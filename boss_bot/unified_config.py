@@ -160,6 +160,7 @@ class BrowserConfig:
     browser_type: str = "chrome"
     user_data_dir: Optional[str] = None  # 兼容 browser_launcher.py 已有接口
     chrome_path: Optional[str] = None    # 兼容 browser_launcher.py 已有接口
+    debug_port: int = 9222               # Chrome 远程调试端口
 
 
 @dataclass

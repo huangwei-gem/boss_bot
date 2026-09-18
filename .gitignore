@@ -67,4 +67,4 @@ tests/screenshots/
 
 # CodeArts 工具目录
 .codeartsdoer/
-.arts/
+.arts/bot_stats.json
