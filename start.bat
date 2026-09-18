@@ -9,17 +9,18 @@ echo.
 
 cd /d "%~dp0"
 
-echo [1/4] 检查 Python 环境...
+echo [1/6] 检查 Python 环境...
 python --version >nul 2>&1
 if errorlevel 1 (
     echo ✗ 未找到 Python，请先安装 Python 3.10+
+    echo   下载地址: https://www.python.org/downloads/
     pause
     exit /b 1
 )
 python --version
 
 echo.
-echo [2/4] 检查依赖包...
+echo [2/6] 检查依赖包...
 python -c "import flask, flask_socketio, DrissionPage, openai, openpyxl" 2>nul
 if errorlevel 1 (
     echo ⚠ 缺少依赖包，正在安装...
@@ -33,7 +34,7 @@ if errorlevel 1 (
 echo ✓ 依赖包完整
 
 echo.
-echo [3/4] 初始化配置...
+echo [3/6] 初始化配置...
 if not exist "bot_config.json" (
     echo ⚠ 首次运行，创建默认配置...
     python -c "from boss_bot.unified_config import UnifiedConfig; UnifiedConfig.load().save()"
@@ -45,7 +46,28 @@ if not exist "user_profile.json" (
 echo ✓ 配置就绪
 
 echo.
-echo [4/4] 启动 Web 界面...
+echo [4/6] 检查端口占用...
+netstat -ano | findstr ":5000 " | findstr "LISTENING" >nul 2>&1
+if not errorlevel 1 (
+    echo ⚠ 端口 5000 已被占用，可能已有实例在运行
+    echo   如需重启，请先关闭占用端口的程序，或修改 flask-version\app.py 中的端口设置
+    pause
+    exit /b 1
+)
+echo ✓ 端口 5000 可用
+
+echo.
+echo [5/6] 检查项目结构...
+if not exist "flask-version\app.py" (
+    echo ✗ 未找到 flask-version\app.py，项目结构不完整
+    echo   请确保 flask-version 目录存在且包含 app.py
+    pause
+    exit /b 1
+)
+echo ✓ 项目结构完整
+
+echo.
+echo [6/6] 启动 Web 界面...
 echo.
 echo ============================================
 echo   访问地址: http://localhost:5000
@@ -53,7 +75,16 @@ echo   按 Ctrl+C 停止服务
 echo ============================================
 echo.
 
+REM 延迟3秒后自动打开浏览器（使用ping模拟延迟，兼容性更好）
+start "" cmd /c "ping -n 4 127.0.0.1 >nul & start http://localhost:5000"
+
 cd flask-version
 python app.py
+
+if errorlevel 1 (
+    echo.
+    echo ✗ 应用启动失败，请检查错误信息
+    pause
+)
 
 pause

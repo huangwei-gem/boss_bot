@@ -176,7 +176,8 @@ def _ensure_manager() -> MultiAccountManager:
             try:
                 socketio.emit("bot_log", {
                     "time": datetime.now().strftime("%H:%M:%S"),
-                    "message": msg,
+                    "level": level,
+                    "message": clean_msg,
                 })
             except Exception:
                 pass

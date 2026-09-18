@@ -27,6 +27,7 @@ import logging
 import threading
 import time
 import random
+import os
 from datetime import datetime
 from typing import Optional, Callable
 
@@ -101,11 +102,13 @@ class UnifiedBotLoop:
             "reply_rounds": 0,
         }
 
-        # 共享浏览器管理器 — 使用指定账号的调试端口
+        # 共享浏览器管理器 — 使用指定账号的调试端口和独立用户数据目录
         browser_cfg = self.config.browser
+        user_data_dir = os.path.join("browser_data", f"account_{account_index}")
         self.browser_manager = BrowserManager(
             config=browser_cfg,
             account_index=account_index,
+            user_data_dir=user_data_dir,
         )
 
         # 回复相关组件（延迟初始化，登录后创建）

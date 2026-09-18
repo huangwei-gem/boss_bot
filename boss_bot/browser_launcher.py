@@ -691,6 +691,7 @@ def launch_browser(
     port: int = 0,
     chrome_path: str = "",
     browser_type: str = "chrome",
+    user_data_dir: str = "",
 ) -> BrowserInstance:
     """启动浏览器（跨平台，支持 Chrome、Edge、Chromium）
 
@@ -740,6 +741,7 @@ def launch_browser(
             viewport_width=viewport_width,
             viewport_height=viewport_height,
             port=port or _find_free_port(),
+            user_data_dir=user_data_dir,
         )
     else:
         return _launch_windows(
@@ -750,6 +752,7 @@ def launch_browser(
             viewport_width=viewport_width,
             viewport_height=viewport_height,
             port=port,
+            user_data_dir=user_data_dir,
         )
 
 
@@ -761,6 +764,7 @@ def _launch_macos(
     viewport_width: int,
     viewport_height: int,
     port: int,
+    user_data_dir: str = "",
 ) -> BrowserInstance:
     """macOS 启动 Chrome（手动启动 + Chromium 连接）
 
@@ -768,11 +772,14 @@ def _launch_macos(
     手动启动 Chrome 子进程，然后通过 WebSocket 地址连接。
     """
 
-    # 构建启动参数
-    user_data_dir = os.path.join(
-        tempfile.gettempdir(), f"boss_bot_chrome_{port}"
-    )
-    os.makedirs(user_data_dir, exist_ok=True)
+    # 构建启动参数 — 优先使用传入的 user_data_dir，否则使用临时目录
+    if user_data_dir:
+        user_data_dir_path = user_data_dir
+    else:
+        user_data_dir_path = os.path.join(
+            tempfile.gettempdir(), f"boss_bot_chrome_{port}"
+        )
+    os.makedirs(user_data_dir_path, exist_ok=True)
 
     args = [
         f'--remote-debugging-port={port}',
@@ -784,7 +791,7 @@ def _launch_macos(
         '--no-first-run',
         '--no-default-browser-check',
         '--disable-features=DnsOverHttps',
-        f'--user-data-dir={user_data_dir}',
+        f'--user-data-dir={user_data_dir_path}',
         '--remote-allow-origins=*',  # 允许所有来源（Chrome 111+ 需要）
         f'--window-size={viewport_width},{viewport_height}',
     ]
@@ -853,6 +860,7 @@ def _launch_windows(
     viewport_width: int,
     viewport_height: int,
     port: int = 0,
+    user_data_dir: str = "",
 ) -> BrowserInstance:
     """Windows 启动 Chrome（使用原生 ChromiumPage）"""
 
@@ -867,6 +875,11 @@ def _launch_windows(
     co.set_argument('--no-default-browser-check')
     co.set_argument('--disable-features=DnsOverHttps')
     co.set_argument(f'--window-size={viewport_width},{viewport_height}')
+
+    # 设置用户数据目录（多账号隔离）
+    if user_data_dir:
+        os.makedirs(user_data_dir, exist_ok=True)
+        co.set_argument(f'--user-data-dir={user_data_dir}')
 
     # 设置调试端口（多账号时每个账号使用不同端口）
     if port > 0:
@@ -914,7 +927,7 @@ class BrowserManager:
     BOSS_SEARCH_URL = "https://www.zhipin.com/web/geek/job-recommend"
     BOSS_CHAT_URL = "https://www.zhipin.com/web/geek/chat"
 
-    def __init__(self, config=None, account_index=0, port=None):
+    def __init__(self, config=None, account_index=0, port=None, user_data_dir=None):
         """初始化浏览器管理器
 
         Args:
@@ -930,6 +943,7 @@ class BrowserManager:
                 - user_data_dir: str - 用户数据目录
             account_index: 账号索引，用于分配独立调试端口
             port: 指定调试端口，None 时自动分配（9222 + account_index）
+            user_data_dir: 指定用户数据目录，优先于 config 中的配置
         """
         self._config = config
         self._account_index = account_index
@@ -950,7 +964,13 @@ class BrowserManager:
         self._chrome_path = getattr(config, 'chrome_path', "") if config else ""
         self._browser_type = getattr(config, 'browser_type', "chrome") if config else "chrome"
         self._cookie_file = getattr(config, 'cookie_file', "") if config else ""
-        self._user_data_dir = getattr(config, 'user_data_dir', "") if config else ""
+        # 优先使用传入的 user_data_dir，其次从 config 获取
+        if user_data_dir:
+            self._user_data_dir = user_data_dir
+        elif config:
+            self._user_data_dir = getattr(config, 'user_data_dir', "")
+        else:
+            self._user_data_dir = ""
 
     def launch(self) -> BrowserInstance:
         """启动浏览器并返回浏览器实例
@@ -973,6 +993,7 @@ class BrowserManager:
             port=self._debug_port,
             chrome_path=self._chrome_path,
             browser_type=self._browser_type,
+            user_data_dir=self._user_data_dir,
         )
 
         # 尝试加载 Cookie
