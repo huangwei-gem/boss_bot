@@ -128,10 +128,15 @@ class UnifiedBotLoop:
     # ─────────────────────────────────────────────
 
     def _log(self, level: str, msg: str):
-        """统一日志输出 — 回调 + logging，包含账号名称前缀。"""
+        """统一日志输出 — 回调 + logging，包含账号名称前缀。
+
+        DEBUG 级别日志只通过 logging 写入文件，不调用 log_cb（不推送前端）。
+        INFO/WARN/ERROR/CRITICAL 级别日志同时推送前端和写入文件。
+        """
         prefix = f"[{self.account_name}] " if self.account_name else ""
         full_msg = f"{prefix}{msg}"
-        if self.log_cb:
+        # DEBUG 级别只写入文件，不推送前端
+        if level.upper() != "DEBUG" and self.log_cb:
             try:
                 self.log_cb(f"[{level}] {full_msg}")
             except Exception:
@@ -269,6 +274,7 @@ class UnifiedBotLoop:
             self._log("INFO", "正在创建双标签页...")
             search_page = self.browser_manager.get_search_page()
             chat_page = self.browser_manager.get_chat_page()
+            self._log("DEBUG", f"搜索标签页: {search_page}, 聊天标签页: {chat_page}")
             self._log("INFO", "✅ 双标签页已创建：搜索标签页 + 聊天标签页")
 
             # 4. 初始化引擎
@@ -304,11 +310,16 @@ class UnifiedBotLoop:
         """启动共享浏览器实例。"""
         try:
             self._log("INFO", "正在启动共享浏览器...")
+            self._log("DEBUG", f"浏览器配置: type={self.config.browser.browser_type}, "
+                              f"chrome_path={self.config.browser.chrome_path}, "
+                              f"debug_port={self.config.browser.debug_port}")
             self.browser_manager.launch()
+            self._log("DEBUG", "浏览器进程已启动，等待连接...")
             self._log("INFO", "浏览器已启动")
             return True
         except Exception as e:
             self._log("ERROR", f"浏览器启动失败: {e}")
+            self._log("DEBUG", f"浏览器启动异常详情: {e!r}")
             return False
 
     def _handle_login(self) -> bool:
@@ -322,8 +333,10 @@ class UnifiedBotLoop:
 
         # 先访问主站
         try:
+            self._log("DEBUG", "正在访问主站 https://www.zhipin.com")
             instance.get("https://www.zhipin.com")
             time.sleep(2)
+            self._log("DEBUG", f"主站访问完成，当前URL: {instance.url}")
         except Exception as e:
             self._log("WARN", f"访问主站异常: {e}")
 
@@ -333,14 +346,17 @@ class UnifiedBotLoop:
         else:
             acc_cookie = ""
         cookie_file = acc_cookie or self.config.login.cookie_file
+        self._log("DEBUG", f"Cookie 文件路径: {cookie_file}")
         if cookie_file:
             try:
                 if self.browser_manager.load_cookies(cookie_file):
                     self._log("INFO", "已加载 Cookie，验证登录状态...")
+                    self._log("DEBUG", "正在访问聊天页面验证登录态...")
                     instance.get("https://www.zhipin.com/web/geek/chat")
                     time.sleep(3)
 
                     current_url = instance.url or ""
+                    self._log("DEBUG", f"验证页面URL: {current_url}")
                     if "login" not in current_url and "user" not in current_url and "passport" not in current_url:
                         self._logged_in = True
                         self._log("SUCCESS", "Cookie 有效，已自动登录")
@@ -385,6 +401,7 @@ class UnifiedBotLoop:
 
         # 初始化回复相关组件 — 使用聊天标签页
         chat_page = self.browser_manager.get_chat_page()
+        self._log("DEBUG", "正在初始化回复组件（BossChatHandler, ReplyEngine, StateStore...）")
         self._chat_handler = BossChatHandler(
             browser_manager=self.browser_manager,
             browser_instance=chat_page,
@@ -397,6 +414,7 @@ class UnifiedBotLoop:
         self._msg_store = MessageStore()
 
         # 初始化打招呼引擎 — 使用搜索标签页
+        self._log("DEBUG", "正在初始化打招呼引擎（GreetEngine）...")
         self._greet_engine = GreetEngine(
             browser_manager=self.browser_manager,
             config=self.config,
@@ -447,6 +465,7 @@ class UnifiedBotLoop:
 
         try:
             tasks = self._build_greet_tasks()
+            self._log("DEBUG", f"构建打招呼任务数: {len(tasks)}")
             if not tasks:
                 self._log("WARN", "无打招呼任务可执行")
                 return
@@ -460,6 +479,9 @@ class UnifiedBotLoop:
                 scroll_pages = task.get("scroll_pages", 5)
 
                 self._log("INFO", f"搜索岗位: {city} · {query}")
+                self._log("DEBUG", f"搜索参数: scroll_pages={scroll_pages}, "
+                                  f"interval_min={task.get('message_interval_min', 3)}, "
+                                  f"interval_max={task.get('message_interval_max', 8)}")
 
                 jobs = self._greet_engine.search_jobs(query, city, scroll_pages)
                 self._stats_dict["greet_total"] += len(jobs)
@@ -469,6 +491,7 @@ class UnifiedBotLoop:
                     continue
 
                 self._log("INFO", f"找到 {len(jobs)} 个岗位，开始打招呼...")
+                self._log("DEBUG", f"岗位列表前5个: {[j.get('title', j.get('job_name', '未知')) for j in jobs[:5]]}")
 
                 for job in jobs:
                     if not self._running or self._greet_paused:
@@ -577,10 +600,14 @@ class UnifiedBotLoop:
                 self._log("INFO", f"人工接管模式中（{info.get('reason', '')}），仅监控不回复")
 
             # 导航到聊天页面（使用聊天标签页）
+            self._log("DEBUG", "正在导航到聊天页面...")
             self._chat_handler.go_to_chat()
+            self._log("DEBUG", "聊天页面导航完成")
 
             # 获取未读聊天列表
+            self._log("DEBUG", "正在获取未读聊天列表...")
             unread_chats = self._chat_handler.get_unread_chats()
+            self._log("DEBUG", f"获取到未读会话数: {len(unread_chats)}")
 
             if not unread_chats:
                 self._log("DEBUG", "无未读消息")
@@ -614,13 +641,16 @@ class UnifiedBotLoop:
         """处理单个未读聊天会话。"""
         name = chat_info.get("name", "未知")
         self._log("INFO", f"--- 正在处理与 [{name}] 的聊天 ---")
+        self._log("DEBUG", f"聊天会话信息: {chat_info}")
 
         if not self._chat_handler.enter_chat(chat_info):
             self._log("WARN", f"会话 [{name}] 切换校验失败，本次跳过")
             return
 
         context_count = self.config.reply.context_message_count
+        self._log("DEBUG", f"正在读取最近 {context_count} 条消息...")
         messages = self._chat_handler.read_latest_messages(count=context_count)
+        self._log("DEBUG", f"读取到消息数: {len(messages)}")
         if not messages:
             self._log("INFO", "未读取到消息，跳过")
             return
@@ -644,10 +674,12 @@ class UnifiedBotLoop:
 
         boss_name = self._chat_handler.get_boss_name()
         job_name = self._chat_handler.get_job_name()
+        self._log("DEBUG", f"聊天对象: boss_name={boss_name}, job_name={job_name}")
 
         action, content, meta = self._reply_engine.get_reply(
             messages, boss_name, job_name, chat_name=name
         )
+        self._log("DEBUG", f"回复引擎决策: action={action}, meta={meta}")
 
         # 重要事件检测
         if self._notifier.notify_if_important(
@@ -769,6 +801,7 @@ class UnifiedBotLoop:
             return
 
         self._log("INFO", f"尝试重连浏览器（第 {self._reconnect_attempts} 次）...")
+        self._log("DEBUG", "正在关闭旧浏览器实例...")
 
         try:
             self.browser_manager.close()
@@ -839,8 +872,11 @@ class MultiAccountManager:
                 )
 
     def _log(self, level: str, msg: str):
-        """统一日志输出。"""
-        if self.log_cb:
+        """统一日志输出。
+
+        DEBUG 级别日志只通过 logging 写入文件，不调用 log_cb（不推送前端）。
+        """
+        if level.upper() != "DEBUG" and self.log_cb:
             try:
                 self.log_cb(f"[{level}] {msg}")
             except Exception:

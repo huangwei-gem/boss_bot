@@ -10,6 +10,11 @@ BOSS 自动回复机器人 - 回复引擎
 返回 (动作类型, 回复内容, 元信息)：
 - 动作类型: 'text' | 'resume' | 'none'
 - 元信息: {"source": rule/intent/ai/default, "intent": ..., "important": bool}
+
+集成自进化引擎（SelfEvolveEngine）：
+- 每次发送 AI 回复后，记录回复内容和上下文
+- 每次收到 HR 新消息时，评估之前 AI 回复的效果
+- 定期自动优化回复策略
 """
 
 import random
@@ -71,13 +76,20 @@ class ReplyCache:
 
 
 class ReplyEngine:
-    """回复引擎：规则 + 意图 + AI 混合模式"""
+    """回复引擎：规则 + 意图 + AI 混合模式
 
-    def __init__(self):
+    可选集成 SelfEvolveEngine 实现自进化功能：
+    - 记录每次 AI 回复的内容和上下文
+    - 收到新消息时评估之前回复的效果
+    - 定期自动优化回复策略
+    """
+
+    def __init__(self, self_evolve: Optional["SelfEvolveEngine"] = None):
         self.rule_engine = RuleEngine()
         self._reply_count = 0
         self._hour_start = time.time()
         self._cache = ReplyCache()
+        self._self_evolve = self_evolve
 
     # ---------- 决策入口 ----------
 
@@ -99,6 +111,13 @@ class ReplyEngine:
         if latest:
             meta["intent"] = classify(latest)
 
+        # 收到新消息时，评估之前 AI 回复的效果（自进化）
+        if self._self_evolve and self._self_evolve.enabled and history:
+            try:
+                self._self_evolve.evaluate_previous_replies(history, chat_name=chat_name)
+            except Exception as e:
+                logger.debug(f"[自进化] 评估历史回复异常: {e}")
+
         # 1. 关键词规则直通（最高优先级）
         if latest:
             result = self.rule_engine.match(latest)
@@ -107,6 +126,7 @@ class ReplyEngine:
                 logger.info(f"[规则匹配] 命中规则 -> 动作={action}")
                 meta["source"] = "rule"
                 self._log_decision(chat_name, latest, meta, action, decision_start)
+                self._record_to_evolve(action, content, meta, chat_name, boss_name, job_name)
                 return action, content, meta
 
         # 2. 意图识别回复
@@ -116,6 +136,7 @@ class ReplyEngine:
             logger.info(f"[意图匹配] intent={meta['intent']} -> 动作={action}")
             meta["source"] = "intent"
             self._log_decision(chat_name, latest, meta, action, decision_start)
+            self._record_to_evolve(action, content, meta, chat_name, boss_name, job_name)
             return action, content, meta
 
         # 3. AI 生成回复（带多轮历史）
@@ -125,6 +146,7 @@ class ReplyEngine:
             if ai_reply:
                 meta["source"] = "ai"
                 self._log_decision(chat_name, latest, meta, "text", decision_start)
+                self._record_to_evolve("text", ai_reply, meta, chat_name, boss_name, job_name)
                 return ("text", ai_reply, meta)
             logger.warning("[AI回复] 主备 API 均失败")
 
@@ -133,6 +155,7 @@ class ReplyEngine:
             logger.info("[默认回复] 使用兜底话术")
             meta["source"] = "default"
             self._log_decision(chat_name, latest, meta, "text", decision_start)
+            self._record_to_evolve("text", config.DEFAULT_REPLY, meta, chat_name, boss_name, job_name)
             return ("text", config.DEFAULT_REPLY, meta)
 
         # skip：宁可不回复，不发驴唇不对马嘴的话
@@ -140,6 +163,25 @@ class ReplyEngine:
         meta["source"] = "default"
         self._log_decision(chat_name, latest, meta, "none", decision_start)
         return ("none", None, meta)
+
+    def _record_to_evolve(self, action: str, content: Optional[str], meta: dict,
+                          chat_name: str, boss_name: str, job_name: str):
+        """将回复记录到自进化引擎（如果已集成且启用）。"""
+        if not self._self_evolve or not self._self_evolve.enabled:
+            return
+        if action == "none" or not content:
+            return
+        try:
+            self._self_evolve.record_ai_reply(content, {
+                "chat_name": chat_name,
+                "job_name": job_name,
+                "boss_name": boss_name,
+                "source": meta.get("source", ""),
+                "intent": meta.get("intent", ""),
+                "action": action,
+            })
+        except Exception as e:
+            logger.debug(f"[自进化] 记录回复异常: {e}")
 
     @staticmethod
     def _log_decision(chat_name: str, message: str, meta: dict,

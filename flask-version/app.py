@@ -19,6 +19,7 @@ import json
 import uuid
 import shutil
 import logging
+from logging.handlers import TimedRotatingFileHandler
 import threading
 import warnings
 import time
@@ -51,10 +52,11 @@ from boss_bot.unified_config import (
     load_config, save_config, validate_config, DEFAULT_GREETING,
 )
 from boss_bot.main_loop import UnifiedBotLoop, MultiAccountManager
+from boss_bot.self_evolve import SelfEvolveEngine
 
 # ===================== 日志缓冲区 =====================
 
-MAX_LOGS = 500
+MAX_LOGS = 200
 log_buffer = []
 log_buffer_lock = threading.Lock()
 
@@ -75,10 +77,32 @@ class WebLogHandler(logging.Handler):
 
 
 # 配置日志
+# 确保 logs 目录存在
+LOG_DIR = PROJECT_ROOT / "logs"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+# 前端日志处理器 — 只记录 INFO 及以上级别
 web_handler = WebLogHandler()
 web_handler.setLevel(logging.INFO)
-logging.getLogger().addHandler(web_handler)
-logging.getLogger().setLevel(logging.INFO)
+
+# 文件日志处理器 — 记录 DEBUG 及以上级别，按日期轮转，保留7天
+file_handler = TimedRotatingFileHandler(
+    str(LOG_DIR / "boss_bot.log"),
+    when="midnight",
+    interval=1,
+    backupCount=7,
+    encoding="utf-8",
+)
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(logging.Formatter(
+    "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+))
+
+# 根日志级别设为 DEBUG，让文件处理器能收到所有日志
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.DEBUG)
+root_logger.addHandler(web_handler)
+root_logger.addHandler(file_handler)
 
 logger = logging.getLogger("boss-web")
 
@@ -97,6 +121,7 @@ _multi_manager: Optional[MultiAccountManager] = None
 _config: Optional[UnifiedConfig] = None
 _status_thread: Optional[threading.Thread] = None
 _status_stop = threading.Event()
+_self_evolve: Optional[SelfEvolveEngine] = None
 
 # 数据目录
 DATA_DIR = PROJECT_ROOT / "data"
@@ -123,12 +148,24 @@ def _ensure_manager() -> MultiAccountManager:
         cfg = _ensure_config()
 
         def log_callback(msg: str):
-            """日志回调 — 同时写入缓冲区和推送 SocketIO。"""
+            """日志回调 — 同时写入缓冲区和推送 SocketIO。
+
+            DEBUG 级别日志只写入文件（由 logging 处理），不推送前端。
+            INFO/WARN/ERROR/CRITICAL 级别日志推送前端 + 写入文件。
+            """
+            # 解析日志级别
+            level = msg.split("]")[0].strip("[") if "]" in msg else "INFO"
+            clean_msg = msg.split("]", 1)[1].strip() if "]" in msg else msg
+
+            # DEBUG 级别不推送前端，只通过 logging 写入文件
+            if level.upper() == "DEBUG":
+                return
+
             with log_buffer_lock:
                 log_buffer.append({
                     "time": datetime.now().strftime("%H:%M:%S"),
-                    "level": msg.split("]")[0].strip("[") if "]" in msg else "INFO",
-                    "message": msg.split("]", 1)[1].strip() if "]" in msg else msg,
+                    "level": level,
+                    "message": clean_msg,
                 })
                 if len(log_buffer) > MAX_LOGS:
                     log_buffer.pop(0)
@@ -464,6 +501,47 @@ def api_logs():
     with log_buffer_lock:
         logs = list(log_buffer)
     return jsonify({"status": "ok", "logs": logs})
+
+
+@app.route("/api/logs/file")
+def api_logs_file():
+    """查看文件日志内容，支持按日期和行数筛选。
+
+    查询参数：
+        date: 指定日期（YYYY-MM-DD），默认今天
+        lines: 返回最后 N 行，默认 200
+    """
+    try:
+        date_str = request.args.get("date", datetime.now().strftime("%Y-%m-%d"))
+        lines = request.args.get("lines", 200, type=int)
+
+        # 构造日志文件路径
+        if date_str == datetime.now().strftime("%Y-%m-%d"):
+            log_file = LOG_DIR / "boss_bot.log"
+        else:
+            log_file = LOG_DIR / f"boss_bot.log.{date_str}"
+
+        if not log_file.exists():
+            return jsonify({
+                "status": "ok",
+                "date": date_str,
+                "lines": [],
+                "message": f"日志文件不存在: {log_file.name}",
+            })
+
+        # 读取最后 N 行
+        all_lines = log_file.read_text(encoding="utf-8").splitlines()
+        recent_lines = all_lines[-lines:] if len(all_lines) > lines else all_lines
+
+        return jsonify({
+            "status": "ok",
+            "date": date_str,
+            "lines": recent_lines,
+            "total": len(all_lines),
+        })
+    except Exception as e:
+        logger.exception("读取文件日志失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 # ===================== 统计 API =====================
@@ -1398,6 +1476,98 @@ def api_save_templates():
         return jsonify({"status": "ok", "message": "模板已保存"})
     except Exception as e:
         logger.exception("保存模板失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ===================== 自进化 API =====================
+
+def _ensure_self_evolve() -> SelfEvolveEngine:
+    """确保 _self_evolve 已初始化。"""
+    global _self_evolve
+    if _self_evolve is None:
+        _self_evolve = SelfEvolveEngine(
+            config={"enabled": True},
+            log_callback=lambda msg: logger.info(msg),
+        )
+    return _self_evolve
+
+
+@app.route("/api/evolution/report", methods=["GET"])
+def api_evolution_report():
+    """获取自进化报告 — 回复效果统计、模板效果分析、策略调整历史。"""
+    try:
+        engine = _ensure_self_evolve()
+        report = engine.get_evolution_report()
+        return jsonify({"status": "ok", "report": report})
+    except Exception as e:
+        logger.exception("获取进化报告失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/evolution/optimize", methods=["POST"])
+def api_evolution_optimize():
+    """手动触发策略优化。"""
+    try:
+        engine = _ensure_self_evolve()
+        result = engine.auto_optimize_strategy()
+        return jsonify({"status": "ok", "result": result})
+    except Exception as e:
+        logger.exception("触发策略优化失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/evolution/history", methods=["GET"])
+def api_evolution_history():
+    """获取进化历史 — 策略调整记录和最近回复记录。"""
+    try:
+        engine = _ensure_self_evolve()
+        report = engine.get_evolution_report()
+        history = {
+            "strategy_adjustments": report.get("strategy_adjustments", []),
+            "recent_records": report.get("recent_records", []),
+        }
+        return jsonify({"status": "ok", "history": history})
+    except Exception as e:
+        logger.exception("获取进化历史失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/evolution/status", methods=["GET"])
+def api_evolution_status():
+    """获取自进化功能状态。"""
+    try:
+        engine = _ensure_self_evolve()
+        return jsonify({
+            "status": "ok",
+            "enabled": engine.enabled,
+            "pending_evaluations": engine.get_pending_evaluations(),
+            "total_replies": engine._reply_stats.get("total_replies", 0),
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/evolution/toggle", methods=["POST"])
+def api_evolution_toggle():
+    """启用或禁用自进化功能。"""
+    try:
+        data = request.get_json() or {}
+        enabled = data.get("enabled", True)
+        engine = _ensure_self_evolve()
+        engine.set_enabled(bool(enabled))
+        return jsonify({"status": "ok", "message": f"自进化功能已{'启用' if enabled else '禁用'}"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/evolution/reset", methods=["POST"])
+def api_evolution_reset():
+    """重置进化统计数据。"""
+    try:
+        engine = _ensure_self_evolve()
+        engine.reset_stats()
+        return jsonify({"status": "ok", "message": "进化统计数据已重置"})
+    except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
 

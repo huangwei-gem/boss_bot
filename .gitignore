@@ -25,6 +25,7 @@ env/
 data/
 logs/
 messages/
+bot_state.json
 
 # 配置文件中的敏感数据
 bot_config.json
@@ -58,6 +59,7 @@ desktop.ini
 .pytest_cache/
 .coverage
 htmlcov/
+tests/screenshots/
 
 # 飞书知识库子项目（独立仓库）
 飞书知识库自动化回复机器人/
