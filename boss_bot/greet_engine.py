@@ -30,6 +30,7 @@ from urllib.error import URLError
 
 from boss_bot.unified_config import UnifiedConfig, BASE_DIR
 from boss_bot.browser_launcher import BrowserManager
+from boss_bot.reply_record import GreetRecordStore, GreetRecord
 
 # ─────────────────────────────────────────────
 # 路径常量
@@ -184,6 +185,12 @@ class AIAnalyzerChain:
         self._resume = None
         self._resume_hash = ""
 
+        # 追踪最后一次分析的信息（供 GreetRecord 记录使用）
+        self.last_system_prompt = None
+        self.last_user_prompt = None
+        self.last_model_name = ""
+        self.last_raw_response = None
+
     def _log(self, level: str, msg: str):
         if self.log_cb:
             self.log_cb(f"[AI] [{level}] {msg}")
@@ -210,6 +217,9 @@ class AIAnalyzerChain:
 
         # 依次尝试每个 provider
         prompt = self._build_prompt(job)
+        # 保存 prompt 信息供 GreetRecord 记录使用
+        self.last_system_prompt = prompt[0]["content"] if len(prompt) > 0 else None
+        self.last_user_prompt = prompt[1]["content"] if len(prompt) > 1 else None
         last_error = None
         for provider in self.providers:
             if not provider.is_valid():
@@ -218,6 +228,7 @@ class AIAnalyzerChain:
             try:
                 self._log("INFO", f"通过 [{provider.name}] ({provider.model}) 分析...")
                 result = self._call_provider_api(provider, prompt)
+                self.last_model_name = provider.model
                 self.analyzed_count += 1
                 if result.get("is_match", False):
                     self.match_count += 1
@@ -270,6 +281,7 @@ class AIAnalyzerChain:
         try:
             message = data["choices"][0]["message"]
             content = message.get("content", "") or message.get("reasoning_content", "")
+            self.last_raw_response = content
             json_start = content.find("{")
             json_end = content.rfind("}") + 1
             if json_start >= 0 and json_end > json_start:
@@ -417,6 +429,16 @@ class GreetEngine:
         # AI 分析器
         self._ai_analyzer = None
 
+        # 打招呼记录存储
+        self._greet_store = GreetRecordStore()
+
+        # 追踪最后一次 AI 分析的完整信息（供 GreetRecord 记录使用）
+        self._last_ai_result = None
+        self._last_ai_system_prompt = None
+        self._last_ai_user_prompt = None
+        self._last_ai_model = ""
+        self._last_ai_raw_response = None
+
         # 从配置加载参数
         self._load_config_params()
         self._load_city_dict()
@@ -504,6 +526,47 @@ class GreetEngine:
             _file_logger.info(f"[{level}] {msg}")
         except Exception:
             pass
+
+    def _record_greet(
+        self,
+        job: dict,
+        is_greeted: bool = False,
+        is_skipped: bool = False,
+        skip_reason: str = "",
+        actual_greeting_sent: str = "",
+    ):
+        """创建并保存一条打招呼/AI分析记录。
+
+        从 self._last_ai_* 属性中获取 AI 分析的完整信息。
+        """
+        try:
+            ai_result = self._last_ai_result or {}
+            record = GreetRecord(
+                job_name=job.get("job_name", ""),
+                job_url=job.get("url", ""),
+                company=job.get("company", job.get("company_location", "")),
+                salary=job.get("salary", ""),
+                job_description=job.get("jd_description", job.get("description", "")),
+                job_requirements=job.get("jd_requirements", job.get("requirements", "")),
+                ai_score=ai_result.get("score", 0),
+                ai_is_match=ai_result.get("is_match", False),
+                ai_reason=ai_result.get("reason", ""),
+                ai_strengths=ai_result.get("strengths", []),
+                ai_weaknesses=ai_result.get("weaknesses", []),
+                ai_suggested_greeting=ai_result.get("suggested_greeting", ""),
+                system_prompt=self._last_ai_system_prompt,
+                user_prompt=self._last_ai_user_prompt,
+                ai_model=self._last_ai_model,
+                ai_raw_response=self._last_ai_raw_response,
+                actual_greeting_sent=actual_greeting_sent,
+                is_greeted=is_greeted,
+                is_skipped=is_skipped,
+                skip_reason=skip_reason,
+                account_name=self._cookie_file or "",
+            )
+            self._greet_store.add(record)
+        except Exception as e:
+            self._log("WARN", f"记录打招呼信息失败: {e}")
 
     def _report_progress(self):
         if self.progress_cb:
@@ -621,15 +684,21 @@ class GreetEngine:
                 self.applied_count += 1
                 self._save_chat_log(job_info, skipped=False)
                 self._log("SUCCESS", f"✅ 已投递: {job_info.get('job_name', '')}")
+                self._record_greet(
+                    job_info, is_greeted=True,
+                    actual_greeting_sent=job_info.get("_actual_greeting_sent", ""),
+                )
             else:
                 self.skipped_count += 1
                 self._log("WARN", f"⏭️ 跳过: {job_info.get('job_name', '')}")
+                self._record_greet(job_info, is_skipped=True, skip_reason="投递失败")
             self._report_progress()
             return success
         except Exception as e:
             self._log("WARN", f"发送打招呼异常: {e}")
             self.skipped_count += 1
             self._report_progress()
+            self._record_greet(job_info, is_skipped=True, skip_reason=f"发送异常: {e}")
             return False
 
     # ── 内部运行逻辑 ──
@@ -1073,10 +1142,17 @@ class GreetEngine:
             duration = time.time() - _start
             score = result.get("score", 50)
             is_match = result.get("is_match", True)
+            # 保存 AI 分析的完整信息供 GreetRecord 记录使用
+            self._last_ai_result = result
+            self._last_ai_system_prompt = analyzer.last_system_prompt
+            self._last_ai_user_prompt = analyzer.last_user_prompt
+            self._last_ai_model = analyzer.last_model_name
+            self._last_ai_raw_response = analyzer.last_raw_response
             self._log("INFO", f"🤖 AI 匹配度: {score}/100 ({duration:.1f}s) —— {result.get('reason', '')[:80]}")
             return (result, duration) if (is_match and score >= self._ai_threshold) else (None, duration)
         except Exception as e:
             self._log("WARN", f"AI 分析异常，按通过处理: {e}")
+            self._last_ai_result = None
             return None, 0
 
     def _step_browse_jobs(self):
@@ -1104,6 +1180,7 @@ class GreetEngine:
                 self.skipped_count += 1
                 self._report_progress()
                 self._save_chat_log(job, skipped=True)
+                self._record_greet(job, is_skipped=True, skip_reason="已沟通过")
                 continue
 
             # AI 智能匹配
@@ -1116,6 +1193,7 @@ class GreetEngine:
                     self.skipped_count += 1
                     self._save_chat_log(job, skipped=True, ai_result=None, ai_duration=ai_duration)
                     self._report_progress()
+                    self._record_greet(job, is_skipped=True, skip_reason="AI判定不匹配")
                     continue
                 if ai_result and ai_result.get("suggested_greeting"):
                     self._greeting_message = ai_result["suggested_greeting"]
@@ -1132,12 +1210,18 @@ class GreetEngine:
                     self.applied_count += 1
                     self._save_chat_log(job, skipped=False, ai_result=ai_result, ai_duration=ai_duration)
                     self._log("SUCCESS", f"✅ 已投递: {job.get('job_name', '')}")
+                    self._record_greet(
+                        job, is_greeted=True,
+                        actual_greeting_sent=job.get("_actual_greeting_sent", ""),
+                    )
                 else:
                     self.skipped_count += 1
                     self._log("WARN", f"⏭️ 跳过: {job.get('job_name', '')}")
+                    self._record_greet(job, is_skipped=True, skip_reason="投递失败")
             except Exception as e:
                 self._log("WARN", f"投递异常: {e}")
                 self.skipped_count += 1
+                self._record_greet(job, is_skipped=True, skip_reason=f"投递异常: {e}")
             self._report_progress()
 
     def _fetch_jd_for_job(self, job: dict):
@@ -1349,6 +1433,8 @@ class GreetEngine:
             if not greeting:
                 from boss_bot.unified_config import DEFAULT_GREETING
                 greeting = DEFAULT_GREETING
+            # 保存实际发送的打招呼语供 GreetRecord 记录使用
+            job["_actual_greeting_sent"] = greeting
             self._log("INFO", f"打招呼语来源: {'AI定制' if self._greeting_message else '默认模板'}")
             input_area = instance.ele(".input-area", timeout=10)
             if not input_area:

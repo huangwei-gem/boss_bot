@@ -503,6 +503,23 @@ class UnifiedBotLoop:
                         self._log("WARN", f"已达到每小时打招呼上限 {self._greet_engine._max_per_hour}，暂停打招呼")
                         break
 
+                    # 去重检查：已沟通过的岗位跳过
+                    if self._greet_engine._is_already_chatted(job):
+                        self._log("INFO", f"⏭️ 已沟通过: {job.get('job_name', '')}")
+                        self._stats_dict["greet_skipped"] += 1
+                        continue
+
+                    # AI 智能匹配分析
+                    has_ai = self._greet_engine._ai_enabled and bool(self._greet_engine._ai_providers)
+                    if has_ai:
+                        ai_result, ai_duration = self._greet_engine._analyze_job_with_ai(job)
+                        if ai_result is None and self._greet_engine._init_ai() is not None:
+                            self._log("WARN", f"🤖 AI 判定不匹配，跳过: {job.get('job_name', '')}")
+                            self._stats_dict["greet_skipped"] += 1
+                            continue
+                        if ai_result and ai_result.get("suggested_greeting"):
+                            job["_ai_suggested_greeting"] = ai_result["suggested_greeting"]
+
                     # 随机间隔
                     min_interval = task.get("message_interval_min", 3)
                     max_interval = task.get("message_interval_max", 8)

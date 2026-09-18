@@ -32,6 +32,7 @@ from boss_bot.config import (
 from boss_bot.rules import RuleEngine
 from boss_bot.intent import classify
 from boss_bot.prompts import SYSTEM_PROMPT, build_user_prompt
+from boss_bot.reply_record import ReplyRecord, ReplyRecordStore
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +91,12 @@ class ReplyEngine:
         self._hour_start = time.time()
         self._cache = ReplyCache()
         self._self_evolve = self_evolve
+        self._record_store = ReplyRecordStore()
+        # AI 调用元信息（每次 _ask_ai 前重置，_call_chat 中写入）
+        self._last_ai_system_prompt: Optional[str] = None
+        self._last_ai_user_prompt: Optional[str] = None
+        self._last_ai_model: str = ""
+        self._last_ai_raw_response: Optional[str] = None
 
     # ---------- 决策入口 ----------
 
@@ -127,6 +134,11 @@ class ReplyEngine:
                 meta["source"] = "rule"
                 self._log_decision(chat_name, latest, meta, action, decision_start)
                 self._record_to_evolve(action, content, meta, chat_name, boss_name, job_name)
+                self._add_record(
+                    chat_name=chat_name, job_name=job_name, received_message=latest,
+                    reply_content=content, reply_source="rule", reply_intent=meta["intent"],
+                    reply_reason=f"关键词规则匹配命中，动作={action}",
+                )
                 return action, content, meta
 
         # 2. 意图识别回复
@@ -137,6 +149,11 @@ class ReplyEngine:
             meta["source"] = "intent"
             self._log_decision(chat_name, latest, meta, action, decision_start)
             self._record_to_evolve(action, content, meta, chat_name, boss_name, job_name)
+            self._add_record(
+                chat_name=chat_name, job_name=job_name, received_message=latest,
+                reply_content=content, reply_source="intent", reply_intent=meta["intent"],
+                reply_reason=f"意图识别匹配: {meta['intent']}，动作={action}",
+            )
             return action, content, meta
 
         # 3. AI 生成回复（带多轮历史）
@@ -147,6 +164,15 @@ class ReplyEngine:
                 meta["source"] = "ai"
                 self._log_decision(chat_name, latest, meta, "text", decision_start)
                 self._record_to_evolve("text", ai_reply, meta, chat_name, boss_name, job_name)
+                self._add_record(
+                    chat_name=chat_name, job_name=job_name, received_message=latest,
+                    reply_content=ai_reply, reply_source="ai", reply_intent=meta["intent"],
+                    reply_reason="规则和意图均未命中，使用AI生成回复",
+                    system_prompt=self._last_ai_system_prompt,
+                    user_prompt=self._last_ai_user_prompt,
+                    ai_model=self._last_ai_model,
+                    ai_raw_response=self._last_ai_raw_response,
+                )
                 return ("text", ai_reply, meta)
             logger.warning("[AI回复] 主备 API 均失败")
 
@@ -156,12 +182,24 @@ class ReplyEngine:
             meta["source"] = "default"
             self._log_decision(chat_name, latest, meta, "text", decision_start)
             self._record_to_evolve("text", config.DEFAULT_REPLY, meta, chat_name, boss_name, job_name)
+            self._add_record(
+                chat_name=chat_name, job_name=job_name, received_message=latest,
+                reply_content=config.DEFAULT_REPLY, reply_source="default",
+                reply_intent=meta["intent"],
+                reply_reason="AI调用失败(AI_FAIL_ACTION=default)，使用兜底话术",
+            )
             return ("text", config.DEFAULT_REPLY, meta)
 
         # skip：宁可不回复，不发驴唇不对马嘴的话
         logger.info("[跳过回复] 无规则/意图命中且 AI 未响应，跳过")
         meta["source"] = "default"
         self._log_decision(chat_name, latest, meta, "none", decision_start)
+        self._add_record(
+            chat_name=chat_name, job_name=job_name, received_message=latest,
+            reply_content=None, reply_source="skip", reply_intent=meta["intent"],
+            reply_reason="无规则/意图命中且AI未响应或未启用，跳过回复",
+            is_skipped=True, skip_reason="无规则/意图命中且AI未响应或未启用",
+        )
         return ("none", None, meta)
 
     def _record_to_evolve(self, action: str, content: Optional[str], meta: dict,
@@ -182,6 +220,14 @@ class ReplyEngine:
             })
         except Exception as e:
             logger.debug(f"[自进化] 记录回复异常: {e}")
+
+    def _add_record(self, **kwargs):
+        """创建并保存一条 ReplyRecord（异常不影响主流程）。"""
+        try:
+            record = ReplyRecord(**kwargs)
+            self._record_store.add(record)
+        except Exception as e:
+            logger.debug(f"[回复记录] 保存记录异常: {e}")
 
     @staticmethod
     def _log_decision(chat_name: str, message: str, meta: dict,
@@ -249,6 +295,12 @@ class ReplyEngine:
         3. 429 限流时等待后重试一次
         4. 全部失败时返回 None
         """
+        # 重置 AI 元信息（供 get_reply 中记录使用）
+        self._last_ai_system_prompt = None
+        self._last_ai_user_prompt = None
+        self._last_ai_model = ""
+        self._last_ai_raw_response = None
+
         if message == "" and not history:
             return None
 
@@ -296,8 +348,7 @@ class ReplyEngine:
         logger.error("所有 AI 模型均调用失败")
         return None
 
-    @staticmethod
-    def _call_chat(client, model, message, boss_name, job_name, history):
+    def _call_chat(self, client, model, message, boss_name, job_name, history):
         user_prompt = build_user_prompt(boss_name, job_name, message, history)
         response = client.chat.completions.create(
             model=model,
@@ -307,7 +358,13 @@ class ReplyEngine:
                 {"role": "user", "content": user_prompt},
             ],
         )
-        return response.choices[0].message.content.strip()
+        raw_content = response.choices[0].message.content
+        # 保存 AI 元信息供回复记录使用
+        self._last_ai_system_prompt = SYSTEM_PROMPT
+        self._last_ai_user_prompt = user_prompt
+        self._last_ai_model = model
+        self._last_ai_raw_response = raw_content
+        return raw_content.strip()
 
     # ---------- 频控与延迟 ----------
 

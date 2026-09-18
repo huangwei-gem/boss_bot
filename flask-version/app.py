@@ -53,6 +53,10 @@ from boss_bot.unified_config import (
 )
 from boss_bot.main_loop import UnifiedBotLoop, MultiAccountManager
 from boss_bot.self_evolve import SelfEvolveEngine
+from boss_bot.reply_record import (
+    ReplyRecordStore, GreetRecordStore,
+    export_reply_records, export_greet_records,
+)
 
 # ===================== 日志缓冲区 =====================
 
@@ -1084,6 +1088,153 @@ def api_excel_export():
         return jsonify({"status": "error", "message": "未安装 openpyxl 库"}), 500
     except Exception as e:
         logger.exception("Excel 导出失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ===================== 记录导出 API =====================
+
+_reply_record_store: Optional[ReplyRecordStore] = None
+_greet_record_store: Optional[GreetRecordStore] = None
+
+
+def _ensure_reply_store() -> ReplyRecordStore:
+    """确保回复记录存储已初始化。"""
+    global _reply_record_store
+    if _reply_record_store is None:
+        _reply_record_store = ReplyRecordStore()
+    return _reply_record_store
+
+
+def _ensure_greet_store() -> GreetRecordStore:
+    """确保打招呼记录存储已初始化。"""
+    global _greet_record_store
+    if _greet_record_store is None:
+        _greet_record_store = GreetRecordStore()
+    return _greet_record_store
+
+
+@app.route("/api/export/reply_records")
+def api_export_reply_records():
+    """导出回复记录，支持 JSON/Excel 格式下载。
+
+    查询参数：
+        format: json 或 excel（默认 json）
+        date: 按日期筛选（YYYY-MM-DD）
+        chat_name: 按聊天对象筛选
+    """
+    fmt = request.args.get("format", "json")
+    date = request.args.get("date")
+    chat_name = request.args.get("chat_name")
+
+    # Excel 格式但 openpyxl 未安装时，fallback 到 JSON
+    if fmt == "excel":
+        try:
+            import openpyxl  # noqa: F401
+        except ImportError:
+            fmt = "json"
+
+    try:
+        file_path = export_reply_records(
+            format=fmt,
+            date=date,
+            chat_name=chat_name,
+        )
+
+        if fmt == "excel":
+            return send_file(
+                file_path,
+                as_attachment=True,
+                download_name=os.path.basename(file_path),
+                mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        else:
+            return send_file(
+                file_path,
+                as_attachment=True,
+                download_name="reply_records_export.json",
+                mimetype="application/json",
+            )
+    except Exception as e:
+        logger.exception("导出回复记录失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/export/greet_records")
+def api_export_greet_records():
+    """导出打招呼记录，支持 JSON/Excel 格式下载。
+
+    查询参数：
+        format: json 或 excel（默认 json）
+        date: 按日期筛选（YYYY-MM-DD）
+    """
+    fmt = request.args.get("format", "json")
+    date = request.args.get("date")
+
+    # Excel 格式但 openpyxl 未安装时，fallback 到 JSON
+    if fmt == "excel":
+        try:
+            import openpyxl  # noqa: F401
+        except ImportError:
+            fmt = "json"
+
+    try:
+        file_path = export_greet_records(
+            format=fmt,
+            date=date,
+        )
+
+        if fmt == "excel":
+            return send_file(
+                file_path,
+                as_attachment=True,
+                download_name=os.path.basename(file_path),
+                mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        else:
+            return send_file(
+                file_path,
+                as_attachment=True,
+                download_name="greet_records_export.json",
+                mimetype="application/json",
+            )
+    except Exception as e:
+        logger.exception("导出打招呼记录失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/reply_records")
+def api_reply_records():
+    """获取回复记录列表（前端展示用，不分页）。"""
+    try:
+        store = _ensure_reply_store()
+        records = store.get_all()
+        # 返回最近的记录（倒序，最多 200 条）
+        result = [r.to_dict() for r in reversed(records[-200:])]
+        return jsonify({
+            "status": "ok",
+            "total": len(records),
+            "records": result,
+        })
+    except Exception as e:
+        logger.exception("获取回复记录列表失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/greet_records")
+def api_greet_records():
+    """获取打招呼记录列表（前端展示用，不分页）。"""
+    try:
+        store = _ensure_greet_store()
+        records = store.get_all()
+        # 返回最近的记录（倒序，最多 200 条）
+        result = [r.to_dict() for r in reversed(records[-200:])]
+        return jsonify({
+            "status": "ok",
+            "total": len(records),
+            "records": result,
+        })
+    except Exception as e:
+        logger.exception("获取打招呼记录列表失败")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 

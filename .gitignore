@@ -68,3 +68,7 @@ tests/screenshots/
 # CodeArts 工具目录
 .codeartsdoer/
 .arts/bot_stats.json
+bot_stats.json
+reply_records_export.json
+zhipin_cookies_ref.json
+.arts/

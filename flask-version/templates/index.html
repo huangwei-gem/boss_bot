@@ -769,6 +769,39 @@ body::before {
 .excel-file-item:hover { background:var(--surface-hover); }
 
 /* ═══════════════════════════════════════════════════════
+   评测数据导出按钮网格
+   ═══════════════════════════════════════════════════════ */
+.export-btn-grid {
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:10px;
+}
+.export-btn {
+  flex-direction:column;
+  padding:12px 8px;
+  border-radius:var(--r-md);
+  gap:4px;
+  text-align:center;
+}
+.export-btn:hover {
+  transform:translateY(-2px);
+  box-shadow:var(--sh);
+  border-color:var(--accent);
+}
+.export-btn-icon { font-size:20px; }
+.export-btn-label { font-size:13px; font-weight:600; color:var(--fg); }
+.export-btn-format {
+  font-size:11px;
+  padding:2px 8px;
+  border-radius:10px;
+  background:var(--accent-light);
+  color:var(--accent);
+}
+@media (max-width:768px) {
+  .export-btn-grid { grid-template-columns:repeat(2, 1fr); }
+}
+
+/* ═══════════════════════════════════════════════════════
    空状态
    ═══════════════════════════════════════════════════════ */
 .empty-state {
@@ -1263,6 +1296,33 @@ body::before {
             <span class="tag tag-orange" id="acc-detail-greet-paused" style="display:none;">打招呼已暂停</span>
             <span class="tag tag-orange" id="acc-detail-reply-paused" style="display:none;">回复已暂停</span>
           </div>
+        </div>
+      </div>
+
+      <!-- 评测数据导出 -->
+      <div class="panel">
+        <div class="panel-title"><span class="icon">📥</span> 评测数据导出</div>
+        <div class="export-btn-grid">
+          <button class="btn btn-ghost export-btn" onclick="downloadReplyRecords('json')">
+            <span class="export-btn-icon">📄</span>
+            <span class="export-btn-label">回复记录</span>
+            <span class="export-btn-format">JSON</span>
+          </button>
+          <button class="btn btn-ghost export-btn" onclick="downloadReplyRecords('excel')">
+            <span class="export-btn-icon">📊</span>
+            <span class="export-btn-label">回复记录</span>
+            <span class="export-btn-format">Excel</span>
+          </button>
+          <button class="btn btn-ghost export-btn" onclick="downloadGreetRecords('json')">
+            <span class="export-btn-icon">📄</span>
+            <span class="export-btn-label">打招呼记录</span>
+            <span class="export-btn-format">JSON</span>
+          </button>
+          <button class="btn btn-ghost export-btn" onclick="downloadGreetRecords('excel')">
+            <span class="export-btn-icon">📊</span>
+            <span class="export-btn-label">打招呼记录</span>
+            <span class="export-btn-format">Excel</span>
+          </button>
         </div>
       </div>
 
@@ -2950,6 +3010,27 @@ async function loadExcelFiles() {
       </div>
     `).join('');
   }
+}
+
+// ═══════════════════════════════════════════════════════
+// 评测数据导出（回复记录 / 打招呼记录）
+// ═══════════════════════════════════════════════════════
+function downloadReplyRecords(format) {
+  downloadExportFile(`/api/export/reply_records?format=${format}`, `回复记录 (${format.toUpperCase()})`);
+}
+
+function downloadGreetRecords(format) {
+  downloadExportFile(`/api/export/greet_records?format=${format}`, `打招呼记录 (${format.toUpperCase()})`);
+}
+
+function downloadExportFile(url, label) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  addLog(`正在下载${label}`, "info");
 }
 
 // ═══════════════════════════════════════════════════════
