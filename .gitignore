@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+*.so
+
+# 虚拟环境
+venv/
+env/
+.venv/
+.env
+
+# 环境变量与敏感配置
+.env
+*.env
+
+# 运行时数据
+data/
+logs/
+messages/
+
+# 配置文件中的敏感数据
+bot_config.json
+user_profile.json
+config_overrides.json
+zhipin_cookies.json
+flask-version/zhipin_cookies.json
+
+# 导出的数据文件
+*.xlsx
+
+# 便携浏览器
+cloakbrowser-windows-x64/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node.js（前端依赖）
+node_modules/
+
+# 操作系统
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 测试缓存
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 飞书知识库子项目（独立仓库）
+飞书知识库自动化回复机器人/
+飞书知识库自动化回复机器人.zip
+
+# CodeArts 工具目录
+.codeartsdoer/
+.arts/

@@ -1,0 +1,2982 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boss直聘 · 智能投递助手</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════
+   CSS 变量系统 — 双主题
+   ═══════════════════════════════════════════════════════ */
+[data-theme="light"], :root {
+  --r-sm:8px; --r-md:14px; --r-lg:20px; --dur:.2s; --ease:cubic-bezier(.4,0,.2,1); --header-h:56px;
+  --bg:#eef1fb; --surface:rgba(255,255,255,.62); --surface-soft:rgba(255,255,255,.45); --surface-hover:rgba(255,255,255,.8);
+  --accent:#5b7cfa; --accent-light:rgba(91,124,250,.14); --accent-hover:#4365e8;
+  --success:#10b981; --success-bg:rgba(16,185,129,.15); --warning:#f59e0b; --warning-bg:rgba(245,158,11,.15);
+  --danger:#ef4444; --danger-bg:rgba(239,68,68,.14); --info:#3b82f6; --info-bg:rgba(59,130,246,.14);
+  --fg:#23233a; --fg-2nd:#555a70; --fg-3rd:#8b90a3; --fg-4th:#b0b4c4;
+  --bd:rgba(255,255,255,.6); --bd-2:rgba(160,170,220,.35);
+  --sh-sm:0 1px 3px rgba(30,40,80,.06); --sh:0 4px 14px rgba(30,40,80,.07),0 1px 2px rgba(30,40,80,.04);
+  --sh-md:0 8px 28px rgba(30,40,80,.09); --sh-lg:0 20px 60px rgba(30,40,80,.14);
+  --side-bg:rgba(255,255,255,.5); --side-text:#23233a; --side-input-bg:rgba(255,255,255,.5); --side-input-bd:rgba(160,170,220,.25);
+  --side-label:rgba(70,80,120,.45);
+  --chip-bg:rgba(91,124,250,.14); --chip-text:#5b7cfa; --chip-del:rgba(91,124,250,.35);
+  --modal-overlay:rgba(30,40,80,.25); --scrollbar-thumb:rgba(160,170,220,.5);
+  --img-checked-bd:#5b7cfa; --img-checked-bg:rgba(91,124,250,.1);
+  --glass-blur:blur(20px) saturate(160%);
+}
+[data-theme="dark"] {
+  --r-sm:8px; --r-md:14px; --r-lg:20px; --dur:.2s; --ease:cubic-bezier(.4,0,.2,1); --header-h:56px;
+  --bg:#0f1220; --surface:rgba(30,34,54,.6); --surface-soft:rgba(255,255,255,.05); --surface-hover:rgba(255,255,255,.09);
+  --accent:#6b96ff; --accent-light:rgba(107,150,255,.16); --accent-hover:#8aadff;
+  --success:#34d399; --success-bg:rgba(52,211,153,.16); --warning:#fbbf24; --warning-bg:rgba(251,191,36,.16);
+  --danger:#f87171; --danger-bg:rgba(248,113,113,.16); --info:#60a5fa; --info-bg:rgba(96,165,250,.16);
+  --fg:#eef0f8; --fg-2nd:#b3b9cc; --fg-3rd:#7a8098; --fg-4th:#545a70;
+  --bd:rgba(255,255,255,.09); --bd-2:rgba(255,255,255,.16);
+  --sh-sm:0 1px 3px rgba(0,0,0,.3); --sh:0 4px 14px rgba(0,0,0,.35),0 1px 2px rgba(0,0,0,.3);
+  --sh-md:0 8px 28px rgba(0,0,0,.45); --sh-lg:0 20px 60px rgba(0,0,0,.55);
+  --side-bg:rgba(22,25,40,.55); --side-text:#eef0f8; --side-input-bg:rgba(255,255,255,.06); --side-input-bd:rgba(255,255,255,.1);
+  --side-label:rgba(255,255,255,.4);
+  --chip-bg:rgba(107,150,255,.18); --chip-text:#6b96ff; --chip-del:rgba(107,150,255,.35);
+  --modal-overlay:rgba(0,0,0,.6); --scrollbar-thumb:rgba(255,255,255,.18);
+  --img-checked-bd:#6b96ff; --img-checked-bg:rgba(107,150,255,.14);
+  --glass-blur:blur(20px) saturate(140%);
+}
+
+/* ═══════════════════════════════════════════════════════
+   全局重置 & 基础
+   ═══════════════════════════════════════════════════════ */
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; }
+body {
+  font-family:'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+  background:var(--bg);
+  color:var(--fg);
+  font-size:14px;
+  overflow:hidden;
+  transition:background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+/* 多层径向渐变背景 */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(91,124,250,.12) 0%, transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(107,150,255,.10) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(16,185,129,.06) 0%, transparent 50%);
+  pointer-events:none;
+  z-index:0;
+}
+[data-theme="dark"] body::before {
+  background:
+    radial-gradient(circle at 15% 20%, rgba(107,150,255,.08) 0%, transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(52,211,153,.05) 0%, transparent 45%),
+    radial-gradient(circle at 50% 50%, rgba(96,165,250,.04) 0%, transparent 50%);
+}
+
+/* 滚动条 */
+::-webkit-scrollbar { width:6px; height:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--scrollbar-thumb); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:var(--accent); }
+
+/* ═══════════════════════════════════════════════════════
+   主布局
+   ═══════════════════════════════════════════════════════ */
+.app {
+  display:flex;
+  height:100vh;
+  position:relative;
+  z-index:1;
+}
+
+/* ── 左侧边栏 ── */
+.sidebar {
+  width:360px;
+  min-width:360px;
+  height:100vh;
+  background:var(--side-bg);
+  backdrop-filter:var(--glass-blur);
+  -webkit-backdrop-filter:var(--glass-blur);
+  border-right:1px solid var(--bd);
+  overflow-y:auto;
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  transition:transform var(--dur) var(--ease), width var(--dur) var(--ease);
+}
+.sidebar.collapsed { transform:translateX(-360px); }
+
+/* ── 右侧主内容区 ── */
+.main {
+  flex:1;
+  height:100vh;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ═══════════════════════════════════════════════════════
+   顶部导航栏
+   ═══════════════════════════════════════════════════════ */
+.topbar {
+  height:var(--header-h);
+  background:var(--surface);
+  backdrop-filter:var(--glass-blur);
+  -webkit-backdrop-filter:var(--glass-blur);
+  border-bottom:1px solid var(--bd);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 20px;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+.topbar-left { display:flex; align-items:center; gap:12px; }
+.topbar-logo {
+  width:32px; height:32px;
+  border-radius:8px;
+  background:linear-gradient(135deg, var(--accent), var(--success));
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px;
+  box-shadow:var(--sh-sm);
+}
+.topbar-title { font-size:16px; font-weight:600; color:var(--fg); }
+.topbar-right { display:flex; align-items:center; gap:12px; }
+
+/* 状态徽章 */
+.status-badge {
+  padding:4px 12px;
+  border-radius:20px;
+  font-size:12px;
+  background:var(--surface-soft);
+  border:1px solid var(--bd);
+  display:flex; align-items:center; gap:6px;
+  color:var(--fg-2nd);
+}
+.status-dot {
+  width:8px; height:8px;
+  border-radius:50%;
+  background:var(--danger);
+  transition:background var(--dur) var(--ease);
+}
+.status-dot.running { background:var(--success); }
+.status-dot.paused { background:var(--warning); }
+
+/* 主题切换按钮 */
+.theme-toggle {
+  width:36px; height:36px;
+  border-radius:50%;
+  background:var(--surface-soft);
+  border:1px solid var(--bd);
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px;
+  transition:all var(--dur) var(--ease);
+  color:var(--fg-2nd);
+}
+.theme-toggle:hover { background:var(--surface-hover); transform:scale(1.1); }
+
+/* 启动/停止按钮 */
+.btn-power {
+  padding:6px 16px;
+  border-radius:20px;
+  font-size:13px;
+  font-weight:600;
+  border:none;
+  cursor:pointer;
+  transition:all var(--dur) var(--ease);
+  display:flex; align-items:center; gap:6px;
+}
+.btn-power.start { background:var(--success); color:#fff; }
+.btn-power.stop { background:var(--danger); color:#fff; }
+.btn-power:hover { transform:translateY(-1px); box-shadow:var(--sh); }
+.btn-power:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+/* 侧边栏切换按钮（窄屏） */
+.sidebar-toggle {
+  display:none;
+  width:36px; height:36px;
+  border-radius:8px;
+  background:var(--surface-soft);
+  border:1px solid var(--bd);
+  cursor:pointer;
+  align-items:center; justify-content:center;
+  font-size:18px;
+  color:var(--fg-2nd);
+}
+
+/* ═══════════════════════════════════════════════════════
+   毛玻璃面板
+   ═══════════════════════════════════════════════════════ */
+.panel {
+  background:var(--surface);
+  backdrop-filter:var(--glass-blur);
+  -webkit-backdrop-filter:var(--glass-blur);
+  border:1px solid var(--bd);
+  border-radius:var(--r-md);
+  padding:16px;
+  box-shadow:var(--sh);
+  transition:all var(--dur) var(--ease);
+}
+.panel:hover { box-shadow:var(--sh-md); }
+.panel-title {
+  font-size:14px;
+  font-weight:600;
+  color:var(--fg);
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.panel-title .icon { font-size:16px; }
+.panel-section { margin-bottom:12px; }
+.panel-section:last-child { margin-bottom:0; }
+
+/* ═══════════════════════════════════════════════════════
+   表单元素
+   ═══════════════════════════════════════════════════════ */
+.field { margin-bottom:10px; }
+.field-label {
+  font-size:12px;
+  color:var(--side-label);
+  margin-bottom:4px;
+  display:block;
+}
+.input, .textarea, .select {
+  width:100%;
+  padding:8px 12px;
+  background:var(--side-input-bg);
+  border:1px solid var(--side-input-bd);
+  border-radius:var(--r-sm);
+  font-size:13px;
+  color:var(--side-text);
+  transition:all var(--dur) var(--ease);
+  font-family:inherit;
+}
+.input:focus, .textarea:focus, .select:focus {
+  border-color:var(--accent);
+  outline:none;
+  box-shadow:0 0 0 3px var(--accent-light);
+}
+.textarea { resize:vertical; min-height:60px; }
+.select { cursor:pointer; }
+
+/* ── Toggle 开关 ── */
+.toggle {
+  width:44px; height:24px;
+  border-radius:12px;
+  background:var(--bd-2);
+  position:relative;
+  cursor:pointer;
+  transition:background var(--dur) var(--ease);
+  flex-shrink:0;
+}
+.toggle.active { background:var(--accent); }
+.toggle::after {
+  content:'';
+  width:20px; height:20px;
+  border-radius:50%;
+  background:#fff;
+  position:absolute;
+  top:2px; left:2px;
+  transition:left var(--dur) var(--ease);
+  box-shadow:0 1px 3px rgba(0,0,0,.2);
+}
+.toggle.active::after { left:22px; }
+
+/* ── 按钮 ── */
+.btn {
+  padding:8px 16px;
+  border:none;
+  border-radius:var(--r-sm);
+  font-size:13px;
+  cursor:pointer;
+  transition:all var(--dur) var(--ease);
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-family:inherit;
+  font-weight:500;
+}
+.btn:hover { transform:translateY(-1px); box-shadow:var(--sh); }
+.btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+.btn-primary { background:var(--accent); color:#fff; }
+.btn-primary:hover { background:var(--accent-hover); }
+.btn-success { background:var(--success); color:#fff; }
+.btn-danger { background:var(--danger); color:#fff; }
+.btn-warn { background:var(--warning); color:#fff; }
+.btn-ghost { background:var(--surface-soft); color:var(--fg-2nd); border:1px solid var(--bd); }
+.btn-ghost:hover { background:var(--surface-hover); }
+.btn-sm { padding:4px 10px; font-size:12px; }
+
+/* ── Chip 标签 ── */
+.chip {
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  padding:3px 10px;
+  border-radius:20px;
+  font-size:12px;
+  background:var(--chip-bg);
+  color:var(--chip-text);
+  margin:2px;
+  transition:all var(--dur) var(--ease);
+}
+.chip-del {
+  cursor:pointer;
+  width:16px; height:16px;
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px;
+  color:var(--chip-del);
+  transition:all var(--dur) var(--ease);
+}
+.chip-del:hover { background:var(--danger-bg); color:var(--danger); }
+.chip-input {
+  border:none;
+  background:transparent;
+  font-size:12px;
+  color:var(--fg);
+  outline:none;
+  width:80px;
+  padding:3px 6px;
+}
+
+/* ── 标签 ── */
+.tag {
+  display:inline-block;
+  padding:2px 10px;
+  border-radius:4px;
+  font-size:12px;
+  font-weight:500;
+}
+.tag-green { background:var(--success-bg); color:var(--success); }
+.tag-red { background:var(--danger-bg); color:var(--danger); }
+.tag-orange { background:var(--warning-bg); color:var(--warning); }
+.tag-blue { background:var(--info-bg); color:var(--info); }
+
+/* ═══════════════════════════════════════════════════════
+   统计卡片
+   ═══════════════════════════════════════════════════════ */
+.stats-grid {
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:12px;
+  margin-bottom:16px;
+}
+.stat-card {
+  background:var(--surface);
+  backdrop-filter:var(--glass-blur);
+  -webkit-backdrop-filter:var(--glass-blur);
+  border:1px solid var(--bd);
+  border-radius:var(--r-md);
+  padding:16px;
+  text-align:center;
+  transition:all var(--dur) var(--ease);
+  position:relative;
+  overflow:hidden;
+  cursor:pointer;
+}
+.stat-card::before {
+  content:'';
+  position:absolute;
+  top:0; left:0; right:0;
+  height:3px;
+  border-radius:var(--r-md) var(--r-md) 0 0;
+}
+.stat-card.s-success::before { background:var(--success); }
+.stat-card.s-warning::before { background:var(--warning); }
+.stat-card.s-info::before { background:var(--info); }
+.stat-card.s-danger::before { background:var(--danger); }
+.stat-card:hover { transform:translateY(-2px); box-shadow:var(--sh-md); }
+.stat-card .label { font-size:12px; color:var(--fg-3rd); margin-bottom:6px; }
+.stat-card .value { font-size:24px; font-weight:700; color:var(--fg); }
+.stat-card.s-success .value { color:var(--success); }
+.stat-card.s-warning .value { color:var(--warning); }
+.stat-card.s-info .value { color:var(--info); }
+.stat-card.s-danger .value { color:var(--danger); }
+
+/* 统计视图切换 */
+.stats-view-toggle {
+  display:flex;
+  gap:6px;
+  margin-bottom:8px;
+}
+.stats-view-btn {
+  padding:4px 12px;
+  border-radius:20px;
+  font-size:12px;
+  background:var(--surface-soft);
+  border:1px solid var(--bd);
+  cursor:pointer;
+  color:var(--fg-2nd);
+  transition:all var(--dur) var(--ease);
+}
+.stats-view-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+/* ═══════════════════════════════════════════════════════
+   账号标签页（多账号核心）
+   ═══════════════════════════════════════════════════════ */
+.account-tabs {
+  display:flex;
+  gap:4px;
+  margin-bottom:12px;
+  flex-wrap:wrap;
+}
+.account-tab {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 12px;
+  border-radius:20px;
+  font-size:12px;
+  background:var(--surface-soft);
+  border:1px solid var(--bd);
+  cursor:pointer;
+  transition:all var(--dur) var(--ease);
+  color:var(--fg-2nd);
+  position:relative;
+}
+.account-tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+.account-tab:hover:not(.active) { background:var(--surface-hover); }
+
+/* 账号状态指示点 */
+.account-status-dot {
+  width:8px; height:8px;
+  border-radius:50%;
+  background:var(--fg-4th);
+  flex-shrink:0;
+  transition:background var(--dur) var(--ease);
+}
+.account-status-dot.running { background:var(--success); }
+.account-status-dot.needs-login { background:var(--warning); }
+.account-status-dot.paused { background:var(--warning); }
+
+/* 账号岗位数量徽章 */
+.account-badge {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:18px; height:18px;
+  padding:0 5px;
+  border-radius:9px;
+  font-size:10px;
+  font-weight:600;
+  background:var(--accent-light);
+  color:var(--accent);
+}
+.account-tab.active .account-badge {
+  background:rgba(255,255,255,.25);
+  color:#fff;
+}
+
+/* 账号级别控制按钮 */
+.account-controls {
+  display:flex;
+  gap:4px;
+  margin-left:4px;
+}
+.account-ctrl-btn {
+  width:22px; height:22px;
+  border-radius:50%;
+  border:none;
+  cursor:pointer;
+  font-size:11px;
+  display:flex; align-items:center; justify-content:center;
+  transition:all var(--dur) var(--ease);
+  padding:0;
+}
+.account-ctrl-btn.start { background:var(--success); color:#fff; }
+.account-ctrl-btn.stop { background:var(--danger); color:#fff; }
+.account-ctrl-btn.pause { background:var(--warning); color:#fff; }
+.account-ctrl-btn.resume { background:var(--info); color:#fff; }
+.account-ctrl-btn:hover { transform:scale(1.15); }
+.account-ctrl-btn:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+
+/* ═══════════════════════════════════════════════════════
+   图片网格
+   ═══════════════════════════════════════════════════════ */
+.image-grid {
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:8px;
+}
+.image-item {
+  position:relative;
+  border-radius:var(--r-sm);
+  overflow:hidden;
+  cursor:pointer;
+  border:2px solid transparent;
+  transition:all var(--dur) var(--ease);
+  aspect-ratio:1;
+}
+.image-item img { width:100%; height:100%; object-fit:cover; }
+.image-item.checked { border-color:var(--img-checked-bd); background:var(--img-checked-bg); }
+.image-item .check-mark {
+  position:absolute;
+  top:4px; right:4px;
+  width:20px; height:20px;
+  border-radius:50%;
+  background:var(--accent);
+  color:#fff;
+  display:none;
+  align-items:center; justify-content:center;
+  font-size:12px;
+}
+.image-item.checked .check-mark { display:flex; }
+.image-item .del-btn {
+  position:absolute;
+  bottom:4px; right:4px;
+  width:22px; height:22px;
+  border-radius:50%;
+  background:var(--danger);
+  color:#fff;
+  display:none;
+  align-items:center; justify-content:center;
+  font-size:12px;
+  cursor:pointer;
+}
+.image-item:hover .del-btn { display:flex; }
+
+/* ═══════════════════════════════════════════════════════
+   折叠面板
+   ═══════════════════════════════════════════════════════ */
+.collapse-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  cursor:pointer;
+  padding:10px 0;
+  font-size:14px;
+  font-weight:600;
+  color:var(--fg);
+}
+.collapse-arrow {
+  transition:transform var(--dur) var(--ease);
+  font-size:12px;
+  color:var(--fg-3rd);
+}
+.collapse-header.open .collapse-arrow { transform:rotate(90deg); }
+.collapse-body {
+  max-height:0;
+  overflow:hidden;
+  transition:max-height var(--dur) var(--ease);
+}
+.collapse-body.open { max-height:2000px; }
+
+/* ═══════════════════════════════════════════════════════
+   日志面板
+   ═══════════════════════════════════════════════════════ */
+.log-panel {
+  background:var(--surface-soft);
+  border:1px solid var(--bd);
+  border-radius:var(--r-sm);
+  padding:12px;
+  font-family:'Consolas', 'Courier New', monospace;
+  font-size:12px;
+  height:260px;
+  overflow-y:auto;
+  line-height:1.6;
+}
+.log-entry { margin-bottom:2px; word-break:break-all; }
+.log-time { color:var(--fg-4th); }
+.log-account { color:var(--accent); font-weight:600; }
+.log-info { color:var(--info); }
+.log-warn { color:var(--warning); }
+.log-error { color:var(--danger); }
+.log-success { color:var(--success); }
+.log-debug { color:var(--fg-3rd); }
+
+/* ═══════════════════════════════════════════════════════
+   消息列表
+   ═══════════════════════════════════════════════════════ */
+.msg-list { max-height:360px; overflow-y:auto; }
+.msg-item {
+  padding:10px 12px;
+  border-bottom:1px solid var(--bd);
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  transition:background var(--dur) var(--ease);
+}
+.msg-item:hover { background:var(--surface-hover); }
+.msg-name { font-weight:600; color:var(--fg); font-size:13px; }
+.msg-text { color:var(--fg-2nd); font-size:12px; margin-top:4px; }
+.msg-time { color:var(--fg-4th); font-size:11px; }
+.msg-source {
+  display:inline-block;
+  padding:2px 8px;
+  border-radius:4px;
+  font-size:11px;
+  margin-top:4px;
+}
+.msg-source.ai { background:var(--success-bg); color:var(--success); }
+.msg-source.rule { background:var(--warning-bg); color:var(--warning); }
+
+/* ═══════════════════════════════════════════════════════
+   岗位列表
+   ═══════════════════════════════════════════════════════ */
+.job-card {
+  background:var(--surface);
+  backdrop-filter:var(--glass-blur);
+  -webkit-backdrop-filter:var(--glass-blur);
+  border:1px solid var(--bd);
+  border-radius:var(--r-sm);
+  padding:12px;
+  margin-bottom:8px;
+  transition:all var(--dur) var(--ease);
+}
+.job-card:hover { box-shadow:var(--sh); }
+.job-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:8px;
+}
+.job-query { font-weight:600; font-size:14px; color:var(--fg); }
+.job-meta { display:flex; gap:8px; flex-wrap:wrap; font-size:12px; color:var(--fg-3rd); }
+.job-greeting {
+  margin-top:8px;
+  padding:8px;
+  background:var(--surface-soft);
+  border-radius:var(--r-sm);
+  font-size:12px;
+  color:var(--fg-2nd);
+  max-height:60px;
+  overflow-y:auto;
+}
+.job-images {
+  display:flex;
+  gap:4px;
+  margin-top:8px;
+}
+.job-thumb {
+  width:40px; height:40px;
+  border-radius:4px;
+  object-fit:cover;
+}
+
+/* ═══════════════════════════════════════════════════════
+   模态弹窗
+   ═══════════════════════════════════════════════════════ */
+.modal-overlay {
+  position:fixed;
+  inset:0;
+  background:var(--modal-overlay);
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+}
+.modal-overlay.show { display:flex; }
+.modal {
+  background:var(--surface);
+  backdrop-filter:var(--glass-blur);
+  -webkit-backdrop-filter:var(--glass-blur);
+  border:1px solid var(--bd);
+  border-radius:var(--r-lg);
+  box-shadow:var(--sh-lg);
+  width:90%;
+  max-width:500px;
+  max-height:85vh;
+  overflow-y:auto;
+  animation:modalIn var(--dur) var(--ease);
+}
+@keyframes modalIn {
+  from { opacity:0; transform:scale(.95) translateY(10px); }
+  to { opacity:1; transform:scale(1) translateY(0); }
+}
+.modal-header {
+  padding:20px 24px 16px;
+  border-bottom:1px solid var(--bd);
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.modal-header-gradient {
+  background:linear-gradient(135deg, var(--accent), var(--info));
+  width:40px; height:40px;
+  border-radius:var(--r-sm);
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px;
+  color:#fff;
+}
+.modal-title { font-size:16px; font-weight:600; color:var(--fg); }
+.modal-body { padding:20px 24px; }
+.modal-footer {
+  padding:16px 24px;
+  border-top:1px solid var(--bd);
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+}
+.modal-close {
+  position:absolute;
+  top:12px; right:12px;
+  width:28px; height:28px;
+  border-radius:50%;
+  background:var(--surface-soft);
+  border:none;
+  cursor:pointer;
+  font-size:16px;
+  color:var(--fg-3rd);
+  display:flex; align-items:center; justify-content:center;
+}
+.modal-close:hover { background:var(--danger-bg); color:var(--danger); }
+
+/* ═══════════════════════════════════════════════════════
+   AI 测试面板
+   ═══════════════════════════════════════════════════════ */
+.ai-test-panel {
+  margin-top:12px;
+  padding:12px;
+  background:var(--surface-soft);
+  border-radius:var(--r-sm);
+  border:1px solid var(--bd);
+}
+.ai-test-result {
+  margin-top:8px;
+  padding:8px;
+  background:var(--surface);
+  border-radius:var(--r-sm);
+  font-size:12px;
+  color:var(--fg-2nd);
+  max-height:120px;
+  overflow-y:auto;
+  white-space:pre-wrap;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Excel 导出
+   ═══════════════════════════════════════════════════════ */
+.excel-file-item {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px 12px;
+  border-bottom:1px solid var(--bd);
+  font-size:13px;
+}
+.excel-file-item:hover { background:var(--surface-hover); }
+
+/* ═══════════════════════════════════════════════════════
+   空状态
+   ═══════════════════════════════════════════════════════ */
+.empty-state {
+  text-align:center;
+  padding:30px 20px;
+  color:var(--fg-3rd);
+  font-size:13px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   上传区域
+   ═══════════════════════════════════════════════════════ */
+.upload-area {
+  border:2px dashed var(--bd-2);
+  border-radius:var(--r-sm);
+  padding:16px;
+  text-align:center;
+  cursor:pointer;
+  transition:border-color var(--dur) var(--ease);
+  color:var(--fg-3rd);
+  font-size:13px;
+}
+.upload-area:hover { border-color:var(--accent); color:var(--accent); }
+
+/* ═══════════════════════════════════════════════════════
+   主内容区容器
+   ═══════════════════════════════════════════════════════ */
+.main-content {
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+/* 两列布局 */
+.two-col {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   响应式
+   ═══════════════════════════════════════════════════════ */
+@media (max-width:1100px) {
+  .stats-grid { grid-template-columns:repeat(2, 1fr); }
+  .two-col { grid-template-columns:1fr; }
+}
+@media (max-width:768px) {
+  .sidebar {
+    position:fixed;
+    left:0; top:0;
+    z-index:200;
+    width:100%;
+    min-width:100%;
+  }
+  .sidebar.collapsed { transform:translateX(-100%); }
+  .sidebar-toggle { display:flex; }
+  .stats-grid { grid-template-columns:1fr; }
+  .topbar-title { font-size:14px; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   控制行
+   ═══════════════════════════════════════════════════════ */
+.control-row {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:8px;
+  flex-wrap:wrap;
+}
+.control-row label {
+  min-width:80px;
+  font-size:12px;
+  color:var(--fg-3rd);
+}
+
+/* AI 提供商列表项 */
+.provider-item {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px 10px;
+  border-radius:var(--r-sm);
+  background:var(--surface-soft);
+  margin-bottom:6px;
+  font-size:13px;
+}
+.provider-item:hover { background:var(--surface-hover); }
+.provider-name { font-weight:600; color:var(--fg); }
+.provider-model { color:var(--fg-3rd); font-size:12px; }
+
+/* 登录提示横幅 */
+.login-banner {
+  background:var(--warning-bg);
+  border:1px solid var(--warning);
+  border-radius:var(--r-sm);
+  padding:12px 16px;
+  display:none;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:12px;
+}
+.login-banner.show { display:flex; }
+.login-banner-text { color:var(--warning); font-size:13px; }
+
+/* 规则列表 */
+.rule-item {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:6px 10px;
+  border-bottom:1px solid var(--bd);
+  font-size:13px;
+}
+.rule-key { font-weight:600; color:var(--fg); }
+.rule-value { color:var(--fg-2nd); max-width:50%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rule-action { color:var(--accent); font-size:12px; }
+
+/* 进度条 */
+.progress-bar {
+  width:100%;
+  height:4px;
+  background:var(--surface-soft);
+  border-radius:2px;
+  overflow:hidden;
+}
+.progress-fill {
+  height:100%;
+  background:var(--accent);
+  border-radius:2px;
+  transition:width var(--dur) var(--ease);
+}
+
+/* 账号详情统计面板 */
+.account-stats-detail {
+  display:none;
+  padding:12px;
+  background:var(--surface-soft);
+  border-radius:var(--r-sm);
+  margin-top:8px;
+}
+.account-stats-detail.show { display:block; }
+.account-stats-grid {
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:8px;
+}
+.account-stat-item {
+  text-align:center;
+  padding:8px 4px;
+  background:var(--surface);
+  border-radius:var(--r-sm);
+  border:1px solid var(--bd);
+}
+.account-stat-item .label { font-size:11px; color:var(--fg-3rd); }
+.account-stat-item .value { font-size:18px; font-weight:700; color:var(--fg); margin-top:2px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ═══════════════════════════════════════════════════════
+       左侧边栏
+       ═══════════════════════════════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- 1. 账号管理（多账号核心） -->
+    <div class="panel">
+      <div class="panel-title"><span class="icon">👤</span> 账号管理</div>
+      <!-- 账号标签页（含状态指示器和控制按钮） -->
+      <div class="account-tabs" id="account-tabs"></div>
+      <div id="account-detail">
+        <div class="field">
+          <label class="field-label">账号名称</label>
+          <input type="text" class="input" id="acc-name" placeholder="主账号">
+        </div>
+        <div class="field">
+          <label class="field-label">Cookie 文件路径</label>
+          <input type="text" class="input" id="acc-cookie-file" placeholder="zhipin_cookies.json">
+        </div>
+        <div class="control-row" style="margin-top:8px;">
+          <label>启用账号</label>
+          <div class="toggle active" id="acc-enabled-toggle" onclick="toggleSwitch(this, 'acc-enabled')"></div>
+          <input type="hidden" id="acc-enabled" value="true">
+        </div>
+        <div class="control-row">
+          <label>消息间隔(秒)</label>
+          <input type="number" class="input" id="acc-msg-min" style="width:60px;" value="3" min="1">
+          <span style="color:var(--fg-4th);">~</span>
+          <input type="number" class="input" id="acc-msg-max" style="width:60px;" value="8" min="1">
+        </div>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="uploadCookieForAccount()">
+            <input type="file" id="acc-cookie-upload" accept=".json" style="display:none;" onchange="handleCookieUpload(this)">
+            上传Cookie
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="deleteCurrentCookie()">删除Cookie</button>
+          <button class="btn btn-primary btn-sm" onclick="updateAccount()">保存</button>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="showAddAccountModal()">+ 添加账号</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteAccount()">删除账号</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. AI 智能解析 -->
+    <div class="panel">
+      <div class="panel-title"><span class="icon">🤖</span> AI 智能解析</div>
+      <div class="control-row">
+        <label>启用 AI</label>
+        <div class="toggle" id="ai-enabled-toggle" onclick="toggleSwitch(this, 'ai-enabled')"></div>
+        <input type="hidden" id="ai-enabled" value="false">
+      </div>
+      <div class="field">
+        <label class="field-label">匹配阈值 (0-100)</label>
+        <input type="number" class="input" id="ai-match-threshold-input" value="70" min="0" max="100">
+      </div>
+
+      <!-- AI 接口列表（可折叠） -->
+      <div class="collapse-header" onclick="toggleCollapse(this)" id="ai-providers-header">
+        <span>AI 接口列表</span>
+        <span class="collapse-arrow">▶</span>
+      </div>
+      <div class="collapse-body" id="ai-providers-body">
+        <div id="ai-providers-list"></div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:6px;width:100%;" onclick="showAddProviderModal()">+ 添加 AI 接口</button>
+      </div>
+
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" onclick="showEditResumeModal()">编辑简历</button>
+        <button class="btn btn-ghost btn-sm" onclick="showEditPromptsModal()">编辑提示词</button>
+        <button class="btn btn-primary btn-sm" onclick="testAI()">测试 AI</button>
+      </div>
+
+      <!-- AI 测试对比面板 -->
+      <div class="ai-test-panel">
+        <div style="font-size:12px;font-weight:600;color:var(--fg-2nd);margin-bottom:6px;">AI 测试对比</div>
+        <div class="field">
+          <label class="field-label">输入 JD（岗位描述）</label>
+          <textarea class="textarea" id="ai-test-jd" placeholder="粘贴岗位描述进行匹配测试..." style="min-height:50px;"></textarea>
+        </div>
+        <button class="btn btn-primary btn-sm" style="width:100%;" onclick="runAITest()">运行测试</button>
+        <div class="ai-test-result" id="ai-test-result" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- 3. 图片上传与网格多选 -->
+    <div class="panel">
+      <div class="panel-title"><span class="icon">🖼</span> 图片上传与多选</div>
+      <input type="file" id="image-upload-input" accept="image/*" multiple style="display:none;" onchange="uploadImages(this)">
+      <button class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:8px;" onclick="document.getElementById('image-upload-input').click()">上传图片</button>
+      <div class="image-grid" id="image-grid">
+        <div class="empty-state">暂无图片</div>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:var(--fg-3rd);">
+        已选 <span id="selected-img-count">0</span> 张图片
+      </div>
+    </div>
+
+    <!-- 4. 高级设置（可折叠） -->
+    <div class="panel">
+      <div class="collapse-header open" onclick="toggleCollapse(this)">
+        <span style="font-size:14px;font-weight:600;">⚙ 高级设置</span>
+        <span class="collapse-arrow">▶</span>
+      </div>
+      <div class="collapse-body open" id="advanced-settings-body">
+
+        <!-- 浏览器设置 -->
+        <div class="panel-section">
+          <div style="font-size:13px;font-weight:600;color:var(--fg-2nd);margin-bottom:6px;">浏览器</div>
+          <div class="field">
+            <label class="field-label">浏览器类型</label>
+            <select class="select" id="adv-browser-type">
+              <option value="chrome">Chrome</option>
+              <option value="edge">Edge</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">浏览器路径</label>
+            <input type="text" class="input" id="adv-browser-path" placeholder="自动检测">
+          </div>
+          <div class="control-row">
+            <label>无头模式</label>
+            <div class="toggle" id="adv-headless-toggle" onclick="toggleSwitch(this, 'adv-headless')"></div>
+            <input type="hidden" id="adv-headless" value="false">
+          </div>
+          <div class="control-row">
+            <label>视口宽</label>
+            <input type="number" class="input" id="adv-viewport-w" style="width:70px;" value="1280">
+            <label>视口高</label>
+            <input type="number" class="input" id="adv-viewport-h" style="width:70px;" value="800">
+          </div>
+          <div id="browser-list-adv"></div>
+        </div>
+
+        <!-- 频率限制 -->
+        <div class="panel-section">
+          <div style="font-size:13px;font-weight:600;color:var(--fg-2nd);margin-bottom:6px;">频率限制</div>
+          <div class="control-row">
+            <label>每小时上限</label>
+            <input type="number" class="input" id="adv-rate-hour" style="width:70px;" value="30">
+          </div>
+          <div class="control-row">
+            <label>每天上限</label>
+            <input type="number" class="input" id="adv-rate-day" style="width:70px;" value="100">
+          </div>
+        </div>
+
+        <!-- 登录设置 -->
+        <div class="panel-section">
+          <div style="font-size:13px;font-weight:600;color:var(--fg-2nd);margin-bottom:6px;">登录</div>
+          <div class="field">
+            <label class="field-label">Cookie 文件</label>
+            <input type="text" class="input" id="adv-cookie-file" value="zhipin_cookies.json">
+          </div>
+          <div class="control-row">
+            <label>等待超时(秒)</label>
+            <input type="number" class="input" id="adv-login-timeout" style="width:70px;" value="300">
+          </div>
+        </div>
+
+        <!-- 重试设置 -->
+        <div class="panel-section">
+          <div style="font-size:13px;font-weight:600;color:var(--fg-2nd);margin-bottom:6px;">重试</div>
+          <div class="control-row">
+            <label>最大重试</label>
+            <input type="number" class="input" id="adv-max-retry" style="width:70px;" value="3">
+          </div>
+          <div class="control-row">
+            <label>重试间隔(秒)</label>
+            <input type="number" class="input" id="adv-retry-interval" style="width:70px;" value="5">
+          </div>
+        </div>
+
+        <!-- 消息间隔 -->
+        <div class="panel-section">
+          <div style="font-size:13px;font-weight:600;color:var(--fg-2nd);margin-bottom:6px;">消息间隔</div>
+          <div class="control-row">
+            <label>最小(秒)</label>
+            <input type="number" class="input" id="adv-msg-min" style="width:70px;" value="3">
+          </div>
+          <div class="control-row">
+            <label>最大(秒)</label>
+            <input type="number" class="input" id="adv-msg-max" style="width:70px;" value="8">
+          </div>
+        </div>
+
+        <!-- User Agent -->
+        <div class="panel-section">
+          <div style="font-size:13px;font-weight:600;color:var(--fg-2nd);margin-bottom:6px;">User Agent</div>
+          <div class="field">
+            <input type="text" class="input" id="adv-user-agent" placeholder="默认 User Agent">
+          </div>
+        </div>
+
+        <!-- 代理设置 -->
+        <div class="panel-section">
+          <div style="font-size:13px;font-weight:600;color:var(--fg-2nd);margin-bottom:6px;">代理设置</div>
+          <div class="field">
+            <input type="text" class="input" id="adv-proxy" placeholder="http://host:port">
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-sm" style="width:100%;margin-top:8px;" onclick="saveAdvancedSettings()">保存高级设置</button>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ═══════════════════════════════════════════════════════
+       右侧主内容区
+       ═══════════════════════════════════════════════════════ -->
+  <div class="main">
+
+    <!-- 顶部导航栏 -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-logo">🚀</div>
+        <span class="topbar-title">Boss直聘 · 智能投递助手</span>
+      </div>
+      <div class="topbar-right">
+        <div class="status-badge" id="status-badge">
+          <span class="status-dot" id="status-dot"></span>
+          <span id="status-text">未运行</span>
+        </div>
+        <span style="font-size:12px;color:var(--fg-3rd);" id="current-mode"></span>
+        <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">🌙</button>
+        <button class="btn-power start" id="btn-start" onclick="startBot()">▶ 启动全部</button>
+        <button class="btn-power stop" id="btn-stop" onclick="stopBot()" style="display:none;">■ 停止全部</button>
+      </div>
+    </div>
+
+    <!-- 登录提示横幅（账号级别） -->
+    <div class="login-banner" id="login-banner">
+      <span class="login-banner-text" id="login-text">需要登录 BOSS 直聘，请在浏览器中手动登录后点击「我已登录」</span>
+      <button class="btn btn-warn btn-sm" id="btn-confirm-login" onclick="confirmLogin()">我已登录</button>
+    </div>
+
+    <!-- 主内容 -->
+    <div class="main-content">
+
+      <!-- 统计视图切换 -->
+      <div class="stats-view-toggle">
+        <div class="stats-view-btn active" onclick="switchStatsView('summary')" id="stats-view-summary">汇总统计</div>
+        <div class="stats-view-btn" onclick="switchStatsView('detail')" id="stats-view-detail">账号详情</div>
+      </div>
+
+      <!-- 统计卡片（汇总模式） -->
+      <div class="stats-grid" id="stats-grid-summary">
+        <div class="stat-card s-success">
+          <div class="label">打招呼成功</div>
+          <div class="value" id="greet-applied">0</div>
+        </div>
+        <div class="stat-card s-warning">
+          <div class="label">打招呼跳过</div>
+          <div class="value" id="greet-skipped">0</div>
+        </div>
+        <div class="stat-card s-info">
+          <div class="label">发现岗位总数</div>
+          <div class="value" id="greet-total">0</div>
+        </div>
+        <div class="stat-card s-info">
+          <div class="label">打招呼轮次</div>
+          <div class="value" id="greet-rounds">0</div>
+        </div>
+        <div class="stat-card s-success">
+          <div class="label">回复发送</div>
+          <div class="value" id="reply-sent">0</div>
+        </div>
+        <div class="stat-card s-warning">
+          <div class="label">回复跳过</div>
+          <div class="value" id="reply-skipped">0</div>
+        </div>
+        <div class="stat-card s-info">
+          <div class="label">简历发送</div>
+          <div class="value" id="resume-sent">0</div>
+        </div>
+        <div class="stat-card s-danger">
+          <div class="label">重要事件</div>
+          <div class="value" id="important-events">0</div>
+        </div>
+      </div>
+
+      <!-- 统计卡片（账号详情模式） -->
+      <div id="stats-grid-detail" style="display:none;">
+        <div class="control-row" style="margin-bottom:8px;">
+          <label>选择账号</label>
+          <select class="select" id="stats-account-select" style="width:200px;" onchange="renderAccountStatsDetail()"></select>
+        </div>
+        <div class="account-stats-detail show" id="account-stats-detail-panel">
+          <div class="account-stats-grid">
+            <div class="account-stat-item">
+              <div class="label">打招呼成功</div>
+              <div class="value" id="acc-greet-applied">0</div>
+            </div>
+            <div class="account-stat-item">
+              <div class="label">打招呼跳过</div>
+              <div class="value" id="acc-greet-skipped">0</div>
+            </div>
+            <div class="account-stat-item">
+              <div class="label">发现岗位</div>
+              <div class="value" id="acc-greet-total">0</div>
+            </div>
+            <div class="account-stat-item">
+              <div class="label">打招呼轮次</div>
+              <div class="value" id="acc-greet-rounds">0</div>
+            </div>
+            <div class="account-stat-item">
+              <div class="label">回复发送</div>
+              <div class="value" id="acc-reply-sent">0</div>
+            </div>
+            <div class="account-stat-item">
+              <div class="label">回复跳过</div>
+              <div class="value" id="acc-reply-skipped">0</div>
+            </div>
+            <div class="account-stat-item">
+              <div class="label">简历发送</div>
+              <div class="value" id="acc-resume-sent">0</div>
+            </div>
+            <div class="account-stat-item">
+              <div class="label">重要事件</div>
+              <div class="value" id="acc-important-events">0</div>
+            </div>
+          </div>
+          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+            <span class="tag tag-green" id="acc-detail-running">运行中</span>
+            <span class="tag tag-blue" id="acc-detail-mode">打招呼</span>
+            <span class="tag tag-orange" id="acc-detail-greet-paused" style="display:none;">打招呼已暂停</span>
+            <span class="tag tag-orange" id="acc-detail-reply-paused" style="display:none;">回复已暂停</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 打招呼/回复控制（全局） -->
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-title"><span class="icon">⚙</span> 打招呼引擎（全局）</div>
+          <div class="control-row">
+            <label>状态</label>
+            <span class="tag tag-green" id="greet-status-tag">待启动</span>
+            <button class="btn btn-warn btn-sm" id="btn-pause-greet" onclick="pauseGreet()">暂停全部</button>
+            <button class="btn btn-success btn-sm" id="btn-resume-greet" onclick="resumeGreet()" style="display:none;">恢复全部</button>
+          </div>
+          <div class="control-row">
+            <label>频率限制</label>
+            <span id="rate-limit-info" style="font-size:13px;color:var(--fg-2nd);">每小时 30 / 每天 100</span>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-title"><span class="icon">⚙</span> 回复引擎（全局）</div>
+          <div class="control-row">
+            <label>状态</label>
+            <span class="tag tag-green" id="reply-status-tag">待启动</span>
+            <button class="btn btn-warn btn-sm" id="btn-pause-reply" onclick="pauseReply()">暂停全部</button>
+            <button class="btn btn-success btn-sm" id="btn-resume-reply" onclick="resumeReply()" style="display:none;">恢复全部</button>
+          </div>
+          <div class="control-row">
+            <label>检查间隔</label>
+            <span id="check-interval-info" style="font-size:13px;color:var(--fg-2nd);">8 秒</span>
+          </div>
+          <div class="control-row">
+            <label>人工接管</label>
+            <span id="manual-takeover-info" style="font-size:13px;color:var(--fg-2nd);">未激活</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 岗位列表 -->
+      <div class="panel">
+        <div class="panel-title" style="justify-content:space-between;">
+          <span><span class="icon">📋</span> 岗位列表</span>
+          <button class="btn btn-primary btn-sm" onclick="showAddJobModal()">+ 添加岗位</button>
+        </div>
+        <div id="jobs-container"></div>
+      </div>
+
+      <!-- 日志区域 + 消息列表 -->
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-title" style="justify-content:space-between;">
+            <span><span class="icon">📝</span> 运行日志</span>
+            <div style="display:flex;gap:4px;">
+              <button class="btn btn-ghost btn-sm" onclick="copyLogs()">复制</button>
+              <button class="btn btn-ghost btn-sm" onclick="clearLogs()">清空</button>
+            </div>
+          </div>
+          <div class="log-panel" id="log-panel"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title"><span class="icon">💬</span> 消息列表</div>
+          <div class="msg-list" id="msg-list">
+            <div class="empty-state">暂无消息记录</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 回复规则 + Excel 导出 -->
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-title"><span class="icon">📖</span> 回复规则</div>
+          <div id="rules-container" style="max-height:300px;overflow-y:auto;"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title" style="justify-content:space-between;">
+            <span><span class="icon">📊</span> Excel 导出</span>
+            <button class="btn btn-primary btn-sm" onclick="exportExcel()">导出数据</button>
+          </div>
+          <div id="excel-files-list" style="max-height:200px;overflow-y:auto;">
+            <div class="empty-state">暂无导出文件</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 个人画像配置 -->
+      <div class="panel">
+        <div class="panel-title"><span class="icon">👤</span> 个人画像配置</div>
+        <div class="two-col">
+          <div>
+            <div class="field">
+              <label class="field-label">姓名</label>
+              <input type="text" class="input" id="profile-name" placeholder="求职者">
+            </div>
+            <div class="field">
+              <label class="field-label">学历</label>
+              <input type="text" class="input" id="profile-education" placeholder="本科学历">
+            </div>
+            <div class="field">
+              <label class="field-label">目标岗位</label>
+              <input type="text" class="input" id="profile-position" placeholder="数据分析">
+            </div>
+            <div class="field">
+              <label class="field-label">期望薪资</label>
+              <input type="text" class="input" id="profile-salary" placeholder="面议">
+            </div>
+          </div>
+          <div>
+            <div class="field">
+              <label class="field-label">技能（逗号分隔）</label>
+              <input type="text" class="input" id="profile-skills" placeholder="Excel,SQL,Python">
+            </div>
+            <div class="field">
+              <label class="field-label">经验</label>
+              <input type="text" class="input" id="profile-experience" placeholder="">
+            </div>
+            <div class="field">
+              <label class="field-label">面试时间</label>
+              <input type="text" class="input" id="profile-interview-time" placeholder="工作日下午">
+            </div>
+            <div class="field">
+              <label class="field-label">联系方式</label>
+              <input type="text" class="input" id="profile-contact" placeholder="">
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" style="margin-top:8px;" onclick="saveProfile()">保存个人画像</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     模态弹窗
+     ═══════════════════════════════════════════════════════ -->
+
+<!-- 登录弹窗（账号级别） -->
+<div class="modal-overlay" id="modal-login">
+  <div class="modal" style="position:relative;">
+    <button class="modal-close" onclick="closeModal('modal-login')">×</button>
+    <div class="modal-header">
+      <div class="modal-header-gradient">🔐</div>
+      <div class="modal-title">登录 BOSS 直聘</div>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--fg-2nd);font-size:14px;line-height:1.6;" id="login-modal-desc">
+        机器人需要登录 BOSS 直聘才能正常运行。请在弹出的浏览器窗口中手动登录，登录完成后点击下方按钮确认。
+      </p>
+      <div style="margin-top:12px;padding:10px;background:var(--warning-bg);border-radius:var(--r-sm);font-size:13px;color:var(--warning);">
+        ⚠ 登录状态会自动检测，如过期将再次提示
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-login')">取消</button>
+      <button class="btn btn-primary" id="btn-modal-confirm-login" onclick="confirmLoginFromModal()">确认登录</button>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑简历弹窗 -->
+<div class="modal-overlay" id="modal-resume">
+  <div class="modal" style="position:relative;max-width:600px;">
+    <button class="modal-close" onclick="closeModal('modal-resume')">×</button>
+    <div class="modal-header">
+      <div class="modal-header-gradient">📄</div>
+      <div class="modal-title">编辑简历</div>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">学校</label>
+        <input type="text" class="input" id="resume-school">
+      </div>
+      <div class="field">
+        <label class="field-label">专业</label>
+        <input type="text" class="input" id="resume-major">
+      </div>
+      <div class="field">
+        <label class="field-label">学历</label>
+        <input type="text" class="input" id="resume-degree">
+      </div>
+      <div class="field">
+        <label class="field-label">技能（逗号分隔）</label>
+        <input type="text" class="input" id="resume-skills">
+      </div>
+      <div class="field">
+        <label class="field-label">工作经验</label>
+        <textarea class="textarea" id="resume-experience" style="min-height:80px;"></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label">目标岗位</label>
+        <input type="text" class="input" id="resume-target-position">
+      </div>
+      <div class="field">
+        <label class="field-label">自我介绍</label>
+        <textarea class="textarea" id="resume-self-intro" style="min-height:80px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-resume')">取消</button>
+      <button class="btn btn-primary" onclick="saveResume()">保存简历</button>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑提示词弹窗 -->
+<div class="modal-overlay" id="modal-prompts">
+  <div class="modal" style="position:relative;max-width:600px;">
+    <button class="modal-close" onclick="closeModal('modal-prompts')">×</button>
+    <div class="modal-header">
+      <div class="modal-header-gradient">💡</div>
+      <div class="modal-title">编辑 AI 提示词</div>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">系统提示词 (System Rules)</label>
+        <textarea class="textarea" id="prompt-system-rules" style="min-height:120px;" placeholder="定义 AI 的角色和行为规则..."></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label">用户提示词模板 (User Prompt Template)</label>
+        <textarea class="textarea" id="prompt-user-template" style="min-height:120px;" placeholder="定义发送给 AI 的用户消息模板..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-prompts')">取消</button>
+      <button class="btn btn-primary" onclick="savePrompts()">保存提示词</button>
+    </div>
+  </div>
+</div>
+
+<!-- 添加岗位弹窗 -->
+<div class="modal-overlay" id="modal-add-job">
+  <div class="modal" style="position:relative;">
+    <button class="modal-close" onclick="closeModal('modal-add-job')">×</button>
+    <div class="modal-header">
+      <div class="modal-header-gradient">📋</div>
+      <div class="modal-title">添加岗位</div>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">所属账号</label>
+        <select class="select" id="add-job-account"></select>
+      </div>
+      <div class="field">
+        <label class="field-label">关键词</label>
+        <input type="text" class="input" id="add-job-query" placeholder="数据分析">
+      </div>
+      <div class="field">
+        <label class="field-label">城市</label>
+        <input type="text" class="input" id="add-job-city" placeholder="上海">
+      </div>
+      <div class="field">
+        <label class="field-label">滚动页数</label>
+        <input type="number" class="input" id="add-job-scroll" value="5" min="1">
+      </div>
+      <div class="field">
+        <label class="field-label">打招呼语</label>
+        <textarea class="textarea" id="add-job-greeting" placeholder="您好，我对这个岗位很感兴趣..."></textarea>
+      </div>
+      <div class="control-row">
+        <label>启用岗位</label>
+        <div class="toggle active" id="add-job-enabled-toggle" onclick="toggleSwitch(this, 'add-job-enabled')"></div>
+        <input type="hidden" id="add-job-enabled" value="true">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-job')">取消</button>
+      <button class="btn btn-primary" onclick="addJob()">添加岗位</button>
+    </div>
+  </div>
+</div>
+
+<!-- 添加账号弹窗 -->
+<div class="modal-overlay" id="modal-add-account">
+  <div class="modal" style="position:relative;">
+    <button class="modal-close" onclick="closeModal('modal-add-account')">×</button>
+    <div class="modal-header">
+      <div class="modal-header-gradient">👤</div>
+      <div class="modal-title">添加账号</div>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">账号名称</label>
+        <input type="text" class="input" id="add-account-name" placeholder="新账号">
+      </div>
+      <div class="field">
+        <label class="field-label">Cookie 文件</label>
+        <input type="text" class="input" id="add-account-cookie" value="zhipin_cookies.json">
+      </div>
+      <div class="control-row">
+        <label>启用账号</label>
+        <div class="toggle active" id="add-account-enabled-toggle" onclick="toggleSwitch(this, 'add-account-enabled')"></div>
+        <input type="hidden" id="add-account-enabled" value="true">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-account')">取消</button>
+      <button class="btn btn-primary" onclick="addAccount()">添加账号</button>
+    </div>
+  </div>
+</div>
+
+<!-- 添加 AI 提供商弹窗 -->
+<div class="modal-overlay" id="modal-add-provider">
+  <div class="modal" style="position:relative;">
+    <button class="modal-close" onclick="closeModal('modal-add-provider')">×</button>
+    <div class="modal-header">
+      <div class="modal-header-gradient">🤖</div>
+      <div class="modal-title">添加 AI 接口</div>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">名称</label>
+        <input type="text" class="input" id="add-provider-name" placeholder="OpenAI">
+      </div>
+      <div class="field">
+        <label class="field-label">API Key</label>
+        <input type="password" class="input" id="add-provider-key" placeholder="sk-...">
+      </div>
+      <div class="field">
+        <label class="field-label">模型</label>
+        <input type="text" class="input" id="add-provider-model" placeholder="gpt-4o-mini">
+      </div>
+      <div class="field">
+        <label class="field-label">API Base URL</label>
+        <input type="text" class="input" id="add-provider-base" placeholder="https://api.openai.com/v1">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-provider')">取消</button>
+      <button class="btn btn-primary" onclick="addProvider()">添加接口</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// 全局状态
+// ═══════════════════════════════════════════════════════
+const socket = io();
+let activeAccountIdx = 0;           // 当前选中的账号索引（用于配置编辑）
+let currentAccountIndex = 0;        // 兼容旧代码
+let botRunning = false;
+let greetPaused = false;
+let replyPaused = false;
+let loggedIn = false;
+let needsLogin = false;
+let configData = null;
+let selectedImages = new Set();
+let imageList = [];
+let providerList = [];
+let accountsStatus = [];            // 多账号运行状态数组
+let loginRequiredAccountIdx = -1;   // 需要登录的账号索引
+let statsViewMode = 'summary';      // 统计视图模式：summary 或 detail
+let statsDetailAccountIdx = 0;      // 统计详情查看的账号索引
+
+// ═══════════════════════════════════════════════════════
+// SocketIO 事件（多账号改造）
+// ═══════════════════════════════════════════════════════
+socket.on("connected", (data) => {
+  addLog("系统已连接", "info");
+});
+
+socket.on("bot_log", (data) => {
+  const msg = data.message || "";
+  const accountName = data.account_name || "";
+  let level = "info";
+  if (msg.includes("[ERROR]")) level = "error";
+  else if (msg.includes("[WARN]")) level = "warn";
+  else if (msg.includes("[SUCCESS]")) level = "success";
+  else if (msg.includes("[DEBUG]")) level = "debug";
+  addLog(msg, level, accountName);
+});
+
+socket.on("bot_progress", (data) => {
+  // 多账号进度推送：如果有 account_index，更新对应账号的统计
+  if (data.account_index !== undefined) {
+    // 更新账号详情统计（如果当前正在查看该账号）
+    if (statsViewMode === 'detail' && statsDetailAccountIdx === data.account_index) {
+      if (data.applied !== undefined) document.getElementById('acc-greet-applied').textContent = data.applied || 0;
+      if (data.skipped !== undefined) document.getElementById('acc-greet-skipped').textContent = data.skipped || 0;
+      if (data.total !== undefined) document.getElementById('acc-greet-total').textContent = data.total || 0;
+      if (data.reply_sent !== undefined) document.getElementById('acc-reply-sent').textContent = data.reply_sent || 0;
+      if (data.reply_skipped !== undefined) document.getElementById('acc-reply-skipped').textContent = data.reply_skipped || 0;
+      if (data.resume_sent !== undefined) document.getElementById('acc-resume-sent').textContent = data.resume_sent || 0;
+      if (data.important_events !== undefined) document.getElementById('acc-important-events').textContent = data.important_events || 0;
+    }
+  }
+  // 同时更新汇总统计
+  if (data.applied !== undefined) document.getElementById('greet-applied').textContent = data.applied || 0;
+  if (data.skipped !== undefined) document.getElementById('greet-skipped').textContent = data.skipped || 0;
+  if (data.total !== undefined) document.getElementById('greet-total').textContent = data.total || 0;
+  if (data.reply_sent !== undefined) document.getElementById('reply-sent').textContent = data.reply_sent || 0;
+  if (data.reply_skipped !== undefined) document.getElementById('reply-skipped').textContent = data.reply_skipped || 0;
+  if (data.resume_sent !== undefined) document.getElementById('resume-sent').textContent = data.resume_sent || 0;
+  if (data.important_events !== undefined) document.getElementById('important-events').textContent = data.important_events || 0;
+});
+
+socket.on("login_required", (data) => {
+  const accountIdx = data.account_index !== undefined ? data.account_index : -1;
+  const accountName = data.account_name || "";
+  loginRequiredAccountIdx = accountIdx;
+  needsLogin = true;
+
+  // 显示登录横幅，标注哪个账号需要登录
+  document.getElementById('login-banner').classList.add('show');
+  const loginText = accountName
+    ? `账号「${accountName}」需要登录 BOSS 直聘，请在浏览器中手动登录后点击「我已登录」`
+    : (data.message || "需要登录 BOSS 直聘，请在浏览器中手动登录后点击「我已登录」");
+  document.getElementById('login-text').textContent = loginText;
+
+  // 更新登录弹窗描述
+  document.getElementById('login-modal-desc').textContent = accountName
+    ? `账号「${accountName}」需要登录 BOSS 直聘才能正常运行。请在弹出的浏览器窗口中手动登录该账号，登录完成后点击下方按钮确认。`
+    : `机器人需要登录 BOSS 直聘才能正常运行。请在弹出的浏览器窗口中手动登录，登录完成后点击下方按钮确认。`;
+
+  addLog(accountName ? `账号「${accountName}」需要手动登录` : "需要手动登录", "warn", accountName);
+  showModal('modal-login');
+});
+
+socket.on("status_update", (data) => {
+  updateMultiAccountStatus(data);
+});
+
+// ═══════════════════════════════════════════════════════
+// 主题切换
+// ═══════════════════════════════════════════════════════
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const newTheme = current === 'light' ? 'dark' : 'light';
+  html.setAttribute('data-theme', newTheme);
+  document.getElementById('theme-btn').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+  apiCall('/api/theme', 'POST', { theme: newTheme });
+  if (typeof anime !== 'undefined') {
+    anime({
+      targets: 'body',
+      opacity: [0.8, 1],
+      duration: 300,
+      easing: 'easeInOutQuad'
+    });
+  }
+}
+
+async function loadTheme() {
+  const res = await apiCall('/api/theme');
+  if (res.status === 'ok' && res.theme) {
+    document.documentElement.setAttribute('data-theme', res.theme);
+    document.getElementById('theme-btn').textContent = res.theme === 'dark' ? '☀️' : '🌙';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// 侧边栏切换
+// ═══════════════════════════════════════════════════════
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+}
+
+// ═══════════════════════════════════════════════════════
+// Toggle 开关
+// ═══════════════════════════════════════════════════════
+function toggleSwitch(el, hiddenId) {
+  el.classList.toggle('active');
+  const hidden = document.getElementById(hiddenId);
+  if (hidden) hidden.value = el.classList.contains('active') ? 'true' : 'false';
+}
+
+// ═══════════════════════════════════════════════════════
+// 折叠面板
+// ═══════════════════════════════════════════════════════
+function toggleCollapse(header) {
+  header.classList.toggle('open');
+  const body = header.nextElementSibling;
+  if (body) body.classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════════════════
+// 模态弹窗
+// ═══════════════════════════════════════════════════════
+function showModal(id) {
+  document.getElementById(id).classList.add('show');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.classList.remove('show');
+  });
+});
+
+function showAddJobModal() {
+  const select = document.getElementById('add-job-account');
+  if (configData && configData.accounts) {
+    select.innerHTML = configData.accounts.map((acc, i) =>
+      `<option value="${i}" ${i === activeAccountIdx ? 'selected' : ''}>${escapeHtml(acc.name || '账号' + (i+1))}</option>`
+    ).join('');
+  }
+  showModal('modal-add-job');
+}
+function showAddAccountModal() { showModal('modal-add-account'); }
+function showAddProviderModal() { showModal('modal-add-provider'); }
+function showEditResumeModal() {
+  loadResume();
+  showModal('modal-resume');
+}
+function showEditPromptsModal() {
+  loadPrompts();
+  showModal('modal-prompts');
+}
+
+// ═══════════════════════════════════════════════════════
+// 多账号状态更新（核心改造）
+// ═══════════════════════════════════════════════════════
+function updateMultiAccountStatus(data) {
+  // 兼容旧格式：如果没有 accounts 字段，走旧逻辑
+  if (!data.accounts) {
+    updateStatus(data);
+    return;
+  }
+
+  // 多账号汇总状态
+  botRunning = data.running || false;
+  accountsStatus = data.accounts || [];
+
+  // 更新顶部全局状态
+  const dot = document.getElementById('status-dot');
+  const text = document.getElementById('status-text');
+  const btnStart = document.getElementById('btn-start');
+  const btnStop = document.getElementById('btn-stop');
+
+  // 判断是否有任何账号在运行
+  const anyRunning = accountsStatus.some(a => a.running);
+  const anyNeedsLogin = accountsStatus.some(a => a.needs_login);
+
+  if (anyRunning) {
+    dot.className = 'status-dot running';
+    text.textContent = `${accountsStatus.filter(a => a.running).length}/${accountsStatus.length} 运行中`;
+    btnStart.style.display = 'none';
+    btnStop.style.display = '';
+  } else {
+    dot.className = 'status-dot';
+    text.textContent = '全部停止';
+    btnStart.style.display = '';
+    btnStop.style.display = 'none';
+  }
+
+  // 更新账号标签页（含状态指示器）
+  renderAccountTabs();
+
+  // 更新登录横幅
+  const loginAccount = accountsStatus.find(a => a.needs_login);
+  if (loginAccount) {
+    document.getElementById('login-banner').classList.add('show');
+    document.getElementById('login-text').textContent =
+      `账号「${loginAccount.name || '账号' + (loginAccount.index + 1)}」需要登录 BOSS 直聘`;
+    loginRequiredAccountIdx = loginAccount.index;
+  } else {
+    document.getElementById('login-banner').classList.remove('show');
+    loginRequiredAccountIdx = -1;
+  }
+
+  // 更新全局打招呼/回复状态
+  const anyGreetPaused = accountsStatus.some(a => a.greet_paused);
+  const anyReplyPaused = accountsStatus.some(a => a.reply_paused);
+  greetPaused = anyGreetPaused;
+  replyPaused = anyReplyPaused;
+
+  const greetTag = document.getElementById('greet-status-tag');
+  const btnPauseGreet = document.getElementById('btn-pause-greet');
+  const btnResumeGreet = document.getElementById('btn-resume-greet');
+  if (anyGreetPaused) {
+    greetTag.className = 'tag tag-orange';
+    greetTag.textContent = '部分已暂停';
+    btnPauseGreet.style.display = '';
+    btnResumeGreet.style.display = '';
+  } else {
+    greetTag.className = 'tag tag-green';
+    greetTag.textContent = anyRunning ? '运行中' : '待启动';
+    btnPauseGreet.style.display = anyRunning ? '' : 'none';
+    btnResumeGreet.style.display = 'none';
+  }
+
+  const replyTag = document.getElementById('reply-status-tag');
+  const btnPauseReply = document.getElementById('btn-pause-reply');
+  const btnResumeReply = document.getElementById('btn-resume-reply');
+  if (anyReplyPaused) {
+    replyTag.className = 'tag tag-orange';
+    replyTag.textContent = '部分已暂停';
+    btnPauseReply.style.display = '';
+    btnResumeReply.style.display = '';
+    document.getElementById('manual-takeover-info').textContent = '部分激活';
+  } else {
+    replyTag.className = 'tag tag-green';
+    replyTag.textContent = anyRunning ? '运行中' : '待启动';
+    btnPauseReply.style.display = anyRunning ? '' : 'none';
+    btnResumeReply.style.display = 'none';
+    document.getElementById('manual-takeover-info').textContent = '未激活';
+  }
+
+  // 更新汇总统计
+  const stats = data.stats || {};
+  document.getElementById('greet-applied').textContent = stats.greet_applied || 0;
+  document.getElementById('greet-skipped').textContent = stats.greet_skipped || 0;
+  document.getElementById('greet-total').textContent = stats.greet_total || 0;
+  document.getElementById('greet-rounds').textContent = stats.greet_rounds || 0;
+  document.getElementById('reply-sent').textContent = stats.reply_sent || 0;
+  document.getElementById('reply-skipped').textContent = stats.reply_skipped || 0;
+  document.getElementById('resume-sent').textContent = stats.resume_sent || 0;
+  document.getElementById('important-events').textContent = stats.important_events || 0;
+
+  // 更新账号详情统计（如果处于详情模式）
+  if (statsViewMode === 'detail') {
+    renderAccountStatsDetail();
+  }
+
+  // 更新当前模式显示
+  const modeEl = document.getElementById('current-mode');
+  const runningAccounts = accountsStatus.filter(a => a.running);
+  if (runningAccounts.length > 0) {
+    const modes = runningAccounts.map(a => {
+      const m = a.current_mode || 'idle';
+      const modeMap = { greet: '打招呼', reply: '回复', idle: '空闲' };
+      return `${a.name || '账号' + (a.index+1)}: ${modeMap[m] || m}`;
+    }).join(', ');
+    modeEl.textContent = modes;
+  } else {
+    modeEl.textContent = '';
+  }
+}
+
+// 旧版状态更新（向后兼容）
+function updateStatus(data) {
+  botRunning = data.running || false;
+  greetPaused = data.greet_paused || false;
+  replyPaused = data.reply_paused || false;
+  loggedIn = data.logged_in || false;
+  needsLogin = data.needs_login || false;
+
+  const dot = document.getElementById('status-dot');
+  const text = document.getElementById('status-text');
+  const modeEl = document.getElementById('current-mode');
+  const btnStart = document.getElementById('btn-start');
+  const btnStop = document.getElementById('btn-stop');
+
+  if (botRunning) {
+    dot.className = 'status-dot running';
+    text.textContent = '运行中';
+    btnStart.style.display = 'none';
+    btnStop.style.display = '';
+  } else {
+    dot.className = 'status-dot';
+    text.textContent = '未运行';
+    btnStart.style.display = '';
+    btnStop.style.display = 'none';
+  }
+
+  const mode = data.current_mode || 'idle';
+  const modeMap = { greet: '打招呼', reply: '回复', idle: '空闲' };
+  modeEl.textContent = `当前: ${modeMap[mode] || mode}`;
+
+  if (needsLogin) {
+    document.getElementById('login-banner').classList.add('show');
+  } else {
+    document.getElementById('login-banner').classList.remove('show');
+  }
+
+  const greetTag = document.getElementById('greet-status-tag');
+  const btnPauseGreet = document.getElementById('btn-pause-greet');
+  const btnResumeGreet = document.getElementById('btn-resume-greet');
+  if (greetPaused) {
+    greetTag.className = 'tag tag-orange';
+    greetTag.textContent = '已暂停';
+    btnPauseGreet.style.display = 'none';
+    btnResumeGreet.style.display = '';
+  } else {
+    greetTag.className = 'tag tag-green';
+    greetTag.textContent = botRunning ? '运行中' : '待启动';
+    btnPauseGreet.style.display = botRunning ? '' : 'none';
+    btnResumeGreet.style.display = 'none';
+  }
+
+  const replyTag = document.getElementById('reply-status-tag');
+  const btnPauseReply = document.getElementById('btn-pause-reply');
+  const btnResumeReply = document.getElementById('btn-resume-reply');
+  if (replyPaused) {
+    replyTag.className = 'tag tag-orange';
+    replyTag.textContent = '已暂停（人工接管）';
+    btnPauseReply.style.display = 'none';
+    btnResumeReply.style.display = '';
+    document.getElementById('manual-takeover-info').textContent = '已激活';
+  } else {
+    replyTag.className = 'tag tag-green';
+    replyTag.textContent = botRunning ? '运行中' : '待启动';
+    btnPauseReply.style.display = botRunning ? '' : 'none';
+    btnResumeReply.style.display = 'none';
+    document.getElementById('manual-takeover-info').textContent = '未激活';
+  }
+
+  const stats = data.stats || {};
+  document.getElementById('greet-applied').textContent = stats.greet_applied || 0;
+  document.getElementById('greet-skipped').textContent = stats.greet_skipped || 0;
+  document.getElementById('greet-total').textContent = stats.greet_total || 0;
+  document.getElementById('greet-rounds').textContent = stats.greet_rounds || 0;
+  document.getElementById('reply-sent').textContent = stats.reply_sent || 0;
+  document.getElementById('reply-skipped').textContent = stats.reply_skipped || 0;
+  document.getElementById('resume-sent').textContent = stats.resume_sent || 0;
+  document.getElementById('important-events').textContent = stats.important_events || 0;
+
+  if (data.current_chat) {
+    modeEl.textContent += ` | 聊天: ${data.current_chat}`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// 统计视图切换
+// ═══════════════════════════════════════════════════════
+function switchStatsView(mode) {
+  statsViewMode = mode;
+  document.getElementById('stats-view-summary').classList.toggle('active', mode === 'summary');
+  document.getElementById('stats-view-detail').classList.toggle('active', mode === 'detail');
+  document.getElementById('stats-grid-summary').style.display = mode === 'summary' ? 'grid' : 'none';
+  document.getElementById('stats-grid-detail').style.display = mode === 'detail' ? 'block' : 'none';
+
+  if (mode === 'detail') {
+    // 填充账号选择下拉框
+    const select = document.getElementById('stats-account-select');
+    if (configData && configData.accounts) {
+      select.innerHTML = configData.accounts.map((acc, i) =>
+        `<option value="${i}" ${i === statsDetailAccountIdx ? 'selected' : ''}>${escapeHtml(acc.name || '账号' + (i+1))}</option>`
+      ).join('');
+    }
+    renderAccountStatsDetail();
+  }
+}
+
+function renderAccountStatsDetail() {
+  const select = document.getElementById('stats-account-select');
+  if (!select) return;
+  statsDetailAccountIdx = parseInt(select.value) || 0;
+
+  // 从 accountsStatus 中获取该账号的状态
+  const accStatus = accountsStatus.find(a => a.index === statsDetailAccountIdx);
+  if (!accStatus) {
+    // 如果没有实时状态，尝试从配置中获取
+    const accounts = (configData && configData.accounts) || [];
+    if (statsDetailAccountIdx >= accounts.length) return;
+    document.getElementById('acc-greet-applied').textContent = '0';
+    document.getElementById('acc-greet-skipped').textContent = '0';
+    document.getElementById('acc-greet-total').textContent = '0';
+    document.getElementById('acc-greet-rounds').textContent = '0';
+    document.getElementById('acc-reply-sent').textContent = '0';
+    document.getElementById('acc-reply-skipped').textContent = '0';
+    document.getElementById('acc-resume-sent').textContent = '0';
+    document.getElementById('acc-important-events').textContent = '0';
+    document.getElementById('acc-detail-running').textContent = '未运行';
+    document.getElementById('acc-detail-running').className = 'tag tag-red';
+    return;
+  }
+
+  const stats = accStatus.stats || {};
+  document.getElementById('acc-greet-applied').textContent = stats.greet_applied || 0;
+  document.getElementById('acc-greet-skipped').textContent = stats.greet_skipped || 0;
+  document.getElementById('acc-greet-total').textContent = stats.greet_total || 0;
+  document.getElementById('acc-greet-rounds').textContent = stats.greet_rounds || 0;
+  document.getElementById('acc-reply-sent').textContent = stats.reply_sent || 0;
+  document.getElementById('acc-reply-skipped').textContent = stats.reply_skipped || 0;
+  document.getElementById('acc-resume-sent').textContent = stats.resume_sent || 0;
+  document.getElementById('acc-important-events').textContent = stats.important_events || 0;
+
+  // 运行状态标签
+  const runningTag = document.getElementById('acc-detail-running');
+  if (accStatus.running) {
+    runningTag.textContent = '运行中';
+    runningTag.className = 'tag tag-green';
+  } else {
+    runningTag.textContent = '已停止';
+    runningTag.className = 'tag tag-red';
+  }
+
+  // 模式标签
+  const modeMap = { greet: '打招呼', reply: '回复', idle: '空闲' };
+  document.getElementById('acc-detail-mode').textContent = modeMap[accStatus.current_mode] || accStatus.current_mode || '空闲';
+
+  // 暂停状态标签
+  document.getElementById('acc-detail-greet-paused').style.display = accStatus.greet_paused ? 'inline-block' : 'none';
+  document.getElementById('acc-detail-reply-paused').style.display = accStatus.reply_paused ? 'inline-block' : 'none';
+}
+
+// ═══════════════════════════════════════════════════════
+// 日志（支持账号名称显示）
+// ═══════════════════════════════════════════════════════
+function addLog(message, level = "info", accountName = "") {
+  const panel = document.getElementById('log-panel');
+  const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+  const entry = document.createElement('div');
+  entry.className = 'log-entry';
+  const accountHtml = accountName
+    ? `<span class="log-account">[${escapeHtml(accountName)}]</span> `
+    : '';
+  entry.innerHTML = `<span class="log-time">[${time}]</span> ${accountHtml}<span class="log-${level}">${escapeHtml(message)}</span>`;
+  panel.appendChild(entry);
+  panel.scrollTop = panel.scrollHeight;
+  while (panel.children.length > 500) panel.removeChild(panel.firstChild);
+}
+
+function clearLogs() {
+  document.getElementById('log-panel').innerHTML = '';
+}
+
+function copyLogs() {
+  const panel = document.getElementById('log-panel');
+  const text = panel.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    addLog("日志已复制到剪贴板", "success");
+  }).catch(() => {
+    addLog("复制失败", "error");
+  });
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = String(text || '');
+  return div.innerHTML;
+}
+
+// ═══════════════════════════════════════════════════════
+// API 调用
+// ═══════════════════════════════════════════════════════
+async function apiCall(url, method = 'GET', body = null) {
+  const opts = { method, headers: {} };
+  if (body) {
+    opts.headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(body);
+  }
+  try {
+    const res = await fetch(url, opts);
+    return await res.json();
+  } catch (e) {
+    addLog(`API 调用失败: ${url} - ${e.message}`, "error");
+    return { status: "error", message: e.message };
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// 全局控制 API（影响所有账号）
+// ═══════════════════════════════════════════════════════
+async function startBot() {
+  const res = await apiCall('/api/start', 'POST');
+  addLog(res.message || "所有账号已启动", "info");
+}
+
+async function stopBot() {
+  const res = await apiCall('/api/stop', 'POST');
+  addLog(res.message || "所有账号已停止", "info");
+}
+
+async function pauseGreet() {
+  const res = await apiCall('/api/pause_greet', 'POST');
+  addLog(res.message || "所有账号打招呼已暂停", "warn");
+}
+
+async function resumeGreet() {
+  const res = await apiCall('/api/resume_greet', 'POST');
+  addLog(res.message || "所有账号打招呼已恢复", "info");
+}
+
+async function pauseReply() {
+  const res = await apiCall('/api/pause_reply', 'POST');
+  addLog(res.message || "所有账号回复已暂停", "warn");
+}
+
+async function resumeReply() {
+  const res = await apiCall('/api/resume_reply', 'POST');
+  addLog(res.message || "所有账号回复已恢复", "info");
+}
+
+// ═══════════════════════════════════════════════════════
+// 账号级别控制 API（新增）
+// ═══════════════════════════════════════════════════════
+async function startAccount(idx) {
+  const res = await apiCall(`/api/accounts/${idx}/start`, 'POST');
+  const name = getAccountName(idx);
+  addLog(res.message || `账号「${name}」已启动`, "info", name);
+}
+
+async function stopAccount(idx) {
+  const res = await apiCall(`/api/accounts/${idx}/stop`, 'POST');
+  const name = getAccountName(idx);
+  addLog(res.message || `账号「${name}」已停止`, "info", name);
+}
+
+async function pauseAccountGreet(idx) {
+  const res = await apiCall(`/api/accounts/${idx}/pause_greet`, 'POST');
+  const name = getAccountName(idx);
+  addLog(res.message || `账号「${name}」打招呼已暂停`, "warn", name);
+}
+
+async function resumeAccountGreet(idx) {
+  const res = await apiCall(`/api/accounts/${idx}/resume_greet`, 'POST');
+  const name = getAccountName(idx);
+  addLog(res.message || `账号「${name}」打招呼已恢复`, "info", name);
+}
+
+async function pauseAccountReply(idx) {
+  const res = await apiCall(`/api/accounts/${idx}/pause_reply`, 'POST');
+  const name = getAccountName(idx);
+  addLog(res.message || `账号「${name}」回复已暂停`, "warn", name);
+}
+
+async function resumeAccountReply(idx) {
+  const res = await apiCall(`/api/accounts/${idx}/resume_reply`, 'POST');
+  const name = getAccountName(idx);
+  addLog(res.message || `账号「${name}」回复已恢复`, "info", name);
+}
+
+async function confirmAccountLogin(idx) {
+  const res = await apiCall(`/api/accounts/${idx}/confirm_login`, 'POST');
+  const name = getAccountName(idx);
+  addLog(res.message || `账号「${name}」登录已确认`, "success", name);
+  document.getElementById('login-banner').classList.remove('show');
+  loginRequiredAccountIdx = -1;
+}
+
+// 登录弹窗确认按钮
+async function confirmLoginFromModal() {
+  if (loginRequiredAccountIdx >= 0) {
+    await confirmAccountLogin(loginRequiredAccountIdx);
+  } else {
+    await confirmLogin();
+  }
+  closeModal('modal-login');
+}
+
+// 登录横幅确认按钮
+async function confirmLogin() {
+  if (loginRequiredAccountIdx >= 0) {
+    await confirmAccountLogin(loginRequiredAccountIdx);
+  } else {
+    const res = await apiCall('/api/confirm_login', 'POST');
+    addLog(res.message || "登录已确认", "success");
+    document.getElementById('login-banner').classList.remove('show');
+  }
+}
+
+function getAccountName(idx) {
+  if (configData && configData.accounts && configData.accounts[idx]) {
+    return configData.accounts[idx].name || `账号${idx+1}`;
+  }
+  if (accountsStatus[idx]) {
+    return accountsStatus[idx].name || `账号${idx+1}`;
+  }
+  return `账号${idx+1}`;
+}
+
+// ═══════════════════════════════════════════════════════
+// 配置加载与渲染
+// ═══════════════════════════════════════════════════════
+async function loadConfig() {
+  const res = await apiCall('/api/config');
+  if (res.status === 'ok') {
+    configData = res.config;
+    renderAccountTabs();
+    renderAccountDetail();
+    renderJobs();
+    renderRules();
+    renderAIConfig();
+    renderProfile();
+    renderRateLimit();
+    renderAdvancedSettings();
+  }
+}
+
+function renderRateLimit() {
+  if (!configData) return;
+  const rl = configData.rate_limit || {};
+  document.getElementById('rate-limit-info').textContent = `每小时 ${rl.max_per_hour || 30} / 每天 ${rl.max_per_day || 100}`;
+  const reply = configData.reply || {};
+  document.getElementById('check-interval-info').textContent = `${reply.check_interval || 8} 秒`;
+}
+
+// ═══════════════════════════════════════════════════════
+// 账号管理（多账号核心改造）
+// ═══════════════════════════════════════════════════════
+function switchAccount(idx) {
+  activeAccountIdx = idx;
+  currentAccountIndex = idx; // 兼容旧代码
+  renderAccountTabs();
+  renderAccountDetail();
+}
+
+function renderAccountTabs() {
+  if (!configData) return;
+  const container = document.getElementById('account-tabs');
+  const accounts = configData.accounts || [];
+  container.innerHTML = '';
+  if (accounts.length === 0) {
+    container.innerHTML = '<span style="color:var(--fg-3rd);font-size:12px;">暂无账号</span>';
+    return;
+  }
+  accounts.forEach((acc, idx) => {
+    const tab = document.createElement('div');
+    tab.className = 'account-tab' + (idx === activeAccountIdx ? ' active' : '');
+
+    // 状态指示点
+    const accStatus = accountsStatus.find(a => a.index === idx);
+    let dotClass = 'account-status-dot';
+    if (accStatus) {
+      if (accStatus.running) dotClass += ' running';
+      else if (accStatus.needs_login) dotClass += ' needs-login';
+      else if (accStatus.greet_paused || accStatus.reply_paused) dotClass += ' paused';
+    }
+    const dotHtml = `<span class="${dotClass}"></span>`;
+
+    // 账号名称
+    const nameHtml = escapeHtml(acc.name || `账号${idx+1}`);
+
+    // 岗位数量徽章
+    const jobCount = (acc.jobs || []).length;
+    const badgeHtml = `<span class="account-badge">${jobCount}</span>`;
+
+    // 账号级别控制按钮
+    let controlsHtml = '';
+    if (accStatus) {
+      if (accStatus.running) {
+        controlsHtml = `<span class="account-controls">
+          <button class="account-ctrl-btn stop" title="停止" onclick="event.stopPropagation();stopAccount(${idx})">■</button>
+        </span>`;
+      } else {
+        controlsHtml = `<span class="account-controls">
+          <button class="account-ctrl-btn start" title="启动" onclick="event.stopPropagation();startAccount(${idx})">▶</button>
+        </span>`;
+      }
+    }
+
+    tab.innerHTML = dotHtml + nameHtml + badgeHtml + controlsHtml;
+    tab.onclick = () => switchAccount(idx);
+    container.appendChild(tab);
+  });
+}
+
+function renderAccountDetail() {
+  if (!configData) return;
+  const accounts = configData.accounts || [];
+  if (activeAccountIdx >= accounts.length) activeAccountIdx = 0;
+  if (accounts.length === 0) return;
+  const acc = accounts[activeAccountIdx];
+
+  document.getElementById('acc-name').value = acc.name || '';
+  document.getElementById('acc-cookie-file').value = acc.cookie_file || 'zhipin_cookies.json';
+  document.getElementById('acc-msg-min').value = acc.message_interval_min || 3;
+  document.getElementById('acc-msg-max').value = acc.message_interval_max || 8;
+
+  const toggle = document.getElementById('acc-enabled-toggle');
+  const hidden = document.getElementById('acc-enabled');
+  if (acc.enabled) {
+    toggle.classList.add('active');
+    hidden.value = 'true';
+  } else {
+    toggle.classList.remove('active');
+    hidden.value = 'false';
+  }
+}
+
+async function updateAccount() {
+  const data = {
+    index: activeAccountIdx,
+    name: document.getElementById('acc-name').value,
+    cookie_file: document.getElementById('acc-cookie-file').value,
+    enabled: document.getElementById('acc-enabled').value === 'true',
+    message_interval_min: parseInt(document.getElementById('acc-msg-min').value) || 3,
+    message_interval_max: parseInt(document.getElementById('acc-msg-max').value) || 8,
+  };
+  const res = await apiCall('/api/accounts/update', 'POST', data);
+  addLog(res.message || "账号已更新", "success");
+  await loadConfig();
+}
+
+async function addAccount() {
+  const data = {
+    name: document.getElementById('add-account-name').value,
+    cookie_file: document.getElementById('add-account-cookie').value,
+    enabled: document.getElementById('add-account-enabled').value === 'true',
+  };
+  const res = await apiCall('/api/accounts/add', 'POST', data);
+  addLog(res.message || "账号已添加", "success");
+  closeModal('modal-add-account');
+  await loadConfig();
+}
+
+async function deleteAccount() {
+  const res = await apiCall('/api/accounts/delete', 'POST', { index: activeAccountIdx });
+  addLog(res.message || "账号已删除", "warn");
+  activeAccountIdx = 0;
+  currentAccountIndex = 0;
+  await loadConfig();
+}
+
+function uploadCookieForAccount() {
+  document.getElementById('acc-cookie-upload').click();
+}
+
+async function handleCookieUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  try {
+    const res = await fetch('/api/upload/cookie', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      addLog(`Cookie 文件已上传: ${data.filename}`, "success");
+      document.getElementById('acc-cookie-file').value = data.filename;
+    } else {
+      addLog(`上传失败: ${data.message}`, "error");
+    }
+  } catch (e) {
+    addLog(`上传失败: ${e.message}`, "error");
+  }
+  input.value = '';
+}
+
+async function deleteCurrentCookie() {
+  const cookieFile = document.getElementById('acc-cookie-file').value;
+  if (!cookieFile) return;
+  addLog(`Cookie 文件 ${cookieFile} 需手动从服务器删除`, "warn");
+}
+
+// ═══════════════════════════════════════════════════════
+// 岗位列表
+// ═══════════════════════════════════════════════════════
+function renderJobs() {
+  if (!configData) return;
+  const container = document.getElementById('jobs-container');
+  const accounts = configData.accounts || [];
+  let html = '';
+
+  accounts.forEach((acc, accIdx) => {
+    (acc.jobs || []).forEach((job, jobIdx) => {
+      const imagesHtml = (job.image_files || []).map(img =>
+        `<img class="job-thumb" src="/static/${escapeHtml(img)}" alt="" onerror="this.style.display='none'">`
+      ).join('');
+
+      html += `
+        <div class="job-card">
+          <div class="job-header">
+            <span class="job-query">${escapeHtml(job.query || '数据分析')}</span>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span class="tag ${job.enabled ? 'tag-green' : 'tag-red'}">${job.enabled ? '启用' : '禁用'}</span>
+              <span style="font-size:12px;color:var(--fg-3rd);">${escapeHtml(acc.name || '账号')}</span>
+              <button class="btn btn-danger btn-sm" onclick="deleteJob(${accIdx}, ${jobIdx})">删除</button>
+            </div>
+          </div>
+          <div class="job-meta">
+            <span>🏙 ${escapeHtml(job.city || '上海')}</span>
+            <span>📄 ${job.scroll_pages || 5}页</span>
+          </div>
+          <div class="job-greeting">${escapeHtml(job.greeting_message || '')}</div>
+          ${imagesHtml ? `<div class="job-images">${imagesHtml}</div>` : ''}
+        </div>
+      `;
+    });
+  });
+
+  if (!html) html = '<div class="empty-state">暂无岗位配置</div>';
+  container.innerHTML = html;
+}
+
+async function addJob() {
+  const data = {
+    account_index: parseInt(document.getElementById('add-job-account').value) || 0,
+    query: document.getElementById('add-job-query').value,
+    city: document.getElementById('add-job-city').value,
+    scroll_pages: parseInt(document.getElementById('add-job-scroll').value) || 5,
+    greeting_message: document.getElementById('add-job-greeting').value,
+    enabled: document.getElementById('add-job-enabled').value === 'true',
+    images: Array.from(selectedImages),
+  };
+  const res = await apiCall('/api/jobs/add', 'POST', data);
+  addLog(res.message || "岗位已添加", "success");
+  closeModal('modal-add-job');
+  selectedImages.clear();
+  await loadConfig();
+}
+
+async function deleteJob(accIdx, jobIdx) {
+  const res = await apiCall('/api/jobs/delete', 'POST', { account_index: accIdx, job_index: jobIdx });
+  addLog(res.message || "岗位已删除", "warn");
+  await loadConfig();
+}
+
+// ═══════════════════════════════════════════════════════
+// AI 配置
+// ═══════════════════════════════════════════════════════
+function renderAIConfig() {
+  if (!configData) return;
+  const ai = configData.ai || {};
+
+  const toggle = document.getElementById('ai-enabled-toggle');
+  const hidden = document.getElementById('ai-enabled');
+  if (ai.enabled) {
+    toggle.classList.add('active');
+    hidden.value = 'true';
+  } else {
+    toggle.classList.remove('active');
+    hidden.value = 'false';
+  }
+
+  document.getElementById('ai-match-threshold-input').value = ai.match_threshold || 70;
+
+  const list = document.getElementById('ai-providers-list');
+  const providers = ai.providers || [];
+  providerList = providers;
+  if (providers.length === 0) {
+    list.innerHTML = '<div class="empty-state">暂无 AI 提供商</div>';
+  } else {
+    list.innerHTML = providers.map((p, i) => `
+      <div class="provider-item">
+        <div>
+          <div class="provider-name">${escapeHtml(p.name || '未命名')}</div>
+          <div class="provider-model">${escapeHtml(p.model || '')}</div>
+        </div>
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-ghost btn-sm" onclick="testAIProvider(${i})">测试</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteProvider(${i})">删除</button>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+async function addProvider() {
+  const data = {
+    name: document.getElementById('add-provider-name').value,
+    api_key: document.getElementById('add-provider-key').value,
+    model: document.getElementById('add-provider-model').value,
+    api_base: document.getElementById('add-provider-base').value,
+  };
+  const res = await apiCall('/api/ai/providers/add', 'POST', data);
+  addLog(res.message || "AI 提供商已添加", "success");
+  closeModal('modal-add-provider');
+  await loadConfig();
+}
+
+async function deleteProvider(index) {
+  const res = await apiCall('/api/ai/providers/delete', 'POST', { index });
+  addLog(res.message || "AI 提供商已删除", "warn");
+  await loadConfig();
+}
+
+async function testAIProvider(index) {
+  addLog(`正在测试 AI 提供商 ${providerList[index]?.name || index}...`, "info");
+  const res = await apiCall('/api/ai/test', 'POST', { provider_index: index });
+  if (res.status === 'ok') {
+    addLog(res.message || "AI 连接成功", "success");
+  } else {
+    addLog(res.message || "AI 连接失败", "error");
+  }
+}
+
+async function testAI() {
+  if (providerList.length === 0) {
+    addLog("暂无 AI 提供商可测试", "warn");
+    return;
+  }
+  await testAIProvider(0);
+}
+
+async function runAITest() {
+  const jd = document.getElementById('ai-test-jd').value;
+  if (!jd.trim()) {
+    addLog("请输入岗位描述", "warn");
+    return;
+  }
+  const resultEl = document.getElementById('ai-test-result');
+  resultEl.style.display = 'block';
+  resultEl.textContent = '正在分析...';
+  const res = await apiCall('/api/ai/analyze', 'POST', { job_desc: jd, provider_index: 0 });
+  if (res.status === 'ok') {
+    resultEl.textContent = `[${res.provider || 'AI'}] ${res.analysis || '无结果'}`;
+    addLog("AI 分析完成", "success");
+  } else {
+    resultEl.textContent = `分析失败: ${res.message || '未知错误'}`;
+    addLog(res.message || "AI 分析失败", "error");
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// 简历编辑
+// ═══════════════════════════════════════════════════════
+async function loadResume() {
+  const res = await apiCall('/api/resume');
+  if (res.status === 'ok' && res.resume) {
+    const r = res.resume;
+    document.getElementById('resume-school').value = r.school || '';
+    document.getElementById('resume-major').value = r.major || '';
+    document.getElementById('resume-degree').value = r.degree || '';
+    document.getElementById('resume-skills').value = (r.skills || []).join(',');
+    document.getElementById('resume-experience').value = r.experience || '';
+    document.getElementById('resume-target-position').value = r.target_position || '';
+    document.getElementById('resume-self-intro').value = r.self_intro || '';
+  }
+}
+
+async function saveResume() {
+  const skills = document.getElementById('resume-skills').value
+    .split(',').map(s => s.trim()).filter(s => s);
+  const resume = {
+    school: document.getElementById('resume-school').value,
+    major: document.getElementById('resume-major').value,
+    degree: document.getElementById('resume-degree').value,
+    skills: skills,
+    experience: document.getElementById('resume-experience').value,
+    target_position: document.getElementById('resume-target-position').value,
+    self_intro: document.getElementById('resume-self-intro').value,
+  };
+  const res = await apiCall('/api/resume', 'POST', { resume });
+  addLog(res.message || "简历已保存", "success");
+  closeModal('modal-resume');
+}
+
+// ═══════════════════════════════════════════════════════
+// AI 提示词编辑
+// ═══════════════════════════════════════════════════════
+async function loadPrompts() {
+  const res = await apiCall('/api/ai/prompts');
+  if (res.status === 'ok' && res.prompts) {
+    document.getElementById('prompt-system-rules').value = res.prompts.system_rules || '';
+    document.getElementById('prompt-user-template').value = res.prompts.user_prompt_template || '';
+  }
+}
+
+async function savePrompts() {
+  const prompts = {
+    system_rules: document.getElementById('prompt-system-rules').value,
+    user_prompt_template: document.getElementById('prompt-user-template').value,
+  };
+  const res = await apiCall('/api/ai/prompts', 'POST', { prompts });
+  addLog(res.message || "提示词已保存", "success");
+  closeModal('modal-prompts');
+}
+
+// ═══════════════════════════════════════════════════════
+// 图片管理
+// ═══════════════════════════════════════════════════════
+async function loadImages() {
+  const res = await apiCall('/api/images');
+  if (res.status === 'ok') {
+    imageList = res.images || [];
+    renderImageGrid();
+  }
+}
+
+function renderImageGrid() {
+  const grid = document.getElementById('image-grid');
+  if (imageList.length === 0) {
+    grid.innerHTML = '<div class="empty-state">暂无图片</div>';
+    document.getElementById('selected-img-count').textContent = '0';
+    return;
+  }
+  grid.innerHTML = imageList.map(img => `
+    <div class="image-item ${selectedImages.has(img.filename) ? 'checked' : ''}" onclick="toggleImageSelect('${escapeHtml(img.filename)}')">
+      <img src="/static/${escapeHtml(img.url)}" alt="${escapeHtml(img.filename)}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%23ddd%22/><text x=%2250%22 y=%2250%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2212%22 fill=%22%23999%22>无预览</text></svg>'">
+      <div class="check-mark">✓</div>
+      <div class="del-btn" onclick="event.stopPropagation();deleteImage('${escapeHtml(img.filename)}')">×</div>
+    </div>
+  `).join('');
+  document.getElementById('selected-img-count').textContent = selectedImages.size;
+}
+
+function toggleImageSelect(filename) {
+  if (selectedImages.has(filename)) {
+    selectedImages.delete(filename);
+  } else {
+    selectedImages.add(filename);
+  }
+  renderImageGrid();
+}
+
+async function deleteImage(filename) {
+  const res = await apiCall('/api/images/delete', 'POST', { filename });
+  addLog(res.message || "图片已删除", "warn");
+  selectedImages.delete(filename);
+  await loadImages();
+}
+
+async function uploadImages(input) {
+  const files = input.files;
+  if (!files || files.length === 0) return;
+  const formData = new FormData();
+  for (const f of files) formData.append('files', f);
+  try {
+    const res = await fetch('/api/upload/images', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.status === 'ok') {
+      const count = (data.files || []).length;
+      addLog(`已上传 ${count} 张图片`, "success");
+      await loadImages();
+    } else {
+      addLog(`上传失败: ${data.message}`, "error");
+    }
+  } catch (e) {
+    addLog(`上传失败: ${e.message}`, "error");
+  }
+  input.value = '';
+}
+
+// ═══════════════════════════════════════════════════════
+// 回复规则
+// ═══════════════════════════════════════════════════════
+function renderRules() {
+  if (!configData) return;
+  const container = document.getElementById('rules-container');
+  const rules = configData.reply_rules || {};
+  const importanceKeywords = configData.importance_keywords || [];
+
+  let html = '';
+  html += '<div style="margin-bottom:10px;"><strong style="font-size:13px;color:var(--fg);">重要事件关键词:</strong><br>';
+  html += importanceKeywords.map(k => `<span class="tag tag-red">${escapeHtml(k)}</span>`).join(' ');
+  html += '</div>';
+  html += '<div><strong style="font-size:13px;color:var(--fg);">关键词回复规则:</strong></div>';
+  for (const [key, value] of Object.entries(rules)) {
+    const action = value === 'send_resume' ? '发送简历' : '文字回复';
+    const valueDisplay = value === 'send_resume' ? '' : escapeHtml(String(value).substring(0, 50));
+    html += `
+      <div class="rule-item">
+        <span class="rule-key">${escapeHtml(key)}</span>
+        <span class="rule-action">${action}</span>
+        <span class="rule-value">${valueDisplay}</span>
+      </div>
+    `;
+  }
+  if (Object.keys(rules).length === 0) {
+    html += '<div class="empty-state">暂无回复规则</div>';
+  }
+  container.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════
+// 个人画像
+// ═══════════════════════════════════════════════════════
+function renderProfile() {
+  if (!configData) return;
+  const profile = configData.user_profile || {};
+  document.getElementById('profile-name').value = profile.name || '';
+  document.getElementById('profile-education').value = profile.education || '';
+  document.getElementById('profile-position').value = profile.position || '';
+  document.getElementById('profile-salary').value = profile.salary_expectation || '';
+  document.getElementById('profile-skills').value = (profile.skills || []).join(',');
+  document.getElementById('profile-experience').value = profile.experience || '';
+  document.getElementById('profile-interview-time').value = profile.available_interview_time || '';
+  document.getElementById('profile-contact').value = profile.contact || '';
+}
+
+async function saveProfile() {
+  const skills = document.getElementById('profile-skills').value
+    .split(',').map(s => s.trim()).filter(s => s);
+  const profile = {
+    name: document.getElementById('profile-name').value,
+    education: document.getElementById('profile-education').value,
+    position: document.getElementById('profile-position').value,
+    salary_expectation: document.getElementById('profile-salary').value,
+    skills: skills,
+    experience: document.getElementById('profile-experience').value,
+    available_interview_time: document.getElementById('profile-interview-time').value,
+    contact: document.getElementById('profile-contact').value,
+  };
+  const res = await apiCall('/api/user_profile', 'POST', { profile });
+  addLog(res.message || "个人画像已保存", "success");
+}
+
+// ═══════════════════════════════════════════════════════
+// 高级设置
+// ═══════════════════════════════════════════════════════
+function renderAdvancedSettings() {
+  if (!configData) return;
+  const browser = configData.browser || {};
+  const rateLimit = configData.rate_limit || {};
+  const login = configData.login || {};
+  const retry = configData.retry || {};
+
+  document.getElementById('adv-browser-type').value = browser.browser_type || 'chrome';
+  document.getElementById('adv-browser-path').value = browser.chrome_path || '';
+  document.getElementById('adv-viewport-w').value = browser.viewport_width || 1280;
+  document.getElementById('adv-viewport-h').value = browser.viewport_height || 800;
+
+  const headlessToggle = document.getElementById('adv-headless-toggle');
+  const headlessHidden = document.getElementById('adv-headless');
+  if (browser.headless) {
+    headlessToggle.classList.add('active');
+    headlessHidden.value = 'true';
+  } else {
+    headlessToggle.classList.remove('active');
+    headlessHidden.value = 'false';
+  }
+
+  document.getElementById('adv-rate-hour').value = rateLimit.max_per_hour || 30;
+  document.getElementById('adv-rate-day').value = rateLimit.max_per_day || 100;
+  document.getElementById('adv-cookie-file').value = login.cookie_file || 'zhipin_cookies.json';
+  document.getElementById('adv-login-timeout').value = login.wait_timeout || 300;
+  document.getElementById('adv-max-retry').value = retry.max_retries || 3;
+  document.getElementById('adv-retry-interval').value = retry.retry_interval || 5;
+  document.getElementById('adv-msg-min').value = configData.accounts?.[0]?.message_interval_min || 3;
+  document.getElementById('adv-msg-max').value = configData.accounts?.[0]?.message_interval_max || 8;
+  document.getElementById('adv-user-agent').value = browser.user_agent || '';
+  document.getElementById('adv-proxy').value = browser.proxy || '';
+}
+
+async function saveAdvancedSettings() {
+  const config = {
+    browser: {
+      browser_type: document.getElementById('adv-browser-type').value,
+      chrome_path: document.getElementById('adv-browser-path').value,
+      headless: document.getElementById('adv-headless').value === 'true',
+      viewport_width: parseInt(document.getElementById('adv-viewport-w').value) || 1280,
+      viewport_height: parseInt(document.getElementById('adv-viewport-h').value) || 800,
+      user_agent: document.getElementById('adv-user-agent').value,
+      proxy: document.getElementById('adv-proxy').value,
+    },
+    rate_limit: {
+      max_per_hour: parseInt(document.getElementById('adv-rate-hour').value) || 30,
+      max_per_day: parseInt(document.getElementById('adv-rate-day').value) || 100,
+    },
+    login: {
+      cookie_file: document.getElementById('adv-cookie-file').value,
+      wait_timeout: parseInt(document.getElementById('adv-login-timeout').value) || 300,
+    },
+    retry: {
+      max_retries: parseInt(document.getElementById('adv-max-retry').value) || 3,
+      retry_interval: parseInt(document.getElementById('adv-retry-interval').value) || 5,
+    },
+  };
+  const res = await apiCall('/api/config', 'POST', { config });
+  addLog(res.message || "高级设置已保存", "success");
+  if (res.need_restart) addLog("需要重启机器人才能生效", "warn");
+  await loadConfig();
+}
+
+// ═══════════════════════════════════════════════════════
+// 浏览器列表
+// ═══════════════════════════════════════════════════════
+async function loadBrowserList() {
+  const res = await apiCall('/api/browser/list');
+  if (res.status === 'ok') {
+    const container = document.getElementById('browser-list-adv');
+    const browsers = res.browsers || [];
+    if (browsers.length === 0) {
+      container.innerHTML = '<div style="font-size:12px;color:var(--fg-3rd);padding:4px 0;">未检测到可用浏览器</div>';
+      return;
+    }
+    container.innerHTML = browsers.map(b => `
+      <div class="rule-item">
+        <span class="rule-key">${escapeHtml(b.name)}</span>
+        <span class="rule-value">${escapeHtml(b.path)}</span>
+        <button class="btn btn-primary btn-sm" onclick="setBrowser('${escapeHtml(b.path)}', '${escapeHtml(b.type)}')">选择</button>
+      </div>
+    `).join('');
+  }
+}
+
+async function setBrowser(path, type) {
+  const res = await apiCall('/api/browser/set', 'POST', { path, type });
+  if (res.status === 'ok') {
+    addLog(res.message || "浏览器已设置", "success");
+    document.getElementById('adv-browser-type').value = type;
+    document.getElementById('adv-browser-path').value = path;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// 消息列表
+// ═══════════════════════════════════════════════════════
+async function loadMessages() {
+  const res = await apiCall('/api/messages');
+  if (res.status === 'ok') {
+    const container = document.getElementById('msg-list');
+    const messages = res.messages || [];
+    if (messages.length === 0) {
+      container.innerHTML = '<div class="empty-state">暂无消息记录</div>';
+      return;
+    }
+    container.innerHTML = messages.map(m => {
+      const sourceClass = m.source === 'ai' ? 'ai' : 'rule';
+      const sourceText = m.source === 'ai' ? 'AI' : (m.reply_source || '规则');
+      const accountName = m.account_name ? `<span style="font-size:11px;color:var(--accent);">[${escapeHtml(m.account_name)}]</span> ` : '';
+      return `
+        <div class="msg-item">
+          <div>
+            ${accountName}
+            <div class="msg-name">${escapeHtml(m.name || m.chat_name || '未知')}</div>
+            <div class="msg-text">${escapeHtml(m.text || '')}</div>
+            <span class="msg-source ${sourceClass}">${escapeHtml(sourceText)}</span>
+          </div>
+          <div class="msg-time">${escapeHtml(m.time || '')}</div>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// 日志加载
+// ═══════════════════════════════════════════════════════
+async function loadLogs() {
+  const res = await apiCall('/api/logs');
+  if (res.status === 'ok') {
+    const panel = document.getElementById('log-panel');
+    panel.innerHTML = '';
+    (res.logs || []).forEach(log => {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      let level = 'info';
+      const lv = (log.level || '').toLowerCase();
+      if (lv === 'error') level = 'error';
+      else if (lv === 'warn' || lv === 'warning') level = 'warn';
+      else if (lv === 'success') level = 'success';
+      else if (lv === 'debug') level = 'debug';
+      const accountName = log.account_name || '';
+      const accountHtml = accountName
+        ? `<span class="log-account">[${escapeHtml(accountName)}]</span> `
+        : '';
+      entry.innerHTML = `<span class="log-time">[${log.time}]</span> ${accountHtml}<span class="log-${level}">[${log.level}] ${escapeHtml(log.message)}</span>`;
+      panel.appendChild(entry);
+    });
+    panel.scrollTop = panel.scrollHeight;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// 统计加载
+// ═══════════════════════════════════════════════════════
+async function loadStats() {
+  const res = await apiCall('/api/stats');
+  if (res.status === 'ok') {
+    const stats = res.stats || {};
+    document.getElementById('greet-applied').textContent = stats.greet_applied || 0;
+    document.getElementById('greet-skipped').textContent = stats.greet_skipped || 0;
+    document.getElementById('greet-total').textContent = stats.greet_total || 0;
+    document.getElementById('greet-rounds').textContent = stats.greet_rounds || 0;
+    document.getElementById('reply-sent').textContent = stats.reply_sent || 0;
+    document.getElementById('reply-skipped').textContent = stats.reply_skipped || 0;
+    document.getElementById('resume-sent').textContent = stats.resume_sent || 0;
+    document.getElementById('important-events').textContent = stats.important_events || 0;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// 状态加载（多账号）
+// ═══════════════════════════════════════════════════════
+async function loadStatus() {
+  const res = await apiCall('/api/status');
+  if (res.status !== undefined || res.running !== undefined) {
+    updateMultiAccountStatus(res);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// Excel 导出
+// ═══════════════════════════════════════════════════════
+async function exportExcel() {
+  const res = await apiCall('/api/excel/export', 'POST');
+  if (res.status === 'ok') {
+    addLog(`数据已导出: ${res.filename}`, "success");
+    await loadExcelFiles();
+  } else {
+    addLog(res.message || "导出失败", "error");
+  }
+}
+
+async function loadExcelFiles() {
+  const res = await apiCall('/api/excel/files');
+  if (res.status === 'ok') {
+    const container = document.getElementById('excel-files-list');
+    const files = res.files || [];
+    if (files.length === 0) {
+      container.innerHTML = '<div class="empty-state">暂无导出文件</div>';
+      return;
+    }
+    container.innerHTML = files.map(f => `
+      <div class="excel-file-item">
+        <div>
+          <div style="font-weight:600;color:var(--fg);">${escapeHtml(f.name)}</div>
+          <div style="font-size:12px;color:var(--fg-3rd);">${escapeHtml(f.created)} · ${Math.round(f.size/1024)}KB</div>
+        </div>
+        <a class="btn btn-primary btn-sm" href="/api/excel/download/${escapeHtml(f.name)}" download>下载</a>
+      </div>
+    `).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// 初始化
+// ═══════════════════════════════════════════════════════
+async function init() {
+  addLog("正在加载配置...", "info");
+  await loadTheme();
+  await loadConfig();
+  await loadStatus();
+  await loadStats();
+  await loadBrowserList();
+  await loadMessages();
+  await loadImages();
+  await loadLogs();
+  await loadExcelFiles();
+  addLog("初始化完成", "success");
+}
+
+// 定时刷新
+setInterval(loadStats, 10000);
+setInterval(loadMessages, 15000);
+setInterval(loadStatus, 5000);
+setInterval(loadExcelFiles, 30000);
+
+// 启动
+init();
+</script>
+</body>
+</html>

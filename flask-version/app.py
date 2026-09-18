@@ -1,0 +1,1447 @@
+"""
+统一 Flask Web 管理界面
+
+整合打招呼引擎和回复引擎的统一控制面板，提供：
+- REST API 管理机器人状态、配置、日志、统计
+- SocketIO 实时推送日志、进度、登录提示、状态更新
+- 后台线程运行 UnifiedBotLoop
+- Cookie 管理、浏览器选择、图片上传
+
+使用方式：
+    python app.py
+    # 访问 http://localhost:5000
+"""
+
+import os
+import sys
+import io
+import json
+import uuid
+import shutil
+import logging
+import threading
+import warnings
+import time
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
+
+# 设置标准输出编码为 UTF-8
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
+from flask import Flask, render_template, jsonify, request, send_file
+from flask_socketio import SocketIO, emit
+
+# 抑制警告
+warnings.filterwarnings("ignore", category=UserWarning, module="urllib3")
+
+# 关闭 Flask 默认请求日志
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
+
+# 项目根目录
+PROJECT_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from boss_bot.unified_config import (
+    UnifiedConfig, BASE_DIR, BOT_CONFIG_FILE, USER_PROFILE_FILE,
+    OVERRIDES_FILE,
+    load_config, save_config, validate_config, DEFAULT_GREETING,
+)
+from boss_bot.main_loop import UnifiedBotLoop, MultiAccountManager
+
+# ===================== 日志缓冲区 =====================
+
+MAX_LOGS = 500
+log_buffer = []
+log_buffer_lock = threading.Lock()
+
+
+class WebLogHandler(logging.Handler):
+    """将日志写入内存缓冲区，供前端显示。"""
+
+    def emit(self, record):
+        entry = {
+            "time": datetime.now().strftime("%H:%M:%S"),
+            "level": record.levelname,
+            "message": record.getMessage(),
+        }
+        with log_buffer_lock:
+            log_buffer.append(entry)
+            if len(log_buffer) > MAX_LOGS:
+                log_buffer.pop(0)
+
+
+# 配置日志
+web_handler = WebLogHandler()
+web_handler.setLevel(logging.INFO)
+logging.getLogger().addHandler(web_handler)
+logging.getLogger().setLevel(logging.INFO)
+
+logger = logging.getLogger("boss-web")
+
+# ===================== Flask 应用 =====================
+
+app = Flask(__name__, template_folder="templates")
+app.config["SECRET_KEY"] = os.urandom(24).hex()
+app.config["TEMPLATES_AUTO_RELOAD"] = True
+app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
+
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+
+# ===================== 全局状态 =====================
+
+_multi_manager: Optional[MultiAccountManager] = None
+_config: Optional[UnifiedConfig] = None
+_status_thread: Optional[threading.Thread] = None
+_status_stop = threading.Event()
+
+# 数据目录
+DATA_DIR = PROJECT_ROOT / "data"
+DASHBOARD_DIR = PROJECT_ROOT / "static" / "dashboard"
+COOKIE_DIR = PROJECT_ROOT / "data"
+
+# 确保目录存在
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+DASHBOARD_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _ensure_config() -> UnifiedConfig:
+    """确保 _config 已初始化。"""
+    global _config
+    if _config is None:
+        _config = UnifiedConfig.load()
+    return _config
+
+
+def _ensure_manager() -> MultiAccountManager:
+    """确保 _multi_manager 已初始化。"""
+    global _multi_manager
+    if _multi_manager is None:
+        cfg = _ensure_config()
+
+        def log_callback(msg: str):
+            """日志回调 — 同时写入缓冲区和推送 SocketIO。"""
+            with log_buffer_lock:
+                log_buffer.append({
+                    "time": datetime.now().strftime("%H:%M:%S"),
+                    "level": msg.split("]")[0].strip("[") if "]" in msg else "INFO",
+                    "message": msg.split("]", 1)[1].strip() if "]" in msg else msg,
+                })
+                if len(log_buffer) > MAX_LOGS:
+                    log_buffer.pop(0)
+            try:
+                socketio.emit("bot_log", {
+                    "time": datetime.now().strftime("%H:%M:%S"),
+                    "message": msg,
+                })
+            except Exception:
+                pass
+
+        _multi_manager = MultiAccountManager(config=cfg, log_callback=log_callback)
+    return _multi_manager
+
+
+def _status_pusher():
+    """后台线程：定期推送状态更新到前端。
+
+    推送多账号汇总状态（status_update），检测每个账号的登录需求并推送
+    login_required 事件（包含 account_index 和 account_name），
+    以及推送每个账号的打招呼/回复进度数据（bot_progress，包含 account_index）。
+    """
+    _last_needs_login = {}  # account_index -> bool
+    while not _status_stop.is_set():
+        try:
+            manager = _multi_manager
+            if manager is not None:
+                status = manager.get_status()
+                socketio.emit("status_update", status)
+
+                # 遍历每个账号，检测登录状态变化 → 推送 login_required
+                for acc_status in status.get("accounts", []):
+                    idx = acc_status.get("index", 0)
+                    name = acc_status.get("name", f"账号{idx}")
+                    needs_login = acc_status.get("needs_login", False)
+                    if needs_login and not _last_needs_login.get(idx, False):
+                        socketio.emit("login_required", {
+                            "message": f"账号「{name}」登录已过期或需要手动登录，请在浏览器中登录后点击「我已登录」",
+                            "account_index": idx,
+                            "account_name": name,
+                        })
+                    _last_needs_login[idx] = needs_login
+
+                # 推送每个账号的进度数据（bot_progress）
+                for acc_status in status.get("accounts", []):
+                    idx = acc_status.get("index", 0)
+                    name = acc_status.get("name", f"账号{idx}")
+                    stats = acc_status.get("stats", {})
+                    if stats:
+                        socketio.emit("bot_progress", {
+                            "account_index": idx,
+                            "account_name": name,
+                            "applied": stats.get("greet_applied", 0),
+                            "skipped": stats.get("greet_skipped", 0),
+                            "total": stats.get("greet_total", 0),
+                            "reply_sent": stats.get("reply_sent", 0),
+                            "reply_skipped": stats.get("reply_skipped", 0),
+                            "resume_sent": stats.get("resume_sent", 0),
+                            "important_events": stats.get("important_events", 0),
+                        })
+        except Exception:
+            pass
+        _status_stop.wait(timeout=3)
+
+
+# ===================== 主页 =====================
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+# ===================== 状态 API =====================
+
+@app.route("/api/status")
+def api_status():
+    """获取机器人运行状态（多账号汇总）。"""
+    manager = _multi_manager
+    if manager is None:
+        return jsonify({
+            "running": False,
+            "accounts": [],
+            "stats": {},
+        })
+    return jsonify(manager.get_status())
+
+
+# ===================== 启动/停止 API =====================
+
+@app.route("/api/start", methods=["POST"])
+def api_start():
+    """启动所有启用的账号。"""
+    global _status_thread
+    manager = _ensure_manager()
+    status = manager.get_status()
+    if status.get("running"):
+        return jsonify({"status": "ok", "message": "机器人已在运行中"})
+    manager.start()
+
+    # 启动状态推送线程
+    _status_stop.clear()
+    _status_thread = threading.Thread(target=_status_pusher, daemon=True)
+    _status_thread.start()
+
+    return jsonify({"status": "ok", "message": "机器人已启动"})
+
+
+@app.route("/api/stop", methods=["POST"])
+def api_stop():
+    """停止所有账号。"""
+    global _status_thread
+    _status_stop.set()
+    manager = _multi_manager
+    if manager is not None:
+        manager.stop()
+    if _status_thread is not None and _status_thread.is_alive():
+        _status_thread.join(timeout=5)
+    return jsonify({"status": "ok", "message": "机器人已停止"})
+
+
+# ===================== 打招呼控制 API =====================
+
+@app.route("/api/pause_greet", methods=["POST"])
+def api_pause_greet():
+    """暂停所有账号的打招呼功能。"""
+    manager = _ensure_manager()
+    manager.pause_greet()
+    return jsonify({"status": "ok", "message": "打招呼已暂停"})
+
+
+@app.route("/api/resume_greet", methods=["POST"])
+def api_resume_greet():
+    """恢复所有账号的打招呼功能。"""
+    manager = _ensure_manager()
+    manager.resume_greet()
+    return jsonify({"status": "ok", "message": "打招呼已恢复"})
+
+
+# ===================== 回复控制 API =====================
+
+@app.route("/api/pause_reply", methods=["POST"])
+def api_pause_reply():
+    """暂停所有账号的回复功能（人工接管模式）。"""
+    manager = _ensure_manager()
+    manager.pause_reply()
+    return jsonify({"status": "ok", "message": "回复已暂停（人工接管模式）"})
+
+
+@app.route("/api/resume_reply", methods=["POST"])
+def api_resume_reply():
+    """恢复所有账号的回复功能。"""
+    manager = _ensure_manager()
+    manager.resume_reply()
+    return jsonify({"status": "ok", "message": "回复已恢复"})
+
+
+# ===================== 登录 API =====================
+
+@app.route("/api/confirm_login", methods=["POST"])
+def api_confirm_login():
+    """确认所有账号的登录完成。"""
+    manager = _ensure_manager()
+    manager.confirm_login()
+    socketio.emit("status_update", manager.get_status())
+    return jsonify({"status": "ok", "message": "登录已确认"})
+
+
+# ===================== 账号级别控制 API =====================
+
+def _validate_account_index(idx: int):
+    """验证账号索引是否有效，返回 (manager, error_response)。"""
+    manager = _ensure_manager()
+    cfg = _ensure_config()
+    if idx < 0 or idx >= len(cfg.greet.accounts):
+        return None, (jsonify({"status": "error", "message": "账号索引超出范围"}), 404)
+    if idx not in manager._loops:
+        return None, (jsonify({"status": "error", "message": "账号未启用或不存在"}), 404)
+    return manager, None
+
+
+@app.route("/api/accounts/<int:idx>/start", methods=["POST"])
+def api_account_start(idx: int):
+    """启动指定账号。"""
+    manager, error = _validate_account_index(idx)
+    if error:
+        return error
+    manager.start_account(idx)
+    return jsonify({"status": "ok", "message": f"账号 {idx} 已启动"})
+
+
+@app.route("/api/accounts/<int:idx>/stop", methods=["POST"])
+def api_account_stop(idx: int):
+    """停止指定账号。"""
+    manager, error = _validate_account_index(idx)
+    if error:
+        return error
+    manager.stop_account(idx)
+    return jsonify({"status": "ok", "message": f"账号 {idx} 已停止"})
+
+
+@app.route("/api/accounts/<int:idx>/pause_greet", methods=["POST"])
+def api_account_pause_greet(idx: int):
+    """暂停指定账号的打招呼功能。"""
+    manager, error = _validate_account_index(idx)
+    if error:
+        return error
+    manager.pause_greet(idx)
+    return jsonify({"status": "ok", "message": f"账号 {idx} 打招呼已暂停"})
+
+
+@app.route("/api/accounts/<int:idx>/resume_greet", methods=["POST"])
+def api_account_resume_greet(idx: int):
+    """恢复指定账号的打招呼功能。"""
+    manager, error = _validate_account_index(idx)
+    if error:
+        return error
+    manager.resume_greet(idx)
+    return jsonify({"status": "ok", "message": f"账号 {idx} 打招呼已恢复"})
+
+
+@app.route("/api/accounts/<int:idx>/pause_reply", methods=["POST"])
+def api_account_pause_reply(idx: int):
+    """暂停指定账号的回复功能（人工接管模式）。"""
+    manager, error = _validate_account_index(idx)
+    if error:
+        return error
+    manager.pause_reply(idx)
+    return jsonify({"status": "ok", "message": f"账号 {idx} 回复已暂停（人工接管模式）"})
+
+
+@app.route("/api/accounts/<int:idx>/resume_reply", methods=["POST"])
+def api_account_resume_reply(idx: int):
+    """恢复指定账号的回复功能。"""
+    manager, error = _validate_account_index(idx)
+    if error:
+        return error
+    manager.resume_reply(idx)
+    return jsonify({"status": "ok", "message": f"账号 {idx} 回复已恢复"})
+
+
+@app.route("/api/accounts/<int:idx>/confirm_login", methods=["POST"])
+def api_account_confirm_login(idx: int):
+    """确认指定账号的登录完成。"""
+    manager, error = _validate_account_index(idx)
+    if error:
+        return error
+    manager.confirm_login(idx)
+    acc_status = manager.get_account_status(idx)
+    socketio.emit("status_update", manager.get_status())
+    return jsonify({"status": "ok", "message": f"账号 {idx} 登录已确认"})
+
+
+@app.route("/api/accounts/<int:idx>/status", methods=["GET"])
+def api_account_status(idx: int):
+    """获取指定账号的运行状态。"""
+    manager, error = _validate_account_index(idx)
+    if error:
+        return error
+    acc_status = manager.get_account_status(idx)
+    if acc_status is None:
+        return jsonify({"status": "error", "message": "账号状态获取失败"}), 404
+    return jsonify(acc_status)
+
+
+# ===================== 配置 API =====================
+
+@app.route("/api/config", methods=["GET"])
+def api_get_config():
+    """获取当前配置。"""
+    cfg = _ensure_config()
+    config_dict = cfg.to_dict()
+    # 添加 user_profile 信息
+    config_dict["user_profile"] = cfg._profile_dict()
+    # 添加 reply_rules 和 importance_keywords
+    config_dict["reply_rules"] = dict(cfg.rules.reply_rules)
+    config_dict["importance_keywords"] = list(cfg.rules.importance_keywords)
+    # 添加 templates
+    config_dict["templates"] = {
+        "salary_reply": cfg.templates.salary_reply,
+        "interview_time_reply": cfg.templates.interview_time_reply,
+        "job_content_reply": cfg.templates.job_content_reply,
+        "greeting_reply": cfg.templates.greeting_reply,
+        "default_reply": cfg.templates.default_reply,
+        "resume_duplicate_reply": cfg.templates.resume_duplicate_reply,
+        "resume_unavailable_reply": cfg.templates.resume_unavailable_reply,
+    }
+    return jsonify({"status": "ok", "config": config_dict})
+
+
+@app.route("/api/config", methods=["POST", "PUT"])
+def api_save_config():
+    """保存配置。"""
+    global _config, _multi_manager
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"status": "error", "message": "请求体为空"}), 400
+
+        new_cfg = data.get("config") if isinstance(data.get("config"), dict) else data
+        if not isinstance(new_cfg, dict):
+            return jsonify({"status": "error", "message": "config 字段必须是对象"}), 400
+
+        # 使用兼容层校验
+        errors = validate_config(new_cfg)
+        if errors:
+            return jsonify({"status": "error", "message": "；".join(errors)}), 400
+
+        # 保存到文件
+        save_config(new_cfg)
+
+        # 重新加载配置
+        _config = UnifiedConfig.load()
+
+        # 如果机器人正在运行，更新配置（需要停止后重启才能生效）
+        if _multi_manager is not None and _multi_manager.get_status().get("running"):
+            return jsonify({
+                "status": "ok",
+                "message": "配置已保存，需重启机器人才能生效",
+                "need_restart": True,
+            })
+
+        return jsonify({"status": "ok", "message": "配置已保存"})
+    except Exception as e:
+        logger.exception("保存配置失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ===================== 日志 API =====================
+
+@app.route("/api/logs")
+def api_logs():
+    """获取日志列表。"""
+    with log_buffer_lock:
+        logs = list(log_buffer)
+    return jsonify({"status": "ok", "logs": logs})
+
+
+# ===================== 统计 API =====================
+
+@app.route("/api/stats")
+def api_stats():
+    """获取统计数据（多账号汇总）。"""
+    manager = _multi_manager
+    if manager is None:
+        return jsonify({
+            "status": "ok",
+            "stats": {
+                "greet_applied": 0,
+                "greet_skipped": 0,
+                "greet_total": 0,
+                "reply_sent": 0,
+                "reply_skipped": 0,
+                "resume_sent": 0,
+                "important_events": 0,
+                "greet_rounds": 0,
+                "reply_rounds": 0,
+            },
+        })
+    status = manager.get_status()
+    return jsonify({"status": "ok", "stats": status.get("stats", {})})
+
+
+# ===================== 消息 API =====================
+
+@app.route("/api/messages")
+def api_messages():
+    """获取消息列表（汇总所有账号）。"""
+    manager = _multi_manager
+    if manager is None:
+        return jsonify({"status": "ok", "messages": []})
+    try:
+        all_messages = []
+        with manager._lock:
+            for idx in sorted(manager._loops.keys()):
+                loop = manager._loops[idx]
+                if loop._msg_store is not None:
+                    msgs = loop._msg_store.get_recent_messages(limit=50)
+                    for msg in msgs:
+                        msg["account_index"] = idx
+                        msg["account_name"] = loop.account_name
+                    all_messages.extend(msgs)
+        # 按时间排序，最多返回 50 条
+        all_messages.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+        return jsonify({"status": "ok", "messages": all_messages[:50]})
+    except Exception as e:
+        return jsonify({"status": "ok", "messages": [], "error": str(e)})
+
+
+# ===================== Cookie 上传 API =====================
+
+@app.route("/api/upload/cookie", methods=["POST"])
+def api_upload_cookie():
+    """上传 Cookie 文件。"""
+    f = request.files.get("file")
+    if not f or not f.filename:
+        return jsonify({"status": "error", "message": "未选择文件"}), 400
+    safe_name = os.path.basename(f.filename)
+    if not safe_name.endswith(".json"):
+        safe_name += ".json"
+    save_path = str(COOKIE_DIR / safe_name)
+    f.save(save_path)
+    return jsonify({"status": "ok", "filename": safe_name})
+
+
+# ===================== 图片上传 API =====================
+
+@app.route("/api/upload/images", methods=["POST"])
+def api_upload_images():
+    """上传作品图片。"""
+    files = request.files.getlist("files")
+    if not files:
+        return jsonify({"status": "error", "message": "未选择文件"}), 400
+    uploaded = []
+    for f in files:
+        if f and f.filename:
+            filename = uuid.uuid4().hex[:8] + "_" + f.filename
+            save_path = str(DASHBOARD_DIR / filename)
+            f.save(save_path)
+            uploaded.append(f"dashboard/{filename}")
+    return jsonify({"status": "ok", "files": uploaded})
+
+
+# ===================== 浏览器检测 API =====================
+
+@app.route("/api/browser/list")
+def api_browser_list():
+    """检测可用浏览器。"""
+    browsers = []
+
+    # Windows 常见路径
+    chrome_paths = [
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"),
+    ]
+    edge_paths = [
+        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+    ]
+
+    for p in chrome_paths:
+        if os.path.isfile(p):
+            browsers.append({"name": "Chrome", "path": p, "type": "chrome"})
+            break
+
+    for p in edge_paths:
+        if os.path.isfile(p):
+            browsers.append({"name": "Edge", "path": p, "type": "edge"})
+            break
+
+    # 检查 PATH 中的浏览器
+    for name in ["chrome", "chromium", "msedge"]:
+        path = shutil.which(name)
+        if path:
+            browsers.append({
+                "name": name.capitalize(),
+                "path": path,
+                "type": "chrome" if name != "msedge" else "edge",
+            })
+
+    return jsonify({"status": "ok", "browsers": browsers})
+
+
+@app.route("/api/browser/set", methods=["POST"])
+def api_browser_set():
+    """设置偏好浏览器。"""
+    data = request.get_json() or {}
+    browser_path = data.get("path", "")
+    browser_type = data.get("type", "chrome")
+
+    if not browser_path:
+        return jsonify({"status": "error", "message": "path 不能为空"}), 400
+
+    cfg = _ensure_config()
+    cfg.browser.chrome_path = browser_path
+    cfg.browser.browser_type = browser_type
+    cfg.save()
+
+    return jsonify({"status": "ok", "message": f"浏览器已设置为 {browser_type}"})
+
+
+# ===================== 个人画像 API =====================
+
+@app.route("/api/user_profile", methods=["GET"])
+def api_get_profile():
+    """获取个人画像配置。"""
+    cfg = _ensure_config()
+    return jsonify({"status": "ok", "profile": cfg._profile_dict()})
+
+
+@app.route("/api/user_profile", methods=["POST"])
+def api_save_profile():
+    """保存个人画像配置。"""
+    global _config
+    try:
+        data = request.get_json()
+        if not data or "profile" not in data:
+            return jsonify({"status": "error", "message": "缺少 profile 字段"}), 400
+
+        profile_data = data["profile"]
+
+        # 保存到 user_profile.json
+        with open(USER_PROFILE_FILE, "w", encoding="utf-8") as f:
+            json.dump(profile_data, f, ensure_ascii=False, indent=2)
+
+        # 重新加载配置
+        _config = UnifiedConfig.load()
+
+        return jsonify({"status": "ok", "message": "个人画像已保存"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ===================== AI 相关 API =====================
+
+@app.route("/api/ai/test", methods=["POST"])
+def api_ai_test():
+    """测试 AI 连接，接收 {provider_index} 参数，返回测试结果。"""
+    try:
+        data = request.get_json() or {}
+        provider_index = data.get("provider_index", 0)
+        cfg = _ensure_config()
+
+        if not cfg.ai.providers:
+            return jsonify({"status": "error", "message": "未配置任何 AI 提供商"}), 400
+
+        if provider_index < 0 or provider_index >= len(cfg.ai.providers):
+            return jsonify({"status": "error", "message": "提供商索引超出范围"}), 400
+
+        provider = cfg.ai.providers[provider_index]
+        if not provider.api_key:
+            return jsonify({"status": "error", "message": f"提供商「{provider.name}」未配置 API Key"}), 400
+
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=provider.api_key, base_url=provider.api_base)
+            response = client.chat.completions.create(
+                model=provider.model,
+                max_tokens=10,
+                messages=[{"role": "user", "content": "请回复：连接成功"}],
+            )
+            reply_text = response.choices[0].message.content if response.choices else ""
+            return jsonify({
+                "status": "ok",
+                "message": f"提供商「{provider.name}」连接成功",
+                "reply": reply_text,
+            })
+        except ImportError:
+            return jsonify({"status": "error", "message": "未安装 openai 库"}), 500
+        except Exception as e:
+            return jsonify({
+                "status": "error",
+                "message": f"提供商「{provider.name}」连接失败: {str(e)[:200]}",
+            }), 500
+    except Exception as e:
+        logger.exception("AI 测试失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/ai/analyze", methods=["POST"])
+def api_ai_analyze():
+    """分析岗位描述，接收 {job_desc, provider_index} 参数，返回分析结果。"""
+    try:
+        data = request.get_json() or {}
+        job_desc = data.get("job_desc", "")
+        provider_index = data.get("provider_index", 0)
+
+        if not job_desc:
+            return jsonify({"status": "error", "message": "岗位描述不能为空"}), 400
+
+        cfg = _ensure_config()
+        if not cfg.ai.providers:
+            return jsonify({"status": "error", "message": "未配置任何 AI 提供商"}), 400
+
+        if provider_index < 0 or provider_index >= len(cfg.ai.providers):
+            return jsonify({"status": "error", "message": "提供商索引超出范围"}), 400
+
+        provider = cfg.ai.providers[provider_index]
+        if not provider.api_key:
+            return jsonify({"status": "error", "message": f"提供商「{provider.name}」未配置 API Key"}), 400
+
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=provider.api_key, base_url=provider.api_base)
+            profile = cfg._profile_dict()
+            skills = "、".join(str(s) for s in profile.get("skills", [])) if isinstance(profile.get("skills"), list) else profile.get("skills", "")
+            system_prompt = (
+                f"你是一个求职分析助手。求职者背景：学历{profile.get('education', '')}，"
+                f"求职方向{profile.get('position', '')}，技能{skills}。"
+                f"请分析岗位描述与求职者的匹配度，给出匹配分数(0-100)和简要理由。"
+            )
+            response = client.chat.completions.create(
+                model=provider.model,
+                max_tokens=cfg.ai.max_tokens,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": f"请分析以下岗位描述：\n{job_desc}"},
+                ],
+            )
+            analysis = response.choices[0].message.content if response.choices else ""
+            return jsonify({
+                "status": "ok",
+                "analysis": analysis,
+                "provider": provider.name,
+            })
+        except ImportError:
+            return jsonify({"status": "error", "message": "未安装 openai 库"}), 500
+        except Exception as e:
+            return jsonify({
+                "status": "error",
+                "message": f"AI 分析失败: {str(e)[:200]}",
+            }), 500
+    except Exception as e:
+        logger.exception("AI 分析失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/ai/prompts", methods=["GET"])
+def api_get_ai_prompts():
+    """获取当前 AI 提示词配置（system_prompt, match_prompt 等）。"""
+    try:
+        overrides = {}
+        if OVERRIDES_FILE.exists():
+            with open(OVERRIDES_FILE, "r", encoding="utf-8") as f:
+                overrides = json.load(f)
+        prompts = {
+            "system_rules": overrides.get("system_rules", ""),
+            "user_prompt_template": overrides.get("user_prompt_template", ""),
+        }
+        return jsonify({"status": "ok", "prompts": prompts})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/ai/prompts", methods=["POST"])
+def api_save_ai_prompts():
+    """保存 AI 提示词配置。"""
+    try:
+        data = request.get_json() or {}
+        prompts = data.get("prompts", data)
+
+        overrides = {}
+        if OVERRIDES_FILE.exists():
+            with open(OVERRIDES_FILE, "r", encoding="utf-8") as f:
+                overrides = json.load(f)
+
+        if "system_rules" in prompts:
+            overrides["system_rules"] = prompts["system_rules"]
+        if "user_prompt_template" in prompts:
+            overrides["user_prompt_template"] = prompts["user_prompt_template"]
+
+        with open(OVERRIDES_FILE, "w", encoding="utf-8") as f:
+            json.dump(overrides, f, ensure_ascii=False, indent=2)
+
+        return jsonify({"status": "ok", "message": "AI 提示词已保存"})
+    except Exception as e:
+        logger.exception("保存 AI 提示词失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/ai/providers", methods=["GET"])
+def api_get_ai_providers():
+    """获取 AI 提供商列表。"""
+    cfg = _ensure_config()
+    providers = [
+        {
+            "name": p.name,
+            "api_key": p.api_key,
+            "api_base": p.api_base,
+            "model": p.model,
+            "timeout": p.timeout,
+        }
+        for p in cfg.ai.providers
+    ]
+    return jsonify({"status": "ok", "providers": providers})
+
+
+@app.route("/api/ai/providers/add", methods=["POST"])
+def api_add_ai_provider():
+    """添加 AI 提供商，接收 {name, api_key, model, api_base}。"""
+    try:
+        data = request.get_json() or {}
+        name = data.get("name", "")
+        api_key = data.get("api_key", "")
+        model = data.get("model", "")
+        api_base = data.get("api_base", "")
+
+        if not name:
+            return jsonify({"status": "error", "message": "提供商名称不能为空"}), 400
+        if not api_key:
+            return jsonify({"status": "error", "message": "API Key 不能为空"}), 400
+        if not model:
+            return jsonify({"status": "error", "message": "模型名称不能为空"}), 400
+
+        cfg = _ensure_config()
+        from boss_bot.unified_config import AIProvider
+        new_provider = AIProvider(
+            name=name,
+            api_key=api_key,
+            api_base=api_base or "https://apihub.agnes-ai.com/v1",
+            model=model,
+            timeout=30,
+        )
+        cfg.ai.providers.append(new_provider)
+        cfg.save()
+
+        return jsonify({"status": "ok", "message": f"提供商「{name}」已添加"})
+    except Exception as e:
+        logger.exception("添加 AI 提供商失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/ai/providers/delete", methods=["POST"])
+def api_delete_ai_provider():
+    """删除 AI 提供商，接收 {index}。"""
+    try:
+        data = request.get_json() or {}
+        index = data.get("index", -1)
+
+        cfg = _ensure_config()
+        if index < 0 or index >= len(cfg.ai.providers):
+            return jsonify({"status": "error", "message": "提供商索引超出范围"}), 400
+
+        removed = cfg.ai.providers.pop(index)
+        cfg.save()
+
+        return jsonify({"status": "ok", "message": f"提供商「{removed.name}」已删除"})
+    except Exception as e:
+        logger.exception("删除 AI 提供商失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ===================== 简历 API =====================
+
+@app.route("/api/resume", methods=["GET"])
+def api_get_resume():
+    """获取简历内容（从配置中读取 resume 相关字段）。"""
+    cfg = _ensure_config()
+    resume = {
+        "school": cfg.resume.school,
+        "major": cfg.resume.major,
+        "degree": cfg.resume.degree,
+        "skills": list(cfg.resume.skills),
+        "experience": cfg.resume.experience,
+        "target_position": cfg.resume.target_position,
+        "self_intro": cfg.resume.self_intro,
+    }
+    return jsonify({"status": "ok", "resume": resume})
+
+
+@app.route("/api/resume", methods=["POST"])
+def api_save_resume():
+    """保存简历内容。"""
+    global _config
+    try:
+        data = request.get_json() or {}
+        resume_data = data.get("resume", data)
+
+        cfg = _ensure_config()
+        if "school" in resume_data:
+            cfg.resume.school = str(resume_data["school"])
+        if "major" in resume_data:
+            cfg.resume.major = str(resume_data["major"])
+        if "degree" in resume_data:
+            cfg.resume.degree = str(resume_data["degree"])
+        if "skills" in resume_data and isinstance(resume_data["skills"], list):
+            cfg.resume.skills = list(resume_data["skills"])
+        if "experience" in resume_data:
+            cfg.resume.experience = str(resume_data["experience"])
+        if "target_position" in resume_data:
+            cfg.resume.target_position = str(resume_data["target_position"])
+        if "self_intro" in resume_data:
+            cfg.resume.self_intro = str(resume_data["self_intro"])
+
+        cfg.save()
+        _config = UnifiedConfig.load()
+
+        return jsonify({"status": "ok", "message": "简历已保存"})
+    except Exception as e:
+        logger.exception("保存简历失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ===================== Excel 导出 API =====================
+
+@app.route("/api/excel/files", methods=["GET"])
+def api_excel_files():
+    """获取已导出的 Excel 文件列表（扫描 data/ 目录下的 .xlsx 文件）。"""
+    try:
+        files = []
+        if DATA_DIR.exists():
+            for f in DATA_DIR.iterdir():
+                if f.is_file() and f.suffix == ".xlsx":
+                    stat = f.stat()
+                    files.append({
+                        "name": f.name,
+                        "size": stat.st_size,
+                        "created": datetime.fromtimestamp(stat.st_ctime).strftime("%Y-%m-%d %H:%M:%S"),
+                    })
+        files.sort(key=lambda x: x["created"], reverse=True)
+        return jsonify({"status": "ok", "files": files})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/excel/download/<filename>", methods=["GET"])
+def api_excel_download(filename):
+    """下载指定的 Excel 文件。"""
+    try:
+        safe_name = os.path.basename(filename)
+        if not safe_name.endswith(".xlsx"):
+            return jsonify({"status": "error", "message": "只能下载 .xlsx 文件"}), 400
+
+        file_path = DATA_DIR / safe_name
+        if not file_path.exists() or not file_path.is_file():
+            return jsonify({"status": "error", "message": "文件不存在"}), 404
+
+        return send_file(
+            str(file_path),
+            as_attachment=True,
+            download_name=safe_name,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/excel/export", methods=["POST"])
+def api_excel_export():
+    """导出当前统计数据为 Excel 文件。"""
+    try:
+        from openpyxl import Workbook
+
+        manager = _multi_manager
+        stats = {}
+        if manager is not None:
+            status = manager.get_status()
+            stats = status.get("stats", {})
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "统计数据"
+
+        headers = ["指标", "数值"]
+        ws.append(headers)
+
+        rows = [
+            ("打招呼-已投递", stats.get("greet_applied", 0)),
+            ("打招呼-已跳过", stats.get("greet_skipped", 0)),
+            ("打招呼-总数", stats.get("greet_total", 0)),
+            ("回复-已发送", stats.get("reply_sent", 0)),
+            ("回复-已跳过", stats.get("reply_skipped", 0)),
+            ("简历-已发送", stats.get("resume_sent", 0)),
+            ("重要事件数", stats.get("important_events", 0)),
+            ("打招呼轮次", stats.get("greet_rounds", 0)),
+            ("回复轮次", stats.get("reply_rounds", 0)),
+        ]
+        for row in rows:
+            ws.append(row)
+
+        # 导出时间
+        ws.append([])
+        ws.append(["导出时间", datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
+
+        filename = f"stats_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        file_path = DATA_DIR / filename
+        wb.save(str(file_path))
+
+        return jsonify({
+            "status": "ok",
+            "message": "数据已导出",
+            "filename": filename,
+        })
+    except ImportError:
+        return jsonify({"status": "error", "message": "未安装 openpyxl 库"}), 500
+    except Exception as e:
+        logger.exception("Excel 导出失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ===================== 账号管理 API =====================
+
+@app.route("/api/accounts", methods=["GET"])
+def api_get_accounts():
+    """获取账号列表。"""
+    cfg = _ensure_config()
+    accounts = [
+        {
+            "name": acc.name,
+            "enabled": acc.enabled,
+            "cookie_file": acc.cookie_file,
+            "image_files": list(acc.image_files),
+            "message_interval_min": acc.message_interval_min,
+            "message_interval_max": acc.message_interval_max,
+            "jobs_count": len(acc.jobs),
+        }
+        for acc in cfg.greet.accounts
+    ]
+    return jsonify({"status": "ok", "accounts": accounts})
+
+
+@app.route("/api/accounts/add", methods=["POST"])
+def api_add_account():
+    """添加新账号，接收 {name, cookie_file, enabled}。"""
+    try:
+        data = request.get_json() or {}
+        name = data.get("name", "")
+        cookie_file = data.get("cookie_file", "zhipin_cookies.json")
+        enabled = data.get("enabled", True)
+
+        if not name:
+            return jsonify({"status": "error", "message": "账号名称不能为空"}), 400
+
+        cfg = _ensure_config()
+        from boss_bot.unified_config import AccountConfig, JobConfig
+        new_account = AccountConfig(
+            name=name,
+            enabled=enabled,
+            cookie_file=cookie_file,
+            jobs=[JobConfig()],
+        )
+        cfg.greet.accounts.append(new_account)
+        cfg.save()
+
+        return jsonify({"status": "ok", "message": f"账号「{name}」已添加"})
+    except Exception as e:
+        logger.exception("添加账号失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/accounts/delete", methods=["POST"])
+def api_delete_account():
+    """删除账号，接收 {index}。"""
+    try:
+        data = request.get_json() or {}
+        index = data.get("index", -1)
+
+        cfg = _ensure_config()
+        if index < 0 or index >= len(cfg.greet.accounts):
+            return jsonify({"status": "error", "message": "账号索引超出范围"}), 400
+
+        if len(cfg.greet.accounts) <= 1:
+            return jsonify({"status": "error", "message": "至少需要保留一个账号"}), 400
+
+        removed = cfg.greet.accounts.pop(index)
+        cfg.save()
+
+        return jsonify({"status": "ok", "message": f"账号「{removed.name}」已删除"})
+    except Exception as e:
+        logger.exception("删除账号失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/accounts/update", methods=["POST"])
+def api_update_account():
+    """更新账号信息，接收 {index, name, cookie_file, enabled, message_interval_min, message_interval_max}。"""
+    try:
+        data = request.get_json() or {}
+        index = data.get("index", -1)
+
+        cfg = _ensure_config()
+        if index < 0 or index >= len(cfg.greet.accounts):
+            return jsonify({"status": "error", "message": "账号索引超出范围"}), 400
+
+        acc = cfg.greet.accounts[index]
+        if "name" in data:
+            acc.name = str(data["name"])
+        if "cookie_file" in data:
+            acc.cookie_file = str(data["cookie_file"])
+        if "enabled" in data:
+            acc.enabled = bool(data["enabled"])
+        if "message_interval_min" in data:
+            acc.message_interval_min = int(data["message_interval_min"])
+        if "message_interval_max" in data:
+            acc.message_interval_max = int(data["message_interval_max"])
+
+        cfg.save()
+
+        return jsonify({"status": "ok", "message": f"账号「{acc.name}」已更新"})
+    except Exception as e:
+        logger.exception("更新账号失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ===================== 岗位管理 API =====================
+
+@app.route("/api/jobs", methods=["GET"])
+def api_get_jobs():
+    """获取岗位列表，支持按账号筛选。"""
+    cfg = _ensure_config()
+    account_index = request.args.get("account_index", type=int)
+
+    result = []
+    for acc_idx, acc in enumerate(cfg.greet.accounts):
+        if account_index is not None and acc_idx != account_index:
+            continue
+        for job_idx, job in enumerate(acc.jobs):
+            result.append({
+                "account_index": acc_idx,
+                "account_name": acc.name,
+                "job_index": job_idx,
+                "query": job.query,
+                "city": job.city,
+                "scroll_pages": job.scroll_pages,
+                "greeting_message": job.greeting_message,
+                "enabled": job.enabled,
+                "image_files": list(job.image_files),
+            })
+
+    return jsonify({"status": "ok", "jobs": result})
+
+
+@app.route("/api/jobs/add", methods=["POST"])
+def api_add_job():
+    """添加岗位，接收 {account_index, query, city, scroll_pages, greeting_message, enabled, images}。"""
+    try:
+        data = request.get_json() or {}
+        account_index = data.get("account_index", 0)
+
+        cfg = _ensure_config()
+        if account_index < 0 or account_index >= len(cfg.greet.accounts):
+            return jsonify({"status": "error", "message": "账号索引超出范围"}), 400
+
+        from boss_bot.unified_config import JobConfig
+        new_job = JobConfig(
+            query=data.get("query", "数据分析"),
+            city=data.get("city", "上海"),
+            scroll_pages=data.get("scroll_pages", 5),
+            greeting_message=data.get("greeting_message", DEFAULT_GREETING),
+            enabled=data.get("enabled", True),
+            image_files=data.get("images", []),
+        )
+        cfg.greet.accounts[account_index].jobs.append(new_job)
+        cfg.save()
+
+        return jsonify({"status": "ok", "message": "岗位已添加"})
+    except Exception as e:
+        logger.exception("添加岗位失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/jobs/delete", methods=["POST"])
+def api_delete_job():
+    """删除岗位，接收 {account_index, job_index}。"""
+    try:
+        data = request.get_json() or {}
+        account_index = data.get("account_index", -1)
+        job_index = data.get("job_index", -1)
+
+        cfg = _ensure_config()
+        if account_index < 0 or account_index >= len(cfg.greet.accounts):
+            return jsonify({"status": "error", "message": "账号索引超出范围"}), 400
+
+        acc = cfg.greet.accounts[account_index]
+        if job_index < 0 or job_index >= len(acc.jobs):
+            return jsonify({"status": "error", "message": "岗位索引超出范围"}), 400
+
+        if len(acc.jobs) <= 1:
+            return jsonify({"status": "error", "message": "每个账号至少需要保留一个岗位"}), 400
+
+        acc.jobs.pop(job_index)
+        cfg.save()
+
+        return jsonify({"status": "ok", "message": "岗位已删除"})
+    except Exception as e:
+        logger.exception("删除岗位失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/jobs/update", methods=["POST"])
+def api_update_job():
+    """更新岗位信息，接收 {account_index, job_index, query, city, scroll_pages, greeting_message, enabled, images}。"""
+    try:
+        data = request.get_json() or {}
+        account_index = data.get("account_index", -1)
+        job_index = data.get("job_index", -1)
+
+        cfg = _ensure_config()
+        if account_index < 0 or account_index >= len(cfg.greet.accounts):
+            return jsonify({"status": "error", "message": "账号索引超出范围"}), 400
+
+        acc = cfg.greet.accounts[account_index]
+        if job_index < 0 or job_index >= len(acc.jobs):
+            return jsonify({"status": "error", "message": "岗位索引超出范围"}), 400
+
+        job = acc.jobs[job_index]
+        if "query" in data:
+            job.query = str(data["query"])
+        if "city" in data:
+            job.city = str(data["city"])
+        if "scroll_pages" in data:
+            job.scroll_pages = int(data["scroll_pages"])
+        if "greeting_message" in data:
+            job.greeting_message = str(data["greeting_message"])
+        if "enabled" in data:
+            job.enabled = bool(data["enabled"])
+        if "images" in data and isinstance(data["images"], list):
+            job.image_files = list(data["images"])
+
+        cfg.save()
+
+        return jsonify({"status": "ok", "message": "岗位已更新"})
+    except Exception as e:
+        logger.exception("更新岗位失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ===================== 图片管理 API =====================
+
+@app.route("/api/images", methods=["GET"])
+def api_get_images():
+    """获取已上传的图片列表（扫描 static/dashboard/ 目录）。"""
+    try:
+        images = []
+        if DASHBOARD_DIR.exists():
+            for f in DASHBOARD_DIR.iterdir():
+                if f.is_file() and f.suffix.lower() in (".png", ".jpg", ".jpeg", ".gif", ".webp"):
+                    stat = f.stat()
+                    images.append({
+                        "filename": f.name,
+                        "url": f"dashboard/{f.name}",
+                        "size": stat.st_size,
+                        "created": datetime.fromtimestamp(stat.st_ctime).strftime("%Y-%m-%d %H:%M:%S"),
+                    })
+        images.sort(key=lambda x: x["created"], reverse=True)
+        return jsonify({"status": "ok", "images": images})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/images/delete", methods=["POST"])
+def api_delete_image():
+    """删除指定图片，接收 {filename}。"""
+    try:
+        data = request.get_json() or {}
+        filename = data.get("filename", "")
+
+        safe_name = os.path.basename(filename)
+        if not safe_name:
+            return jsonify({"status": "error", "message": "文件名不能为空"}), 400
+
+        file_path = DASHBOARD_DIR / safe_name
+        if not file_path.exists() or not file_path.is_file():
+            return jsonify({"status": "error", "message": "文件不存在"}), 404
+
+        file_path.unlink()
+        return jsonify({"status": "ok", "message": f"图片「{safe_name}」已删除"})
+    except Exception as e:
+        logger.exception("删除图片失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ===================== 主题设置 API =====================
+
+@app.route("/api/theme", methods=["GET"])
+def api_get_theme():
+    """获取当前主题设置（light/dark）。"""
+    try:
+        config_dict = load_config()
+        theme = config_dict.get("theme", "light")
+        return jsonify({"status": "ok", "theme": theme})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/theme", methods=["POST"])
+def api_save_theme():
+    """保存主题设置。"""
+    try:
+        data = request.get_json() or {}
+        theme = data.get("theme", "light")
+
+        if theme not in ("light", "dark"):
+            return jsonify({"status": "error", "message": "主题只能是 light 或 dark"}), 400
+
+        config_dict = load_config()
+        config_dict["theme"] = theme
+        save_config(config_dict)
+
+        return jsonify({"status": "ok", "message": f"主题已设置为 {theme}"})
+    except Exception as e:
+        logger.exception("保存主题失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ===================== 规则管理 API =====================
+
+@app.route("/api/rules", methods=["GET"])
+def api_get_rules():
+    """获取回复规则和重要关键词。"""
+    cfg = _ensure_config()
+    rules = {
+        "reply_rules": dict(cfg.rules.reply_rules),
+        "importance_keywords": list(cfg.rules.importance_keywords),
+    }
+    return jsonify({"status": "ok", "rules": rules})
+
+
+@app.route("/api/rules", methods=["POST"])
+def api_save_rules():
+    """保存回复规则和重要关键词。"""
+    global _config
+    try:
+        data = request.get_json() or {}
+        rules_data = data.get("rules", data)
+
+        cfg = _ensure_config()
+        if "reply_rules" in rules_data and isinstance(rules_data["reply_rules"], dict):
+            cfg.rules.reply_rules = dict(rules_data["reply_rules"])
+        if "importance_keywords" in rules_data and isinstance(rules_data["importance_keywords"], list):
+            cfg.rules.importance_keywords = list(rules_data["importance_keywords"])
+
+        cfg.save()
+        _config = UnifiedConfig.load()
+
+        return jsonify({"status": "ok", "message": "规则已保存"})
+    except Exception as e:
+        logger.exception("保存规则失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ===================== 模板管理 API =====================
+
+@app.route("/api/templates", methods=["GET"])
+def api_get_templates():
+    """获取回复模板（salary_reply, interview_time_reply 等）。"""
+    cfg = _ensure_config()
+    templates = {
+        "salary_reply": cfg.templates.salary_reply,
+        "interview_time_reply": cfg.templates.interview_time_reply,
+        "job_content_reply": cfg.templates.job_content_reply,
+        "greeting_reply": cfg.templates.greeting_reply,
+        "default_reply": cfg.templates.default_reply,
+        "resume_duplicate_reply": cfg.templates.resume_duplicate_reply,
+        "resume_unavailable_reply": cfg.templates.resume_unavailable_reply,
+    }
+    return jsonify({"status": "ok", "templates": templates})
+
+
+@app.route("/api/templates", methods=["POST"])
+def api_save_templates():
+    """保存回复模板。"""
+    global _config
+    try:
+        data = request.get_json() or {}
+        templates_data = data.get("templates", data)
+
+        cfg = _ensure_config()
+        if "salary_reply" in templates_data:
+            cfg.templates.salary_reply = str(templates_data["salary_reply"])
+        if "interview_time_reply" in templates_data:
+            cfg.templates.interview_time_reply = str(templates_data["interview_time_reply"])
+        if "job_content_reply" in templates_data:
+            cfg.templates.job_content_reply = str(templates_data["job_content_reply"])
+        if "greeting_reply" in templates_data:
+            cfg.templates.greeting_reply = str(templates_data["greeting_reply"])
+        if "default_reply" in templates_data:
+            cfg.templates.default_reply = str(templates_data["default_reply"])
+        if "resume_duplicate_reply" in templates_data:
+            cfg.templates.resume_duplicate_reply = str(templates_data["resume_duplicate_reply"])
+        if "resume_unavailable_reply" in templates_data:
+            cfg.templates.resume_unavailable_reply = str(templates_data["resume_unavailable_reply"])
+
+        cfg.save()
+        _config = UnifiedConfig.load()
+
+        return jsonify({"status": "ok", "message": "模板已保存"})
+    except Exception as e:
+        logger.exception("保存模板失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ===================== SocketIO 事件 =====================
+
+@socketio.on("connect")
+def on_connect():
+    """客户端连接时推送当前状态。"""
+    emit("connected", {"data": "BOSS Bot 统一管理面板已连接"})
+    manager = _multi_manager
+    if manager is not None:
+        emit("status_update", manager.get_status())
+    # 推送最近的日志
+    with log_buffer_lock:
+        recent_logs = list(log_buffer[-50:])
+    for log_entry in recent_logs:
+        emit("bot_log", {
+            "time": log_entry["time"],
+            "message": f"[{log_entry['level']}] {log_entry['message']}",
+        })
+
+
+@socketio.on("disconnect")
+def on_disconnect():
+    logger.info("客户端已断开连接")
+
+
+# ===================== 主入口 =====================
+
+def main():
+    """启动 Flask 应用。"""
+    logger.info("=" * 50)
+    logger.info("BOSS 统一机器人 Web 管理界面")
+    logger.info(f"项目根目录: {PROJECT_ROOT}")
+    logger.info(f"配置文件: {BOT_CONFIG_FILE}")
+    logger.info("=" * 50)
+
+    # 预加载配置
+    _ensure_config()
+    logger.info("配置已加载")
+
+    # 启动 Flask
+    socketio.run(app, host="0.0.0.0", port=5000, debug=False, allow_unsafe_werkzeug=True)
+
+
+if __name__ == "__main__":
+    main()

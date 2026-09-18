@@ -1,0 +1,18 @@
+# BOSS Bot 统一项目依赖
+# 合并自 auto_boss 和 BOSS-auto-reply-bot 两个项目
+
+# 浏览器自动化
+DrissionPage>=4.1.0,<5.0.0
+
+# AI / OpenAI
+openai>=1.0.0
+
+# Web 框架
+flask>=3.0.0
+Flask-SocketIO>=5.3.0
+
+# 图像处理
+Pillow>=10.0.0
+
+# Excel 处理
+openpyxl>=3.1.0
