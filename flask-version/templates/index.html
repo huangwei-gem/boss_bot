@@ -130,7 +130,7 @@ a{color:var(--accent);text-decoration:none}
 .side-form-input::placeholder{color:var(--fg-4th)}
 .side-form-select option{background:var(--surface);color:var(--fg)}
 .acc-field-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--fg-2nd)}
-.acc-field-row label{flex-shrink:0;font-size:10.5px;font-weight:500;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em;min-width:48px}
+.acc-field-row label{flex-shrink:0;font-size:10.5px;font-weight:500;color:var(--side-label);E;text-transform:uppercase;letter-spacing:.04em;min-width:48px}
 
 /* File upload */
 .file-input-wrap{display:flex;flex:1;gap:4px}
@@ -216,7 +216,7 @@ a{color:var(--accent);text-decoration:none}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:8px 16px;font-size:12px;font-weight:500;border-radius:10px;transition:all var(--dur) var(--ease);white-space:nowrap}
 .btn-sm{padding:5px 10px;font-size:11px}
 .btn-success{background:var(--success);color:#fff;box-shadow:0 2px 8px rgba(16,185,129,.25)}
-.btn-success:hover{filter:brightness(1.05);4);box-shadow:0 6px 18px rgba(16,185,129,.35);transform:translateY(-1px)}
+.btn-success:hover{filter:brightness(1.05);box-shadow:0 6px 18px rgba(16,185,129,.35);transform:translateY(-1px)}
 .btn-success:active{transform:translateY(0)}
 .btn-danger{background:var(--danger);color:#fff;box-shadow:0 2px 8px rgba(239,68,68,.22)}
 .btn-danger:hover{filter:brightness(1.05);box-shadow:0 6px 18px rgba(239,68,68,.32);transform:translateY(-1px)}
@@ -239,7 +239,7 @@ a{color:var(--accent);text-decoration:none}
 /* Job list */
 .job-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r-sm);border:1px solid var(--bd);background:var(--surface-soft);margin-bottom:6px;transition:all var(--dur) var(--ease);cursor:pointer}
 .job-item:hover{background:var(--surface-hover);border-color:var(--bd-2);box-shadow:var(--sh);transform:translateY(-1px)}
-.job-item .job-info{flex:1;min-width:0}
+.job-item .job-info{flex:1;min-width:5px}
 .job-item .job-query{font-size:13px;font-weight:500;color:var(--fg)}
 .job-item .job-city{font-size:10px;color:var(--fg-3rd);margin-top:1px}
 .job-thumbs{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
@@ -266,7 +266,7 @@ a{color:var(--accent);text-decoration:none}
 .modal-large textarea:focus{outline:none;border-color:var(--accent)}
 
 /* Excel file list */
-.ex0.excel-file-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--bd-2);border-radius:8px;margin-bottom:8px}
+.excel-file-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--bd-2);border-radius:8px;margin-bottom:8px}
 .excel-file-info{flex:1;min-width:0}
 .excel-file-name{font-size:12px;font-weight:600;color:var(--fg)}
 .excel-file-meta{font-size:10px;color:var(--fg-3rd);margin-top:2px}
@@ -309,7 +309,7 @@ a{color:var(--accent);text-decoration:none}
 /* Login Modal */
 .login-modal-overlay{position:fixed;inset:0;background:var(--modal-overlay);z-index:9999;display:none;align-items:center;justify-content:center;animation:fadeIn .25s ease;-webkit-backdrop-filter:blur(8px) saturate(140%);backdrop-filter:blur(8px) saturate(140%)}
 .login-modal-overlay.active{display:flex}
-.login-modal{position:relative;background:var(--surface);border-radius:24px;padding:0;max-width:440px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,.28),0 0 0 1px var(--bd);border:1px solid var(--bd);animation:modalPop .28s cubic-bezier(.2,.9,.3,1.2);overflow:hidden;-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+.login-modal{position:relative;background:var(--surface);border-radius:24px;padding:0;max-width:440px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,.28),0 0 0 1px var(--bd);border:1px solid var(--bd);animation:modalPop .28s cubic-bezier(.2,.9,.3,1.2);overflow:hidden;-webkit-backdrop-filter:var(--glass-blur);8);backdrop-filter:var(--glass-blur)}
 .login-modal-header{background:linear-gradient(135deg,var(--accent),#7c5bfa);padding:28px 32px 24px;text-align:center;position:relative}
 .login-modal-header::after{content:"";position:absolute;bottom:-12px;left:0;right:0;height:24px;background:var(--surface);border-radius:18px 18px 0 0}
 .login-modal-icon{font-size:42px;line-height:1;margin-bottom:10px;display:inline-block;animation:iconBob 2.2s ease-in-out infinite;filter:drop-shadow(0 2px 8px rgba(0,0,0,.2))}
@@ -322,7 +322,7 @@ a{color:var(--accent);text-decoration:none}
 .login-modal-btn:active{transform:translateY(0)}
 .login-modal-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
 .login-modal-btn-secondary{background:var(--surface-soft);color:var(--fg-2nd);border:1px solid var(--bd);box-shadow:none}
-.login-modal-btn-secondary:hover{background:var(--surface-hover);color:var(--fg);%2c0 2px 6px rgba(0,0,0,.06)}
+.login-modal-btn-secondary:hover{background:var(--surface-hover);color:var(--fg);box-shadow:0 2px 6px rgba(0,0,0,.06)}
 @keyframes modalPop{0%{transform:scale(.92) translateY(8px);opacity:0}60%{transform:scale(1.02)}100%{transform:scale(1) translateY(0);opacity:1}}
 @keyframes iconBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 </style>
@@ -350,39 +350,40 @@ a{color:var(--accent);text-decoration:none}
         <div class="acc-field-row"><label>Cookie</label>
           <div class="file-input-wrap">
             <input class="side-form-input" id="accCookie" type="text" placeholder="zhipin_cookies.json" onchange="onAccChange()">
-            <button class="file-btn" onclick="document.getElementById('cookieFileInput').click()" title="上传 Cookie 文件">📁</button>
+            <button class="file-btn" onclick="document.getElementById('cookieFileInput').click()" title="上传 Cookie 文件">上传</button>
+            <button class="file-btn" style="background:var(--danger-bg);color:var(--danger)" onclick="deleteCookieFile()">删除</button>
             <input type="file" id="cookieFileInput" class="hidden" accept=".json,.txt" onchange="uploadCookieFile(event)">
           </div>
         </div>
         <div class="acc-field-row" style="gap:6px"><label>启用</label><span id="accEnabled" class="toggle-switch on" onclick="toggleAccEnabled()"></span></div>
       </div>
       <div>
-        <div class="side-section-title">🤖 AI 智能解析 <span class="badge-count" id="aiBadge">关</span></div>
+        <div class="side-section-title">AI 智能解析 <span class="badge-count" id="aiBadge">关</span></div>
         <div class="acc-field-row"><label>启用</label><span id="aiEnabled" class="toggle-switch" onclick="toggleAiEnabled()"></span></div>
         <div class="acc-field-row"><label>匹配阈值</label><input class="side-form-input" id="aiThreshold" type="number" min="0" max="100" placeholder="70" onchange="onAiChange()"></div>
         <button class="adv-toggle" id="aiProvToggle" onclick="toggleAiProviders()">
-          🔌 AI 接口列表 <span class="arrow">▶</span>
+          AI 接口列表 <span class="arrow">></span>
           <span id="aiProvSummary" style="margin-left:4px;font-size:10px;color:var(--fg-3rd);font-weight:400"></span>
         </button>
         <div class="adv-section" id="aiProvSection">
           <div id="aiProviders" style="margin-top:8px"></div>
         </div>
         <div class="side-btn-row" style="margin-top:6px;flex-wrap:wrap">
-          <button class="side-btn side-btn-ghost side-btn-sm" onclick="addAiProvider()">➕ 添加 AI 接口</button>
-          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showResumeModal()">📄 编辑简历</button>
-          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showPromptModal()">✏️ 编辑提示词</button>
-          <button class="side-btn side-btn-ghost side-btn-sm" onclick="testAi()">⚡ 测试 AI</button>
-          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showRulesModal()">📋 编辑规则</button>
-          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showTemplatesModal()">💬 编辑模板</button>
-          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showEvolutionModal()">🧬 自进化</button>
+          <button class="side-btn side-btn-ghost side-btn-sm" onclick="addAiProvider()">添加 AI 接口</button>
+          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showResumeModal()">编辑简历</button>
+          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showPromptModal()">编辑提示词</button>
+          <button class="side-btn side-btn-ghost side-btn-sm" onclick="testAi()">测试 AI</button>
+          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showRulesModal()">编辑规则</button>
+          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showTemplatesModal()">编辑模板</button>
+          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showEvolutionModal()">自进化</button>
         </div>
         <div id="aiStatus" style="font-size:10px;color:var(--fg-3rd);margin-top:4px;word-break:break-all"></div>
         <!-- AI 测试对比面板 -->
         <div class="ai-test-panel" style="margin-top:10px;border:1px solid var(--bd-2);border-radius:8px;padding:10px">
-          <div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin-bottom:6px">🧪 AI 测试对比</div>
+          <div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin-bottom:6px">AI 测试对比</div>
           <textarea id="aiTestJobDesc" placeholder="粘贴岗位描述（JD）进行测试..." style="width:100%;min-height:60px;padding:6px 8px;font-size:11px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg);color:var(--fg);resize:vertical;box-sizing:border-box;margin-bottom:6px"></textarea>
           <div class="side-btn-row" style="margin-bottom:6px;flex-wrap:wrap">
-            <button class="side-btn side-btn-ghost side-btn-sm" onclick="runAiTest()">▶ 运行测试</button>
+            <button class="side-btn side-btn-ghost side-btn-sm" onclick="runAiTest()">运行测试</button>
             <button class="side-btn side-btn-ghost side-btn-sm" onclick="clearAiTest()">清空</button>
           </div>
           <div id="aiTestResults" style="font-size:10.5px;color:var(--fg-2nd);max-height:200px;overflow-y:auto"></div>
@@ -391,7 +392,7 @@ a{color:var(--accent);text-decoration:none}
       <div style="flex:1">
         <div>
           <button class="adv-toggle" id="advToggle" onclick="toggleAdvSection()">
-            ⚙️ 高级设置 <span class="arrow">▶</span>
+            高级设置 <span class="arrow">></span>
           </button>
           <div class="adv-section" id="advSection">
             <div class="adv-group-title">浏览器</div>
@@ -429,6 +430,9 @@ a{color:var(--accent);text-decoration:none}
           </div>
         </div>
 
+        <div class="side-section-title">岗位列表 <span class="badge-count" id="sbarJobCount">0</span></div>
+        <div id="sbarJobs" style="display:flex;flex-direction:column;min-height:40px"></div>
+        <button class="side-btn side-btn-ghost side-btn-sm side-btn-block" onclick="addJob()" style="margin-top:6px;padding:8px 12px;font-size:11px;font-weight:500;border:1px dashed var(--bd-2);background:var(--side-input-bg);border-radius:6px;cursor:pointer" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--bd-2)';this.style.color='var(--fg-2nd)'">+ 添加岗位</button>
       </div>
     </div>
     <div class="side-footer">
@@ -445,41 +449,39 @@ a{color:var(--accent);text-decoration:none}
         <span class="topbar-badge">v2.0</span>
         <button class="theme-toggle" onclick="toggleTheme()" title="切换主题" aria-label="切换主题">
           <span class="toggle-icon" id="themeIcon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></span>
-          <span id="themeLabel">🌙 暗色</span>
+          <span id="themeLabel">暗色</span>
         </button>
       </div>
     </div>
     <div class="content">
-      <!-- 4列统计卡片：总任务 | 已投递 | 已跳过 | 操作 -->
       <div class="stats-grid">
         <div class="stat-card accent"><div class="stat-label">总任务</div><div class="stat-value" id="statTotal">0</div><div class="stat-sub">全部任务</div></div>
         <div class="stat-card success"><div class="stat-label">已投递</div><div class="stat-value" id="statApplied">0</div><div class="stat-sub">成功投递</div></div>
         <div class="stat-card warning"><div class="stat-label">已跳过</div><div class="stat-value" id="statSkipped">0</div><div class="stat-sub">已过滤</div></div>
         <div class="stat-card info"><div class="stat-label">操作</div>
           <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">
-            <button class="btn btn-success btn-sm" id="btnStartAll" onclick="startAll()">▶ 启动</button>
-            <button class="btn btn-danger btn-sm" id="btnStopAll" onclick="stopAll()" style="display:none">■ 停止</button>
-            <button class="btn btn-ghost btn-sm" id="btnConfirmLogin" onclick="confirmLogin()" style="display:none">✓ 确认登录</button>
-            <button class="btn btn-ghost btn-sm" onclick="saveConfig()">💾 保存配置</button>
-            <button class="btn btn-ghost btn-sm" onclick="showExcelModal()">📊 Excel 导出</button>
-            <button class="btn btn-warn btn-sm" id="btnPauseGreet" onclick="pauseGreet()" style="display:none">⏸ 暂停打招呼</button>
-            <button class="btn btn-success btn-sm" id="btnResumeGreet" onclick="resumeGreet()" style="display:none">▶ 恢复打招呼</button>
-            <button class="btn btn-warn btn-sm" id="btnPauseReply" onclick="pauseReply()" style="display:none">⏸ 暂停回复</button>
-            <button class="btn btn-success btn-sm" id="btnResumeReply" onclick="resumeReply()" style="display:none">▶ 恢复回复</button>
-            <button class="btn btn-ghost btn-sm" onclick="downloadReplyRecords()">📥 下载回复记录</button>
-            <button class="btn btn-ghost btn-sm" onclick="downloadGreetRecords()">📥 下载打招呼记录</button>
+            <button class="btn btn-success btn-sm" id="btnStartAll" onclick="startAll()">启动</button>
+            <button class="btn btn-danger btn-sm" id="btnStopAll" onclick="stopAll()" style="display:none">停止</button>
+            <button class="btn btn-ghost btn-sm" id="btnConfirmLogin" onclick="confirmLogin()" style="display:none">确认登录</button>
+            <button class="btn btn-ghost btn-sm" onclick="saveConfig()">保存配置</button>
+            <button class="btn btn-ghost btn-sm" onclick="showExcelModal()">Excel 导出</button>
+            <button class="btn btn-warn btn-sm" id="btnPauseGreet" onclick="pauseGreet()" style="display:none">暂停打招呼</button>
+            <button class="btn btn-success btn-sm" id="btnResumeGreet" onclick="resumeGreet()" style="display:none">恢复打招呼</button>
+            <button class="btn btn-warn btn-sm" id="btnPauseReply" onclick="pauseReply()" style="display:none">暂停回复</button>
+            <button class="btn btn-success btn-sm" id="btnResumeReply" onclick="resumeReply()" style="display:none">恢复回复</button>
+            <button class="btn btn-ghost btn-sm" onclick="downloadReplyRecords()">下载回复记录</button>
+            <button class="btn btn-ghost btn-sm" onclick="downloadGreetRecords()">下载打招呼记录</button>
           </div>
         </div>
       </div>
-      <!-- 双面板行：岗位管理 + 运行日志 -->
       <div class="panel-row">
         <div class="panel panel-half">
           <div class="panel-header"><span class="panel-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="panel-title">岗位管理</span><div class="panel-actions"><button class="btn btn-ghost btn-sm" onclick="addJob()">+ 添加</button></div></div>
           <div class="panel-body" id="jobList"></div>
         </div>
         <div class="panel panel-half">
-          <div class="panel-header"><span class="panel-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="panel-title">运行日志</span><div class="panel-actions"><button class="btn btn-ghost btn-sm" onclick="copyLog()" title="复制全部日志">📋 复制</button><button class="btn btn-ghost btn-sm" onclick="clearLog()">清空</button></div></div>
-          <div class="panel-body log-area" id="logArea"><div class="log-empty"><div class="empty-icon">📝</div><div>等待操作...</div></div></div>
+          <div class="panel-header"><span class="panel-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="panel-title">运行日志</span><div class="panel-actions"><button class="btn btn-ghost btn-sm" onclick="copyLog()" title="复制全部日志">复制</button><button class="btn btn-ghost btn-sm" onclick="clearLog()">清空</button></div></div>
+          <div class="panel-body log-area" id="logArea"><div class="log-empty"><div class="empty-icon">等待操作...</div></div></div>
         </div>
       </div>
     </div>
@@ -502,9 +504,9 @@ const cityList = ['北京','上海','广州','深圳','杭州','成都','长沙'
 // ── AI 配置渲染 ──
 function renderAiConfig() {
   if (!config.ai) config.ai = {};
-  config.ai = Object.assign({enabled:true,api_key:'sk-P5tZ5ljBOWyNi85fVzabu633Vp88cmP78d4G7279f6k9KNQj',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,providers:[]}, config.ai);
+  config.ai = Object.assign({enabled:true,api_key:'',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,providers:[]}, config.ai);
   setEl('aiEnabled', 'toggle-switch' + (config.ai.enabled ? ' on' : ''));
-  setVal('aiThreshold', config.ai.match_threshold ?? 70);
+  setVal('aiThreshold', config.ai.match_threshold || 70);
   const badge = document.getElementById('aiBadge');
   if (badge) badge.textContent = config.ai.enabled ? '开' : '关';
   var container = document.getElementById('aiProviders');
@@ -587,18 +589,18 @@ function testAi() {
     addLog('ERROR', 'AI 测试失败: API Key 未配置');
     return;
   }
-  if (status) status.textContent = '⏳ 正在测试 AI 连接...';
+  if (status) status.textContent = '正在测试 AI 连接...';
   saveConfig().then(function() {
     return fetch('/api/ai/test', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({provider_index: 0})});
-  }).then(r=>r.json()).then(function(data) {
+  }).then(function(r){return r.json()}).then(function(data) {
     if (data.status === 'ok') {
-      if (status) status.textContent = '✓ ' + data.message;
+      if (status) status.textContent = 'OK ' + data.message;
       addLog('SUCCESS', 'AI 测试成功: ' + data.message + ' —— ' + (data.reply || ''));
     } else {
       throw new Error(data.message || 'AI 测试失败');
     }
   }).catch(function(e) {
-    if (status) status.textContent = '✗ 测试失败: ' + e.message;
+    if (status) status.textContent = '测试失败: ' + e.message;
     addLog('ERROR', 'AI 测试失败: ' + e.message);
   });
 }
@@ -610,11 +612,11 @@ function runAiTest() {
   const desc = document.getElementById('aiTestJobDesc').value.trim();
   if (!desc) { addLog('ERROR', '请先输入岗位描述'); return; }
   const resultsEl = document.getElementById('aiTestResults');
-  resultsEl.innerHTML = '<div style="color:var(--fg-3rd)">⏳ 分析中...</div>';
+  resultsEl.innerHTML = '<div style="color:var(--fg-3rd)">分析中...</div>';
   const startTime = Date.now();
   fetch('/api/ai/analyze', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({job_desc: desc, provider_index: 0})})
-  .then(r=>r.json())
-  .then(data => {
+  .then(function(r){return r.json()})
+  .then(function(data) {
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
     if (data.status !== 'ok') throw new Error(data.message || 'AI 分析失败');
     const analysis = data.analysis || '';
@@ -624,8 +626,8 @@ function runAiTest() {
     if (aiTestHistory.length > 5) aiTestHistory.pop();
     renderAiTestResults();
   })
-  .catch(e => {
-    resultsEl.innerHTML = '<div style="color:var(--danger)">✗ ' + e.message + '</div>';
+  .catch(function(e) {
+    resultsEl.innerHTML = '<div style="color:var(--danger)">失败: ' + e.message + '</div>';
     addLog('ERROR', 'AI 测试失败: ' + e.message);
   });
 }
@@ -634,15 +636,15 @@ function renderAiTestResults() {
   const el = document.getElementById('aiTestResults');
   if (!el) return;
   if (aiTestHistory.length === 0) { el.innerHTML = ''; return; }
-  el.innerHTML = aiTestHistory.map((r, i) =>
-    '<div style="padding:6px 0;border-bottom:' + (i < aiTestHistory.length-1 ? '1px solid var(--bd-2)' : 'none') + '">'+
+  el.innerHTML = aiTestHistory.map(function(r, i) {
+    return '<div style="padding:6px 0;border-bottom:' + (i < aiTestHistory.length-1 ? '1px solid var(--bd-2)' : 'none') + '">'+
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
         '<span style="font-weight:600;color:var(--accent)">' + escHtml(r.provider || 'AI') + '</span>'+
         '<span style="color:var(--fg-4th);font-size:9px">' + r.time + ' · ' + r.duration + 's</span>'+
       '</div>'+
       '<div style="color:var(--fg-3rd);margin-top:2px;white-space:pre-wrap">'+escHtml(r.analysis || '')+'</div>'+
-    '</div>'
-  ).join('');
+    '</div>';
+  }).join('');
 }
 
 function clearAiTest() {
@@ -654,34 +656,34 @@ function clearAiTest() {
 
 // ── Excel 导出弹窗 ──
 function showExcelModal() {
-  fetch('/api/excel/files').then(r => r.json()).then(data => {
-    if (data.status !== 'ok') { addLog('ERROR', '加载文件B文件列表失败'); return; }
+  fetch('/api/excel/files').then(function(r){return r.json()}).then(function(data) {
+    if (data.status !== 'ok') { addLog('ERROR', '加载文件列表失败'); return; }
     const files = data.files || [];
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.id = 'excelModal';
     let listHtml = '';
     if (files.length === 0) {
-      listHtml = '<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">暂无导出文件</div><div class="empty-desc">投递岗位后会自动生成 Excel 记录</div></div>';
+      listHtml = '<div class="empty-state"><div class="empty-icon">暂无导出文件</div><div class="empty-desc">投递岗位后会自动生成 Excel 记录</div></div>';
     } else {
-      listHtml = files.map(f =>
-        '<div class="excel-file-row">'+
+      listHtml = files.map(function(f) {
+        return '<div class="excel-file-row">'+
           '<div class="excel-file-info">'+
             '<div class="excel-file-name">'+escHtml(f.name)+'</div>'+
             '<div class="excel-file-meta">'+escHtml(f.created || '')+' · '+((f.size||0)/1024).toFixed(1)+' KB</div>'+
           '</div>'+
           '<a class="btn btn-ghost btn-sm" href="/api/excel/download/'+encodeURIComponent(f.name)+'" download>下载</a>'+
-        '</div>'
-      ).join('');
+        '</div>';
+      }).join('');
     }
     overlay.innerHTML =
       '<div class="modal">'+
-        '<h3>📊 Excel 导出</h3>'+
+        '<h3>Excel 导出</h3>'+
         '<div style="max-height:50vh;overflow-y:auto;margin:12px 0">'+listHtml+'</div>'+
         '<div class="modal-actions"><button class="btn btn-cancel" onclick="closeExcelModal()">关闭</button></div>'+
       '</div>';
     document.body.appendChild(overlay);
-  }).catch(e => addLog('ERROR', '加载文件列表失败: ' + e));
+  }).catch(function(e){addLog('ERROR', '加载文件列表失败: ' + e)});
 }
 
 function closeExcelModal() {
@@ -691,7 +693,7 @@ function closeExcelModal() {
 
 // ── AI 提示词弹窗 ──
 function showPromptModal() {
-  fetch('/api/ai/prompts').then(r => r.json()).then(data => {
+  fetch('/api/ai/prompts').then(function(r){return r.json()}).then(function(data) {
     if (data.status !== 'ok') { addLog('ERROR', '加载提示词失败'); return; }
     const prompts = data.prompts || {};
     const overlay = document.createElement('div');
@@ -699,7 +701,7 @@ function showPromptModal() {
     overlay.id = 'promptModal';
     overlay.innerHTML =
       '<div class="modal modal-large">'+
-        '<h3>✏️ 编辑 AI 提示词</h3>'+
+        '<h3>编辑 AI 提示词</h3>'+
         '<div class="modal-field"><label>System Rules（系统规则）</label>'+
           '<textarea id="promptSystem" style="min-height:120px;width:100%;resize:vertical;box-sizing:border-box">'+escHtml(prompts.system_rules||'')+'</textarea></div>'+
         '<div class="modal-field"><label>User Prompt Template（用户提示词模板）<span style="font-size:10px;color:var(--fg-3rd);margin-left:8px">支持占位符: {job_name} {salary} {description} {requirements} {company} {school} {major} {degree} {skills} {experience} {target_position}</span></label>'+
@@ -710,7 +712,7 @@ function showPromptModal() {
         '</div>'+
       '</div>';
     document.body.appendChild(overlay);
-  }).catch(e => addLog('ERROR', '加载提示词失败: ' + e));
+  }).catch(function(e){addLog('ERROR', '加载提示词失败: ' + e)});
 }
 
 function closePromptModal() {
@@ -727,8 +729,8 @@ function savePromptModal() {
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ prompts: { system_rules: systemRules, user_prompt_template: userPromptTemplate } })
   })
-  .then(r => r.json())
-  .then(data => {
+  .then(function(r){return r.json()})
+  .then(function(data) {
     if (data.status === 'ok') {
       addLog('SUCCESS', 'AI 提示词已保存');
       closePromptModal();
@@ -736,7 +738,7 @@ function savePromptModal() {
       addLog('ERROR', data.message || '保存失败');
     }
   })
-  .catch(e => addLog('ERROR', '保存失败: ' + e));
+  .catch(function(e){addLog('ERROR', '保存失败: ' + e)});
 }
 
 // ── 简历弹窗 ──
@@ -748,7 +750,7 @@ function showResumeModal() {
   overlay.id = 'resumeModal';
   overlay.innerHTML =
     '<div class="modal">'+
-      '<h3>📄 编辑简历（用于 AI 匹配分析）</h3>'+
+      '<h3>编辑简历（用于 AI 匹配分析）</h3>'+
       '<div class="modal-field"><label>学校</label><input id="resumeSchool" value="'+escHtml(config.resume.school||'')+'" placeholder="例如: 某某大学"></div>'+
       '<div class="modal-field"><label>专业</label><input id="resumeMajor" value="'+escHtml(config.resume.major||'')+'" placeholder="例如: 统计学"></div>'+
       '<div class="modal-field"><label>学历</label><input id="resumeDegree" value="'+escHtml(config.resume.degree||'')+'" placeholder="例如: 本科"></div>'+
@@ -774,23 +776,23 @@ function saveResumeModal() {
   config.resume.school = document.getElementById('resumeSchool').value.trim();
   config.resume.major = document.getElementById('resumeMajor').value.trim();
   config.resume.degree = document.getElementById('resumeDegree').value.trim();
-  config.resume.skills = document.getElementById('resumeSkills').value.split(/[,，]/).map(s=>s.trim()).filter(Boolean);
+  config.resume.skills = document.getElementById('resumeSkills').value.split(/[,，]/).map(function(s){return s.trim()}).filter(Boolean);
   config.resume.experience = document.getElementById('resumeExperience').value.trim();
   config.resume.target_position = document.getElementById('resumeTarget').value.trim();
   config.resume.self_intro = document.getElementById('resumeIntro').value.trim();
- 6closeResumeModal();
+  closeResumeModal();
   fetch('/api/resume', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({resume: config.resume})})
-    .then(r=>r.json()).then(function(data) {
+    .then(function(r){return r.json()}).then(function(data) {
       if (data.status === 'ok') addLog('SUCCESS', '简历已保存');
       else addLog('ERROR', '保存简历失败: ' + (data.message||''));
-    }).catch(e => addLog('ERROR', '保存简历失败: ' + e.message));
+    }).catch(function(e){addLog('ERROR', '保存简历失败: ' + e.message)});
 }
 
-// ── 回复规则弹窗（新增） ──
+// ── 回复规则弹窗 ──
 function showRulesModal() {
-  fetch('/api/rules').then(r => r.json()).then(data => {
+  fetch('/api/rules').then(function(r){return r.json()}).then(function(data) {
     if (data.status !== 'ok') { addLog('ERROR', '加载规则失败'); return; }
-const rules = data.rules || {};
+    const rules = data.rules || {};
     const replyRules = rules.reply_rules || {};
     const importanceKeywords = rules.importance_keywords || [];
     const overlay = document.createElement('div');
@@ -799,19 +801,19 @@ const rules = data.rules || {};
     let rulesHtml = '';
     const ruleKeys = Object.keys(replyRules);
     if (ruleKeys.length === 0) {
-      rulesHtml = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">暂无回复规则</div><div class="empty-desc">添加规则以控制自动回复行为</div></div>';
+      rulesHtml = '<div class="empty-state"><div class="empty-icon">暂无回复规则</div><div class="empty-desc">添加规则以控制自动回复行为</div></div>';
     } else {
-      rulesHtml = ruleKeys.map(k =>
-        '<div class="modal-field"><label>'+escHtml(k)+'</label>'+
-        '<input id="rule_'+escAttr(k)+'" value="'+escAttr(replyRules[k]||'')+'" placeholder="回复内容"></div>'
-      ).join('');
+      rulesHtml = ruleKeys.map(function(k) {
+        return '<div class="modal-field"><label>'+escHtml(k)+'</label>'+
+        '<input id="rule_'+escAttr(k)+'" value="'+escAttr(replyRules[k]||'')+'" placeholder="回复内容"></div>';
+      }).join('');
     }
     overlay.innerHTML =
       '<div class="modal modal-large">'+
-        '<h3>📋 编辑回复规则</h3>'+
+        '<h3>编辑回复规则</h3>'+
         '<div style="max-height:40vh;overflow-y:auto;margin:12px 0">'+rulesHtml+'</div>'+
         '<div class="modal-field"><label>重要关键词（逗号分隔）</label>'+
-        '<input id="importanceKeywords" value="'+escHtml(importanceKeywords.join(', '))+'" placeholder2placeholder="例如: 面试, offer, 薪资"></div>'+
+        '<input id="importanceKeywords" value="'+escHtml(importanceKeywords.join(', '))+'" placeholder="例如: 面试, offer, 薪资"></div>'+
         '<div class="modal-field"><label>添加新规则</label>'+
         '<div style="display:flex;gap:8px">'+
         '<input id="newRuleKey" placeholder="规则名称" style="flex:1">'+
@@ -824,7 +826,7 @@ const rules = data.rules || {};
         '</div>'+
       '</div>';
     document.body.appendChild(overlay);
-  }).catch(e => addLog('ERROR', '加载规则失败: ' + e));
+  }).catch(function(e){addLog('ERROR', '加载规则失败: ' + e)});
 }
 
 function closeRulesModal() {
@@ -836,7 +838,7 @@ function addRuleItem() {
   const key = document.getElementById('newRuleKey').value.trim();
   const value = document.getElementById('newRuleValue').value.trim();
   if (!key || !value) { addLog('ERROR', '规则名称和回复内容不能为空'); return; }
-  const container = document.querySelector('#rulesModal .modal-field[style*="max-height"]') || document.querySelector('#rulesModal div[style*="overflow"]');
+  const container = document.querySelector('#rulesModal div[style*="overflow"]');
   if (container) {
     const field = document.createElement('div');
     field.className = 'modal-field';
@@ -852,18 +854,18 @@ function saveRulesModal() {
   if (!modal) return;
   const inputs = modal.querySelectorAll('input[id^="rule_"]');
   const replyRules = {};
-  inputs.forEach(inp => {
+  inputs.forEach(function(inp) {
     const key = inp.id.replace(/^rule_/, '');
     replyRules[key] = inp.value;
   });
-  const keywords = document.getElementById('importanceKeywords').value.split(/[,，]/).map(s=>s.trim()).filter(Boolean);
+  const keywords = document.getElementById('importanceKeywords').value.split(/[,，]/).map(function(s){return s.trim()}).filter(Boolean);
   fetch('/api/rules', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ rules: { reply_rules: replyRules, importance_keywords: keywords } })
   })
-  .then(r => r.json())
-  .then(data => {
+  .then(function(r){return r.json()})
+  .then(function(data) {
     if (data.status === 'ok') {
       addLog('SUCCESS', '回复规则已保存');
       closeRulesModal();
@@ -871,12 +873,12 @@ function saveRulesModal() {
       addLog('ERROR', data.message || '保存失败');
     }
   })
-  .catch(e => addLog('ERROR', '保存规则失败: ' + e));
+  .catch(function(e){addLog('ERROR', '保存规则失败: ' + e)});
 }
 
-// ── 回复模板弹窗（新增） ──
+// ── 回复模板弹窗 ──
 function showTemplatesModal() {
-  fetch('/api/templates').then(r => r.json()).then(data => {
+  fetch('/api/templates').then(function(r){return r.json()}).then(function(data) {
     if (data.status !== 'ok') { addLog('ERROR', '加载模板失败'); return; }
     const templates = data.templates || {};
     const overlay = document.createElement('div');
@@ -884,28 +886,28 @@ function showTemplatesModal() {
     overlay.id = 'templatesModal';
     const fields = [
       {key: 'salary_reply', label: '薪资回复模板', placeholder: '当对方询问期望薪资时使用'},
-      {key: 'interview_timeCreply', label: '面试时间回复模板', placeholder: '当对方询问面试时间时使用'},
+      {key: 'interview_time_reply', label: '面试时间回复模板', placeholder: '当对方询问面试时间时使用'},
       {key: 'job_content_reply', label: '岗位内容回复模板', placeholder: '当对方询问岗位详情时使用'},
       {key: 'greeting_reply', label: '打招呼回复模板', placeholder: '当对方打招呼时使用'},
       {key: 'default_reply', label: '默认回复模板', placeholder: '无法匹配其他规则时使用'},
       {key: 'resume_duplicate_reply', label: '简历重复回复模板', placeholder: '当对方要求重复发送简历时使用'},
       {key: 'resume_unavailable_reply', label: '简历不可用回复模板', placeholder: '当简历暂时无法发送时使用'},
     ];
-    let fieldsHtml = fields.map(f =>
-      '<div class="modal-field"><label>'+f.label+'</label>'+
-      '<textarea id="template_'+f.key+'" placeholder="'+f.placeholder+'" style="min-height:60px">'+escHtml(templates[f.key]||'')+'</textarea></div>'
-    ).join('');
+    let fieldsHtml = fields.map(function(f) {
+      return '<div class="modal-field"><label>'+f.label+'</label>'+
+      '<textarea id="template_'+f.key+'" placeholder="'+f.placeholder+'" style="min-height:60px">'+escHtml(templates[f.key]||'')+'</textarea></div>';
+    }).join('');
     overlay.innerHTML =
       '<div class="modal modal-large">'+
-        '<h3>💬 编辑回复模板</h3>'+
+        '<h3>编辑回复模板</h3>'+
         '<div style="max-height:50vh;overflow-y:auto;margin:12px 0">'+fieldsHtml+'</div>'+
         '<div class="modal-actions">'+
           '<button class="btn btn-primary" onclick="saveTemplatesModal()">保存</button>'+
           '<button class="btn btn-cancel" onclick="closeTemplatesModal()">取消</button>'+
         '</div>'+
       '</div>';
-   document.body.appendChild(overlay);
-  }).catch(e => addLog('ERROR', '加载模板失败: ' + e));
+    document.body.appendChild(overlay);
+  }).catch(function(e){addLog('ERROR', '加载模板失败: ' + e)});
 }
 
 function closeTemplatesModal() {
@@ -916,7 +918,7 @@ function closeTemplatesModal() {
 function saveTemplatesModal() {
   const templates = {};
   const keys = ['salary_reply','interview_time_reply','job_content_reply','greeting_reply','default_reply','resume_duplicate_reply','resume_unavailable_reply'];
-  keys.forEach(k => {
+  keys.forEach(function(k) {
     const el = document.getElementById('template_'+k);
     if (el) templates[k] = el.value;
   });
@@ -925,8 +927,8 @@ function saveTemplatesModal() {
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ templates: templates })
   })
-  .then(r => r.json())
-  .then(data => {
+  .then(function(r){return r.json()})
+  .then(function(data) {
     if (data.status === 'ok') {
       addLog('SUCCESS', '回复模板已保存');
       closeTemplatesModal();
@@ -934,15 +936,17 @@ function saveTemplatesModal() {
       addLog('ERROR', data.message || '保存失败');
     }
   })
-  .catch(e => addLog('ERROR', '保存模板失败: ' + e));
+  .catch(function(e){addLog('ERROR', '保存模板失败: ' + e)});
 }
 
-// ── 自进化弹窗（新增） ──
+// ── 自进化弹窗 ──
 function showEvolutionModal() {
   Promise.all([
-    fetch('/api/evolution/status').then(r=>r.json()),
-    fetch('/api/evolution/report').then(r=>r.json()).catch(()=>({status:'error'}))
-  ]).then(([statusData, reportData]) => {
+    fetch('/api/evolution/status').then(function(r){return r.json()}),
+    fetch('/api/evolution/report').then(function(r){return r.json()}).catch(function(){return {status:'error'}})
+  ]).then(function(results) {
+    var statusData = results[0];
+    var reportData = results[1];
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.id = 'evolutionModal';
@@ -955,22 +959,22 @@ function showEvolutionModal() {
     let reportHtml = '';
     if (adjustments.length > 0) {
       reportHtml += '<div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin-bottom:6px">策略调整历史</div>';
-      reportHtml += adjustments.slice(0, 5).map(a =>
-        '<div style="padding:4px 0;border-bottom:1px solid var(--bd-2);font-size:10px;color:var(--fg-3rd)">'+escHtml(JSON.stringify(a))+'</div>'
-      ).join('');
+      reportHtml += adjustments.slice(0, 5).map(function(a) {
+        return '<div style="padding:4px 0;border-bottom:1px solid var(--bd-2);font-size:10px;color:var(--fg-3rd)">'+escHtml(JSON.stringify(a))+'</div>';
+      }).join('');
     }
     if (recentRecords.length > 0) {
       reportHtml += '<div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin:8px 0 6px">最近回复记录</div>';
-      reportHtml += recentRecords.slice(0, 5).map(r =>
-        '<div style="padding:4px 0;border-bottom:1px solid var(--bd-2);font-size:10px;color:var(--fg-3rd)">'+escHtml(JSON.stringify(r))+'</div>'
-      ).join('');
+      reportHtml += recentRecords.slice(0, 5).map(function(r) {
+        return '<div style="padding:4px 0;border-bottom:1px solid var(--bd-2);font-size:10px;color:var(--fg-3rd)">'+escHtml(JSON.stringify(r))+'</div>';
+      }).join('');
     }
     if (!reportHtml) {
-      reportHtml = '<div class="empty-state"><div class="empty-icon">🧬</div><div class="empty-title">暂无进化数据</div><div class="empty-desc">运行一段时间后会有数据</div></div>';
+      reportHtml = '<div class="empty-state"><div class="empty-icon">暂无进化数据</div><div class="empty-desc">运行一段时间后会有数据</div></div>';
     }
     overlay.innerHTML =
       '<div class="modal modal-large">'+
-        '<h3>🧬 自进化功能</h3>'+
+        '<h3>自进化功能</h3>'+
         '<div class="modal-field"><label>启用自进化</label><span id="evolutionEnabled" class="toggle-switch'+(enabled?' on':'')+'" onclick="toggleEvolution()"></span></div>'+
         '<div style="display:flex;gap:16px;margin:12px 0">'+
           '<div style="flex:1;text-align:center;padding:8px;border:1px solid var(--bd-2);border-radius:8px">'+
@@ -984,12 +988,12 @@ function showEvolutionModal() {
         '</div>'+
         '<div style="max-height:30vh;overflow-y:auto;margin:12px 0">'+reportHtml+'</div>'+
         '<div class="modal-actions">'+
-          '<button class="btn btn-primary" onclick="optimizeEvolution()">⚡ 手动优化</button>'+
+          '<button class="btn btn-primary" onclick="optimizeEvolution()">手动优化</button>'+
           '<button class="btn btn-cancel" onclick="closeEvolutionModal()">关闭</button>'+
         '</div>'+
       '</div>';
     document.body.appendChild(overlay);
-  }).catch(e => addLog('ERROR', '加载自进化数据失败: ' + e));
+  }).catch(function(e){addLog('ERROR', '加载自进化数据失败: ' + e)});
 }
 
 function closeEvolutionModal() {
@@ -1005,27 +1009,27 @@ function toggleEvolution() {
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ enabled: enabled })
   })
-  .then(r => r.json())
-  .then(data => {
+  .then(function(r){return r.json()})
+  .then(function(data) {
     if (data.status === 'ok') {
       el.className = 'toggle-switch' + (enabled ? ' on' : '');
       addLog('SUCCESS', '自进化功能已' + (enabled ? '启用' : '禁用'));
     }
   })
-  .catch(e => addLog('ERROR', '切换自进化失败: ' + e));
+  .catch(function(e){addLog('ERROR', '切换自进化失败: ' + e)});
 }
 
 function optimizeEvolution() {
   fetch('/api/evolution/optimize', { method:'POST' })
-    .then(r => r.json())
-    .then(data => {
+    .then(function(r){return r.json()})
+    .then(function(data) {
       if (data.status === 'ok') {
         addLog('SUCCESS', '策略优化已触发');
       } else {
         addLog('ERROR', data.message || '优化失败');
       }
     })
-    .catch(e => addLog('ERROR', '优化失败: ' + e));
+    .catch(function(e){addLog('ERROR', '优化失败: ' + e)});
 }
 
 // ── 主题切换 ──
@@ -1036,7 +1040,7 @@ function toggleTheme() {
   html.setAttribute('data-theme', next);
   localStorage.setItem('boss-theme', next);
   updateThemeUI(next);
-  fetch('/api/theme', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({theme: next})}).catch(()=>{});
+  fetch('/api/theme', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({theme: next})}).catch(function(){});
 }
 
 function loadTheme() {
@@ -1046,7 +1050,7 @@ function loadTheme() {
   }
   document.documentElement.setAttribute('data-theme', saved);
   updateThemeUI(saved);
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
     if (!localStorage.getItem('boss-theme')) {
       const next = e.matches ? 'dark' : 'light';
       document.documentElement.setAttribute('data-theme', next);
@@ -1060,22 +1064,22 @@ function updateThemeUI(theme) {
   document.getElementById('themeIcon').innerHTML = isDark
     ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
     : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
-  document.getElementById('themeLabel').textContent = isDark ? '☀️ 亮色' : '🌙 暗色';
+  document.getElementById('themeLabel').textContent = isDark ? '亮色' : '暗色';
 }
 
 // ── 日志操作 ──
 function clearLog() {
-  document.getElementById('logArea').innerHTML = '<div class="log-empty"><div class="empty-icon">📝</div><div>等待操作...</div></div>';
+  document.getElementById('logArea').innerHTML = '<div class="log-empty"><div class="empty-icon">等待操作...</div></div>';
 }
 
 function copyLog() {
   var area = document.getElementById('logArea');
   if (!area) return;
   var text = area.innerText || area.textContent || '';
-  if (!text.trim()) { addLog('WARN', '日志为空，5无可复制内容'); return; }
-  if (Aavigator.clipboard && navigator.clipboard.writeText) {
+  if (!text.trim()) { addLog('WARN', '日志为空，无可复制内容'); return; }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(function() {
-      addLog('SUCCESS', '✓ 日志已复制到剪贴板（' + text.length + ' 字符）');
+      addLog('SUCCESS', '日志已复制到剪贴板（' + text.length + ' 字符）');
     }).catch(function() {
       fallbackCopy(text);
     });
@@ -1093,18 +1097,18 @@ function fallbackCopy(text) {
   ta.select();
   try {
     document.execCommand('copy');
-    addLog('SUCCESS', '✓ 日志已复制到剪贴板');
+    addLog('SUCCESS', '日志已复制到剪贴板');
   } catch(e) {
-   DaddLog('ERROR', '复制失败: ' + e.message);
+    addLog('ERROR', '复制失败: ' + e.message);
   }
   document.body.removeChild(ta);
 }
 
 // ── 配置加载/保存 ──
 function loadConfig() {
-  fetch('/api/config').then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(cfg => {
+  fetch('/api/config').then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(cfg) {
     config = cfg.config || cfg;
-    // 填充所有默认值（参考原 auto_boss 项目）
+    // 填充所有默认值
     if (!config.browser) config.browser = {};
     if (!config.login) config.login = {};
     if (!config.rate_limit) config.rate_limit = {};
@@ -1114,19 +1118,19 @@ function loadConfig() {
     config.rate_limit = Object.assign({enabled:true,max_per_hour:30,max_per_day:100}, config.rate_limit);
     config.retry = Object.assign({max_attempts:3,base_delay:2,backoff_factor:2}, config.retry);
     if (!config.ai) config.ai = {};
-    config.ai = Object.assign({enabled:true,api_key:'sk-P5tZ5ljBOWyNi85fVzabu633Vp88cmP78d4G7279f6k9KNQj',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,providers:[]}, config.ai);
+    config.ai = Object.assign({enabled:true,api_key:'',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,providers:[]}, config.ai);
     if (!config.resume) config.resume = {};
     config.resume = Object.assign({school:'某某大学',major:'统计学',degree:'本科',skills:['Excel','SQL','Python','数据分析'],experience:'负责业务数据报表与洞察分析',target_position:'数据分析师',self_intro:'做事严谨细心，学习能力强'}, config.resume);
     if (!config.accounts || !config.accounts.length) {
-      config.accounts = [{name:'主账号',enabled:true,cookie_file:'zhipin_cookies.json',image_files:[],message_interval_min:3,message_interval_max:8,jobs:[{enabled:true,city:'长沙',query:'数据分析',scroll_pages:5,greeting_message:<defaultGreeting}]}];
+      config.accounts = [{name:'主账号',enabled:true,cookie_file:'zhipin_cookies.json',image_files:[],message_interval_min:3,message_interval_max:8,jobs:[{enabled:true,city:'长沙',query:'数据分析',scroll_pages:5,greeting_message:defaultGreeting}]}];
     }
     // 填充每个账号和岗位的默认值
     config.accounts.forEach(function(acc) {
       acc.enabled = acc.enabled !== false;
       acc.cookie_file = acc.cookie_file || 'zhipin_cookies.json';
       acc.image_files = acc.image_files || [];
-      acc.message_interval_min = acc.message_interval_min ?? 3;
-      acc.message_interval_max = acc.message_interval_max ?? 8;
+      acc.message_interval_min = acc.message_interval_min != null ? acc.message_interval_min : 3;
+      acc.message_interval_max = acc.message_interval_max != null ? acc.message_interval_max : 8;
       (acc.jobs || []).forEach(function(job) {
         job.enabled = job.enabled !== false;
         job.city = job.city || '长沙';
@@ -1142,7 +1146,7 @@ function loadConfig() {
     renderJobs();
     updateSbarJobs();
     addLog('SUCCESS', '配置已加载');
-  }).catch(function(e){console.error('loadConfig:',e);addLog('ERROR','加载配置失败: '+e.message);});
+  }).catch(function(e){console.error('loadConfig:',e);addLog('ERROR','加载配置失败: '+e.message)});
 }
 
 function saveConfig() {
@@ -1151,27 +1155,26 @@ function saveConfig() {
     return Promise.reject(new Error('配置未加载'));
   }
   return fetch('/api/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({config:config})})
-    .then(r=>{if(!r.ok)throw new Error('保存失败: '+r.status);Dreturn r.json()})
-    .then(d=>{if(d.status!=='ok')throw new Error(d.message||'保存失败');addLog('SYSTEM','配置已保存')})
-    .catch(e=>{addLog('ERROR', '保存配置失败: '+e.message);throw e});
+    .then(function(r){if(!r.ok)throw new Error('保存失败: '+r.status);return r.json()})
+    .then(function(d){if(d.status!=='ok')throw new Error(d.message||'保存失败');addLog('SYSTEM','配置已保存')})
+    .catch(function(e){addLog('ERROR', '保存配置失败: '+e.message);throw e});
 }
 
 // ── 账号渲染 ──
 function renderAccounts() {
   const c = document.getElementById('accountTabs');
   const badge = document.getElementById('accBadge');
-  c.innerHTML = config.accounts.map((a,i) => {
+  c.innerHTML = config.accounts.map(function(a,i) {
     var statusClass = 'idle';
     if (accountStatuses[i]) {
       if (accountStatuses[i].running) statusClass = 'running';
       else if (accountStatuses[i].needs_login) statusClass = 'needs_login';
-
     }
     return '<div class="account-tab'+(i===activeAccountIdx?' active':'')+'" onclick="switchAccount('+i+')">'+
       '<span class="acc-status-dot '+statusClass+'"></span>'+
       escHtml(a.name||'未命名')+'<span class="badge">'+(a.jobs||[]).length+'</span></div>';
   }).join('');
-  if (badge) badge.textContent =9config.accounts.length;
+  if (badge) badge.textContent = config.accounts.length;
 }
 
 function setEl(id, cls) { var e = document.getElementById(id); if (e) e.className = cls; }
@@ -1183,9 +1186,9 @@ function renderAdvSettings() {
   const b = config.browser || {};
   setEl('advHeadless', 'toggle-switch' + (b.headless ? ' on' : ''));
   setVal('advBrowserType', b.browser_type || 'chrome');
-  setVal('advViewportW', b.viewport_width ?? 1280);
-  setVal('advViewportH', b.viewport_height ?? 800);
-  setVal('advTimeout', b.page_load_timeout ?? 30);
+  setVal('advViewportW', b.viewport_width != null ? b.viewport_width : 1280);
+  setVal('advViewportH', b.viewport_height != null ? b.viewport_height : 800);
+  setVal('advTimeout', b.page_load_timeout != null ? b.page_load_timeout : 30);
   setVal('advUserAgent', b.custom_user_agent || '');
   setPlh('advUserAgent', '留空自动');
   setVal('advProxy', b.proxy || '');
@@ -1193,29 +1196,29 @@ function renderAdvSettings() {
 
   const rl = config.rate_limit || {};
   setEl('advRateLimit', 'toggle-switch' + (rl.enabled !== false ? ' on' : ''));
-  setVal('advRatePerHour', rl.max_per_hour ?? 30);
-  setVal('advRatePerDay', rl.max_per_day ?? 100);
+  setVal('advRatePerHour', rl.max_per_hour != null ? rl.max_per_hour : 30);
+  setVal('advRatePerDay', rl.max_per_day != null ? rl.max_per_day : 100);
 
   const lg = config.login || {};
-  setVal('advLoginWait', lg.wait_timeout ?? 300);
-  setEl5El('advClearCookies', 'toggle-switch' + (lg.clear_cookies_on_failure !== false ? ' on' : ''));
+  setVal('advLoginWait', lg.wait_timeout != null ? lg.wait_timeout : 300);
+  setEl('advClearCookies', 'toggle-switch' + (lg.clear_cookies_on_failure !== false ? ' on' : ''));
 
   const rt = config.retry || {};
-  setVal('advRetryAttempts', rt.max_attempts ?? 3);
-  setVal('advRetryDelay', rt.base_delay ?? 2);
-  setVal('advRetryBackoff', rt.backoff_factor ?? 2);
+  setVal('advRetryAttempts', rt.max_attempts != null ? rt.max_attempts : 3);
+  setVal('advRetryDelay', rt.base_delay != null ? rt.base_delay : 2);
+  setVal('advRetryBackoff', rt.backoff_factor != null ? rt.backoff_factor : 2);
 
   var _acc = config.accounts[activeAccountIdx];
   if (_acc) {
-    setVal('advMsgIntervalMin', _acc.message_interval_min ?? 3);
-    setVal('advMsgIntervalMax', _acc.message_interval_max ?? 8);
+    setVal('advMsgIntervalMin', _acc.message_interval_min != null ? _acc.message_interval_min : 3);
+    setVal('advMsgIntervalMax', _acc.message_interval_max != null ? _acc.message_interval_max : 8);
   }
 
   // 投递/回复限制
   var _grl = (config.greet && config.greet.rate_limit) || config.rate_limit || {};
-  setVal('advMaxGreet', _grl.max_per_hour ?? 30);
+  setVal('advMaxGreet', _grl.max_per_hour != null ? _grl.max_per_hour : 30);
   var _rl = config.reply || {};
-  setVal('advMaxReply', _rl.max_replies_per_hour ?? 30);
+  setVal('advMaxReply', _rl.max_replies_per_hour != null ? _rl.max_replies_per_hour : 30);
 
   // 测试模式
   setEl('advTestMode', 'toggle-switch' + (config.test_mode ? ' on' : ''));
@@ -1237,9 +1240,9 @@ function toggleAiProviders() {
 
 function toggleAdvBool(key) {
   if (key === "headless") {
-    if (!config.browser)?config.browser = {};
+    if (!config.browser) config.browser = {};
     config.browser.headless = !config.browser.headless;
-   AsetEl('advHeadless', 'toggle-switch' + (config.browser.headless ? ' on' : ''));
+    setEl('advHeadless', 'toggle-switch' + (config.browser.headless ? ' on' : ''));
   } else if (key === "rate_limit_enabled") {
     if (!config.rate_limit) config.rate_limit = {};
     config.rate_limit.enabled = !config.rate_limit.enabled;
@@ -1268,7 +1271,7 @@ function onAdvChange() {
   if (!config.rate_limit) config.rate_limit = {};
   config.rate_limit.enabled = document.getElementById('advRateLimit').classList.contains('on');
   config.rate_limit.max_per_hour = parseInt(document.getElementById('advRatePerHour').value) || 30;
-  config.rate_limit.max_per_day = parseInt(document.getElementById('advRatePerDay').value)/|| 100;
+  config.rate_limit.max_per_day = parseInt(document.getElementById('advRatePerDay').value) || 100;
 
   if (!config.login) config.login = {};
   config.login.wait_timeout = parseInt(document.getElementById('advLoginWait').value) || 300;
@@ -1313,25 +1316,36 @@ function renderJobs() {
   if (!a) return;
   const c = document.getElementById('jobList');
   if (!a.jobs || !a.jobs.length) {
-    c.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">暂无岗位</div><div class="empty-desc">点击上方「+ 添加岗位」按钮添加</div></div>';
+    c.innerHTML = '<div class="empty-state"><div class="empty-icon">暂无岗位</div><div class="empty-desc">点击上方「+ 添加岗位」按钮添加</div></div>';
     return;
   }
-  c.innerHTML = a.jobs.map((j,i) =>
-    '<div class="job-item">'+
+  c.innerHTML = a.jobs.map(function(j,i) {
+    return '<div class="job-item">'+
       '<span class="job-toggle toggle-switch'+(j.enabled!==false?' on':'')+'" onclick="event.stopPropagation();toggleJob('+i+')"></span>'+
       '<div class="job-info" onclick="editJob('+i+')">'+
         '<div class="job-query">'+escHtml(j.query||'')+'</div>'+
         '<div class="job-city">'+escHtml(j.city||'')+(j.scroll_pages?' · '+j.scroll_pages+'页':'')+(j.image_files&&j.image_files.length?' · 图片'+j.image_files.length:'')+'</div>'+
-        (j.image_files&&j.image_files.length?'<div class="job-thumbs">'+j.image_files.slice(0,3).map(f=>{var fn=f.replace(/^dashboard[\/]/,'');return '<img src="/dashboard/'+fn+'" alt="" loading="lazy" onclick="event.stopPropagation();showImageLightbox(\'/dashboard/'+fn+'\')">'}).join('')+(j.image_files.length>3?'<span class="job-thumbs-more">+'+(j.image_files.length-3)+'</span>':'')+'</div>':'')+
+        (j.image_files&&j.image_files.length?'<div class="job-thumbs">'+j.image_files.slice(0,3).map(function(f){var fn=f.replace(/^dashboard[\/]/,'');return '<img src="/dashboard/'+fn+'" alt="" loading="lazy" onclick="event.stopPropagation();showImageLightbox(\'/dashboard/'+fn+'\')">'}).join('')+(j.image_files.length>3?'<span class="job-thumbs-more">+'+(j.image_files.length-3)+'</span>':'')+'</div>':'')+
       '</div>'+
       '<span class="job-badge">'+(j.city||'')+'</span>'+
-      '<span class="job-del" onclick="event.stopPropagation();deleteJob('+i+')" title="删除">✕</span>'+
-    '</div>'
-  ).join('');
+      '<span class="job-del" onclick="event.stopPropagation();deleteJob('+i+')" title="删除">x</span>'+
+    '</div>';
+  }).join('');
 }
 
 function updateSbarJobs() {
-  // 左侧岗位列表已移除，此函数保留为空以兼容现有调用
+  const a = config.accounts[activeAccountIdx];
+  const el = document.getElementById('sbarJobs');
+  const badge = document.getElementById('sbarJobCount');
+  if (a && a.jobs && a.jobs.length) {
+    if (badge) badge.textContent = a.jobs.length;
+    el.innerHTML = a.jobs.map(function(j,i) {
+      return '<div class="sbar-job-item" onclick="editJob('+i+')"><span class="sbar-job-query">'+escHtml(j.query||'')+'</span><span class="sbar-job-city">'+escHtml(j.city||'')+'</span></div>';
+    }).join('');
+  } else {
+    if (badge) badge.textContent = '0';
+    el.innerHTML = '<span style="color:var(--fg-3rd);font-size:10px;padding:8px 0;display:block;text-align:center">暂无岗位，点击上方添加</span>';
+  }
 }
 
 function switchAccount(i) { activeAccountIdx = i; renderAccounts(); renderAccountConfig(); renderJobs(); updateSbarJobs(); renderAdvSettings(); }
@@ -1405,7 +1419,7 @@ function showJobModal(job) {
 
 function closeJobModal() {
   const m = document.getElementById('jobModal');
-  if (5(m) m.remove();
+  if (m) m.remove();
 }
 
 function loadCityList() {
@@ -1422,18 +1436,18 @@ function handleJobImageUpload(event) {
     formData.append('files', files[i]);
   }
   fetch('/api/upload/images', { method:'POST', body: formData })
-    .then(r => r.json())
-    .then(data => {
+    .then(function(r){return r.json()})
+    .then(function(data) {
       if (data.status === 'ok' && data.files) {
         const a = config.accounts[activeAccountIdx];
         if (a && a.jobs && a.jobs[editingJobIdx]) {
           if (!a.jobs[editingJobIdx].image_files) a.jobs[editingJobIdx].image_files = [];
-          a.jobs[editingJobIdx].image_files.push(...data.files);
+          a.jobs[editingJobIdx].image_files.push.apply(a.jobs[editingJobIdx].image_files, data.files);
           renderJobImageChips();
         }
       }
     })
-    .catch(() => {});
+    .catch(function(){});
   event.target.value = '';
 }
 
@@ -1444,7 +1458,7 @@ function renderJobImageChips() {
   const job = a && a.jobs && a.jobs[editingJobIdx];
   el.innerHTML = '';
   if (!job || !job.image_files || !job.image_files.length) return;
-  job.image_files.forEach(f => {
+  job.image_files.forEach(function(f) {
     var fn = f.replace(/^dashboard[\/]/, '');
     var chip = document.createElement('div');
     chip.className = 'job-img-chip';
@@ -1454,7 +1468,7 @@ function renderJobImageChips() {
     chip.appendChild(img);
     var rm = document.createElement('span');
     rm.className = 'chip-remove';
-    rm.textContent = '✕';
+    rm.textContent = 'x';
     rm.onclick = function(e) { e.stopPropagation(); removeImageChipForJob(f); };
     chip.appendChild(rm);
     el.appendChild(chip);
@@ -1480,7 +1494,7 @@ function showImageLightbox(src) {
   overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;cursor:zoom-out;animation:fadeIn .2s ease';
   overlay.onclick = closeLightbox;
   var img = document.createElement('img');
- 6img.src = src;
+  img.src = src;
   img.style.cssText = 'max-width:90vw;max-height:90vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:slideUp .25s ease';
   img.onclick = function(e) { e.stopPropagation(); };
   overlay.appendChild(img);
@@ -1493,7 +1507,7 @@ function closeLightbox() {
 }
 
 function saveJobModal() {
-  const city = document.getElementById('modalCity').value.trim();
+  const city"city = document.getElementById('modalCity').value.trim();
   const query = document.getElementById('modalQuery').value.trim();
   const pages = parseInt(document.getElementById('modalPages').value) || 5;
   const greeting = document.getElementById('modalGreeting').value.trim() || defaultGreeting;
@@ -1501,7 +1515,7 @@ function saveJobModal() {
   const a = config.accounts[activeAccountIdx];
   if (!a) return;
   if (!a.jobs) a.jobs = [];
-  const job = { enabled:true, city, query, scroll_pages:pages, greeting_message:greeting };
+  const job = { enabled:true, city:city, query:query, scroll_pages:pages, greeting_message:greeting };
   if (editingJobIdx >= 0 && editingJobIdx < a.jobs.length) {
     const old = a.jobs[editingJobIdx];
     job.image_files = old.image_files || [];
@@ -1534,65 +1548,57 @@ function addAccount() {
   const name = '账号' + (config.accounts.length + 1);
   const cookieFile = document.getElementById('accCookie').value || 'zhipin_cookies.json';
   fetch('/api/accounts/add', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name: name, cookie_file: cookieFile, enabled: true}) })
-    .then(r=>r.json())
-    .then(data => {
+    .then(function(r){return r.json()})
+    .then(function(data) {
       if (data.status === 'ok') {
         loadConfig();
         activeAccountIdx = config.accounts.length - 1;
         addLog('INFO', '已添加新账号: ' + name);
       } else { addLog('ERROR', '添加账号失败: ' + (data.message||'')); }
     })
-    .catch(e => addLog('ERROR', '添加账号异常: ' + e.message));
+    .catch(function(e){addLog('ERROR', '添加账号异常: ' + e.message)});
 }
 
 function deleteAccount() {
   if (config.accounts.length <= 1) { addLog('WARN', '至少需要保留一个账号'); return; }
-  if (!confirm('确定删除账号「' + (config.accounts[activeAccountIdx]?.name || '账号'+(activeAccountIdx+1)) + '」？')) return;
+  if (!confirm('确定删除账号「' + (config.accounts[activeAccountIdx] ? config.accounts[activeAccountIdx].name : '账号'+(activeAccountIdx+1)) + '」？')) return;
   fetch('/api/accounts/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({index: activeAccountIdx}) })
-    .then(r=>r.json())
-    .then(data => {
+    .then(function(r){return r.json()})
+    .then(function(data) {
       if (data.status === 'ok') {
         loadConfig();
         if (activeAccountIdx >= config.accounts.length) activeAccountIdx = Math.max(0, config.accounts.length - 1);
         addLog('INFO', '已删除账号');
       } else { addLog('ERROR', '删除账号失败: ' + (data.message||'')); }
     })
-    .catch(e => addLog('ERROR', e.message));
+    .catch(function(e){addLog('ERROR', e.message)});
 }
 
 // ── 启动/停止 ──
 function startAll() {
   const btn = document.getElementById('btnStartAll');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ 启动中...'; }
+  if (btn) { btn.disabled = true; btn.textContent = '启动中...'; }
   saveConfig()
-    .then(() => {
-      return fetch('/api/start', { method:'POST' });
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (data.status === 'ok') {
-        addLog('SYSTEM', '机器人已启动');
-        setControls(true);
+    .then(function() {
+      if (socket && socket.connected) {
+        socket.emit('start_all');
+        addLog('SYSTEM', '正在启动所有任务...');
       } else {
-        throw new Error(data.message || '启动失败');
+        addLog('ERROR', 'WebSocket 未连接，请刷新页面重试');
+        if (btn) { btn.disabled = false; btn.textContent = '启动'; btn.style.display = ''; }
       }
     })
-    .catch(e => {
+    .catch(function(e) {
       addLog('ERROR', '启动失败: ' + e.message);
-      if (btn) { btn.disabled = false; btn.textContent = '▶ 启动'; btn.style.display = ''; }
+      if (btn) { btn.disabled = false; btn.textContent = '启动'; btn.style.display = ''; }
     });
 }
 
 function stopAll() {
-  fetch('/api/stop', { method:'POST' })
-    .then(r => r.json())
-    .then(data => {
-      addLog('SYSTEM', '机器人已停止');
-      setControls(false);
-    })
-    .catch(e => addLog('ERROR', '停止失败: ' + e.message));
+  socket.emit('stop_all');
+  addLog('SYSTEM', '正在停止所有任务...');
   const btn = document.getElementById('btnStartAll');
-  if (btn) { btn.disabled = false; btn.textContent = '▶ 启动'; btn.style.display = ''; }
+  if (btn) { btn.disabled = false; btn.textContent = '启动'; btn.style.display = ''; }
   const stopBtn = document.getElementById('btnStopAll');
   if (stopBtn) { stopBtn.style.display = 'none'; }
   const dot = document.getElementById('sbarDot');
@@ -1603,13 +1609,13 @@ function stopAll() {
 
 function confirmLogin() {
   fetch('/api/confirm_login', { method:'POST' })
-    .then(r => r.json())
-    .then(data => {
+    .then(function(r){return r.json()})
+    .then(function(data) {
       addLog('SYSTEM', '已确认登录');
       const btn = document.getElementById('btnConfirmLogin');
       if (btn) btn.style.display = 'none';
     })
-    .catch(e => addLog('ERROR', '确认登录失败: ' + e.message));
+    .catch(function(e){addLog('ERROR', '确认登录失败: ' + e.message)});
 }
 
 function doConfirmLogin() {
@@ -1619,65 +1625,65 @@ function doConfirmLogin() {
     modal.classList.remove('active');
   }
   fetch('/api/confirm_login', { method:'POST' })
-    .then(r => r.json())
-    .then(data => {
+    .then(function(r){return r.json()})
+    .then(function(data) {
       addLog('SYSTEM', '已确认登录，继续执行...');
     })
-    .catch(e => addLog('ERROR', '确认登录失败: ' + e.message));
+    .catch(function(e){addLog('ERROR', '确认登录失败: ' + e.message)});
 }
 
 // ── 暂停/恢复打招呼 ──
 function pauseGreet() {
   fetch('/api/pause_greet', { method:'POST' })
-    .then(r => r.json())
-    .then(data => {
+    .then(function(r){return r.json()})
+    .then(function(data) {
       if (data.status === 'ok') {
         greetPaused = true;
         updatePauseButtons();
         addLog('SYSTEM', '打招呼已暂停');
       }
     })
-    .catch(e => addLog('ERROR', '暂停打招呼失败: ' + e.message));
+    .catch(function(e){addLog('ERROR', '暂停打招呼失败: ' + e.message)});
 }
 
 function resumeGreet() {
   fetch('/api/resume_greet', { method:'POST' })
-    .then(r => r.json())
-    .then(data => {
+    .then(function(r){return r.json()})
+    .then(function(data) {
       if (data.status === 'ok') {
         greetPaused = false;
         updatePauseButtons();
         addLog('SYSTEM', '打招呼已恢复');
       }
     })
-    .catch(e => addLog('ERROR', '恢复打招呼失败: ' + e.message));
+    .catch(function(e){addLog('ERROR', '恢复打招呼失败: ' + e.message)});
 }
 
 // ── 暂停/恢复回复 ──
 function pauseReply() {
   fetch('/api/pause_reply', { method:'POST' })
-    .then(r => r.json())
-    .then(data => {
-      if (7(data.status === 'ok') {
+    .then(function(r){return r.json()})
+    .then(function(data) {
+      if (data.status === 'ok') {
         replyPaused = true;
         updatePauseButtons();
         addLog('SYSTEM', '回复已暂停（人工接管模式）');
       }
     })
-    .catch(e => addLog('ERROR', '暂停回复失败: ' + e.message));
+    .catch(function(e){addLog('ERROR', '暂停回复失败: ' + e.message)});
 }
 
 function resumeReply() {
   fetch('/api/resume_reply', { method:'POST' })
-    .then(r => r.json())
-    .then(data => {
+    .then(function(r){return r.json()})
+    .then(function(data) {
       if (data.status === 'ok') {
         replyPaused = false;
         updatePauseButtons();
         addLog('SYSTEM', '回复已恢复');
       }
     })
-    .catch(e => addLog('ERROR', '恢复回复失败: ' + e.message));
+    .catch(function(e){addLog('ERROR', '恢复回复失败: ' + e.message)});
 }
 
 function updatePauseButtons() {
@@ -1705,7 +1711,7 @@ function downloadGreetRecords() {
 // ── 控制按钮状态 ──
 function setControls(running) {
   const s=document.getElementById('btnStartAll'),p=document.getElementById('btnStopAll'),cl=document.getElementById('btnConfirmLogin'),dot=document.getElementById('sbarDot'),st=document.getElementById('sbarStatus');
-  if(s) { s.style.display=running?'none':''; s.disabled=false; s.textContent='▶ 启动'; }
+  if(s) { s.style.display=running?'none':''; s.disabled=false; s.textContent='启动'; }
   if(p) { p.style.display=running?'':'none'; }
   if(cl) { cl.style.display=running?'':'none'; }
   if(dot) dot.className='status-dot'+(running?' running':' idle');
@@ -1744,24 +1750,24 @@ function addLog(level,message){
 }
 
 // ── SocketIO 事件 ──
-socket.on('connect',()=>{
+socket.on('connect',function(){
   addLog('SYSTEM','WebSocket 已连接');
   document.getElementById('connStatus').textContent='已连接';
   document.getElementById('connStatus').classList.remove('disconnected');
 });
-socket.on('disconnect',()=>{
+socket.on('disconnect',function(){
   addLog('ERROR','WebSocket 断开');
   document.getElementById('connStatus').textContent='已断开';
   document.getElementById('connStatus').classList.add('disconnected');
 });
-socket.on('bot_log',(data)=>{
+socket.on('bot_log',function(data){
   if(data&&data.message){
     var level = data.level || 'INFO';
-    if(level === 'DEBUG') return;
+    if(level === 'DEBUG') return; // 前端只显示 INFO/WARN/ERROR
     addLog(level, data.message);
   }
 });
-socket.on('bot_progress',(data)=>{
+socket.on('bot_progress',function(data){
   if(data.total!==undefined) stats.total=data.total;
   if(data.applied!==undefined) stats.applied=data.applied;
   if(data.skipped!==undefined) stats.skipped=data.skipped;
@@ -1776,7 +1782,7 @@ socket.on('bot_progress',(data)=>{
     renderAccounts();
   }
 });
-socket.on('status_update',(data)=>{
+socket.on('status_update',function(data){
   if (data.running !== undefined) {
     setControls(data.running);
   }
@@ -1794,7 +1800,7 @@ socket.on('status_update',(data)=>{
     document.getElementById('currentTaskLabel').textContent='';
   }
 });
-socket.on('login_required',(data)=>{
+socket.on('login_required',function(data){
   const modal = document.getElementById('loginModal');
   if (!modal) return;
   const desc = document.getElementById('loginModalDesc');
@@ -1826,9 +1832,9 @@ function uploadCookieFile(event) {
   if (!file) return;
   const formData = new FormData();
   formData.append('file', file);
-  fetch('/api/upload/cookie', { method:'POST', body: formData })
-    .then(r=>r.json())
-    .then(data => {
+  fetch('/api/cookies/upload', { method:'POST', body: formData })
+    .then(function(r){return r.json()})
+    .then(function(data) {
       if (data.status === 'ok') {
         addLog('SUCCESS', 'Cookie 已上传: ' + file.name);
         config.accounts[activeAccountIdx].cookie_file = data.filename || file.name;
@@ -1838,12 +1844,31 @@ function uploadCookieFile(event) {
         addLog('ERROR', 'Cookie 上传失败: ' + (data.message || ''));
       }
     })
-    .catch(e => addLog('ERROR', 'Cookie 上传失败: ' + e.message));
+    .catch(function(e){addLog('ERROR', 'Cookie 上传失败: ' + e.message)});
   event.target.value = '';
 }
 
+function deleteCookieFile() {
+  const filename = document.getElementById("accCookie").value || "zhipin_cookies.json";
+  if (!confirm('确定删除 Cookie 文件 "' + filename + '" 吗？')) return;
+  fetch("/api/cookies/delete", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({filename: filename})
+  }).then(function(r){return r.json()}).then(function(data) {
+    if (data.status === "ok") {
+      addLog("INFO", "已删除 Cookie 文件: " + filename);
+      config.accounts[activeAccountIdx].cookie_file = "";
+      renderAccountConfig();
+      saveConfig();
+    } else {
+      addLog("ERROR", "删除失败: " + (data.message||""));
+    }
+  }).catch(function(e){addLog("ERROR", "删除异常: " +F e.message)});
+}
+
 /* ===== anime.js entrance animations ===== */
-document.addEventListener('DOMContentLoaded',Ffunction() {
+document.addEventListener('DOMContentLoaded', function() {
   if (typeof anime === 'undefined') return;
 
   anime({
@@ -1898,14 +1923,14 @@ document.addEventListener('DOMContentLoaded',Ffunction() {
         var val = parseInt(m.target.textContent);
         if (!isNaN(val) && val > 0) {
           anime({
-            targets: m.target,
-            scale: [1.2, 1],
-            duration: 400,
-            easing: 'easeOutBack'
-          });
-        }
+          targets: m.target,
+          scale: [1.2, 1],
+          duration: 400,
+          easing: 'easeOutBack'
+        });
       }
-    });
+    }
+  });
   });
   document.querySelectorAll('.stat-value').forEach(function(el) {
     observer.observe(el, {childList: true, characterData: true, subtree: true});
@@ -1917,14 +1942,13 @@ document.addEventListener('DOMContentLoaded',Ffunction() {
 <div class="login-modal-overlay" id="loginModal">
   <div class="login-modal">
     <div class="login-modal-header">
-      <div class="login-modal-icon">🔐</div>
-      <div class="login-modal-title">需要登录 Boss 直聘</div>
+      <div class="login-modal-icon">需要登录 Boss 直聘</div>
     </div>
     <div class="login-modal-body">
       <div class="login-modal-desc" id="loginModalDesc">登录已过期或未登录，请在弹出的浏览器中完成登录，然后点击下方按钮继续。</div>
       <div class="login-modal-actions">
-        <button class="login-modal-btn" onclick="doConfirmLogin()">✅ 我已登录，继续执行</button>
-        <button class="login-modal-btn login-modal-btn-secondary" onclick="closeLoginModal()">✕ 关闭</button>
+        <button class="login-modal-btn" onclick="doConfirmLogin()">我已登录，继续执行</button>
+        <button class="login-modal-btn login-modal-btn-secondary" onclick="closeLoginModal()">关闭</button>
       </div>
     </div>
   </div>
