@@ -1580,34 +1580,29 @@ function deleteAccount() {
 // ── 启动/停止 ──
 function startAll() {
   const btn = document.getElementById('btnStartAll');
-  if (btn) { btn.disabled = true; btn.textContent = '启动中...'; }
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ 启动中...'; }
   saveConfig()
     .then(function() {
-      if (socket && socket.connected) {
-        socket.emit('start_all');
-        addLog('SYSTEM', '正在启动所有任务...');
-      } else {
-        addLog('ERROR', 'WebSocket 未连接，请刷新页面重试');
-        if (btn) { btn.disabled = false; btn.textContent = '启动'; btn.style.display = ''; }
-      }
+      return fetch('/api/accounts/0/start', {method:'POST'});
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      addLog('SYSTEM', '正在启动所有任务...');
+      setControls(true);
+      if (btn) { btn.disabled = false; btn.textContent = '▶ 启动'; }
     })
     .catch(function(e) {
       addLog('ERROR', '启动失败: ' + e.message);
-      if (btn) { btn.disabled = false; btn.textContent = '启动'; btn.style.display = ''; }
+      if (btn) { btn.disabled = false; btn.textContent = '▶ 启动'; btn.style.display = ''; }
     });
 }
 
 function stopAll() {
-  socket.emit('stop_all');
-  addLog('SYSTEM', '正在停止所有任务...');
-  const btn = document.getElementById('btnStartAll');
-  if (btn) { btn.disabled = false; btn.textContent = '启动'; btn.style.display = ''; }
-  const stopBtn = document.getElementById('btnStopAll');
-  if (stopBtn) { stopBtn.style.display = 'none'; }
-  const dot = document.getElementById('sbarDot');
-  if (dot) dot.className = 'status-dot idle';
-  const st = document.getElementById('sbarStatus');
-  if (st) st.textContent = '就绪';
+  fetch('/api/stop', {method:'POST'})
+    .then(function(r) { return r.json(); })
+    .then(function(data) { addLog('SYSTEM', '所有任务已停止'); })
+    .catch(function(e) { addLog('ERROR', '停止失败: ' + e.message); });
+  setControls(false);
 }
 
 function confirmLogin() {
@@ -1822,6 +1817,82 @@ socket.on('login_required',function(data){
   if (cl) cl.style.display = '';
 });
 
+// ── Socket.IO 事件监听（必须在loadConfig之前注册）──
+socket.on('connect', function() {
+  addLog('SYSTEM', 'WebSocket 已连接');
+  var cs = document.getElementById('connStatus');
+  if (cs) cs.textContent = '已连接';
+});
+
+socket.on('disconnect', function() {
+  addLog('ERROR', 'WebSocket 断开');
+  var cs = document.getElementById('connStatus');
+  if (cs) cs.textContent = '已断开';
+});
+
+socket.on('bot_log', function(data) {
+  if (data && data.message) {
+    var level = (data.level || 'INFO').toUpperCase();
+    if (level === 'DEBUG') return;
+    addLog(level, data.message);
+  }
+});
+
+socket.on('bot_progress', function(data) {
+  if (data.total !== undefined) stats.total = data.total;
+  if (data.applied !== undefined) stats.applied = data.applied;
+  if (data.skipped !== undefined) stats.skipped = data.skipped;
+  if (data.reply_sent !== undefined) stats.reply_sent = data.reply_sent;
+  if (data.reply_skipped !== undefined) stats.reply_skipped = data.reply_skipped;
+  updateStats();
+});
+
+socket.on('bot_status', function(data) {
+  setControls(data.running);
+  if (!data.running) {
+    var lbl = document.getElementById('currentTaskLabel');
+    if (lbl) lbl.textContent = '';
+  }
+});
+
+socket.on('scheduler_status', function(data) {
+  setControls(data.running);
+  var lbl = document.getElementById('currentTaskLabel');
+  if (data.current && lbl) {
+    lbl.textContent = (data.current.account || '') + ' / ' + (data.current.query || '') + '(' + (data.current.city || '') + ')';
+  } else if (!data.running && lbl) {
+    lbl.textContent = '';
+  }
+  if (!data.running) {
+    var btn = document.getElementById('btnStartAll');
+    if (btn) { btn.disabled = false; btn.textContent = '▶ 启动'; btn.style.display = ''; }
+    var stopBtn = document.getElementById('btnStopAll');
+    if (stopBtn) stopBtn.style.display = 'none';
+  }
+});
+
+socket.on('bot_login', function() {
+  var btn = document.getElementById('btnConfirmLogin');
+  if (btn) btn.disabled = false;
+});
+
+socket.on('login_result', function(data) {
+  if (data.success) addLog('SUCCESS', '登录状态正常');
+  else addLog('ERROR', '未登录');
+});
+
+socket.on('login_required', function(data) {
+  var modal = document.getElementById('loginModal');
+  if (!modal) return;
+  var desc = document.getElementById('loginModalDesc');
+  if (data && data.message && desc) desc.textContent = data.message;
+  modal.style.display = 'flex';
+  modal.classList.add('active');
+  addLog('WARN', '需要登录：请在浏览器中登录后点击确认');
+});
+
+socket.on('connected', function(data) {});
+
 loadTheme();
 loadConfig();
 
@@ -1942,6 +2013,7 @@ document.addEventListener('DOMContentLoaded', function() {
     observer.observe(el, {childList: true, characterData: true, subtree: true});
   });
 });
+
 
 </script>
 <!-- Login Modal -->

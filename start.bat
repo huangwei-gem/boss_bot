@@ -49,10 +49,19 @@ echo.
 echo [4/6] 检查端口占用...
 netstat -ano | findstr ":5000 " | findstr "LISTENING" >nul 2>&1
 if not errorlevel 1 (
-    echo ⚠ 端口 5000 已被占用，可能已有实例在运行
-    echo   如需重启，请先关闭占用端口的程序，或修改 flask-version\app.py 中的端口设置
-    pause
-    exit /b 1
+    echo ⚠ 端口 5000 已被占用，正在自动终止旧进程...
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":5000 " ^| findstr "LISTENING"') do (
+        taskkill /F /PID %%a >nul 2>&1
+        echo   已终止进程 PID: %%a
+    )
+    timeout /t 2 /nobreak >nul
+    netstat -ano | findstr ":5000 " | findstr "LISTENING" >nul 2>&1
+    if not errorlevel 1 (
+        echo ✗ 端口仍被占用，无法自动终止，请手动关闭后重试
+        pause
+        exit /b 1
+    )
+    echo ✓ 旧进程已终止，端口已释放
 )
 echo ✓ 端口 5000 可用
 

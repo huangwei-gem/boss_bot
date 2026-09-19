@@ -48,15 +48,25 @@ echo
 echo "[4/6] 检查端口占用..."
 if command -v lsof &>/dev/null; then
     if lsof -i :5000 -sTCP:LISTEN &>/dev/null; then
-        echo "⚠ 端口 5000 已被占用，可能已有实例在运行"
-        echo "  如需重启，请先关闭占用端口的程序，或修改 flask-version/app.py 中的端口设置"
-        exit 1
+        echo "⚠ 端口 5000 已被占用，正在自动终止旧进程..."
+        lsof -i :5000 -sTCP:LISTEN -t | xargs kill -9 2>/dev/null
+        sleep 2
+        if lsof -i :5000 -sTCP:LISTEN &>/dev/null; then
+            echo "✗ 端口仍被占用，无法自动终止，请手动关闭后重试"
+            exit 1
+        fi
+        echo "✓ 旧进程已终止，端口已释放"
     fi
 elif command -v ss &>/dev/null; then
     if ss -tlnp | grep ":5000 " &>/dev/null; then
-        echo "⚠ 端口 5000 已被占用，可能已有实例在运行"
-        echo "  如需重启，请先关闭占用端口的程序，或修改 flask-version/app.py 中的端口设置"
-        exit 1
+        echo "⚠ 端口 5000 已被占用，正在自动终止旧进程..."
+        ss -tlnp | grep ":5000 " | grep -oP 'pid=\K[0-9]+' | xargs kill -9 2>/dev/null
+        sleep 2
+        if ss -tlnp | grep ":5000 " &>/dev/null; then
+            echo "✗ 端口仍被占用，无法自动终止，请手动关闭后重试"
+            exit 1
+        fi
+        echo "✓ 旧进程已终止，端口已释放"
     fi
 else
     echo "⚠ 无法检测端口占用（lsof/ss 未安装），跳过检查"

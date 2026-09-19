@@ -243,6 +243,16 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/dashboard/<path:filename>")
+def serve_dashboard(filename):
+    """提供看板图片静态文件。"""
+    safe_name = filename.replace("..", "").strip("/")
+    filepath = DASHBOARD_DIR / safe_name
+    if filepath.exists() and filepath.is_file():
+        return send_file(str(filepath))
+    return jsonify({"error": "File not found"}), 404
+
+
 # ===================== 状态 API =====================
 
 @app.route("/api/status")
@@ -1739,12 +1749,84 @@ def on_connect():
         emit("bot_log", {
             "time": log_entry["time"],
             "message": f"[{log_entry['level']}] {log_entry['message']}",
+            "level": log_entry["level"],
         })
 
 
 @socketio.on("disconnect")
 def on_disconnect():
     logger.info("客户端已断开连接")
+
+
+@socketio.on("start_all")
+def on_start_all():
+    """启动所有账号的机器人。"""
+    import threading
+    logger.info("收到 start_all 事件，正在启动所有账号...")
+    emit("bot_log", {"time": _now(), "message": "正在启动所有账号...", "level": "INFO"})
+    emit("bot_status", {"running": True})
+    
+    def _start_thread():
+        try:
+            cfg = _ensure_config()
+            global _multi_manager
+            from boss_bot.main_loop import MultiAccountManager
+            if _multi_manager is None:
+                _multi_manager = MultiAccountManager(cfg)
+            _multi_manager.start_all()
+            socketio.emit("bot_log", {"time": _now(), "message": "所有账号已启动", "level": "SUCCESS"})
+            socketio.emit("scheduler_status", {"running": True, "current": None})
+        except Exception as e:
+            logger.error(f"启动失败: {e}", exc_info=True)
+            socketio.emit("bot_log", {"time": _now(), "message": f"启动失败: {e}", "level": "ERROR"})
+            socketio.emit("bot_status", {"running": False})
+    
+    threading.Thread(target=_start_thread, daemon=True).start()
+
+
+@socketio.on("stop_all")
+def on_stop_all():
+    """停止所有账号的机器人。"""
+    logger.info("收到 stop_all 事件，正在停止所有账号...")
+    emit("bot_log", {"time": _now(), "message": "正在停止所有账号...", "level": "INFO"})
+    emit("bot_status", {"running": False})
+    emit("scheduler_status", {"running": False, "current": None})
+    
+    def _stop_thread():
+        try:
+            global _multi_manager
+            if _multi_manager is not None:
+                _multi_manager.stop_all()
+            socketio.emit("bot_log", {"time": _now(), "message": "所有账号已停止", "level": "SUCCESS"})
+        except Exception as e:
+            logger.error(f"停止失败: {e}", exc_info=True)
+            socketio.emit("bot_log", {"time": _now(), "message": f"停止失败: {e}", "level": "ERROR"})
+    
+    import threading
+    threading.Thread(target=_stop_thread, daemon=True).start()
+
+
+@socketio.on("confirm_login")
+def on_confirm_login():
+    """确认登录。"""
+    logger.info("收到 confirm_login 事件")
+    emit("bot_log", {"time": _now(), "message": "登录已确认", "level": "SUCCESS"})
+    global _multi_manager
+    if _multi_manager is not None:
+        _multi_manager.confirm_login()
+
+
+@socketio.on("check_login")
+def on_check_login():
+    """检查登录状态。"""
+    logger.info("收到 check_login 事件")
+    emit("login_result", {"success": True})
+
+
+@socketio.on("stop_login_modal")
+def on_stop_login_modal():
+    """关闭登录弹窗。"""
+    logger.info("收到 stop_login_modal 事件")
 
 
 # ===================== 主入口 =====================
