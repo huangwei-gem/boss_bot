@@ -1079,7 +1079,12 @@ def api_get_ai_prompts():
 def api_save_ai_prompts():
     """保存 AI 提示词配置。"""
     try:
-        data = request.get_json() or {}
+        try:
+            data = request.get_json() or {}
+        except Exception:
+            # 编码问题降级：手动解析请求体
+            raw = request.get_data()
+            data = json.loads(raw.decode('utf-8', errors='replace')) if raw else {}
         prompts = data.get("prompts", data)
 
         overrides = {}
@@ -1858,7 +1863,12 @@ def api_save_templates():
     """
     global _config
     try:
-        data = request.get_json() or {}
+        try:
+            data = request.get_json() or {}
+        except Exception:
+            # 编码问题降级：手动解析请求体
+            raw = request.get_data()
+            data = json.loads(raw.decode('utf-8', errors='replace')) if raw else {}
         templates_data = data.get("templates", data)
 
         # 1. 更新内存中的配置对象
