@@ -1065,6 +1065,20 @@ class UnifiedBotLoop:
         if hasattr(self.config, 'reply'):
             self._reply_enabled = getattr(self.config.reply, 'enabled', True)
 
+        # 8. 人工接管状态自动恢复 — 如果暂停原因已不再匹配重要关键词，自动恢复
+        if self._reply_paused and hasattr(self.config, 'rules'):
+            pause_info = self._state_store.get_pause_info() if hasattr(self._state_store, 'get_pause_info') else None
+            if pause_info:
+                pause_reason = pause_info.get('reason', '')
+                # 检查暂停原因中的消息是否还匹配当前的重要关键词
+                from boss_bot.config import IMPORTANCE_KEYWORDS
+                reason_text = pause_reason.lower()
+                still_important = any(kw.lower() in reason_text for kw in IMPORTANCE_KEYWORDS)
+                if not still_important:
+                    self._reply_paused = False
+                    self._state_store.resume()
+                    self._log("INFO", "热重载检测到暂停原因已不再匹配重要关键词，自动恢复回复")
+
     # ─────────────────────────────────────────────
     # 健康检查与错误恢复
     # ─────────────────────────────────────────────
