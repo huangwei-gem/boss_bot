@@ -1005,7 +1005,7 @@ class BrowserManager:
     def get_search_page(self) -> BrowserInstance:
         """获取搜索/打招呼页面 tab（包装为 BrowserInstance）
 
-        如果尚未创建搜索标签页，则创建一个并导航到搜索页。
+        复用浏览器初始标签页作为搜索页，避免创建多余标签页。
         打招呼引擎使用此标签页进行职位搜索和打招呼操作。
 
         Returns:
@@ -1015,14 +1015,10 @@ class BrowserManager:
             self.launch()
 
         if self._search_tab is None:
-            raw_tab = self._instance.new_tab(self.BOSS_SEARCH_URL)
-            # 包装为 BrowserInstance，复用底层 chromium/browser 对象
-            self._search_tab = BrowserInstance(
-                chrome_page=raw_tab if not _IS_MACOS else None,
-                chromium=self._instance._get_browser() if _IS_MACOS else None,
-                tab=raw_tab if _IS_MACOS else None,
-            )
-            logger.info("已创建搜索/打招呼标签页")
+            # 复用初始标签页，导航到搜索 URL
+            self._instance.get(self.BOSS_SEARCH_URL)
+            self._search_tab = self._instance
+            logger.info("已复用初始标签页作为搜索/打招呼页")
 
         return self._search_tab
 

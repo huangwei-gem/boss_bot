@@ -87,7 +87,7 @@ a{color:var(--accent);text-decoration:none}
 .hidden{display:none!important}
 
 /* Layout */
-.app{display:flex;width:100%;height:100dvh}
+.app{display:flex;width:100%;height:100vh;height:100dvh}
 .side{flex:0 0 360px;display:flex;flex-direction:column;background:var(--side-bg);color:var(--side-text);position:relative;z-index:10;border-right:1px solid var(--bd);overflow:hidden;-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
 .side-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--side-input-bd);flex-shrink:0}
 .side-head .logo-wrap{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#5b7cfa,#8a6bfa);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;flex-shrink:0;box-shadow:0 2px 12px rgba(91,124,250,.35);transition:transform .2s ease,box-shadow .2s ease}.side-head .logo-wrap:hover{transform:scale(1.1);box-shadow:0 4px 20px rgba(91,124,250,.5)}
@@ -200,17 +200,23 @@ a{color:var(--accent);text-decoration:none}
 .theme-toggle .toggle-icon{font-size:14px;line-height:1}
 
 /* Content */
-.content{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px;text-wrap:pretty}
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.stat-card{padding:16px 18px;border-radius:16px;background:var(--surface);border:1px solid var(--bd);box-shadow:var(--sh-sm);transition:all var(--dur) var(--ease);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
-.stat-card:hover{box-shadow:var(--sh-md);border-color:var(--bd-2);transform:translateY(-2px)}
+.content{flex:1;overflow:hidden;padding:10px 16px;display:flex;flex-direction:column;gap:8px;min-height:0}
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;flex-shrink:0}
+.stat-card{padding:10px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--bd);box-shadow:var(--sh-sm);transition:all var(--dur) var(--ease);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);display:flex;align-items:center;gap:10px}
+.stat-card:hover{box-shadow:var(--sh-md);border-color:var(--bd-2)}
 .stat-card.accent{border-left:3px solid var(--accent)}
 .stat-card.success{border-left:3px solid var(--success)}
 .stat-card.warning{border-left:3px solid var(--warning)}
 .stat-card.info{border-left:3px solid var(--info)}
-.stat-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fg-3rd)}
-.stat-value{font-size:28px;font-weight:700;margin:4px 0;letter-spacing:-.03em;color:var(--fg)}
-.stat-sub{font-size:11px;color:var(--fg-3rd)}
+.stat-card .stat-icon{font-size:20px;flex-shrink:0;opacity:.8}
+.stat-card .stat-body{flex:1;min-width:0}
+.stat-label{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fg-3rd)}
+.stat-value{font-size:20px;font-weight:700;margin:1px 0;letter-spacing:-.03em;color:var(--fg);line-height:1.1}
+.stat-sub{font-size:10px;color:var(--fg-3rd)}
+
+/* Action bar */
+.action-bar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:6px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--bd);flex-shrink:0;box-shadow:var(--sh-sm)}
+.action-bar .action-label{font-size:10px;font-weight:600;color:var(--fg-3rd);text-transform:uppercase;letter-spacing:.04em;margin-right:4px}
 
 /* Button variants */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:8px 16px;font-size:12px;font-weight:500;border-radius:10px;transition:all var(--dur) var(--ease);white-space:nowrap}
@@ -227,14 +233,24 @@ a{color:var(--accent);text-decoration:none}
 .btn-warn:hover{filter:brightness(1.05);box-shadow:0 6px 18px rgba(245,158,11,.32);transform:translateY(-1px)}
 
 /* Panels */
-.panel-row{display:flex;gap:16px;flex:1;min-height:0}
-.panel{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh-sm);overflow:hidden;-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+.panel-row{display:flex;gap:8px;flex:1;min-height:0}
+.panel{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--bd);border-radius:12px;box-shadow:var(--sh-sm);overflow:hidden;-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);min-height:0}
 .panel-half{flex:1}
-.panel-header{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--bd);flex-shrink:0;gap:6px}
+.panel-full{flex:1;width:100%}
+.panel-header{display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid var(--bd);flex-shrink:0;gap:6px}
 .panel-icon{font-size:14px}
 .panel-title{font-size:12px;font-weight:600;color:var(--fg);letter-spacing:-.01em}
 .panel-actions{margin-left:auto;display:flex;gap:4px}
-.panel-body{flex:1;overflow-y:auto;padding:8px 12px}
+.panel-body{flex:1;overflow-y:auto;padding:6px 10px;min-height:0}
+
+/* Log panel collapsible */
+.log-panel{flex-shrink:0;transition:flex .3s ease}
+.log-panel .panel-header{cursor:pointer;user-select:none}
+.log-panel .log-toggle-icon{margin-left:8px;font-size:10px;transition:transform .2s ease;color:var(--fg-3rd)}
+.log-panel.collapsed .log-toggle-icon{transform:rotate(-90deg)}
+.log-panel.collapsed .panel-body{display:none}
+.log-panel.collapsed{flex:0 0 auto}
+.log-panel.expanded{flex:0 0 180px}
 
 /* Job list */
 .job-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r-sm);border:1px solid var(--bd);background:var(--surface-soft);margin-bottom:6px;transition:all var(--dur) var(--ease);cursor:pointer}
@@ -272,7 +288,8 @@ a{color:var(--accent);text-decoration:none}
 .excel-file-meta{font-size:10px;color:var(--fg-3rd);margin-top:2px}
 
 /* Log */
-.log-area{font-family:ui-monospace,SF Mono,Menlo,Consolas,monospace;font-size:11px;line-height:1.6;padding:8px 12px}
+.log-area{font-family:ui-monospace,SF Mono,Menlo,Consolas,monospace;font-size:11px;line-height:1.6;padding:8px 12px;max-height:120px;overflow-y:auto}
+.panel.collapsed .panel-body{display:none}
 .log-entry{padding:2px 0;display:flex;gap:8px;word-break:break-all}
 .log-time{color:var(--fg-4th);flex-shrink:0;font-size:10px}
 .log-message{flex:1}
@@ -281,6 +298,37 @@ a{color:var(--accent);text-decoration:none}
 .log-ERROR{color:var(--danger)}
 .log-WARN{color:var(--warning)}
 .log-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:8px;color:var(--fg-3rd)}
+
+/* Greet Table */
+.greet-table{width:100%;border-collapse:collapse;font-size:12px}
+.greet-table thead{position:sticky;top:0;background:var(--bg-2nd);z-index:1}
+.greet-table th{padding:8px 10px;text-align:left;font-weight:600;color:var(--fg-2nd);border-bottom:1px solid var(--border);font-size:11px;white-space:nowrap}
+.greet-table td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.greet-table tr:hover td{background:var(--bg-3rd)}
+.greet-status{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.greet-status-success{background:rgba(34,197,94,.15);color:var(--success)}
+.greet-status-skip{background:rgba(107,114,128,.16);color:var(--fg-3rd)}
+.greet-status-ai_skip{background:rgba(139,92,246,.16);color:#8b5cf6}
+.greet-status-already{background:rgba(107,114,128,.15);color:var(--fg-3rd)}
+.greet-status-error{background:rgba(239,68,68,.15);color:var(--danger)}
+.greet-status-pending{background:rgba(91,124,250,.14);color:var(--accent);position:relative;overflow:hidden}
+.greet-status-pending::before{content:"";position:absolute;left:-40%;top:0;bottom:0;width:40%;background:linear-gradient(90deg,transparent,rgba(91,124,250,.35),transparent);animation:greetPendingStrip 1.2s linear infinite}
+@keyframes greetPendingStrip{0%{left:-40%}100%{left:100%}}
+.greet-pending-bar{display:inline-block;width:60px;height:6px;border-radius:3px;background:var(--accent-light);overflow:hidden;vertical-align:middle;position:relative}
+.greet-pending-bar::after{content:"";position:absolute;top:0;left:0;bottom:0;width:40%;background:var(--accent);border-radius:3px;animation:greetPendingBar 1.1s ease-in-out infinite}
+@keyframes greetPendingBar{0%{left:-40%}100%{left:100%}}
+.greet-ai-badge{font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(34,197,94,.12);color:var(--success)}
+.greet-ai-badge-nomatch{background:rgba(239,68,68,.12);color:var(--danger)}
+
+/* Record Tabs */
+.record-tabs{display:flex;gap:2px;padding:0 16px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.record-tab{padding:8px 14px;font-size:11.5px;font-weight:500;color:var(--fg-3rd);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:all var(--dur) var(--ease);display:inline-flex;align-items:center;gap:6px}
+.record-tab:hover{color:var(--fg)}
+.record-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.record-tab .tab-count{font-size:9px;padding:1px 6px;border-radius:8px;background:var(--surface-soft);color:var(--fg-3rd);font-weight:600}
+.record-tab.active .tab-count{background:var(--accent-light);color:var(--accent)}
+.record-tab-content{display:none;flex:1;overflow-y:auto}
+.record-tab-content.active{display:block}
 
 /* Modal */
 .modal-overlay{position:fixed;inset:0;background:var(--modal-overlay);z-index:1000;display:flex;align-items:center;justify-content:center;animation:fadeIn .15s ease}
@@ -303,7 +351,7 @@ a{color:var(--accent);text-decoration:none}
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
 /* Responsive */
-@media(max-width:1200px){.stats-grid{grid-template-columns:repeat(3,1fr)}.panel-half{flex:none;width:100%}.panel-row{flex-direction:column}}
+@media(max-width:1200px){.stats-grid{grid-template-columns:repeat(5,1fr)}.panel-half{flex:none;width:100%}.panel-row{flex-direction:column}}
 @media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}.side{width:280px}.panel-row{flex-direction:column}}
 @media(max-width:600px){.side{display:none}.stats-grid{grid-template-columns:1fr}.content{padding:12px}.topbar{padding:8px 12px}.topbar-title{font-size:14px}.stat-card{padding:10px}.stat-value{font-size:20px}.btn-sm{padding:4px 8px;font-size:11px}.modal{width:95%;max-width:400px}.modal-large{width:95%;max-width:600px}}
 
@@ -461,21 +509,20 @@ a{color:var(--accent);text-decoration:none}
         <div class="stat-card warning"><div class="stat-label">已跳过</div><div class="stat-value" id="statSkipped">0</div><div class="stat-sub">已过滤</div></div>
         <div class="stat-card success"><div class="stat-label">已回复</div><div class="stat-value" id="statReplySent">0</div><div class="stat-sub">AI回复</div></div>
         <div class="stat-card warning"><div class="stat-label">回复跳过</div><div class="stat-value" id="statReplySkipped">0</div><div class="stat-sub">无需回复</div></div>
-        <div class="stat-card info"><div class="stat-label">操作</div>
-          <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">
-            <button class="btn btn-success btn-sm" id="btnStartAll" onclick="startAll()">启动</button>
-            <button class="btn btn-danger btn-sm" id="btnStopAll" onclick="stopAll()" style="display:none">停止</button>
-            <button class="btn btn-ghost btn-sm" id="btnConfirmLogin" onclick="confirmLogin()" style="display:none">确认登录</button>
-            <button class="btn btn-ghost btn-sm" onclick="saveConfig()">保存配置</button>
-            <button class="btn btn-ghost btn-sm" onclick="showExcelModal()">Excel 导出</button>
-            <button class="btn btn-warn btn-sm" id="btnPauseGreet" onclick="pauseGreet()" style="display:none">暂停打招呼</button>
-            <button class="btn btn-success btn-sm" id="btnResumeGreet" onclick="resumeGreet()" style="display:none">恢复打招呼</button>
-            <button class="btn btn-warn btn-sm" id="btnPauseReply" onclick="pauseReply()" style="display:none">暂停回复</button>
-            <button class="btn btn-success btn-sm" id="btnResumeReply" onclick="resumeReply()" style="display:none">恢复回复</button>
-            <button class="btn btn-ghost btn-sm" onclick="downloadReplyRecords()">下载回复记录</button>
-            <button class="btn btn-ghost btn-sm" onclick="downloadGreetRecords()">下载打招呼记录</button>
-          </div>
-        </div>
+      </div>
+      <div class="action-bar">
+        <span class="action-label">操作</span>
+        <button class="btn btn-success btn-sm" id="btnStartAll" onclick="startAll()">启动</button>
+        <button class="btn btn-danger btn-sm" id="btnStopAll" onclick="stopAll()" style="display:none">停止</button>
+        <button class="btn btn-ghost btn-sm" id="btnConfirmLogin" onclick="confirmLogin()" style="display:none">确认登录</button>
+        <button class="btn btn-ghost btn-sm" onclick="saveConfig()">保存配置</button>
+        <button class="btn btn-ghost btn-sm" onclick="showExcelModal()">Excel 导出</button>
+        <button class="btn btn-warn btn-sm" id="btnPauseGreet" onclick="pauseGreet()" style="display:none">暂停打招呼</button>
+        <button class="btn btn-success btn-sm" id="btnResumeGreet" onclick="resumeGreet()" style="display:none">恢复打招呼</button>
+        <button class="btn btn-warn btn-sm" id="btnPauseReply" onclick="pauseReply()" style="display:none">暂停回复</button>
+        <button class="btn btn-success btn-sm" id="btnResumeReply" onclick="resumeReply()" style="display:none">恢复回复</button>
+        <button class="btn btn-ghost btn-sm" onclick="downloadReplyRecords()">下载回复记录</button>
+        <button class="btn btn-ghost btn-sm" onclick="downloadGreetRecords()">下载打招呼记录</button>
       </div>
       <div class="panel-row">
         <div class="panel panel-half">
@@ -483,7 +530,30 @@ a{color:var(--accent);text-decoration:none}
           <div class="panel-body" id="jobList"></div>
         </div>
         <div class="panel panel-half">
-          <div class="panel-header"><span class="panel-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="panel-title">运行日志</span><div class="panel-actions"><button class="btn btn-ghost btn-sm" onclick="copyLog()" title="复制全部日志">复制</button><button class="btn btn-ghost btn-sm" onclick="clearLog()">清空</button></div></div>
+          <div class="panel-header"><span class="panel-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="panel-title">投递记录</span><div class="panel-actions"><button class="btn btn-ghost btn-sm" onclick="clearGreetTable()">清空</button></div></div>
+          <div class="record-tabs">
+            <button class="record-tab active" onclick="switchRecordTab('greet')">打招呼记录 <span class="tab-count" id="greetTabCount">0</span></button>
+            <button class="record-tab" onclick="switchRecordTab('reply')">回复记录 <span class="tab-count" id="replyTabCount">0</span></button>
+          </div>
+          <div class="record-tab-content active" id="greetTabContent" style="padding:0;flex:1;overflow-y:auto">
+            <table class="greet-table" id="greetTable">
+              <thead><tr><th>时间</th><th>岗位</th><th>公司</th><th>薪资</th><th>状态</th><th>AI</th></tr></thead>
+              <tbody id="greetTableBody"></tbody>
+            </table>
+            <div id="greetEmpty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:8px;color:var(--fg-3rd);height:100%;min-height:200px"><div style="font-size:28px">📋</div><div>等待投递...</div></div>
+          </div>
+          <div class="record-tab-content" id="replyTabContent" style="padding:0;flex:1;overflow-y:auto">
+            <table class="greet-table" id="replyTable">
+              <thead><tr><th>时间</th><th>聊天对象</th><th>岗位</th><th>对方消息</th><th>我的回复</th><th>状态</th></tr></thead>
+              <tbody id="replyTableBody"></tbody>
+            </table>
+            <div id="replyEmpty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:8px;color:var(--fg-3rd);height:100%;min-height:200px"><div style="font-size:28px">💬</div><div>等待回复...</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-row" style="margin-top:8px;flex:0 0 auto">
+        <div class="panel log-panel collapsed" id="logPanel">
+          <div class="panel-header" onclick="toggleLogPanel()" style="cursor:pointer;user-select:none"><span class="panel-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="panel-title">系统日志</span><span class="log-toggle-icon" style="margin-left:auto;transition:transform .2s ease;font-size:10px;color:var(--fg-3rd)">▼</span><div class="panel-actions" onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="copyLog()">复制</button><button class="btn btn-ghost btn-sm" onclick="clearLog()">清空</button></div></div>
           <div class="panel-body log-area" id="logArea"><div class="log-empty"><div class="empty-icon">等待操作...</div></div></div>
         </div>
       </div>
@@ -543,13 +613,17 @@ function renderAiConfig() {
 function addAiProvider() {
   if (!config.ai) config.ai = {};
   if (!config.ai.providers) config.ai.providers = [];
-  config.ai.providers.push({name:'新接口',api_key:'',api_base:'',model:'',timeout:30});
+  config.ai.providers.push({name:'新接口',api_key:'',api_base:'https://apihub.agnes-ai.com/v1',model:'',timeout:30});
   renderAiConfig();
-  saveConfig();
+  // 添加后立即保存到后端
+  saveConfig().then(function() {
+    addLog('INFO', '已添加新 AI 接口，请填写 API Key 和模型名称后点击「保存配置」');
+  }).catch(function(){});
 }
 
 function removeAiProvider(idx) {
   if (!config.ai || !config.ai.providers) return;
+  if (!confirm('确定删除接口「' + (config.ai.providers[idx].name || '未命名') + '」？')) return;
   config.ai.providers.splice(idx, 1);
   renderAiConfig();
   saveConfig();
@@ -557,7 +631,14 @@ function removeAiProvider(idx) {
 
 function updateAiProvider(idx, field, val) {
   if (!config.ai || !config.ai.providers) return;
+  if (!config.ai.providers[idx]) return;
   config.ai.providers[idx][field] = val;
+  // 同步第一个 provider 的字段到 config.ai 顶层（兼容旧逻辑）
+  if (idx === 0 && (field === 'api_key' || field === 'api_base' || field === 'model')) {
+    config.ai[field] = val;
+  }
+  // 失焦时自动保存
+  saveConfig().catch(function(){});
 }
 
 function toggleAiEnabled() {
@@ -695,10 +776,17 @@ function closeExcelModal() {
 }
 
 // ── AI 提示词弹窗 ──
+// 前端默认提示词兜底（与后端 prompts.py 保持一致，当后端返回空时使用）
+const DEFAULT_SYSTEM_RULES = "你的回复要求：\n1. 语气专业、礼貌、真诚，不要过于机械\n2. 简洁明了，控制在 1-2 句话，不要长篇大论\n3. 展现积极态度和学习能力\n4. 不要编造不存在的工作经历或技能\n5. 如果对方问了你不知道的问题，诚实说可以面谈详细了解\n6. 不要使用 emoji，保持专业\n7. 只输出回复内容本身，不要加引号或任何前缀\n8. 结合上面的对话历史自然接续话题，不要重复已经说过的内容\n9. 严格禁止声称已经完成了无法确认的事情（如\"已投递简历\"\"已发送材料\"\"已经报名\"），除非对话历史中确实发生过；对方要求你做某事时，回复\"稍后完成/马上处理\"即可\n10. 如果对方的岗位与你的求职方向明显不符，礼貌说明求职方向并询问是否有相关岗位，不要强行迎合";
+const DEFAULT_USER_PROMPT_TEMPLATE = "当前聊天上下文：\n- 招聘方称呼：{boss_name}\n- 招聘岗位：{job_name}\n- 最近对话记录：\n{history}\n- 对方最新消息：{message}\n\n请根据对话历史和最新消息，给出合适的回复。只输出回复内容，不要解释。";
+
 function showPromptModal() {
   fetch('/api/ai/prompts').then(function(r){return r.json()}).then(function(data) {
     if (data.status !== 'ok') { addLog('ERROR', '加载提示词失败'); return; }
     const prompts = data.prompts || {};
+    // 后端已返回默认值，这里再加前端兜底
+    const systemRules = prompts.system_rules || DEFAULT_SYSTEM_RULES;
+    const userPromptTemplate = prompts.user_prompt_template || DEFAULT_USER_PROMPT_TEMPLATE;
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.id = 'promptModal';
@@ -706,16 +794,25 @@ function showPromptModal() {
       '<div class="modal modal-large">'+
         '<h3>编辑 AI 提示词</h3>'+
         '<div class="modal-field"><label>System Rules（系统规则）</label>'+
-          '<textarea id="promptSystem" style="min-height:120px;width:100%;resize:vertical;box-sizing:border-box">'+escHtml(prompts.system_rules||'')+'</textarea></div>'+
-        '<div class="modal-field"><label>User Prompt Template（用户提示词模板）<span style="font-size:10px;color:var(--fg-3rd);margin-left:8px">支持占位符: {job_name} {salary} {description} {requirements} {company} {school} {major} {degree} {skills} {experience} {target_position}</span></label>'+
-          '<textarea id="promptUser" style="min-height:200px;width:100%;resize:vertical;box-sizing:border-box">'+escHtml(prompts.user_prompt_template||'')+'</textarea></div>'+
+          '<textarea id="promptSystem" style="min-height:120px;width:100%;resize:vertical;box-sizing:border-box">'+escHtml(systemRules)+'</textarea></div>'+
+        '<div class="modal-field"><label>User Prompt Template（用户提示词模板）<span style="font-size:10px;color:var(--fg-3rd);margin-left:8px">支持占位符: {boss_name} {job_name} {history} {message}</span></label>'+
+          '<textarea id="promptUser" style="min-height:200px;width:100%;resize:vertical;box-sizing:border-box">'+escHtml(userPromptTemplate)+'</textarea></div>'+
         '<div class="modal-actions">'+
+          '<button class="btn btn-ghost btn-sm" onclick="resetPromptModal()">恢复默认</button>'+
           '<button class="btn btn-primary" onclick="savePromptModal()">保存</button>'+
           '<button class="btn btn-cancel" onclick="closePromptModal()">取消</button>'+
         '</div>'+
       '</div>';
     document.body.appendChild(overlay);
   }).catch(function(e){addLog('ERROR', '加载提示词失败: ' + e)});
+}
+
+function resetPromptModal() {
+  var sys = document.getElementById('promptSystem');
+  var usr = document.getElementById('promptUser');
+  if (sys) sys.value = DEFAULT_SYSTEM_RULES;
+  if (usr) usr.value = DEFAULT_USER_PROMPT_TEMPLATE;
+  addLog('INFO', '已恢复默认提示词，点击「保存」生效');
 }
 
 function closePromptModal() {
@@ -744,29 +841,64 @@ function savePromptModal() {
   .catch(function(e){addLog('ERROR', '保存失败: ' + e)});
 }
 
-// ── 简历弹窗 ──
+// ── 简历弹窗（只读预览，简历在BOSS直聘网页上编辑）──
 function showResumeModal() {
-  if (!config.resume) config.resume = {};
-  config.resume = Object.assign({school:'某某大学',major:'统计学',degree:'本科',skills:['Excel','SQL','Python','数据分析'],experience:'负责业务数据报表与洞察分析',target_position:'数据分析师',self_intro:'做事严谨细心，学习能力强'}, config.resume);
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.id = 'resumeModal';
-  overlay.innerHTML =
-    '<div class="modal">'+
-      '<h3>编辑简历（用于 AI 匹配分析）</h3>'+
-      '<div class="modal-field"><label>学校</label><input id="resumeSchool" value="'+escHtml(config.resume.school||'')+'" placeholder="例如: 某某大学"></div>'+
-      '<div class="modal-field"><label>专业</label><input id="resumeMajor" value="'+escHtml(config.resume.major||'')+'" placeholder="例如: 统计学"></div>'+
-      '<div class="modal-field"><label>学历</label><input id="resumeDegree" value="'+escHtml(config.resume.degree||'')+'" placeholder="例如: 本科"></div>'+
-      '<div class="modal-field"><label>技能（逗号分隔）</label><input id="resumeSkills" value="'+escHtml((config.resume.skills||[]).join(', '))+'" placeholder="例如: Excel, SQL, Python, 数据分析"></div>'+
-      '<div class="modal-field"><label>工作经验</label><textarea id="resumeExperience" placeholder="简要描述工作/项目经验" style="min-height:60px">'+escHtml(config.resume.experience||'')+'</textarea></div>'+
-      '<div class="modal-field"><label>求职意向</label><input id="resumeTarget" value="'+escHtml(config.resume.target_position||'')+'" placeholder="例如: 数据分析师"></div>'+
-      '<div class="modal-field"><label>自我介绍</label><textarea id="resumeIntro" placeholder="自我介绍（可用于打招呼消息）" style="min-height:60px">'+escHtml(config.resume.self_intro||'')+'</textarea></div>'+
-      '<div class="modal-actions">'+
-        '<button class="btn btn-primary" onclick="saveResumeModal()">保存</button>'+
-        '<button class="btn btn-cancel" onclick="closeResumeModal()">取消</button>'+
-      '</div>'+
-    '</div>';
-  document.body.appendChild(overlay);
+  // 从后端加载最新简历信息
+  fetch('/api/resume').then(function(r){return r.json()}).then(function(data) {
+    var resume = (data.status === 'ok' && data.resume) ? data.resume : {};
+    if (!config.resume) config.resume = {};
+    config.resume = Object.assign({school:'',major:'',degree:'',skills:[],experience:'',target_position:'',self_intro:''}, resume);
+    var skillsText = (config.resume.skills || []).join('、') || '未填写';
+    var infoRows = [
+      {label: '姓名/求职者', value: config.resume.target_position ? '（见 BOSS 直聘简历）' : '未填写'},
+      {label: '学校', value: config.resume.school || '未填写'},
+      {label: '专业', value: config.resume.major || '未填写'},
+      {label: '学历', value: config.resume.degree || '未填写'},
+      {label: '求职意向', value: config.resume.target_position || '未填写'},
+      {label: '技能', value: skillsText},
+      {label: '工作经验', value: config.resume.experience || '未填写'},
+      {label: '自我介绍', value: config.resume.self_intro || '未填写'},
+    ];
+    var rowsHtml = infoRows.map(function(r) {
+      return '<div style="display:flex;padding:8px 0;border-bottom:1px solid var(--bd-2);gap:12px">'+
+        '<div style="flex:0 0 100px;font-size:11px;font-weight:600;color:var(--fg-2nd)">'+escHtml(r.label)+'</div>'+
+        '<div style="flex:1;font-size:11px;color:var(--fg);white-space:pre-wrap;word-break:break-all">'+escHtml(r.value)+'</div>'+
+      '</div>';
+    }).join('');
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'resumeModal';
+    overlay.innerHTML =
+      '<div class="modal modal-large">'+
+        '<h3>简历信息预览</h3>'+
+        '<div style="background:var(--warning-bg);color:var(--warning);padding:10px 12px;border-radius:8px;font-size:11px;margin-bottom:14px;display:flex;gap:8px;align-items:flex-start">'+
+          '<span style="font-size:14px">💡</span>'+
+          '<span>请在 <strong>BOSS 直聘网页/App</strong> 上编辑你的简历，这里只做简历信息预览，用于 AI 匹配分析。<br>修改简历请前往：<a href="https://www.zhipin.com/web/geek/resume" target="_blank" style="color:var(--accent);text-decoration:underline">https://www.zhipin.com/web/geek/resume</a></span>'+
+        '</div>'+
+        '<div style="max-height:50vh;overflow-y:auto">'+rowsHtml+'</div>'+
+        '<div class="modal-actions">'+
+          '<button class="btn btn-cancel" onclick="closeResumeModal()">关闭</button>'+
+        '</div>'+
+      '</div>';
+    document.body.appendChild(overlay);
+  }).catch(function(e){
+    addLog('ERROR', '加载简历信息失败: ' + e.message);
+    // 兜底：用 config 中的简历信息
+    if (!config.resume) config.resume = {};
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.id = 'resumeModal';
+    overlay.innerHTML =
+      '<div class="modal modal-large">'+
+        '<h3>简历信息预览</h3>'+
+        '<div style="background:var(--warning-bg);color:var(--warning);padding:10px 12px;border-radius:8px;font-size:11px;margin-bottom:14px">'+
+          '请在 BOSS 直聘网页上编辑你的简历，这里只做简历信息预览。'+
+        '</div>'+
+        '<div style="color:var(--fg-3rd);padding:20px;text-align:center">加载简历信息失败，请稍后重试。</div>'+
+        '<div class="modal-actions"><button class="btn btn-cancel" onclick="closeResumeModal()">关闭</button></div>'+
+      '</div>';
+    document.body.appendChild(overlay);
+  });
 }
 
 function closeResumeModal() {
@@ -791,7 +923,7 @@ function saveResumeModal() {
     }).catch(function(e){addLog('ERROR', '保存简历失败: ' + e.message)});
 }
 
-// ── 回复规则弹窗 ──
+// ── 回复规则弹窗（可编辑 key/value、可删除、可添加）──
 function showRulesModal() {
   fetch('/api/rules').then(function(r){return r.json()}).then(function(data) {
     if (data.status !== 'ok') { addLog('ERROR', '加载规则失败'); return; }
@@ -801,28 +933,27 @@ function showRulesModal() {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.id = 'rulesModal';
-    let rulesHtml = '';
     const ruleKeys = Object.keys(replyRules);
+    let rulesHtml = '';
     if (ruleKeys.length === 0) {
-      rulesHtml = '<div class="empty-state"><div class="empty-icon">暂无回复规则</div><div class="empty-desc">添加规则以控制自动回复行为</div></div>';
+      rulesHtml = '<div id="rulesList"><div class="empty-state"><div class="empty-icon">暂无回复规则</div><div class="empty-desc">添加规则以控制自动回复行为</div></div></div>';
     } else {
-      rulesHtml = ruleKeys.map(function(k) {
-        return '<div class="modal-field"><label>'+escHtml(k)+'</label>'+
-        '<input id="rule_'+escAttr(k)+'" value="'+escAttr(replyRules[k]||'')+'" placeholder="回复内容"></div>';
-      }).join('');
+      rulesHtml = '<div id="rulesList">' + ruleKeys.map(function(k, i) {
+        return renderRuleRow(i, k, replyRules[k]||'');
+      }).join('') + '</div>';
     }
     overlay.innerHTML =
       '<div class="modal modal-large">'+
         '<h3>编辑回复规则</h3>'+
         '<div style="max-height:40vh;overflow-y:auto;margin:12px 0">'+rulesHtml+'</div>'+
-        '<div class="modal-field"><label>重要关键词（逗号分隔）</label>'+
-        '<input id="importanceKeywords" value="'+escHtml(importanceKeywords.join(', '))+'" placeholder="例如: 面试, offer, 薪资"></div>'+
         '<div class="modal-field"><label>添加新规则</label>'+
         '<div style="display:flex;gap:8px">'+
-        '<input id="newRuleKey" placeholder="规则名称" style="flex:1">'+
+        '<input id="newRuleKey" placeholder="规则关键词（如：面试时间）" style="flex:1">'+
         '<input id="newRuleValue" placeholder="回复内容" style="flex:2">'+
         '<button class="btn btn-primary btn-sm" onclick="addRuleItem()">添加</button>'+
         '</div></div>'+
+        '<div class="modal-field"><label>重要关键词（逗号分隔）</label>'+
+        '<input id="importanceKeywords" value="'+escHtml(importanceKeywords.join(', '))+'" placeholder="例如: 面试, offer, 薪资"></div>'+
         '<div class="modal-actions">'+
           '<button class="btn btn-primary" onclick="saveRulesModal()">保存</button>'+
           '<button class="btn btn-cancel" onclick="closeRulesModal()">取消</button>'+
@@ -830,6 +961,24 @@ function showRulesModal() {
       '</div>';
     document.body.appendChild(overlay);
   }).catch(function(e){addLog('ERROR', '加载规则失败: ' + e)});
+}
+
+function renderRuleRow(idx, key, value) {
+  return '<div class="rule-row" data-idx="'+idx+'" style="display:flex;gap:6px;align-items:center;margin-bottom:6px">'+
+    '<input class="rule-key" value="'+escAttr(key||'')+'" placeholder="关键词" style="flex:1;padding:6px 8px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg);color:var(--fg);font-size:12px">'+
+    '<input class="rule-value" value="'+escAttr(value||'')+'" placeholder="回复内容" style="flex:2;padding:6px 8px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg);color:var(--fg);font-size:12px">'+
+    '<button class="btn btn-danger btn-sm" onclick="removeRuleRow(this)" style="flex-shrink:0">删除</button>'+
+  '</div>';
+}
+
+function removeRuleRow(btn) {
+  var row = btn.parentNode;
+  if (row) row.remove();
+  // 如果删空了，显示空状态
+  var list = document.getElementById('rulesList');
+  if (list && list.children.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">暂无回复规则</div><div class="empty-desc">添加规则以控制自动回复行为</div></div>';
+  }
 }
 
 function closeRulesModal() {
@@ -840,13 +989,25 @@ function closeRulesModal() {
 function addRuleItem() {
   const key = document.getElementById('newRuleKey').value.trim();
   const value = document.getElementById('newRuleValue').value.trim();
-  if (!key || !value) { addLog('ERROR', '规则名称和回复内容不能为空'); return; }
-  const container = document.querySelector('#rulesModal div[style*="overflow"]');
-  if (container) {
-    const field = document.createElement('div');
-    field.className = 'modal-field';
-    field.innerHTML = '<label>'+escHtml(key)+'</label><input id="rule_'+escAttr(key)+'" value="'+escAttr(value)+'" placeholder="回复内容">';
-    container.appendChild(field);
+  if (!key || !value) { addLog('ERROR', '规则关键词和回复内容不能为空'); return; }
+  let list = document.getElementById('rulesList');
+  if (!list) {
+    var container = document.querySelector('#rulesModal div[style*="overflow"]');
+    if (container) {
+      list = document.createElement('div');
+      list.id = 'rulesList';
+      container.innerHTML = '';
+      container.appendChild(list);
+    }
+  }
+  if (list) {
+    // 移除空状态提示
+    var empty = list.querySelector('.empty-state');
+    if (empty) empty.remove();
+    const idx = list.children.length;
+    const tmp = document.createElement('div');
+    tmp.innerHTML = renderRuleRow(idx, key, value);
+    list.appendChild(tmp.firstChild);
   }
   document.getElementById('newRuleKey').value = '';
   document.getElementById('newRuleValue').value = '';
@@ -855,12 +1016,22 @@ function addRuleItem() {
 function saveRulesModal() {
   const modal = document.getElementById('rulesModal');
   if (!modal) return;
-  const inputs = modal.querySelectorAll('input[id^="rule_"]');
   const replyRules = {};
-  inputs.forEach(function(inp) {
-    const key = inp.id.replace(/^rule_/, '');
-    replyRules[key] = inp.value;
+  const rows = modal.querySelectorAll('.rule-row');
+  var hasDup = false;
+  rows.forEach(function(row) {
+    var keyEl = row.querySelector('.rule-key');
+    var valEl = row.querySelector('.rule-value');
+    if (keyEl && valEl) {
+      var k = keyEl.value.trim();
+      var v = valEl.value.trim();
+      if (k) {
+        if (replyRules.hasOwnProperty(k)) hasDup = true;
+        replyRules[k] = v;
+      }
+    }
   });
+  if (hasDup) addLog('WARN', '检测到重复规则关键词，后者已覆盖前者');
   const keywords = document.getElementById('importanceKeywords').value.split(/[,，]/).map(function(s){return s.trim()}).filter(Boolean);
   fetch('/api/rules', {
     method:'POST',
@@ -870,7 +1041,7 @@ function saveRulesModal() {
   .then(function(r){return r.json()})
   .then(function(data) {
     if (data.status === 'ok') {
-      addLog('SUCCESS', '回复规则已保存');
+      addLog('SUCCESS', '回复规则已保存（共 ' + Object.keys(replyRules).length + ' 条）');
       closeRulesModal();
     } else {
       addLog('ERROR', data.message || '保存失败');
@@ -1073,6 +1244,12 @@ function updateThemeUI(theme) {
 // ── 日志操作 ──
 function clearLog() {
   document.getElementById('logArea').innerHTML = '<div class="log-empty"><div class="empty-icon">等待操作...</div></div>';
+}
+function toggleLogPanel() {
+  var p = document.getElementById('logPanel');
+  p.classList.toggle('collapsed');
+  var icon = p.querySelector('.log-toggle-icon');
+  if (icon) icon.textContent = p.classList.contains('collapsed') ? '▼' : '▶';
 }
 
 function copyLog() {
@@ -1747,7 +1924,137 @@ function addLog(level,message){
   div.innerHTML='<span class="log-time">'+ts+'</span><span class="log-message log-'+level+'">'+escHtml(message)+'</span>';
   area.appendChild(div);
   area.scrollTop=area.scrollHeight;
-  while(area.children.length>300) area.removeChild(area.firstChild);
+  while(area.children.length>100) area.removeChild(area.firstChild);
+}
+
+// ── 投递记录表格 ──
+const greetStatusMap = {
+  success: {label:'✅ 已投递', cls:'greet-status-success'},
+  skip: {label:'跳过', cls:'greet-status-skip'},
+  ai_skip: {label:'AI不匹配', cls:'greet-status-ai_skip'},
+  already: {label:'已沟通', cls:'greet-status-already'},
+  error: {label:'失败', cls:'greet-status-error'},
+  pending: {label:'正在投递...', cls:'greet-status-pending'},
+};
+let greetRecordCount = 0;
+let replyRecordCount = 0;
+
+function bumpGreetTabCount() {
+  greetRecordCount++;
+  var el = document.getElementById('greetTabCount');
+  if (el) el.textContent = greetRecordCount;
+}
+function bumpReplyTabCount() {
+  replyRecordCount++;
+  var el = document.getElementById('replyTabCount');
+  if (el) el.textContent = replyRecordCount;
+}
+
+function switchRecordTab(tab) {
+  var tabs = document.querySelectorAll('.record-tab');
+  var contents = document.querySelectorAll('.record-tab-content');
+  tabs.forEach(function(t){ t.classList.remove('active'); });
+  contents.forEach(function(c){ c.classList.remove('active'); });
+  if (tab === 'greet') {
+    var gt = document.querySelector('.record-tab[onclick*="greet"]');
+    var gc = document.getElementById('greetTabContent');
+    if (gt) gt.classList.add('active');
+    if (gc) gc.classList.add('active');
+  } else {
+    var rt = document.querySelector('.record-tab[onclick*="reply"]');
+    var rc = document.getElementById('replyTabContent');
+    if (rt) rt.classList.add('active');
+    if (rc) rc.classList.add('active');
+  }
+}
+
+function buildGreetRowHtml(data, isPending) {
+  var st;
+  if (isPending) {
+    st = greetStatusMap.pending;
+  } else {
+    st = greetStatusMap[data.status] || {label:data.status, cls:'greet-status-skip'};
+  }
+  const time=data.time||new Date().toLocaleTimeString();
+  const aiScore=data.ai_score||0;
+  const aiBadge=aiScore>0?(aiScore>=70?'<span class="greet-ai-badge">'+aiScore+'分</span>':'<span class="greet-ai-badge greet-ai-badge-nomatch">'+aiScore+'分</span>'):'<span style="color:var(--fg-4th)">—</span>';
+  var statusHtml = '<span class="greet-status '+st.cls+'">'+st.label+'</span>';
+  if (isPending) {
+    statusHtml += ' <span class="greet-pending-bar"></span>';
+  }
+  return '<td>'+escHtml(time)+'</td>'
+    +'<td title="'+escAttr(data.job_name||'')+'">'+escHtml(data.job_name||'—')+'</td>'
+    +'<td title="'+escAttr(data.company||'')+'">'+escHtml(data.company||'—')+'</td>'
+    +'<td>'+escHtml(data.salary||'—')+'</td>'
+    +'<td>'+statusHtml+'</td>'
+    +'<td>'+aiBadge+'</td>';
+}
+
+function addGreetRecord(data){
+  const body=document.getElementById('greetTableBody');
+  if(!body) return;
+  const empty=document.getElementById('greetEmpty');
+  if(empty) empty.style.display='none';
+  const tr=document.createElement('tr');
+
+  // 如果是明确的最终状态，先显示"正在投递"动画，800ms 后更新为最终状态
+  var isFinalStatus = data.status && data.status !== 'pending' && data.status !== 'running';
+  if (isFinalStatus) {
+    tr.innerHTML = buildGreetRowHtml(data, true);
+    body.appendChild(tr);
+    const panel=body.parentElement;
+    if(panel) panel.scrollTop=panel.scrollHeight;
+    // 800ms 后更新为最终状态
+    setTimeout(function() {
+      if (tr.parentNode) {
+        tr.innerHTML = buildGreetRowHtml(data, false);
+      }
+    }, 800);
+  } else {
+    // pending/running 状态，显示动画
+    tr.innerHTML = buildGreetRowHtml(data, true);
+    body.appendChild(tr);
+    const panel=body.parentElement;
+    if(panel) panel.scrollTop=panel.scrollHeight;
+  }
+  bumpGreetTabCount();
+  // 限制最多200行
+  while(body.children.length>200) body.removeChild(body.firstChild);
+}
+
+function addReplyRecord(data){
+  const body=document.getElementById('replyTableBody');
+  if(!body) return;
+  const empty=document.getElementById('replyEmpty');
+  if(empty) empty.style.display='none';
+  const tr=document.createElement('tr');
+  const time=data.time||new Date().toLocaleTimeString();
+  var statusLabel = data.status || '已回复';
+  var statusCls = 'greet-status-success';
+  if (data.status === 'skip' || data.status === 'skipped') { statusLabel = '跳过'; statusCls = 'greet-status-skip'; }
+  else if (data.status === 'error' || data.status === 'failed') { statusLabel = '失败'; statusCls = 'greet-status-error'; }
+  else if (data.status === 'ai') { statusLabel = 'AI回复'; statusCls = 'greet-status-ai_skip'; }
+  tr.innerHTML='<td>'+escHtml(time)+'</td>'
+    +'<td title="'+escAttr(data.chat_name||'')+'">'+escHtml(data.chat_name||data.boss_name||'—')+'</td>'
+    +'<td title="'+escAttr(data.job_name||'')+'">'+escHtml(data.job_name||'—')+'</td>'
+    +'<td title="'+escAttr(data.incoming_message||'')+'" style="max-width:180px">'+escHtml((data.incoming_message||data.message||'').slice(0,40))+'</td>'
+    +'<td title="'+escAttr(data.reply_message||'')+'" style="max-width:180px">'+escHtml((data.reply_message||data.reply||'').slice(0,40))+'</td>'
+    +'<td><span class="greet-status '+statusCls+'">'+escHtml(statusLabel)+'</span></td>';
+  body.appendChild(tr);
+  const panel=body.parentElement;
+  if(panel) panel.scrollTop=panel.scrollHeight;
+  bumpReplyTabCount();
+  while(body.children.length>200) body.removeChild(body.firstChild);
+}
+
+function clearGreetTable(){
+  var gb = document.getElementById('greetTableBody');
+  if (gb) gb.innerHTML='';
+  var ge = document.getElementById('greetEmpty');
+  if (ge) ge.style.display='flex';
+  greetRecordCount = 0;
+  var el = document.getElementById('greetTabCount');
+  if (el) el.textContent = '0';
 }
 
 // ── SocketIO 事件 ──
@@ -1766,6 +2073,27 @@ socket.on('bot_log',function(data){
     var level = data.level || 'INFO';
     if(level === 'DEBUG') return; // 前端只显示 INFO/WARN/ERROR
     addLog(level, data.message);
+  }
+});
+socket.on('greet_record',function(data){
+  if(data) addGreetRecord(data);
+});
+socket.on('reply_record',function(data){
+  if(data) addReplyRecord(data);
+});
+socket.on('reply_event',function(data){
+  // 兼容另一种事件名
+  if(data) addReplyRecord(data);
+});
+socket.on('wind_control',function(data){
+  if(data && data.message){
+    addLog('WARN', '⚠️ ' + data.message);
+    // 显示醒目警告
+    var w = document.createElement('div');
+    w.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#fef3c7;color:#92400e;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.15);max-width:90vw';
+    w.textContent = '⚠️ ' + data.message;
+    document.body.appendChild(w);
+    setTimeout(function(){ w.style.opacity='0'; w.style.transition='opacity .5s'; setTimeout(function(){w.remove();},500); }, 10000);
   }
 });
 socket.on('bot_progress',function(data){
@@ -1817,36 +2145,7 @@ socket.on('login_required',function(data){
   if (cl) cl.style.display = '';
 });
 
-// ── Socket.IO 事件监听（必须在loadConfig之前注册）──
-socket.on('connect', function() {
-  addLog('SYSTEM', 'WebSocket 已连接');
-  var cs = document.getElementById('connStatus');
-  if (cs) cs.textContent = '已连接';
-});
-
-socket.on('disconnect', function() {
-  addLog('ERROR', 'WebSocket 断开');
-  var cs = document.getElementById('connStatus');
-  if (cs) cs.textContent = '已断开';
-});
-
-socket.on('bot_log', function(data) {
-  if (data && data.message) {
-    var level = (data.level || 'INFO').toUpperCase();
-    if (level === 'DEBUG') return;
-    addLog(level, data.message);
-  }
-});
-
-socket.on('bot_progress', function(data) {
-  if (data.total !== undefined) stats.total = data.total;
-  if (data.applied !== undefined) stats.applied = data.applied;
-  if (data.skipped !== undefined) stats.skipped = data.skipped;
-  if (data.reply_sent !== undefined) stats.reply_sent = data.reply_sent;
-  if (data.reply_skipped !== undefined) stats.reply_skipped = data.reply_skipped;
-  updateStats();
-});
-
+// ── Socket.IO 额外事件监听（非重复，补充上面没有的事件）──
 socket.on('bot_status', function(data) {
   setControls(data.running);
   if (!data.running) {
@@ -1879,16 +2178,6 @@ socket.on('bot_login', function() {
 socket.on('login_result', function(data) {
   if (data.success) addLog('SUCCESS', '登录状态正常');
   else addLog('ERROR', '未登录');
-});
-
-socket.on('login_required', function(data) {
-  var modal = document.getElementById('loginModal');
-  if (!modal) return;
-  var desc = document.getElementById('loginModalDesc');
-  if (data && data.message && desc) desc.textContent = data.message;
-  modal.style.display = 'flex';
-  modal.classList.add('active');
-  addLog('WARN', '需要登录：请在浏览器中登录后点击确认');
 });
 
 socket.on('connected', function(data) {});

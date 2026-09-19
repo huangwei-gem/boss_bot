@@ -38,15 +38,15 @@ _SYSTEM_RULES_DEFAULT = """你的回复要求：
 9. 严格禁止声称已经完成了无法确认的事情（如"已投递简历""已发送材料""已经报名"），除非对话历史中确实发生过；对方要求你做某事时，回复"稍后完成/马上处理"即可
 10. 如果对方的岗位与你的求职方向明显不符，礼貌说明求职方向并询问是否有相关岗位，不要强行迎合"""
 
-_SYSTEM_RULES = _OVERRIDES.get("system_rules", _SYSTEM_RULES_DEFAULT)
-USER_PROMPT_TEMPLATE = _OVERRIDES.get("user_prompt_template", """当前聊天上下文：
+_SYSTEM_RULES = _OVERRIDES.get("system_rules") or _SYSTEM_RULES_DEFAULT
+USER_PROMPT_TEMPLATE = _OVERRIDES.get("user_prompt_template") or """当前聊天上下文：
 - 招聘方称呼：{boss_name}
 - 招聘岗位：{job_name}
 - 最近对话记录：
 {history}
 - 对方最新消息：{message}
 
-请根据对话历史和最新消息，给出合适的回复。只输出回复内容，不要解释。""")
+请根据对话历史和最新消息，给出合适的回复。只输出回复内容，不要解释。"""
 
 
 def build_system_prompt(profile: dict = None) -> str:

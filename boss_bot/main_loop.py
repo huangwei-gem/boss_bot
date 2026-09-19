@@ -41,7 +41,33 @@ from boss_bot.stats import Stats
 from boss_bot.notify import Notifier
 from boss_bot.message_store import MessageStore
 
+# DrissionPage 断连异常
+try:
+    from DrissionPage.errors import PageDisconnectedError
+except ImportError:
+    PageDisconnectedError = None
+
 logger = logging.getLogger(__name__)
+
+
+# 前端可见的关键日志关键词 — INFO 级别日志只有包含这些关键词才推送前端
+# WARN/ERROR/SUCCESS/CRITICAL 始终推送前端，DEBUG 始终不推送
+_FRONTEND_LOG_KEYWORDS = (
+    "启动", "停止", "已启动", "已停止", "已终止", "已退出",
+    "浏览器", "登录", "登出", "重连",
+    "配置已保存",
+)
+
+
+def _should_show_frontend(level: str, msg: str) -> bool:
+    """判断日志是否应该推送到前端。"""
+    level_upper = level.upper()
+    if level_upper == "DEBUG":
+        return False
+    if level_upper in ("WARN", "ERROR", "SUCCESS", "CRITICAL"):
+        return True
+    # INFO 级别：根据关键词过滤
+    return any(kw in msg for kw in _FRONTEND_LOG_KEYWORDS)
 
 
 class UnifiedBotLoop:
@@ -61,10 +87,14 @@ class UnifiedBotLoop:
 
     def __init__(self, config: Optional[UnifiedConfig] = None,
                  log_callback: Optional[Callable] = None,
-                 account_index: int = 0):
+                 account_index: int = 0,
+                 greet_event_cb: Optional[Callable] = None,
+                 reply_event_cb: Optional[Callable] = None):
         self.config = config or UnifiedConfig.load()
         self.log_cb = log_callback
         self.account_index = account_index
+        self._greet_event_cb = greet_event_cb
+        self._reply_event_cb = reply_event_cb
 
         # 获取账号名称，用于日志前缀
         if account_index < len(self.config.greet.accounts):
@@ -133,18 +163,55 @@ class UnifiedBotLoop:
     def _log(self, level: str, msg: str):
         """统一日志输出 — 回调 + logging，包含账号名称前缀。
 
-        DEBUG 级别日志只通过 logging 写入文件，不调用 log_cb（不推送前端）。
-        INFO/WARN/ERROR/CRITICAL 级别日志同时推送前端和写入文件。
+        前端日志精简：只有关键事件（启动/停止/AI匹配/投递结果/错误等）推送到前端。
+        后台日志完整：所有级别（含DEBUG）都写入日志文件，方便定位问题。
         """
         prefix = f"[{self.account_name}] " if self.account_name else ""
         full_msg = f"{prefix}{msg}"
-        # DEBUG 级别只写入文件，不推送前端
-        if level.upper() != "DEBUG" and self.log_cb:
+        # 前端过滤：只有关键日志推送到前端
+        if _should_show_frontend(level, msg) and self.log_cb:
             try:
                 self.log_cb(f"[{level}] {full_msg}")
             except Exception:
                 pass
-        getattr(logger, level.lower(), logger.info)(full_msg)
+        # 后台完整：所有日志都写入文件
+        log_method = getattr(logger, level.lower(), None)
+        if log_method is None:
+            log_method = logger.info
+        if level.lower() == "warn":
+            log_method = logger.warning
+        log_method(full_msg)
+
+    def _emit_reply_event(self, contact_name: str, job_name: str,
+                          message_received: str, reply_sent: str,
+                          ai_model: str = "", intent: str = "",
+                          status: str = "replied"):
+        """推送回复事件到前端（通过 reply_record socket 事件）。
+
+        Args:
+            contact_name: 聊天对象名称（BOSS 名）
+            job_name: 岗位名称
+            message_received: 收到的对方消息
+            reply_sent: 实际发送的回复内容
+            ai_model: 使用的 AI 模型名称（若由 AI 生成）
+            intent: 意图标签
+            status: replied（已回复）/ skipped（跳过）/ error（错误）
+        """
+        if not self._reply_event_cb:
+            return
+        try:
+            self._reply_event_cb({
+                "time": datetime.now().strftime("%H:%M:%S"),
+                "contact_name": contact_name or "",
+                "job_name": job_name or "",
+                "message_received": message_received or "",
+                "reply_sent": reply_sent or "",
+                "ai_model": ai_model or "",
+                "intent": intent or "",
+                "status": status,
+            })
+        except Exception:
+            pass
 
     # ─────────────────────────────────────────────
     # 对外接口
@@ -423,7 +490,10 @@ class UnifiedBotLoop:
             config=self.config,
             log_callback=lambda msg: self._log("INFO", msg),
             progress_callback=self._on_greet_progress,
+            greet_event_cb=self._greet_event_cb,
         )
+        # 关键：设置 running=True，否则 send_greeting 会直接返回 False
+        self._greet_engine.running = True
 
         self._log("INFO", "引擎初始化完成")
 
@@ -457,6 +527,10 @@ class UnifiedBotLoop:
                 self._log("ERROR", f"打招呼线程异常: {e}")
                 import traceback
                 self._log("ERROR", traceback.format_exc())
+                # 检测浏览器断连，自动重连
+                if self._is_connection_error(e):
+                    self._log("WARN", "检测到浏览器连接断开，尝试重连...")
+                    self._try_reconnect_browser()
                 self._stop_event.wait(timeout=30)
 
         self._log("INFO", "打招呼线程结束")
@@ -500,11 +574,29 @@ class UnifiedBotLoop:
                     if not self._running or self._greet_paused:
                         break
 
-                    # 频率限制检查
-                    if self._greet_engine._rate_limit_enabled and \
-                       self._greet_engine.applied_count >= self._greet_engine._max_per_hour:
-                        self._log("WARN", f"已达到每小时打招呼上限 {self._greet_engine._max_per_hour}，暂停打招呼")
-                        break
+                    # 频率限制检查 — 带时间窗口重置
+                    if self._greet_engine._rate_limit_enabled:
+                        # 检查是否需要重置计数器（每小时重置）
+                        now = time.time()
+                        if not hasattr(self, '_rate_window_start'):
+                            self._rate_window_start = now
+                        if now - self._rate_window_start >= 3600:
+                            self._greet_engine.applied_count = 0
+                            self._rate_window_start = now
+                            self._log("INFO", "每小时计数器已重置")
+
+                        if self._greet_engine.applied_count >= self._greet_engine._max_per_hour:
+                            wait_sec = int(3600 - (now - self._rate_window_start))
+                            self._log("WARN", f"已达到每小时打招呼上限 {self._greet_engine._max_per_hour}，等待 {wait_sec} 秒后重置")
+                            # 真正等待，而不是立即重试
+                            self._stop_event.wait(timeout=max(wait_sec, 60))
+                            if not self._running:
+                                break
+                            # 重置计数器
+                            self._greet_engine.applied_count = 0
+                            self._rate_window_start = time.time()
+                            self._log("INFO", "计数器已重置，继续打招呼")
+                            break
 
                     # 去重检查：已沟通过的岗位跳过
                     if self._greet_engine._is_already_chatted(job):
@@ -512,7 +604,12 @@ class UnifiedBotLoop:
                         self._stats_dict["greet_skipped"] += 1
                         continue
 
-                    # AI 智能匹配分析
+                    # AI 智能匹配分析 — 热重载配置，支持运行时开关 AI
+                    try:
+                        self.config = UnifiedConfig.load()
+                    except Exception:
+                        pass
+                    self._greet_engine._ai_enabled = self.config.ai.enabled
                     has_ai = self._greet_engine._ai_enabled and bool(self._greet_engine._ai_providers)
                     if has_ai:
                         ai_result, ai_duration = self._greet_engine._analyze_job_with_ai(job)
@@ -541,6 +638,10 @@ class UnifiedBotLoop:
             self._log("ERROR", f"打招呼轮次异常: {e}")
             import traceback
             self._log("ERROR", traceback.format_exc())
+            # 检测浏览器断连，自动重连
+            if self._is_connection_error(e):
+                self._log("WARN", "检测到浏览器连接断开，尝试重连...")
+                self._try_reconnect_browser()
 
         self._log("INFO", "━━━ 打招呼轮次结束 ━━━")
 
@@ -603,6 +704,10 @@ class UnifiedBotLoop:
                 self._log("ERROR", f"回复线程异常: {e}")
                 import traceback
                 self._log("ERROR", traceback.format_exc())
+                # 检测浏览器断连，自动重连
+                if self._is_connection_error(e):
+                    self._log("WARN", "检测到浏览器连接断开，尝试重连...")
+                    self._try_reconnect_browser()
                 self._stop_event.wait(timeout=30)
 
         self._log("INFO", "回复线程结束")
@@ -654,6 +759,10 @@ class UnifiedBotLoop:
             self._log("ERROR", f"回复轮次异常: {e}")
             import traceback
             self._log("ERROR", traceback.format_exc())
+            # 检测浏览器断连，自动重连
+            if self._is_connection_error(e):
+                self._log("WARN", "检测到浏览器连接断开，尝试重连...")
+                self._try_reconnect_browser()
 
         self._log("INFO", "━━━ 回复轮次结束 ━━━")
 
@@ -665,6 +774,12 @@ class UnifiedBotLoop:
 
         if not self._chat_handler.enter_chat(chat_info):
             self._log("WARN", f"会话 [{name}] 切换校验失败，本次跳过")
+            self._emit_reply_event(
+                contact_name=name, job_name="",
+                message_received="", reply_sent="",
+                ai_model="", intent="",
+                status="skipped",
+            )
             return
 
         context_count = self.config.reply.context_message_count
@@ -673,6 +788,12 @@ class UnifiedBotLoop:
         self._log("DEBUG", f"读取到消息数: {len(messages)}")
         if not messages:
             self._log("INFO", "未读取到消息，跳过")
+            self._emit_reply_event(
+                contact_name=name, job_name="",
+                message_received="", reply_sent="",
+                ai_model="", intent="",
+                status="skipped",
+            )
             return
 
         latest_other_msg = None
@@ -683,6 +804,12 @@ class UnifiedBotLoop:
 
         if not latest_other_msg:
             self._log("INFO", "最新消息是自己发的，无需回复")
+            self._emit_reply_event(
+                contact_name=name, job_name="",
+                message_received="", reply_sent="",
+                ai_model="", intent="",
+                status="skipped",
+            )
             return
 
         self._log("INFO", f"对方最新消息: {latest_other_msg[:80]}")
@@ -690,6 +817,12 @@ class UnifiedBotLoop:
         if self._state_store.was_handled(name, latest_other_msg):
             self._log("INFO", "该消息已处理过，跳过（防重复回复）")
             self._stats.record_skip()
+            self._emit_reply_event(
+                contact_name=name, job_name="",
+                message_received=latest_other_msg, reply_sent="",
+                ai_model="", intent="",
+                status="skipped",
+            )
             return
 
         boss_name = self._chat_handler.get_boss_name()
@@ -744,6 +877,13 @@ class UnifiedBotLoop:
                     "time": datetime.now().strftime("%H:%M"),
                 }, job_name)
                 self._log("INFO", "已发送简历")
+                self._emit_reply_event(
+                    contact_name=name, job_name=job_name,
+                    message_received=latest_other_msg, reply_sent="[简历已发送]",
+                    ai_model=self._reply_engine._last_ai_model,
+                    intent=meta.get("intent", ""),
+                    status="replied",
+                )
             else:
                 from boss_bot.config import RESUME_UNAVAILABLE_REPLY
                 self._log("WARN", "简历发送失败，降级为文字告知")
@@ -762,6 +902,13 @@ class UnifiedBotLoop:
                     level="warning",
                 )
                 self._stats.record_reply(source=meta.get("source", "rule"), action="skip")
+                self._emit_reply_event(
+                    contact_name=name, job_name=job_name,
+                    message_received=latest_other_msg, reply_sent=RESUME_UNAVAILABLE_REPLY,
+                    ai_model=self._reply_engine._last_ai_model,
+                    intent=meta.get("intent", ""),
+                    status="replied",
+                )
 
         elif action == "text" and content:
             self._reply_engine.wait_human_delay()
@@ -777,14 +924,35 @@ class UnifiedBotLoop:
                     "time": datetime.now().strftime("%H:%M"),
                 }, job_name)
                 self._log("INFO", f"已回复: {content[:30]}...")
+                self._emit_reply_event(
+                    contact_name=name, job_name=job_name,
+                    message_received=latest_other_msg, reply_sent=content,
+                    ai_model=self._reply_engine._last_ai_model,
+                    intent=meta.get("intent", ""),
+                    status="replied",
+                )
             else:
                 self._stats.record_reply(source=meta.get("source", "rule"), action="skip")
                 self._log("WARN", "发送文字失败")
+                self._emit_reply_event(
+                    contact_name=name, job_name=job_name,
+                    message_received=latest_other_msg, reply_sent=content or "",
+                    ai_model=self._reply_engine._last_ai_model,
+                    intent=meta.get("intent", ""),
+                    status="error",
+                )
 
         else:
             self._log("INFO", "无合适回复，跳过")
             self._stats.record_reply(source=meta.get("source", "default"), action="skip")
             self._stats_dict["reply_skipped"] += 1
+            self._emit_reply_event(
+                contact_name=name, job_name=job_name,
+                message_received=latest_other_msg, reply_sent="",
+                ai_model=self._reply_engine._last_ai_model,
+                intent=meta.get("intent", ""),
+                status="skipped",
+            )
 
         self._state_store.mark_handled(name, latest_other_msg, action or "none")
         self._reply_engine.record_reply()
@@ -792,6 +960,18 @@ class UnifiedBotLoop:
     # ─────────────────────────────────────────────
     # 健康检查与错误恢复
     # ─────────────────────────────────────────────
+
+    def _is_connection_error(self, e: Exception) -> bool:
+        """判断异常是否为浏览器连接断开错误。"""
+        if e is None:
+            return False
+        # PageDisconnectedError
+        if PageDisconnectedError is not None and isinstance(e, PageDisconnectedError):
+            return True
+        # 字符串匹配（兼容不同版本）
+        err_str = str(e).lower()
+        keywords = ["断开", "disconnected", "connection", "target closed", "session deleted"]
+        return any(k in err_str for k in keywords)
 
     def _check_health(self) -> str:
         """健康检查：检测登录态和验证码拦截。"""
@@ -836,8 +1016,10 @@ class UnifiedBotLoop:
                 except Exception:
                     pass
 
-            self._chat_handler = BossChatHandler(browser_manager=self.browser_manager)
+            # 重新初始化所有引擎（回复 + 打招呼）
+            self._init_engines()
             self._reconnect_attempts = 0
+            self._log("INFO", "引擎重新初始化完成，恢复运行")
 
         except Exception as e:
             self._log("ERROR", f"浏览器重连失败: {e}")
@@ -876,9 +1058,13 @@ class MultiAccountManager:
     """
 
     def __init__(self, config: Optional[UnifiedConfig] = None,
-                 log_callback: Optional[Callable] = None):
+                 log_callback: Optional[Callable] = None,
+                 greet_event_cb: Optional[Callable] = None,
+                 reply_event_cb: Optional[Callable] = None):
         self.config = config or UnifiedConfig.load()
         self.log_cb = log_callback
+        self._greet_event_cb = greet_event_cb
+        self._reply_event_cb = reply_event_cb
         self._loops: dict = {}  # account_index -> UnifiedBotLoop
         self._lock = threading.Lock()
 
@@ -889,14 +1075,13 @@ class MultiAccountManager:
                     config=self.config,
                     log_callback=log_callback,
                     account_index=i,
+                    greet_event_cb=greet_event_cb,
+                    reply_event_cb=reply_event_cb,
                 )
 
     def _log(self, level: str, msg: str):
-        """统一日志输出。
-
-        DEBUG 级别日志只通过 logging 写入文件，不调用 log_cb（不推送前端）。
-        """
-        if level.upper() != "DEBUG" and self.log_cb:
+        """统一日志输出 — 前端精简，后台完整。"""
+        if _should_show_frontend(level, msg) and self.log_cb:
             try:
                 self.log_cb(f"[{level}] {msg}")
             except Exception:

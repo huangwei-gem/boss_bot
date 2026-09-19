@@ -26,6 +26,8 @@ data/
 logs/
 messages/
 bot_state.json
+notifications.json
+flask-version/browser_data/
 
 # 配置文件中的敏感数据
 bot_config.json

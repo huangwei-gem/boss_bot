@@ -151,6 +151,22 @@ def _ensure_manager() -> MultiAccountManager:
     if _multi_manager is None:
         cfg = _ensure_config()
 
+        def greet_event_callback(event_data: dict):
+            """投递事件回调 — 推送结构化投递记录到前端表格。"""
+            try:
+                event_data["time"] = datetime.now().strftime("%H:%M:%S")
+                socketio.emit("greet_record", event_data)
+            except Exception:
+                pass
+
+        def reply_event_callback(event_data: dict):
+            """回复事件回调 — 推送结构化回复记录到前端表格。"""
+            try:
+                event_data["time"] = datetime.now().strftime("%H:%M:%S")
+                socketio.emit("reply_record", event_data)
+            except Exception:
+                pass
+
         def log_callback(msg: str):
             """日志回调 — 同时写入缓冲区和推送 SocketIO。
 
@@ -182,7 +198,7 @@ def _ensure_manager() -> MultiAccountManager:
             except Exception:
                 pass
 
-        _multi_manager = MultiAccountManager(config=cfg, log_callback=log_callback)
+        _multi_manager = MultiAccountManager(config=cfg, log_callback=log_callback, greet_event_cb=greet_event_callback, reply_event_cb=reply_event_callback)
     return _multi_manager
 
 
@@ -559,6 +575,26 @@ def api_logs_file():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+@app.route("/api/logs/clear", methods=["POST"])
+def api_logs_clear():
+    """清空日志文件和前端日志缓冲。"""
+    try:
+        # 清空前端日志缓冲
+        with log_buffer_lock:
+            log_buffer.clear()
+        # 清空日志文件内容（不删除文件本身）
+        for log_file in LOG_DIR.iterdir():
+            if log_file.is_file() and log_file.name.endswith(".log"):
+                try:
+                    log_file.write_text("", encoding="utf-8")
+                except Exception:
+                    pass
+        logger.info("日志已清空")
+        return jsonify({"status": "ok", "message": "日志已清空"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 # ===================== 统计 API =====================
 
 @app.route("/api/stats")
@@ -624,6 +660,33 @@ def api_upload_cookie():
     save_path = str(COOKIE_DIR / safe_name)
     f.save(save_path)
     return jsonify({"status": "ok", "filename": safe_name})
+
+
+@app.route("/api/cookies/upload", methods=["POST"])
+def api_cookies_upload():
+    """上传 Cookie 文件（别名路由，兼容前端路径）。"""
+    return api_upload_cookie()
+
+
+@app.route("/api/cookies/delete", methods=["POST"])
+def api_cookies_delete():
+    """删除 Cookie 文件。"""
+    try:
+        data = request.get_json() or {}
+        filename = data.get("filename", "")
+        if not filename:
+            return jsonify({"status": "error", "message": "未指定文件名"}), 400
+        safe_name = os.path.basename(filename)
+        if not safe_name.endswith(".json"):
+            safe_name += ".json"
+        cookie_path = COOKIE_DIR / safe_name
+        if cookie_path.exists():
+            cookie_path.unlink()
+            return jsonify({"status": "ok", "message": f"已删除 {safe_name}"})
+        else:
+            return jsonify({"status": "error", "message": f"文件不存在: {safe_name}"}), 404
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 # ===================== 图片上传 API =====================
@@ -839,17 +902,43 @@ def api_ai_analyze():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+# AI 提示词默认值（与 boss_bot/prompts.py 保持一致）
+_DEFAULT_SYSTEM_RULES = """你的回复要求：
+1. 语气专业、礼貌、真诚，不要过于机械
+2. 简洁明了，控制在 1-2 句话，不要长篇大论
+3. 展现积极态度和学习能力
+4. 不要编造不存在的工作经历或技能
+5. 如果对方问了你不知道的问题，诚实说可以面谈详细了解
+6. 不要使用 emoji，保持专业
+7. 只输出回复内容本身，不要加引号或任何前缀
+8. 结合上面的对话历史自然接续话题，不要重复已经说过的内容
+9. 严格禁止声称已经完成了无法确认的事情（如"已投递简历""已发送材料""已经报名"），除非对话历史中确实发生过；对方要求你做某事时，回复"稍后完成/马上处理"即可
+10. 如果对方的岗位与你的求职方向明显不符，礼貌说明求职方向并询问是否有相关岗位，不要强行迎合"""
+
+_DEFAULT_USER_PROMPT_TEMPLATE = """当前聊天上下文：
+- 招聘方称呼：{boss_name}
+- 招聘岗位：{job_name}
+- 最近对话记录：
+{history}
+- 对方最新消息：{message}
+
+请根据对话历史和最新消息，给出合适的回复。只输出回复内容，不要解释。"""
+
+
 @app.route("/api/ai/prompts", methods=["GET"])
 def api_get_ai_prompts():
-    """获取当前 AI 提示词配置（system_prompt, match_prompt 等）。"""
+    """获取当前 AI 提示词配置（system_rules, user_prompt_template）。
+
+    当 config_overrides.json 中未配置时，返回 prompts.py 中的默认值。
+    """
     try:
         overrides = {}
         if OVERRIDES_FILE.exists():
             with open(OVERRIDES_FILE, "r", encoding="utf-8") as f:
                 overrides = json.load(f)
         prompts = {
-            "system_rules": overrides.get("system_rules", ""),
-            "user_prompt_template": overrides.get("user_prompt_template", ""),
+            "system_rules": overrides.get("system_rules", "") or _DEFAULT_SYSTEM_RULES,
+            "user_prompt_template": overrides.get("user_prompt_template", "") or _DEFAULT_USER_PROMPT_TEMPLATE,
         }
         return jsonify({"status": "ok", "prompts": prompts})
     except Exception as e:
@@ -1569,19 +1658,40 @@ def api_get_rules():
 
 @app.route("/api/rules", methods=["POST"])
 def api_save_rules():
-    """保存回复规则和重要关键词。"""
+    """保存回复规则和重要关键词。
+
+    将规则写入 config_overrides.json（OVERRIDES_FILE），因为 to_dict() 不含
+    rules 字段，cfg.save() 不会持久化 rules。_apply_overrides 会从
+    config_overrides.json 加载 reply_rules 和 importance_keywords。
+    """
     global _config
     try:
         data = request.get_json() or {}
         rules_data = data.get("rules", data)
 
+        # 1. 更新内存中的配置对象
         cfg = _ensure_config()
         if "reply_rules" in rules_data and isinstance(rules_data["reply_rules"], dict):
             cfg.rules.reply_rules = dict(rules_data["reply_rules"])
         if "importance_keywords" in rules_data and isinstance(rules_data["importance_keywords"], list):
             cfg.rules.importance_keywords = list(rules_data["importance_keywords"])
 
-        cfg.save()
+        # 2. 持久化到 config_overrides.json（rules 的真正存储位置）
+        overrides = {}
+        if OVERRIDES_FILE.exists():
+            try:
+                with open(OVERRIDES_FILE, "r", encoding="utf-8") as f:
+                    overrides = json.load(f)
+            except Exception:
+                overrides = {}
+        if "reply_rules" in rules_data and isinstance(rules_data["reply_rules"], dict):
+            overrides["reply_rules"] = dict(rules_data["reply_rules"])
+        if "importance_keywords" in rules_data and isinstance(rules_data["importance_keywords"], list):
+            overrides["importance_keywords"] = list(rules_data["importance_keywords"])
+        with open(OVERRIDES_FILE, "w", encoding="utf-8") as f:
+            json.dump(overrides, f, ensure_ascii=False, indent=2)
+
+        # 3. 重新加载配置以保持一致性
         _config = UnifiedConfig.load()
 
         return jsonify({"status": "ok", "message": "规则已保存"})
@@ -1610,12 +1720,18 @@ def api_get_templates():
 
 @app.route("/api/templates", methods=["POST"])
 def api_save_templates():
-    """保存回复模板。"""
+    """保存回复模板。
+
+    将模板写入 config_overrides.json 的 reply_templates 字段（大写键），
+    因为 to_dict() 不含 templates 字段，cfg.save() 不会持久化 templates。
+    _apply_overrides 会从 config_overrides.json 的 reply_templates 加载。
+    """
     global _config
     try:
         data = request.get_json() or {}
         templates_data = data.get("templates", data)
 
+        # 1. 更新内存中的配置对象
         cfg = _ensure_config()
         if "salary_reply" in templates_data:
             cfg.templates.salary_reply = str(templates_data["salary_reply"])
@@ -1632,7 +1748,37 @@ def api_save_templates():
         if "resume_unavailable_reply" in templates_data:
             cfg.templates.resume_unavailable_reply = str(templates_data["resume_unavailable_reply"])
 
-        cfg.save()
+        # 2. 持久化到 config_overrides.json（templates 的真正存储位置）
+        overrides = {}
+        if OVERRIDES_FILE.exists():
+            try:
+                with open(OVERRIDES_FILE, "r", encoding="utf-8") as f:
+                    overrides = json.load(f)
+            except Exception:
+                overrides = {}
+        # _apply_overrides 使用大写键名读取 reply_templates
+        rt = overrides.get("reply_templates", {})
+        if not isinstance(rt, dict):
+            rt = {}
+        if "salary_reply" in templates_data:
+            rt["SALARY_REPLY"] = str(templates_data["salary_reply"])
+        if "interview_time_reply" in templates_data:
+            rt["INTERVIEW_TIME_REPLY"] = str(templates_data["interview_time_reply"])
+        if "job_content_reply" in templates_data:
+            rt["JOB_CONTENT_REPLY"] = str(templates_data["job_content_reply"])
+        if "greeting_reply" in templates_data:
+            rt["GREETING_REPLY"] = str(templates_data["greeting_reply"])
+        if "default_reply" in templates_data:
+            rt["DEFAULT_REPLY"] = str(templates_data["default_reply"])
+        if "resume_duplicate_reply" in templates_data:
+            rt["RESUME_DUPLICATE_REPLY"] = str(templates_data["resume_duplicate_reply"])
+        if "resume_unavailable_reply" in templates_data:
+            rt["RESUME_UNAVAILABLE_REPLY"] = str(templates_data["resume_unavailable_reply"])
+        overrides["reply_templates"] = rt
+        with open(OVERRIDES_FILE, "w", encoding="utf-8") as f:
+            json.dump(overrides, f, ensure_ascii=False, indent=2)
+
+        # 3. 重新加载配置以保持一致性
         _config = UnifiedConfig.load()
 
         return jsonify({"status": "ok", "message": "模板已保存"})
@@ -1829,6 +1975,65 @@ def on_stop_login_modal():
     logger.info("收到 stop_login_modal 事件")
 
 
+# ===================== 日志清理 =====================
+
+def cleanup_old_logs():
+    """清理旧日志文件 — 删除超过7天的日志和临时flask日志。"""
+    import time
+    from pathlib import Path
+
+    log_dir = PROJECT_ROOT / "logs"
+    if not log_dir.exists():
+        return
+
+    now = time.time()
+    max_age_seconds = 7 * 24 * 3600  # 7天
+    cleaned = 0
+
+    for f in log_dir.iterdir():
+        if not f.is_file():
+            continue
+        # 删除超过7天的日志文件
+        try:
+            file_age = now - f.stat().st_mtime
+            if file_age > max_age_seconds:
+                f.unlink()
+                cleaned += 1
+                continue
+        except Exception:
+            pass
+
+        # 删除临时 flask 日志文件（flask_e2e*.log, flask_output*.log）
+        if f.name.startswith("flask_e2e") or f.name.startswith("flask_output"):
+            try:
+                f.unlink()
+                cleaned += 1
+            except Exception:
+                pass
+
+        # 大文件截断：超过20MB的日志文件清空内容
+        try:
+            if f.stat().st_size > 20 * 1024 * 1024:
+                f.write_text("", encoding="utf-8")
+                cleaned += 1
+        except Exception:
+            pass
+
+    if cleaned > 0:
+        logger.info(f"日志清理: 已清理 {cleaned} 个文件")
+
+
+def _log_cleanup_loop():
+    """后台线程：每天清理一次旧日志。"""
+    import time
+    while True:
+        try:
+            cleanup_old_logs()
+        except Exception:
+            pass
+        time.sleep(24 * 3600)  # 24小时执行一次
+
+
 # ===================== 主入口 =====================
 
 def main():
@@ -1842,6 +2047,12 @@ def main():
     # 预加载配置
     _ensure_config()
     logger.info("配置已加载")
+
+    # 启动日志清理线程
+    import threading
+    threading.Thread(target=_log_cleanup_loop, daemon=True).start()
+    cleanup_old_logs()  # 启动时立即清理一次
+    logger.info("日志清理已启动")
 
     # 启动 Flask
     socketio.run(app, host="0.0.0.0", port=5000, debug=False, allow_unsafe_werkzeug=True)

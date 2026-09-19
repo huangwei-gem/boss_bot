@@ -47,21 +47,11 @@ echo ✓ 配置就绪
 
 echo.
 echo [4/6] 检查端口占用...
-netstat -ano | findstr ":5000 " | findstr "LISTENING" >nul 2>&1
-if not errorlevel 1 (
-    echo ⚠ 端口 5000 已被占用，正在自动终止旧进程...
-    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":5000 " ^| findstr "LISTENING"') do (
-        taskkill /F /PID %%a >nul 2>&1
-        echo   已终止进程 PID: %%a
-    )
-    timeout /t 2 /nobreak >nul
-    netstat -ano | findstr ":5000 " | findstr "LISTENING" >nul 2>&1
-    if not errorlevel 1 (
-        echo ✗ 端口仍被占用，无法自动终止，请手动关闭后重试
-        pause
-        exit /b 1
-    )
-    echo ✓ 旧进程已终止，端口已释放
+python kill_port.py 5000
+if errorlevel 1 (
+    echo ✗ 端口 5000 无法释放，请手动关闭后重试
+    pause
+    exit /b 1
 )
 echo ✓ 端口 5000 可用
 
@@ -90,10 +80,14 @@ start "" cmd /c "ping -n 4 127.0.0.1 >nul & start http://localhost:5000"
 cd flask-version
 python app.py
 
-if errorlevel 1 (
+REM Flask正常退出（Ctrl+C）的errorlevel是1，不是真正的错误
+if errorlevel 2 (
     echo.
     echo ✗ 应用启动失败，请检查错误信息
     pause
+) else (
+    echo.
+    echo 服务已停止
 )
 
 pause

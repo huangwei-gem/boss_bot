@@ -70,6 +70,21 @@ SELECTOR_REC_JOB_LIST = ".rec-job-list"
 SELECTOR_JOB_NAME = ".job-name"
 
 # ─────────────────────────────────────────────
+# 风控检测关键词
+# ─────────────────────────────────────────────
+# 验证码/安全验证关键词（出现即视为风控触发）
+WIND_CONTROL_CAPTCHA_KEYWORDS = (
+    "安全验证", "滑动验证", "验证码", "请完成验证", "拖动滑块",
+    "人机验证", "图形验证", "verifyCode", "captcha",
+)
+# 限制/频控关键词（出现即视为风控触发）
+WIND_CONTROL_LIMIT_KEYWORDS = (
+    "操作频繁", "稍后再试", "访问太频繁", "请求过于频繁",
+    "已被限制", "暂时限制", "限制访问", "请稍候再试",
+    "frequent", "too many",
+)
+
+# ─────────────────────────────────────────────
 # 默认 User-Agent 列表
 # ─────────────────────────────────────────────
 FALLBACK_USER_AGENTS = [
@@ -390,16 +405,25 @@ class GreetEngine:
         config: UnifiedConfig,
         log_callback: Optional[Callable] = None,
         progress_callback: Optional[Callable] = None,
+        greet_event_cb: Optional[Callable] = None,
+        wind_control_cb: Optional[Callable] = None,
     ):
         self.browser_manager = browser_manager
         self.config = config
         self.log_cb = log_callback
         self.progress_cb = progress_callback
+        self._greet_event_cb = greet_event_cb
+        # 风控触发回调 — 触发时通知 main_loop 暂停打招呼并推送前端事件
+        # 回调签名: wind_control_cb(message: str, wtype: str) -> None
+        # wtype: "captcha"（验证码） | "limit"（限制提示）
+        self._wind_control_cb = wind_control_cb
 
         # 运行状态
         self.running = False
         self._is_logged_in = False
         self._login_event = threading.Event()
+        # 风控触发标志 — 触发后停止投递，等待用户手动处理
+        self._wind_control_detected = False
 
         # 统计
         self.applied_count = 0
@@ -524,6 +548,31 @@ class GreetEngine:
             self.log_cb(f"[{level}] {msg}")
         try:
             _file_logger.info(f"[{level}] {msg}")
+        except Exception:
+            pass
+
+    def _emit_greet_event(self, job: dict, status: str, ai_result: dict = None):
+        """推送投递事件到前端表格。
+
+        Args:
+            job: 岗位信息字典
+            status: "success" | "skip" | "ai_skip" | "already" | "error"
+            ai_result: AI 分析结果（可选）
+        """
+        if not self._greet_event_cb:
+            return
+        try:
+            ai = ai_result or self._last_ai_result or {}
+            self._greet_event_cb({
+                "job_name": job.get("job_name", ""),
+                "company": job.get("company", ""),
+                "salary": job.get("salary", ""),
+                "status": status,
+                "ai_score": ai.get("score", 0),
+                "ai_reason": ai.get("reason", ""),
+                "ai_match": ai.get("is_match", False),
+                "greeting": job.get("_actual_greeting_sent", "")[:60],
+            })
         except Exception:
             pass
 
@@ -676,27 +725,38 @@ class GreetEngine:
         Returns:
             发送成功返回 True，失败返回 False
         """
+        job_name = job_info.get('job_name', '')
+        job_url = job_info.get('url', '')
+        self._log("DEBUG", f"send_greeting 被调用: job={job_name}, url={job_url[:60]}, running={self.running}")
+        
         if not self.running:
+            self._log("WARN", f"投递跳过: running=False, job={job_name}")
+            return False
+        if not job_url:
+            self._log("WARN", f"投递跳过: url为空, job={job_name}")
             return False
         try:
             success = self._apply_job(job_info)
             if success:
                 self.applied_count += 1
                 self._save_chat_log(job_info, skipped=False)
-                self._log("SUCCESS", f"✅ 已投递: {job_info.get('job_name', '')}")
+                self._log("SUCCESS", f"✅ 已投递: {job_name}")
+                self._emit_greet_event(job_info, "success")
                 self._record_greet(
                     job_info, is_greeted=True,
                     actual_greeting_sent=job_info.get("_actual_greeting_sent", ""),
                 )
             else:
                 self.skipped_count += 1
-                self._log("WARN", f"⏭️ 跳过: {job_info.get('job_name', '')}")
+                self._log("WARN", f"⏭️ 跳过: {job_name}")
+                self._emit_greet_event(job_info, "skip")
                 self._record_greet(job_info, is_skipped=True, skip_reason="投递失败")
             self._report_progress()
             return success
         except Exception as e:
             self._log("WARN", f"发送打招呼异常: {e}")
             self.skipped_count += 1
+            self._emit_greet_event(job_info, "error")
             self._report_progress()
             self._record_greet(job_info, is_skipped=True, skip_reason=f"发送异常: {e}")
             return False
@@ -1180,6 +1240,7 @@ class GreetEngine:
                 self.skipped_count += 1
                 self._report_progress()
                 self._save_chat_log(job, skipped=True)
+                self._emit_greet_event(job, "already")
                 self._record_greet(job, is_skipped=True, skip_reason="已沟通过")
                 continue
 
@@ -1193,6 +1254,7 @@ class GreetEngine:
                     self.skipped_count += 1
                     self._save_chat_log(job, skipped=True, ai_result=None, ai_duration=ai_duration)
                     self._report_progress()
+                    self._emit_greet_event(job, "ai_skip")
                     self._record_greet(job, is_skipped=True, skip_reason="AI判定不匹配")
                     continue
                 if ai_result and ai_result.get("suggested_greeting"):
@@ -1210,6 +1272,7 @@ class GreetEngine:
                     self.applied_count += 1
                     self._save_chat_log(job, skipped=False, ai_result=ai_result, ai_duration=ai_duration)
                     self._log("SUCCESS", f"✅ 已投递: {job.get('job_name', '')}")
+                    self._emit_greet_event(job, "success", ai_result)
                     self._record_greet(
                         job, is_greeted=True,
                         actual_greeting_sent=job.get("_actual_greeting_sent", ""),
@@ -1217,10 +1280,12 @@ class GreetEngine:
                 else:
                     self.skipped_count += 1
                     self._log("WARN", f"⏭️ 跳过: {job.get('job_name', '')}")
+                    self._emit_greet_event(job, "skip", ai_result)
                     self._record_greet(job, is_skipped=True, skip_reason="投递失败")
             except Exception as e:
                 self._log("WARN", f"投递异常: {e}")
                 self.skipped_count += 1
+                self._emit_greet_event(job, "error")
                 self._record_greet(job, is_skipped=True, skip_reason=f"投递异常: {e}")
             self._report_progress()
 
