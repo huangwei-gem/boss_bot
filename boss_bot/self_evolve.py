@@ -28,11 +28,30 @@ logger = logging.getLogger(__name__)
 # 进化数据文件路径
 _EVOLUTION_DATA_FILE = Path(__file__).parent.parent / "data" / "evolution_data.json"
 
+# 自进化质量数据文件路径（评分、规则调整、模板优化记录）
+_QUALITY_DATA_FILE = Path(__file__).parent.parent / "data" / "self_evolve_data.json"
+
 # 回复效果分类
 EFFECT_POSITIVE = "positive"
 EFFECT_NEUTRAL = "neutral"
 EFFECT_NEGATIVE = "negative"
 EFFECT_IGNORED = "ignored"
+
+# ─────────────────────────────────────────────
+# 评分维度配置（总分 100）
+# ─────────────────────────────────────────────
+SCORE_RELEVANCE_MAX = 30       # 相关性：回复内容是否与收到的消息相关
+SCORE_COMPLETENESS_MAX = 30    # 完整性：回复是否完整回答了对方的问题
+SCORE_NATURALNESS_MAX = 20     # 自然度：回复是否像真人说话，不像机器
+SCORE_EFFECTIVENESS_MAX = 20   # 有效性：回复是否推动了对话进展
+SCORE_TOTAL_MAX = 100
+LOW_SCORE_THRESHOLD = 60       # 低于此分数视为低分回复
+
+# 评分批量大小（每次调用 AI 评分的样本数，避免 prompt 过长）
+AI_SCORING_BATCH_SIZE = 10
+
+# 模板使用次数阈值：低于此值不参与优化建议
+TEMPLATE_MIN_USAGE_FOR_OPT = 3
 
 # 积极反应关键词（HR 继续对话、询问详情、约面试等）
 _POSITIVE_PATTERNS = [
@@ -105,6 +124,8 @@ class SelfEvolveEngine:
         self.enabled = (config or {}).get("enabled", True)
         self.log_cb = log_callback
         self._data_file = Path(data_file) if data_file else _EVOLUTION_DATA_FILE
+        # 质量评分数据文件（评分历史、规则调整、模板优化记录）
+        self._quality_data_file = _QUALITY_DATA_FILE
         self._lock = threading.Lock()
 
         # 进化数据结构
@@ -120,8 +141,22 @@ class SelfEvolveEngine:
         self._strategy_adjustments: List[Dict[str, Any]] = []
         self._reply_count_since_optimize = 0
 
+        # ── 自进化质量评分数据结构 ──
+        # 回复评分历史：[{id, received_message, reply_content, reply_source,
+        #               score, relevance, completeness, naturalness, effectiveness,
+        #               timestamp, scoring_method}]
+        self._reply_evaluations: List[Dict[str, Any]] = []
+        # 规则调整记录：[{rule_key, old_value, new_value, reason, auto_applied, timestamp}]
+        self._rule_adjustments: List[Dict[str, Any]] = []
+        # 模板优化记录：[{template_key, current_template, suggested_template,
+        #                 usage_count, avg_score, reason, timestamp, applied}]
+        self._template_optimizations: List[Dict[str, Any]] = []
+        # 模板使用统计：{template_key: {usage_count, total_score, avg_score, last_used}}
+        self._template_usage_stats: Dict[str, Dict[str, Any]] = {}
+
         # 加载持久化数据
         self.load_evolution_data()
+        self._load_quality_data()
 
     def _log(self, level: str, msg: str):
         """统一日志输出。"""
@@ -629,3 +664,1266 @@ class SelfEvolveEngine:
         """启用或禁用自进化功能。"""
         self.enabled = enabled
         self._log("INFO", f"自进化功能已{'启用' if enabled else '禁用'}")
+    # ─────────────────────────────────────────────
+    # 回复质量评分
+    # ─────────────────────────────────────────────
+
+    def _get_reply_records_from_store(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """从 ReplyRecordStore 获取最近的回复记录。
+
+        Args:
+            limit: 最多获取的记录数
+
+        Returns:
+            回复记录字典列表，每条包含 received_message、reply_content、reply_source 等
+        """
+        try:
+            from boss_bot.reply_record import _get_reply_store
+            store = _get_reply_store()
+            records = store.get_all()
+            # 取最近 limit 条已回复的记录（排除跳过的）
+            valid_records = [
+                r for r in records
+                if not r.is_skipped and r.reply_content and r.received_message
+            ]
+            recent = valid_records[-limit:] if limit > 0 else valid_records
+            return [
+                {
+                    "chat_name": r.chat_name,
+                    "job_name": r.job_name,
+                    "received_message": r.received_message or "",
+                    "reply_content": r.reply_content or "",
+                    "reply_source": r.reply_source or "",
+                    "reply_intent": r.reply_intent or "",
+                    "timestamp": r.timestamp,
+                    "ai_model": r.ai_model or "",
+                }
+                for r in recent
+            ]
+        except Exception as e:
+            self._log("ERROR", f"获取回复记录失败: {e}")
+            return []
+
+    def _get_ai_providers(self) -> List[dict]:
+        """获取已配置的 AI 提供商列表。
+
+        优先使用 Agnes 或商汤(SenseNova)。
+
+        Returns:
+            provider 字典列表，每个包含 key/model/url
+        """
+        try:
+            from boss_bot.config import AI_PROVIDERS
+            if not AI_PROVIDERS:
+                return []
+            # 优先排序：agnes 和 sensenova 排前面
+            def _priority(p):
+                model = (p.get("model", "") + p.get("url", "")).lower()
+                if "agnes" in model:
+                    return 0
+                if "sensenova" in model or "sensetime" in model:
+                    return 1
+                return 2
+            return sorted(AI_PROVIDERS, key=_priority)
+        except Exception:
+            return []
+
+    def _call_ai_for_scoring(self, prompt: str, system_prompt: str = "") -> Optional[str]:
+        """调用 AI 进行评分/优化（OpenAI 兼容格式）。
+
+        Args:
+            prompt: 用户提示词
+            system_prompt: 系统提示词
+
+        Returns:
+            AI 返回的文本，失败返回 None
+        """
+        providers = self._get_ai_providers()
+        if not providers:
+            return None
+
+        try:
+            from openai import OpenAI
+        except ImportError:
+            self._log("WARNING", "未安装 openai 库，无法使用 AI 评分")
+            return None
+
+        # 只尝试前 2 个可用 provider，避免长时间等待
+        max_attempts = 2
+        attempted = 0
+
+        for provider in providers:
+            if attempted >= max_attempts:
+                break
+
+            api_key = provider.get("key", "")
+            model = provider.get("model", "")
+            base_url = provider.get("url", "")
+            if not api_key or not model or not base_url:
+                continue
+
+            attempted += 1
+
+            try:
+                # 设置 10 秒超时，避免长时间阻塞
+                client = OpenAI(api_key=api_key, base_url=base_url, timeout=10.0)
+                messages = []
+                if system_prompt:
+                    messages.append({"role": "system", "content": system_prompt})
+                messages.append({"role": "user", "content": prompt})
+
+                response = client.chat.completions.create(
+                    model=model,
+                    max_tokens=1000,
+                    temperature=0.3,  # 评分需要确定性，降低温度
+                    messages=messages,
+                )
+                content = response.choices[0].message.content
+                return content.strip() if content else None
+            except Exception as e:
+                self._log("DEBUG", f"AI 调用失败 [{model}]: {str(e)[:100]}")
+                continue
+
+        return None
+
+    def _heuristic_score(self, received_message: str, reply_content: str,
+                         reply_source: str = "") -> Dict[str, int]:
+        """规则启发式评分（AI 不可用时的降级方案）。
+
+        评分维度：
+        - 相关性（30分）：回复内容是否与收到的消息相关
+        - 完整性（30分）：回复是否完整回答了对方的问题
+        - 自然度（20分）：回复是否像真人说话
+        - 有效性（20分）：回复是否推动了对话进展
+
+        Args:
+            received_message: 收到的消息
+            reply_content: 回复内容
+            reply_source: 回复来源（rule/intent/ai/default）
+
+        Returns:
+            {"relevance": int, "completeness": int, "naturalness": int, "effectiveness": int}
+        """
+        received = (received_message or "").strip()
+        reply = (reply_content or "").strip()
+
+        # ── 相关性评分（30分）──
+        relevance = 0
+        if reply_source == "rule":
+            # 规则匹配通常相关性较高
+            relevance = 25
+        elif reply_source == "intent":
+            relevance = 22
+        elif reply_source == "ai":
+            relevance = 20
+        elif reply_source == "default":
+            # 兜底回复相关性较低
+            relevance = 10
+
+        # 检查回复中是否包含消息中的关键词
+        if received and reply:
+            # 提取消息中的关键词（简单分词）
+            msg_keywords = set(re.findall(r"[\u4e00-\u9fa5]{2,}", received))
+            reply_keywords = set(re.findall(r"[\u4e00-\u9fa5]{2,}", reply))
+            if msg_keywords:
+                overlap = msg_keywords & reply_keywords
+                overlap_ratio = len(overlap) / len(msg_keywords)
+                relevance += int(5 * overlap_ratio)
+
+        relevance = min(relevance, SCORE_RELEVANCE_MAX)
+
+        # ── 完整性评分（30分）──
+        completeness = 0
+        if not reply:
+            completeness = 0
+        else:
+            # 检查是否包含问号（回答了问题）
+            has_question = "？" in received or "?" in received
+            if has_question:
+                # 如果对方问了问题，回复应该包含具体信息
+                if len(reply) >= 10:
+                    completeness = 20
+                if len(reply) >= 30:
+                    completeness = 25
+                # 检查是否包含具体回答（数字、时间等）
+                if re.search(r"\d+|可以|能够|方便|没问题", reply):
+                    completeness = min(completeness + 5, SCORE_COMPLETENESS_MAX)
+            else:
+                # 非问题消息，回复确认即可
+                if len(reply) >= 5:
+                    completeness = 25
+                if len(reply) >= 15:
+                    completeness = 30
+
+        # ── 自然度评分（20分）──
+        naturalness = 0
+        if not reply:
+            naturalness = 0
+        else:
+            # 检查是否像真人说话
+            # 过长或过短都不自然
+            length = len(reply)
+            if 5 <= length <= 100:
+                naturalness = 15
+            elif length > 100:
+                naturalness = 10  # 过长，像机器
+            elif length > 0:
+                naturalness = 8  # 过短
+
+            # 检查是否包含口语化表达
+            if any(w in reply for w in ["~", "哈", "呢", "呀", "哦", "嗯"]):
+                naturalness = min(naturalness + 3, SCORE_NATURALNESS_MAX)
+
+            # 检查是否过于模板化（连续重复词）
+            if re.search(r"(.{3,})\1{2,}", reply):
+                naturalness = max(naturalness - 5, 0)
+
+            # AI 回复通常更自然
+            if reply_source == "ai":
+                naturalness = min(naturalness + 2, SCORE_NATURALNESS_MAX)
+
+        # ── 有效性评分（20分）──
+        effectiveness = 0
+        if not reply:
+            effectiveness = 0
+        else:
+            # 检查是否推动对话进展
+            # 包含提问、邀约、确认等
+            if re.search(r"[？?]|方便|可以吗|怎么样|何时|什么时候", reply):
+                effectiveness = 15  # 包含提问，推动对话
+            elif re.search(r"面试|面谈|沟通|联系|安排", reply):
+                effectiveness = 18  # 包含邀约，高度有效
+            elif re.search(r"好的|可以|没问题|感谢|谢谢", reply):
+                effectiveness = 12  # 确认回复
+            else:
+                effectiveness = 8  # 普通回复
+
+            # 兜底回复有效性低
+            if reply_source == "default":
+                effectiveness = max(effectiveness - 5, 0)
+
+        return {
+            "relevance": relevance,
+            "completeness": completeness,
+            "naturalness": naturalness,
+            "effectiveness": effectiveness,
+        }
+
+    def _parse_ai_scoring_response(self, ai_response: str) -> Optional[Dict[str, int]]:
+        """解析 AI 评分响应。
+
+        期望 AI 返回 JSON 格式：
+        {"relevance": 25, "completeness": 20, "naturalness": 15, "effectiveness": 12}
+
+        Args:
+            ai_response: AI 返回的文本
+
+        Returns:
+            评分字典，解析失败返回 None
+        """
+        if not ai_response:
+            return None
+
+        try:
+            # 尝试从文本中提取 JSON
+            # AI 可能返回 ```json ... ``` 或纯 JSON
+            text = ai_response.strip()
+
+            # 去除 markdown 代码块标记
+            if text.startswith("```"):
+                lines = text.split("\n")
+                # 去除首行 ```json 和末行 ```
+                lines = [l for l in lines if not l.strip().startswith("```")]
+                text = "\n".join(lines).strip()
+
+            # 尝试找到 JSON 部分
+            json_match = re.search(r"\{[^}]+\}", text, re.DOTALL)
+            if json_match:
+                text = json_match.group(0)
+
+            data = json.loads(text)
+
+            # 验证并限制范围
+            def _clamp(val, max_val):
+                try:
+                    v = int(val)
+                    return max(0, min(v, max_val))
+                except (ValueError, TypeError):
+                    return 0
+
+            return {
+                "relevance": _clamp(data.get("relevance", 0), SCORE_RELEVANCE_MAX),
+                "completeness": _clamp(data.get("completeness", 0), SCORE_COMPLETENESS_MAX),
+                "naturalness": _clamp(data.get("naturalness", 0), SCORE_NATURALNESS_MAX),
+                "effectiveness": _clamp(data.get("effectiveness", 0), SCORE_EFFECTIVENESS_MAX),
+            }
+        except (json.JSONDecodeError, ValueError, TypeError) as e:
+            self._log("DEBUG", f"解析 AI 评分响应失败: {e}")
+            return None
+
+    def evaluate_reply_quality(self, limit: int = 50) -> dict:
+        """评估最近N条回复的质量。
+
+        读取 reply_record.py 中的回复记录，对每条回复评分（0-100分）。
+        评分维度：
+        - 相关性（30分）：回复内容是否与收到的消息相关
+        - 完整性（30分）：回复是否完整回答了对方的问题
+        - 自然度（20分）：回复是否像真人说话，不像机器
+        - 有效性（20分）：回复是否推动了对话进展
+
+        评分方法：优先使用 AI 批量评分，AI 不可用时降级到规则启发式评分。
+        评分结果存入 self_evolve_data.json。
+
+        Args:
+            limit: 评估最近 N 条回复，默认 50
+
+        Returns:
+            {
+                "total_evaluated": int,
+                "avg_score": float,
+                "avg_relevance": float,
+                "avg_completeness": float,
+                "avg_naturalness": float,
+                "avg_effectiveness": float,
+                "low_score_replies": list,  # 低于60分的回复
+                "suggestions": list  # 改进建议
+            }
+        """
+        if not self.enabled:
+            return {"status": "disabled", "message": "自进化功能未启用"}
+
+        # 获取回复记录
+        records = self._get_reply_records_from_store(limit=limit)
+        if not records:
+            self._log("INFO", "无回复记录可评估")
+            return {
+                "total_evaluated": 0,
+                "avg_score": 0,
+                "avg_relevance": 0,
+                "avg_completeness": 0,
+                "avg_naturalness": 0,
+                "avg_effectiveness": 0,
+                "low_score_replies": [],
+                "suggestions": ["暂无回复记录，无法评估"],
+            }
+
+        self._log("INFO", f"开始评估 {len(records)} 条回复质量")
+
+        # 尝试使用 AI 批量评分
+        ai_available = bool(self._get_ai_providers())
+        scoring_method = "ai" if ai_available else "heuristic"
+
+        # AI 可用性预检查：用第一条记录测试 AI 是否真的可用
+        if ai_available:
+            test_record = records[0]
+            test_score = self._score_single_reply_with_ai(
+                test_record.get("received_message", ""),
+                test_record.get("reply_content", ""),
+                test_record.get("reply_source", ""),
+            )
+            if test_score is None:
+                ai_available = False
+                scoring_method = "heuristic"
+                self._log("INFO", "AI 评分预检查失败，降级到启发式评分")
+
+        evaluations = []
+        for record in records:
+            received = record.get("received_message", "")
+            reply = record.get("reply_content", "")
+            source = record.get("reply_source", "")
+
+            score_data = None
+
+            # 优先尝试 AI 评分
+            if ai_available:
+                score_data = self._score_single_reply_with_ai(received, reply, source)
+
+            # AI 评分失败，降级到启发式评分
+            if score_data is None:
+                score_data = self._heuristic_score(received, reply, source)
+                if scoring_method == "ai":
+                    scoring_method = "heuristic"
+
+            total_score = sum(score_data.values())
+
+            evaluation = {
+                "received_message": received[:100],
+                "reply_content": reply[:100],
+                "reply_source": source,
+                "reply_intent": record.get("reply_intent", ""),
+                "chat_name": record.get("chat_name", ""),
+                "score": total_score,
+                "relevance": score_data["relevance"],
+                "completeness": score_data["completeness"],
+                "naturalness": score_data["naturalness"],
+                "effectiveness": score_data["effectiveness"],
+                "scoring_method": scoring_method,
+                "timestamp": record.get("timestamp", datetime.now().isoformat()),
+            }
+            evaluations.append(evaluation)
+
+            # 更新模板使用统计
+            self._update_template_usage_stats(source, total_score)
+
+        # 计算统计值
+        total_evaluated = len(evaluations)
+        avg_relevance = sum(e["relevance"] for e in evaluations) / total_evaluated
+        avg_completeness = sum(e["completeness"] for e in evaluations) / total_evaluated
+        avg_naturalness = sum(e["naturalness"] for e in evaluations) / total_evaluated
+        avg_effectiveness = sum(e["effectiveness"] for e in evaluations) / total_evaluated
+        avg_score = sum(e["score"] for e in evaluations) / total_evaluated
+
+        # 找出低分回复
+        low_score_replies = [
+            {
+                "received_message": e["received_message"],
+                "reply_content": e["reply_content"],
+                "reply_source": e["reply_source"],
+                "score": e["score"],
+                "timestamp": e["timestamp"],
+            }
+            for e in evaluations
+            if e["score"] < LOW_SCORE_THRESHOLD
+        ]
+
+        # 生成改进建议
+        suggestions = self._generate_improvement_suggestions(
+            avg_relevance, avg_completeness, avg_naturalness, avg_effectiveness,
+            low_score_replies
+        )
+
+        # 保存评分结果
+        with self._lock:
+            self._reply_evaluations.extend(evaluations)
+            # 保留最近 1000 条评分记录
+            if len(self._reply_evaluations) > 1000:
+                self._reply_evaluations = self._reply_evaluations[-1000:]
+            self._save_quality_data()
+
+        result = {
+            "total_evaluated": total_evaluated,
+            "avg_score": round(avg_score, 2),
+            "avg_relevance": round(avg_relevance, 2),
+            "avg_completeness": round(avg_completeness, 2),
+            "avg_naturalness": round(avg_naturalness, 2),
+            "avg_effectiveness": round(avg_effectiveness, 2),
+            "low_score_replies": low_score_replies,
+            "suggestions": suggestions,
+            "scoring_method": scoring_method,
+        }
+
+        self._log("INFO",
+                  f"回复质量评估完成: {total_evaluated} 条, 平均分 {avg_score:.1f}, "
+                  f"低分 {len(low_score_replies)} 条, 评分方式={scoring_method}")
+
+        return result
+
+    def _score_single_reply_with_ai(self, received_message: str, reply_content: str,
+                                     reply_source: str) -> Optional[Dict[str, int]]:
+        """使用 AI 评分单条回复。
+
+        Args:
+            received_message: 收到的消息
+            reply_content: 回复内容
+            reply_source: 回复来源
+
+        Returns:
+            评分字典，失败返回 None
+        """
+        if not received_message or not reply_content:
+            return None
+
+        system_prompt = (
+            "你是一个回复质量评分专家。请对求职者在 BOSS 直聘上的回复进行评分。\n"
+            "评分维度：\n"
+            f"- relevance: 相关性（0-{SCORE_RELEVANCE_MAX}分），回复内容是否与收到的消息相关\n"
+            f"- completeness: 完整性（0-{SCORE_COMPLETENESS_MAX}分），回复是否完整回答了对方的问题\n"
+            f"- naturalness: 自然度（0-{SCORE_NATURALNESS_MAX}分），回复是否像真人说话，不像机器\n"
+            f"- effectiveness: 有效性（0-{SCORE_EFFECTIVENESS_MAX}分），回复是否推动了对话进展\n"
+            "请只返回 JSON 格式，不要其他内容。格式：\n"
+            '{"relevance": 25, "completeness": 20, "naturalness": 15, "effectiveness": 12}'
+        )
+
+        prompt = (
+            f"收到的消息：{received_message[:200]}\n"
+            f"回复内容：{reply_content[:200]}\n"
+            f"回复来源：{reply_source}\n\n"
+            "请对这条回复进行评分，只返回 JSON。"
+        )
+
+        try:
+            ai_response = self._call_ai_for_scoring(prompt, system_prompt)
+            if ai_response:
+                return self._parse_ai_scoring_response(ai_response)
+        except Exception as e:
+            self._log("DEBUG", f"AI 评分异常: {e}")
+
+        return None
+
+    def _update_template_usage_stats(self, template_key: str, score: int):
+        """更新模板使用统计。
+
+        Args:
+            template_key: 模板/来源标识
+            score: 本次评分
+        """
+        if not template_key:
+            template_key = "unknown"
+
+        if template_key not in self._template_usage_stats:
+            self._template_usage_stats[template_key] = {
+                "usage_count": 0,
+                "total_score": 0,
+                "avg_score": 0,
+                "last_used": datetime.now().isoformat(),
+            }
+
+        stats = self._template_usage_stats[template_key]
+        stats["usage_count"] += 1
+        stats["total_score"] += score
+        stats["avg_score"] = round(stats["total_score"] / stats["usage_count"], 2)
+        stats["last_used"] = datetime.now().isoformat()
+
+    def _generate_improvement_suggestions(self, avg_relevance: float,
+                                           avg_completeness: float,
+                                           avg_naturalness: float,
+                                           avg_effectiveness: float,
+                                           low_score_replies: list) -> list:
+        """根据评分结果生成改进建议。
+
+        Args:
+            avg_relevance: 平均相关性得分
+            avg_completeness: 平均完整性得分
+            avg_naturalness: 平均自然度得分
+            avg_effectiveness: 平均有效性得分
+            low_score_replies: 低分回复列表
+
+        Returns:
+            改进建议列表
+        """
+        suggestions = []
+
+        # 相关性建议
+        if avg_relevance < SCORE_RELEVANCE_MAX * 0.6:
+            suggestions.append(
+                f"相关性得分偏低（{avg_relevance:.1f}/{SCORE_RELEVANCE_MAX}），"
+                "建议优化规则匹配精度，确保回复内容与收到消息紧密相关"
+            )
+
+        # 完整性建议
+        if avg_completeness < SCORE_COMPLETENESS_MAX * 0.6:
+            suggestions.append(
+                f"完整性得分偏低（{avg_completeness:.1f}/{SCORE_COMPLETENESS_MAX}），"
+                "建议完善回复模板，确保完整回答对方问题，增加具体信息"
+            )
+
+        # 自然度建议
+        if avg_naturalness < SCORE_NATURALNESS_MAX * 0.6:
+            suggestions.append(
+                f"自然度得分偏低（{avg_naturalness:.1f}/{SCORE_NATURALNESS_MAX}），"
+                "建议优化回复语气，增加口语化表达，避免过于模板化"
+            )
+
+        # 有效性建议
+        if avg_effectiveness < SCORE_EFFECTIVENESS_MAX * 0.6:
+            suggestions.append(
+                f"有效性得分偏低（{avg_effectiveness:.1f}/{SCORE_EFFECTIVENESS_MAX}），"
+                "建议在回复中增加提问或邀约，推动对话进展"
+            )
+
+        # 低分回复统计
+        if low_score_replies:
+            # 按来源统计低分回复
+            source_counts = {}
+            for r in low_score_replies:
+                src = r.get("reply_source", "unknown")
+                source_counts[src] = source_counts.get(src, 0) + 1
+
+            for src, count in sorted(source_counts.items(), key=lambda x: -x[1]):
+                suggestions.append(
+                    f"来源 '{src}' 有 {count} 条低分回复，建议重点优化该来源的回复策略"
+                )
+
+        if not suggestions:
+            suggestions.append("回复质量整体良好，继续保持当前策略")
+
+        return suggestions
+
+    # ─────────────────────────────────────────────
+    # 规则自动调整
+    # ─────────────────────────────────────────────
+
+    def auto_adjust_rules(self, evaluation: dict) -> list:
+        """根据评估结果自动调整回复规则。
+
+        分析低分回复对应的规则，检测规则匹配是否过于宽泛或过于狭窄，
+        自动调整规则关键词的匹配范围，生成调整建议。
+
+        Args:
+            evaluation: evaluate_reply_quality() 的返回结果
+
+        Returns:
+            调整建议列表，每条包含：
+            {
+                "rule_key": str,
+                "old_value": str,
+                "new_value": str,
+                "reason": str,
+                "auto_applied": bool
+            }
+        """
+        if not self.enabled:
+            return []
+
+        adjustments = []
+
+        # 获取当前规则配置
+        try:
+            from boss_bot.config import REPLY_RULES
+            current_rules = dict(REPLY_RULES or {})
+        except Exception:
+            current_rules = {}
+
+        # 分析低分回复
+        low_score_replies = evaluation.get("low_score_replies", [])
+        if not low_score_replies:
+            self._log("INFO", "无低分回复，无需调整规则")
+            return []
+
+        # 按来源统计低分回复
+        source_low_count = {}
+        for r in low_score_replies:
+            src = r.get("reply_source", "unknown")
+            source_low_count[src] = source_low_count.get(src, 0) + 1
+
+        # 获取模板使用统计
+        template_stats = self._template_usage_stats
+
+        # 分析每个低分来源的规则
+        for source, low_count in source_low_count.items():
+            if source not in template_stats:
+                continue
+
+            stats = template_stats[source]
+            usage_count = stats.get("usage_count", 0)
+            avg_score = stats.get("avg_score", 0)
+
+            if usage_count < TEMPLATE_MIN_USAGE_FOR_OPT:
+                continue  # 数据量不足
+
+            # 计算低分率
+            low_rate = low_count / usage_count if usage_count > 0 else 0
+
+            # 规则过于宽泛：使用次数多但平均分低
+            if low_rate > 0.4 and avg_score < LOW_SCORE_THRESHOLD:
+                # 查找该来源对应的规则
+                rule_keys = self._find_rules_by_source(source, current_rules)
+
+                for rule_key in rule_keys:
+                    old_value = current_rules.get(rule_key, "")
+                    if not old_value:
+                        continue
+
+                    # 分析规则是否过于宽泛
+                    new_value, reason = self._suggest_rule_narrowing(
+                        rule_key, old_value, source, low_rate
+                    )
+
+                    if new_value is not None:
+                        adjustment = {
+                            "rule_key": rule_key,
+                            "old_value": old_value if isinstance(old_value, str) else str(old_value),
+                            "new_value": new_value if isinstance(new_value, str) else str(new_value),
+                            "reason": reason,
+                            "auto_applied": False,  # 默认不自动应用，需人工确认
+                            "timestamp": datetime.now().isoformat(),
+                        }
+                        adjustments.append(adjustment)
+
+        # 分析评分维度短板，给出规则调整建议
+        avg_relevance = evaluation.get("avg_relevance", 0)
+
+        if avg_relevance < SCORE_RELEVANCE_MAX * 0.6:
+            # 相关性低，建议增加更精确的关键词
+            for rule_key, rule_value in current_rules.items():
+                if not isinstance(rule_value, str):
+                    continue
+                # 检查规则关键词是否过少
+                keywords = re.findall(r"[\u4e00-\u9fa5]+", rule_value)
+                if len(keywords) <= 1:
+                    adjustment = {
+                        "rule_key": rule_key,
+                        "old_value": rule_value,
+                        "new_value": rule_value,  # 需要人工补充
+                        "reason": f"规则关键词过少（{len(keywords)}个），"
+                                  f"建议增加更精确的匹配关键词以提高相关性",
+                        "auto_applied": False,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                    adjustments.append(adjustment)
+
+        # 保存调整记录
+        with self._lock:
+            self._rule_adjustments.extend(adjustments)
+            # 保留最近 200 条调整记录
+            if len(self._rule_adjustments) > 200:
+                self._rule_adjustments = self._rule_adjustments[-200:]
+            self._save_quality_data()
+
+        self._log("INFO", f"规则自动调整完成: 生成 {len(adjustments)} 条建议")
+
+        return adjustments
+
+    def _find_rules_by_source(self, source: str, rules: dict) -> list:
+        """根据回复来源查找对应的规则键。
+
+        Args:
+            source: 回复来源（rule/intent/ai/default）
+            rules: 规则字典
+
+        Returns:
+            规则键列表
+        """
+        if source == "rule":
+            # 规则来源：返回所有规则键
+            return list(rules.keys())[:5]  # 限制数量
+        elif source == "intent":
+            # 意图来源：返回意图相关的规则键
+            return [k for k in rules.keys() if "intent" in k.lower()][:3]
+        elif source == "default":
+            # 兜底来源
+            return [k for k in rules.keys() if "default" in k.lower()][:2]
+        return []
+
+    def _suggest_rule_narrowing(self, rule_key: str, old_value: str,
+                                 source: str, low_rate: float) -> tuple:
+        """建议规则收窄（使匹配更精确）。
+
+        Args:
+            rule_key: 规则键
+            old_value: 原规则值
+            source: 回复来源
+            low_rate: 低分率
+
+        Returns:
+            (新规则值, 调整原因)
+        """
+        reason = f"来源 '{source}' 低分率 {low_rate:.0%}，规则匹配可能过于宽泛，建议收窄匹配范围"
+
+        # 如果规则是列表形式（关键词列表），建议增加更精确的关键词
+        if isinstance(old_value, list):
+            new_value = old_value  # 不自动修改列表，仅给出建议
+            return new_value, reason
+
+        # 如果规则是字符串形式，分析是否需要收窄
+        if isinstance(old_value, str):
+            # 不自动修改规则内容，仅给出建议
+            return old_value, reason
+
+        return old_value, reason
+
+    # ─────────────────────────────────────────────
+    # 模板优化
+    # ─────────────────────────────────────────────
+
+    def optimize_templates(self) -> list:
+        """分析并优化回复模板。
+
+        统计每个模板的使用次数和平均评分，找出使用频率高但评分低的模板，
+        使用 AI 生成优化后的模板内容，返回优化建议。
+
+        Returns:
+            优化建议列表，每条包含：
+            {
+                "template_key": str,
+                "current_template": str,
+                "suggested_template": str,
+                "usage_count": int,
+                "avg_score": float,
+                "reason": str
+            }
+        """
+        if not self.enabled:
+            return []
+
+        # 获取当前模板配置
+        try:
+            from boss_bot.config import (
+                SALARY_REPLY, INTERVIEW_TIME_REPLY, JOB_CONTENT_REPLY,
+                GREETING_REPLY, DEFAULT_REPLY, RESUME_DUPLICATE_REPLY,
+                RESUME_UNAVAILABLE_REPLY,
+            )
+            templates = {
+                "salary_reply": SALARY_REPLY,
+                "interview_time_reply": INTERVIEW_TIME_REPLY,
+                "job_content_reply": JOB_CONTENT_REPLY,
+                "greeting_reply": GREETING_REPLY,
+                "default_reply": DEFAULT_REPLY,
+                "resume_duplicate_reply": RESUME_DUPLICATE_REPLY,
+                "resume_unavailable_reply": RESUME_UNAVAILABLE_REPLY,
+            }
+        except Exception as e:
+            self._log("ERROR", f"获取模板配置失败: {e}")
+            return []
+
+        # 模板来源到模板键的映射
+        source_to_template = {
+            "rule": ["salary_reply", "interview_time_reply", "job_content_reply"],
+            "intent": ["greeting_reply", "job_content_reply"],
+            "default": ["default_reply", "resume_duplicate_reply", "resume_unavailable_reply"],
+            "ai": [],  # AI 回复不使用固定模板
+        }
+
+        optimizations = []
+
+        for template_key, template_content in templates.items():
+            if not template_content:
+                continue
+
+            # 查找该模板的使用统计
+            usage_count = 0
+            avg_score = 0
+
+            # 通过来源映射查找统计
+            for source, template_keys in source_to_template.items():
+                if template_key in template_keys:
+                    stats = self._template_usage_stats.get(source, {})
+                    if stats.get("usage_count", 0) > usage_count:
+                        usage_count = stats.get("usage_count", 0)
+                        avg_score = stats.get("avg_score", 0)
+
+            # 也可以直接用 template_key 查找
+            if usage_count == 0:
+                stats = self._template_usage_stats.get(template_key, {})
+                usage_count = stats.get("usage_count", 0)
+                avg_score = stats.get("avg_score", 0)
+
+            # 数据量不足，跳过
+            if usage_count < TEMPLATE_MIN_USAGE_FOR_OPT:
+                continue
+
+            # 判断是否需要优化
+            needs_optimization = avg_score < LOW_SCORE_THRESHOLD
+
+            if not needs_optimization:
+                continue  # 模板效果良好，不需要优化
+
+            # 生成优化建议
+            suggested_template, reason = self._optimize_template_content(
+                template_key, template_content, usage_count, avg_score
+            )
+
+            optimization = {
+                "template_key": template_key,
+                "current_template": template_content,
+                "suggested_template": suggested_template,
+                "usage_count": usage_count,
+                "avg_score": avg_score,
+                "reason": reason,
+                "timestamp": datetime.now().isoformat(),
+                "applied": False,
+            }
+            optimizations.append(optimization)
+
+        # 保存优化记录
+        with self._lock:
+            self._template_optimizations.extend(optimizations)
+            # 保留最近 100 条优化记录
+            if len(self._template_optimizations) > 100:
+                self._template_optimizations = self._template_optimizations[-100:]
+            self._save_quality_data()
+
+        self._log("INFO", f"模板优化完成: 生成 {len(optimizations)} 条建议")
+
+        return optimizations
+
+    def _optimize_template_content(self, template_key: str, current_template: str,
+                                    usage_count: int, avg_score: float) -> tuple:
+        """优化单个模板内容。
+
+        优先使用 AI 生成优化建议，AI 不可用时使用规则启发式优化。
+
+        Args:
+            template_key: 模板键
+            current_template: 当前模板内容
+            usage_count: 使用次数
+            avg_score: 平均评分
+
+        Returns:
+            (优化后的模板内容, 优化原因)
+        """
+        reason = f"使用 {usage_count} 次，平均分 {avg_score:.1f}，低于阈值 {LOW_SCORE_THRESHOLD}"
+
+        # 尝试使用 AI 优化
+        providers = self._get_ai_providers()
+        if providers:
+            system_prompt = (
+                "你是求职回复话术优化专家。请优化以下在 BOSS 直聘上使用的回复模板，"
+                "使其更自然、更有效、更能推动对话进展。\n"
+                "优化要求：\n"
+                "1. 保持专业礼貌的语气\n"
+                "2. 增加口语化表达，更像真人说话\n"
+                "3. 适当增加提问或邀约，推动对话进展\n"
+                "4. 控制在 1-2 句话，简洁明了\n"
+                "5. 保留原模板中的占位符（如 {salary}、{interview_time} 等）\n"
+                "只返回优化后的模板内容，不要解释。"
+            )
+
+            prompt = (
+                f"模板类型：{template_key}\n"
+                f"当前模板：{current_template}\n"
+                f"使用次数：{usage_count}\n"
+                f"平均评分：{avg_score:.1f}/100\n\n"
+                "请优化这个模板。"
+            )
+
+            try:
+                ai_response = self._call_ai_for_scoring(prompt, system_prompt)
+                if ai_response and len(ai_response) > 5:
+                    # 清理 AI 响应
+                    suggested = ai_response.strip()
+                    # 去除引号
+                    suggested = suggested.strip('"\'""''')
+                    if suggested and suggested != current_template:
+                        return suggested, reason + "（AI 优化）"
+            except Exception as e:
+                self._log("DEBUG", f"AI 模板优化失败: {e}")
+
+        # AI 不可用，使用启发式优化
+        suggested = self._heuristic_optimize_template(template_key, current_template)
+        return suggested, reason + "（规则启发式优化）"
+
+    def _heuristic_optimize_template(self, template_key: str, template_content: str) -> str:
+        """规则启发式优化模板内容。
+
+        Args:
+            template_key: 模板键
+            template_content: 当前模板内容
+
+        Returns:
+            优化后的模板内容
+        """
+        if not template_content:
+            return template_content
+
+        optimized = template_content
+
+        # 根据模板类型进行针对性优化
+        if template_key == "default_reply":
+            # 兜底回复：增加提问推动对话
+            if "？" not in optimized and "?" not in optimized:
+                optimized = optimized.rstrip("。.") + "，有什么我可以进一步了解的吗？"
+
+        elif template_key == "greeting_reply":
+            # 打招呼：增加具体性
+            if "方便" not in optimized:
+                optimized = optimized.rstrip("。.") + "，方便详细聊聊吗？"
+
+        elif template_key == "salary_reply":
+            # 薪资回复：确保包含面谈邀约
+            if "面谈" not in optimized:
+                optimized = optimized.rstrip("。.") + "，具体可以面谈。"
+
+        elif template_key == "interview_time_reply":
+            # 面试时间：确保有提问
+            if "？" not in optimized and "?" not in optimized:
+                optimized = optimized.rstrip("。.") + "，您看哪个时间方便？"
+
+        return optimized
+
+    # ─────────────────────────────────────────────
+    # 进化报告生成
+    # ─────────────────────────────────────────────
+
+    def generate_report(self, evaluation: Optional[dict] = None,
+                        rule_adjustments: Optional[list] = None,
+                        template_optimizations: Optional[list] = None) -> str:
+        """生成人类可读的进化报告。
+
+        包含：
+        - 统计数据（总回复数、平均评分、改进幅度）
+        - 问题分析（哪些类型消息回复效果差）
+        - 改进措施（已调整的规则和模板）
+        - 下一步建议
+
+        Args:
+            evaluation: 评估结果，None 时使用最近一次评估
+            rule_adjustments: 规则调整列表，None 时使用最近记录
+            template_optimizations: 模板优化列表，None 时使用最近记录
+
+        Returns:
+            人类可读的进化报告字符串
+        """
+        # 使用传入的数据或最近的数据
+        if evaluation is None:
+            # 使用最近的评分数据计算
+            if self._reply_evaluations:
+                recent_evals = self._reply_evaluations[-50:]
+                total = len(recent_evals)
+                avg_score = sum(e.get("score", 0) for e in recent_evals) / total
+                avg_relevance = sum(e.get("relevance", 0) for e in recent_evals) / total
+                avg_completeness = sum(e.get("completeness", 0) for e in recent_evals) / total
+                avg_naturalness = sum(e.get("naturalness", 0) for e in recent_evals) / total
+                avg_effectiveness = sum(e.get("effectiveness", 0) for e in recent_evals) / total
+                evaluation = {
+                    "total_evaluated": total,
+                    "avg_score": round(avg_score, 2),
+                    "avg_relevance": round(avg_relevance, 2),
+                    "avg_completeness": round(avg_completeness, 2),
+                    "avg_naturalness": round(avg_naturalness, 2),
+                    "avg_effectiveness": round(avg_effectiveness, 2),
+                    "low_score_replies": [
+                        {"reply_source": e.get("reply_source", "")}
+                        for e in recent_evals
+                        if e.get("score", 0) < LOW_SCORE_THRESHOLD
+                    ],
+                    "suggestions": [],
+                }
+            else:
+                evaluation = {
+                    "total_evaluated": 0,
+                    "avg_score": 0,
+                    "avg_relevance": 0,
+                    "avg_completeness": 0,
+                    "avg_naturalness": 0,
+                    "avg_effectiveness": 0,
+                    "low_score_replies": [],
+                    "suggestions": [],
+                }
+
+        if rule_adjustments is None:
+            rule_adjustments = self._rule_adjustments[-10:] if self._rule_adjustments else []
+
+        if template_optimizations is None:
+            template_optimizations = self._template_optimizations[-10:] if self._template_optimizations else []
+
+        # 生成报告
+        lines = []
+        lines.append("=" * 60)
+        lines.append("              AI 自进化报告")
+        lines.append(f"              生成时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        lines.append("=" * 60)
+
+        # ── 一、统计数据 ──
+        lines.append("")
+        lines.append("一、统计数据")
+        lines.append("-" * 40)
+        lines.append(f"  评估回复数：{evaluation.get('total_evaluated', 0)} 条")
+        lines.append(f"  平均总评分：{evaluation.get('avg_score', 0):.1f} / {SCORE_TOTAL_MAX}")
+        lines.append(f"  相关性得分：{evaluation.get('avg_relevance', 0):.1f} / {SCORE_RELEVANCE_MAX}")
+        lines.append(f"  完整性得分：{evaluation.get('avg_completeness', 0):.1f} / {SCORE_COMPLETENESS_MAX}")
+        lines.append(f"  自然度得分：{evaluation.get('avg_naturalness', 0):.1f} / {SCORE_NATURALNESS_MAX}")
+        lines.append(f"  有效性得分：{evaluation.get('avg_effectiveness', 0):.1f} / {SCORE_EFFECTIVENESS_MAX}")
+
+        # 评分等级
+        avg_score = evaluation.get("avg_score", 0)
+        if avg_score >= 80:
+            grade = "优秀"
+        elif avg_score >= 70:
+            grade = "良好"
+        elif avg_score >= 60:
+            grade = "合格"
+        else:
+            grade = "需改进"
+        lines.append(f"  质量等级：{grade}")
+
+        # ── 二、问题分析 ──
+        lines.append("")
+        lines.append("二、问题分析")
+        lines.append("-" * 40)
+
+        low_score_replies = evaluation.get("low_score_replies", [])
+        if low_score_replies:
+            lines.append(f"  低分回复数：{len(low_score_replies)} 条（低于 {LOW_SCORE_THRESHOLD} 分）")
+
+            # 按来源统计
+            source_counts = {}
+            for r in low_score_replies:
+                src = r.get("reply_source", "unknown")
+                source_counts[src] = source_counts.get(src, 0) + 1
+
+            lines.append("  低分回复来源分布：")
+            for src, count in sorted(source_counts.items(), key=lambda x: -x[1]):
+                lines.append(f"    - {src}: {count} 条")
+        else:
+            lines.append("  无低分回复，质量良好")
+
+        # 维度短板分析
+        avg_relevance = evaluation.get("avg_relevance", 0)
+        avg_completeness = evaluation.get("avg_completeness", 0)
+        avg_naturalness = evaluation.get("avg_naturalness", 0)
+        avg_effectiveness = evaluation.get("avg_effectiveness", 0)
+
+        weaknesses = []
+        if avg_relevance < SCORE_RELEVANCE_MAX * 0.6:
+            weaknesses.append("相关性")
+        if avg_completeness < SCORE_COMPLETENESS_MAX * 0.6:
+            weaknesses.append("完整性")
+        if avg_naturalness < SCORE_NATURALNESS_MAX * 0.6:
+            weaknesses.append("自然度")
+        if avg_effectiveness < SCORE_EFFECTIVENESS_MAX * 0.6:
+            weaknesses.append("有效性")
+
+        if weaknesses:
+            lines.append(f"  主要短板：{', '.join(weaknesses)}")
+        else:
+            lines.append("  各维度得分均衡，无明显短板")
+
+        # ── 三、改进措施 ──
+        lines.append("")
+        lines.append("三、改进措施")
+        lines.append("-" * 40)
+
+        if rule_adjustments:
+            lines.append(f"  规则调整建议：{len(rule_adjustments)} 条")
+            for adj in rule_adjustments[-5:]:
+                lines.append(f"    - [{adj.get('rule_key', '')}] {adj.get('reason', '')}")
+        else:
+            lines.append("  规则调整建议：无")
+
+        if template_optimizations:
+            lines.append(f"  模板优化建议：{len(template_optimizations)} 条")
+            for opt in template_optimizations[-5:]:
+                lines.append(f"    - [{opt.get('template_key', '')}] "
+                             f"使用 {opt.get('usage_count', 0)} 次, "
+                             f"平均分 {opt.get('avg_score', 0):.1f}")
+        else:
+            lines.append("  模板优化建议：无")
+
+        # ── 四、下一步建议 ──
+        lines.append("")
+        lines.append("四、下一步建议")
+        lines.append("-" * 40)
+
+        suggestions = evaluation.get("suggestions", [])
+        if suggestions:
+            for i, s in enumerate(suggestions, 1):
+                lines.append(f"  {i}. {s}")
+        else:
+            lines.append("  1. 继续收集回复数据，积累更多评估样本")
+            lines.append("  2. 定期运行自进化周期，持续优化回复质量")
+
+        lines.append("")
+        lines.append("=" * 60)
+
+        return "\n".join(lines)
+
+    # ─────────────────────────────────────────────
+    # 自进化主循环
+    # ─────────────────────────────────────────────
+
+    def run_evolution_cycle(self) -> dict:
+        """执行一次完整的自进化周期。
+
+        流程：
+        1. 评估回复质量
+        2. 自动调整规则
+        3. 优化模板
+        4. 生成进化报告
+        5. 持久化结果
+
+        Returns:
+            {
+                "evaluation": dict,
+                "rule_adjustments": list,
+                "template_optimizations": list,
+                "report": str,  # 人类可读的进化报告
+                "timestamp": str
+            }
+        """
+        if not self.enabled:
+            return {"status": "disabled", "message": "自进化功能未启用"}
+
+        timestamp = datetime.now().isoformat()
+        self._log("INFO", f"开始执行自进化周期 @ {timestamp}")
+
+        try:
+            # 1. 评估回复质量
+            self._log("INFO", "[自进化] 步骤 1/4: 评估回复质量")
+            evaluation = self.evaluate_reply_quality()
+
+            # 2. 自动调整规则
+            self._log("INFO", "[自进化] 步骤 2/4: 自动调整规则")
+            rule_adjustments = self.auto_adjust_rules(evaluation)
+
+            # 3. 优化模板
+            self._log("INFO", "[自进化] 步骤 3/4: 优化模板")
+            template_optimizations = self.optimize_templates()
+
+            # 4. 生成进化报告
+            self._log("INFO", "[自进化] 步骤 4/4: 生成进化报告")
+            report = self.generate_report(
+                evaluation=evaluation,
+                rule_adjustments=rule_adjustments,
+                template_optimizations=template_optimizations,
+            )
+
+            # 5. 持久化结果
+            with self._lock:
+                self._save_quality_data()
+
+            result = {
+                "evaluation": evaluation,
+                "rule_adjustments": rule_adjustments,
+                "template_optimizations": template_optimizations,
+                "report": report,
+                "timestamp": timestamp,
+            }
+
+            self._log("INFO",
+                      f"自进化周期完成: 评估 {evaluation.get('total_evaluated', 0)} 条回复, "
+                      f"规则调整 {len(rule_adjustments)} 条, "
+                      f"模板优化 {len(template_optimizations)} 条")
+
+            return result
+
+        except Exception as e:
+            self._log("ERROR", f"自进化周期执行失败: {e}")
+            return {
+                "status": "error",
+                "message": str(e),
+                "timestamp": timestamp,
+            }
+
+    # ─────────────────────────────────────────────
+    # 质量数据持久化
+    # ─────────────────────────────────────────────
+
+    def _save_quality_data(self):
+        """保存质量评分数据到 self_evolve_data.json（不加锁，由调用方负责加锁）。"""
+        try:
+            self._quality_data_file.parent.mkdir(parents=True, exist_ok=True)
+            data = {
+                "reply_evaluations": self._reply_evaluations[-1000:],  # 保留最近1000条
+                "rule_adjustments": self._rule_adjustments[-200:],    # 保留最近200条
+                "template_optimizations": self._template_optimizations[-100:],  # 保留最近100条
+                "template_usage_stats": {
+                    k: dict(v) for k, v in self._template_usage_stats.items()
+                },
+                "last_saved": datetime.now().isoformat(),
+            }
+            with open(self._quality_data_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            self._log("ERROR", f"保存质量数据失败: {e}")
+
+    def _load_quality_data(self):
+        """从 self_evolve_data.json 加载质量评分数据。"""
+        try:
+            if self._quality_data_file.exists():
+                with open(self._quality_data_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+
+                self._reply_evaluations = data.get("reply_evaluations", [])
+                self._rule_adjustments = data.get("rule_adjustments", [])
+                self._template_optimizations = data.get("template_optimizations", [])
+                self._template_usage_stats = data.get("template_usage_stats", {})
+
+                self._log("INFO",
+                          f"质量数据已加载: {len(self._reply_evaluations)} 条评分记录, "
+                          f"{len(self._rule_adjustments)} 条规则调整, "
+                          f"{len(self._template_optimizations)} 条模板优化")
+            else:
+                self._log("DEBUG", "无历史质量数据文件，使用空数据初始化")
+        except Exception as e:
+            self._log("ERROR", f"加载质量数据失败: {e}")

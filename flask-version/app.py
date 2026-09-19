@@ -23,10 +23,7 @@ import warnings
 from logging.handlers import TimedRotatingFileHandler
 import threading
 
-# 抑制 eventlet 弃用警告（功能正常，仅维护模式提示）
-warnings.filterwarnings("ignore", category=DeprecationWarning, module="eventlet")
-warnings.filterwarnings("ignore", message=".*Eventlet.*")
-import warnings
+
 import time
 from datetime import datetime
 from pathlib import Path
@@ -38,7 +35,7 @@ if sys.stdout.encoding != 'utf-8':
 if sys.stderr.encoding != 'utf-8':
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
-from flask import Flask, render_template, jsonify, request, send_file
+from flask import Flask, render_template, jsonify, request, send_file, abort
 from flask_socketio import SocketIO, emit
 
 # 抑制警告
@@ -122,23 +119,66 @@ app.config["SECRET_KEY"] = os.urandom(24).hex()
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
 
-# 自动选择最佳 async_mode：eventlet > gevent > threading
+# 自动选择最佳 async_mode：gevent > eventlet > threading
 _socketio_kwargs = {"cors_allowed_origins": "*"}
 try:
-
-    import eventlet  # noqa: F401
-    _socketio_kwargs["async_mode"] = "eventlet"
-    # eventlet.monkey_patch() 需在所有其他导入前调用，但此处仅用于 SocketIO
+    import gevent  # noqa: F401
+    from gevent import monkey
+    monkey.patch_all()
+    _socketio_kwargs["async_mode"] = "gevent"
 except ImportError:
     try:
-        import gevent  # noqa: F401
-        from gevent import monkey
-        monkey.patch_all()
-        _socketio_kwargs["async_mode"] = "gevent"
+        import eventlet  # noqa: F401
+        _socketio_kwargs["async_mode"] = "eventlet"
     except ImportError:
         _socketio_kwargs["async_mode"] = "threading"
 
 socketio = SocketIO(app, **_socketio_kwargs)
+
+# ===================== API 认证 =====================
+
+# 允许访问的本地 IP 白名单
+_ALLOWED_LOCAL_IPS = {"127.0.0.1", "::1", "::ffff:127.0.0.1"}
+
+
+def _get_api_token() -> str:
+    """从 bot_config.json 读取 api_token（可选字段，默认为空字符串）。
+
+    api_token 为空时，仅允许本地 IP 访问；
+    api_token 非空时，非本地 IP 请求需携带匹配的 X-API-Token 头。
+    """
+    try:
+        config_dict = load_config()
+        return str(config_dict.get("api_token", "") or "")
+    except Exception:
+        return ""
+
+
+@app.before_request
+def _check_api_auth():
+    """API 认证：本地 IP 白名单 + 可选 token。
+
+    - 首页（/）和静态文件（/static/）不需要认证
+    - 本地 IP（127.0.0.1, ::1, ::ffff:127.0.0.1）直接放行
+    - 非本地 IP：若配置了 api_token，则校验 X-API-Token 头；否则拒绝
+    """
+    # 首页和静态文件不需要认证
+    if request.path == "/" or request.path.startswith("/static/"):
+        return
+
+    # 检查请求来源 IP
+    remote_ip = request.remote_addr or ""
+    if remote_ip in _ALLOWED_LOCAL_IPS:
+        return
+
+    # 非本地 IP，检查 token
+    api_token = _get_api_token()
+    if api_token:
+        provided_token = request.headers.get("X-API-Token", "")
+        if provided_token != api_token:
+            abort(403, description="认证失败：无效的 API Token")
+    else:
+        abort(403, description="认证失败：仅限本地访问")
 
 # ===================== 全局状态 =====================
 
@@ -156,6 +196,62 @@ COOKIE_DIR = PROJECT_ROOT / "data"
 # 确保目录存在
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 DASHBOARD_DIR.mkdir(parents=True, exist_ok=True)
+
+# ===================== 风控通知持久化 =====================
+
+# 全局通知列表（最新的在前），每条通知结构：
+# {id, timestamp, type, message, read}
+_notifications: list[dict] = []
+# 通知列表最大容量，超过自动删除最旧的
+_MAX_NOTIFICATIONS = 200
+# 通知持久化文件路径
+_NOTIFICATIONS_FILE = os.path.join(os.path.dirname(__file__), "..", "notifications.json")
+# 通知列表读写锁，避免并发写入冲突
+_notifications_lock = threading.Lock()
+
+
+def _load_notifications():
+    """启动时从 notifications.json 加载持久化通知。"""
+    global _notifications
+    try:
+        if os.path.exists(_NOTIFICATIONS_FILE):
+            with open(_NOTIFICATIONS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, list):
+                _notifications = data
+    except Exception:
+        _notifications = []
+
+
+def _save_notifications():
+    """将当前通知列表持久化到 notifications.json。"""
+    try:
+        with open(_NOTIFICATIONS_FILE, "w", encoding="utf-8") as f:
+            json.dump(_notifications, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+
+def _add_notification(ntype: str, message: str):
+    """添加一条通知并持久化。
+
+    Args:
+        ntype: 通知类型，如 "wind_control"、"error"、"info"
+        message: 通知内容
+    """
+    global _notifications
+    notif = {
+        "id": uuid.uuid4().hex[:8],
+        "timestamp": datetime.now().isoformat(),
+        "type": ntype,
+        "message": message,
+        "read": False,
+    }
+    with _notifications_lock:
+        _notifications.insert(0, notif)  # 最新的在前
+        if len(_notifications) > _MAX_NOTIFICATIONS:
+            _notifications = _notifications[:_MAX_NOTIFICATIONS]
+        _save_notifications()
 
 
 def _ensure_config() -> UnifiedConfig:
@@ -189,13 +285,18 @@ def _ensure_manager() -> MultiAccountManager:
                 pass
 
         def wind_control_callback(message: str, wtype: str):
-            """风控事件回调 — 推送风控警告到前端。"""
+            """风控事件回调 — 推送风控警告到前端，并持久化通知。"""
             try:
                 socketio.emit("wind_control", {
                     "time": datetime.now().strftime("%H:%M:%S"),
                     "message": message,
                     "type": wtype,
                 })
+            except Exception:
+                pass
+            # 持久化通知到列表和文件
+            try:
+                _add_notification(wtype, message)
             except Exception:
                 pass
 
@@ -1819,6 +1920,98 @@ def api_save_templates():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+# ===================== 风控通知 API =====================
+
+@app.route("/api/notifications", methods=["GET"])
+def api_get_notifications():
+    """获取所有通知列表。
+
+    查询参数：
+        unread_only: 为 true 时仅返回未读通知
+    """
+    try:
+        unread_only = request.args.get("unread_only", "").lower() in ("true", "1", "yes")
+        with _notifications_lock:
+            if unread_only:
+                result = [n for n in _notifications if not n.get("read", False)]
+            else:
+                result = list(_notifications)
+        return jsonify({
+            "status": "ok",
+            "total": len(result),
+            "notifications": result,
+        })
+    except Exception as e:
+        logger.exception("获取通知列表失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/notifications/unread_count", methods=["GET"])
+def api_notifications_unread_count():
+    """获取未读通知数量。"""
+    try:
+        with _notifications_lock:
+            count = sum(1 for n in _notifications if not n.get("read", False))
+        return jsonify({"status": "ok", "unread_count": count})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/notifications/<notif_id>/read", methods=["POST"])
+def api_notification_mark_read(notif_id: str):
+    """标记指定通知为已读。"""
+    try:
+        with _notifications_lock:
+            for n in _notifications:
+                if n.get("id") == notif_id:
+                    n["read"] = True
+                    _save_notifications()
+                    return jsonify({"status": "ok", "message": "通知已标记为已读"})
+        return jsonify({"status": "error", "message": "通知不存在"}), 404
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/notifications/read_all", methods=["POST"])
+def api_notifications_mark_all_read():
+    """标记所有通知为已读。"""
+    try:
+        with _notifications_lock:
+            for n in _notifications:
+                n["read"] = True
+            _save_notifications()
+        return jsonify({"status": "ok", "message": "所有通知已标记为已读"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/notifications/<notif_id>", methods=["DELETE"])
+def api_notification_delete(notif_id: str):
+    """删除指定通知。"""
+    try:
+        with _notifications_lock:
+            for i, n in enumerate(_notifications):
+                if n.get("id") == notif_id:
+                    _notifications.pop(i)
+                    _save_notifications()
+                    return jsonify({"status": "ok", "message": "通知已删除"})
+        return jsonify({"status": "error", "message": "通知不存在"}), 404
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/notifications", methods=["DELETE"])
+def api_notifications_clear():
+    """清空所有通知。"""
+    try:
+        with _notifications_lock:
+            _notifications.clear()
+            _save_notifications()
+        return jsonify({"status": "ok", "message": "所有通知已清空"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 # ===================== 自进化 API =====================
 
 def _ensure_self_evolve() -> SelfEvolveEngine:
@@ -1908,6 +2101,139 @@ def api_evolution_reset():
         engine.reset_stats()
         return jsonify({"status": "ok", "message": "进化统计数据已重置"})
     except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ===================== 自进化质量评分 API =====================
+
+@app.route("/api/self_evolve/report", methods=["GET"])
+def api_self_evolve_report():
+    """获取自进化质量评分报告。
+
+    返回回复质量评分、规则调整建议、模板优化建议等完整报告。
+    可选 query 参数 limit 控制评估的回复数量（默认 50）。
+    """
+    try:
+        engine = _ensure_self_evolve()
+        limit = request.args.get("limit", 50, type=int)
+
+        # 获取评分数据
+        evaluation = engine.evaluate_reply_quality(limit=limit)
+
+        # 获取最近的规则调整和模板优化记录
+        with engine._lock:
+            rule_adjustments = list(engine._rule_adjustments[-20:])
+            template_optimizations = list(engine._template_optimizations[-20:])
+            template_usage_stats = {
+                k: dict(v) for k, v in engine._template_usage_stats.items()
+            }
+
+        # 生成人类可读报告
+        report_text = engine.generate_report(
+            evaluation=evaluation,
+            rule_adjustments=rule_adjustments,
+            template_optimizations=template_optimizations,
+        )
+
+        return jsonify({
+            "status": "ok",
+            "evaluation": evaluation,
+            "rule_adjustments": rule_adjustments,
+            "template_optimizations": template_optimizations,
+            "template_usage_stats": template_usage_stats,
+            "report": report_text,
+        })
+    except Exception as e:
+        logger.exception("获取自进化报告失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/self_evolve/run", methods=["POST"])
+def api_self_evolve_run():
+    """执行一次完整的自进化周期。
+
+    流程：评估回复质量 → 自动调整规则 → 优化模板 → 生成报告 → 持久化。
+    可选 body 参数 limit 控制评估的回复数量（默认 50）。
+    """
+    try:
+        engine = _ensure_self_evolve()
+        data = request.get_json() or {}
+        limit = data.get("limit", 50)
+
+        # 如果指定了 limit，先评估指定数量的回复
+        if limit != 50:
+            evaluation = engine.evaluate_reply_quality(limit=int(limit))
+            rule_adjustments = engine.auto_adjust_rules(evaluation)
+            template_optimizations = engine.optimize_templates()
+            report_text = engine.generate_report(
+                evaluation=evaluation,
+                rule_adjustments=rule_adjustments,
+                template_optimizations=template_optimizations,
+            )
+            result = {
+                "evaluation": evaluation,
+                "rule_adjustments": rule_adjustments,
+                "template_optimizations": template_optimizations,
+                "report": report_text,
+                "timestamp": datetime.now().isoformat(),
+            }
+        else:
+            # 使用默认的自进化周期
+            result = engine.run_evolution_cycle()
+
+        return jsonify({"status": "ok", "result": result})
+    except Exception as e:
+        logger.exception("执行自进化周期失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/self_evolve/evaluate", methods=["POST"])
+def api_self_evolve_evaluate():
+    """仅评估回复质量（不执行完整周期）。
+
+    可选 body 参数 limit 控制评估的回复数量（默认 50）。
+    """
+    try:
+        engine = _ensure_self_evolve()
+        data = request.get_json() or {}
+        limit = data.get("limit", 50)
+        result = engine.evaluate_reply_quality(limit=int(limit))
+        return jsonify({"status": "ok", "result": result})
+    except Exception as e:
+        logger.exception("评估回复质量失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/self_evolve/adjust_rules", methods=["POST"])
+def api_self_evolve_adjust_rules():
+    """根据评估结果自动调整回复规则。
+
+    可选 body 参数 evaluation 传入评估结果，不传则自动评估。
+    """
+    try:
+        engine = _ensure_self_evolve()
+        data = request.get_json() or {}
+        evaluation = data.get("evaluation")
+
+        if not evaluation:
+            evaluation = engine.evaluate_reply_quality()
+
+        adjustments = engine.auto_adjust_rules(evaluation)
+        return jsonify({"status": "ok", "adjustments": adjustments})
+    except Exception as e:
+        logger.exception("自动调整规则失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/self_evolve/optimize_templates", methods=["POST"])
+def api_self_evolve_optimize_templates():
+    """分析并优化回复模板。"""
+    try:
+        engine = _ensure_self_evolve()
+        optimizations = engine.optimize_templates()
+        return jsonify({"status": "ok", "optimizations": optimizations})
+    except Exception as e:
+        logger.exception("优化模板失败")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
@@ -2079,6 +2405,10 @@ def main():
     # 预加载配置
     _ensure_config()
     logger.info("配置已加载")
+
+    # 加载持久化通知
+    _load_notifications()
+    logger.info(f"已加载 {len(_notifications)} 条通知")
 
     # 启动日志清理线程
     import threading

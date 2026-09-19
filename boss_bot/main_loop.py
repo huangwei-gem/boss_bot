@@ -154,9 +154,19 @@ class UnifiedBotLoop:
         # 打招呼引擎（延迟初始化，登录后创建）
         self._greet_engine: Optional[GreetEngine] = None
 
-        # 浏览器重连计数
+        # 浏览器重连计数 — 指数退避策略
         self._reconnect_attempts = 0
-        self._max_reconnect_attempts = 3
+        self._max_reconnect_attempts = 10  # 允许更多次重连
+        self._reconnect_base_delay = 2.0   # 基础延迟2秒
+        self._reconnect_backoff_factor = 2.0  # 退避因子
+        self._reconnect_max_delay = 60.0   # 最大延迟60秒
+
+        # 热重载配置默认值 — 运行时可被 _hot_reload_config() 覆盖
+        self._message_interval_min = 3
+        self._message_interval_max = 8
+        self._greet_enabled = True
+        self._reply_enabled = True
+        self._page_timeout = 30
 
     # ─────────────────────────────────────────────
     # 日志
@@ -641,12 +651,8 @@ class UnifiedBotLoop:
                         self._stats_dict["greet_skipped"] += 1
                         continue
 
-                    # AI 智能匹配分析 — 热重载配置，支持运行时开关 AI
-                    try:
-                        self.config = UnifiedConfig.load()
-                    except Exception:
-                        pass
-                    self._greet_engine._ai_enabled = self.config.ai.enabled
+                    # AI 智能匹配分析 — 热重载所有运行时可变配置
+                    self._hot_reload_config()
                     has_ai = self._greet_engine._ai_enabled and bool(self._greet_engine._ai_providers)
                     if has_ai:
                         ai_result, ai_duration = self._greet_engine._analyze_job_with_ai(job)
@@ -657,9 +663,9 @@ class UnifiedBotLoop:
                         if ai_result and ai_result.get("suggested_greeting"):
                             job["_ai_suggested_greeting"] = ai_result["suggested_greeting"]
 
-                    # 随机间隔
-                    min_interval = task.get("message_interval_min", 3)
-                    max_interval = task.get("message_interval_max", 8)
+                    # 随机间隔 — 优先使用热重载的配置值，回退到任务级配置
+                    min_interval = getattr(self, '_message_interval_min', task.get("message_interval_min", 3))
+                    max_interval = getattr(self, '_message_interval_max', task.get("message_interval_max", 8))
                     delay = random.uniform(min_interval, max_interval)
                     self._stop_event.wait(timeout=delay)
                     if not self._running:
@@ -730,6 +736,9 @@ class UnifiedBotLoop:
                 if self._reply_paused:
                     self._stop_event.wait(timeout=10)
                     continue
+
+                # 热重载所有运行时可变配置（AI/频率/间隔/开关等）
+                self._hot_reload_config()
 
                 self._current_mode = "reply"
                 self._run_reply_round()
@@ -996,6 +1005,67 @@ class UnifiedBotLoop:
         self._reply_engine.record_reply()
 
     # ─────────────────────────────────────────────
+    # 配置热重载
+    # ─────────────────────────────────────────────
+
+    def _hot_reload_config(self):
+        """热重载所有运行时可变配置。
+
+        从配置文件重新加载，并同步到各运行引擎和主循环属性。
+        覆盖范围：
+          1. AI 配置（开关 + providers）
+          2. 频率限制（每小时/每天上限）
+          3. 消息间隔（打招呼最小/最大间隔）
+          4. 回复配置（回复间隔、每会话最大回复数）
+          5. 浏览器配置（页面超时）
+          6. 打招呼开关
+          7. 回复开关
+        任何配置加载异常都只记录日志并返回，不影响主循环运行。
+        """
+        try:
+            self.config = UnifiedConfig.load()
+        except Exception as e:
+            self._log("WARN", f"热重载配置失败，保留旧配置: {e}")
+            return
+
+        # 1. AI 配置热重载 — 打招呼和回复引擎共享同一份 AI 配置
+        if self._greet_engine:
+            self._greet_engine._ai_enabled = self.config.ai.enabled
+            self._greet_engine._ai_providers = self.config.ai.providers
+
+        if self._reply_engine:
+            self._reply_engine._ai_enabled = self.config.ai.enabled
+            self._reply_engine._ai_providers = self.config.ai.providers
+
+        # 2. 频率限制热重载 — 每小时/每天打招呼上限
+        if hasattr(self.config, 'greet') and self._greet_engine:
+            self._greet_engine._rate_per_hour = getattr(self.config.greet, 'rate_per_hour', 30)
+            self._greet_engine._rate_per_day = getattr(self.config.greet, 'rate_per_day', 100)
+
+        # 3. 消息间隔热重载 — 打招呼消息发送间隔
+        if hasattr(self.config, 'greet'):
+            self._message_interval_min = getattr(self.config.greet, 'message_interval_min', 3)
+            self._message_interval_max = getattr(self.config.greet, 'message_interval_max', 8)
+
+        # 4. 回复配置热重载 — 回复间隔和每会话最大回复数
+        if hasattr(self.config, 'reply') and self._reply_engine:
+            self._reply_engine._reply_interval_min = getattr(self.config.reply, 'reply_interval_min', 5)
+            self._reply_engine._reply_interval_max = getattr(self.config.reply, 'reply_interval_max', 15)
+            self._reply_engine._max_reply_per_conversation = getattr(self.config.reply, 'max_reply_per_conversation', 10)
+
+        # 5. 浏览器配置热重载 — 页面超时时间
+        if hasattr(self.config, 'browser'):
+            self._page_timeout = getattr(self.config.browser, 'page_timeout', 30)
+
+        # 6. 打招呼开关热重载
+        if hasattr(self.config, 'greet'):
+            self._greet_enabled = getattr(self.config.greet, 'enabled', True)
+
+        # 7. 回复开关热重载
+        if hasattr(self.config, 'reply'):
+            self._reply_enabled = getattr(self.config.reply, 'enabled', True)
+
+    # ─────────────────────────────────────────────
     # 健康检查与错误恢复
     # ─────────────────────────────────────────────
 
@@ -1031,14 +1101,29 @@ class UnifiedBotLoop:
         return "ok"
 
     def _try_reconnect_browser(self):
-        """尝试重新连接浏览器。"""
+        """尝试重新连接浏览器（指数退避策略）。
+
+        退避序列：2s → 4s → 8s → 16s → 32s → 60s → 60s → ...
+        每次重连失败后等待时间按指数增长，上限为 _reconnect_max_delay。
+        """
         self._reconnect_attempts += 1
         if self._reconnect_attempts > self._max_reconnect_attempts:
             self._log("ERROR", f"已达到最大重连次数 {self._max_reconnect_attempts}，停止重连")
             self._running = False
             return
 
-        self._log("INFO", f"尝试重连浏览器（第 {self._reconnect_attempts} 次）...")
+        # 指数退避：base_delay * (backoff_factor ^ (attempts - 1))，上限 max_delay
+        delay = min(
+            self._reconnect_base_delay * (self._reconnect_backoff_factor ** (self._reconnect_attempts - 1)),
+            self._reconnect_max_delay
+        )
+
+        self._log("INFO", f"尝试重连浏览器（第 {self._reconnect_attempts} 次，等待 {delay:.1f}s）...")
+        # 在重连前先等待退避时间，避免短时间内频繁重连加重服务端压力
+        self._stop_event.wait(timeout=delay)
+        if not self._running:
+            return
+
         self._log("DEBUG", "正在关闭旧浏览器实例...")
 
         try:
@@ -1061,7 +1146,7 @@ class UnifiedBotLoop:
 
         except Exception as e:
             self._log("ERROR", f"浏览器重连失败: {e}")
-            self._stop_event.wait(timeout=10)
+            # 不再固定等待10秒，由下次调用的指数退避决定等待时长
 
     # ─────────────────────────────────────────────
     # 上下文管理器支持

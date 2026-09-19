@@ -355,6 +355,97 @@ a{color:var(--accent);text-decoration:none}
 @media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}.side{width:280px}.panel-row{flex-direction:column}}
 @media(max-width:600px){.side{display:none}.stats-grid{grid-template-columns:1fr}.content{padding:12px}.topbar{padding:8px 12px}.topbar-title{font-size:14px}.stat-card{padding:10px}.stat-value{font-size:20px}.btn-sm{padding:4px 8px;font-size:11px}.modal{width:95%;max-width:400px}.modal-large{width:95%;max-width:600px}}
 
+/* ── 移动端适配 ── */
+.mobile-menu-btn{display:none;position:fixed;top:10px;left:10px;z-index:1001;background:var(--side-bg);border:1px solid var(--bd-2);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:16px;color:var(--fg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);align-items:center;justify-content:center;line-height:1}
+.sidebar-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:999}
+.records-table-wrapper{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+@media screen and (max-width: 768px) {
+  /* 侧边栏改为可折叠抽屉 */
+  .side {
+    position: fixed;
+    left: -100%;
+    width: 80%;
+    max-width: 320px;
+    height: 100vh;
+    height: 100dvh;
+    z-index: 1000;
+    transition: left 0.3s ease;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+  }
+  .side.open { left: 0; }
+
+  /* 主区域占满宽度 */
+  .main { margin-left: 0; width: 100%; }
+
+  /* 显示汉堡菜单按钮 */
+  .mobile-menu-btn { display: flex !important; }
+
+  /* 统计卡片改为2列 */
+  .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* 面板改为单列 */
+  .panel-row { flex-direction: column; }
+  .panel-row > * { width: 100% !important; }
+
+  /* 表格水平滚动 */
+  .records-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { min-width: 500px; }
+
+  /* 模态弹窗占满屏幕 */
+  .modal { width: 95% !important; margin: 5vh auto !important; max-width: 95vw !important; }
+
+  /* 操作按钮区域改为垂直排列 */
+  .action-bar { flex-direction: column; gap: 6px; align-items: stretch; }
+  .action-bar button { width: 100%; }
+  .action-bar .action-label { text-align: center; }
+
+  /* 遮罩层显示 */
+  .sidebar-overlay.show { display: block; }
+
+  /* 顶栏留出汉堡菜单空间 */
+  .topbar { padding-left: 56px; }
+  .topbar-title { font-size: 13px; }
+
+  /* 内容区域减小内边距 */
+  .content { padding: 8px 10px; }
+
+  /* 统计卡片数值缩小 */
+  .stat-value { font-size: 16px; }
+  .stat-card { padding: 8px 10px; }
+
+  /* 通知列表最大高度适配 */
+  .notif-list { max-height: 240px; }
+}
+
+@media screen and (min-width: 769px) {
+  .mobile-menu-btn { display: none !important; }
+  .sidebar-overlay { display: none !important; }
+}
+
+/* ── 风控通知中心 ── */
+.notif-badge{display:inline-block;background:#e74c3c;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:600;min-width:18px;text-align:center;line-height:1.4}
+.notif-list{max-height:300px;overflow-y:auto;border:1px solid var(--bd-2);border-radius:8px;background:var(--side-input-bg);margin-top:6px}
+.notif-item{padding:8px 10px;border-bottom:1px solid var(--bd-2);font-size:11px;cursor:pointer;transition:background .2s}
+.notif-item:hover{background:var(--surface-hover)}
+.notif-item.unread{border-left:3px solid #e74c3c}
+.notif-item .notif-time{color:var(--fg-3rd);font-size:10px;display:block}
+.notif-item .notif-msg{color:var(--fg);margin-top:2px;display:block;white-space:pre-wrap;word-break:break-all}
+.notif-item .notif-type{display:inline-block;padding:1px 5px;border-radius:3px;font-size:9px;margin-right:4px;font-weight:600}
+.notif-type.wind_control{background:#e74c3c;color:#fff}
+.notif-type.error{background:#e67e22;color:#fff}
+.notif-type.info{background:#3498db;color:#fff}
+.notif-type.success{background:var(--success);color:#fff}
+.notif-type.warn{background:var(--warning);color:#fff}
+.notif-empty{text-align:center;padding:20px;color:var(--fg-3rd);font-size:11px}
+.notif-actions{display:flex;gap:6px;padding:6px 10px;border-bottom:1px solid var(--bd-2)}
+.notif-actions button{flex:1;padding:4px;border:1px solid var(--bd-2);border-radius:4px;background:var(--side-input-bg);color:var(--fg);font-size:10px;cursor:pointer;transition:all var(--dur) var(--ease)}
+.notif-actions button:hover{background:var(--surface-hover);color:var(--fg)}
+.notif-center-header{cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:6px 4px;border-radius:4px;transition:all var(--dur) var(--ease);font-size:10.5px;font-weight:600;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em;margin-top:14px;width:100%;border:none;background:none}
+.notif-center-header:hover{background:var(--surface-hover);color:var(--fg)}
+.notif-center-header .arrow{transition:transform .2s ease;font-size:8px;margin-left:auto}
+.notif-center-header.open .arrow{transform:rotate(90deg)}
+
 /* Login Modal */
 .login-modal-overlay{position:fixed;inset:0;background:var(--modal-overlay);z-index:9999;display:none;align-items:center;justify-content:center;animation:fadeIn .25s ease;-webkit-backdrop-filter:blur(8px) saturate(140%);backdrop-filter:blur(8px) saturate(140%)}
 .login-modal-overlay.active{display:flex}
@@ -377,6 +468,8 @@ a{color:var(--accent);text-decoration:none}
 </style>
 </head>
 <body>
+<button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="切换菜单">☰</button>
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 <div class="app">
   <div class="side">
     <div class="side-head">
@@ -483,6 +576,20 @@ a{color:var(--accent);text-decoration:none}
         <div id="sbarJobs" style="display:flex;flex-direction:column;min-height:40px"></div>
         <button class="side-btn side-btn-ghost side-btn-sm side-btn-block" onclick="addJob()" style="margin-top:6px;padding:8px 12px;font-size:11px;font-weight:500;border:1px dashed var(--bd-2);background:var(--side-input-bg);border-radius:6px;cursor:pointer" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--bd-2)';this.style.color='var(--fg-2nd)'">+ 添加岗位</button>
       </div>
+
+      <!-- 风控通知中心入口 -->
+      <div class="sidebar-section" id="notificationCenter">
+        <button class="notif-center-header" id="notifCenterToggle" onclick="toggleNotifications()">
+          <span>通知中心</span>
+          <span style="display:flex;align-items:center;gap:6px">
+            <span id="notifBadge" class="notif-badge" style="display:none">0</span>
+            <span class="arrow">›</span>
+          </span>
+        </button>
+        <div id="notifList" class="notif-list" style="display:none">
+          <!-- 通知项动态填充 -->
+        </div>
+      </div>
     </div>
     <div class="side-footer">
       <div class="status-dot idle" id="sbarDot"></div>
@@ -536,14 +643,26 @@ a{color:var(--accent);text-decoration:none}
               <thead><tr><th>时间</th><th>岗位</th><th>公司</th><th>薪资</th><th>状态</th><th>AI</th></tr></thead>
               <tbody id="greetTableBody"></tbody>
             </table>
-            <div id="greetEmpty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:8px;color:var(--fg-3rd);height:100%;min-height:200px"><div style="font-size:28px">📋</div><div>等待投递...</div></div>
+            <div class="empty-state" id="greetEmpty" style="height:100%;min-height:200px">
+              <div class="empty-icon" style="font-size:36px;opacity:0.3">📋</div>
+              <div class="empty-desc" style="font-size:13px;font-weight:600;margin-top:8px">暂无投递记录</div>
+              <div class="empty-hint" style="font-size:11px;color:var(--fg-3rd);margin-top:4px">
+                点击上方 <span style="color:var(--accent);font-weight:600">启动</span> 按钮开始自动投递
+              </div>
+            </div>
           </div>
           <div class="record-tab-content" id="replyTabContent" style="padding:0;flex:1;overflow-y:auto">
             <table class="greet-table" id="replyTable">
               <thead><tr><th>时间</th><th>聊天对象</th><th>岗位</th><th>对方消息</th><th>我的回复</th><th>状态</th></tr></thead>
               <tbody id="replyTableBody"></tbody>
             </table>
-            <div id="replyEmpty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:8px;color:var(--fg-3rd);height:100%;min-height:200px"><div style="font-size:28px">💬</div><div>等待回复...</div></div>
+            <div class="empty-state" id="replyEmpty" style="height:100%;min-height:200px">
+              <div class="empty-icon" style="font-size:36px;opacity:0.3">💬</div>
+              <div class="empty-desc" style="font-size:13px;font-weight:600;margin-top:8px">暂无回复记录</div>
+              <div class="empty-hint" style="font-size:11px;color:var(--fg-3rd);margin-top:4px">
+                启动机器人后，收到消息将自动回复并记录在此
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -2058,6 +2177,176 @@ function clearGreetTable(){
   if (el) el.textContent = '0';
 }
 
+// ── 风控通知中心 ──
+// 移动端侧边栏抽屉切换
+function toggleSidebar() {
+  var sidebar = document.querySelector('.side');
+  var overlay = document.querySelector('.sidebar-overlay');
+  if (sidebar) sidebar.classList.toggle('open');
+  if (overlay) overlay.classList.toggle('show');
+}
+
+let notifListOpen = false;       // 通知列表是否展开
+let notifPollingTimer = null;    // 轮询定时器
+
+// 展开/折叠通知列表，展开时加载通知
+function toggleNotifications() {
+  notifListOpen = !notifListOpen;
+  const listEl = document.getElementById('notifList');
+  const toggleBtn = document.getElementById('notifCenterToggle');
+  if (!listEl || !toggleBtn) return;
+  if (notifListOpen) {
+    listEl.style.display = 'block';
+    toggleBtn.classList.add('open');
+    loadNotifications();
+  } else {
+    listEl.style.display = 'none';
+    toggleBtn.classList.remove('open');
+  }
+}
+
+// 调用 GET /api/notifications 获取通知列表并渲染
+function loadNotifications() {
+  const listEl = document.getElementById('notifList');
+  if (!listEl) return;
+  // 显示加载中
+  listEl.innerHTML = '<div class="notif-empty">加载中...</div>';
+  fetch('/api/notifications')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      // 兼容后端返回 {status:'ok', notifications:[...]} 或直接数组
+      var notifs = [];
+      if (Array.isArray(data)) {
+        notifs = data;
+      } else if (data && data.status === 'ok') {
+        notifs = data.notifications || data.data || [];
+      } else if (data && Array.isArray(data.notifications)) {
+        notifs = data.notifications;
+      }
+      renderNotifList(notifs);
+    })
+    .catch(function(e) {
+      listEl.innerHTML = '<div class="notif-empty">加载失败</div>';
+      console.error('loadNotifications:', e);
+    });
+}
+
+// 渲染通知列表到 DOM
+function renderNotifList(notifs) {
+  const listEl = document.getElementById('notifList');
+  if (!listEl) return;
+  if (!notifs || notifs.length === 0) {
+    listEl.innerHTML = '<div class="notif-empty">暂无通知</div>';
+    return;
+  }
+  // 顶部操作按钮
+  var html = '<div class="notif-actions">' +
+    '<button onclick="markAllNotifsRead()">全部已读</button>' +
+    '<button onclick="clearAllNotifs()">清空通知</button>' +
+  '</div>';
+  // 通知项
+  notifs.forEach(function(n) {
+    var nid = n.id || n._id || '';
+    var ntype = n.type || 'info';
+    var nmsg = n.message || n.msg || n.content || '';
+    var ntime = n.time || n.created_at || n.timestamp || '';
+    var nread = !!n.read || !!n.is_read;
+    // 类型图标
+    var typeIcon = 'ℹ️';
+    if (ntype === 'wind_control') typeIcon = '⚠️';
+    else if (ntype === 'error') typeIcon = '❌';
+    else if (ntype === 'success') typeIcon = '✅';
+    else if (ntype === 'warn' || ntype === 'warning') typeIcon = '⚡';
+    html += '<div class="notif-item' + (nread ? '' : ' unread') + '" onclick="markNotifRead(\'' + escAttr(String(nid)) + '\')">' +
+      '<span class="notif-time">' + escHtml(ntime) + '</span>' +
+      '<span class="notif-type ' + escHtml(ntype) + '">' + typeIcon + ' ' + escHtml(ntype) + '</span>' +
+      '<span class="notif-msg">' + escHtml(nmsg) + '</span>' +
+    '</div>';
+  });
+  listEl.innerHTML = html;
+}
+
+// 调用 GET /api/notifications/unread_count 更新红点数字
+function updateNotifBadge() {
+  const badge = document.getElementById('notifBadge');
+  if (!badge) return;
+  fetch('/api/notifications/unread_count')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var count = 0;
+      if (typeof data === 'number') {
+        count = data;
+      } else if (data && typeof data.count === 'number') {
+        count = data.count;
+      } else if (data && typeof data.unread_count === 'number') {
+        count = data.unread_count;
+      } else if (data && data.status === 'ok') {
+        count = data.count || data.unread_count || 0;
+      }
+      if (count > 0) {
+        badge.style.display = 'inline-block';
+        badge.textContent = count > 99 ? '99+' : String(count);
+      } else {
+        badge.style.display = 'none';
+        badge.textContent = '0';
+      }
+    })
+    .catch(function() {
+      // 静默失败，不打扰用户
+    });
+}
+
+// 调用 POST /api/notifications/<id>/read 标记已读
+function markNotifRead(id) {
+  if (!id) return;
+  fetch('/api/notifications/' + encodeURIComponent(id) + '/read', { method: 'POST' })
+    .then(function(r) { return r.json(); })
+    .then(function() {
+      // 刷新列表和红点
+      loadNotifications();
+      updateNotifBadge();
+    })
+    .catch(function(e) {
+      addLog('ERROR', '标记已读失败: ' + e.message);
+    });
+}
+
+// 调用 POST /api/notifications/read_all 全部已读
+function markAllNotifsRead() {
+  fetch('/api/notifications/read_all', { method: 'POST' })
+    .then(function(r) { return r.json(); })
+    .then(function() {
+      loadNotifications();
+      updateNotifBadge();
+      addLog('SUCCESS', '所有通知已标记为已读');
+    })
+    .catch(function(e) {
+      addLog('ERROR', '全部已读失败: ' + e.message);
+    });
+}
+
+// 调用 DELETE /api/notifications 清空通知
+function clearAllNotifs() {
+  if (!confirm('确定清空所有通知吗？')) return;
+  fetch('/api/notifications', { method: 'DELETE' })
+    .then(function(r) { return r.json(); })
+    .then(function() {
+      loadNotifications();
+      updateNotifBadge();
+      addLog('SUCCESS', '通知已清空');
+    })
+    .catch(function(e) {
+      addLog('ERROR', '清空通知失败: ' + e.message);
+    });
+}
+
+// 启动通知红点轮询（每30秒）
+function startNotifPolling() {
+  updateNotifBadge();
+  if (notifPollingTimer) clearInterval(notifPollingTimer);
+  notifPollingTimer = setInterval(updateNotifBadge, 30000);
+}
+
 // ── SocketIO 事件 ──
 socket.on('connect',function(){
   addLog('SYSTEM','WebSocket 已连接');
@@ -2095,6 +2384,10 @@ socket.on('wind_control',function(data){
     w.textContent = '⚠️ ' + data.message;
     document.body.appendChild(w);
     setTimeout(function(){ w.style.opacity='0'; w.style.transition='opacity .5s'; setTimeout(function(){w.remove();},500); }, 10000);
+    // 风控事件触发后刷新通知红点
+    updateNotifBadge();
+    // 如果通知列表已展开，同时刷新列表
+    if (notifListOpen) loadNotifications();
   }
 });
 socket.on('bot_progress',function(data){
@@ -2185,6 +2478,8 @@ socket.on('connected', function(data) {});
 
 loadTheme();
 loadConfig();
+// 启动通知红点轮询（每30秒刷新一次）
+startNotifPolling();
 
 function closeLoginModal() {
   const modal = document.getElementById("loginModal");
