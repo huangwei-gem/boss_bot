@@ -303,8 +303,9 @@ a{color:var(--accent);text-decoration:none}
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
 /* Responsive */
-@media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}.panel-row{flex-direction:column}}
-@media(max-width:600px){.side{display:none}.stats-grid{grid-template-columns:1fr}.content{padding:12px}}
+@media(max-width:1200px){.stats-grid{grid-template-columns:repeat(3,1fr)}.panel-half{flex:none;width:100%}.panel-row{flex-direction:column}}
+@media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}.side{width:280px}.panel-row{flex-direction:column}}
+@media(max-width:600px){.side{display:none}.stats-grid{grid-template-columns:1fr}.content{padding:12px}.topbar{padding:8px 12px}.topbar-title{font-size:14px}.stat-card{padding:10px}.stat-value{font-size:20px}.btn-sm{padding:4px 8px;font-size:11px}.modal{width:95%;max-width:400px}.modal-large{width:95%;max-width:600px}}
 
 /* Login Modal */
 .login-modal-overlay{position:fixed;inset:0;background:var(--modal-overlay);z-index:9999;display:none;align-items:center;justify-content:center;animation:fadeIn .25s ease;-webkit-backdrop-filter:blur(8px) saturate(140%);backdrop-filter:blur(8px) saturate(140%)}
@@ -458,6 +459,8 @@ a{color:var(--accent);text-decoration:none}
         <div class="stat-card accent"><div class="stat-label">总任务</div><div class="stat-value" id="statTotal">0</div><div class="stat-sub">全部任务</div></div>
         <div class="stat-card success"><div class="stat-label">已投递</div><div class="stat-value" id="statApplied">0</div><div class="stat-sub">成功投递</div></div>
         <div class="stat-card warning"><div class="stat-label">已跳过</div><div class="stat-value" id="statSkipped">0</div><div class="stat-sub">已过滤</div></div>
+        <div class="stat-card success"><div class="stat-label">已回复</div><div class="stat-value" id="statReplySent">0</div><div class="stat-sub">AI回复</div></div>
+        <div class="stat-card warning"><div class="stat-label">回复跳过</div><div class="stat-value" id="statReplySkipped">0</div><div class="stat-sub">无需回复</div></div>
         <div class="stat-card info"><div class="stat-label">操作</div>
           <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">
             <button class="btn btn-success btn-sm" id="btnStartAll" onclick="startAll()">启动</button>
@@ -1507,7 +1510,7 @@ function closeLightbox() {
 }
 
 function saveJobModal() {
-  const city"city = document.getElementById('modalCity').value.trim();
+  const city = document.getElementById('modalCity').value.trim();
   const query = document.getElementById('modalQuery').value.trim();
   const pages = parseInt(document.getElementById('modalPages').value) || 5;
   const greeting = document.getElementById('modalGreeting').value.trim() || defaultGreeting;
@@ -1729,9 +1732,12 @@ function setControls(running) {
 
 function updateStats() {
   const t=document.getElementById('statTotal'),a=document.getElementById('statApplied'),s=document.getElementById('statSkipped');
+  const rs=document.getElementById('statReplySent'),rsk=document.getElementById('statReplySkipped');
   if(t) t.textContent=stats.total;
   if(a) a.textContent=stats.applied;
   if(s) s.textContent=stats.skipped;
+  if(rs) rs.textContent=stats.reply_sent||0;
+  if(rsk) rsk.textContent=stats.reply_skipped||0;
 }
 
 function escHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
@@ -1864,7 +1870,7 @@ function deleteCookieFile() {
     } else {
       addLog("ERROR", "删除失败: " + (data.message||""));
     }
-  }).catch(function(e){addLog("ERROR", "删除异常: " +F e.message)});
+  }).catch(function(e){addLog("ERROR", "删除异常: " + e.message)});
 }
 
 /* ===== anime.js entrance animations ===== */
