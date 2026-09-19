@@ -421,6 +421,11 @@ a{color:var(--accent);text-decoration:none}
             <div class="adv-group-title">消息间隔(秒)</div>
             <div class="adv-field-row"><label>最小间隔</label><input class="side-form-input" id="advMsgIntervalMin" type="number" value="3" min="1" max="60" step="1" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label>最大间隔</label><input class="side-form-input" id="advMsgIntervalMax" type="number" value="8" min="1" max="120" step="1" onchange="onAdvChange()"></div>
+            <div class="adv-group-title">投递/回复限制</div>
+            <div class="adv-field-row"><label>每小时最多打招呼</label><input class="side-form-input" id="advMaxGreet" type="number" value="30" min="1" max="200" step="1" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label>每小时最多回复</label><input class="side-form-input" id="advMaxReply" type="number" value="30" min="1" max="200" step="1" onchange="onAdvChange()"></div>
+            <div class="adv-group-title">测试模式</div>
+            <div class="adv-field-row"><label>测试模式</label><span id="advTestMode" class="toggle-switch" onclick="toggleAdvBool('test_mode')"></span></div>
           </div>
         </div>
 
@@ -1205,6 +1210,15 @@ function renderAdvSettings() {
     setVal('advMsgIntervalMin', _acc.message_interval_min ?? 3);
     setVal('advMsgIntervalMax', _acc.message_interval_max ?? 8);
   }
+
+  // 投递/回复限制
+  var _grl = (config.greet && config.greet.rate_limit) || config.rate_limit || {};
+  setVal('advMaxGreet', _grl.max_per_hour ?? 30);
+  var _rl = config.reply || {};
+  setVal('advMaxReply', _rl.max_replies_per_hour ?? 30);
+
+  // 测试模式
+  setEl('advTestMode', 'toggle-switch' + (config.test_mode ? ' on' : ''));
 }
 
 function toggleAdvSection() {
@@ -1234,6 +1248,9 @@ function toggleAdvBool(key) {
     if (!config.login) config.login = {};
     config.login.clear_cookies_on_failure = !config.login.clear_cookies_on_failure;
     setEl('advClearCookies', 'toggle-switch' + (config.login.clear_cookies_on_failure !== false ? ' on' : ''));
+  } else if (key === "test_mode") {
+    config.test_mode = !config.test_mode;
+    setEl('advTestMode', 'toggle-switch' + (config.test_mode ? ' on' : ''));
   }
   saveConfig();
 }
@@ -1267,6 +1284,17 @@ function onAdvChange() {
     _acc.message_interval_min = parseInt(document.getElementById('advMsgIntervalMin').value) || 3;
     _acc.message_interval_max = parseInt(document.getElementById('advMsgIntervalMax').value) || 8;
   }
+
+  // 投递/回复限制
+  if (!config.greet) config.greet = {};
+  if (!config.greet.rate_limit) config.greet.rate_limit = {};
+  config.greet.rate_limit.max_per_hour = parseInt(document.getElementById('advMaxGreet').value) || 30;
+  if (!config.reply) config.reply = {};
+  config.reply.max_replies_per_hour = parseInt(document.getElementById('advMaxReply').value) || 30;
+
+  // 测试模式
+  config.test_mode = document.getElementById('advTestMode').classList.contains('on');
+
   saveConfig();
 }
 

@@ -985,10 +985,20 @@ class ReplyEngineTest:
         """测试兜底跳过 — AI 未启用且无匹配时跳过"""
         from boss_bot.reply_engine import ReplyEngine
         engine = ReplyEngine()
-        action, content, meta = engine.get_reply("今天天气不错啊")
-        assert action == "none"
-        assert content is None
-        assert meta["source"] == "default"
+        with patch('boss_bot.reply_engine.config') as mock_config:
+            mock_config.ENABLE_AI = False
+            mock_config.AI_API_KEYS = []
+            mock_config.AI_FAIL_ACTION = "skip"
+            mock_config.AI_PROVIDERS = []
+            mock_config.AI_MAX_TOKENS = 200
+            mock_config.AI_RATE_LIMIT_WAIT = 30
+            mock_config.MAX_REPLIES_PER_HOUR = 30
+            mock_config.MIN_DELAY = 2
+            mock_config.MAX_DELAY = 5
+            action, content, meta = engine.get_reply("今天天气不错啊")
+            assert action == "none"
+            assert content is None
+            assert meta["source"] == "default"
 
     def test_default_reply_when_configured(self):
         """测试配置为 default 时使用兜底话术"""
