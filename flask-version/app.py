@@ -119,19 +119,16 @@ app.config["SECRET_KEY"] = os.urandom(24).hex()
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
 
-# 自动选择最佳 async_mode：gevent > eventlet > threading
+# 自动选择最佳 async_mode：gevent > threading（eventlet已弃用，不再使用）
 _socketio_kwargs = {"cors_allowed_origins": "*"}
 try:
     import gevent  # noqa: F401
     from gevent import monkey
-    monkey.patch_all()
+    monkey.patch_all()  # 协程化标准库，支持 WebSocket
     _socketio_kwargs["async_mode"] = "gevent"
-except ImportError:
-    try:
-        import eventlet  # noqa: F401
-        _socketio_kwargs["async_mode"] = "eventlet"
-    except ImportError:
-        _socketio_kwargs["async_mode"] = "threading"
+except Exception:
+    # gevent 不可用或 monkey.patch_all() 失败时，降级到 threading
+    _socketio_kwargs["async_mode"] = "threading"
 
 socketio = SocketIO(app, **_socketio_kwargs)
 
