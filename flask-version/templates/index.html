@@ -174,10 +174,10 @@ a{color:var(--accent);text-decoration:none}
 .chip .chip-remove:hover{opacity:1}
 
 /* Sidebar job list */
-.sbar-job-item{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:4px;background:var(--side-input-bg);border:1px solid var(--side-input-bd);cursor:pointer;transition:all var(--dur) var(--ease);margin-bottom:4px}
+.sbar-job-item{display:flex;align-items:flex-start;gap:6px;padding:6px 8px;border-radius:4px;background:var(--side-input-bg);border:1px solid var(--side-input-bd);cursor:pointer;transition:all var(--dur) var(--ease);margin-bottom:4px}
 .sbar-job-item:hover{background:var(--surface-hover)}
 .sbar-job-query{font-size:11px;font-weight:500;color:var(--fg)}
-.sbar-job-city{font-size:9px;color:var(--fg-3rd);padding:2px 6px;border-radius:3px;background:var(--side-input-bg)}
+.sbar-job-city{font-size:9px;color:var(--fg-3rd);padding:2px 6px;border-radius:3px;background:var(--side-input-bg);display:inline-block;margin-top:2px}
 .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .status-dot.idle{background:var(--fg-4th)}
 .status-dot.running{background:#34d399;animation:pulse 1.5s ease-in-out infinite}
@@ -525,11 +525,7 @@ a{color:var(--accent);text-decoration:none}
         <button class="btn btn-ghost btn-sm" onclick="downloadGreetRecords()">下载打招呼记录</button>
       </div>
       <div class="panel-row">
-        <div class="panel panel-half">
-          <div class="panel-header"><span class="panel-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="panel-title">岗位管理</span><div class="panel-actions"><button class="btn btn-ghost btn-sm" onclick="addJob()">+ 添加</button></div></div>
-          <div class="panel-body" id="jobList"></div>
-        </div>
-        <div class="panel panel-half">
+        <div class="panel panel-full">
           <div class="panel-header"><span class="panel-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="panel-title">投递记录</span><div class="panel-actions"><button class="btn btn-ghost btn-sm" onclick="clearGreetTable()">清空</button></div></div>
           <div class="record-tabs">
             <button class="record-tab active" onclick="switchRecordTab('greet')">打招呼记录 <span class="tab-count" id="greetTabCount">0</span></button>
@@ -1492,25 +1488,8 @@ function renderAccountConfig() {
 
 // ── 岗位列表渲染 ──
 function renderJobs() {
-  const a = config.accounts[activeAccountIdx];
-  if (!a) return;
-  const c = document.getElementById('jobList');
-  if (!a.jobs || !a.jobs.length) {
-    c.innerHTML = '<div class="empty-state"><div class="empty-icon">暂无岗位</div><div class="empty-desc">点击上方「+ 添加岗位」按钮添加</div></div>';
-    return;
-  }
-  c.innerHTML = a.jobs.map(function(j,i) {
-    return '<div class="job-item">'+
-      '<span class="job-toggle toggle-switch'+(j.enabled!==false?' on':'')+'" onclick="event.stopPropagation();toggleJob('+i+')"></span>'+
-      '<div class="job-info" onclick="editJob('+i+')">'+
-        '<div class="job-query">'+escHtml(j.query||'')+'</div>'+
-        '<div class="job-city">'+escHtml(j.city||'')+(j.scroll_pages?' · '+j.scroll_pages+'页':'')+(j.image_files&&j.image_files.length?' · 图片'+j.image_files.length:'')+'</div>'+
-        (j.image_files&&j.image_files.length?'<div class="job-thumbs">'+j.image_files.slice(0,3).map(function(f){var fn=f.replace(/^dashboard[\/]/,'');return '<img src="/dashboard/'+fn+'" alt="" loading="lazy" onclick="event.stopPropagation();showImageLightbox(\'/dashboard/'+fn+'\')">'}).join('')+(j.image_files.length>3?'<span class="job-thumbs-more">+'+(j.image_files.length-3)+'</span>':'')+'</div>':'')+
-      '</div>'+
-      '<span class="job-badge">'+(j.city||'')+'</span>'+
-      '<span class="job-del" onclick="event.stopPropagation();deleteJob('+i+')" title="删除">x</span>'+
-    '</div>';
-  }).join('');
+  // 岗位管理已迁移到侧边栏，此处仅同步更新侧边栏岗位列表
+  updateSbarJobs();
 }
 
 function updateSbarJobs() {
@@ -1520,7 +1499,22 @@ function updateSbarJobs() {
   if (a && a.jobs && a.jobs.length) {
     if (badge) badge.textContent = a.jobs.length;
     el.innerHTML = a.jobs.map(function(j,i) {
-      return '<div class="sbar-job-item" onclick="editJob('+i+')"><span class="sbar-job-query">'+escHtml(j.query||'')+'</span><span class="sbar-job-city">'+escHtml(j.city||'')+'</span></div>';
+      var thumbs = '';
+      if (j.image_files && j.image_files.length) {
+        thumbs = '<div class="job-thumbs">' + j.image_files.slice(0,3).map(function(f){
+          var fn = f.replace(/^dashboard[\/]/, '');
+          return '<img src="/dashboard/' + encodeURIComponent(fn) + '" alt="" loading="lazy" onclick="event.stopPropagation();showImageLightbox(\'/dashboard/' + encodeURIComponent(fn) + '\')">';
+        }).join('') + (j.image_files.length > 3 ? '<span class="job-thumbs-more">+' + (j.image_files.length - 3) + '</span>' : '') + '</div>';
+      }
+      return '<div class="sbar-job-item" onclick="editJob('+i+')">' +
+        '<span class="job-toggle toggle-switch' + (j.enabled !== false ? ' on' : '') + '" onclick="event.stopPropagation();toggleJob('+i+')"></span>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div class="sbar-job-query">' + escHtml(j.query||'') + '</div>' +
+          '<div class="sbar-job-city">' + escHtml(j.city||'') + (j.scroll_pages ? ' · ' + j.scroll_pages + '页' : '') + (j.image_files && j.image_files.length ? ' · 图片' + j.image_files.length : '') + '</div>' +
+          thumbs +
+        '</div>' +
+        '<span class="job-del" onclick="event.stopPropagation();deleteJob('+i+')" title="删除">x</span>' +
+      '</div>';
     }).join('');
   } else {
     if (badge) badge.textContent = '0';
@@ -1642,9 +1636,9 @@ function renderJobImageChips() {
     var fn = f.replace(/^dashboard[\/]/, '');
     var chip = document.createElement('div');
     chip.className = 'job-img-chip';
-    chip.onclick = function() { showImageLightbox('/dashboard/' + fn); };
+    chip.onclick = function() { showImageLightbox('/dashboard/' + encodeURIComponent(fn)); };
     var img = document.createElement('img');
-    img.src = '/dashboard/' + fn;
+    img.src = '/dashboard/' + encodeURIComponent(fn);
     chip.appendChild(img);
     var rm = document.createElement('span');
     rm.className = 'chip-remove';
@@ -1674,9 +1668,16 @@ function showImageLightbox(src) {
   overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;cursor:zoom-out;animation:fadeIn .2s ease';
   overlay.onclick = closeLightbox;
   var img = document.createElement('img');
-  img.src = src;
   img.style.cssText = 'max-width:90vw;max-height:90vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:slideUp .25s ease';
   img.onclick = function(e) { e.stopPropagation(); };
+  img.onerror = function() {
+    img.style.display = 'none';
+    var err = document.createElement('div');
+    err.style.cssText = 'color:#fff;font-size:14px;text-align:center;padding:20px';
+    err.innerHTML = '⚠ 图片加载失败<br><span style="font-size:12px;opacity:.7">' + src + '</span>';
+    overlay.appendChild(err);
+  };
+  img.src = src;
   overlay.appendChild(img);
   document.body.appendChild(overlay);
 }

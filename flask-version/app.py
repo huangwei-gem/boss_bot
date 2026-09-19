@@ -19,8 +19,13 @@ import json
 import uuid
 import shutil
 import logging
+import warnings
 from logging.handlers import TimedRotatingFileHandler
 import threading
+
+# 抑制 eventlet 弃用警告（功能正常，仅维护模式提示）
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="eventlet")
+warnings.filterwarnings("ignore", message=".*Eventlet.*")
 import warnings
 import time
 from datetime import datetime
@@ -117,7 +122,23 @@ app.config["SECRET_KEY"] = os.urandom(24).hex()
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
 
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+# 自动选择最佳 async_mode：eventlet > gevent > threading
+_socketio_kwargs = {"cors_allowed_origins": "*"}
+try:
+
+    import eventlet  # noqa: F401
+    _socketio_kwargs["async_mode"] = "eventlet"
+    # eventlet.monkey_patch() 需在所有其他导入前调用，但此处仅用于 SocketIO
+except ImportError:
+    try:
+        import gevent  # noqa: F401
+        from gevent import monkey
+        monkey.patch_all()
+        _socketio_kwargs["async_mode"] = "gevent"
+    except ImportError:
+        _socketio_kwargs["async_mode"] = "threading"
+
+socketio = SocketIO(app, **_socketio_kwargs)
 
 # ===================== 全局状态 =====================
 
@@ -167,6 +188,17 @@ def _ensure_manager() -> MultiAccountManager:
             except Exception:
                 pass
 
+        def wind_control_callback(message: str, wtype: str):
+            """风控事件回调 — 推送风控警告到前端。"""
+            try:
+                socketio.emit("wind_control", {
+                    "time": datetime.now().strftime("%H:%M:%S"),
+                    "message": message,
+                    "type": wtype,
+                })
+            except Exception:
+                pass
+
         def log_callback(msg: str):
             """日志回调 — 同时写入缓冲区和推送 SocketIO。
 
@@ -198,7 +230,7 @@ def _ensure_manager() -> MultiAccountManager:
             except Exception:
                 pass
 
-        _multi_manager = MultiAccountManager(config=cfg, log_callback=log_callback, greet_event_cb=greet_event_callback, reply_event_cb=reply_event_callback)
+        _multi_manager = MultiAccountManager(config=cfg, log_callback=log_callback, greet_event_cb=greet_event_callback, reply_event_cb=reply_event_callback, wind_control_cb=wind_control_callback)
     return _multi_manager
 
 
@@ -2054,8 +2086,11 @@ def main():
     cleanup_old_logs()  # 启动时立即清理一次
     logger.info("日志清理已启动")
 
-    # 启动 Flask
-    socketio.run(app, host="0.0.0.0", port=5000, debug=False, allow_unsafe_werkzeug=True)
+    # 启动 Flask-SocketIO
+    _run_kwargs = {"host": "0.0.0.0", "port": 5000, "debug": False, "use_reloader": False}
+    if _socketio_kwargs.get("async_mode") == "threading":
+        _run_kwargs["allow_unsafe_werkzeug"] = True
+    socketio.run(app, **_run_kwargs)
 
 
 if __name__ == "__main__":

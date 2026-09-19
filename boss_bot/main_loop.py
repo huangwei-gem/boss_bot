@@ -89,12 +89,14 @@ class UnifiedBotLoop:
                  log_callback: Optional[Callable] = None,
                  account_index: int = 0,
                  greet_event_cb: Optional[Callable] = None,
-                 reply_event_cb: Optional[Callable] = None):
+                 reply_event_cb: Optional[Callable] = None,
+                 wind_control_cb: Optional[Callable] = None):
         self.config = config or UnifiedConfig.load()
         self.log_cb = log_callback
         self.account_index = account_index
         self._greet_event_cb = greet_event_cb
         self._reply_event_cb = reply_event_cb
+        self._wind_control_cb = wind_control_cb
 
         # 获取账号名称，用于日志前缀
         if account_index < len(self.config.greet.accounts):
@@ -510,14 +512,47 @@ class UnifiedBotLoop:
             self._log("INFO", "打招呼功能未启用，线程退出")
             return
 
+        consecutive_empty_rounds = 0  # 连续空搜索轮次计数
+
         while self._running and not self._stop_event.is_set():
             try:
                 if self._greet_paused:
                     self._stop_event.wait(timeout=10)
                     continue
 
+                # ── 健康检查：检测验证码/风控/登录态 ──
+                health = self._check_health()
+                if health == "captcha":
+                    self._log("ERROR", "⚠️ 检测到验证码/风控拦截！打招呼已暂停，请手动解除风控后恢复")
+                    if self._wind_control_cb:
+                        self._wind_control_cb("检测到验证码/风控拦截，请手动解除", "captcha")
+                    self._greet_paused = True
+                    continue
+                elif health == "need_login":
+                    self._log("WARN", "登录态失效，等待重新登录...")
+                    self._needs_login = True
+                    self._stop_event.wait(timeout=30)
+                    continue
+                elif health == "browser_disconnected":
+                    self._log("WARN", "浏览器断开，尝试重连...")
+                    self._try_reconnect_browser()
+                    self._stop_event.wait(timeout=10)
+                    continue
+
                 self._current_mode = "greet"
-                self._run_greet_round()
+                round_had_jobs = self._run_greet_round()
+
+                # ── 连续空搜索检测 ──
+                if round_had_jobs is False:
+                    consecutive_empty_rounds += 1
+                    if consecutive_empty_rounds >= 3:
+                        self._log("ERROR", "⚠️ 连续3轮搜索结果为0，可能触发风控或岗位已投完。打招呼已暂停，请检查BOSS直聘页面")
+                        if self._wind_control_cb:
+                            self._wind_control_cb("连续3轮搜索结果为0，请检查BOSS直聘页面", "limit")
+                        self._greet_paused = True
+                        consecutive_empty_rounds = 0
+                else:
+                    consecutive_empty_rounds = 0
 
                 # 打招呼间隔
                 greet_interval = self.config.greet.rate_limit.min_interval if hasattr(self.config.greet.rate_limit, 'min_interval') else 30
@@ -535,10 +570,11 @@ class UnifiedBotLoop:
 
         self._log("INFO", "打招呼线程结束")
 
-    def _run_greet_round(self):
-        """执行一轮打招呼任务。"""
+    def _run_greet_round(self) -> bool:
+        """执行一轮打招呼任务。返回 True 如果有岗位被处理，False 如果所有搜索都为空。"""
         self._log("INFO", "━━━ 开始打招呼轮次 ━━━")
         self._stats_dict["greet_rounds"] += 1
+        any_jobs_found = False
 
         try:
             tasks = self._build_greet_tasks()
@@ -567,6 +603,7 @@ class UnifiedBotLoop:
                     self._log("WARN", f"未找到岗位: {city} · {query}")
                     continue
 
+                any_jobs_found = True
                 self._log("INFO", f"找到 {len(jobs)} 个岗位，开始打招呼...")
                 self._log("DEBUG", f"岗位列表前5个: {[j.get('title', j.get('job_name', '未知')) for j in jobs[:5]]}")
 
@@ -644,6 +681,7 @@ class UnifiedBotLoop:
                 self._try_reconnect_browser()
 
         self._log("INFO", "━━━ 打招呼轮次结束 ━━━")
+        return any_jobs_found
 
     def _build_greet_tasks(self) -> list:
         """从配置构建打招呼任务列表（仅当前账号）。"""
@@ -1060,11 +1098,13 @@ class MultiAccountManager:
     def __init__(self, config: Optional[UnifiedConfig] = None,
                  log_callback: Optional[Callable] = None,
                  greet_event_cb: Optional[Callable] = None,
-                 reply_event_cb: Optional[Callable] = None):
+                 reply_event_cb: Optional[Callable] = None,
+                 wind_control_cb: Optional[Callable] = None):
         self.config = config or UnifiedConfig.load()
         self.log_cb = log_callback
         self._greet_event_cb = greet_event_cb
         self._reply_event_cb = reply_event_cb
+        self._wind_control_cb = wind_control_cb
         self._loops: dict = {}  # account_index -> UnifiedBotLoop
         self._lock = threading.Lock()
 
@@ -1077,6 +1117,7 @@ class MultiAccountManager:
                     account_index=i,
                     greet_event_cb=greet_event_cb,
                     reply_event_cb=reply_event_cb,
+                    wind_control_cb=wind_control_cb,
                 )
 
     def _log(self, level: str, msg: str):
