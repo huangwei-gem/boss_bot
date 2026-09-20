@@ -1063,13 +1063,16 @@ class UnifiedBotLoop:
             self._log("WARN", f"热重载配置失败，保留旧配置: {e}")
             return
 
-        # 1. AI 配置热重载 — 打招呼和回复引擎共享同一份 AI 配置
+        # 1. AI 配置热重载
+        # 注意：ai.enabled 仅控制打招呼的AI岗位解析，不控制自动回复AI
+        # 自动回复AI始终开启（只要有API key），确保句句有回应
         if self._greet_engine:
             self._greet_engine._ai_enabled = self.config.ai.enabled
             self._greet_engine._ai_providers = self.config.ai.providers
 
         if self._reply_engine:
-            self._reply_engine._ai_enabled = self.config.ai.enabled
+            # 回复引擎AI始终开启，不受 ai.enabled 开关控制
+            self._reply_engine._ai_enabled = True
             self._reply_engine._ai_providers = self.config.ai.providers
 
         # 2. 频率限制热重载 — 每小时/每天打招呼上限

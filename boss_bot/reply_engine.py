@@ -160,7 +160,9 @@ class ReplyEngine:
             return action, content, meta
 
         # 3. AI 生成回复（带多轮历史）
-        if config.ENABLE_AI and any(config.AI_API_KEYS):
+        # 注意：自动回复AI始终开启，不受 ai.enabled 开关控制
+        # ai.enabled 仅控制打招呼时的AI岗位解析，回复必须句句有回应
+        if any(config.AI_API_KEYS):
             logger.info("[AI回复] 规则/意图未命中，调用 AI 生成回复...")
             ai_reply = self._ask_ai(latest, boss_name, job_name, history)
             if ai_reply:
