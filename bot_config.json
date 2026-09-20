@@ -184,7 +184,8 @@
         "model": "",
         "timeout": 30
       }
-    ]
+    ],
+    "fail_action": "default"
   },
   "resume": {
     "school": "某某大学",

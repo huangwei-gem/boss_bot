@@ -257,7 +257,7 @@ class AIConfig:
     """
     enabled: bool = False
     providers: list = field(default_factory=list)  # AIProvider 列表
-    fail_action: str = "skip"            # skip | default
+    fail_action: str = "default"         # skip | default (default=句句有回应)
     max_tokens: int = 200
     rate_limit_wait: int = 30
     match_threshold: int = 70            # auto_boss: match_threshold
@@ -495,6 +495,8 @@ class UnifiedConfig:
                 self.ai.model = str(ai["model"])
             if "match_threshold" in ai:
                 self.ai.match_threshold = int(ai["match_threshold"])
+            if "fail_action" in ai and ai["fail_action"]:
+                self.ai.fail_action = str(ai["fail_action"])
             if "providers" in ai and isinstance(ai["providers"], list):
                 self.ai.providers = [
                     AIProvider(
@@ -854,6 +856,7 @@ class UnifiedConfig:
                 "api_base": self.ai.api_base,
                 "model": self.ai.model,
                 "match_threshold": self.ai.match_threshold,
+                "fail_action": self.ai.fail_action,
                 "providers": [
                     {
                         "name": p.name,

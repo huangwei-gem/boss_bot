@@ -41,7 +41,7 @@ class UnifiedConfigTest:
         assert cfg.reply.max_delay == 5
         assert cfg.reply.pause_on_important is True
         assert cfg.ai.enabled is False
-        assert cfg.ai.fail_action == "skip"
+        assert cfg.ai.fail_action == "default"
         assert cfg.ai.max_tokens == 200
         assert cfg.test_mode is False
         assert cfg.test_page == ""
