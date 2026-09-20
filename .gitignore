@@ -40,7 +40,14 @@ flask-version/zhipin_cookies.json
 *.xlsx
 
 # 便携浏览器
+cloakbrowser/
 cloakbrowser-windows-x64/
+
+# 浏览器运行数据
+browser_data/
+
+# Windows保留名误创建
+nul
 
 # IDE
 .vscode/

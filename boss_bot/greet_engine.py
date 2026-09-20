@@ -17,6 +17,7 @@
 
 import json
 import os
+import re
 import random
 import time
 import threading
@@ -438,6 +439,7 @@ class GreetEngine:
         self._city = "上海"
         self._scroll_pages = 5
         self._greeting_message = ""
+        self._greeting_source = "默认"
         self._image_files = []
         self._min_interval = 3
         self._max_interval = 8
@@ -540,6 +542,7 @@ class GreetEngine:
                 self._city = job.city
                 self._scroll_pages = job.scroll_pages
                 self._greeting_message = job.greeting_message
+                self._greeting_source = "岗位配置"
                 self._image_files = job.image_files or self._image_files
 
     def _log(self, level: str, msg: str):
@@ -565,13 +568,14 @@ class GreetEngine:
             ai = ai_result or self._last_ai_result or {}
             self._greet_event_cb({
                 "job_name": job.get("job_name", ""),
-                "company": job.get("company", ""),
+                "company": job.get("company", "") or job.get("company_location", ""),
                 "salary": job.get("salary", ""),
                 "status": status,
                 "ai_score": ai.get("score", 0),
                 "ai_reason": ai.get("reason", ""),
                 "ai_match": ai.get("is_match", False),
                 "greeting": job.get("_actual_greeting_sent", "")[:60],
+                "url": job.get("url", ""),
             })
         except Exception:
             pass
@@ -1026,12 +1030,14 @@ class GreetEngine:
 
     def _build_search_url(self, query: str, city: str) -> str:
         """构建搜索 URL。"""
+        from urllib.parse import quote
         city_code = self._get_city_id(city) if city else ""
         self._log("INFO", f"城市: {city}, 编码: {city_code}")
+        encoded_query = quote(query, safe="")
         if city_code:
-            return f"https://www.zhipin.com/web/geek/jobs?query={query}&city={city_code}&industry=&position="
+            return f"https://www.zhipin.com/web/geek/jobs?query={encoded_query}&city={city_code}&industry=&position="
         else:
-            return f"https://www.zhipin.com/web/geek/jobs?query={query}&industry=&position="
+            return f"https://www.zhipin.com/web/geek/jobs?query={encoded_query}&industry=&position="
 
     def _parse_job_list(self):
         """解析岗位列表。"""
@@ -1085,20 +1091,84 @@ class GreetEngine:
                 parts = job_str.split("\n")
                 if len(parts) < 4:
                     continue
+                # ── 关键：BOSS直聘反爬，用Unicode私用区字符代替数字 ──
+                # \ue030→0, \ue031→1, ..., \ue039→9
+                # 必须先映射数字，再做薪资解析
+                def _decode_anti_scrape(text):
+                    """将BOSS直聘的反爬Unicode字符映射回数字。"""
+                    result = []
+                    for ch in text:
+                        code = ord(ch)
+                        if 0xe030 <= code <= 0xe039:
+                            result.append(str(code - 0xe030))
+                        elif 0xe000 <= code <= 0xf8ff:
+                            # 其他私用区字符直接跳过
+                            continue
+                        else:
+                            result.append(ch)
+                    return ''.join(result)
+
+                parts = [_decode_anti_scrape(p) for p in parts]
                 first_part = parts[0]
-                salary_start = len(first_part)
-                for marker in ["K", "元/月", "元/天", "薪"]:
-                    m_idx = first_part.find(marker)
-                    if m_idx != -1 and m_idx < salary_start:
-                        salary_start = m_idx
-                job_name = first_part[:salary_start].strip() if salary_start < len(first_part) else first_part
-                salary = first_part[salary_start:].strip() if salary_start < len(first_part) else ""
+                if idx < 3:
+                    self._log("DEBUG", f"解码后文本[{idx}]: parts={parts}")
+
+                # 薪资解析：数字已解码，用通用正则匹配
+                salary_pattern = r'(\d+\D{1,2}\d+[Kk]·?\d*薪?|\d+\D{1,2}\d+元/[月天小时]|\d+\D{1,2}\d+[Kk]|\d+K·?\d*薪?)'
+                salary_match = re.search(salary_pattern, first_part)
+                if salary_match:
+                    salary_start = salary_match.start()
+                    job_name = first_part[:salary_start].strip()
+                    salary = salary_match.group()
+                else:
+                    job_name = first_part.strip()
+                    salary = ""
+                    if len(parts) > 1:
+                        second_part = parts[1].strip()
+                        salary_match2 = re.search(salary_pattern, second_part)
+                        if salary_match2:
+                            salary = salary_match2.group()
+                        elif second_part and ("K" in second_part or "元" in second_part):
+                            salary = second_part
+
+                # 清理岗位名末尾的破折号
+                job_name = job_name.rstrip("-–—").strip()
+
+                # ── 公司名和地点解析 ──
+                # parts[3] 格式通常是 "公司名 城市·区域·子区域" 或 "公司名 城市"
+                company_location = parts[3] if len(parts) > 3 else ""
+                company = ""
+                location = ""
+                if "·" in company_location:
+                    # 格式: "公司名 城市·区域·子区域"
+                    # 按 "·" 分割，第一段是 "公司名 城市"，后面是区域
+                    dot_parts = company_location.split("·")
+                    first_segment = dot_parts[0].strip()
+                    # 从第一段中分离公司名和城市
+                    if " " in first_segment:
+                        sp = first_segment.rsplit(" ", 1)
+                        company = sp[0].strip()
+                        location = sp[1].strip() + "·" + "·".join(dot_parts[1:])
+                    else:
+                        company = first_segment
+                        location = "·".join(dot_parts[1:])
+                elif " " in company_location:
+                    # 格式: "公司名 城市"（空格分隔）
+                    sp = company_location.rsplit(" ", 1)
+                    company = sp[0].strip()
+                    location = sp[1].strip()
+                else:
+                    company = company_location.strip()
+
+                self._log("DEBUG", f"解析岗位: name={job_name}, salary={salary}, company={company}, location={location}")
                 processed_jobs.append({
                     "job_name": job_name,
                     "salary": salary,
                     "experience": parts[1] if len(parts) > 1 else "",
                     "education": parts[2] if len(parts) > 2 else "",
-                    "company_location": parts[3] if len(parts) > 3 else "",
+                    "company": company,
+                    "company_location": company_location,
+                    "location": location,
                     "url": full_job_urls[idx] if idx < len(full_job_urls) else "",
                     "query": self._query,
                 })
@@ -1233,6 +1303,8 @@ class GreetEngine:
                     break
             self._log("INFO", f"处理 [{idx+1}/{self.total_jobs}] {job.get('job_name', '未知岗位')}")
             self._random_delay(self._min_interval, self._max_interval)
+            # 每个岗位重置打招呼语来源（可能被AI覆盖）
+            self._greeting_source = "岗位配置"
 
             # 先检查是否已沟通过
             if self._is_already_chatted(job):
@@ -1259,6 +1331,7 @@ class GreetEngine:
                     continue
                 if ai_result and ai_result.get("suggested_greeting"):
                     self._greeting_message = ai_result["suggested_greeting"]
+                    self._greeting_source = "AI定制"
             else:
                 ai_result = None
                 ai_duration = 0
@@ -1267,6 +1340,8 @@ class GreetEngine:
                 break
 
             try:
+                # 推送"正在投递"状态到前端
+                self._emit_greet_event(job, "pending")
                 success = self._apply_job(job)
                 if success:
                     self.applied_count += 1
@@ -1405,6 +1480,7 @@ class GreetEngine:
                     return False
 
         try:
+            message_sent = False  # 跟踪消息是否已发送
             # ── 1. 导航到岗位详情页 ──
             try:
                 _ = instance.url
@@ -1490,27 +1566,214 @@ class GreetEngine:
                 self._log("WARN", "未找到沟通按钮!")
                 return False
             self._log("INFO", f"找到沟通按钮，文本: {chat_btn.text}")
+            # 记录点击前的标签页数量
+            browser = instance._get_browser() if hasattr(instance, '_get_browser') else None
             chat_btn.click()
             self._log("INFO", "已点击沟通按钮，等待输入框...")
+            # 等待聊天窗口加载
+            self._random_delay(3, 5)
+            
+            # 尝试获取最新标签页（聊天页面通常在新标签页打开）
+            chat_tab = None
+            if browser:
+                try:
+                    # latest_tab 获取最新激活的标签页
+                    latest = browser.latest_tab
+                    latest_url = latest.url
+                    self._log("INFO", f"最新标签页URL: {latest_url}")
+                    # 如果最新标签页是聊天页面，使用它
+                    if "chat" in latest_url or "message" in latest_url:
+                        chat_tab = latest
+                        self._log("INFO", f"切换到聊天标签页: {latest_url}")
+                    else:
+                        # 最新标签页不是聊天页面，检查所有标签页
+                        all_tabs = browser.tab_ids
+                        self._log("INFO", f"当前有 {len(all_tabs)} 个标签页，查找聊天标签页")
+                        for tid in all_tabs:
+                            try:
+                                t = browser.get_tab(tid)
+                                t_url = t.url
+                                if "chat" in t_url or "message" in t_url:
+                                    chat_tab = t
+                                    self._log("INFO", f"找到聊天标签页: {t_url}")
+                                    break
+                            except Exception:
+                                pass
+                except Exception as e:
+                    self._log("DEBUG", f"获取最新标签页失败: {e}")
 
             # ── 5. 输入消息 ──
-            greeting = self._greeting_message or self.config.greet.accounts[0].jobs[0].greeting_message if self.config.greet.accounts and self.config.greet.accounts[0].jobs else ""
+            # 优先级：AI定制 > 岗位配置 > 默认模板
+            greeting = self._greeting_message
+            if not greeting:
+                if self.config.greet.accounts and self.config.greet.accounts[0].jobs:
+                    greeting = self.config.greet.accounts[0].jobs[0].greeting_message
             if not greeting:
                 from boss_bot.unified_config import DEFAULT_GREETING
                 greeting = DEFAULT_GREETING
+                self._greeting_source = "默认模板"
             # 保存实际发送的打招呼语供 GreetRecord 记录使用
             job["_actual_greeting_sent"] = greeting
-            self._log("INFO", f"打招呼语来源: {'AI定制' if self._greeting_message else '默认模板'}")
-            input_area = instance.ele(".input-area", timeout=10)
+            self._log("INFO", f"打招呼语来源: {self._greeting_source}, 内容: {greeting[:50]}...")
+            # 等待聊天窗口加载
+            self._random_delay(3, 5)
+
+            # 检查是否有弹窗阻止（简历弹窗等），自动关闭
+            try:
+                for popup_sel in [".panel-resume", ".sentence-popover", ".dialog-content", ".modal-content", ".resume-guide"]:
+                    popup = instance.ele(popup_sel, timeout=1)
+                    if popup:
+                        self._log("WARN", f"检测到弹窗: {popup_sel}，尝试关闭...")
+                        try:
+                            close = instance.ele(".icon-close", timeout=1)
+                            if close:
+                                close.click()
+                                self._random_delay(1, 2)
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+
+            # 优先在聊天标签页查找输入框（如果有新标签页打开）
+            # 严格参考原项目 auto_boss: self.dp.ele(".input-area", timeout=10)
+            input_area = None
+            
+            if chat_tab:
+                # 在新打开的聊天标签页中查找
+                try:
+                    input_area = chat_tab.ele(".input-area", timeout=10)
+                    if input_area:
+                        self._log("INFO", "在聊天标签页找到输入框: .input-area")
+                        # 切换 instance 到聊天标签页
+                        instance._page = chat_tab
+                        instance._tab = chat_tab
+                except Exception as e:
+                    self._log("DEBUG", f"在聊天标签页查找输入框失败: {e}")
+            
+            # 如果聊天标签页没找到，尝试 latest_tab（不管URL是什么）
+            if not input_area and browser:
+                try:
+                    latest = browser.latest_tab
+                    input_area = latest.ele(".input-area", timeout=5)
+                    if input_area:
+                        self._log("INFO", f"在latest_tab找到输入框: {latest.url}")
+                        instance._page = latest
+                        instance._tab = latest
+                except Exception:
+                    pass
+            
+            # 如果还没找到，尝试当前页面
             if not input_area:
-                self._log("WARN", "未找到输入框!")
+                try:
+                    input_area = instance.ele(".input-area", timeout=5)
+                    if input_area:
+                        self._log("INFO", "在当前页面找到输入框: .input-area")
+                except Exception:
+                    pass
+
+            # 如果当前页面没找到，遍历所有标签页（不过滤URL）
+            if not input_area:
+                try:
+                    browser = instance._get_browser() if hasattr(instance, '_get_browser') else None
+                    if browser:
+                        all_tabs = browser.tab_ids
+                        if len(all_tabs) > 1:
+                            self._log("INFO", f"当前页面未找到输入框，遍历 {len(all_tabs)} 个标签页")
+                            for tab_id in all_tabs:
+                                try:
+                                    tab = browser.get_tab(tab_id)
+                                    tab_url = tab.url
+                                    self._log("DEBUG", f"  检查标签页: {tab_url}")
+                                    # 不过滤URL，在每个标签页中尝试查找输入框
+                                    for sel in [".input-area", "#chat-input", ".chat-input", "tag:textarea", "[contenteditable=true]"]:
+                                        try:
+                                            input_area = tab.ele(sel, timeout=3)
+                                            if input_area:
+                                                self._log("INFO", f"在标签页 {tab_url} 中找到输入框: {sel}")
+                                                # 切换到该标签页
+                                                instance._page = tab
+                                                instance._tab = tab
+                                                break
+                                        except Exception:
+                                            pass
+                                    if input_area:
+                                        break
+                                except Exception:
+                                    pass
+                except Exception as e:
+                    self._log("DEBUG", f"标签页遍历失败: {e}")
+
+            # 最后尝试在iframe中查找
+            if not input_area:
+                try:
+                    iframes = instance.eles("tag:iframe", timeout=2)
+                    if iframes:
+                        self._log("INFO", f"发现 {len(iframes)} 个iframe，尝试在iframe中查找输入框")
+                        for iframe in iframes:
+                            try:
+                                for sel in [".input-area", ".chat-input", "tag:textarea", "[contenteditable=true]"]:
+                                    input_area = iframe.ele(sel, timeout=3)
+                                    if input_area:
+                                        self._log("INFO", f"在iframe中找到输入框: {sel}")
+                                        break
+                                if input_area:
+                                    break
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
+
+            if not input_area:
+                self._log("WARN", "未找到输入框! 尝试打印页面上的input/textarea元素...")
+                try:
+                    inputs = instance.eles("tag:input", timeout=2) + instance.eles("tag:textarea", timeout=2)
+                    self._log("WARN", f"页面上有 {len(inputs)} 个input/textarea元素")
+                    for i, inp in enumerate(inputs[:10]):
+                        try:
+                            cls = inp.attr("class") or ""
+                            tag = inp.tag or ""
+                            t = inp.attr("type") or ""
+                            self._log("WARN", f"  元素{i}: tag={tag}, class={cls}, type={t}")
+                        except Exception:
+                            pass
+                    # 也打印当前URL帮助调试
+                    self._log("WARN", f"当前URL: {instance.url}")
+                except Exception as e:
+                    self._log("WARN", f"调试打印失败: {e}")
+                    pass
                 return False
             self._log("INFO", "找到输入框，输入消息...")
             input_area.input(greeting)
             self._log("INFO", "消息已输入")
 
             # ── 6. 点击发送 ──
-            instance.ele(".send-message").click()
+            message_sent = False
+            try:
+                # 尝试多个发送按钮选择器
+                send_btn = None
+                for send_sel in [".send-message", ".btn-send", ".btn-v2.btn-sure-v2.btn-send", "tag:button@@type=submit", ".chat-send"]:
+                    try:
+                        send_btn = instance.ele(send_sel, timeout=3)
+                        if send_btn:
+                            self._log("INFO", f"找到发送按钮: {send_sel}")
+                            break
+                    except Exception:
+                        pass
+                if send_btn:
+                    send_btn.click()
+                    message_sent = True
+                else:
+                    self._log("WARN", "未找到发送按钮，尝试按回车发送")
+                    input_area.input("\n")
+                    message_sent = True
+            except Exception as send_e:
+                self._log("WARN", f"点击发送按钮失败: {send_e}")
+                # 尝试按回车发送
+                try:
+                    input_area.input("\n")
+                    message_sent = True
+                except Exception:
+                    pass
             self._random_delay(1, 2)
 
             # 发送后检测页面是否断开
@@ -1546,6 +1809,11 @@ class GreetEngine:
             self._log("WARN", "发送消息异常: " + str(e))
             import traceback
             self._log("WARN", traceback.format_exc())
+            # 如果消息已发送但后续步骤出错，仍标记为成功
+            if message_sent:
+                self._log("WARN", "消息已发送但后续步骤出错，标记为成功")
+                self._mark_chatted(job)
+                return True
             return False
 
     def _send_images_after_message(self):
@@ -1789,7 +2057,7 @@ class GreetEngine:
             logs.append({
                 "time": time.strftime("%Y-%m-%d %H:%M:%S"),
                 "job_name": job.get("job_name", ""),
-                "company": job.get("company_location", ""),
+                "company": job.get("company", "") or job.get("company_location", ""),
                 "salary": job.get("salary", ""),
                 "query": self._query,
                 "city": self._city,

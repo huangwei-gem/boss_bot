@@ -85,13 +85,16 @@ class ReplyEngine:
     - 定期自动优化回复策略
     """
 
-    def __init__(self, self_evolve: Optional["SelfEvolveEngine"] = None):
+    def __init__(self, self_evolve: Optional["SelfEvolveEngine"] = None,
+                 account_name: str = "", account_index: int = 0):
         self.rule_engine = RuleEngine()
         self._reply_count = 0
         self._hour_start = time.time()
         self._cache = ReplyCache()
         self._self_evolve = self_evolve
         self._record_store = ReplyRecordStore()
+        self._account_name = account_name
+        self._account_index = account_index
         # AI 调用元信息（每次 _ask_ai 前重置，_call_chat 中写入）
         self._last_ai_system_prompt: Optional[str] = None
         self._last_ai_user_prompt: Optional[str] = None
@@ -224,6 +227,9 @@ class ReplyEngine:
     def _add_record(self, **kwargs):
         """创建并保存一条 ReplyRecord（异常不影响主流程）。"""
         try:
+            # 自动填充账号信息（如果调用方未指定）
+            kwargs.setdefault("account_name", self._account_name)
+            kwargs.setdefault("account_index", self._account_index)
             record = ReplyRecord(**kwargs)
             self._record_store.add(record)
         except Exception as e:

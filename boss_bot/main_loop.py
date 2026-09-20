@@ -50,24 +50,16 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-# 前端可见的关键日志关键词 — INFO 级别日志只有包含这些关键词才推送前端
-# WARN/ERROR/SUCCESS/CRITICAL 始终推送前端，DEBUG 始终不推送
-_FRONTEND_LOG_KEYWORDS = (
-    "启动", "停止", "已启动", "已停止", "已终止", "已退出",
-    "浏览器", "登录", "登出", "重连",
-    "配置已保存",
-)
-
-
 def _should_show_frontend(level: str, msg: str) -> bool:
-    """判断日志是否应该推送到前端。"""
+    """判断日志是否应该推送到前端。
+    
+    前端显示所有 INFO/WARN/ERROR/SUCCESS/CRITICAL 级别日志，不过滤。
+    DEBUG 级别不推送到前端（后台日志文件保留）。
+    """
     level_upper = level.upper()
     if level_upper == "DEBUG":
         return False
-    if level_upper in ("WARN", "ERROR", "SUCCESS", "CRITICAL"):
-        return True
-    # INFO 级别：根据关键词过滤
-    return any(kw in msg for kw in _FRONTEND_LOG_KEYWORDS)
+    return True
 
 
 class UnifiedBotLoop:
@@ -252,6 +244,8 @@ class UnifiedBotLoop:
 
     def stop(self):
         """停止主循环，关闭浏览器。"""
+        if not self._running and self._current_mode == "idle":
+            return  # 已经停止，不重复执行
         self._log("INFO", "正在停止主循环...")
         self._running = False
         self._stop_event.set()
@@ -489,8 +483,15 @@ class UnifiedBotLoop:
             browser_instance=chat_page,
         )
 
-        self._reply_engine = ReplyEngine()
+        self._reply_engine = ReplyEngine(
+            account_name=self.account_name,
+            account_index=self.account_index,
+        )
         self._state_store = StateStore()
+        # 启动时自动清除之前的人工接管暂停状态
+        if self._state_store.is_paused():
+            self._log("INFO", "检测到之前的人工接管暂停状态，自动恢复")
+            self._state_store.resume()
         self._stats = Stats()
         self._notifier = Notifier()
         self._msg_store = MessageStore()
@@ -827,6 +828,13 @@ class UnifiedBotLoop:
                 ai_model="", intent="",
                 status="skipped",
             )
+            self._reply_engine._add_record(
+                chat_name=name, job_name="",
+                received_message="", reply_content=None,
+                reply_source="skip", reply_intent="",
+                reply_reason="会话切换校验失败，本次跳过",
+                is_skipped=True, skip_reason="会话切换校验失败",
+            )
             return
 
         context_count = self.config.reply.context_message_count
@@ -835,11 +843,20 @@ class UnifiedBotLoop:
         self._log("DEBUG", f"读取到消息数: {len(messages)}")
         if not messages:
             self._log("INFO", "未读取到消息，跳过")
+            boss_name = self._chat_handler.get_boss_name()
+            job_name = self._chat_handler.get_job_name()
             self._emit_reply_event(
-                contact_name=name, job_name="",
+                contact_name=name, job_name=job_name,
                 message_received="", reply_sent="",
                 ai_model="", intent="",
                 status="skipped",
+            )
+            self._reply_engine._add_record(
+                chat_name=name, job_name=job_name,
+                received_message="", reply_content=None,
+                reply_source="skip", reply_intent="",
+                reply_reason="未读取到消息，跳过",
+                is_skipped=True, skip_reason="未读取到消息",
             )
             return
 
@@ -851,11 +868,20 @@ class UnifiedBotLoop:
 
         if not latest_other_msg:
             self._log("INFO", "最新消息是自己发的，无需回复")
+            boss_name = self._chat_handler.get_boss_name()
+            job_name = self._chat_handler.get_job_name()
             self._emit_reply_event(
-                contact_name=name, job_name="",
+                contact_name=name, job_name=job_name,
                 message_received="", reply_sent="",
                 ai_model="", intent="",
                 status="skipped",
+            )
+            self._reply_engine._add_record(
+                chat_name=name, job_name=job_name,
+                received_message="", reply_content=None,
+                reply_source="skip", reply_intent="",
+                reply_reason="最新消息是自己发的，无需回复",
+                is_skipped=True, skip_reason="最新消息是自己发的，无需回复",
             )
             return
 
@@ -864,11 +890,20 @@ class UnifiedBotLoop:
         if self._state_store.was_handled(name, latest_other_msg):
             self._log("INFO", "该消息已处理过，跳过（防重复回复）")
             self._stats.record_skip()
+            boss_name = self._chat_handler.get_boss_name()
+            job_name = self._chat_handler.get_job_name()
             self._emit_reply_event(
-                contact_name=name, job_name="",
+                contact_name=name, job_name=job_name,
                 message_received=latest_other_msg, reply_sent="",
                 ai_model="", intent="",
                 status="skipped",
+            )
+            self._reply_engine._add_record(
+                chat_name=name, job_name=job_name,
+                received_message=latest_other_msg, reply_content=None,
+                reply_source="skip", reply_intent="",
+                reply_reason="该消息已处理过，防重复回复",
+                is_skipped=True, skip_reason="该消息已处理过，防重复回复",
             )
             return
 
@@ -1249,7 +1284,9 @@ class MultiAccountManager:
                     loop.stop()
                 except Exception as e:
                     self._log("ERROR", f"账号 {idx} 停止失败: {e}")
-        self._log("INFO", "多账号管理器已停止")
+        # 只在有账号在运行时才输出停止日志
+        if any(loop._current_mode != "idle" for loop in self._loops.values()):
+            self._log("INFO", "多账号管理器已停止")
 
     def start_account(self, account_index: int):
         """启动指定账号。"""

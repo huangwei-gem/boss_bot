@@ -1,0 +1,27 @@
+{
+  "name_candidates": [
+    "label-name => 全部",
+    "label-name => 未读(15)",
+    "label-name => 新招呼",
+    "label-name more => 更多",
+    "label-name => AI筛选",
+    "title-box => 陈子俊深圳市骏豪碧贸易HR",
+    "name-box => 陈子俊深圳市骏豪碧贸易HR",
+    "name-text => 陈子俊",
+    "title-box => 王先生麓商科技人力经理",
+    "name-box => 王先生麓商科技人力经理",
+    "name-text => 王先生",
+    "title-box => 刘先生智玖贸易人事部HR",
+    "name-box => 刘先生智玖贸易人事部HR",
+    "name-text => 刘先生",
+    "title-box => 林女士嘉创信息招聘专员",
+    "name-box => 林女士嘉创信息招聘专员",
+    "name-text => 林女士",
+    "title-box => 曾女士甲骨易HR",
+    "name-box => 曾女士甲骨易HR"
+  ],
+  "input_selector": "textarea",
+  "input_class": "input",
+  "friend_count": 40,
+  "unread_count": 6
+}

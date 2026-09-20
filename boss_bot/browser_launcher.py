@@ -56,17 +56,16 @@ def _get_portable_browser_path() -> str:
     if not _IS_WINDOWS:
         return ""
 
-    # 可能的路径列表
+    # 可能的路径列表（cloakbrowser 优先，兼容旧目录名）
+    _project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     possible_paths = [
-        # 项目根目录（browser_launcher.py 的上上级）
-        os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            "cloakbrowser-windows-x64", "chrome.exe"
-        ),
+        # 项目根目录/cloakbrowser/chrome.exe（新目录名）
+        os.path.join(_project_root, "cloakbrowser", "chrome.exe"),
+        # 项目根目录/cloakbrowser-windows-x64/chrome.exe（旧目录名）
+        os.path.join(_project_root, "cloakbrowser-windows-x64", "chrome.exe"),
         # 当前工作目录
+        os.path.join(os.getcwd(), "cloakbrowser", "chrome.exe"),
         os.path.join(os.getcwd(), "cloakbrowser-windows-x64", "chrome.exe"),
-        # browser_launcher.py 同级目录的上级
-        os.path.join(os.path.dirname(__file__), "..", "cloakbrowser-windows-x64", "chrome.exe"),
     ]
 
     for portable_path in possible_paths:

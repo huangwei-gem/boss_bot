@@ -310,10 +310,7 @@ class BossChatHandler:
     def enter_chat(self, chat_info: dict, retries: int = 2) -> bool:
         """点击进入某个聊天并校验切换成功，等待聊天内容加载。
 
-        注意：使用 JS 点击（与 get_unread_chats 扫描同一 DOM 顺序）。
-        实测 element.click() 坐标点击在 Retina 屏偏移、
-        element 引用与 JS 索引错位，均会点错会话。
-
+        策略：优先按名称点击（更可靠），回退到按索引点击。
         切换后校验页面顶栏姓名与目标会话一致，防止读到错误会话的消息。
         返回 True=切换成功并确认；False=校验失败（调用方应跳过该会话）。
         """
@@ -321,10 +318,32 @@ class BossChatHandler:
         expected_name = chat_info.get('name', '')
 
         for attempt in range(1, retries + 2):
-            self.page.run_js(
-                f'document.querySelectorAll(".friend-content")[{idx}].click()',
-                as_expr=True
-            )
+            # 优先按名称点击（更可靠，不受 DOM 重新排序影响）
+            if expected_name:
+                click_result = self.page.run_js(f'''(
+                    function() {{
+                        var friends = document.querySelectorAll(".friend-content");
+                        for (var i = 0; i < friends.length; i++) {{
+                            var nameEl = friends[i].querySelector(".name-text");
+                            if (nameEl && nameEl.textContent.trim() === "{expected_name}") {{
+                                friends[i].click();
+                                return "clicked_by_name";
+                            }}
+                        }}
+                        return "name_not_found";
+                    }}
+                )()''', as_expr=True)
+                if click_result == "name_not_found":
+                    # 回退到按索引点击
+                    self.page.run_js(
+                        f'document.querySelectorAll(".friend-content")[{idx}].click()',
+                        as_expr=True
+                    )
+            else:
+                self.page.run_js(
+                    f'document.querySelectorAll(".friend-content")[{idx}].click()',
+                    as_expr=True
+                )
             time.sleep(3)
 
             # 等待输入框加载
@@ -339,7 +358,12 @@ class BossChatHandler:
 
             # 校验会话切换是否正确
             actual_name = self.get_boss_name()
-            if not expected_name or actual_name == expected_name:
+            if not expected_name or not actual_name or actual_name == expected_name:
+                if not actual_name and expected_name:
+                    logger.warning(
+                        f"无法获取当前会话名称（选择器可能不匹配），"
+                        f"跳过校验直接处理 [{expected_name}]"
+                    )
                 return True
             logger.warning(
                 f"会话切换校验失败（第 {attempt}/{retries + 1} 次）: "
@@ -398,12 +422,33 @@ class BossChatHandler:
         return messages
 
     def get_boss_name(self) -> str:
-        """获取当前聊天对象的名称"""
+        """获取当前聊天对象的名称
+
+        尝试多个选择器，适配 BOSS 直聘不同版本页面结构。
+        """
         try:
-            result = self.page.run_js(
-                'document.querySelector(".top-info-content .name-text") ? document.querySelector(".top-info-content .name-text").textContent.trim() : ""',
-                as_expr=True
-            )
+            result = self.page.run_js('''(
+                function() {
+                    // 多个选择器兜底
+                    var sels = [
+                        ".top-info-content .name-text",
+                        ".top-info-box .name-text",
+                        ".chat-header .name-text",
+                        ".user-info .name-text",
+                        ".header-content .name-text",
+                        ".top-info .name",
+                        ".boss-name",
+                        ".chat-title .name"
+                    ];
+                    for (var i = 0; i < sels.length; i++) {
+                        var el = document.querySelector(sels[i]);
+                        if (el && el.textContent.trim()) {
+                            return el.textContent.trim();
+                        }
+                    }
+                    return "";
+                }
+            )()''', as_expr=True)
             return result or ""
         except Exception:
             return ""
@@ -514,18 +559,42 @@ class BossChatHandler:
 
                 # 2. 等待弹层出现：确认弹层 or 上传引导
                 state = "pending"
-                for _ in range(10):
+                for _ in range(15):  # 增加等待次数（15次×0.5秒=7.5秒）
                     state = self.page.run_js('''(
                         function() {
-                            var panel = document.querySelector(".panel-resume");
-                            if (panel) {
-                                var cs = window.getComputedStyle(panel);
-                                if (cs.display !== "none" && cs.visibility !== "hidden") return "confirm";
+                            // 多备选选择器检测确认弹层
+                            var panelSels = [
+                                ".panel-resume",
+                                ".sentence-popover",
+                                "[class*='panel-resume']",
+                                "[class*='resume-pop']",
+                                ".dialog-content[class*='resume']",
+                                ".popover[class*='resume']"
+                            ];
+                            for (var i = 0; i < panelSels.length; i++) {
+                                var panel = document.querySelector(panelSels[i]);
+                                if (panel) {
+                                    var cs = window.getComputedStyle(panel);
+                                    if (cs.display !== "none" && cs.visibility !== "hidden" && cs.opacity !== "0") return "confirm";
+                                }
                             }
-                            var upload = document.querySelector(".upload-resume-dialog");
-                            if (upload) {
-                                var cs2 = window.getComputedStyle(upload);
-                                if (cs2.display !== "none" && cs2.visibility !== "hidden") return "no_resume";
+                            // 检测上传引导
+                            var uploadSels = [".upload-resume-dialog", "[class*='upload-resume']"];
+                            for (var j = 0; j < uploadSels.length; j++) {
+                                var upload = document.querySelector(uploadSels[j]);
+                                if (upload) {
+                                    var cs2 = window.getComputedStyle(upload);
+                                    if (cs2.display !== "none" && cs2.visibility !== "hidden") return "no_resume";
+                                }
+                            }
+                            // 检测"确定向Boss发送简历吗"文字弹层（兜底）
+                            var allDivs = document.querySelectorAll("div");
+                            for (var k = 0; k < allDivs.length; k++) {
+                                var d = allDivs[k];
+                                if (d.textContent && d.textContent.indexOf("确定向") >= 0 && d.textContent.indexOf("发送简历") >= 0) {
+                                    var cs3 = window.getComputedStyle(d);
+                                    if (cs3.display !== "none" && cs3.visibility !== "hidden") return "confirm";
+                                }
                             }
                             return "pending";
                         }
@@ -539,7 +608,22 @@ class BossChatHandler:
                     return False
 
                 if state != "confirm":
-                    logger.warning(f"确认弹层未出现（尝试 {attempt}/{retries + 1}）")
+                    # 调试：打印页面上所有可见弹层信息
+                    debug_info = self.page.run_js('''(
+                        function() {
+                            var info = [];
+                            var candidates = document.querySelectorAll("[class*='panel'], [class*='popover'], [class*='dialog'], [class*='modal'], [class*='resume']");
+                            for (var i = 0; i < Math.min(candidates.length, 10); i++) {
+                                var el = candidates[i];
+                                var cs = window.getComputedStyle(el);
+                                if (cs.display !== "none" && cs.visibility !== "hidden") {
+                                    info.push(el.className.substring(0, 60) + " | text: " + (el.textContent || "").substring(0, 40));
+                                }
+                            }
+                            return info.join(" || ");
+                        }
+                    )()''', as_expr=True)
+                    logger.warning(f"确认弹层未出现（尝试 {attempt}/{retries + 1}），页面弹层: {debug_info}")
                     continue
 
                 # 3. 点击确定按钮

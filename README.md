@@ -59,6 +59,25 @@ pip install -r requirements.txt
 cp bot_config.json bot_config.json.bak  # 备份默认配置
 ```
 
+### 浏览器登录（推荐：破解版浏览器）
+
+BOSS 直聘对自动化操作有风控检测，**推荐使用破解版（反检测版）Chrome 浏览器**登录：
+
+1. **下载破解版 Chrome** — 绿色免安装版，已 patch `navigator.webdriver` 等检测点
+2. **在 `bot_config.json` 中指定路径**：
+   ```json
+   {
+     "browser": {
+       "browser_path": "C:/path/to/Chrome/chrome.exe",
+       "user_data_dir": "C:/path/to/user-data"
+     }
+   }
+   ```
+3. **首次启动** — 程序会打开浏览器，手动扫码/账密登录 BOSS 直聘，Cookie 自动保存
+4. **后续启动** — 自动加载已保存的 Cookie，无需重复登录
+
+> 也可使用系统已安装的 Chrome/Edge，但可能触发风控验证码。如遇验证码，程序会自动暂停并通知。
+
 ## 使用说明
 
 ### 方式一：Flask Web 界面（推荐）
@@ -67,6 +86,14 @@ cp bot_config.json bot_config.json.bak  # 备份默认配置
 python flask-version/app.py
 # 访问 http://localhost:5000
 ```
+
+**首次使用流程**：
+1. 打开 Web 界面 → 「账号管理」→ 填写破解版 Chrome 路径
+2. 点击「启动浏览器」→ 在弹出的浏览器中手动登录 BOSS 直聘
+3. 登录成功后 → Cookie 自动保存 → 后续免登录
+4. 在「岗位管理」中配置城市、搜索关键词、打招呼话术
+5. 点击「开始投递」→ 自动搜索岗位并发送打招呼消息
+6. 点击「开始回复」→ 自动监控未读消息并智能回复
 
 Web 界面提供：
 - 启动/停止机器人、暂停/恢复打招呼和回复
