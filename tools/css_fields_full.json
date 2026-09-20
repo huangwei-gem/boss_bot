@@ -1,0 +1,1021 @@
+{
+  "_meta": {
+    "chat_page_url": "https://www.zhipin.com/web/geek/chat",
+    "extracted_at": "2026-09-20 13:23:05",
+    "browser": "cloakbrowser"
+  },
+  "chat_page": {
+    "chat_name": [
+      ".top-info-content .name-text",
+      ".user-info .name-text",
+      ".name-text",
+      ".name-box .name-text"
+    ],
+    "input_box": [
+      "#chat-input",
+      ".chat-input",
+      "textarea",
+      "[contenteditable=true]"
+    ],
+    "send_button": [
+      ".btn-send",
+      ".btn-v2.btn-sure-v2.btn-send",
+      ".btn-sure-v2",
+      "[class*='send']"
+    ],
+    "job_name": [
+      ".chat-position-content .position-content",
+      ".position-content"
+    ],
+    "friend_item": [
+      ".friend-content",
+      "[class*='friend']",
+      ".user-list li"
+    ],
+    "send_resume_btn": [
+      "[class*='resume']"
+    ],
+    "confirm_dialog": [
+      ".dialog-wrap"
+    ],
+    "chat_message_list": [
+      ".chat-content",
+      ".message-content"
+    ],
+    "company_name": [
+      "[class*='company']"
+    ],
+    "toolbar_buttons": [
+      {
+        "tag": "span",
+        "class": "card-btn one-btn",
+        "text": "查看详细分析"
+      },
+      {
+        "tag": "div",
+        "class": "toolbar-btn-content",
+        "text": "发简历"
+      },
+      {
+        "tag": "div",
+        "class": "toolbar-btn tooltip tooltip-top",
+        "text": "发简历"
+      },
+      {
+        "tag": "div",
+        "class": "toolbar-btn-content",
+        "text": "换微信"
+      },
+      {
+        "tag": "div",
+        "class": "btn-weixin toolbar-btn tooltip tooltip-top",
+        "text": "换微信"
+      },
+      {
+        "tag": "button",
+        "class": "btn-v2 btn-sure-v2 btn-send disabled",
+        "text": "发送"
+      }
+    ],
+    "element_candidates": [
+      {
+        "tag": "span",
+        "class": "label-name",
+        "text": "全部"
+      },
+      {
+        "tag": "span",
+        "class": "label-name",
+        "text": "未读(7)"
+      },
+      {
+        "tag": "span",
+        "class": "label-name",
+        "text": "新招呼"
+      },
+      {
+        "tag": "span",
+        "class": "label-name more",
+        "text": "更多"
+      },
+      {
+        "tag": "span",
+        "class": "label-name",
+        "text": "AI筛选"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "邹先生长沙坤梁科技有限公司经理"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "邹先生长沙坤梁科技有限公司经理"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "邹先生"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "张女士湖南德沃招聘部"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "张女士湖南德沃招聘部"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "张女士"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "易鸣中软国际招聘主管"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "易鸣中软国际招聘主管"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "易鸣"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "胡茸万辰集团人才发展经理"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "胡茸万辰集团人才发展经理"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "胡茸"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "柳甜湖南先施制药有限公司人事"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "柳甜湖南先施制药有限公司人事"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "柳甜"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "高女士湖南百川智媒科技人事招聘专员"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "高女士湖南百川智媒科技人事招聘专员"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "高女士"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "陈先生湖南百川智媒科技招聘主管"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "陈先生湖南百川智媒科技招聘主管"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "陈先生"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "李女士伯乐华擎猎头顾问"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "李女士伯乐华擎猎头顾问"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "李女士"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "王女士丛茂科技HR"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "王女士丛茂科技HR"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "王女士"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "徐安飞乐行百川供应链管理总经理"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "徐安飞乐行百川供应链管理总经理"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "徐安飞"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "黄女士机械之家招聘主管"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "黄女士机械之家招聘主管"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "黄女士"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "贾女士长沙笠川科技有限公司招聘者"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "贾女士长沙笠川科技有限公司招聘者"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "贾女士"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "熊娜中晟全肽人事专员"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "熊娜中晟全肽人事专员"
+      }
+    ]
+  },
+  "chat_page_detail": {
+    "chat_name": [
+      {
+        "selector": ".top-info-content .name-text",
+        "tag": "span",
+        "class": "name-text",
+        "text": "邹先生",
+        "visible": true
+      },
+      {
+        "selector": ".user-info .name-text",
+        "tag": "span",
+        "class": "name-text",
+        "text": "邹先生",
+        "visible": true
+      },
+      {
+        "selector": ".name-text",
+        "tag": "span",
+        "class": "name-text",
+        "text": "邹先生",
+        "visible": true
+      },
+      {
+        "selector": ".name-box .name-text",
+        "tag": "span",
+        "class": "name-text",
+        "text": "邹先生",
+        "visible": true
+      }
+    ],
+    "input_box": [
+      {
+        "selector": "#chat-input",
+        "tag": "div",
+        "class": "chat-input",
+        "text": "",
+        "visible": true
+      },
+      {
+        "selector": ".chat-input",
+        "tag": "div",
+        "class": "chat-input",
+        "text": "",
+        "visible": true
+      },
+      {
+        "selector": "textarea",
+        "tag": "textarea",
+        "class": "input",
+        "text": "",
+        "visible": false
+      },
+      {
+        "selector": "[contenteditable=true]",
+        "tag": "div",
+        "class": "chat-input",
+        "text": "",
+        "visible": true
+      }
+    ],
+    "send_button": [
+      {
+        "selector": ".btn-send",
+        "tag": "button",
+        "class": "btn-v2 btn-sure-v2 btn-send disabled",
+        "text": "发送",
+        "visible": true
+      },
+      {
+        "selector": ".btn-v2.btn-sure-v2.btn-send",
+        "tag": "button",
+        "class": "btn-v2 btn-sure-v2 btn-send disabled",
+        "text": "发送",
+        "visible": true
+      },
+      {
+        "selector": ".btn-sure-v2",
+        "tag": "div",
+        "class": "btn-v2 btn-sure-v2 disabled",
+        "text": "提交",
+        "visible": false
+      },
+      {
+        "selector": "[class*='send']",
+        "tag": "div",
+        "class": "toolbar-btn-content icon btn-sendimg tooltip tooltip-top",
+        "text": "",
+        "visible": true
+      }
+    ],
+    "job_name": [
+      {
+        "selector": ".chat-position-content .position-content",
+        "tag": "div",
+        "class": "position-content",
+        "text": "兼职·大数据分析工程师80-120元/时长沙查看职位",
+        "visible": true
+      },
+      {
+        "selector": ".position-content",
+        "tag": "div",
+        "class": "position-content",
+        "text": "兼职·大数据分析工程师80-120元/时长沙查看职位",
+        "visible": true
+      }
+    ],
+    "friend_item": [
+      {
+        "selector": ".friend-content",
+        "tag": "div",
+        "class": "friend-content selected",
+        "text": "13:09邹先生长沙坤梁科技有限公司经理明天上午有时间过来面试一下吗？",
+        "visible": true
+      },
+      {
+        "selector": "[class*='friend']",
+        "tag": "div",
+        "class": "friend-content-warp",
+        "text": "13:09邹先生长沙坤梁科技有限公司经理明天上午有时间过来面试一下吗？",
+        "visible": true
+      },
+      {
+        "selector": ".user-list li",
+        "tag": "li",
+        "class": "",
+        "text": "13:09邹先生长沙坤梁科技有限公司经理明天上午有时间过来面试一下吗？",
+        "visible": true
+      }
+    ],
+    "send_resume_btn": [
+      {
+        "selector": "[class*='resume']",
+        "tag": "span",
+        "class": "nav-resume-tools",
+        "text": "简历new\n                        \n                            \n                    ",
+        "visible": true
+      }
+    ],
+    "confirm_dialog": [
+      {
+        "selector": ".dialog-wrap",
+        "tag": "div",
+        "class": "dialog-wrap upload-resume-dialog v-transfer-dom",
+        "text": "拖拽文件到这里简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式文件大小不超过20M上传附件简历 没有附件简历  在线填写",
+        "visible": false
+      }
+    ],
+    "chat_message_list": [
+      {
+        "selector": ".chat-content",
+        "tag": "div",
+        "class": "chat-content",
+        "text": "13:09邹先生长沙坤梁科技有限公司经理明天上午有时间过来面试一下吗？13:07张女士湖南德沃招聘部 [送达] 您好，看到您的招聘信息，我很感兴趣，希望可以进一",
+        "visible": true
+      },
+      {
+        "selector": ".message-content",
+        "tag": "div",
+        "class": "message-content",
+        "text": "昨天 12:34 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。你与该职位竞争者PK情况共人投递，你超过竞争者优秀竞争者会，建议你查看详细分析 ",
+        "visible": true
+      }
+    ],
+    "company_name": [
+      {
+        "selector": "[class*='company']",
+        "tag": "div",
+        "class": "company-detail-guide-download-app-v62",
+        "text": "下载App  查看更多",
+        "visible": false
+      }
+    ],
+    "toolbar_buttons": [
+      {
+        "tag": "span",
+        "class": "card-btn one-btn",
+        "text": "查看详细分析"
+      },
+      {
+        "tag": "div",
+        "class": "toolbar-btn-content",
+        "text": "发简历"
+      },
+      {
+        "tag": "div",
+        "class": "toolbar-btn tooltip tooltip-top",
+        "text": "发简历"
+      },
+      {
+        "tag": "div",
+        "class": "toolbar-btn-content",
+        "text": "换微信"
+      },
+      {
+        "tag": "div",
+        "class": "btn-weixin toolbar-btn tooltip tooltip-top",
+        "text": "换微信"
+      },
+      {
+        "tag": "button",
+        "class": "btn-v2 btn-sure-v2 btn-send disabled",
+        "text": "发送"
+      }
+    ],
+    "element_candidates": [
+      {
+        "tag": "span",
+        "class": "label-name",
+        "text": "全部"
+      },
+      {
+        "tag": "span",
+        "class": "label-name",
+        "text": "未读(7)"
+      },
+      {
+        "tag": "span",
+        "class": "label-name",
+        "text": "新招呼"
+      },
+      {
+        "tag": "span",
+        "class": "label-name more",
+        "text": "更多"
+      },
+      {
+        "tag": "span",
+        "class": "label-name",
+        "text": "AI筛选"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "邹先生长沙坤梁科技有限公司经理"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "邹先生长沙坤梁科技有限公司经理"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "邹先生"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "张女士湖南德沃招聘部"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "张女士湖南德沃招聘部"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "张女士"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "易鸣中软国际招聘主管"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "易鸣中软国际招聘主管"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "易鸣"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "胡茸万辰集团人才发展经理"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "胡茸万辰集团人才发展经理"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "胡茸"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "柳甜湖南先施制药有限公司人事"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "柳甜湖南先施制药有限公司人事"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "柳甜"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "高女士湖南百川智媒科技人事招聘专员"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "高女士湖南百川智媒科技人事招聘专员"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "高女士"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "陈先生湖南百川智媒科技招聘主管"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "陈先生湖南百川智媒科技招聘主管"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "陈先生"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "李女士伯乐华擎猎头顾问"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "李女士伯乐华擎猎头顾问"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "李女士"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "王女士丛茂科技HR"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "王女士丛茂科技HR"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "王女士"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "徐安飞乐行百川供应链管理总经理"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "徐安飞乐行百川供应链管理总经理"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "徐安飞"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "黄女士机械之家招聘主管"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "黄女士机械之家招聘主管"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "黄女士"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "贾女士长沙笠川科技有限公司招聘者"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "贾女士长沙笠川科技有限公司招聘者"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "贾女士"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "熊娜中晟全肽人事专员"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "熊娜中晟全肽人事专员"
+      }
+    ]
+  },
+  "job_detail_page": {
+    "chat_button": [
+      ".btn.btn-startchat",
+      ".btn-startchat",
+      "[class*='startchat']"
+    ],
+    "job_name": [
+      ".name h1",
+      ".job-title",
+      ".job-detail .name",
+      ".info-primary .name",
+      ".job-banner .name"
+    ],
+    "salary": [
+      ".salary",
+      ".info-primary .salary",
+      ".job-detail .salary",
+      "[class*='salary']"
+    ],
+    "company_name": [
+      ".company-info .name",
+      ".company-name",
+      ".job-detail .company-name",
+      "[class*='company-info'] [class*='name']"
+    ],
+    "job_description": [
+      ".job-sec-text",
+      "[class*='job-sec-text']"
+    ],
+    "job_keywords": [
+      ".job-tags"
+    ],
+    "job_area": [
+      ".info-primary .text-city",
+      ".text-city",
+      ".location-address",
+      ".job-location",
+      ".info-primary p"
+    ],
+    "button_candidates": [
+      {
+        "tag": "button",
+        "class": "btn btn-search",
+        "text": "搜索"
+      },
+      {
+        "tag": "span",
+        "class": "nav-chat-num",
+        "text": "7"
+      },
+      {
+        "tag": "a",
+        "class": "btn btn-interest ",
+        "text": "感兴趣"
+      },
+      {
+        "tag": "div",
+        "class": "btn btn-startchat-wrap",
+        "text": "立即沟通"
+      },
+      {
+        "tag": "a",
+        "class": "btn btn-startchat",
+        "text": "立即沟通"
+      },
+      {
+        "tag": "a",
+        "class": "link-wechat-share",
+        "text": "微信kanzhun扫码分享"
+      },
+      {
+        "tag": "button",
+        "class": "btn btn-search",
+        "text": "搜索"
+      }
+    ],
+    "_page_url": "https://www.zhipin.com/job_detail/1ff1bb5249cbf7480nJ93N6-GVVS.html?securityId=tUPOBoH2jF4QQ-C1xIkX_ows8uG5ivNJQsVmryngMwoh2uMUlISVdhHmU7SiC42pZDLnQ5MLAnLpHZR9XvLxpSja3MajZxMXo7Mle3k2aihmT1LQvQ6oBXQHV-7PsXxtwF4uMC4yS5IV"
+  },
+  "job_detail_page_detail": {
+    "chat_button": [
+      {
+        "selector": ".btn.btn-startchat",
+        "tag": "a",
+        "class": "btn btn-startchat",
+        "text": "立即沟通",
+        "visible": true
+      },
+      {
+        "selector": ".btn-startchat",
+        "tag": "a",
+        "class": "btn btn-startchat",
+        "text": "立即沟通",
+        "visible": true
+      },
+      {
+        "selector": "[class*='startchat']",
+        "tag": "div",
+        "class": "btn btn-startchat-wrap",
+        "text": "立即沟通",
+        "visible": true
+      }
+    ],
+    "job_name": [
+      {
+        "selector": ".name h1",
+        "tag": "h1",
+        "class": "",
+        "text": "秋招实习生（免费住宿 三方协议）",
+        "visible": true
+      },
+      {
+        "selector": ".job-title",
+        "tag": "span",
+        "class": "job-title",
+        "text": "秋招实习生（免费住宿 三方协议）",
+        "visible": false
+      },
+      {
+        "selector": ".job-detail .name",
+        "tag": "h2",
+        "class": "name",
+        "text": "尹女士\n                                    \n                                    刚刚活跃",
+        "visible": true
+      },
+      {
+        "selector": ".info-primary .name",
+        "tag": "div",
+        "class": "name",
+        "text": "秋招实习生（免费住宿 三方协议）\n                            4-6K",
+        "visible": true
+      },
+      {
+        "selector": ".job-banner .name",
+        "tag": "div",
+        "class": "name",
+        "text": "秋招实习生（免费住宿 三方协议）\n                            4-6K",
+        "visible": true
+      }
+    ],
+    "salary": [
+      {
+        "selector": ".salary",
+        "tag": "span",
+        "class": "salary",
+        "text": "4-6K",
+        "visible": true
+      },
+      {
+        "selector": ".info-primary .salary",
+        "tag": "span",
+        "class": "salary",
+        "text": "4-6K",
+        "visible": true
+      },
+      {
+        "selector": ".job-detail .salary",
+        "tag": "p",
+        "class": "salary",
+        "text": "5-10K",
+        "visible": true
+      },
+      {
+        "selector": "[class*='salary']",
+        "tag": "span",
+        "class": "salary",
+        "text": "4-6K",
+        "visible": true
+      }
+    ],
+    "company_name": [
+      {
+        "selector": ".company-info .name",
+        "tag": "div",
+        "class": "name",
+        "text": "秋招实习生（免费住宿 三方协议）\n                        4-6K",
+        "visible": false
+      },
+      {
+        "selector": ".company-name",
+        "tag": "span",
+        "class": "company-name",
+        "text": "鲨娱传媒",
+        "visible": false
+      },
+      {
+        "selector": ".job-detail .company-name",
+        "tag": "li",
+        "class": "company-name",
+        "text": "公司名称湖南晟星贸易有限责任公司",
+        "visible": true
+      },
+      {
+        "selector": "[class*='company-info'] [class*='name']",
+        "tag": "div",
+        "class": "name",
+        "text": "秋招实习生（免费住宿 三方协议）\n                        4-6K",
+        "visible": false
+      }
+    ],
+    "job_description": [
+      {
+        "selector": ".job-sec-text",
+        "tag": "div",
+        "class": "job-sec-text",
+        "text": "任职要求：  1、善于沟通、按时完成上级交给的工作；  2、拥有良好的团队合作精神，能迅速融入团队；  3、具备良好的学习能力，能够不断改进工作⽅法；4、基本的吃苦性，愿意从基层开始学习 岗位职责: ",
+        "visible": true
+      },
+      {
+        "selector": "[class*='job-sec-text']",
+        "tag": "div",
+        "class": "job-sec-text",
+        "text": "任职要求：  1、善于沟通、按时完成上级交给的工作；  2、拥有良好的团队合作精神，能迅速融入团队；  3、具备良好的学习能力，能够不断改进工作⽅法；4、基本的吃苦性，愿意从基层开始学习 岗位职责: ",
+        "visible": true
+      }
+    ],
+    "job_keywords": [
+      {
+        "selector": ".job-tags",
+        "tag": "div",
+        "class": "tag-all job-tags",
+        "text": "交通补助生日福利节日福利有无线网宿舍有空调包住团建聚餐全勤奖底薪加提成绩效奖金年终奖",
+        "visible": false
+      }
+    ],
+    "job_area": [
+      {
+        "selector": ".info-primary .text-city",
+        "tag": "a",
+        "class": "text-desc text-city",
+        "text": "长沙",
+        "visible": true
+      },
+      {
+        "selector": ".text-city",
+        "tag": "a",
+        "class": "text-desc text-city",
+        "text": "长沙",
+        "visible": true
+      },
+      {
+        "selector": ".location-address",
+        "tag": "div",
+        "class": "location-address",
+        "text": "长沙开福区万达·总部国际C115楼1506室",
+        "visible": true
+      },
+      {
+        "selector": ".job-location",
+        "tag": "div",
+        "class": "job-location",
+        "text": "长沙开福区万达·总部国际C115楼1506室\n                                        \n                                    ",
+        "visible": true
+      },
+      {
+        "selector": ".info-primary p",
+        "tag": "p",
+        "class": "",
+        "text": "长沙        在校/应届\n大专",
+        "visible": true
+      }
+    ],
+    "button_candidates": [
+      {
+        "tag": "button",
+        "class": "btn btn-search",
+        "text": "搜索"
+      },
+      {
+        "tag": "span",
+        "class": "nav-chat-num",
+        "text": "7"
+      },
+      {
+        "tag": "a",
+        "class": "btn btn-interest ",
+        "text": "感兴趣"
+      },
+      {
+        "tag": "div",
+        "class": "btn btn-startchat-wrap",
+        "text": "立即沟通"
+      },
+      {
+        "tag": "a",
+        "class": "btn btn-startchat",
+        "text": "立即沟通"
+      },
+      {
+        "tag": "a",
+        "class": "link-wechat-share",
+        "text": "微信kanzhun扫码分享"
+      },
+      {
+        "tag": "button",
+        "class": "btn btn-search",
+        "text": "搜索"
+      }
+    ],
+    "_page_url": "https://www.zhipin.com/job_detail/1ff1bb5249cbf7480nJ93N6-GVVS.html?securityId=tUPOBoH2jF4QQ-C1xIkX_ows8uG5ivNJQsVmryngMwoh2uMUlISVdhHmU7SiC42pZDLnQ5MLAnLpHZR9XvLxpSja3MajZxMXo7Mle3k2aihmT1LQvQ6oBXQHV-7PsXxtwF4uMC4yS5IV"
+  }
+}

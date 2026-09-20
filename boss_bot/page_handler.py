@@ -551,10 +551,12 @@ class BossChatHandler:
                         return "not found";
                     }
                 )()''', as_expr=True)
+                logger.info(f"点击发简历按钮结果: {click_result}（尝试 {attempt}/{retries + 1}）")
                 if click_result != "clicked":
                     logger.warning(f"发简历按钮未找到（尝试 {attempt}/{retries + 1}）")
                     time.sleep(1)
                     continue
+                logger.info("已点击发简历按钮，等待确认弹层...")
                 time.sleep(2)
 
                 # 2. 等待弹层出现：确认弹层 or 上传引导
@@ -562,10 +564,15 @@ class BossChatHandler:
                 for _ in range(15):  # 增加等待次数（15次×0.5秒=7.5秒）
                     state = self.page.run_js('''(
                         function() {
-                            // 多备选选择器检测确认弹层
+                            // 优先检测精确选择器 .panel-resume.sentence-popover（实测确认弹层）
+                            var exactPanel = document.querySelector(".panel-resume.sentence-popover");
+                            if (exactPanel) {
+                                var cs0 = window.getComputedStyle(exactPanel);
+                                if (cs0.display !== "none" && cs0.visibility !== "hidden" && cs0.opacity !== "0") return "confirm";
+                            }
+                            // 备选选择器检测确认弹层（兜底，不单独检测 .sentence-popover 以免误匹配其他弹层）
                             var panelSels = [
                                 ".panel-resume",
-                                ".sentence-popover",
                                 "[class*='panel-resume']",
                                 "[class*='resume-pop']",
                                 ".dialog-content[class*='resume']",
@@ -629,9 +636,21 @@ class BossChatHandler:
                 # 3. 点击确定按钮
                 send_result = self.page.run_js('''(
                     function() {
-                        var btn = document.querySelector(".panel-resume .btn-v2.btn-sure-v2");
+                        // 主选择器 + 备选选择器（实测: .panel-resume .btn-v2.btn-sure-v2）
+                        var btnSels = [
+                            ".panel-resume .btn-v2.btn-sure-v2",
+                            ".panel-resume.sentence-popover .btn-v2.btn-sure-v2",
+                            ".panel-resume .btn-sure",
+                            "[class*='panel-resume'] .btn-v2.btn-sure-v2"
+                        ];
+                        var btn = null;
+                        for (var i = 0; i < btnSels.length; i++) {
+                            btn = document.querySelector(btnSels[i]);
+                            if (btn) break;
+                        }
                         if (!btn) return "button not found";
-                        if (btn.className.indexOf("disabled") >= 0) return "button disabled";
+                        // disabled 检测：classList / disabled 属性 / className 兜底
+                        if (btn.disabled || btn.classList.contains("disabled") || btn.getAttribute("disabled") !== null) return "button disabled";
                         btn.click();
                         return "sent";
                     }
@@ -641,11 +660,19 @@ class BossChatHandler:
 
                 if send_result != "sent":
                     logger.warning(f"发送按钮不可用（尝试 {attempt}/{retries + 1}）: {send_result}")
-                    # 关闭弹层后重试
+                    # 关闭弹层后重试（实测取消按钮: .panel-resume .btn-v2.btn-outline-v2）
                     self.page.run_js('''(
                         function() {
-                            var btn = document.querySelector(".panel-resume .btn-outline-v2");
-                            if (btn) btn.click();
+                            var cancelSels = [
+                                ".panel-resume .btn-v2.btn-outline-v2",
+                                ".panel-resume.sentence-popover .btn-v2.btn-outline-v2",
+                                ".panel-resume .btn-outline-v2",
+                                "[class*='panel-resume'] .btn-v2.btn-outline-v2"
+                            ];
+                            for (var i = 0; i < cancelSels.length; i++) {
+                                var btn = document.querySelector(cancelSels[i]);
+                                if (btn) { btn.click(); return; }
+                            }
                         }
                     )()''', as_expr=True)
                     time.sleep(1)
@@ -668,11 +695,16 @@ class BossChatHandler:
             try:
                 result = self.page.run_js('''(
                     function() {
-                        var panel = document.querySelector(".panel-resume");
-                        if (panel) {
-                            var cs = window.getComputedStyle(panel);
-                            if (cs.display !== "none" && cs.visibility !== "hidden") return "panel visible";
+                        // 检测确认弹层是否仍可见（优先精确选择器 .panel-resume.sentence-popover）
+                        var panelSels = [".panel-resume.sentence-popover", ".panel-resume"];
+                        for (var i = 0; i < panelSels.length; i++) {
+                            var panel = document.querySelector(panelSels[i]);
+                            if (panel) {
+                                var cs = window.getComputedStyle(panel);
+                                if (cs.display !== "none" && cs.visibility !== "hidden") return "panel visible";
+                            }
                         }
+                        // 检测消息列表是否出现简历消息
                         var items = document.querySelectorAll(".message-item .text-content");
                         var count = items.length;
                         var last = count ? items[count - 1].textContent : "";

@@ -208,6 +208,7 @@ class GreetRecord:
         is_skipped: 是否跳过
         skip_reason: 跳过原因
         account_name: 账号名称
+        account_index: 账号索引
     """
 
     def __init__(
@@ -233,6 +234,7 @@ class GreetRecord:
         is_skipped: bool = False,
         skip_reason: str = "",
         account_name: str = "",
+        account_index: int = 0,
         timestamp: Optional[str] = None,
     ):
         self.timestamp = timestamp or datetime.now().isoformat()
@@ -265,6 +267,7 @@ class GreetRecord:
         self.is_skipped = is_skipped
         self.skip_reason = _truncate(skip_reason, MAX_SKIP_REASON_LEN)
         self.account_name = account_name
+        self.account_index = account_index
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -290,6 +293,7 @@ class GreetRecord:
             "is_skipped": self.is_skipped,
             "skip_reason": self.skip_reason,
             "account_name": self.account_name,
+            "account_index": self.account_index,
         }
 
     @classmethod
@@ -317,6 +321,7 @@ class GreetRecord:
             is_skipped=data.get("is_skipped", False),
             skip_reason=data.get("skip_reason", ""),
             account_name=data.get("account_name", ""),
+            account_index=data.get("account_index", 0),
         )
 
 
@@ -793,6 +798,7 @@ def record_greet(
     is_skipped: bool = False,
     skip_reason: str = "",
     account_name: str = "",
+    account_index: int = 0,
 ) -> GreetRecord:
     """便捷函数：创建并保存一条打招呼记录。
 
@@ -821,6 +827,7 @@ def record_greet(
         is_skipped=is_skipped,
         skip_reason=skip_reason,
         account_name=account_name,
+        account_index=account_index,
     )
     _get_greet_store().add(record)
     return record

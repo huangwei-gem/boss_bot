@@ -1640,13 +1640,20 @@ class GreetEngine:
             
             if chat_tab:
                 # 在新打开的聊天标签页中查找
+                # BOSS直聘聊天页面输入框实际是 #chat-input（contenteditable div，class=chat-input）
+                # 优先使用 #chat-input / .chat-input，再降级到 .input-area 等其他选择器
                 try:
-                    input_area = chat_tab.ele(".input-area", timeout=10)
-                    if input_area:
-                        self._log("INFO", "在聊天标签页找到输入框: .input-area")
-                        # 切换 instance 到聊天标签页
-                        instance._page = chat_tab
-                        instance._tab = chat_tab
+                    for sel in ["#chat-input", ".chat-input", ".input-area", "tag:textarea", "[contenteditable=true]"]:
+                        try:
+                            input_area = chat_tab.ele(sel, timeout=3)
+                            if input_area:
+                                self._log("INFO", f"在聊天标签页找到输入框: {sel}")
+                                # 切换 instance 到聊天标签页
+                                instance._page = chat_tab
+                                instance._tab = chat_tab
+                                break
+                        except Exception:
+                            pass
                 except Exception as e:
                     self._log("DEBUG", f"在聊天标签页查找输入框失败: {e}")
             
@@ -1654,20 +1661,30 @@ class GreetEngine:
             if not input_area and browser:
                 try:
                     latest = browser.latest_tab
-                    input_area = latest.ele(".input-area", timeout=5)
-                    if input_area:
-                        self._log("INFO", f"在latest_tab找到输入框: {latest.url}")
-                        instance._page = latest
-                        instance._tab = latest
+                    for sel in ["#chat-input", ".chat-input", ".input-area", "tag:textarea", "[contenteditable=true]"]:
+                        try:
+                            input_area = latest.ele(sel, timeout=2)
+                            if input_area:
+                                self._log("INFO", f"在latest_tab找到输入框: {sel} (url={latest.url})")
+                                instance._page = latest
+                                instance._tab = latest
+                                break
+                        except Exception:
+                            pass
                 except Exception:
                     pass
             
             # 如果还没找到，尝试当前页面
             if not input_area:
                 try:
-                    input_area = instance.ele(".input-area", timeout=5)
-                    if input_area:
-                        self._log("INFO", "在当前页面找到输入框: .input-area")
+                    for sel in ["#chat-input", ".chat-input", ".input-area", "tag:textarea", "[contenteditable=true]"]:
+                        try:
+                            input_area = instance.ele(sel, timeout=2)
+                            if input_area:
+                                self._log("INFO", f"在当前页面找到输入框: {sel}")
+                                break
+                        except Exception:
+                            pass
                 except Exception:
                     pass
 
@@ -1685,7 +1702,8 @@ class GreetEngine:
                                     tab_url = tab.url
                                     self._log("DEBUG", f"  检查标签页: {tab_url}")
                                     # 不过滤URL，在每个标签页中尝试查找输入框
-                                    for sel in [".input-area", "#chat-input", ".chat-input", "tag:textarea", "[contenteditable=true]"]:
+                                    # 优先 #chat-input / .chat-input（BOSS直聘实际使用的选择器）
+                                    for sel in ["#chat-input", ".chat-input", ".input-area", "tag:textarea", "[contenteditable=true]"]:
                                         try:
                                             input_area = tab.ele(sel, timeout=3)
                                             if input_area:
@@ -1711,7 +1729,7 @@ class GreetEngine:
                         self._log("INFO", f"发现 {len(iframes)} 个iframe，尝试在iframe中查找输入框")
                         for iframe in iframes:
                             try:
-                                for sel in [".input-area", ".chat-input", "tag:textarea", "[contenteditable=true]"]:
+                                for sel in ["#chat-input", ".chat-input", ".input-area", "tag:textarea", "[contenteditable=true]"]:
                                     input_area = iframe.ele(sel, timeout=3)
                                     if input_area:
                                         self._log("INFO", f"在iframe中找到输入框: {sel}")
@@ -1751,7 +1769,7 @@ class GreetEngine:
             try:
                 # 尝试多个发送按钮选择器
                 send_btn = None
-                for send_sel in [".send-message", ".btn-send", ".btn-v2.btn-sure-v2.btn-send", "tag:button@@type=submit", ".chat-send"]:
+                for send_sel in [".btn-send", ".btn-v2.btn-sure-v2.btn-send", ".send-message", "tag:button@@type=submit", ".chat-send"]:
                     try:
                         send_btn = instance.ele(send_sel, timeout=3)
                         if send_btn:
