@@ -51,7 +51,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from boss_bot.unified_config import (
     UnifiedConfig, BASE_DIR, BOT_CONFIG_FILE, USER_PROFILE_FILE,
     OVERRIDES_FILE,
-    load_config, save_config, validate_config, DEFAULT_GREETING,
+    load_config, save_config, save_overrides, validate_config, DEFAULT_GREETING,
 )
 from boss_bot.main_loop import UnifiedBotLoop, MultiAccountManager
 from boss_bot.self_evolve import SelfEvolveEngine
@@ -618,7 +618,14 @@ def api_get_config():
 
 @app.route("/api/config", methods=["POST", "PUT"])
 def api_save_config():
-    """保存配置。"""
+    """保存配置。
+
+    保存策略：
+      - reply_rules、templates、importance_keywords、user_profile 同时写入
+        bot_config.json 和 config_overrides.json，确保两个文件一致。
+      - AI 配置等其他字段只写入 bot_config.json。
+      - 保存后重新加载配置，确保后端读到正确的值。
+    """
     global _config, _multi_manager
     try:
         data = request.get_json()
@@ -634,8 +641,12 @@ def api_save_config():
         if errors:
             return jsonify({"status": "error", "message": "；".join(errors)}), 400
 
-        # 保存到文件
+        # 保存到 bot_config.json（主配置源）
         save_config(new_cfg)
+
+        # 同步 reply_rules、templates、importance_keywords、user_profile 到 config_overrides.json
+        # 确保 config_overrides.json 中的覆盖配置与 bot_config.json 一致
+        save_overrides(new_cfg)
 
         # 重新加载配置
         _config = UnifiedConfig.load()
@@ -1858,9 +1869,10 @@ def api_get_rules():
 def api_save_rules():
     """保存回复规则和重要关键词。
 
-    将规则写入 config_overrides.json（OVERRIDES_FILE），因为 to_dict() 不含
-    rules 字段，cfg.save() 不会持久化 rules。_apply_overrides 会从
-    config_overrides.json 加载 reply_rules 和 importance_keywords。
+    三端一致策略：同时写入 bot_config.json 和 config_overrides.json，
+    确保两个文件中的 reply_rules 和 importance_keywords 完全一致。
+    后端 UnifiedConfig.load() 会先加载 bot_config.json，再用 config_overrides.json 覆盖，
+    因此两个文件保持一致可避免任何不一致问题。
     """
     global _config
     try:
@@ -1874,7 +1886,7 @@ def api_save_rules():
         if "importance_keywords" in rules_data and isinstance(rules_data["importance_keywords"], list):
             cfg.rules.importance_keywords = list(rules_data["importance_keywords"])
 
-        # 2. 持久化到 config_overrides.json（rules 的真正存储位置）
+        # 2. 持久化到 config_overrides.json
         overrides = {}
         if OVERRIDES_FILE.exists():
             try:
@@ -1889,7 +1901,22 @@ def api_save_rules():
         with open(OVERRIDES_FILE, "w", encoding="utf-8") as f:
             json.dump(overrides, f, ensure_ascii=False, indent=2)
 
-        # 3. 重新加载配置以保持一致性
+        # 3. 同步写入 bot_config.json，保持三端一致
+        try:
+            with open(BOT_CONFIG_FILE, "r", encoding="utf-8") as f:
+                bot_cfg = json.load(f)
+            if not isinstance(bot_cfg, dict):
+                bot_cfg = {}
+        except Exception:
+            bot_cfg = {}
+        if "reply_rules" in rules_data and isinstance(rules_data["reply_rules"], dict):
+            bot_cfg["reply_rules"] = dict(rules_data["reply_rules"])
+        if "importance_keywords" in rules_data and isinstance(rules_data["importance_keywords"], list):
+            bot_cfg["importance_keywords"] = list(rules_data["importance_keywords"])
+        with open(BOT_CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(bot_cfg, f, ensure_ascii=False, indent=2)
+
+        # 4. 重新加载配置以保持一致性
         _config = UnifiedConfig.load()
 
         return jsonify({"status": "ok", "message": "规则已保存"})
@@ -1920,9 +1947,11 @@ def api_get_templates():
 def api_save_templates():
     """保存回复模板。
 
-    将模板写入 config_overrides.json 的 reply_templates 字段（大写键），
-    因为 to_dict() 不含 templates 字段，cfg.save() 不会持久化 templates。
-    _apply_overrides 会从 config_overrides.json 的 reply_templates 加载。
+    三端一致策略：同时写入 bot_config.json（templates 小写键）和
+    config_overrides.json（reply_templates 大写键），确保两个文件完全一致。
+    后端 UnifiedConfig.load() 会先加载 bot_config.json 的 templates，
+    再用 config_overrides.json 的 reply_templates 覆盖，因此两个文件保持一致
+    可避免任何不一致问题。
     """
     global _config
     try:
@@ -1951,7 +1980,7 @@ def api_save_templates():
         if "resume_unavailable_reply" in templates_data:
             cfg.templates.resume_unavailable_reply = str(templates_data["resume_unavailable_reply"])
 
-        # 2. 持久化到 config_overrides.json（templates 的真正存储位置）
+        # 2. 持久化到 config_overrides.json（reply_templates 大写键）
         overrides = {}
         if OVERRIDES_FILE.exists():
             try:
@@ -1981,7 +2010,36 @@ def api_save_templates():
         with open(OVERRIDES_FILE, "w", encoding="utf-8") as f:
             json.dump(overrides, f, ensure_ascii=False, indent=2)
 
-        # 3. 重新加载配置以保持一致性
+        # 3. 同步写入 bot_config.json（templates 小写键），保持三端一致
+        try:
+            with open(BOT_CONFIG_FILE, "r", encoding="utf-8") as f:
+                bot_cfg = json.load(f)
+            if not isinstance(bot_cfg, dict):
+                bot_cfg = {}
+        except Exception:
+            bot_cfg = {}
+        bt = bot_cfg.get("templates", {})
+        if not isinstance(bt, dict):
+            bt = {}
+        if "salary_reply" in templates_data:
+            bt["salary_reply"] = str(templates_data["salary_reply"])
+        if "interview_time_reply" in templates_data:
+            bt["interview_time_reply"] = str(templates_data["interview_time_reply"])
+        if "job_content_reply" in templates_data:
+            bt["job_content_reply"] = str(templates_data["job_content_reply"])
+        if "greeting_reply" in templates_data:
+            bt["greeting_reply"] = str(templates_data["greeting_reply"])
+        if "default_reply" in templates_data:
+            bt["default_reply"] = str(templates_data["default_reply"])
+        if "resume_duplicate_reply" in templates_data:
+            bt["resume_duplicate_reply"] = str(templates_data["resume_duplicate_reply"])
+        if "resume_unavailable_reply" in templates_data:
+            bt["resume_unavailable_reply"] = str(templates_data["resume_unavailable_reply"])
+        bot_cfg["templates"] = bt
+        with open(BOT_CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(bot_cfg, f, ensure_ascii=False, indent=2)
+
+        # 4. 重新加载配置以保持一致性
         _config = UnifiedConfig.load()
 
         return jsonify({"status": "ok", "message": "模板已保存"})

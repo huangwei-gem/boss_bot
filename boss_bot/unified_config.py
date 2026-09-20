@@ -610,6 +610,7 @@ class UnifiedConfig:
                     self.rules.reply_rules[rk.strip()] = rv
 
         # 回复模板
+        # bot_config.json 使用 templates（小写字段名），但也兼容 reply_templates（大写字段名）
         templates = data.get("templates", {})
         if isinstance(templates, dict):
             if "salary_reply" in templates:
@@ -626,6 +627,23 @@ class UnifiedConfig:
                 self.templates.resume_duplicate_reply = str(templates["resume_duplicate_reply"])
             if "resume_unavailable_reply" in templates:
                 self.templates.resume_unavailable_reply = str(templates["resume_unavailable_reply"])
+        # 兼容 config_overrides.json 风格的 reply_templates（大写字段名）
+        reply_templates = data.get("reply_templates", {})
+        if isinstance(reply_templates, dict):
+            if "SALARY_REPLY" in reply_templates:
+                self.templates.salary_reply = str(reply_templates["SALARY_REPLY"])
+            if "INTERVIEW_TIME_REPLY" in reply_templates:
+                self.templates.interview_time_reply = str(reply_templates["INTERVIEW_TIME_REPLY"])
+            if "JOB_CONTENT_REPLY" in reply_templates:
+                self.templates.job_content_reply = str(reply_templates["JOB_CONTENT_REPLY"])
+            if "GREETING_REPLY" in reply_templates:
+                self.templates.greeting_reply = str(reply_templates["GREETING_REPLY"])
+            if "DEFAULT_REPLY" in reply_templates:
+                self.templates.default_reply = str(reply_templates["DEFAULT_REPLY"])
+            if "RESUME_DUPLICATE_REPLY" in reply_templates:
+                self.templates.resume_duplicate_reply = str(reply_templates["RESUME_DUPLICATE_REPLY"])
+            if "RESUME_UNAVAILABLE_REPLY" in reply_templates:
+                self.templates.resume_unavailable_reply = str(reply_templates["RESUME_UNAVAILABLE_REPLY"])
 
         # 重要事件关键词
         importance_keywords = data.get("importance_keywords", [])
@@ -686,6 +704,14 @@ class UnifiedConfig:
                     continue
                 if rv == "send_resume" or (isinstance(rv, str) and 0 < len(rv.strip()) <= 200):
                     self.rules.reply_rules[rk.strip()] = rv
+
+        # 个人画像覆盖（如果 config_overrides.json 中有 user_profile 字段）
+        if "user_profile" in data and isinstance(data["user_profile"], dict):
+            for k, v in data["user_profile"].items():
+                if v is None:
+                    continue
+                if hasattr(self.user_profile, k):
+                    setattr(self.user_profile, k, v)
 
     def _apply_env_overrides(self):
         """应用环境变量覆盖（最高优先级）。"""
@@ -919,6 +945,28 @@ class UnifiedConfig:
                 "log_retention_days": self.log.log_retention_days,
                 "event_log_enabled": self.log.event_log_enabled,
             },
+            "reply_rules": dict(self.rules.reply_rules),
+            "importance_keywords": list(self.rules.importance_keywords),
+            "templates": {
+                "salary_reply": self.templates.salary_reply,
+                "interview_time_reply": self.templates.interview_time_reply,
+                "job_content_reply": self.templates.job_content_reply,
+                "greeting_reply": self.templates.greeting_reply,
+                "default_reply": self.templates.default_reply,
+                "resume_duplicate_reply": self.templates.resume_duplicate_reply,
+                "resume_unavailable_reply": self.templates.resume_unavailable_reply,
+            },
+            "user_profile": {
+                "name": self.user_profile.name,
+                "education": self.user_profile.education,
+                "position": self.user_profile.position,
+                "skills": list(self.user_profile.skills),
+                "experience": self.user_profile.experience,
+                "salary_expectation": self.user_profile.salary_expectation,
+                "available_interview_time": self.user_profile.available_interview_time,
+                "contact": self.user_profile.contact,
+                "highlights": list(self.user_profile.highlights),
+            },
         }
 
     def validate(self) -> list:
@@ -1053,6 +1101,70 @@ def save_config(cfg: dict) -> None:
     """保存配置字典到 bot_config.json（兼容 auto_boss 接口）。"""
     with open(BOT_CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(cfg, f, ensure_ascii=False, indent=2)
+
+
+def save_overrides(cfg: dict) -> None:
+    """将 reply_rules、reply_templates、importance_keywords、user_profile 同步写入 config_overrides.json。
+
+    字段名映射：
+      - bot_config.json 的 templates（小写字段名）→ config_overrides.json 的 reply_templates（大写字段名）
+      - reply_rules、importance_keywords、user_profile 字段名保持一致
+
+    保留 config_overrides.json 中已有的 system_rules、user_prompt_template 等其他字段。
+
+    Args:
+        cfg: 来自前端的配置字典（与 bot_config.json 结构一致）
+    """
+    if not isinstance(cfg, dict):
+        return
+
+    # 读取现有 config_overrides.json，保留其他字段
+    existing = {}
+    if OVERRIDES_FILE.exists():
+        try:
+            with open(OVERRIDES_FILE, "r", encoding="utf-8") as f:
+                existing = json.load(f)
+            if not isinstance(existing, dict):
+                existing = {}
+        except (json.JSONDecodeError, OSError):
+            existing = {}
+
+    # 同步 reply_rules
+    if "reply_rules" in cfg and isinstance(cfg["reply_rules"], dict):
+        existing["reply_rules"] = dict(cfg["reply_rules"])
+
+    # 同步 importance_keywords
+    if "importance_keywords" in cfg and isinstance(cfg["importance_keywords"], list):
+        existing["importance_keywords"] = list(cfg["importance_keywords"])
+
+    # 同步 user_profile
+    if "user_profile" in cfg and isinstance(cfg["user_profile"], dict):
+        existing["user_profile"] = dict(cfg["user_profile"])
+
+    # 同步 templates → reply_templates（字段名映射：小写 → 大写）
+    templates = cfg.get("templates", {})
+    if isinstance(templates, dict) and templates:
+        rt = existing.get("reply_templates", {})
+        if not isinstance(rt, dict):
+            rt = {}
+        if "salary_reply" in templates:
+            rt["SALARY_REPLY"] = str(templates["salary_reply"])
+        if "interview_time_reply" in templates:
+            rt["INTERVIEW_TIME_REPLY"] = str(templates["interview_time_reply"])
+        if "job_content_reply" in templates:
+            rt["JOB_CONTENT_REPLY"] = str(templates["job_content_reply"])
+        if "greeting_reply" in templates:
+            rt["GREETING_REPLY"] = str(templates["greeting_reply"])
+        if "default_reply" in templates:
+            rt["DEFAULT_REPLY"] = str(templates["default_reply"])
+        if "resume_duplicate_reply" in templates:
+            rt["RESUME_DUPLICATE_REPLY"] = str(templates["resume_duplicate_reply"])
+        if "resume_unavailable_reply" in templates:
+            rt["RESUME_UNAVAILABLE_REPLY"] = str(templates["resume_unavailable_reply"])
+        existing["reply_templates"] = rt
+
+    with open(OVERRIDES_FILE, "w", encoding="utf-8") as f:
+        json.dump(existing, f, ensure_ascii=False, indent=2)
 
 
 def validate_config(cfg: dict) -> list:

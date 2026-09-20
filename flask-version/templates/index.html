@@ -1633,23 +1633,26 @@ function renderConfigPreview() {
   }
   html += '</div>';
 
-  // 6. 个人画像
+  // 6. 个人画像（user_profile 字段：name/education/position/experience/salary_expectation/available_interview_time/contact/highlights/skills）
   html += '<div style="margin-bottom:10px;padding:8px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg)">';
   html += '<div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin-bottom:4px">个人画像</div>';
   try {
     var profile = config.user_profile || {};
     var profileLabels = {
-      'school': '学校',
-      'major': '专业',
-      'degree': '学历',
-      'target_position': '求职意向',
+      'name': '姓名',
+      'education': '学历',
+      'position': '求职意向',
       'experience': '工作经验',
-      'self_intro': '自我介绍'
+      'salary_expectation': '期望薪资',
+      'available_interview_time': '可面试时间',
+      'contact': '联系方式'
     };
+    var profileHasValue = false;
     for (var pk in profileLabels) {
       if (Object.prototype.hasOwnProperty.call(profileLabels, pk)) {
         var pv = profile[pk] || '';
         if (pv) {
+          profileHasValue = true;
           html += '<div style="font-size:10px;color:var(--fg);margin-bottom:4px">' +
             '<span style="color:var(--fg-3rd);font-weight:600">' + escHtml(profileLabels[pk]) + ':</span> ' +
             '<span style="white-space:pre-wrap;word-break:break-all">' + escHtml(pv) + '</span></div>';
@@ -1657,10 +1660,16 @@ function renderConfigPreview() {
       }
     }
     if (profile.skills && profile.skills.length > 0) {
+      profileHasValue = true;
       html += '<div style="font-size:10px;color:var(--fg);margin-bottom:4px">' +
         '<span style="color:var(--fg-3rd);font-weight:600">技能:</span> ' + escHtml(profile.skills.join('、')) + '</div>';
     }
-    if (!profile.school && !profile.major && !profile.target_position) {
+    if (profile.highlights && profile.highlights.length > 0) {
+      profileHasValue = true;
+      html += '<div style="font-size:10px;color:var(--fg);margin-bottom:4px">' +
+        '<span style="color:var(--fg-3rd);font-weight:600">亮点:</span> ' + escHtml(profile.highlights.join('、')) + '</div>';
+    }
+    if (!profileHasValue) {
       html += '<div style="font-size:10px;color:var(--fg-3rd)">暂无个人画像</div>';
     }
   } catch (e) {
