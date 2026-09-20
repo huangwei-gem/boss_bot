@@ -300,11 +300,12 @@ a{color:var(--accent);text-decoration:none}
 .log-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:8px;color:var(--fg-3rd)}
 
 /* Greet Table */
-.greet-table{width:100%;border-collapse:collapse;font-size:12px}
-.greet-table thead{position:sticky;top:0;background:var(--bg-2nd);z-index:1}
-.greet-table th{padding:8px 10px;text-align:left;font-weight:600;color:var(--fg-2nd);border-bottom:1px solid var(--border);font-size:11px;white-space:nowrap}
-.greet-table td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.greet-table tr:hover td{background:var(--bg-3rd)}
+.greet-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+.greet-table thead{position:sticky;top:0;background:var(--surface);z-index:10;box-shadow:0 1px 0 var(--bd-2)}
+.greet-table thead th{background:var(--surface)}
+.greet-table th{padding:8px 10px;text-align:left;font-weight:600;color:var(--fg-2nd);border-bottom:1px solid var(--bd-2);font-size:11px;white-space:nowrap}
+.greet-table td{padding:7px 10px;border-bottom:1px solid var(--bd);color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.greet-table tr:hover td{background:var(--surface-hover)}
 .greet-status{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
 .greet-status-success{background:rgba(34,197,94,.15);color:var(--success)}
 .greet-status-skip{background:rgba(107,114,128,.16);color:var(--fg-3rd)}
@@ -653,7 +654,7 @@ a{color:var(--accent);text-decoration:none}
           </div>
           <div class="record-tab-content" id="replyTabContent" style="padding:0;flex:1;overflow-y:auto">
             <table class="greet-table" id="replyTable">
-              <thead><tr><th>时间</th><th>聊天对象</th><th>岗位</th><th>对方消息</th><th>我的回复</th><th>状态</th></tr></thead>
+              <thead><tr><th>时间</th><th>聊天对象</th><th>岗位</th><th>对方消息</th><th>我的回复</th><th>状态</th><th>来源</th><th>说明</th></tr></thead>
               <tbody id="replyTableBody"></tbody>
             </table>
             <div class="empty-state" id="replyEmpty" style="height:100%;min-height:200px">
@@ -2023,6 +2024,11 @@ function setControls(running) {
 }
 
 function updateStats() {
+  // 确保 total 至少为 applied + skipped，避免"总任务0但已投递4"的不一致
+  var sumAppliedSkipped = (stats.applied||0) + (stats.skipped||0);
+  if (!stats.total || stats.total < sumAppliedSkipped) {
+    stats.total = sumAppliedSkipped;
+  }
   const t=document.getElementById('statTotal'),a=document.getElementById('statApplied'),s=document.getElementById('statSkipped');
   const rs=document.getElementById('statReplySent'),rsk=document.getElementById('statReplySkipped');
   if(t) t.textContent=stats.total;
@@ -2157,17 +2163,39 @@ function addReplyRecord(data){
   if(empty) empty.style.display='none';
   const tr=document.createElement('tr');
   const time=data.time||new Date().toLocaleTimeString();
+  // 字段映射：兼容新旧字段名
+  //   旧: incoming_message / reply_message / boss_name
+  //   新: received_message / reply_content  / chat_name
+  const chatName = data.chat_name || data.boss_name || '';
+  const receivedMsg = data.received_message || data.incoming_message || data.message || '';
+  const replyMsg = data.reply_content || data.reply_message || data.reply || '';
+  const replySource = data.reply_source || '';
+  const skipReason = data.skip_reason || '';
+  const replyReason = data.reply_reason || '';
+  // 状态判定
   var statusLabel = data.status || '已回复';
   var statusCls = 'greet-status-success';
-  if (data.status === 'skip' || data.status === 'skipped') { statusLabel = '跳过'; statusCls = 'greet-status-skip'; }
+  if (data.status === 'skip' || data.status === 'skipped' || data.is_skipped) { statusLabel = '跳过'; statusCls = 'greet-status-skip'; }
   else if (data.status === 'error' || data.status === 'failed') { statusLabel = '失败'; statusCls = 'greet-status-error'; }
-  else if (data.status === 'ai') { statusLabel = 'AI回复'; statusCls = 'greet-status-ai_skip'; }
+  else if (data.status === 'ai' || replySource === 'ai') { statusLabel = 'AI回复'; statusCls = 'greet-status-ai_skip'; }
+  // 来源标签
+  var sourceLabel = '—';
+  if (replySource === 'ai') sourceLabel = 'AI';
+  else if (replySource === 'rule') sourceLabel = '规则';
+  else if (replySource === 'intent') sourceLabel = '意图';
+  else if (replySource === 'default') sourceLabel = '默认';
+  else if (replySource === 'skip') sourceLabel = '跳过';
+  else if (replySource) sourceLabel = replySource;
+  // 说明列：跳过时显示跳过原因，否则显示回复理由（若有）
+  var noteText = skipReason || replyReason || '';
   tr.innerHTML='<td>'+escHtml(time)+'</td>'
-    +'<td title="'+escAttr(data.chat_name||'')+'">'+escHtml(data.chat_name||data.boss_name||'—')+'</td>'
+    +'<td title="'+escAttr(chatName)+'">'+escHtml(chatName||'—')+'</td>'
     +'<td title="'+escAttr(data.job_name||'')+'">'+escHtml(data.job_name||'—')+'</td>'
-    +'<td title="'+escAttr(data.incoming_message||'')+'" style="max-width:180px">'+escHtml((data.incoming_message||data.message||'').slice(0,40))+'</td>'
-    +'<td title="'+escAttr(data.reply_message||'')+'" style="max-width:180px">'+escHtml((data.reply_message||data.reply||'').slice(0,40))+'</td>'
-    +'<td><span class="greet-status '+statusCls+'">'+escHtml(statusLabel)+'</span></td>';
+    +'<td title="'+escAttr(receivedMsg)+'" style="max-width:180px">'+escHtml(receivedMsg.slice(0,40))+'</td>'
+    +'<td title="'+escAttr(replyMsg)+'" style="max-width:180px">'+escHtml(replyMsg.slice(0,40))+'</td>'
+    +'<td><span class="greet-status '+statusCls+'">'+escHtml(statusLabel)+'</span></td>'
+    +'<td>'+escHtml(sourceLabel)+'</td>'
+    +'<td title="'+escAttr(noteText)+'" style="max-width:160px">'+escHtml(noteText.slice(0,30))+'</td>';
   body.appendChild(tr);
   const panel=body.parentElement;
   if(panel) panel.scrollTop=panel.scrollHeight;
@@ -2488,6 +2516,58 @@ loadTheme();
 loadConfig();
 // 启动通知红点轮询（每30秒刷新一次）
 startNotifPolling();
+
+// ── 页面加载时拉取历史记录 ──
+// 加载历史打招呼记录
+fetch('/api/greet_records').then(function(r){return r.json();}).then(function(data){
+  if(!data || !data.records || !data.records.length) return;
+  data.records.forEach(function(rec){
+    addGreetRecord({
+      status: rec.is_skipped ? 'skip' : 'success',
+      job_name: rec.job_name || '',
+      company: rec.company || '',
+      salary: rec.salary || '',
+      url: rec.job_url || '',
+      time: (rec.timestamp||'').slice(11,19),
+      is_skipped: rec.is_skipped,
+      skip_reason: rec.skip_reason || '',
+      ai_score: rec.ai_score || '',
+      actual_greeting_sent: rec.actual_greeting_sent || ''
+    });
+  });
+  // 用历史记录数修正统计卡片（避免总任务显示0但实际有记录）
+  var histCount = data.records.length;
+  if (stats.total < histCount) stats.total = histCount;
+  var applied = data.records.filter(function(r){return !r.is_skipped;}).length;
+  var skipped = data.records.filter(function(r){return r.is_skipped;}).length;
+  if (stats.applied < applied) stats.applied = applied;
+  if (stats.skipped < skipped) stats.skipped = skipped;
+  updateStats();
+}).catch(function(e){console.error('加载打招呼记录失败:',e);});
+
+// 加载历史回复记录
+fetch('/api/reply_records').then(function(r){return r.json();}).then(function(data){
+  if(!data || !data.records || !data.records.length) return;
+  data.records.forEach(function(rec){
+    addReplyRecord({
+      time: (rec.timestamp||'').slice(11,19),
+      chat_name: rec.chat_name || '',
+      job_name: rec.job_name || '',
+      received_message: rec.received_message || '',
+      reply_content: rec.reply_content || '',
+      status: rec.is_skipped ? 'skipped' : (rec.reply_source==='ai' ? 'ai' : 'replied'),
+      reply_source: rec.reply_source || '',
+      skip_reason: rec.skip_reason || '',
+      reply_reason: rec.reply_reason || ''
+    });
+  });
+  // 用历史记录数修正回复统计卡片
+  var replySent = data.records.filter(function(r){return !r.is_skipped;}).length;
+  var replySkipped = data.records.filter(function(r){return r.is_skipped;}).length;
+  if (stats.reply_sent < replySent) stats.reply_sent = replySent;
+  if (stats.reply_skipped < replySkipped) stats.reply_skipped = replySkipped;
+  updateStats();
+}).catch(function(e){console.error('加载回复记录失败:',e);});
 
 function closeLoginModal() {
   const modal = document.getElementById("loginModal");

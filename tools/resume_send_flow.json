@@ -1,0 +1,113 @@
+{
+  "step_1_open_chat": {
+    "status": "success",
+    "detail": "打开聊天页面",
+    "url": "https://www.zhipin.com/web/geek/chat"
+  },
+  "step_2_click_friend": {
+    "status": "success",
+    "detail": "点击第一个会话",
+    "clicked": true
+  },
+  "step_3_find_resume_btn": {
+    "status": "success",
+    "detail": "查找发简历按钮",
+    "button_info": {
+      "found": true,
+      "tag": "div",
+      "class": "toolbar-btn tooltip tooltip-top unable",
+      "text": "发简历",
+      "outerHTML": "<div data-v-1352bb5b=\"\" aria-label=\"求简历：双方回复后可用\" d-c=\"62009\" class=\"toolbar-btn tooltip tooltip-top unable\"> 发简历 </div>",
+      "selector_hint": "文本为'发简历'的toolbar按钮"
+    }
+  },
+  "step_4_click_resume_btn": {
+    "status": "success",
+    "detail": "点击发简历按钮",
+    "click_result": {
+      "clicked": true,
+      "method": "toolbar文本匹配"
+    }
+  },
+  "step_5_wait_dialog": {
+    "status": "success",
+    "detail": "等待确认弹层出现",
+    "dialog_found": true,
+    "dialogs": [
+      {
+        "selector": ".v-transfer-dom",
+        "tag": "div",
+        "class": "context-menu v-transfer-dom",
+        "visible": false,
+        "text": "",
+        "outerHTML": "<div data-v-56b23c81=\"\" data-v-a2f29c4e=\"\" data-transfer=\"true\" class=\"context-menu v-transfer-dom\" conversation=\"[object Object]\"><!----></div>"
+      }
+    ]
+  },
+  "step_6_screenshot_dialog": {
+    "status": "success",
+    "detail": "截图弹层",
+    "screenshot": "C:\\Users\\35796\\orca\\boss_bot\\logs\\resume_confirm_dialog.png"
+  },
+  "step_7_record_dialog_selectors": {
+    "status": "success",
+    "detail": "记录弹层确定/取消按钮选择器",
+    "confirm_btn": {
+      "selector": ".btn-sure-v2",
+      "tag": "button",
+      "class": "btn-v2 btn-sure-v2 btn-send disabled",
+      "text": "发送",
+      "outerHTML": "<button type=\"send\" d-c=\"62013\" class=\"btn-v2 btn-sure-v2 btn-send disabled\"> 发送 </button>"
+    },
+    "cancel_btn": null,
+    "dialogs": [
+      {
+        "selector": ".v-transfer-dom",
+        "tag": "div",
+        "class": "context-menu v-transfer-dom",
+        "visible": false,
+        "text": "",
+        "outerHTML": "<div data-v-56b23c81=\"\" data-v-a2f29c4e=\"\" data-transfer=\"true\" class=\"context-menu v-transfer-dom\" conversation=\"[object Object]\"><!----></div>"
+      }
+    ]
+  },
+  "step_8_click_confirm": {
+    "status": "failed",
+    "detail": "点击确定按钮",
+    "click_result": {
+      "clicked": false
+    }
+  },
+  "step_9_verify_send": {
+    "status": "success",
+    "detail": "验证简历是否发送成功",
+    "verify_result": {
+      "sent": true,
+      "message": "弹层已关闭",
+      "recent": [
+        "已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+        "16:18 不好意思，不太合适哦",
+        "",
+        "不好意思，不太合适哦",
+        ""
+      ],
+      "dialog_still_visible": false
+    }
+  },
+  "step_10_screenshot_after": {
+    "status": "success",
+    "detail": "截图发送后页面",
+    "screenshot": "C:\\Users\\35796\\orca\\boss_bot\\logs\\resume_after_send.png"
+  },
+  "summary": {
+    "total_steps": 10,
+    "success_steps": 9,
+    "failed_steps": 1,
+    "all_success": false,
+    "screenshots": {
+      "resume_dialog": "C:\\Users\\35796\\orca\\boss_bot\\logs\\resume_confirm_dialog.png",
+      "resume_after_send": "C:\\Users\\35796\\orca\\boss_bot\\logs\\resume_after_send.png"
+    }
+  },
+  "errors": []
+}

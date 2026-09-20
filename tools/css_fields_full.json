@@ -1,8 +1,15 @@
 {
   "_meta": {
     "chat_page_url": "https://www.zhipin.com/web/geek/chat",
-    "extracted_at": "2026-09-20 13:23:05",
-    "browser": "cloakbrowser"
+    "extracted_at": "2026-09-20 16:26:10",
+    "browser": "cloakbrowser",
+    "browser_path": "C:\\Users\\35796\\orca\\boss_bot\\cloakbrowser\\chrome.exe",
+    "screenshots": {
+      "chat_page_full": "C:\\Users\\35796\\orca\\boss_bot\\logs\\chat_page_full.png",
+      "job_detail_full": "C:\\Users\\35796\\orca\\boss_bot\\logs\\job_detail_full.png",
+      "resume_confirm_dialog": "C:\\Users\\35796\\orca\\boss_bot\\logs\\resume_confirm_dialog.png",
+      "resume_after_send": "C:\\Users\\35796\\orca\\boss_bot\\logs\\resume_after_send.png"
+    }
   },
   "chat_page": {
     "chat_name": [
@@ -36,7 +43,8 @@
       "[class*='resume']"
     ],
     "confirm_dialog": [
-      ".dialog-wrap"
+      ".dialog-wrap",
+      ".upload-resume-dialog"
     ],
     "chat_message_list": [
       ".chat-content",
@@ -47,34 +55,210 @@
     ],
     "toolbar_buttons": [
       {
-        "tag": "span",
-        "class": "card-btn one-btn",
-        "text": "查看详细分析"
-      },
-      {
-        "tag": "div",
-        "class": "toolbar-btn-content",
-        "text": "发简历"
-      },
-      {
         "tag": "div",
         "class": "toolbar-btn tooltip tooltip-top",
-        "text": "发简历"
+        "text": "发简历",
+        "outerHTML": "<div data-v-1352bb5b=\"\" aria-label=\"\" d-c=\"62009\" class=\"toolbar-btn tooltip tooltip-top\"> 发简历 </div>"
       },
       {
         "tag": "div",
-        "class": "toolbar-btn-content",
-        "text": "换微信"
+        "class": "sentence-popover panel-contact",
+        "text": "确认与对方交换电话吗？取消确定",
+        "outerHTML": "<div data-v-36ae8cc4=\"\" data-v-5d8f6078=\"\" class=\"sentence-popover panel-contact\" style=\"display: none;\"><p data-v-36ae8cc4=\"\" class=\"title\">确认与对方交换电话吗？</p><div data-v-36ae8cc4=\"\" class=\"btns\"><span data-v-36ae8cc4=\"\" class=\"btn-v2 btn-outline-v2\">取消</span><span data-v-36ae8cc4=\"\" class=\"btn-v2 btn-"
+      },
+      {
+        "tag": "div",
+        "class": "btns",
+        "text": "取消确定",
+        "outerHTML": "<div data-v-36ae8cc4=\"\" class=\"btns\"><span data-v-36ae8cc4=\"\" class=\"btn-v2 btn-outline-v2\">取消</span><span data-v-36ae8cc4=\"\" class=\"btn-v2 btn-sure-v2\">确定</span></div>"
+      },
+      {
+        "tag": "div",
+        "class": "flex-right",
+        "text": "该Boss可能有一定安全风险,已为你自动打开隐私保护",
+        "outerHTML": "<div data-v-1fc0d4b7=\"\" class=\"flex-right\"><div data-v-1fc0d4b7=\"\" class=\"popover popover-top\"><div data-v-1fc0d4b7=\"\"><!----></div><div class=\"popover-wrap popover-dark\" style=\"display: none;\"><div class=\"popover-content\">该Boss可能有一定安全风险,已为你自动打开隐私保护</div></div></div><label data-v-1fc0d4b7=\"\" class=\""
+      },
+      {
+        "tag": "div",
+        "class": "popover popover-top",
+        "text": "该Boss可能有一定安全风险,已为你自动打开隐私保护",
+        "outerHTML": "<div data-v-1fc0d4b7=\"\" class=\"popover popover-top\"><div data-v-1fc0d4b7=\"\"><!----></div><div class=\"popover-wrap popover-dark\" style=\"display: none;\"><div class=\"popover-content\">该Boss可能有一定安全风险,已为你自动打开隐私保护</div></div></div>"
+      },
+      {
+        "tag": "div",
+        "class": "popover-wrap popover-dark",
+        "text": "该Boss可能有一定安全风险,已为你自动打开隐私保护",
+        "outerHTML": "<div class=\"popover-wrap popover-dark\" style=\"display: none;\"><div class=\"popover-content\">该Boss可能有一定安全风险,已为你自动打开隐私保护</div></div>"
+      },
+      {
+        "tag": "div",
+        "class": "popover-content",
+        "text": "该Boss可能有一定安全风险,已为你自动打开隐私保护",
+        "outerHTML": "<div class=\"popover-content\">该Boss可能有一定安全风险,已为你自动打开隐私保护</div>"
+      },
+      {
+        "tag": "div",
+        "class": "virtual-footer",
+        "text": "取消确定",
+        "outerHTML": "<div data-v-1fc0d4b7=\"\" class=\"virtual-footer\"><span data-v-1fc0d4b7=\"\" class=\"virtual-cancel\">取消</span><span data-v-1fc0d4b7=\"\" class=\"virtual-confirm\">确定</span></div>"
       },
       {
         "tag": "div",
         "class": "btn-weixin toolbar-btn tooltip tooltip-top",
-        "text": "换微信"
+        "text": "换微信",
+        "outerHTML": "<div data-v-4f09633a=\"\" aria-label=\"\" d-c=\"62011\" class=\"btn-weixin toolbar-btn tooltip tooltip-top\"> 换微信 </div>"
+      }
+    ],
+    "send_resume_btn_html": [
+      {
+        "tag": "span",
+        "class": "nav-resume-tools",
+        "text": "简历new\n                        \n                   ",
+        "outerHTML": "<span class=\"nav-resume-tools\">\n                        <li class=\"header-resume-new\"><a ka=\"header-resume\" href=\"https://www.zhipin.com/web/geek/resume\">简历<span class=\"new\" style=\"display:block;\">new</span></a></li>\n                        <div class=\"nav-resume-box\">\n                            <ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>\n                                <li class=\"resume-box-update\">\n                                    <a",
+        "parentHTML": "<ul>\n                    <li class=\"cur\"><a ka=\"header-message\" href=\"https://www.zhipin.com/web/geek/chat\">消息<span class=\"nav-chat-num\" style=\"display: none;\">0</span></a></li>\n                    <span class=\"nav-resume-tools\">\n                        <li class=\"header-resume-new\"><a ka=\"header-resume\" href=\"https://www.zhipin.com/web/geek/resume\">简历<span class=\"new\" style=\"display:block;\">new</span></a></li>\n                        <div class=\"nav-resume-box\">\n                            <ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                    "
       },
       {
-        "tag": "button",
-        "class": "btn-v2 btn-sure-v2 btn-send disabled",
-        "text": "发送"
+        "tag": "li",
+        "class": "header-resume-new",
+        "text": "简历new",
+        "outerHTML": "<li class=\"header-resume-new\"><a ka=\"header-resume\" href=\"https://www.zhipin.com/web/geek/resume\">简历<span class=\"new\" style=\"display:block;\">new</span></a></li>",
+        "parentHTML": "<span class=\"nav-resume-tools\">\n                        <li class=\"header-resume-new\"><a ka=\"header-resume\" href=\"https://www.zhipin.com/web/geek/resume\">简历<span class=\"new\" style=\"display:block;\">new</span></a></li>\n                        <div class=\"nav-resume-box\">\n                            <ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>\n                                <li class=\"resume-box-update\">\n                                    <a"
+      },
+      {
+        "tag": "div",
+        "class": "nav-resume-box",
+        "text": "AI简历\n                                        智能简历生",
+        "outerHTML": "<div class=\"nav-resume-box\">\n                            <ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>\n                                <li class=\"resume-box-update\">\n                                    <a href=\"/web/geek/resumeAnalyze?parserId=81abc17f330e53c81XB729i-EVdS\" rel=\"nofollow\" ka=\"to_resume_click_1\">\n                                        <span>简历更新</span>\n                                        <p>自动识别新简历</p>\n                   ",
+        "parentHTML": "<span class=\"nav-resume-tools\">\n                        <li class=\"header-resume-new\"><a ka=\"header-resume\" href=\"https://www.zhipin.com/web/geek/resume\">简历<span class=\"new\" style=\"display:block;\">new</span></a></li>\n                        <div class=\"nav-resume-box\">\n                            <ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>\n                                <li class=\"resume-box-update\">\n                                    <a"
+      },
+      {
+        "tag": "li",
+        "class": "resume-box-ai",
+        "text": "AI简历\n                                        智能简历生",
+        "outerHTML": "<li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>",
+        "parentHTML": "<ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>\n                                <li class=\"resume-box-update\">\n                                    <a href=\"/web/geek/resumeAnalyze?parserId=81abc17f330e53c81XB729i-EVdS\" rel=\"nofollow\" ka=\"to_resume_click_1\">\n                                        <span>简历更新</span>\n                                        <p>自动识别新简历</p>\n                                    </a>\n                                </l"
+      },
+      {
+        "tag": "li",
+        "class": "resume-box-update",
+        "text": "简历更新\n                                        自动识别新",
+        "outerHTML": "<li class=\"resume-box-update\">\n                                    <a href=\"/web/geek/resumeAnalyze?parserId=81abc17f330e53c81XB729i-EVdS\" rel=\"nofollow\" ka=\"to_resume_click_1\">\n                                        <span>简历更新</span>\n                                        <p>自动识别新简历</p>\n                                    </a>\n                                </li>",
+        "parentHTML": "<ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>\n                                <li class=\"resume-box-update\">\n                                    <a href=\"/web/geek/resumeAnalyze?parserId=81abc17f330e53c81XB729i-EVdS\" rel=\"nofollow\" ka=\"to_resume_click_1\">\n                                        <span>简历更新</span>\n                                        <p>自动识别新简历</p>\n                                    </a>\n                                </l"
+      },
+      {
+        "tag": "li",
+        "class": "resume-box-resume",
+        "text": "在线编辑\n                                        匹配优质岗",
+        "outerHTML": "<li class=\"resume-box-resume\">\n                                    <a href=\"https://www.zhipin.com/web/geek/resume\" rel=\"nofollow\" ka=\"resume_box_resume\">\n                                        <span>在线编辑</span>\n                                        <p>匹配优质岗位</p>\n                                    </a>\n                                </li>",
+        "parentHTML": "<ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>\n                                <li class=\"resume-box-update\">\n                                    <a href=\"/web/geek/resumeAnalyze?parserId=81abc17f330e53c81XB729i-EVdS\" rel=\"nofollow\" ka=\"to_resume_click_1\">\n                                        <span>简历更新</span>\n                                        <p>自动识别新简历</p>\n                                    </a>\n                                </l"
+      },
+      {
+        "tag": "li",
+        "class": "resume-box-template",
+        "text": "附件简历制作\n                                        打动H",
+        "outerHTML": "<li class=\"resume-box-template\">\n                                    <a href=\"https://cv.zhipin.com\" rel=\"nofollow\" ka=\"resume_box_template\">\n                                        <span>附件简历制作</span>\n                                        <p>打动HR的专业简历</p>\n                                    </a>\n                                </li>",
+        "parentHTML": "<ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>\n                                <li class=\"resume-box-update\">\n                                    <a href=\"/web/geek/resumeAnalyze?parserId=81abc17f330e53c81XB729i-EVdS\" rel=\"nofollow\" ka=\"to_resume_click_1\">\n                                        <span>简历更新</span>\n                                        <p>自动识别新简历</p>\n                                    </a>\n                                </l"
+      },
+      {
+        "tag": "li",
+        "class": "resume-box-upload nav-up-file",
+        "text": "附件上传\n                                        快速投递心",
+        "outerHTML": "<li class=\"resume-box-upload nav-up-file\">\n                                    <a class=\"header-resume-upload\" ka=\"header-resume-upload-2\" href=\"javascript:;\">\n                                        <span>附件上传</span>\n                                        <p>快速投递心仪职位</p>\n                                    </a>\n                                </li>",
+        "parentHTML": "<ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>\n                                <li class=\"resume-box-update\">\n                                    <a href=\"/web/geek/resumeAnalyze?parserId=81abc17f330e53c81XB729i-EVdS\" rel=\"nofollow\" ka=\"to_resume_click_1\">\n                                        <span>简历更新</span>\n                                        <p>自动识别新简历</p>\n                                    </a>\n                                </l"
+      },
+      {
+        "tag": "a",
+        "class": "header-resume-upload",
+        "text": "附件上传\n                                        快速投递心",
+        "outerHTML": "<a class=\"header-resume-upload\" ka=\"header-resume-upload-2\" href=\"javascript:;\">\n                                        <span>附件上传</span>\n                                        <p>快速投递心仪职位</p>\n                                    </a>",
+        "parentHTML": "<li class=\"resume-box-upload nav-up-file\">\n                                    <a class=\"header-resume-upload\" ka=\"header-resume-upload-2\" href=\"javascript:;\">\n                                        <span>附件上传</span>\n                                        <p>快速投递心仪职位</p>\n                                    </a>\n                                </li>"
+      },
+      {
+        "tag": "div",
+        "class": "dialog-wrap upload-resume-dialog v-transfer-dom",
+        "text": "拖拽文件到这里简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式文件大小不超过",
+        "outerHTML": "<div data-v-46c9e5e1=\"\" data-v-c18800fc=\"\" data-transfer=\"true\" class=\"dialog-wrap upload-resume-dialog v-transfer-dom\" style=\"display: none;\"><div ka=\"dialog_layer\" class=\"dialog-layer\"></div><div class=\"dialog-container\" style=\"display: none;\"><div class=\"dialog-header\"><!----><h3 class=\"title\"></h3><span ka=\"dialog_close\" class=\"close\"><i class=\"icon-close\"></i></span></div><div class=\"dialog-body\"><div data-v-46c9e5e1=\"\" class=\"upload-resume__old\"><!----><p data-v-46c9e5e1=\"\" class=\"tip-drag\">拖拽文件到这里</p><p data-v-46c9e5e1=\"\" class=\"tip-filetype\">简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式</p><p data-v-46c9e5e1=\"\" class=\"tip-size\">文件大小不超过20M</p><div data-v-46c9e5e1=\"\" class=\"btns\"><a data-v-46c9e5e1=\"\" href=\"javascript:;\" class=\"btn btn-primary btn-file\">上传附件简历 <input data-v-46c9e5e1=\"\" type=\"",
+        "parentHTML": "<body><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" style=\"position: absolute; width: 0; height: 0\" aria-hidden=\"true\" id=\"__SVG_SPRITE_NODE__\"><symbol xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 16 16\" id=\"icon-icon-set-top\"><path transform=\"matrix(1 0 0 1 2.4 1.26875)\" d=\"M0.986328 0C0.654957 0 0.386328 0.268629 0.386328 0.6L0.386328 0.6009C0.386328 0.932271 0.654957 1.2 0.986328 1.2L10.1863 1.2C10.5177 1.2 10.7863 0.932271 10.7863 0.6009L10.7863 0.6C10.7863 0.268629 10.5177 0 10.1863 0L0.986328 0ZM4.73149 2.51989C5.25177 2.02337 6.05471 2.05454 6.53763 2.59337L11.004 7.64871C11.1294 7.78614 11.2 7.97329 11.2 8.16306C11.2 8.58968 10.8723 8.92742 10.4719 8.92724L8.6938 8.92724C8.63194 8.92724 8.58179 8.979"
+      },
+      {
+        "tag": "div",
+        "class": "upload-resume__old",
+        "text": "拖拽文件到这里简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式文件大小不超过",
+        "outerHTML": "<div data-v-46c9e5e1=\"\" class=\"upload-resume__old\"><!----><p data-v-46c9e5e1=\"\" class=\"tip-drag\">拖拽文件到这里</p><p data-v-46c9e5e1=\"\" class=\"tip-filetype\">简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式</p><p data-v-46c9e5e1=\"\" class=\"tip-size\">文件大小不超过20M</p><div data-v-46c9e5e1=\"\" class=\"btns\"><a data-v-46c9e5e1=\"\" href=\"javascript:;\" class=\"btn btn-primary btn-file\">上传附件简历 <input data-v-46c9e5e1=\"\" type=\"file\" ka=\"user-resume-upload-file\" accept=\"image/jpg, image/jpeg, image/png, application/vnd.ms-powerpoint, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.presentationml.presentation,.doc,.docx,.pdf\"></a></div><p data-v-46c9e5e1=\"\" class=\"tip-guide\">没有附件简历 <a data-v-46c9e5e1=\"\" href=\"/web/geek/g",
+        "parentHTML": "<div class=\"dialog-body\"><div data-v-46c9e5e1=\"\" class=\"upload-resume__old\"><!----><p data-v-46c9e5e1=\"\" class=\"tip-drag\">拖拽文件到这里</p><p data-v-46c9e5e1=\"\" class=\"tip-filetype\">简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式</p><p data-v-46c9e5e1=\"\" class=\"tip-size\">文件大小不超过20M</p><div data-v-46c9e5e1=\"\" class=\"btns\"><a data-v-46c9e5e1=\"\" href=\"javascript:;\" class=\"btn btn-primary btn-file\">上传附件简历 <input data-v-46c9e5e1=\"\" type=\"file\" ka=\"user-resume-upload-file\" accept=\"image/jpg, image/jpeg, image/png, application/vnd.ms-powerpoint, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.presentationml.presentation,.doc,.docx,.pdf\"></a></div><p data-v-46c9e5e1=\"\" class=\"tip-guide\">没有附件简历 <a data-v-46c9"
+      },
+      {
+        "tag": "div",
+        "class": "dialog-wrap upload-resume-dialog v-transfer-dom",
+        "text": "拖拽文件到这里简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式文件大小不超过",
+        "outerHTML": "<div data-v-46c9e5e1=\"\" data-transfer=\"true\" class=\"dialog-wrap upload-resume-dialog v-transfer-dom\" style=\"display: none;\"><div ka=\"dialog_layer\" class=\"dialog-layer\"></div><div class=\"dialog-container\" style=\"display: none;\"><div class=\"dialog-header\"><!----><h3 class=\"title\"></h3><span ka=\"dialog_close\" class=\"close\"><i class=\"icon-close\"></i></span></div><div class=\"dialog-body\"><div data-v-46c9e5e1=\"\" class=\"upload-resume__old\"><!----><p data-v-46c9e5e1=\"\" class=\"tip-drag\">拖拽文件到这里</p><p data-v-46c9e5e1=\"\" class=\"tip-filetype\">简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式</p><p data-v-46c9e5e1=\"\" class=\"tip-size\">文件大小不超过20M</p><div data-v-46c9e5e1=\"\" class=\"btns\"><a data-v-46c9e5e1=\"\" href=\"javascript:;\" class=\"btn btn-primary btn-file\">上传附件简历 <input data-v-46c9e5e1=\"\" type=\"file\" ka=\"user-resu",
+        "parentHTML": "<body><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" style=\"position: absolute; width: 0; height: 0\" aria-hidden=\"true\" id=\"__SVG_SPRITE_NODE__\"><symbol xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 16 16\" id=\"icon-icon-set-top\"><path transform=\"matrix(1 0 0 1 2.4 1.26875)\" d=\"M0.986328 0C0.654957 0 0.386328 0.268629 0.386328 0.6L0.386328 0.6009C0.386328 0.932271 0.654957 1.2 0.986328 1.2L10.1863 1.2C10.5177 1.2 10.7863 0.932271 10.7863 0.6009L10.7863 0.6C10.7863 0.268629 10.5177 0 10.1863 0L0.986328 0ZM4.73149 2.51989C5.25177 2.02337 6.05471 2.05454 6.53763 2.59337L11.004 7.64871C11.1294 7.78614 11.2 7.97329 11.2 8.16306C11.2 8.58968 10.8723 8.92742 10.4719 8.92724L8.6938 8.92724C8.63194 8.92724 8.58179 8.979"
+      },
+      {
+        "tag": "div",
+        "class": "upload-resume__old",
+        "text": "拖拽文件到这里简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式文件大小不超过",
+        "outerHTML": "<div data-v-46c9e5e1=\"\" class=\"upload-resume__old\"><!----><p data-v-46c9e5e1=\"\" class=\"tip-drag\">拖拽文件到这里</p><p data-v-46c9e5e1=\"\" class=\"tip-filetype\">简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式</p><p data-v-46c9e5e1=\"\" class=\"tip-size\">文件大小不超过20M</p><div data-v-46c9e5e1=\"\" class=\"btns\"><a data-v-46c9e5e1=\"\" href=\"javascript:;\" class=\"btn btn-primary btn-file\">上传附件简历 <input data-v-46c9e5e1=\"\" type=\"file\" ka=\"user-resume-upload-file\" accept=\"image/jpg, image/jpeg, image/png, application/vnd.ms-powerpoint, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.presentationml.presentation,.doc,.docx,.pdf\"></a></div><p data-v-46c9e5e1=\"\" class=\"tip-guide\">没有附件简历 <a data-v-46c9e5e1=\"\" href=\"/web/geek/g",
+        "parentHTML": "<div class=\"dialog-body\"><div data-v-46c9e5e1=\"\" class=\"upload-resume__old\"><!----><p data-v-46c9e5e1=\"\" class=\"tip-drag\">拖拽文件到这里</p><p data-v-46c9e5e1=\"\" class=\"tip-filetype\">简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式</p><p data-v-46c9e5e1=\"\" class=\"tip-size\">文件大小不超过20M</p><div data-v-46c9e5e1=\"\" class=\"btns\"><a data-v-46c9e5e1=\"\" href=\"javascript:;\" class=\"btn btn-primary btn-file\">上传附件简历 <input data-v-46c9e5e1=\"\" type=\"file\" ka=\"user-resume-upload-file\" accept=\"image/jpg, image/jpeg, image/png, application/vnd.ms-powerpoint, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.presentationml.presentation,.doc,.docx,.pdf\"></a></div><p data-v-46c9e5e1=\"\" class=\"tip-guide\">没有附件简历 <a data-v-46c9"
+      }
+    ],
+    "confirm_dialog_html": [
+      {
+        "tag": "div",
+        "class": "dialog-wrap upload-resume-dialog v-transfer-dom",
+        "visible": false,
+        "outerHTML": "<div data-v-46c9e5e1=\"\" data-v-c18800fc=\"\" data-transfer=\"true\" class=\"dialog-wrap upload-resume-dialog v-transfer-dom\" style=\"display: none;\"><div ka=\"dialog_layer\" class=\"dialog-layer\"></div><div class=\"dialog-container\" style=\"display: none;\"><div class=\"dialog-header\"><!----><h3 class=\"title\"></h3><span ka=\"dialog_close\" class=\"close\"><i class=\"icon-close\"></i></span></div><div class=\"dialog-body\"><div data-v-46c9e5e1=\"\" class=\"upload-resume__old\"><!----><p data-v-46c9e5e1=\"\" class=\"tip-drag\">拖拽文件到这里</p><p data-v-46c9e5e1=\"\" class=\"tip-filetype\">简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式</p><p data-v-46c9e5e1=\"\" class=\"tip-size\">文件大小不超过20M</p><div data-v-46c9e5e1=\"\" class=\"btns\"><a data-v-46c9e5e1=\"\" href=\"javascript:;\" class=\"btn btn-primary btn-file\">上传附件简历 <input data-v-46c9e5e1=\"\" type=\"file\" ka=\"user-resume-upload-file\" accept=\"image/jpg, image/jpeg, image/png, application/vnd.ms-powerpoint, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.presentationml.presentation,.doc,.docx,.pdf\"></a></div><p data-v-46c9e5e1=\"\" class=\"tip-guide\">没有附件简历 <a data-v-46c9e5e1=\"\" href=\"/web/geek/guide\" ka=\"nlp_no_resume\"> 在线填写</a></p></div></div><!----></div></div>"
+      },
+      {
+        "tag": "div",
+        "class": "upload-select-dialog dialog-wrap v-transfer-dom",
+        "visible": false,
+        "outerHTML": "<div data-v-6cf1a9b0=\"\" data-v-c18800fc=\"\" data-transfer=\"true\" class=\"upload-select-dialog dialog-wrap v-transfer-dom\" style=\"display: none;\"><div ka=\"dialog_layer\" class=\"dialog-layer\"></div><div class=\"dialog-container\" style=\"display: none;\"><div class=\"dialog-header\"><!----><h3 class=\"title\"></h3><span ka=\"dialog_close\" class=\"close\"><i class=\"icon-close\"></i></span></div><div class=\"dialog-body\"><div data-v-6cf1a9b0=\"\" class=\"select-box\"><div data-v-6cf1a9b0=\"\" class=\"select-one\"><div data-v-6cf1a9b0=\"\" class=\"top-title\"><img data-v-6cf1a9b0=\"\" src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5543/static/images/jianli-logo.8ca8f60b.png\"><p data-v-6cf1a9b0=\"\" class=\"title\">RESUME</p></div><p data-v-6cf1a9b0=\"\" class=\"main-title\">上传简历</p><p data-v-6cf1a9b0=\"\" class=\"detail-title\">通过简历展示你的基本资料及经历</p></div><!----><div data-v-6cf1a9b0=\"\" class=\"select-one\"><div data-v-6cf1a9b0=\"\" class=\"top-title\"><img data-v-6cf1a9b0=\"\" src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5543/static/images/resume-logo.e0b97ed6.png\"><p data-v-6cf1a9b0=\"\" class=\"title\">EXPORT</p></div><p data-v-6cf1a9b0=\"\" class=\"main-title\">发送在线简历</p><p data-v-6cf1a9b0=\"\" class=\"detail-title\">在线简历以文件形式发送至Boss</p></div></div></div><div class=\"dialog-footer\"><div class=\"btns\"><!----><!----></div></div></div></div>"
+      },
+      {
+        "tag": "div",
+        "class": "upload-select-dialog dialog-wrap v-transfer-dom",
+        "visible": false,
+        "outerHTML": "<div data-v-6cf1a9b0=\"\" data-transfer=\"true\" class=\"upload-select-dialog dialog-wrap v-transfer-dom\" style=\"display: none;\"><div ka=\"dialog_layer\" class=\"dialog-layer\"></div><div class=\"dialog-container\" style=\"display: none;\"><div class=\"dialog-header\"><!----><h3 class=\"title\"></h3><span ka=\"dialog_close\" class=\"close\"><i class=\"icon-close\"></i></span></div><div class=\"dialog-body\"><div data-v-6cf1a9b0=\"\" class=\"select-box\"><div data-v-6cf1a9b0=\"\" class=\"select-one\"><div data-v-6cf1a9b0=\"\" class=\"top-title\"><img data-v-6cf1a9b0=\"\" src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5543/static/images/jianli-logo.8ca8f60b.png\"><p data-v-6cf1a9b0=\"\" class=\"title\">RESUME</p></div><p data-v-6cf1a9b0=\"\" class=\"main-title\">上传简历</p><p data-v-6cf1a9b0=\"\" class=\"detail-title\">通过简历展示你的基本资料及经历</p></div><!----><div data-v-6cf1a9b0=\"\" class=\"select-one\"><div data-v-6cf1a9b0=\"\" class=\"top-title\"><img data-v-6cf1a9b0=\"\" src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5543/static/images/resume-logo.e0b97ed6.png\"><p data-v-6cf1a9b0=\"\" class=\"title\">EXPORT</p></div><p data-v-6cf1a9b0=\"\" class=\"main-title\">发送在线简历</p><p data-v-6cf1a9b0=\"\" class=\"detail-title\">在线简历以文件形式发送至Boss</p></div></div></div><div class=\"dialog-footer\"><div class=\"btns\"><!----><!----></div></div></div></div>"
+      },
+      {
+        "tag": "div",
+        "class": "dialog-wrap upload-resume-dialog v-transfer-dom",
+        "visible": false,
+        "outerHTML": "<div data-v-46c9e5e1=\"\" data-transfer=\"true\" class=\"dialog-wrap upload-resume-dialog v-transfer-dom\" style=\"display: none;\"><div ka=\"dialog_layer\" class=\"dialog-layer\"></div><div class=\"dialog-container\" style=\"display: none;\"><div class=\"dialog-header\"><!----><h3 class=\"title\"></h3><span ka=\"dialog_close\" class=\"close\"><i class=\"icon-close\"></i></span></div><div class=\"dialog-body\"><div data-v-46c9e5e1=\"\" class=\"upload-resume__old\"><!----><p data-v-46c9e5e1=\"\" class=\"tip-drag\">拖拽文件到这里</p><p data-v-46c9e5e1=\"\" class=\"tip-filetype\">简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式</p><p data-v-46c9e5e1=\"\" class=\"tip-size\">文件大小不超过20M</p><div data-v-46c9e5e1=\"\" class=\"btns\"><a data-v-46c9e5e1=\"\" href=\"javascript:;\" class=\"btn btn-primary btn-file\">上传附件简历 <input data-v-46c9e5e1=\"\" type=\"file\" ka=\"user-resume-upload-file\" accept=\"image/jpg, image/jpeg, image/png, application/vnd.ms-powerpoint, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.presentationml.presentation,.doc,.docx,.pdf\"></a></div><p data-v-46c9e5e1=\"\" class=\"tip-guide\">没有附件简历 <a data-v-46c9e5e1=\"\" href=\"/web/geek/guide\" ka=\"nlp_no_resume\"> 在线填写</a></p></div></div><!----></div></div>"
+      }
+    ],
+    "message_list_selector_used": ".chat-content li",
+    "chat_message_items": [
+      {
+        "tag": "li",
+        "class": "",
+        "text": "16:18王女士南京迈特望招聘总监[祈祷] 不好意思，不太合适哦",
+        "outerHTML": "<li role=\"listitem\" class=\"\"><div data-v-3d67f5a8=\"\" class=\"friend-content-warp\"><!----><div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content selected\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><!----><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20250808/607f1f3d68754fd03c04f743f92819aabda5467ae14bc4953b5e6051f9ad7f11b7d6e86f54809422_s.png.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">16:18</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">王女士</span><span>南京迈特望</span><i class=\"vline\"></i><span>招聘总监</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" cla"
+      },
+      {
+        "tag": "li",
+        "class": "",
+        "text": "16:15金鑫天健人事HRBP [送达] 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+        "outerHTML": "<li role=\"listitem\" class=\"\"><div data-v-3d67f5a8=\"\" class=\"friend-content-warp\"><!----><div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><!----><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/boss/avatar/avatar_15.png?x-oss-process=image/resize,l_900,h_600/format,webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">16:15</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">金鑫</span><span>天健</span><i class=\"vline\"></i><span>人事HRBP</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><i class=\"message-status statu"
+      },
+      {
+        "tag": "li",
+        "class": "",
+        "text": "16:12喻女士圣禾堂HRBP [已读] 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+        "outerHTML": "<li role=\"listitem\" class=\"\"><div data-v-3d67f5a8=\"\" class=\"friend-content-warp\"><!----><div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><!----><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20250829/607f1f3d68754fd0448e05286dd744f2ddca89f526bb1423438bc55be8c27e8619ed19b57cf544a3_s.jpg.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">16:12</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">喻女士</span><span>圣禾堂</span><i class=\"vline\"></i><span>HRBP</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray la"
+      },
+      {
+        "tag": "li",
+        "class": "",
+        "text": "16:11刘先生湖南芸鲸互动科技运营总监 [已读] 您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能",
+        "outerHTML": "<li role=\"listitem\" class=\"\"><div data-v-3d67f5a8=\"\" class=\"friend-content-warp\"><!----><div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><!----><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20260421/607f1f3d68754fd0e0a32371ff96c094451b6da73196cb3377704415a65bc5b2c29dfeec01cf877e_s.png.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">16:11</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">刘先生</span><span>湖南芸鲸互动科技</span><i class=\"vline\"></i><span>运营总监</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gr"
+      },
+      {
+        "tag": "li",
+        "class": "",
+        "text": "16:11郑先生广州中钦科技服务人力资源主管 [已读] 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+        "outerHTML": "<li role=\"listitem\" class=\"\"><div data-v-3d67f5a8=\"\" class=\"friend-content-warp\"><!----><div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><!----><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20250303/607f1f3d68754fd0a9507ffcfd30f9304d22c558cdc718039484a757772f7f5ea98a01930bb769d2_s.png.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">16:11</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">郑先生</span><span>广州中钦科技服务</span><i class=\"vline\"></i><span>人力资源主管</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\""
       }
     ],
     "element_candidates": [
@@ -86,7 +270,7 @@
       {
         "tag": "span",
         "class": "label-name",
-        "text": "未读(7)"
+        "text": "未读"
       },
       {
         "tag": "span",
@@ -106,17 +290,107 @@
       {
         "tag": "div",
         "class": "title-box",
-        "text": "邹先生长沙坤梁科技有限公司经理"
+        "text": "王女士南京迈特望招聘总监"
       },
       {
         "tag": "span",
         "class": "name-box",
-        "text": "邹先生长沙坤梁科技有限公司经理"
+        "text": "王女士南京迈特望招聘总监"
       },
       {
         "tag": "span",
         "class": "name-text",
-        "text": "邹先生"
+        "text": "王女士"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "金鑫天健人事HRBP"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "金鑫天健人事HRBP"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "金鑫"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "喻女士圣禾堂HRBP"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "喻女士圣禾堂HRBP"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "喻女士"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "刘先生湖南芸鲸互动科技运营总监"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "刘先生湖南芸鲸互动科技运营总监"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "刘先生"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "郑先生广州中钦科技服务人力资源主管"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "郑先生广州中钦科技服务人力资源主管"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "郑先生"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "鲁娟好学星城招聘者"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "鲁娟好学星城招聘者"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "鲁娟"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "陈女士东源智行HR"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "陈女士东源智行HR"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "陈女士"
       },
       {
         "tag": "div",
@@ -136,126 +410,6 @@
       {
         "tag": "div",
         "class": "title-box",
-        "text": "易鸣中软国际招聘主管"
-      },
-      {
-        "tag": "span",
-        "class": "name-box",
-        "text": "易鸣中软国际招聘主管"
-      },
-      {
-        "tag": "span",
-        "class": "name-text",
-        "text": "易鸣"
-      },
-      {
-        "tag": "div",
-        "class": "title-box",
-        "text": "胡茸万辰集团人才发展经理"
-      },
-      {
-        "tag": "span",
-        "class": "name-box",
-        "text": "胡茸万辰集团人才发展经理"
-      },
-      {
-        "tag": "span",
-        "class": "name-text",
-        "text": "胡茸"
-      },
-      {
-        "tag": "div",
-        "class": "title-box",
-        "text": "柳甜湖南先施制药有限公司人事"
-      },
-      {
-        "tag": "span",
-        "class": "name-box",
-        "text": "柳甜湖南先施制药有限公司人事"
-      },
-      {
-        "tag": "span",
-        "class": "name-text",
-        "text": "柳甜"
-      },
-      {
-        "tag": "div",
-        "class": "title-box",
-        "text": "高女士湖南百川智媒科技人事招聘专员"
-      },
-      {
-        "tag": "span",
-        "class": "name-box",
-        "text": "高女士湖南百川智媒科技人事招聘专员"
-      },
-      {
-        "tag": "span",
-        "class": "name-text",
-        "text": "高女士"
-      },
-      {
-        "tag": "div",
-        "class": "title-box",
-        "text": "陈先生湖南百川智媒科技招聘主管"
-      },
-      {
-        "tag": "span",
-        "class": "name-box",
-        "text": "陈先生湖南百川智媒科技招聘主管"
-      },
-      {
-        "tag": "span",
-        "class": "name-text",
-        "text": "陈先生"
-      },
-      {
-        "tag": "div",
-        "class": "title-box",
-        "text": "李女士伯乐华擎猎头顾问"
-      },
-      {
-        "tag": "span",
-        "class": "name-box",
-        "text": "李女士伯乐华擎猎头顾问"
-      },
-      {
-        "tag": "span",
-        "class": "name-text",
-        "text": "李女士"
-      },
-      {
-        "tag": "div",
-        "class": "title-box",
-        "text": "王女士丛茂科技HR"
-      },
-      {
-        "tag": "span",
-        "class": "name-box",
-        "text": "王女士丛茂科技HR"
-      },
-      {
-        "tag": "span",
-        "class": "name-text",
-        "text": "王女士"
-      },
-      {
-        "tag": "div",
-        "class": "title-box",
-        "text": "徐安飞乐行百川供应链管理总经理"
-      },
-      {
-        "tag": "span",
-        "class": "name-box",
-        "text": "徐安飞乐行百川供应链管理总经理"
-      },
-      {
-        "tag": "span",
-        "class": "name-text",
-        "text": "徐安飞"
-      },
-      {
-        "tag": "div",
-        "class": "title-box",
         "text": "黄女士机械之家招聘主管"
       },
       {
@@ -271,27 +425,57 @@
       {
         "tag": "div",
         "class": "title-box",
-        "text": "贾女士长沙笠川科技有限公司招聘者"
+        "text": "易先生今观文化人事主管"
       },
       {
         "tag": "span",
         "class": "name-box",
-        "text": "贾女士长沙笠川科技有限公司招聘者"
+        "text": "易先生今观文化人事主管"
       },
       {
         "tag": "span",
         "class": "name-text",
-        "text": "贾女士"
+        "text": "易先生"
       },
       {
         "tag": "div",
         "class": "title-box",
-        "text": "熊娜中晟全肽人事专员"
+        "text": "张先生鸣鸣很忙集团HRBP"
       },
       {
         "tag": "span",
         "class": "name-box",
-        "text": "熊娜中晟全肽人事专员"
+        "text": "张先生鸣鸣很忙集团HRBP"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "张先生"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "李女士素医健康HR人事经理"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "李女士素医健康HR人事经理"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "李女士"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "潘女士伍爱创意HR"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "潘女士伍爱创意HR"
       }
     ]
   },
@@ -301,28 +485,28 @@
         "selector": ".top-info-content .name-text",
         "tag": "span",
         "class": "name-text",
-        "text": "邹先生",
+        "text": "王女士",
         "visible": true
       },
       {
         "selector": ".user-info .name-text",
         "tag": "span",
         "class": "name-text",
-        "text": "邹先生",
+        "text": "王女士",
         "visible": true
       },
       {
         "selector": ".name-text",
         "tag": "span",
         "class": "name-text",
-        "text": "邹先生",
+        "text": "王女士",
         "visible": true
       },
       {
         "selector": ".name-box .name-text",
         "tag": "span",
         "class": "name-text",
-        "text": "邹先生",
+        "text": "王女士",
         "visible": true
       }
     ],
@@ -391,14 +575,14 @@
         "selector": ".chat-position-content .position-content",
         "tag": "div",
         "class": "position-content",
-        "text": "兼职·大数据分析工程师80-120元/时长沙查看职位",
+        "text": "数据库运维（瑞中长沙3-12）10-12K长沙查看职位",
         "visible": true
       },
       {
         "selector": ".position-content",
         "tag": "div",
         "class": "position-content",
-        "text": "兼职·大数据分析工程师80-120元/时长沙查看职位",
+        "text": "数据库运维（瑞中长沙3-12）10-12K长沙查看职位",
         "visible": true
       }
     ],
@@ -407,21 +591,21 @@
         "selector": ".friend-content",
         "tag": "div",
         "class": "friend-content selected",
-        "text": "13:09邹先生长沙坤梁科技有限公司经理明天上午有时间过来面试一下吗？",
+        "text": "16:18王女士南京迈特望招聘总监[祈祷] 不好意思，不太合适哦",
         "visible": true
       },
       {
         "selector": "[class*='friend']",
         "tag": "div",
         "class": "friend-content-warp",
-        "text": "13:09邹先生长沙坤梁科技有限公司经理明天上午有时间过来面试一下吗？",
+        "text": "16:18王女士南京迈特望招聘总监[祈祷] 不好意思，不太合适哦",
         "visible": true
       },
       {
         "selector": ".user-list li",
         "tag": "li",
         "class": "",
-        "text": "13:09邹先生长沙坤梁科技有限公司经理明天上午有时间过来面试一下吗？",
+        "text": "16:18王女士南京迈特望招聘总监[祈祷] 不好意思，不太合适哦",
         "visible": true
       }
     ],
@@ -441,6 +625,13 @@
         "class": "dialog-wrap upload-resume-dialog v-transfer-dom",
         "text": "拖拽文件到这里简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式文件大小不超过20M上传附件简历 没有附件简历  在线填写",
         "visible": false
+      },
+      {
+        "selector": ".upload-resume-dialog",
+        "tag": "div",
+        "class": "dialog-wrap upload-resume-dialog v-transfer-dom",
+        "text": "拖拽文件到这里简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式文件大小不超过20M上传附件简历 没有附件简历  在线填写",
+        "visible": false
       }
     ],
     "chat_message_list": [
@@ -448,14 +639,14 @@
         "selector": ".chat-content",
         "tag": "div",
         "class": "chat-content",
-        "text": "13:09邹先生长沙坤梁科技有限公司经理明天上午有时间过来面试一下吗？13:07张女士湖南德沃招聘部 [送达] 您好，看到您的招聘信息，我很感兴趣，希望可以进一",
+        "text": "16:18王女士南京迈特望招聘总监[祈祷] 不好意思，不太合适哦16:15金鑫天健人事HRBP [送达] 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通",
         "visible": true
       },
       {
         "selector": ".message-content",
         "tag": "div",
         "class": "message-content",
-        "text": "昨天 12:34 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。你与该职位竞争者PK情况共人投递，你超过竞争者优秀竞争者会，建议你查看详细分析 ",
+        "text": "16:09 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。 16:18 不好意思，不太合适哦",
         "visible": true
       }
     ],
@@ -470,34 +661,210 @@
     ],
     "toolbar_buttons": [
       {
-        "tag": "span",
-        "class": "card-btn one-btn",
-        "text": "查看详细分析"
-      },
-      {
-        "tag": "div",
-        "class": "toolbar-btn-content",
-        "text": "发简历"
-      },
-      {
         "tag": "div",
         "class": "toolbar-btn tooltip tooltip-top",
-        "text": "发简历"
+        "text": "发简历",
+        "outerHTML": "<div data-v-1352bb5b=\"\" aria-label=\"\" d-c=\"62009\" class=\"toolbar-btn tooltip tooltip-top\"> 发简历 </div>"
       },
       {
         "tag": "div",
-        "class": "toolbar-btn-content",
-        "text": "换微信"
+        "class": "sentence-popover panel-contact",
+        "text": "确认与对方交换电话吗？取消确定",
+        "outerHTML": "<div data-v-36ae8cc4=\"\" data-v-5d8f6078=\"\" class=\"sentence-popover panel-contact\" style=\"display: none;\"><p data-v-36ae8cc4=\"\" class=\"title\">确认与对方交换电话吗？</p><div data-v-36ae8cc4=\"\" class=\"btns\"><span data-v-36ae8cc4=\"\" class=\"btn-v2 btn-outline-v2\">取消</span><span data-v-36ae8cc4=\"\" class=\"btn-v2 btn-"
+      },
+      {
+        "tag": "div",
+        "class": "btns",
+        "text": "取消确定",
+        "outerHTML": "<div data-v-36ae8cc4=\"\" class=\"btns\"><span data-v-36ae8cc4=\"\" class=\"btn-v2 btn-outline-v2\">取消</span><span data-v-36ae8cc4=\"\" class=\"btn-v2 btn-sure-v2\">确定</span></div>"
+      },
+      {
+        "tag": "div",
+        "class": "flex-right",
+        "text": "该Boss可能有一定安全风险,已为你自动打开隐私保护",
+        "outerHTML": "<div data-v-1fc0d4b7=\"\" class=\"flex-right\"><div data-v-1fc0d4b7=\"\" class=\"popover popover-top\"><div data-v-1fc0d4b7=\"\"><!----></div><div class=\"popover-wrap popover-dark\" style=\"display: none;\"><div class=\"popover-content\">该Boss可能有一定安全风险,已为你自动打开隐私保护</div></div></div><label data-v-1fc0d4b7=\"\" class=\""
+      },
+      {
+        "tag": "div",
+        "class": "popover popover-top",
+        "text": "该Boss可能有一定安全风险,已为你自动打开隐私保护",
+        "outerHTML": "<div data-v-1fc0d4b7=\"\" class=\"popover popover-top\"><div data-v-1fc0d4b7=\"\"><!----></div><div class=\"popover-wrap popover-dark\" style=\"display: none;\"><div class=\"popover-content\">该Boss可能有一定安全风险,已为你自动打开隐私保护</div></div></div>"
+      },
+      {
+        "tag": "div",
+        "class": "popover-wrap popover-dark",
+        "text": "该Boss可能有一定安全风险,已为你自动打开隐私保护",
+        "outerHTML": "<div class=\"popover-wrap popover-dark\" style=\"display: none;\"><div class=\"popover-content\">该Boss可能有一定安全风险,已为你自动打开隐私保护</div></div>"
+      },
+      {
+        "tag": "div",
+        "class": "popover-content",
+        "text": "该Boss可能有一定安全风险,已为你自动打开隐私保护",
+        "outerHTML": "<div class=\"popover-content\">该Boss可能有一定安全风险,已为你自动打开隐私保护</div>"
+      },
+      {
+        "tag": "div",
+        "class": "virtual-footer",
+        "text": "取消确定",
+        "outerHTML": "<div data-v-1fc0d4b7=\"\" class=\"virtual-footer\"><span data-v-1fc0d4b7=\"\" class=\"virtual-cancel\">取消</span><span data-v-1fc0d4b7=\"\" class=\"virtual-confirm\">确定</span></div>"
       },
       {
         "tag": "div",
         "class": "btn-weixin toolbar-btn tooltip tooltip-top",
-        "text": "换微信"
+        "text": "换微信",
+        "outerHTML": "<div data-v-4f09633a=\"\" aria-label=\"\" d-c=\"62011\" class=\"btn-weixin toolbar-btn tooltip tooltip-top\"> 换微信 </div>"
+      }
+    ],
+    "send_resume_btn_html": [
+      {
+        "tag": "span",
+        "class": "nav-resume-tools",
+        "text": "简历new\n                        \n                   ",
+        "outerHTML": "<span class=\"nav-resume-tools\">\n                        <li class=\"header-resume-new\"><a ka=\"header-resume\" href=\"https://www.zhipin.com/web/geek/resume\">简历<span class=\"new\" style=\"display:block;\">new</span></a></li>\n                        <div class=\"nav-resume-box\">\n                            <ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>\n                                <li class=\"resume-box-update\">\n                                    <a",
+        "parentHTML": "<ul>\n                    <li class=\"cur\"><a ka=\"header-message\" href=\"https://www.zhipin.com/web/geek/chat\">消息<span class=\"nav-chat-num\" style=\"display: none;\">0</span></a></li>\n                    <span class=\"nav-resume-tools\">\n                        <li class=\"header-resume-new\"><a ka=\"header-resume\" href=\"https://www.zhipin.com/web/geek/resume\">简历<span class=\"new\" style=\"display:block;\">new</span></a></li>\n                        <div class=\"nav-resume-box\">\n                            <ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                    "
       },
       {
-        "tag": "button",
-        "class": "btn-v2 btn-sure-v2 btn-send disabled",
-        "text": "发送"
+        "tag": "li",
+        "class": "header-resume-new",
+        "text": "简历new",
+        "outerHTML": "<li class=\"header-resume-new\"><a ka=\"header-resume\" href=\"https://www.zhipin.com/web/geek/resume\">简历<span class=\"new\" style=\"display:block;\">new</span></a></li>",
+        "parentHTML": "<span class=\"nav-resume-tools\">\n                        <li class=\"header-resume-new\"><a ka=\"header-resume\" href=\"https://www.zhipin.com/web/geek/resume\">简历<span class=\"new\" style=\"display:block;\">new</span></a></li>\n                        <div class=\"nav-resume-box\">\n                            <ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>\n                                <li class=\"resume-box-update\">\n                                    <a"
+      },
+      {
+        "tag": "div",
+        "class": "nav-resume-box",
+        "text": "AI简历\n                                        智能简历生",
+        "outerHTML": "<div class=\"nav-resume-box\">\n                            <ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>\n                                <li class=\"resume-box-update\">\n                                    <a href=\"/web/geek/resumeAnalyze?parserId=81abc17f330e53c81XB729i-EVdS\" rel=\"nofollow\" ka=\"to_resume_click_1\">\n                                        <span>简历更新</span>\n                                        <p>自动识别新简历</p>\n                   ",
+        "parentHTML": "<span class=\"nav-resume-tools\">\n                        <li class=\"header-resume-new\"><a ka=\"header-resume\" href=\"https://www.zhipin.com/web/geek/resume\">简历<span class=\"new\" style=\"display:block;\">new</span></a></li>\n                        <div class=\"nav-resume-box\">\n                            <ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>\n                                <li class=\"resume-box-update\">\n                                    <a"
+      },
+      {
+        "tag": "li",
+        "class": "resume-box-ai",
+        "text": "AI简历\n                                        智能简历生",
+        "outerHTML": "<li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>",
+        "parentHTML": "<ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>\n                                <li class=\"resume-box-update\">\n                                    <a href=\"/web/geek/resumeAnalyze?parserId=81abc17f330e53c81XB729i-EVdS\" rel=\"nofollow\" ka=\"to_resume_click_1\">\n                                        <span>简历更新</span>\n                                        <p>自动识别新简历</p>\n                                    </a>\n                                </l"
+      },
+      {
+        "tag": "li",
+        "class": "resume-box-update",
+        "text": "简历更新\n                                        自动识别新",
+        "outerHTML": "<li class=\"resume-box-update\">\n                                    <a href=\"/web/geek/resumeAnalyze?parserId=81abc17f330e53c81XB729i-EVdS\" rel=\"nofollow\" ka=\"to_resume_click_1\">\n                                        <span>简历更新</span>\n                                        <p>自动识别新简历</p>\n                                    </a>\n                                </li>",
+        "parentHTML": "<ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>\n                                <li class=\"resume-box-update\">\n                                    <a href=\"/web/geek/resumeAnalyze?parserId=81abc17f330e53c81XB729i-EVdS\" rel=\"nofollow\" ka=\"to_resume_click_1\">\n                                        <span>简历更新</span>\n                                        <p>自动识别新简历</p>\n                                    </a>\n                                </l"
+      },
+      {
+        "tag": "li",
+        "class": "resume-box-resume",
+        "text": "在线编辑\n                                        匹配优质岗",
+        "outerHTML": "<li class=\"resume-box-resume\">\n                                    <a href=\"https://www.zhipin.com/web/geek/resume\" rel=\"nofollow\" ka=\"resume_box_resume\">\n                                        <span>在线编辑</span>\n                                        <p>匹配优质岗位</p>\n                                    </a>\n                                </li>",
+        "parentHTML": "<ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>\n                                <li class=\"resume-box-update\">\n                                    <a href=\"/web/geek/resumeAnalyze?parserId=81abc17f330e53c81XB729i-EVdS\" rel=\"nofollow\" ka=\"to_resume_click_1\">\n                                        <span>简历更新</span>\n                                        <p>自动识别新简历</p>\n                                    </a>\n                                </l"
+      },
+      {
+        "tag": "li",
+        "class": "resume-box-template",
+        "text": "附件简历制作\n                                        打动H",
+        "outerHTML": "<li class=\"resume-box-template\">\n                                    <a href=\"https://cv.zhipin.com\" rel=\"nofollow\" ka=\"resume_box_template\">\n                                        <span>附件简历制作</span>\n                                        <p>打动HR的专业简历</p>\n                                    </a>\n                                </li>",
+        "parentHTML": "<ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>\n                                <li class=\"resume-box-update\">\n                                    <a href=\"/web/geek/resumeAnalyze?parserId=81abc17f330e53c81XB729i-EVdS\" rel=\"nofollow\" ka=\"to_resume_click_1\">\n                                        <span>简历更新</span>\n                                        <p>自动识别新简历</p>\n                                    </a>\n                                </l"
+      },
+      {
+        "tag": "li",
+        "class": "resume-box-upload nav-up-file",
+        "text": "附件上传\n                                        快速投递心",
+        "outerHTML": "<li class=\"resume-box-upload nav-up-file\">\n                                    <a class=\"header-resume-upload\" ka=\"header-resume-upload-2\" href=\"javascript:;\">\n                                        <span>附件上传</span>\n                                        <p>快速投递心仪职位</p>\n                                    </a>\n                                </li>",
+        "parentHTML": "<ul>\n                                <li class=\"resume-box-ai\">\n                                    <a href=\"https://cv.zhipin.com/smart-resume?from=3\" rel=\"nofollow\" ka=\"resume_box_resume_ai\" target=\"_blank\">\n                                        <span>AI简历</span>\n                                        <p>智能简历生成</p>\n                                    </a>\n                                </li>\n                                <li class=\"resume-box-update\">\n                                    <a href=\"/web/geek/resumeAnalyze?parserId=81abc17f330e53c81XB729i-EVdS\" rel=\"nofollow\" ka=\"to_resume_click_1\">\n                                        <span>简历更新</span>\n                                        <p>自动识别新简历</p>\n                                    </a>\n                                </l"
+      },
+      {
+        "tag": "a",
+        "class": "header-resume-upload",
+        "text": "附件上传\n                                        快速投递心",
+        "outerHTML": "<a class=\"header-resume-upload\" ka=\"header-resume-upload-2\" href=\"javascript:;\">\n                                        <span>附件上传</span>\n                                        <p>快速投递心仪职位</p>\n                                    </a>",
+        "parentHTML": "<li class=\"resume-box-upload nav-up-file\">\n                                    <a class=\"header-resume-upload\" ka=\"header-resume-upload-2\" href=\"javascript:;\">\n                                        <span>附件上传</span>\n                                        <p>快速投递心仪职位</p>\n                                    </a>\n                                </li>"
+      },
+      {
+        "tag": "div",
+        "class": "dialog-wrap upload-resume-dialog v-transfer-dom",
+        "text": "拖拽文件到这里简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式文件大小不超过",
+        "outerHTML": "<div data-v-46c9e5e1=\"\" data-v-c18800fc=\"\" data-transfer=\"true\" class=\"dialog-wrap upload-resume-dialog v-transfer-dom\" style=\"display: none;\"><div ka=\"dialog_layer\" class=\"dialog-layer\"></div><div class=\"dialog-container\" style=\"display: none;\"><div class=\"dialog-header\"><!----><h3 class=\"title\"></h3><span ka=\"dialog_close\" class=\"close\"><i class=\"icon-close\"></i></span></div><div class=\"dialog-body\"><div data-v-46c9e5e1=\"\" class=\"upload-resume__old\"><!----><p data-v-46c9e5e1=\"\" class=\"tip-drag\">拖拽文件到这里</p><p data-v-46c9e5e1=\"\" class=\"tip-filetype\">简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式</p><p data-v-46c9e5e1=\"\" class=\"tip-size\">文件大小不超过20M</p><div data-v-46c9e5e1=\"\" class=\"btns\"><a data-v-46c9e5e1=\"\" href=\"javascript:;\" class=\"btn btn-primary btn-file\">上传附件简历 <input data-v-46c9e5e1=\"\" type=\"",
+        "parentHTML": "<body><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" style=\"position: absolute; width: 0; height: 0\" aria-hidden=\"true\" id=\"__SVG_SPRITE_NODE__\"><symbol xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 16 16\" id=\"icon-icon-set-top\"><path transform=\"matrix(1 0 0 1 2.4 1.26875)\" d=\"M0.986328 0C0.654957 0 0.386328 0.268629 0.386328 0.6L0.386328 0.6009C0.386328 0.932271 0.654957 1.2 0.986328 1.2L10.1863 1.2C10.5177 1.2 10.7863 0.932271 10.7863 0.6009L10.7863 0.6C10.7863 0.268629 10.5177 0 10.1863 0L0.986328 0ZM4.73149 2.51989C5.25177 2.02337 6.05471 2.05454 6.53763 2.59337L11.004 7.64871C11.1294 7.78614 11.2 7.97329 11.2 8.16306C11.2 8.58968 10.8723 8.92742 10.4719 8.92724L8.6938 8.92724C8.63194 8.92724 8.58179 8.979"
+      },
+      {
+        "tag": "div",
+        "class": "upload-resume__old",
+        "text": "拖拽文件到这里简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式文件大小不超过",
+        "outerHTML": "<div data-v-46c9e5e1=\"\" class=\"upload-resume__old\"><!----><p data-v-46c9e5e1=\"\" class=\"tip-drag\">拖拽文件到这里</p><p data-v-46c9e5e1=\"\" class=\"tip-filetype\">简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式</p><p data-v-46c9e5e1=\"\" class=\"tip-size\">文件大小不超过20M</p><div data-v-46c9e5e1=\"\" class=\"btns\"><a data-v-46c9e5e1=\"\" href=\"javascript:;\" class=\"btn btn-primary btn-file\">上传附件简历 <input data-v-46c9e5e1=\"\" type=\"file\" ka=\"user-resume-upload-file\" accept=\"image/jpg, image/jpeg, image/png, application/vnd.ms-powerpoint, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.presentationml.presentation,.doc,.docx,.pdf\"></a></div><p data-v-46c9e5e1=\"\" class=\"tip-guide\">没有附件简历 <a data-v-46c9e5e1=\"\" href=\"/web/geek/g",
+        "parentHTML": "<div class=\"dialog-body\"><div data-v-46c9e5e1=\"\" class=\"upload-resume__old\"><!----><p data-v-46c9e5e1=\"\" class=\"tip-drag\">拖拽文件到这里</p><p data-v-46c9e5e1=\"\" class=\"tip-filetype\">简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式</p><p data-v-46c9e5e1=\"\" class=\"tip-size\">文件大小不超过20M</p><div data-v-46c9e5e1=\"\" class=\"btns\"><a data-v-46c9e5e1=\"\" href=\"javascript:;\" class=\"btn btn-primary btn-file\">上传附件简历 <input data-v-46c9e5e1=\"\" type=\"file\" ka=\"user-resume-upload-file\" accept=\"image/jpg, image/jpeg, image/png, application/vnd.ms-powerpoint, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.presentationml.presentation,.doc,.docx,.pdf\"></a></div><p data-v-46c9e5e1=\"\" class=\"tip-guide\">没有附件简历 <a data-v-46c9"
+      },
+      {
+        "tag": "div",
+        "class": "dialog-wrap upload-resume-dialog v-transfer-dom",
+        "text": "拖拽文件到这里简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式文件大小不超过",
+        "outerHTML": "<div data-v-46c9e5e1=\"\" data-transfer=\"true\" class=\"dialog-wrap upload-resume-dialog v-transfer-dom\" style=\"display: none;\"><div ka=\"dialog_layer\" class=\"dialog-layer\"></div><div class=\"dialog-container\" style=\"display: none;\"><div class=\"dialog-header\"><!----><h3 class=\"title\"></h3><span ka=\"dialog_close\" class=\"close\"><i class=\"icon-close\"></i></span></div><div class=\"dialog-body\"><div data-v-46c9e5e1=\"\" class=\"upload-resume__old\"><!----><p data-v-46c9e5e1=\"\" class=\"tip-drag\">拖拽文件到这里</p><p data-v-46c9e5e1=\"\" class=\"tip-filetype\">简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式</p><p data-v-46c9e5e1=\"\" class=\"tip-size\">文件大小不超过20M</p><div data-v-46c9e5e1=\"\" class=\"btns\"><a data-v-46c9e5e1=\"\" href=\"javascript:;\" class=\"btn btn-primary btn-file\">上传附件简历 <input data-v-46c9e5e1=\"\" type=\"file\" ka=\"user-resu",
+        "parentHTML": "<body><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" style=\"position: absolute; width: 0; height: 0\" aria-hidden=\"true\" id=\"__SVG_SPRITE_NODE__\"><symbol xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\"0 0 16 16\" id=\"icon-icon-set-top\"><path transform=\"matrix(1 0 0 1 2.4 1.26875)\" d=\"M0.986328 0C0.654957 0 0.386328 0.268629 0.386328 0.6L0.386328 0.6009C0.386328 0.932271 0.654957 1.2 0.986328 1.2L10.1863 1.2C10.5177 1.2 10.7863 0.932271 10.7863 0.6009L10.7863 0.6C10.7863 0.268629 10.5177 0 10.1863 0L0.986328 0ZM4.73149 2.51989C5.25177 2.02337 6.05471 2.05454 6.53763 2.59337L11.004 7.64871C11.1294 7.78614 11.2 7.97329 11.2 8.16306C11.2 8.58968 10.8723 8.92742 10.4719 8.92724L8.6938 8.92724C8.63194 8.92724 8.58179 8.979"
+      },
+      {
+        "tag": "div",
+        "class": "upload-resume__old",
+        "text": "拖拽文件到这里简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式文件大小不超过",
+        "outerHTML": "<div data-v-46c9e5e1=\"\" class=\"upload-resume__old\"><!----><p data-v-46c9e5e1=\"\" class=\"tip-drag\">拖拽文件到这里</p><p data-v-46c9e5e1=\"\" class=\"tip-filetype\">简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式</p><p data-v-46c9e5e1=\"\" class=\"tip-size\">文件大小不超过20M</p><div data-v-46c9e5e1=\"\" class=\"btns\"><a data-v-46c9e5e1=\"\" href=\"javascript:;\" class=\"btn btn-primary btn-file\">上传附件简历 <input data-v-46c9e5e1=\"\" type=\"file\" ka=\"user-resume-upload-file\" accept=\"image/jpg, image/jpeg, image/png, application/vnd.ms-powerpoint, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.presentationml.presentation,.doc,.docx,.pdf\"></a></div><p data-v-46c9e5e1=\"\" class=\"tip-guide\">没有附件简历 <a data-v-46c9e5e1=\"\" href=\"/web/geek/g",
+        "parentHTML": "<div class=\"dialog-body\"><div data-v-46c9e5e1=\"\" class=\"upload-resume__old\"><!----><p data-v-46c9e5e1=\"\" class=\"tip-drag\">拖拽文件到这里</p><p data-v-46c9e5e1=\"\" class=\"tip-filetype\">简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式</p><p data-v-46c9e5e1=\"\" class=\"tip-size\">文件大小不超过20M</p><div data-v-46c9e5e1=\"\" class=\"btns\"><a data-v-46c9e5e1=\"\" href=\"javascript:;\" class=\"btn btn-primary btn-file\">上传附件简历 <input data-v-46c9e5e1=\"\" type=\"file\" ka=\"user-resume-upload-file\" accept=\"image/jpg, image/jpeg, image/png, application/vnd.ms-powerpoint, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.presentationml.presentation,.doc,.docx,.pdf\"></a></div><p data-v-46c9e5e1=\"\" class=\"tip-guide\">没有附件简历 <a data-v-46c9"
+      }
+    ],
+    "confirm_dialog_html": [
+      {
+        "tag": "div",
+        "class": "dialog-wrap upload-resume-dialog v-transfer-dom",
+        "visible": false,
+        "outerHTML": "<div data-v-46c9e5e1=\"\" data-v-c18800fc=\"\" data-transfer=\"true\" class=\"dialog-wrap upload-resume-dialog v-transfer-dom\" style=\"display: none;\"><div ka=\"dialog_layer\" class=\"dialog-layer\"></div><div class=\"dialog-container\" style=\"display: none;\"><div class=\"dialog-header\"><!----><h3 class=\"title\"></h3><span ka=\"dialog_close\" class=\"close\"><i class=\"icon-close\"></i></span></div><div class=\"dialog-body\"><div data-v-46c9e5e1=\"\" class=\"upload-resume__old\"><!----><p data-v-46c9e5e1=\"\" class=\"tip-drag\">拖拽文件到这里</p><p data-v-46c9e5e1=\"\" class=\"tip-filetype\">简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式</p><p data-v-46c9e5e1=\"\" class=\"tip-size\">文件大小不超过20M</p><div data-v-46c9e5e1=\"\" class=\"btns\"><a data-v-46c9e5e1=\"\" href=\"javascript:;\" class=\"btn btn-primary btn-file\">上传附件简历 <input data-v-46c9e5e1=\"\" type=\"file\" ka=\"user-resume-upload-file\" accept=\"image/jpg, image/jpeg, image/png, application/vnd.ms-powerpoint, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.presentationml.presentation,.doc,.docx,.pdf\"></a></div><p data-v-46c9e5e1=\"\" class=\"tip-guide\">没有附件简历 <a data-v-46c9e5e1=\"\" href=\"/web/geek/guide\" ka=\"nlp_no_resume\"> 在线填写</a></p></div></div><!----></div></div>"
+      },
+      {
+        "tag": "div",
+        "class": "upload-select-dialog dialog-wrap v-transfer-dom",
+        "visible": false,
+        "outerHTML": "<div data-v-6cf1a9b0=\"\" data-v-c18800fc=\"\" data-transfer=\"true\" class=\"upload-select-dialog dialog-wrap v-transfer-dom\" style=\"display: none;\"><div ka=\"dialog_layer\" class=\"dialog-layer\"></div><div class=\"dialog-container\" style=\"display: none;\"><div class=\"dialog-header\"><!----><h3 class=\"title\"></h3><span ka=\"dialog_close\" class=\"close\"><i class=\"icon-close\"></i></span></div><div class=\"dialog-body\"><div data-v-6cf1a9b0=\"\" class=\"select-box\"><div data-v-6cf1a9b0=\"\" class=\"select-one\"><div data-v-6cf1a9b0=\"\" class=\"top-title\"><img data-v-6cf1a9b0=\"\" src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5543/static/images/jianli-logo.8ca8f60b.png\"><p data-v-6cf1a9b0=\"\" class=\"title\">RESUME</p></div><p data-v-6cf1a9b0=\"\" class=\"main-title\">上传简历</p><p data-v-6cf1a9b0=\"\" class=\"detail-title\">通过简历展示你的基本资料及经历</p></div><!----><div data-v-6cf1a9b0=\"\" class=\"select-one\"><div data-v-6cf1a9b0=\"\" class=\"top-title\"><img data-v-6cf1a9b0=\"\" src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5543/static/images/resume-logo.e0b97ed6.png\"><p data-v-6cf1a9b0=\"\" class=\"title\">EXPORT</p></div><p data-v-6cf1a9b0=\"\" class=\"main-title\">发送在线简历</p><p data-v-6cf1a9b0=\"\" class=\"detail-title\">在线简历以文件形式发送至Boss</p></div></div></div><div class=\"dialog-footer\"><div class=\"btns\"><!----><!----></div></div></div></div>"
+      },
+      {
+        "tag": "div",
+        "class": "upload-select-dialog dialog-wrap v-transfer-dom",
+        "visible": false,
+        "outerHTML": "<div data-v-6cf1a9b0=\"\" data-transfer=\"true\" class=\"upload-select-dialog dialog-wrap v-transfer-dom\" style=\"display: none;\"><div ka=\"dialog_layer\" class=\"dialog-layer\"></div><div class=\"dialog-container\" style=\"display: none;\"><div class=\"dialog-header\"><!----><h3 class=\"title\"></h3><span ka=\"dialog_close\" class=\"close\"><i class=\"icon-close\"></i></span></div><div class=\"dialog-body\"><div data-v-6cf1a9b0=\"\" class=\"select-box\"><div data-v-6cf1a9b0=\"\" class=\"select-one\"><div data-v-6cf1a9b0=\"\" class=\"top-title\"><img data-v-6cf1a9b0=\"\" src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5543/static/images/jianli-logo.8ca8f60b.png\"><p data-v-6cf1a9b0=\"\" class=\"title\">RESUME</p></div><p data-v-6cf1a9b0=\"\" class=\"main-title\">上传简历</p><p data-v-6cf1a9b0=\"\" class=\"detail-title\">通过简历展示你的基本资料及经历</p></div><!----><div data-v-6cf1a9b0=\"\" class=\"select-one\"><div data-v-6cf1a9b0=\"\" class=\"top-title\"><img data-v-6cf1a9b0=\"\" src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5543/static/images/resume-logo.e0b97ed6.png\"><p data-v-6cf1a9b0=\"\" class=\"title\">EXPORT</p></div><p data-v-6cf1a9b0=\"\" class=\"main-title\">发送在线简历</p><p data-v-6cf1a9b0=\"\" class=\"detail-title\">在线简历以文件形式发送至Boss</p></div></div></div><div class=\"dialog-footer\"><div class=\"btns\"><!----><!----></div></div></div></div>"
+      },
+      {
+        "tag": "div",
+        "class": "dialog-wrap upload-resume-dialog v-transfer-dom",
+        "visible": false,
+        "outerHTML": "<div data-v-46c9e5e1=\"\" data-transfer=\"true\" class=\"dialog-wrap upload-resume-dialog v-transfer-dom\" style=\"display: none;\"><div ka=\"dialog_layer\" class=\"dialog-layer\"></div><div class=\"dialog-container\" style=\"display: none;\"><div class=\"dialog-header\"><!----><h3 class=\"title\"></h3><span ka=\"dialog_close\" class=\"close\"><i class=\"icon-close\"></i></span></div><div class=\"dialog-body\"><div data-v-46c9e5e1=\"\" class=\"upload-resume__old\"><!----><p data-v-46c9e5e1=\"\" class=\"tip-drag\">拖拽文件到这里</p><p data-v-46c9e5e1=\"\" class=\"tip-filetype\">简历建议使用 PDF 文件，也支持DOC、DOCX、JPG、PNG 格式</p><p data-v-46c9e5e1=\"\" class=\"tip-size\">文件大小不超过20M</p><div data-v-46c9e5e1=\"\" class=\"btns\"><a data-v-46c9e5e1=\"\" href=\"javascript:;\" class=\"btn btn-primary btn-file\">上传附件简历 <input data-v-46c9e5e1=\"\" type=\"file\" ka=\"user-resume-upload-file\" accept=\"image/jpg, image/jpeg, image/png, application/vnd.ms-powerpoint, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.openxmlformats-officedocument.presentationml.presentation,.doc,.docx,.pdf\"></a></div><p data-v-46c9e5e1=\"\" class=\"tip-guide\">没有附件简历 <a data-v-46c9e5e1=\"\" href=\"/web/geek/guide\" ka=\"nlp_no_resume\"> 在线填写</a></p></div></div><!----></div></div>"
+      }
+    ],
+    "message_list_selector_used": ".chat-content li",
+    "chat_message_items": [
+      {
+        "tag": "li",
+        "class": "",
+        "text": "16:18王女士南京迈特望招聘总监[祈祷] 不好意思，不太合适哦",
+        "outerHTML": "<li role=\"listitem\" class=\"\"><div data-v-3d67f5a8=\"\" class=\"friend-content-warp\"><!----><div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content selected\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><!----><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20250808/607f1f3d68754fd03c04f743f92819aabda5467ae14bc4953b5e6051f9ad7f11b7d6e86f54809422_s.png.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">16:18</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">王女士</span><span>南京迈特望</span><i class=\"vline\"></i><span>招聘总监</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" cla"
+      },
+      {
+        "tag": "li",
+        "class": "",
+        "text": "16:15金鑫天健人事HRBP [送达] 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+        "outerHTML": "<li role=\"listitem\" class=\"\"><div data-v-3d67f5a8=\"\" class=\"friend-content-warp\"><!----><div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><!----><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/boss/avatar/avatar_15.png?x-oss-process=image/resize,l_900,h_600/format,webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">16:15</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">金鑫</span><span>天健</span><i class=\"vline\"></i><span>人事HRBP</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><i class=\"message-status statu"
+      },
+      {
+        "tag": "li",
+        "class": "",
+        "text": "16:12喻女士圣禾堂HRBP [已读] 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+        "outerHTML": "<li role=\"listitem\" class=\"\"><div data-v-3d67f5a8=\"\" class=\"friend-content-warp\"><!----><div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><!----><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20250829/607f1f3d68754fd0448e05286dd744f2ddca89f526bb1423438bc55be8c27e8619ed19b57cf544a3_s.jpg.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">16:12</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">喻女士</span><span>圣禾堂</span><i class=\"vline\"></i><span>HRBP</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray la"
+      },
+      {
+        "tag": "li",
+        "class": "",
+        "text": "16:11刘先生湖南芸鲸互动科技运营总监 [已读] 您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能",
+        "outerHTML": "<li role=\"listitem\" class=\"\"><div data-v-3d67f5a8=\"\" class=\"friend-content-warp\"><!----><div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><!----><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20260421/607f1f3d68754fd0e0a32371ff96c094451b6da73196cb3377704415a65bc5b2c29dfeec01cf877e_s.png.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">16:11</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">刘先生</span><span>湖南芸鲸互动科技</span><i class=\"vline\"></i><span>运营总监</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gr"
+      },
+      {
+        "tag": "li",
+        "class": "",
+        "text": "16:11郑先生广州中钦科技服务人力资源主管 [已读] 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+        "outerHTML": "<li role=\"listitem\" class=\"\"><div data-v-3d67f5a8=\"\" class=\"friend-content-warp\"><!----><div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><!----><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20250303/607f1f3d68754fd0a9507ffcfd30f9304d22c558cdc718039484a757772f7f5ea98a01930bb769d2_s.png.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">16:11</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">郑先生</span><span>广州中钦科技服务</span><i class=\"vline\"></i><span>人力资源主管</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\""
       }
     ],
     "element_candidates": [
@@ -509,7 +876,7 @@
       {
         "tag": "span",
         "class": "label-name",
-        "text": "未读(7)"
+        "text": "未读"
       },
       {
         "tag": "span",
@@ -529,17 +896,107 @@
       {
         "tag": "div",
         "class": "title-box",
-        "text": "邹先生长沙坤梁科技有限公司经理"
+        "text": "王女士南京迈特望招聘总监"
       },
       {
         "tag": "span",
         "class": "name-box",
-        "text": "邹先生长沙坤梁科技有限公司经理"
+        "text": "王女士南京迈特望招聘总监"
       },
       {
         "tag": "span",
         "class": "name-text",
-        "text": "邹先生"
+        "text": "王女士"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "金鑫天健人事HRBP"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "金鑫天健人事HRBP"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "金鑫"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "喻女士圣禾堂HRBP"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "喻女士圣禾堂HRBP"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "喻女士"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "刘先生湖南芸鲸互动科技运营总监"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "刘先生湖南芸鲸互动科技运营总监"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "刘先生"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "郑先生广州中钦科技服务人力资源主管"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "郑先生广州中钦科技服务人力资源主管"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "郑先生"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "鲁娟好学星城招聘者"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "鲁娟好学星城招聘者"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "鲁娟"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "陈女士东源智行HR"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "陈女士东源智行HR"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "陈女士"
       },
       {
         "tag": "div",
@@ -559,126 +1016,6 @@
       {
         "tag": "div",
         "class": "title-box",
-        "text": "易鸣中软国际招聘主管"
-      },
-      {
-        "tag": "span",
-        "class": "name-box",
-        "text": "易鸣中软国际招聘主管"
-      },
-      {
-        "tag": "span",
-        "class": "name-text",
-        "text": "易鸣"
-      },
-      {
-        "tag": "div",
-        "class": "title-box",
-        "text": "胡茸万辰集团人才发展经理"
-      },
-      {
-        "tag": "span",
-        "class": "name-box",
-        "text": "胡茸万辰集团人才发展经理"
-      },
-      {
-        "tag": "span",
-        "class": "name-text",
-        "text": "胡茸"
-      },
-      {
-        "tag": "div",
-        "class": "title-box",
-        "text": "柳甜湖南先施制药有限公司人事"
-      },
-      {
-        "tag": "span",
-        "class": "name-box",
-        "text": "柳甜湖南先施制药有限公司人事"
-      },
-      {
-        "tag": "span",
-        "class": "name-text",
-        "text": "柳甜"
-      },
-      {
-        "tag": "div",
-        "class": "title-box",
-        "text": "高女士湖南百川智媒科技人事招聘专员"
-      },
-      {
-        "tag": "span",
-        "class": "name-box",
-        "text": "高女士湖南百川智媒科技人事招聘专员"
-      },
-      {
-        "tag": "span",
-        "class": "name-text",
-        "text": "高女士"
-      },
-      {
-        "tag": "div",
-        "class": "title-box",
-        "text": "陈先生湖南百川智媒科技招聘主管"
-      },
-      {
-        "tag": "span",
-        "class": "name-box",
-        "text": "陈先生湖南百川智媒科技招聘主管"
-      },
-      {
-        "tag": "span",
-        "class": "name-text",
-        "text": "陈先生"
-      },
-      {
-        "tag": "div",
-        "class": "title-box",
-        "text": "李女士伯乐华擎猎头顾问"
-      },
-      {
-        "tag": "span",
-        "class": "name-box",
-        "text": "李女士伯乐华擎猎头顾问"
-      },
-      {
-        "tag": "span",
-        "class": "name-text",
-        "text": "李女士"
-      },
-      {
-        "tag": "div",
-        "class": "title-box",
-        "text": "王女士丛茂科技HR"
-      },
-      {
-        "tag": "span",
-        "class": "name-box",
-        "text": "王女士丛茂科技HR"
-      },
-      {
-        "tag": "span",
-        "class": "name-text",
-        "text": "王女士"
-      },
-      {
-        "tag": "div",
-        "class": "title-box",
-        "text": "徐安飞乐行百川供应链管理总经理"
-      },
-      {
-        "tag": "span",
-        "class": "name-box",
-        "text": "徐安飞乐行百川供应链管理总经理"
-      },
-      {
-        "tag": "span",
-        "class": "name-text",
-        "text": "徐安飞"
-      },
-      {
-        "tag": "div",
-        "class": "title-box",
         "text": "黄女士机械之家招聘主管"
       },
       {
@@ -694,27 +1031,57 @@
       {
         "tag": "div",
         "class": "title-box",
-        "text": "贾女士长沙笠川科技有限公司招聘者"
+        "text": "易先生今观文化人事主管"
       },
       {
         "tag": "span",
         "class": "name-box",
-        "text": "贾女士长沙笠川科技有限公司招聘者"
+        "text": "易先生今观文化人事主管"
       },
       {
         "tag": "span",
         "class": "name-text",
-        "text": "贾女士"
+        "text": "易先生"
       },
       {
         "tag": "div",
         "class": "title-box",
-        "text": "熊娜中晟全肽人事专员"
+        "text": "张先生鸣鸣很忙集团HRBP"
       },
       {
         "tag": "span",
         "class": "name-box",
-        "text": "熊娜中晟全肽人事专员"
+        "text": "张先生鸣鸣很忙集团HRBP"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "张先生"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "李女士素医健康HR人事经理"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "李女士素医健康HR人事经理"
+      },
+      {
+        "tag": "span",
+        "class": "name-text",
+        "text": "李女士"
+      },
+      {
+        "tag": "div",
+        "class": "title-box",
+        "text": "潘女士伍爱创意HR"
+      },
+      {
+        "tag": "span",
+        "class": "name-box",
+        "text": "潘女士伍爱创意HR"
       }
     ]
   },
@@ -757,16 +1124,37 @@
       ".job-location",
       ".info-primary p"
     ],
+    "chat_button_html": [
+      {
+        "tag": "div",
+        "class": "btn btn-startchat-wrap",
+        "text": "继续沟通",
+        "outerHTML": "<div class=\"btn btn-startchat-wrap\">\n                    <a class=\"btn btn-startchat\" ka=\"go_chat_done_560571320\" href=\"javascript:;\" redirect-url=\"/web/geek/chat?id=2e1d6bee496639730XN_3NS4ElBX&amp;jobId=af15e019247032130nJ63tq8E1BQ&amp;securityId=an2SBC76t2I4G-D1hFDBWh4ftJ6u5PkbFUmLHU1Fq1LUQt_eaILxOu4plxqhR-C4WDhJAxYxCnK3UXOGEwrq25xHedtYSQJPz3168WmIqdm8Dbdpt1RwE1kJMv_h183WcXjy9B1rOh1qtqM1XARsYGuqt6Cb64MlYc7HbOelKcvknuLrwIr769JtUDXu5y89uDJTTonRo4AvFOULZ7iVYrmwqHpzX7MdcsA004ijIVA-mR6QQuaTiqerk1r"
+      },
+      {
+        "tag": "a",
+        "class": "btn btn-startchat",
+        "text": "继续沟通",
+        "outerHTML": "<a class=\"btn btn-startchat\" ka=\"go_chat_done_560571320\" href=\"javascript:;\" redirect-url=\"/web/geek/chat?id=2e1d6bee496639730XN_3NS4ElBX&amp;jobId=af15e019247032130nJ63tq8E1BQ&amp;securityId=an2SBC76t2I4G-D1hFDBWh4ftJ6u5PkbFUmLHU1Fq1LUQt_eaILxOu4plxqhR-C4WDhJAxYxCnK3UXOGEwrq25xHedtYSQJPz3168WmIqdm8Dbdpt1RwE1kJMv_h183WcXjy9B1rOh1qtqM1XARsYGuqt6Cb64MlYc7HbOelKcvknuLrwIr769JtUDXu5y89uDJTTonRo4AvFOULZ7iVYrmwqHpzX7MdcsA004ijIVA-mR6QQuaTiqerk1rniyEWMIgQ1Py735NEpiQVHsfu6r2zsCOkduqZ4sOTKEiExJJjKwFHC8o~"
+      },
+      {
+        "tag": "div",
+        "class": "btn btn-startchat-wrap",
+        "text": "继续沟通",
+        "outerHTML": "<div class=\"btn btn-startchat-wrap\">\n                    <a class=\"btn btn-startchat\" ka=\"ceiling_job_detail_gochat\" href=\"javascript:;\" redirect-url=\"/web/geek/chat?id=2e1d6bee496639730XN_3NS4ElBX&amp;jobId=af15e019247032130nJ63tq8E1BQ&amp;securityId=an2SBC76t2I4G-D1hFDBWh4ftJ6u5PkbFUmLHU1Fq1LUQt_eaILxOu4plxqhR-C4WDhJAxYxCnK3UXOGEwrq25xHedtYSQJPz3168WmIqdm8Dbdpt1RwE1kJMv_h183WcXjy9B1rOh1qtqM1XARsYGuqt6Cb64MlYc7HbOelKcvknuLrwIr769JtUDXu5y89uDJTTonRo4AvFOULZ7iVYrmwqHpzX7MdcsA004ijIVA-mR6QQuaTiqer"
+      },
+      {
+        "tag": "a",
+        "class": "btn btn-startchat",
+        "text": "继续沟通",
+        "outerHTML": "<a class=\"btn btn-startchat\" ka=\"ceiling_job_detail_gochat\" href=\"javascript:;\" redirect-url=\"/web/geek/chat?id=2e1d6bee496639730XN_3NS4ElBX&amp;jobId=af15e019247032130nJ63tq8E1BQ&amp;securityId=an2SBC76t2I4G-D1hFDBWh4ftJ6u5PkbFUmLHU1Fq1LUQt_eaILxOu4plxqhR-C4WDhJAxYxCnK3UXOGEwrq25xHedtYSQJPz3168WmIqdm8Dbdpt1RwE1kJMv_h183WcXjy9B1rOh1qtqM1XARsYGuqt6Cb64MlYc7HbOelKcvknuLrwIr769JtUDXu5y89uDJTTonRo4AvFOULZ7iVYrmwqHpzX7MdcsA004ijIVA-mR6QQuaTiqerk1rniyEWMIgQ1Py735NEpiQVHsfu6r2zsCOkduqZ4sOTKEiExJJjKwFHC"
+      }
+    ],
     "button_candidates": [
       {
         "tag": "button",
         "class": "btn btn-search",
         "text": "搜索"
-      },
-      {
-        "tag": "span",
-        "class": "nav-chat-num",
-        "text": "7"
       },
       {
         "tag": "a",
@@ -776,17 +1164,17 @@
       {
         "tag": "div",
         "class": "btn btn-startchat-wrap",
-        "text": "立即沟通"
+        "text": "继续沟通"
       },
       {
         "tag": "a",
         "class": "btn btn-startchat",
-        "text": "立即沟通"
+        "text": "继续沟通"
       },
       {
         "tag": "a",
         "class": "link-wechat-share",
-        "text": "微信kanzhun扫码分享"
+        "text": "微信BOSS直聘扫码分享"
       },
       {
         "tag": "button",
@@ -794,7 +1182,7 @@
         "text": "搜索"
       }
     ],
-    "_page_url": "https://www.zhipin.com/job_detail/1ff1bb5249cbf7480nJ93N6-GVVS.html?securityId=tUPOBoH2jF4QQ-C1xIkX_ows8uG5ivNJQsVmryngMwoh2uMUlISVdhHmU7SiC42pZDLnQ5MLAnLpHZR9XvLxpSja3MajZxMXo7Mle3k2aihmT1LQvQ6oBXQHV-7PsXxtwF4uMC4yS5IV"
+    "_page_url": "https://www.zhipin.com/job_detail/af15e019247032130nJ63tq8E1BQ.html?securityId=Qyy7skvAKE5le-_1GlFq2LyQaZKycZ8d2vxINoH6U9XQx4ex5vUvTmuL4-QihS3uB1kdSk72ORAwQtHe6MWVH2-lLTHWadqlgXkF5c4CDon4URh65PGFiwsVBgBmknCioL4vDzoKiL2Q"
   },
   "job_detail_page_detail": {
     "chat_button": [
@@ -802,21 +1190,21 @@
         "selector": ".btn.btn-startchat",
         "tag": "a",
         "class": "btn btn-startchat",
-        "text": "立即沟通",
+        "text": "继续沟通",
         "visible": true
       },
       {
         "selector": ".btn-startchat",
         "tag": "a",
         "class": "btn btn-startchat",
-        "text": "立即沟通",
+        "text": "继续沟通",
         "visible": true
       },
       {
         "selector": "[class*='startchat']",
         "tag": "div",
         "class": "btn btn-startchat-wrap",
-        "text": "立即沟通",
+        "text": "继续沟通",
         "visible": true
       }
     ],
@@ -825,35 +1213,35 @@
         "selector": ".name h1",
         "tag": "h1",
         "class": "",
-        "text": "秋招实习生（免费住宿 三方协议）",
+        "text": "724机房值守实习生（驾照、倒班）",
         "visible": true
       },
       {
         "selector": ".job-title",
         "tag": "span",
         "class": "job-title",
-        "text": "秋招实习生（免费住宿 三方协议）",
+        "text": "724机房值守实习生（驾照、倒班）",
         "visible": false
       },
       {
         "selector": ".job-detail .name",
         "tag": "h2",
         "class": "name",
-        "text": "尹女士\n                                    \n                                    刚刚活跃",
+        "text": "李女士\n                                    \n                                    刚刚活跃",
         "visible": true
       },
       {
         "selector": ".info-primary .name",
         "tag": "div",
         "class": "name",
-        "text": "秋招实习生（免费住宿 三方协议）\n                            4-6K",
+        "text": "724机房值守实习生（驾照、倒班）\n                            3-4K",
         "visible": true
       },
       {
         "selector": ".job-banner .name",
         "tag": "div",
         "class": "name",
-        "text": "秋招实习生（免费住宿 三方协议）\n                            4-6K",
+        "text": "724机房值守实习生（驾照、倒班）\n                            3-4K",
         "visible": true
       }
     ],
@@ -862,28 +1250,28 @@
         "selector": ".salary",
         "tag": "span",
         "class": "salary",
-        "text": "4-6K",
+        "text": "3-4K",
         "visible": true
       },
       {
         "selector": ".info-primary .salary",
         "tag": "span",
         "class": "salary",
-        "text": "4-6K",
+        "text": "3-4K",
         "visible": true
       },
       {
         "selector": ".job-detail .salary",
         "tag": "p",
         "class": "salary",
-        "text": "5-10K",
+        "text": "3-4K",
         "visible": true
       },
       {
         "selector": "[class*='salary']",
         "tag": "span",
         "class": "salary",
-        "text": "4-6K",
+        "text": "3-4K",
         "visible": true
       }
     ],
@@ -892,28 +1280,28 @@
         "selector": ".company-info .name",
         "tag": "div",
         "class": "name",
-        "text": "秋招实习生（免费住宿 三方协议）\n                        4-6K",
+        "text": "724机房值守实习生（驾照、倒班）\n                        3-4K",
         "visible": false
       },
       {
         "selector": ".company-name",
         "tag": "span",
         "class": "company-name",
-        "text": "鲨娱传媒",
+        "text": "湖南嘉杰",
         "visible": false
       },
       {
         "selector": ".job-detail .company-name",
         "tag": "li",
         "class": "company-name",
-        "text": "公司名称湖南晟星贸易有限责任公司",
+        "text": "公司名称南京华苏科技有限公司",
         "visible": true
       },
       {
         "selector": "[class*='company-info'] [class*='name']",
         "tag": "div",
         "class": "name",
-        "text": "秋招实习生（免费住宿 三方协议）\n                        4-6K",
+        "text": "724机房值守实习生（驾照、倒班）\n                        3-4K",
         "visible": false
       }
     ],
@@ -922,14 +1310,14 @@
         "selector": ".job-sec-text",
         "tag": "div",
         "class": "job-sec-text",
-        "text": "任职要求：  1、善于沟通、按时完成上级交给的工作；  2、拥有良好的团队合作精神，能迅速融入团队；  3、具备良好的学习能力，能够不断改进工作⽅法；4、基本的吃苦性，愿意从基层开始学习 岗位职责: ",
+        "text": "岗位职直聘责:  1. 负boss责724机房的日常值守工作，保障机房运行安全  2. 按要求完成倒班任务，配合完成相关运维支持  任职要求：  1. 持有有效驾照，具备基本驾驶能力  2. 善于沟通",
         "visible": true
       },
       {
         "selector": "[class*='job-sec-text']",
         "tag": "div",
         "class": "job-sec-text",
-        "text": "任职要求：  1、善于沟通、按时完成上级交给的工作；  2、拥有良好的团队合作精神，能迅速融入团队；  3、具备良好的学习能力，能够不断改进工作⽅法；4、基本的吃苦性，愿意从基层开始学习 岗位职责: ",
+        "text": "岗位职直聘责:  1. 负boss责724机房的日常值守工作，保障机房运行安全  2. 按要求完成倒班任务，配合完成相关运维支持  任职要求：  1. 持有有效驾照，具备基本驾驶能力  2. 善于沟通",
         "visible": true
       }
     ],
@@ -938,7 +1326,7 @@
         "selector": ".job-tags",
         "tag": "div",
         "class": "tag-all job-tags",
-        "text": "交通补助生日福利节日福利有无线网宿舍有空调包住团建聚餐全勤奖底薪加提成绩效奖金年终奖",
+        "text": "节日福利带薪年假定期体检五险一金",
         "visible": false
       }
     ],
@@ -961,22 +1349,48 @@
         "selector": ".location-address",
         "tag": "div",
         "class": "location-address",
-        "text": "长沙开福区万达·总部国际C115楼1506室",
+        "text": "长沙长沙县上汽大众汽车有限公司(长沙分公司)上汽",
         "visible": true
       },
       {
         "selector": ".job-location",
         "tag": "div",
         "class": "job-location",
-        "text": "长沙开福区万达·总部国际C115楼1506室\n                                        \n                                    ",
+        "text": "长沙长沙县上汽大众汽车有限公司(长沙分公司)上汽\n                                        \n                                  ",
         "visible": true
       },
       {
         "selector": ".info-primary p",
         "tag": "p",
         "class": "",
-        "text": "长沙        在校/应届\n大专",
+        "text": "长沙        1年以内\n大专",
         "visible": true
+      }
+    ],
+    "chat_button_html": [
+      {
+        "tag": "div",
+        "class": "btn btn-startchat-wrap",
+        "text": "继续沟通",
+        "outerHTML": "<div class=\"btn btn-startchat-wrap\">\n                    <a class=\"btn btn-startchat\" ka=\"go_chat_done_560571320\" href=\"javascript:;\" redirect-url=\"/web/geek/chat?id=2e1d6bee496639730XN_3NS4ElBX&amp;jobId=af15e019247032130nJ63tq8E1BQ&amp;securityId=an2SBC76t2I4G-D1hFDBWh4ftJ6u5PkbFUmLHU1Fq1LUQt_eaILxOu4plxqhR-C4WDhJAxYxCnK3UXOGEwrq25xHedtYSQJPz3168WmIqdm8Dbdpt1RwE1kJMv_h183WcXjy9B1rOh1qtqM1XARsYGuqt6Cb64MlYc7HbOelKcvknuLrwIr769JtUDXu5y89uDJTTonRo4AvFOULZ7iVYrmwqHpzX7MdcsA004ijIVA-mR6QQuaTiqerk1r"
+      },
+      {
+        "tag": "a",
+        "class": "btn btn-startchat",
+        "text": "继续沟通",
+        "outerHTML": "<a class=\"btn btn-startchat\" ka=\"go_chat_done_560571320\" href=\"javascript:;\" redirect-url=\"/web/geek/chat?id=2e1d6bee496639730XN_3NS4ElBX&amp;jobId=af15e019247032130nJ63tq8E1BQ&amp;securityId=an2SBC76t2I4G-D1hFDBWh4ftJ6u5PkbFUmLHU1Fq1LUQt_eaILxOu4plxqhR-C4WDhJAxYxCnK3UXOGEwrq25xHedtYSQJPz3168WmIqdm8Dbdpt1RwE1kJMv_h183WcXjy9B1rOh1qtqM1XARsYGuqt6Cb64MlYc7HbOelKcvknuLrwIr769JtUDXu5y89uDJTTonRo4AvFOULZ7iVYrmwqHpzX7MdcsA004ijIVA-mR6QQuaTiqerk1rniyEWMIgQ1Py735NEpiQVHsfu6r2zsCOkduqZ4sOTKEiExJJjKwFHC8o~"
+      },
+      {
+        "tag": "div",
+        "class": "btn btn-startchat-wrap",
+        "text": "继续沟通",
+        "outerHTML": "<div class=\"btn btn-startchat-wrap\">\n                    <a class=\"btn btn-startchat\" ka=\"ceiling_job_detail_gochat\" href=\"javascript:;\" redirect-url=\"/web/geek/chat?id=2e1d6bee496639730XN_3NS4ElBX&amp;jobId=af15e019247032130nJ63tq8E1BQ&amp;securityId=an2SBC76t2I4G-D1hFDBWh4ftJ6u5PkbFUmLHU1Fq1LUQt_eaILxOu4plxqhR-C4WDhJAxYxCnK3UXOGEwrq25xHedtYSQJPz3168WmIqdm8Dbdpt1RwE1kJMv_h183WcXjy9B1rOh1qtqM1XARsYGuqt6Cb64MlYc7HbOelKcvknuLrwIr769JtUDXu5y89uDJTTonRo4AvFOULZ7iVYrmwqHpzX7MdcsA004ijIVA-mR6QQuaTiqer"
+      },
+      {
+        "tag": "a",
+        "class": "btn btn-startchat",
+        "text": "继续沟通",
+        "outerHTML": "<a class=\"btn btn-startchat\" ka=\"ceiling_job_detail_gochat\" href=\"javascript:;\" redirect-url=\"/web/geek/chat?id=2e1d6bee496639730XN_3NS4ElBX&amp;jobId=af15e019247032130nJ63tq8E1BQ&amp;securityId=an2SBC76t2I4G-D1hFDBWh4ftJ6u5PkbFUmLHU1Fq1LUQt_eaILxOu4plxqhR-C4WDhJAxYxCnK3UXOGEwrq25xHedtYSQJPz3168WmIqdm8Dbdpt1RwE1kJMv_h183WcXjy9B1rOh1qtqM1XARsYGuqt6Cb64MlYc7HbOelKcvknuLrwIr769JtUDXu5y89uDJTTonRo4AvFOULZ7iVYrmwqHpzX7MdcsA004ijIVA-mR6QQuaTiqerk1rniyEWMIgQ1Py735NEpiQVHsfu6r2zsCOkduqZ4sOTKEiExJJjKwFHC"
       }
     ],
     "button_candidates": [
@@ -986,11 +1400,6 @@
         "text": "搜索"
       },
       {
-        "tag": "span",
-        "class": "nav-chat-num",
-        "text": "7"
-      },
-      {
         "tag": "a",
         "class": "btn btn-interest ",
         "text": "感兴趣"
@@ -998,17 +1407,17 @@
       {
         "tag": "div",
         "class": "btn btn-startchat-wrap",
-        "text": "立即沟通"
+        "text": "继续沟通"
       },
       {
         "tag": "a",
         "class": "btn btn-startchat",
-        "text": "立即沟通"
+        "text": "继续沟通"
       },
       {
         "tag": "a",
         "class": "link-wechat-share",
-        "text": "微信kanzhun扫码分享"
+        "text": "微信BOSS直聘扫码分享"
       },
       {
         "tag": "button",
@@ -1016,6 +1425,16 @@
         "text": "搜索"
       }
     ],
-    "_page_url": "https://www.zhipin.com/job_detail/1ff1bb5249cbf7480nJ93N6-GVVS.html?securityId=tUPOBoH2jF4QQ-C1xIkX_ows8uG5ivNJQsVmryngMwoh2uMUlISVdhHmU7SiC42pZDLnQ5MLAnLpHZR9XvLxpSja3MajZxMXo7Mle3k2aihmT1LQvQ6oBXQHV-7PsXxtwF4uMC4yS5IV"
+    "_page_url": "https://www.zhipin.com/job_detail/af15e019247032130nJ63tq8E1BQ.html?securityId=Qyy7skvAKE5le-_1GlFq2LyQaZKycZ8d2vxINoH6U9XQx4ex5vUvTmuL4-QihS3uB1kdSk72ORAwQtHe6MWVH2-lLTHWadqlgXkF5c4CDon4URh65PGFiwsVBgBmknCioL4vDzoKiL2Q"
+  },
+  "resume_send_flow_summary": {
+    "total_steps": 10,
+    "success_steps": 9,
+    "failed_steps": 1,
+    "all_success": false,
+    "screenshots": {
+      "resume_dialog": "C:\\Users\\35796\\orca\\boss_bot\\logs\\resume_confirm_dialog.png",
+      "resume_after_send": "C:\\Users\\35796\\orca\\boss_bot\\logs\\resume_after_send.png"
+    }
   }
 }
