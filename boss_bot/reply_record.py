@@ -209,6 +209,8 @@ class GreetRecord:
         skip_reason: 跳过原因
         account_name: 账号名称
         account_index: 账号索引
+        status: 状态 (pending/applied/skipped/failed)
+        greeting_message: 使用的打招呼语（实际发送或配置的）
     """
 
     def __init__(
@@ -235,6 +237,8 @@ class GreetRecord:
         skip_reason: str = "",
         account_name: str = "",
         account_index: int = 0,
+        status: str = "",
+        greeting_message: str = "",
         timestamp: Optional[str] = None,
     ):
         self.timestamp = timestamp or datetime.now().isoformat()
@@ -268,6 +272,26 @@ class GreetRecord:
         self.skip_reason = _truncate(skip_reason, MAX_SKIP_REASON_LEN)
         self.account_name = account_name
         self.account_index = account_index
+        # 状态：pending/applied/skipped/failed
+        # 若调用方未提供，则根据 is_greeted/is_skipped 自动推导
+        if status:
+            self.status = status
+        elif is_greeted:
+            self.status = "applied"
+        elif is_skipped:
+            # 根据跳过原因区分 skipped（主动跳过）和 failed（投递失败）
+            reason = skip_reason or ""
+            if any(kw in reason for kw in ("失败", "异常", "错误")):
+                self.status = "failed"
+            else:
+                self.status = "skipped"
+        else:
+            self.status = "pending"
+        # 打招呼语：优先使用实际发送的，其次 AI 建议的，最后传入的 greeting_message
+        self.greeting_message = _truncate(
+            actual_greeting_sent or ai_suggested_greeting or greeting_message,
+            MAX_ACTUAL_GREETING_LEN,
+        )
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -294,6 +318,8 @@ class GreetRecord:
             "skip_reason": self.skip_reason,
             "account_name": self.account_name,
             "account_index": self.account_index,
+            "status": self.status,
+            "greeting_message": self.greeting_message,
         }
 
     @classmethod
@@ -322,6 +348,8 @@ class GreetRecord:
             skip_reason=data.get("skip_reason", ""),
             account_name=data.get("account_name", ""),
             account_index=data.get("account_index", 0),
+            status=data.get("status", ""),
+            greeting_message=data.get("greeting_message", ""),
         )
 
 
@@ -679,6 +707,7 @@ def _export_greet_records_excel(
         "AI理由", "优势", "劣势", "AI建议打招呼",
         "AI模型", "AI原始返回", "实际打招呼", "是否已打招呼",
         "是否跳过", "跳过原因", "账号名称",
+        "状态", "打招呼语",
     ]
     ws.append(headers)
 
@@ -698,6 +727,8 @@ def _export_greet_records_excel(
             "是" if r.is_skipped else "否",
             r.skip_reason or "",
             r.account_name,
+            r.status or "",
+            r.greeting_message or "",
         ])
 
     wb.save(output_path)
@@ -799,6 +830,8 @@ def record_greet(
     skip_reason: str = "",
     account_name: str = "",
     account_index: int = 0,
+    status: str = "",
+    greeting_message: str = "",
 ) -> GreetRecord:
     """便捷函数：创建并保存一条打招呼记录。
 
@@ -828,6 +861,8 @@ def record_greet(
         skip_reason=skip_reason,
         account_name=account_name,
         account_index=account_index,
+        status=status,
+        greeting_message=greeting_message,
     )
     _get_greet_store().add(record)
     return record

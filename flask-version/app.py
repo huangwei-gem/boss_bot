@@ -1455,6 +1455,60 @@ def api_reply_records():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+@app.route("/api/reply_records/grouped")
+def api_reply_records_grouped():
+    """获取按聊天对象分组的回复记录。
+
+    将所有回复记录按 chat_name 分组，每组包含：
+    - chat_name: 聊天对象名称
+    - message_count: 该聊天对象的消息总数
+    - last_time: 最新消息的时间戳
+    - last_message: 最新收到的消息
+    - last_reply: 最新回复的内容
+    - records: 该聊天对象的所有记录列表（按时间正序）
+
+    返回的分组列表按 last_time 倒序排列（最新的在前）。
+    """
+    try:
+        store = _ensure_reply_store()
+        records = store.get_all()
+
+        # 按 chat_name 分组
+        groups = {}
+        for r in records:
+            chat_name = r.chat_name or "(未知)"
+            if chat_name not in groups:
+                groups[chat_name] = {
+                    "chat_name": chat_name,
+                    "message_count": 0,
+                    "last_time": "",
+                    "last_message": "",
+                    "last_reply": "",
+                    "records": [],
+                }
+            d = r.to_dict()
+            groups[chat_name]["records"].append(d)
+            groups[chat_name]["message_count"] += 1
+            # 更新最新消息（按 timestamp 字符串比较）
+            timestamp = d.get("timestamp", "") or ""
+            if timestamp > groups[chat_name]["last_time"]:
+                groups[chat_name]["last_time"] = timestamp
+                groups[chat_name]["last_message"] = d.get("received_message", "") or ""
+                groups[chat_name]["last_reply"] = d.get("reply_content", "") or ""
+
+        # 转为列表，按最后消息时间倒序排列
+        result = sorted(groups.values(), key=lambda x: x["last_time"], reverse=True)
+        return jsonify({
+            "status": "ok",
+            "groups": result,
+            "total_groups": len(result),
+            "total_records": len(records),
+        })
+    except Exception as e:
+        logger.exception("获取分组回复记录失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 @app.route("/api/greet_records")
 def api_greet_records():
     """获取打招呼记录列表（前端展示用，不分页）。"""

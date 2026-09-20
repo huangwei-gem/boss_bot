@@ -230,6 +230,11 @@ class ReplyEngine:
             # 自动填充账号信息（如果调用方未指定）
             kwargs.setdefault("account_name", self._account_name)
             kwargs.setdefault("account_index", self._account_index)
+            # 关键字段缺失警告（帮助定位调用方未传字段的问题）
+            if not kwargs.get("chat_name"):
+                logger.debug(f"[回复记录] chat_name 为空，received_message={kwargs.get('received_message', '')[:50]}")
+            if not kwargs.get("received_message") and not kwargs.get("is_skipped"):
+                logger.debug(f"[回复记录] received_message 为空且未跳过，chat_name={kwargs.get('chat_name', '')}")
             record = ReplyRecord(**kwargs)
             self._record_store.add(record)
         except Exception as e:

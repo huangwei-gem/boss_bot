@@ -598,6 +598,47 @@ class UnifiedConfig:
             if "event_log_enabled" in log:
                 self.log.event_log_enabled = bool(log["event_log_enabled"])
 
+        # 关键词回复规则
+        reply_rules = data.get("reply_rules", {})
+        if isinstance(reply_rules, dict):
+            for rk, rv in reply_rules.items():
+                if not isinstance(rk, str) or not rk.strip():
+                    continue
+                if rv == "send_resume" or (isinstance(rv, str) and 0 < len(rv.strip()) <= 200):
+                    self.rules.reply_rules[rk.strip()] = rv
+
+        # 回复模板
+        templates = data.get("templates", {})
+        if isinstance(templates, dict):
+            if "salary_reply" in templates:
+                self.templates.salary_reply = str(templates["salary_reply"])
+            if "interview_time_reply" in templates:
+                self.templates.interview_time_reply = str(templates["interview_time_reply"])
+            if "job_content_reply" in templates:
+                self.templates.job_content_reply = str(templates["job_content_reply"])
+            if "greeting_reply" in templates:
+                self.templates.greeting_reply = str(templates["greeting_reply"])
+            if "default_reply" in templates:
+                self.templates.default_reply = str(templates["default_reply"])
+            if "resume_duplicate_reply" in templates:
+                self.templates.resume_duplicate_reply = str(templates["resume_duplicate_reply"])
+            if "resume_unavailable_reply" in templates:
+                self.templates.resume_unavailable_reply = str(templates["resume_unavailable_reply"])
+
+        # 重要事件关键词
+        importance_keywords = data.get("importance_keywords", [])
+        if isinstance(importance_keywords, list):
+            self.rules.importance_keywords = [str(k) for k in importance_keywords if k]
+
+        # 个人画像（从 bot_config.json 的 user_profile 字段）
+        user_profile = data.get("user_profile", {})
+        if isinstance(user_profile, dict):
+            for k, v in user_profile.items():
+                if v is None:
+                    continue
+                if hasattr(self.user_profile, k):
+                    setattr(self.user_profile, k, v)
+
     def _apply_user_profile(self, data: dict):
         """将 user_profile.json 的数据应用到个人画像。"""
         if not isinstance(data, dict):

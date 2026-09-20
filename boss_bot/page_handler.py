@@ -527,19 +527,27 @@ class BossChatHandler:
         """
         点击发送简历按钮，确认发送。
 
-        实测 CSS（2026-09-20 破解浏览器验证，v5543 版本）:
-        - 发简历按钮: .toolbar-btn（文本含"发简历"，可能含 unable 类）
-        - 确认弹层（情况A，已上传简历）: .panel-resume.sentence-popover（"确定向 Boss 发送简历吗？"）
-        - 确定按钮（实测）: .btn-v2.btn-sure-v2.btn-send（文本"发送"，可能含 disabled 类）
-        - 取消按钮: .panel-resume .btn-v2.btn-outline-v2
+        实测 CSS（2026-09-20 破解浏览器实测，用户黄维账号）:
+        - 发简历按钮: .toolbar-btn（文本含"发简历"）
+        - 简历选择弹层（情况A，已上传简历）: .choose-resume-dialog（标题"请选择要发送的简历"）
+          - 容器: .boss-popup__wrapper.boss-dialog.boss-dialog__wrapper.dialog-default.choose-resume-dialog
+          - 简历列表: .resume-list > li.list-item
+          - 简历名: .resume-name
+          - 发送按钮: .btn-v2.btn-sure-v2.btn-confirm（文本"发送"，选中简历后 enabled）
+          - 管理附件: .manage-btn
         - 上传弹层（情况B，未上传简历）: .upload-resume-dialog 或 .upload-select-dialog 可见
-          - .upload-resume-dialog: "拖拽文件到这里…上传附件简历"
-          - .upload-select-dialog: "上传简历 / 发送在线简历" 二选一
+        - 旧版确认弹层（兜底）: .panel-resume.sentence-popover（"确定向 Boss 发送简历吗？"）
+
+        关键流程:
+        1. 点击 .toolbar-btn（文本含"发简历"）
+        2. 等待 .choose-resume-dialog 弹层出现
+        3. 点击 .resume-list .list-item 选中简历（发送按钮才会 enabled）
+        4. 点击 .btn-v2.btn-sure-v2.btn-confirm 发送简历
+        5. 验证弹层消失 + 消息列表出现简历消息
 
         注意：
-        - 旧版页面的 .choose-resume-dialog / .resume-list .list-item 已不存在。
-        - 确定按钮可能不在 .panel-resume 容器内，需优先用 .btn-v2.btn-sure-v2.btn-send。
-        - 确定按钮文本是"发送"而非"确定"，且有 btn-send 类。
+        - .btn-v2.btn-sure-v2.btn-send 是另一个弹层的按钮，始终 disabled，不要用！
+        - 必须先点击简历项选中，btn-confirm 才会从 disabled 变成 enabled
         """
         for attempt in range(1, retries + 2):
             try:
@@ -561,37 +569,36 @@ class BossChatHandler:
                     logger.warning(f"发简历按钮未找到（尝试 {attempt}/{retries + 1}）")
                     time.sleep(1)
                     continue
-                logger.info("已点击发简历按钮，等待确认弹层...")
+                logger.info("已点击发简历按钮，等待简历选择弹层...")
                 time.sleep(2)
 
-                # 2. 等待弹层出现：确认弹层（情况A） or 上传引导（情况B）
+                # 2. 等待弹层出现：简历选择弹层（情况A） or 上传引导（情况B）
                 state = "pending"
-                for wait_idx in range(15):  # 增加等待次数（15次×0.5秒=7.5秒）
+                for wait_idx in range(15):  # 15次×0.5秒=7.5秒
                     state = self.page.run_js('''(
                         function() {
-                            // 优先检测精确选择器 .panel-resume.sentence-popover（实测确认弹层）
-                            var exactPanel = document.querySelector(".panel-resume.sentence-popover");
-                            if (exactPanel) {
-                                var cs0 = window.getComputedStyle(exactPanel);
-                                if (cs0.display !== "none" && cs0.visibility !== "hidden" && cs0.opacity !== "0") return "confirm";
+                            // 优先检测简历选择弹层 .choose-resume-dialog（实测确认）
+                            var chooseDialog = document.querySelector(".choose-resume-dialog");
+                            if (chooseDialog) {
+                                var cs0 = window.getComputedStyle(chooseDialog);
+                                if (cs0.display !== "none" && cs0.visibility !== "hidden") return "choose_resume";
                             }
-                            // 备选选择器检测确认弹层（兜底，不单独检测 .sentence-popover 以免误匹配其他弹层）
-                            var panelSels = [
-                                ".panel-resume",
-                                "[class*='panel-resume']",
-                                "[class*='resume-pop']",
-                                ".dialog-content[class*='resume']",
-                                ".popover[class*='resume']"
-                            ];
-                            for (var i = 0; i < panelSels.length; i++) {
-                                var panel = document.querySelector(panelSels[i]);
-                                if (panel) {
-                                    var cs = window.getComputedStyle(panel);
-                                    if (cs.display !== "none" && cs.visibility !== "hidden" && cs.opacity !== "0") return "confirm";
+                            // 备选：.dialog-wrap.active（弹层容器）
+                            var wrapActive = document.querySelector(".dialog-wrap.active");
+                            if (wrapActive) {
+                                var csW = window.getComputedStyle(wrapActive);
+                                if (csW.display !== "none" && csW.visibility !== "hidden") {
+                                    // 检查是否含"请选择要发送的简历"文本
+                                    if (wrapActive.textContent.indexOf("请选择要发送的简历") >= 0) return "choose_resume";
                                 }
                             }
+                            // 旧版确认弹层（兜底）: .panel-resume.sentence-popover
+                            var exactPanel = document.querySelector(".panel-resume.sentence-popover");
+                            if (exactPanel) {
+                                var cs1 = window.getComputedStyle(exactPanel);
+                                if (cs1.display !== "none" && cs1.visibility !== "hidden" && cs1.opacity !== "0") return "confirm";
+                            }
                             // 检测上传引导（情况B：未上传简历）
-                            // 实测有两种弹层：.upload-resume-dialog（上传附件）和 .upload-select-dialog（选择上传方式）
                             var uploadSels = [
                                 ".upload-resume-dialog",
                                 ".upload-select-dialog",
@@ -605,7 +612,7 @@ class BossChatHandler:
                                     if (cs2.display !== "none" && cs2.visibility !== "hidden") return "no_resume";
                                 }
                             }
-                            // 检测"确定向Boss发送简历吗"文字弹层（兜底）
+                            // 检测"确定向Boss发送简历吗"文字弹层（旧版兜底）
                             var allDivs = document.querySelectorAll("div");
                             for (var k = 0; k < allDivs.length; k++) {
                                 var d = allDivs[k];
@@ -617,7 +624,7 @@ class BossChatHandler:
                             return "pending";
                         }
                     )()''', as_expr=True)
-                    if state in ("confirm", "no_resume"):
+                    if state in ("choose_resume", "confirm", "no_resume"):
                         logger.info(f"弹层状态检测: {state}（等待 {wait_idx + 1} 次）")
                         break
                     time.sleep(0.5)
@@ -626,78 +633,143 @@ class BossChatHandler:
                     logger.error("请先在BOSS直聘上传简历：当前账号未上传附件简历，BOSS 弹出上传引导弹层（.upload-resume-dialog 或 .upload-select-dialog），无法自动发送")
                     return False
 
-                if state != "confirm":
+                if state == "pending":
                     # 调试：打印页面上所有可见弹层信息
                     debug_info = self.page.run_js('''(
                         function() {
                             var info = [];
-                            var candidates = document.querySelectorAll("[class*='panel'], [class*='popover'], [class*='dialog'], [class*='modal'], [class*='resume'], [class*='upload']");
-                            for (var i = 0; i < Math.min(candidates.length, 15); i++) {
+                            var candidates = document.querySelectorAll("[class*='panel'], [class*='popover'], [class*='dialog'], [class*='modal'], [class*='resume'], [class*='upload'], [class*='choose']");
+                            for (var i = 0; i < Math.min(candidates.length, 20); i++) {
                                 var el = candidates[i];
                                 var cs = window.getComputedStyle(el);
                                 if (cs.display !== "none" && cs.visibility !== "hidden") {
-                                    info.push(el.className.substring(0, 80) + " | text: " + (el.textContent || "").substring(0, 50));
+                                    info.push((el.className || "").toString().substring(0, 80) + " | text: " + (el.textContent || "").substring(0, 50));
                                 }
                             }
                             return info.join(" || ");
                         }
                     )()''', as_expr=True)
-                    logger.warning(f"确认弹层未出现（尝试 {attempt}/{retries + 1}），页面可见弹层: {debug_info}")
+                    logger.warning(f"弹层未出现（尝试 {attempt}/{retries + 1}），页面可见弹层: {debug_info}")
                     continue
 
-                # 3. 点击确定按钮（实测: .btn-v2.btn-sure-v2.btn-send，文本"发送"）
-                send_result = self.page.run_js('''(
-                    function() {
-                        // 主选择器 + 备选选择器
-                        // 实测确定按钮: <button class="btn-v2 btn-sure-v2 btn-send disabled">发送</button>
-                        // 按钮可能不在 .panel-resume 容器内，需优先用全局选择器
-                        var btnSels = [
-                            ".btn-v2.btn-sure-v2.btn-send",
-                            ".panel-resume .btn-v2.btn-sure-v2.btn-send",
-                            ".panel-resume.sentence-popover .btn-v2.btn-sure-v2.btn-send",
-                            ".panel-resume .btn-v2.btn-sure-v2",
-                            ".panel-resume.sentence-popover .btn-v2.btn-sure-v2",
-                            ".panel-resume .btn-sure",
-                            ".btn-sure-v2",
-                            "[class*='panel-resume'] .btn-v2.btn-sure-v2"
-                        ];
-                        var btn = null;
-                        var usedSel = "";
-                        for (var i = 0; i < btnSels.length; i++) {
-                            btn = document.querySelector(btnSels[i]);
-                            if (btn) { usedSel = btnSels[i]; break; }
-                        }
-                        if (!btn) return "button not found";
-                        // disabled 检测：classList / disabled 属性 / className 兜底
-                        if (btn.disabled || btn.classList.contains("disabled") || btn.getAttribute("disabled") !== null) return "button disabled";
-                        btn.click();
-                        return "sent:" + usedSel;
-                    }
-                )()''', as_expr=True)
-                logger.info(f"发送简历结果: {send_result}")
-                time.sleep(2)
-
-                if send_result != "sent" and not send_result.startswith("sent:"):
-                    logger.warning(f"发送按钮不可用（尝试 {attempt}/{retries + 1}）: {send_result}")
-                    # 关闭弹层后重试（实测取消按钮: .panel-resume .btn-v2.btn-outline-v2）
-                    self.page.run_js('''(
+                # 3. 根据弹层类型执行不同的发送流程
+                if state == "choose_resume":
+                    # 新版流程：选择简历弹层
+                    # 3a. 点击简历项选中简历
+                    select_result = self.page.run_js('''(
                         function() {
-                            var cancelSels = [
-                                ".panel-resume .btn-v2.btn-outline-v2",
-                                ".panel-resume.sentence-popover .btn-v2.btn-outline-v2",
-                                ".panel-resume .btn-outline-v2",
-                                "[class*='panel-resume'] .btn-v2.btn-outline-v2"
+                            // 查找简历列表项
+                            var itemSels = [
+                                ".choose-resume-dialog .resume-list .list-item",
+                                ".resume-list .list-item",
+                                ".choose-resume-dialog .list-item",
+                                ".dialog-wrap.active .resume-list .list-item"
                             ];
-                            for (var i = 0; i < cancelSels.length; i++) {
-                                var btn = document.querySelector(cancelSels[i]);
-                                if (btn) { btn.click(); return; }
+                            for (var i = 0; i < itemSels.length; i++) {
+                                var items = document.querySelectorAll(itemSels[i]);
+                                if (items.length > 0) {
+                                    items[0].click();
+                                    return "selected:" + itemSels[i] + " count=" + items.length;
+                                }
                             }
+                            return "no resume item";
                         }
                     )()''', as_expr=True)
+                    logger.info(f"选中简历项: {select_result}")
                     time.sleep(1)
-                    continue
 
-                # 4. 送达验证：确认弹层消失 + 消息列表出现简历消息
+                    if not select_result.startswith("selected:"):
+                        logger.warning(f"简历项未找到（尝试 {attempt}/{retries + 1}）: {select_result}")
+                        self._close_resume_dialog()
+                        time.sleep(1)
+                        continue
+
+                    # 3b. 点击发送按钮 .btn-v2.btn-sure-v2.btn-confirm
+                    send_result = self.page.run_js('''(
+                        function() {
+                            // 优先选择 choose-resume-dialog 内的 btn-confirm（实测可用按钮）
+                            var btnSels = [
+                                ".choose-resume-dialog .btn-v2.btn-sure-v2.btn-confirm",
+                                ".dialog-wrap.active .btn-v2.btn-sure-v2.btn-confirm",
+                                ".btn-v2.btn-sure-v2.btn-confirm",
+                                ".choose-resume-dialog .btn-v2.btn-sure-v2",
+                                ".choose-resume-dialog button.btn-v2"
+                            ];
+                            for (var i = 0; i < btnSels.length; i++) {
+                                var btn = document.querySelector(btnSels[i]);
+                                if (!btn) continue;
+                                var cs = window.getComputedStyle(btn);
+                                if (cs.display === "none" || cs.visibility === "hidden") continue;
+                                var cls = (btn.className || "").toString();
+                                var disabled = btn.disabled || cls.indexOf("disabled") >= 0;
+                                if (disabled) {
+                                    return "button disabled: " + btnSels[i] + " class=" + cls;
+                                }
+                                btn.click();
+                                return "sent:" + btnSels[i];
+                            }
+                            return "button not found";
+                        }
+                    )()''', as_expr=True)
+                    logger.info(f"发送简历结果: {send_result}")
+                    time.sleep(2)
+
+                    if not send_result.startswith("sent:"):
+                        logger.warning(f"发送按钮不可用（尝试 {attempt}/{retries + 1}）: {send_result}")
+                        self._close_resume_dialog()
+                        time.sleep(1)
+                        continue
+
+                else:
+                    # 旧版流程：confirm 弹层（.panel-resume.sentence-popover）
+                    # 点击确定按钮 .btn-v2.btn-sure-v2.btn-send
+                    send_result = self.page.run_js('''(
+                        function() {
+                            var btnSels = [
+                                ".btn-v2.btn-sure-v2.btn-send",
+                                ".panel-resume .btn-v2.btn-sure-v2.btn-send",
+                                ".panel-resume.sentence-popover .btn-v2.btn-sure-v2.btn-send",
+                                ".panel-resume .btn-v2.btn-sure-v2",
+                                ".panel-resume.sentence-popover .btn-v2.btn-sure-v2",
+                                ".btn-sure-v2"
+                            ];
+                            for (var i = 0; i < btnSels.length; i++) {
+                                var btn = document.querySelector(btnSels[i]);
+                                if (!btn) continue;
+                                var cs = window.getComputedStyle(btn);
+                                if (cs.display === "none" || cs.visibility === "hidden") continue;
+                                var cls = (btn.className || "").toString();
+                                var disabled = btn.disabled || cls.indexOf("disabled") >= 0;
+                                if (disabled) return "button disabled: " + btnSels[i];
+                                btn.click();
+                                return "sent:" + btnSels[i];
+                            }
+                            return "button not found";
+                        }
+                    )()''', as_expr=True)
+                    logger.info(f"发送简历结果（旧版弹层）: {send_result}")
+                    time.sleep(2)
+
+                    if not send_result.startswith("sent:"):
+                        logger.warning(f"发送按钮不可用（尝试 {attempt}/{retries + 1}）: {send_result}")
+                        # 关闭旧版弹层
+                        self.page.run_js('''(
+                            function() {
+                                var cancelSels = [
+                                    ".panel-resume .btn-v2.btn-outline-v2",
+                                    ".panel-resume.sentence-popover .btn-v2.btn-outline-v2",
+                                    ".panel-resume .btn-outline-v2"
+                                ];
+                                for (var i = 0; i < cancelSels.length; i++) {
+                                    var btn = document.querySelector(cancelSels[i]);
+                                    if (btn) { btn.click(); return; }
+                                }
+                            }
+                        )()''', as_expr=True)
+                        time.sleep(1)
+                        continue
+
+                # 4. 送达验证：弹层消失 + 消息列表出现简历消息
                 return self._verify_resume_sent()
 
             except Exception as e:
@@ -707,27 +779,68 @@ class BossChatHandler:
         logger.error("发送简历最终失败")
         return False
 
-    def _verify_resume_sent(self, timeout: int = 6) -> bool:
-        """验证简历是否发送成功：确认弹层消失 + 消息列表出现简历项"""
+    def _close_resume_dialog(self) -> None:
+        """关闭简历选择弹层（.choose-resume-dialog）"""
+        try:
+            self.page.run_js('''(
+                function() {
+                    // 优先点击弹层右上角的关闭按钮（×）
+                    var closeSels = [
+                        ".choose-resume-dialog .boss-dialog__close",
+                        ".choose-resume-dialog .dialog-close",
+                        ".choose-resume-dialog .close",
+                        ".dialog-wrap.active .boss-dialog__close",
+                        ".dialog-wrap.active .close"
+                    ];
+                    for (var i = 0; i < closeSels.length; i++) {
+                        var btn = document.querySelector(closeSels[i]);
+                        if (btn) { btn.click(); return; }
+                    }
+                    // 备选：点击遮罩层关闭
+                    var mask = document.querySelector(".dialog-wrap.active .dialog-mask, .boss-popup__mask");
+                    if (mask) { mask.click(); return; }
+                    // 最后备选：点击"管理附件"按钮（会跳转到简历管理页面，不理想但能关闭弹层）
+                    var manage = document.querySelector(".choose-resume-dialog .manage-btn");
+                    if (manage) { manage.click(); return; }
+                }
+            )()''', as_expr=True)
+        except Exception:
+            pass
+
+    def _verify_resume_sent(self, timeout: int = 8) -> bool:
+        """验证简历是否发送成功：弹层消失 + 消息列表出现简历项
+
+        实测送达消息格式: "附件简历请求已发送" + "数据分析简历-黄维.docx点击预览附件简历"
+        """
         deadline = time.time() + timeout
         while time.time() < deadline:
             try:
                 result = self.page.run_js('''(
                     function() {
-                        // 检测确认弹层是否仍可见（优先精确选择器 .panel-resume.sentence-popover）
-                        var panelSels = [".panel-resume.sentence-popover", ".panel-resume"];
-                        for (var i = 0; i < panelSels.length; i++) {
-                            var panel = document.querySelector(panelSels[i]);
+                        // 检测简历选择弹层是否仍可见
+                        var dialogSels = [".choose-resume-dialog", ".dialog-wrap.active", ".panel-resume.sentence-popover", ".panel-resume"];
+                        var dialogVisible = false;
+                        for (var i = 0; i < dialogSels.length; i++) {
+                            var panel = document.querySelector(dialogSels[i]);
                             if (panel) {
                                 var cs = window.getComputedStyle(panel);
-                                if (cs.display !== "none" && cs.visibility !== "hidden") return "panel visible";
+                                if (cs.display !== "none" && cs.visibility !== "hidden") {
+                                    dialogVisible = true;
+                                    break;
+                                }
                             }
                         }
                         // 检测消息列表是否出现简历消息
-                        var items = document.querySelectorAll(".message-item .text-content");
+                        var items = document.querySelectorAll(".message-item .text-content, [class*='message-item']");
                         var count = items.length;
-                        var last = count ? items[count - 1].textContent : "";
-                        if (last.indexOf("简历") >= 0) return "delivered";
+                        // 检查最后几条消息是否含简历相关文本
+                        for (var j = Math.max(0, count - 3); j < count; j++) {
+                            var txt = items[j].textContent || "";
+                            if (txt.indexOf("简历") >= 0 || txt.indexOf("附件简历") >= 0 || txt.indexOf(".docx") >= 0 || txt.indexOf("简历请求已发送") >= 0) {
+                                return "delivered";
+                            }
+                        }
+                        if (dialogVisible) return "dialog visible";
                         return count > 0 ? "new_message" : "pending";
                     }
                 )()''', as_expr=True)

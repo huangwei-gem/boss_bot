@@ -587,13 +587,40 @@ class GreetEngine:
         is_skipped: bool = False,
         skip_reason: str = "",
         actual_greeting_sent: str = "",
+        status: str = "",
     ):
         """创建并保存一条打招呼/AI分析记录。
 
         从 self._last_ai_* 属性中获取 AI 分析的完整信息。
+
+        Args:
+            job: 岗位信息字典
+            is_greeted: 是否成功打招呼
+            is_skipped: 是否跳过
+            skip_reason: 跳过原因
+            actual_greeting_sent: 实际发送的打招呼语
+            status: 状态 (pending/applied/skipped/failed)，留空则自动推导
         """
         try:
             ai_result = self._last_ai_result or {}
+            # 推导 status（若调用方未指定）
+            if not status:
+                if is_greeted:
+                    status = "applied"
+                elif is_skipped:
+                    reason = skip_reason or ""
+                    if any(kw in reason for kw in ("失败", "异常", "错误")):
+                        status = "failed"
+                    else:
+                        status = "skipped"
+                else:
+                    status = "pending"
+            # 打招呼语：优先实际发送的，其次 AI 建议的，最后当前配置的
+            greeting_message = (
+                actual_greeting_sent
+                or ai_result.get("suggested_greeting", "")
+                or self._greeting_message
+            )
             record = GreetRecord(
                 job_name=job.get("job_name", ""),
                 job_url=job.get("url", ""),
@@ -616,6 +643,8 @@ class GreetEngine:
                 is_skipped=is_skipped,
                 skip_reason=skip_reason,
                 account_name=self._cookie_file or "",
+                status=status,
+                greeting_message=greeting_message,
             )
             self._greet_store.add(record)
         except Exception as e:
