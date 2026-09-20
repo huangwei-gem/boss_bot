@@ -511,7 +511,7 @@ a{color:var(--accent);text-decoration:none}
         </div>
       </div>
       <div>
-        <div class="side-section-title">账号设置</div>
+        <div class="side-section-title">账号设置 <span style="font-size:10px;color:var(--fg-4th);font-weight:400">(独立)</span></div>
         <div class="acc-field-row"><label>名称</label><input class="side-form-input" id="accName" type="text" placeholder="主账号" onchange="onAccChange()"></div>
         <div class="acc-field-row"><label>Cookie</label>
           <div class="file-input-wrap">
@@ -522,9 +522,14 @@ a{color:var(--accent);text-decoration:none}
           </div>
         </div>
         <div class="acc-field-row" style="gap:6px"><label>启用</label><span id="accEnabled" class="toggle-switch on" onclick="toggleAccEnabled()"></span></div>
+        <div style="font-size:10px;color:var(--fg-4th);margin-top:4px;line-height:1.5">
+          <b>独立配置：</b>Cookie、浏览器、岗位任务、投递/回复记录、运行状态<br>
+          <b>全局共享：</b>AI配置、回复规则、回复模板、个人画像、关键词
+        </div>
       </div>
       <div>
-        <div class="side-section-title">AI 智能解析 <span class="badge-count" id="aiBadge">关</span></div>
+        <div class="side-section-title">AI 智能解析 <span class="badge-count" id="aiBadge">关</span> <span style="font-size:10px;color:var(--fg-4th);font-weight:400">(全局共享)</span></div>
+        <div style="font-size:10px;color:var(--warning);margin-bottom:4px">⚠ 此开关仅控制打招呼的AI岗位解析，自动回复AI始终开启</div>
         <div class="acc-field-row" style="padding:6px 8px;border-radius:8px;background:var(--side-input-bg);border:1px solid var(--bd-2)"><label style="font-size:12px;font-weight:600">启用 AI</label><span id="aiEnabled" class="toggle-switch ai-switch" onclick="toggleAiEnabled()" style="margin-left:auto"></span></div>
         <div class="acc-field-row"><label>匹配阈值</label><input class="side-form-input" id="aiThreshold" type="number" min="0" max="100" placeholder="70" onchange="onAiChange()"></div>
         <button class="adv-toggle" id="aiProvToggle" onclick="toggleAiProviders()">
@@ -2057,8 +2062,9 @@ function deleteJob(i) {
 // ── 账号添加/删除 ──
 function addAccount() {
   const name = '账号' + (config.accounts.length + 1);
-  const cookieFile = document.getElementById('accCookie').value || 'zhipin_cookies.json';
-  fetch('/api/accounts/add', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name: name, cookie_file: cookieFile, enabled: true}) })
+  // 新账号使用独立的 cookie 文件，不复制当前账号的
+  // 后端会自动生成 zhipin_cookies_{n}.json
+  fetch('/api/accounts/add', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name: name, enabled: true}) })
     .then(function(r){return r.json()})
     .then(function(data) {
       if (data.status === 'ok') {

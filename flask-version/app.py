@@ -1554,7 +1554,6 @@ def api_add_account():
     try:
         data = request.get_json() or {}
         name = data.get("name", "")
-        cookie_file = data.get("cookie_file", "zhipin_cookies.json")
         enabled = data.get("enabled", True)
 
         if not name:
@@ -1562,6 +1561,16 @@ def api_add_account():
 
         cfg = _ensure_config()
         from boss_bot.unified_config import AccountConfig, JobConfig
+
+        # 自动生成独立的 cookie 文件名 — 每个账号必须独立
+        # 主账号用 zhipin_cookies.json，后续账号用 zhipin_cookies_1.json, _2.json ...
+        new_idx = len(cfg.greet.accounts)
+        if new_idx == 0:
+            cookie_file = data.get("cookie_file", "zhipin_cookies.json")
+        else:
+            # 优先使用前端传入的，否则自动生成
+            cookie_file = data.get("cookie_file", "") or f"zhipin_cookies_{new_idx}.json"
+
         new_account = AccountConfig(
             name=name,
             enabled=enabled,
@@ -1571,7 +1580,7 @@ def api_add_account():
         cfg.greet.accounts.append(new_account)
         cfg.save()
 
-        return jsonify({"status": "ok", "message": f"账号「{name}」已添加"})
+        return jsonify({"status": "ok", "message": f"账号「{name}」已添加，Cookie文件: {cookie_file}"})
     except Exception as e:
         logger.exception("添加账号失败")
         return jsonify({"status": "error", "message": str(e)}), 500
