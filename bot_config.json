@@ -1,4 +1,210 @@
 {
+  "accounts": [
+    {
+      "cookie_file": "zhipin_cookies.json",
+      "enabled": true,
+      "image_files": [],
+      "jobs": [
+        {
+          "city": "长沙",
+          "enabled": true,
+          "greeting_message": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+          "image_files": [
+            "dashboard/d7ca4e20_看板1.png",
+            "dashboard/452a1b69_看板2.png",
+            "dashboard/d258c537_看板3.png"
+          ],
+          "query": "数据分析",
+          "scroll_pages": 5
+        }
+      ],
+      "message_interval_max": 8,
+      "message_interval_min": 3,
+      "name": "主账号"
+    },
+    {
+      "cookie_file": "zhipin_cookies_1.json",
+      "enabled": true,
+      "image_files": [],
+      "jobs": [
+        {
+          "city": "上海",
+          "enabled": true,
+          "greeting_message": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+          "image_files": [],
+          "query": "数据分析",
+          "scroll_pages": 5
+        }
+      ],
+      "message_interval_max": 8,
+      "message_interval_min": 3,
+      "name": "账号2"
+    }
+  ],
+  "ai": {
+    "enabled": false,
+    "api_key": "sk-P5tZ5ljBOWyNi85fVzabu633Vp88cmP78d4G7279f6k9KNQj",
+    "api_base": "https://apihub.agnes-ai.com/v1",
+    "model": "agnes-2.5-flash",
+    "match_threshold": 70,
+    "providers": [
+      {
+        "api_base": "https://apihub.agnes-ai.com/v1",
+        "api_key": "sk-P5tZ5ljBOWyNi85fVzabu633Vp88cmP78d4G7279f6k9KNQj",
+        "model": "agnes-2.5-flash",
+        "name": "Agnes-2.5-Flash",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://apihub.agnes-ai.com/v1",
+        "api_key": "sk-9oqBiyfO2pR3caC5gZ1gqCx5rOhCFZRjRsnNkPxCXlw9BpF0",
+        "model": "agnes-2.5-flash",
+        "name": "Agnes-2",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://token.sensenova.cn/v1",
+        "api_key": "sk-F3WGt9cnsCrduZMyhyTYMEEKYJWE1Mzn",
+        "model": "deepseek-v4-flash",
+        "name": "SenseNova-DeepSeek-1",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://token.sensenova.cn/v1",
+        "api_key": "sk-Pw4XHALKoM3MYleuICN6F2vfp2GP1QUl",
+        "model": "deepseek-v4-flash",
+        "name": "SenseNova-DeepSeek-2",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://note3-prev-api.askdiandian.com/v1",
+        "api_key": "ak_iGxurHneP9HveEQ5cJRuAvZQDJeDI",
+        "model": "dots3-note-prev",
+        "name": "AskDiandian-Dots3",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://developer.amd.com.cn/radeon/api/v1",
+        "api_key": "rc-ee98411a4be1ae0e3522888415af21cad30c3940981af7fa",
+        "model": "DeepSeek-V4.1-Flash",
+        "name": "AMD-DeepSeek-V4.1",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://developer.amd.com.cn/radeon/api/v1",
+        "api_key": "rc-ee98411a4be1ae0e3522888415af21cad30c3940981af7fa",
+        "model": "GLM-5.3-Flash",
+        "name": "AMD-GLM-5.3",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://developer.amd.com.cn/radeon/api/v1",
+        "api_key": "rc-ee98411a4be1ae0e3522888415af21cad30c3940981af7fa",
+        "model": "Qwen3.8-Flash-Next",
+        "name": "AMD-Qwen3.8",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://integrate.api.nvidia.com/v1",
+        "api_key": "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",
+        "model": "glm-5-3",
+        "name": "NVIDIA-GLM-5-3",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://integrate.api.nvidia.com/v1",
+        "api_key": "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",
+        "model": "glm-5-3-flash",
+        "name": "NVIDIA-GLM-5-3-Flash",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://integrate.api.nvidia.com/v1",
+        "api_key": "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",
+        "model": "kimi-k3",
+        "name": "NVIDIA-Kimi-K3",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://integrate.api.nvidia.com/v1",
+        "api_key": "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",
+        "model": "deepseek-v4-flash-0731",
+        "name": "NVIDIA-DeepSeek-V4",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://opencode.ai/zen/v1",
+        "api_key": "sk-NKrrY96pSd8PK2PFjiyb2oJJgNVg6X1iagE1hfPgeDQDECmBejcJAHxdn9Zt8quN",
+        "model": "deepseek-v4-flash-free",
+        "name": "OpenCode-DeepSeek-Free",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://opencode.ai/zen/v1",
+        "api_key": "sk-NKrrY96pSd8PK2PFjiyb2oJJgNVg6X1iagE1hfPgeDQDECmBejcJAHxdn9Zt8quN",
+        "model": "muse-spark-1.3-contributor-free",
+        "name": "OpenCode-Muse-Spark-1.3-Free",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://opencode.ai/zen/v1",
+        "api_key": "sk-NKrrY96pSd8PK2PFjiyb2oJJgNVg6X1iagE1hfPgeDQDECmBejcJAHxdn9Zt8quN",
+        "model": "muse-spark-1.2-contributor-free",
+        "name": "OpenCode-Muse-Spark-1.2-Free",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://opencode.ai/zen/v1",
+        "api_key": "sk-NKrrY96pSd8PK2PFjiyb2oJJgNVg6X1iagE1hfPgeDQDECmBejcJAHxdn9Zt8quN",
+        "model": "mimo-v2.5-free",
+        "name": "OpenCode-MiMo-V2.5-Free",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://opencode.ai/zen/v1",
+        "api_key": "sk-NKrrY96pSd8PK2PFjiyb2oJJgNVg6X1iagE1hfPgeDQDECmBejcJAHxdn9Zt8quN",
+        "model": "ling-3.0-flash-fin-free",
+        "name": "OpenCode-Ling-3.0-Free",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://opencode.ai/zen/v1",
+        "api_key": "sk-NKrrY96pSd8PK2PFjiyb2oJJgNVg6X1iagE1hfPgeDQDECmBejcJAHxdn9Zt8quN",
+        "model": "nemotron-3-ultra-free",
+        "name": "OpenCode-Nemotron-Ultra-Free",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://opencode.ai/zen/v1",
+        "api_key": "sk-NKrrY96pSd8PK2PFjiyb2oJJgNVg6X1iagE1hfPgeDQDECmBejcJAHxdn9Zt8quN",
+        "model": "nemotron-3.5-lightning-free",
+        "name": "OpenCode-Nemotron-Lightning-Free",
+        "timeout": 30
+      },
+      {
+        "api_base": "",
+        "api_key": "",
+        "model": "",
+        "name": "新接口",
+        "timeout": 30
+      },
+      {
+        "api_base": "",
+        "api_key": "",
+        "model": "",
+        "name": "新接口",
+        "timeout": 30
+      },
+      {
+        "api_base": "",
+        "api_key": "",
+        "model": "",
+        "name": "新接口",
+        "timeout": 30
+      }
+    ],
+    "fail_action": "default"
+  },
   "browser": {
     "headless": false,
     "viewport_width": 1280,
@@ -8,260 +214,49 @@
     "proxy": "",
     "browser_type": "chrome"
   },
+  "importance_keywords": [
+    "offer",
+    "确认入职",
+    "入职通知",
+    "办理入职",
+    "录取",
+    "录用",
+    "欢迎加入",
+    "报到",
+    "面试邀请",
+    "邀约",
+    "来公司",
+    "到岗"
+  ],
+  "log": {
+    "event_log_enabled": true,
+    "log_level": "INFO",
+    "log_retention_days": 14
+  },
   "login": {
     "wait_timeout": 300,
     "clear_cookies_on_failure": true,
     "cookie_file": "zhipin_cookies.json"
   },
-  "rate_limit": {
-    "enabled": true,
-    "max_per_hour": 30,
-    "max_per_day": 100
-  },
-  "retry": {
-    "max_attempts": 3,
-    "base_delay": 2.0,
-    "backoff_factor": 2.0
-  },
-  "ai": {
-    "enabled": false,
-    "api_key": "sk-P5tZ5ljBOWyNi85fVzabu633Vp88cmP78d4G7279f6k9KNQj",
-    "api_base": "https://apihub.agnes-ai.com/v1",
-    "model": "agnes-2.5-flash",
-    "match_threshold": 70,
-    "providers": [
-      {
-        "name": "Agnes-2.5-Flash",
-        "api_key": "sk-P5tZ5ljBOWyNi85fVzabu633Vp88cmP78d4G7279f6k9KNQj",
-        "api_base": "https://apihub.agnes-ai.com/v1",
-        "model": "agnes-2.5-flash",
-        "timeout": 30
-      },
-      {
-        "name": "Agnes-2",
-        "api_key": "sk-9oqBiyfO2pR3caC5gZ1gqCx5rOhCFZRjRsnNkPxCXlw9BpF0",
-        "api_base": "https://apihub.agnes-ai.com/v1",
-        "model": "agnes-2.5-flash",
-        "timeout": 30
-      },
-      {
-        "name": "SenseNova-DeepSeek-1",
-        "api_key": "sk-F3WGt9cnsCrduZMyhyTYMEEKYJWE1Mzn",
-        "api_base": "https://token.sensenova.cn/v1",
-        "model": "deepseek-v4-flash",
-        "timeout": 30
-      },
-      {
-        "name": "SenseNova-DeepSeek-2",
-        "api_key": "sk-Pw4XHALKoM3MYleuICN6F2vfp2GP1QUl",
-        "api_base": "https://token.sensenova.cn/v1",
-        "model": "deepseek-v4-flash",
-        "timeout": 30
-      },
-      {
-        "name": "AskDiandian-Dots3",
-        "api_key": "ak_iGxurHneP9HveEQ5cJRuAvZQDJeDI",
-        "api_base": "https://note3-prev-api.askdiandian.com/v1",
-        "model": "dots3-note-prev",
-        "timeout": 30
-      },
-      {
-        "name": "AMD-DeepSeek-V4.1",
-        "api_key": "rc-ee98411a4be1ae0e3522888415af21cad30c3940981af7fa",
-        "api_base": "https://developer.amd.com.cn/radeon/api/v1",
-        "model": "DeepSeek-V4.1-Flash",
-        "timeout": 30
-      },
-      {
-        "name": "AMD-GLM-5.3",
-        "api_key": "rc-ee98411a4be1ae0e3522888415af21cad30c3940981af7fa",
-        "api_base": "https://developer.amd.com.cn/radeon/api/v1",
-        "model": "GLM-5.3-Flash",
-        "timeout": 30
-      },
-      {
-        "name": "AMD-Qwen3.8",
-        "api_key": "rc-ee98411a4be1ae0e3522888415af21cad30c3940981af7fa",
-        "api_base": "https://developer.amd.com.cn/radeon/api/v1",
-        "model": "Qwen3.8-Flash-Next",
-        "timeout": 30
-      },
-      {
-        "name": "NVIDIA-GLM-5-3",
-        "api_key": "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",
-        "api_base": "https://integrate.api.nvidia.com/v1",
-        "model": "glm-5-3",
-        "timeout": 30
-      },
-      {
-        "name": "NVIDIA-GLM-5-3-Flash",
-        "api_key": "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",
-        "api_base": "https://integrate.api.nvidia.com/v1",
-        "model": "glm-5-3-flash",
-        "timeout": 30
-      },
-      {
-        "name": "NVIDIA-Kimi-K3",
-        "api_key": "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",
-        "api_base": "https://integrate.api.nvidia.com/v1",
-        "model": "kimi-k3",
-        "timeout": 30
-      },
-      {
-        "name": "NVIDIA-DeepSeek-V4",
-        "api_key": "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",
-        "api_base": "https://integrate.api.nvidia.com/v1",
-        "model": "deepseek-v4-flash-0731",
-        "timeout": 30
-      },
-      {
-        "name": "OpenCode-DeepSeek-Free",
-        "api_key": "sk-NKrrY96pSd8PK2PFjiyb2oJJgNVg6X1iagE1hfPgeDQDECmBejcJAHxdn9Zt8quN",
-        "api_base": "https://opencode.ai/zen/v1",
-        "model": "deepseek-v4-flash-free",
-        "timeout": 30
-      },
-      {
-        "name": "OpenCode-Muse-Spark-1.3-Free",
-        "api_key": "sk-NKrrY96pSd8PK2PFjiyb2oJJgNVg6X1iagE1hfPgeDQDECmBejcJAHxdn9Zt8quN",
-        "api_base": "https://opencode.ai/zen/v1",
-        "model": "muse-spark-1.3-contributor-free",
-        "timeout": 30
-      },
-      {
-        "name": "OpenCode-Muse-Spark-1.2-Free",
-        "api_key": "sk-NKrrY96pSd8PK2PFjiyb2oJJgNVg6X1iagE1hfPgeDQDECmBejcJAHxdn9Zt8quN",
-        "api_base": "https://opencode.ai/zen/v1",
-        "model": "muse-spark-1.2-contributor-free",
-        "timeout": 30
-      },
-      {
-        "name": "OpenCode-MiMo-V2.5-Free",
-        "api_key": "sk-NKrrY96pSd8PK2PFjiyb2oJJgNVg6X1iagE1hfPgeDQDECmBejcJAHxdn9Zt8quN",
-        "api_base": "https://opencode.ai/zen/v1",
-        "model": "mimo-v2.5-free",
-        "timeout": 30
-      },
-      {
-        "name": "OpenCode-Ling-3.0-Free",
-        "api_key": "sk-NKrrY96pSd8PK2PFjiyb2oJJgNVg6X1iagE1hfPgeDQDECmBejcJAHxdn9Zt8quN",
-        "api_base": "https://opencode.ai/zen/v1",
-        "model": "ling-3.0-flash-fin-free",
-        "timeout": 30
-      },
-      {
-        "name": "OpenCode-Nemotron-Ultra-Free",
-        "api_key": "sk-NKrrY96pSd8PK2PFjiyb2oJJgNVg6X1iagE1hfPgeDQDECmBejcJAHxdn9Zt8quN",
-        "api_base": "https://opencode.ai/zen/v1",
-        "model": "nemotron-3-ultra-free",
-        "timeout": 30
-      },
-      {
-        "name": "OpenCode-Nemotron-Lightning-Free",
-        "api_key": "sk-NKrrY96pSd8PK2PFjiyb2oJJgNVg6X1iagE1hfPgeDQDECmBejcJAHxdn9Zt8quN",
-        "api_base": "https://opencode.ai/zen/v1",
-        "model": "nemotron-3.5-lightning-free",
-        "timeout": 30
-      },
-      {
-        "name": "新接口",
-        "api_key": "",
-        "api_base": "",
-        "model": "",
-        "timeout": 30
-      },
-      {
-        "name": "新接口",
-        "api_key": "",
-        "api_base": "",
-        "model": "",
-        "timeout": 30
-      },
-      {
-        "name": "新接口",
-        "api_key": "",
-        "api_base": "",
-        "model": "",
-        "timeout": 30
-      }
-    ],
-    "fail_action": "default"
-  },
-  "resume": {
-    "school": "某某大学",
-    "major": "统计学",
-    "degree": "本科",
-    "skills": [
-      "Excel",
-      "SQL",
-      "Python",
-      "数据分析"
-    ],
-    "experience": "负责业务数据报表与洞察分析",
-    "target_position": "数据分析师",
-    "self_intro": "做事严谨细心，学习能力强"
-  },
-  "accounts": [
-    {
-      "name": "主账号",
-      "enabled": true,
-      "cookie_file": "zhipin_cookies.json",
-      "image_files": [],
-      "message_interval_min": 3,
-      "message_interval_max": 8,
-      "jobs": [
-        {
-          "enabled": true,
-          "city": "长沙",
-          "query": "数据分析",
-          "scroll_pages": 5,
-          "greeting_message": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
-          "image_files": [
-            "dashboard/d7ca4e20_看板1.png",
-            "dashboard/452a1b69_看板2.png",
-            "dashboard/d258c537_看板3.png"
-          ]
-        }
-      ]
-    },
-    {
-      "name": "账号2",
-      "enabled": true,
-      "cookie_file": "zhipin_cookies_1.json",
-      "image_files": [],
-      "message_interval_min": 3,
-      "message_interval_max": 8,
-      "jobs": [
-        {
-          "enabled": true,
-          "city": "上海",
-          "query": "数据分析",
-          "scroll_pages": 5,
-          "greeting_message": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
-          "image_files": []
-        }
-      ]
-    }
-  ],
-  "reply": {
-    "enabled": true,
-    "check_interval": 8,
-    "context_message_count": 10,
-    "max_replies_per_hour": 30,
-    "min_delay": 2,
-    "max_delay": 5,
-    "pause_on_important": true,
-    "resume_send_once": true,
-    "chat_url": "https://www.zhipin.com/web/geek/chat"
-  },
   "notify": {
     "enabled": true,
     "webhook_url": ""
   },
-  "log": {
-    "log_level": "INFO",
-    "log_retention_days": 14,
-    "event_log_enabled": true
+  "rate_limit": {
+    "enabled": true,
+    "max_per_hour": 30,
+    "max_per_day": 150
+  },
+  "reply": {
+    "chat_url": "https://www.zhipin.com/web/geek/chat",
+    "check_interval": 8,
+    "context_message_count": 10,
+    "enabled": true,
+    "max_delay": 5,
+    "max_replies_per_hour": 30,
+    "min_delay": 2,
+    "pause_on_important": true,
+    "resume_send_once": true
   },
   "reply_rules": {
     "你好": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
@@ -282,38 +277,43 @@
     "薪资": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
     "面试": "工作日下午都可以安排面试，您看哪个时间段方便？"
   },
-  "importance_keywords": [
-    "offer",
-    "确认入职",
-    "入职通知",
-    "办理入职",
-    "录取",
-    "录用",
-    "欢迎加入",
-    "报到",
-    "面试邀请",
-    "邀约",
-    "来公司",
-    "到岗"
-  ],
+  "resume": {
+    "school": "某某大学",
+    "major": "统计学",
+    "degree": "本科",
+    "skills": [
+      "Excel",
+      "SQL",
+      "Python",
+      "数据分析"
+    ],
+    "experience": "负责业务数据报表与洞察分析",
+    "target_position": "数据分析师",
+    "self_intro": "做事严谨细心，学习能力强"
+  },
+  "retry": {
+    "max_attempts": 3,
+    "base_delay": 2,
+    "backoff_factor": 2
+  },
   "templates": {
-    "salary_reply": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+    "default_reply": "好的，感谢您的消息，我会尽快回复您。",
+    "greeting_reply": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
     "interview_time_reply": "工作日下午都可以安排面试，您看哪个时间段方便？",
     "job_content_reply": "我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。",
-    "greeting_reply": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
-    "default_reply": "好的，感谢您的消息，我会尽快回复您。",
     "resume_duplicate_reply": "您好，简历刚刚已经发您了，您看一下，有任何问题随时沟通~",
-    "resume_unavailable_reply": "不好意思，简历文件暂时不在我这边，稍后我补发给您，可以先看看我主页的在线简历~"
+    "resume_unavailable_reply": "不好意思，简历文件暂时不在我这边，稍后我补发给您，可以先看看我主页的在线简历~",
+    "salary_reply": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。"
   },
   "user_profile": {
-    "name": "求职者",
-    "education": "本科学历",
-    "position": "数据分析",
-    "skills": [],
-    "experience": "",
-    "salary_expectation": "面议",
     "available_interview_time": "工作日下午",
     "contact": "",
-    "highlights": []
+    "education": "本科学历",
+    "experience": "",
+    "highlights": [],
+    "name": "求职者",
+    "position": "数据分析",
+    "salary_expectation": "面议",
+    "skills": []
   }
 }

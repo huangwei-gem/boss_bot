@@ -554,13 +554,15 @@ class GreetEngine:
         except Exception:
             pass
 
-    def _emit_greet_event(self, job: dict, status: str, ai_result: dict = None):
+    def _emit_greet_event(self, job: dict, status: str, ai_result: dict = None,
+                          skip_reason: str = ""):
         """推送投递事件到前端表格。
 
         Args:
             job: 岗位信息字典
-            status: "success" | "skip" | "ai_skip" | "already" | "error"
+            status: "success" | "skip" | "Bai_skip" | "already" | "error"
             ai_result: AI 分析结果（可选）
+            skip_reason: 跳过原因（可选，用于前端显示）
         """
         if not self._greet_event_cb:
             return
@@ -576,6 +578,8 @@ class GreetEngine:
                 "ai_match": ai.get("is_match", False),
                 "greeting": job.get("_actual_greeting_sent", "")[:60],
                 "url": job.get("url", ""),
+                "skip_reason": skip_reason or job.get("_last_skip_reason", ""),
+                "is_skipped": status in ("skip", "ai_skip", "already", "error"),
             })
         except Exception:
             pass
@@ -769,7 +773,7 @@ class GreetEngine:
             self._log("WARN", f"投递跳过: url为空, job={job_name}")
             return False
         try:
-            success = self._apply_job(job_info)
+            success, fail_reason = self._apply_job(job_info)
             if success:
                 self.applied_count += 1
                 self._save_chat_log(job_info, skipped=False)
@@ -781,9 +785,9 @@ class GreetEngine:
                 )
             else:
                 self.skipped_count += 1
-                self._log("WARN", f"⏭️ 跳过: {job_name}")
+                self._log("WARN", f"⏭️ 跳过: {job_name}（原因: {fail_reason}）")
                 self._emit_greet_event(job_info, "skip")
-                self._record_greet(job_info, is_skipped=True, skip_reason="投递失败")
+                self._record_greet(job_info, is_skipped=True, skip_reason=fail_reason or "投递失败-原因未知")
             self._report_progress()
             return success
         except Exception as e:
@@ -1341,7 +1345,7 @@ class GreetEngine:
                 self.skipped_count += 1
                 self._report_progress()
                 self._save_chat_log(job, skipped=True)
-                self._emit_greet_event(job, "already")
+                self._emit_greet_event(job, "already", skip_reason="已沟通过")
                 self._record_greet(job, is_skipped=True, skip_reason="已沟通过")
                 continue
 
@@ -1355,7 +1359,7 @@ class GreetEngine:
                     self.skipped_count += 1
                     self._save_chat_log(job, skipped=True, ai_result=None, ai_duration=ai_duration)
                     self._report_progress()
-                    self._emit_greet_event(job, "ai_skip")
+                    self._emit_greet_event(job, "ai_skip", skip_reason="AI判定不匹配")
                     self._record_greet(job, is_skipped=True, skip_reason="AI判定不匹配")
                     continue
                 if ai_result and ai_result.get("suggested_greeting"):
@@ -1371,7 +1375,7 @@ class GreetEngine:
             try:
                 # 推送"正在投递"状态到前端
                 self._emit_greet_event(job, "pending")
-                success = self._apply_job(job)
+                success, fail_reason = self._apply_job(job)
                 if success:
                     self.applied_count += 1
                     self._save_chat_log(job, skipped=False, ai_result=ai_result, ai_duration=ai_duration)
@@ -1383,13 +1387,14 @@ class GreetEngine:
                     )
                 else:
                     self.skipped_count += 1
-                    self._log("WARN", f"⏭️ 跳过: {job.get('job_name', '')}")
-                    self._emit_greet_event(job, "skip", ai_result)
-                    self._record_greet(job, is_skipped=True, skip_reason="投递失败")
+                    self._log("WARN", f"⏭️ 跳过: {job.get('job_name', '')}（原因: {fail_reason}）")
+                    self._emit_greet_event(job, "skip", ai_result,
+                                           skip_reason=fail_reason or "投递失败-原因未知")
+                    self._record_greet(job, is_skipped=True, skip_reason=fail_reason or "投递失败-原因未知")
             except Exception as e:
                 self._log("WARN", f"投递异常: {e}")
                 self.skipped_count += 1
-                self._emit_greet_event(job, "error")
+                self._emit_greet_event(job, "error", skip_reason=f"投递异常: {e}")
                 self._record_greet(job, is_skipped=True, skip_reason=f"投递异常: {e}")
             self._report_progress()
 
@@ -1478,23 +1483,35 @@ class GreetEngine:
             self._log("ERROR", traceback.format_exc())
             return False
 
-    def _apply_job(self, job: dict, _disconnect_retry: int = 0) -> bool:
-        """投递一个岗位。"""
+    def _apply_job(self, job: dict, _disconnect_retry: int = 0):
+        """投递一个岗位。
+
+        Returns:
+            (success, fail_reason) 元组：
+            - 成功: (True, "")
+            - 失败: (False, 具体失败原因字符串)
+        """
         with self._apply_lock:
             return self._apply_job_inner(job, _disconnect_retry)
 
-    def _apply_job_inner(self, job: dict, _disconnect_retry: int = 0) -> bool:
-        """实际投递逻辑（内部方法）。"""
+    def _apply_job_inner(self, job: dict, _disconnect_retry: int = 0):
+        """实际投递逻辑（内部方法）。
+
+        Returns:
+            (success, fail_reason) 元组：
+            - 成功: (True, "")
+            - 失败: (False, 具体失败原因字符串)
+        """
         if not self.running:
-            return False
+            return False, "运行已停止"
         url = job.get("url", "")
         if not url:
-            return False
+            return False, "岗位URL为空"
 
         instance = self.browser_manager.get_instance()
         if instance is None:
             self._log("ERROR", "浏览器未启动")
-            return False
+            return False, "浏览器未启动"
 
         # 如果页面已断开，先尝试恢复
         if _disconnect_retry == 0:
@@ -1506,7 +1523,7 @@ class GreetEngine:
                     instance = self.browser_manager.get_instance()
                     _disconnect_retry = 1
                 else:
-                    return False
+                    return False, "页面断开且恢复失败"
 
         try:
             message_sent = False  # 跟踪消息是否已发送
@@ -1516,7 +1533,7 @@ class GreetEngine:
             except Exception:
                 self._log("WARN", "导航前页面已断开，尝试恢复...")
                 if not self._handle_disconnect():
-                    return False
+                    return False, "导航前页面断开且恢复失败"
                 instance = self.browser_manager.get_instance()
 
             for _retry in range(3):
@@ -1531,7 +1548,7 @@ class GreetEngine:
                     self._random_delay(2, 4)
             else:
                 self._log("WARN", "页面加载失败，跳过此岗位")
-                return False
+                return False, "页面加载失败"
 
             # 检查是否被重定向到登录页
             try:
@@ -1543,28 +1560,28 @@ class GreetEngine:
                     self._log("INFO", "请重新登录，登录后点击「确认登录」")
                     if not self._wait_for_login():
                         self._log("ERROR", "登录超时")
-                        return False
+                        return False, "登录超时"
                     self._save_cookies()
                     self._log("SUCCESS", "登录成功")
                     try:
                         instance.get(url)
                         self._random_delay(3, 6)
                     except Exception:
-                        return False
+                        return False, "登录后重新访问岗位失败"
             except Exception:
                 self._log("WARN", "页面断开")
-                return False
+                return False, "页面断开"
 
             # ── 2. 查找沟通按钮 ──
             chat_btn = self._find_chat_button(timeout=8)
             if chat_btn is None:
                 self._log("WARN", "未找到沟通按钮")
-                return False
+                return False, "未找到沟通按钮"
 
             btn_text = chat_btn.text
             if "继续沟通" in btn_text:
                 self._log("INFO", "该岗位之前已投递过（继续沟通），跳过")
-                return False
+                return False, "该岗位之前已投递过（继续沟通）"
 
             # ── 3. 获取 JD 信息 ──
             job_description = ""
@@ -1593,43 +1610,73 @@ class GreetEngine:
             chat_btn = instance.ele(".btn btn-startchat", timeout=5)
             if not chat_btn:
                 self._log("WARN", "未找到沟通按钮!")
-                return False
+                return False, "未找到沟通按钮（点击阶段）"
             self._log("INFO", f"找到沟通按钮，文本: {chat_btn.text}")
-            # 记录点击前的标签页数量
+            # 记录点击前的标签页ID集合，用于识别新打开的标签页
             browser = instance._get_browser() if hasattr(instance, '_get_browser') else None
+            pre_tab_ids = set(browser.tab_ids) if browser else set()
             chat_btn.click()
             self._log("INFO", "已点击沟通按钮，等待输入框...")
             # 等待聊天窗口加载
             self._random_delay(3, 5)
-            
-            # 尝试获取最新标签页（聊天页面通常在新标签页打开）
+
+            # 尝试获取新打开的聊天标签页（BOSS 点"沟通"后通常新开标签页）
+            # 关键修复：新标签页严格通过 browser_manager.get_greet_chat_tab() 管理，
+            # 与回复引擎的 _chat_tab 严格区分，避免抢占。
             chat_tab = None
             if browser:
                 try:
-                    # latest_tab 获取最新激活的标签页
-                    latest = browser.latest_tab
-                    latest_url = latest.url
-                    self._log("INFO", f"最新标签页URL: {latest_url}")
-                    # 如果最新标签页是聊天页面，使用它
-                    if "chat" in latest_url or "message" in latest_url:
-                        chat_tab = latest
-                        self._log("INFO", f"切换到聊天标签页: {latest_url}")
-                    else:
-                        # 最新标签页不是聊天页面，检查所有标签页
-                        all_tabs = browser.tab_ids
-                        self._log("INFO", f"当前有 {len(all_tabs)} 个标签页，查找聊天标签页")
-                        for tid in all_tabs:
+                    # 优先通过 tab_ids 差检新打开的标签页（比 latest_tab 更可靠）
+                    # latest_tab 返回最新激活的标签页，但可能恰好是回复引擎的 _chat_tab
+                    post_tab_ids = set(browser.tab_ids)
+                    new_tab_ids = post_tab_ids - pre_tab_ids
+                    # 先检查新打开的标签页
+                    for tid in new_tab_ids:
+                        try:
+                            t = browser.get_tab(tid)
+                            t_url = t.url or ""
+                            self._log("DEBUG", f"新标签页: {t_url}")
+                            if "chat" in t_url or "message" in t_url:
+                                chat_tab = t
+                                self._log("INFO", f"识别到新打开的聊天标签页: {t_url}")
+                                break
+                        except Exception:
+                            pass
+                    # 如果新标签页中没有聊天页，回退到 latest_tab
+                    if chat_tab is None:
+                        latest = browser.latest_tab
+                        latest_url = latest.url or ""
+                        self._log("INFO", f"latest_tab URL: {latest_url}")
+                        if "chat" in latest_url or "message" in latest_url:
+                            # 确认 latest_tab 不在 pre_tab_ids 中（确实是新打开的）
+                            latest_id = None
                             try:
-                                t = browser.get_tab(tid)
-                                t_url = t.url
-                                if "chat" in t_url or "message" in t_url:
-                                    chat_tab = t
-                                    self._log("INFO", f"找到聊天标签页: {t_url}")
-                                    break
+                                # DrissionPage: tab.tab_id 或 tab._tab_id 获取标签页ID
+                                latest_id = getattr(latest, 'tab_id', None) or getattr(latest, '_tab_id', None)
                             except Exception:
                                 pass
+                            if latest_id is None or latest_id not in pre_tab_ids:
+                                chat_tab = latest
+                                self._log("INFO", f"使用 latest_tab 作为聊天标签页: {latest_url}")
+                            else:
+                                self._log("DEBUG", "latest_tab 是已有标签页，不作为聊天标签页")
                 except Exception as e:
-                    self._log("DEBUG", f"获取最新标签页失败: {e}")
+                    self._log("DEBUG", f"获取新打开标签页失败: {e}")
+
+            # 将识别到的聊天标签页注册到 browser_manager._greet_chat_tab
+            # 这样后续 close_greet_chat_tab() 可以精确关闭它，不影响回复引擎的 _chat_tab
+            if chat_tab is not None and self.browser_manager is not None:
+                try:
+                    from boss_bot.browser_launcher import BrowserInstance, _IS_MACOS
+                    # 包装为 BrowserInstance 并注册到 browser_manager
+                    self.browser_manager._greet_chat_tab = BrowserInstance(
+                        chrome_page=chat_tab if not _IS_MACOS else None,
+                        chromium=browser if _IS_MACOS else None,
+                        tab=chat_tab if _IS_MACOS else None,
+                    )
+                    self._log("DEBUG", "已将聊天标签页注册到 browser_manager._greet_chat_tab")
+                except Exception as e:
+                    self._log("DEBUG", f"注册聊天标签页失败: {e}")
 
             # ── 5. 输入消息 ──
             # 优先级：AI定制 > 岗位配置 > 默认模板
@@ -1666,20 +1713,26 @@ class GreetEngine:
             # 优先在聊天标签页查找输入框（如果有新标签页打开）
             # 严格参考原项目 auto_boss: self.dp.ele(".input-area", timeout=10)
             input_area = None
-            
+            greet_chat_instance = None  # 打招呼专用的临时聊天 BrowserInstance
+
             if chat_tab:
                 # 在新打开的聊天标签页中查找
                 # BOSS直聘聊天页面输入框实际是 #chat-input（contenteditable div，class=chat-input）
                 # 优先使用 #chat-input / .chat-input，再降级到 .input-area 等其他选择器
+                # 关键修复：不修改 instance._page/_tab（那会破坏搜索标签页），
+                # 而是创建一个独立的 BrowserInstance 包装 chat_tab 用于操作
                 try:
+                    from boss_bot.browser_launcher import BrowserInstance, _IS_MACOS
+                    greet_chat_instance = BrowserInstance(
+                        chrome_page=chat_tab if not _IS_MACOS else None,
+                        chromium=browser if _IS_MACOS else None,
+                        tab=chat_tab if _IS_MACOS else None,
+                    )
                     for sel in ["#chat-input", ".chat-input", ".input-area", "tag:textarea", "[contenteditable=true]"]:
                         try:
-                            input_area = chat_tab.ele(sel, timeout=3)
+                            input_area = greet_chat_instance.ele(sel, timeout=3)
                             if input_area:
                                 self._log("INFO", f"在聊天标签页找到输入框: {sel}")
-                                # 切换 instance 到聊天标签页
-                                instance._page = chat_tab
-                                instance._tab = chat_tab
                                 break
                         except Exception:
                             pass
@@ -1690,13 +1743,25 @@ class GreetEngine:
             if not input_area and browser:
                 try:
                     latest = browser.latest_tab
+                    # 不修改 instance，直接在 latest 上查找
                     for sel in ["#chat-input", ".chat-input", ".input-area", "tag:textarea", "[contenteditable=true]"]:
                         try:
                             input_area = latest.ele(sel, timeout=2)
                             if input_area:
                                 self._log("INFO", f"在latest_tab找到输入框: {sel} (url={latest.url})")
-                                instance._page = latest
-                                instance._tab = latest
+                                # 将 latest 包装为 greet_chat_instance 用于后续操作
+                                try:
+                                    from boss_bot.browser_launcher import BrowserInstance, _IS_MACOS
+                                    greet_chat_instance = BrowserInstance(
+                                        chrome_page=latest if not _IS_MACOS else None,
+                                        chromium=browser if _IS_MACOS else None,
+                                        tab=latest if _IS_MACOS else None,
+                                    )
+                                    # 同步注册到 browser_manager
+                                    if self.browser_manager is not None:
+                                        self.browser_manager._greet_chat_tab = greet_chat_instance
+                                except Exception:
+                                    pass
                                 break
                         except Exception:
                             pass
@@ -1718,14 +1783,28 @@ class GreetEngine:
                     pass
 
             # 如果当前页面没找到，遍历所有标签页（不过滤URL）
+            # 关键：排除回复引擎专用的 _chat_tab，避免抢占
             if not input_area:
                 try:
                     browser = instance._get_browser() if hasattr(instance, '_get_browser') else None
                     if browser:
                         all_tabs = browser.tab_ids
+                        # 获取回复引擎 _chat_tab 的 tab_id，用于排除
+                        reply_chat_tab_id = None
+                        if self.browser_manager is not None and self.browser_manager._chat_tab is not None:
+                            try:
+                                reply_raw = self.browser_manager._chat_tab._page or self.browser_manager._chat_tab._tab
+                                if reply_raw is not None:
+                                    reply_chat_tab_id = getattr(reply_raw, 'tab_id', None) or getattr(reply_raw, '_tab_id', None)
+                            except Exception:
+                                pass
                         if len(all_tabs) > 1:
-                            self._log("INFO", f"当前页面未找到输入框，遍历 {len(all_tabs)} 个标签页")
+                            self._log("INFO", f"当前页面未找到输入框，遍历 {len(all_tabs)} 个标签页（排除回复引擎标签页）")
                             for tab_id in all_tabs:
+                                # 跳过回复引擎的 _chat_tab，避免打招呼引擎抢占
+                                if reply_chat_tab_id and tab_id == reply_chat_tab_id:
+                                    self._log("DEBUG", "  跳过回复引擎专用标签页")
+                                    continue
                                 try:
                                     tab = browser.get_tab(tab_id)
                                     tab_url = tab.url
@@ -1737,9 +1816,19 @@ class GreetEngine:
                                             input_area = tab.ele(sel, timeout=3)
                                             if input_area:
                                                 self._log("INFO", f"在标签页 {tab_url} 中找到输入框: {sel}")
-                                                # 切换到该标签页
-                                                instance._page = tab
-                                                instance._tab = tab
+                                                # 包装为 greet_chat_instance，不修改 instance
+                                                try:
+                                                    from boss_bot.browser_launcher import BrowserInstance, _IS_MACOS
+                                                    greet_chat_instance = BrowserInstance(
+                                                        chrome_page=tab if not _IS_MACOS else None,
+                                                        chromium=browser if _IS_MACOS else None,
+                                                        tab=tab if _IS_MACOS else None,
+                                                    )
+                                                    # 同步注册到 browser_manager
+                                                    if self.browser_manager is not None:
+                                                        self.browser_manager._greet_chat_tab = greet_chat_instance
+                                                except Exception:
+                                                    pass
                                                 break
                                         except Exception:
                                             pass
@@ -1788,19 +1877,22 @@ class GreetEngine:
                 except Exception as e:
                     self._log("WARN", f"调试打印失败: {e}")
                     pass
-                return False
+                return False, "未找到输入框"
             self._log("INFO", "找到输入框，输入消息...")
             input_area.input(greeting)
             self._log("INFO", "消息已输入")
 
             # ── 6. 点击发送 ──
+            # 关键修复：发送按钮在聊天标签页中查找，不在搜索标签页(instance)中
+            # 优先使用 greet_chat_instance（打招呼专用临时标签页），回退到 instance
+            send_search_instance = greet_chat_instance if greet_chat_instance else instance
             message_sent = False
             try:
                 # 尝试多个发送按钮选择器
                 send_btn = None
                 for send_sel in [".btn-send", ".btn-v2.btn-sure-v2.btn-send", ".send-message", "tag:button@@type=submit", ".chat-send"]:
                     try:
-                        send_btn = instance.ele(send_sel, timeout=3)
+                        send_btn = send_search_instance.ele(send_sel, timeout=3)
                         if send_btn:
                             self._log("INFO", f"找到发送按钮: {send_sel}")
                             break
@@ -1829,39 +1921,63 @@ class GreetEngine:
             except Exception:
                 self._log("WARN", "发送消息后页面连接断开，但消息可能已发送成功")
                 self._mark_chatted(job)
-                return True
+                # 即使页面断开，也要尝试关闭临时聊天标签页
+                if self.browser_manager is not None:
+                    try:
+                        self.browser_manager.close_greet_chat_tab()
+                    except Exception:
+                        pass
+                return True, ""
 
             # ── 7. 发送图片 ──
             self._send_images_after_message()
 
             # ── 清理状态 ──
+            # 关键修复：在聊天标签页中关闭弹窗，不在搜索标签页中
             try:
-                close_btn = instance.ele(".icon-close", timeout=2)
+                close_btn = send_search_instance.ele(".icon-close", timeout=2)
                 if close_btn:
                     close_btn.click()
                     self._random_delay(1, 2)
             except Exception:
                 pass
 
-            # ── 关闭当前 tab，回到列表页 ──
-            try:
-                instance.close_current_tab()
-                self._random_delay(1, 2)
-            except Exception:
-                pass
+            # ── 关闭打招呼专用的临时聊天标签页，回到搜索标签页 ──
+            # 关键修复：通过 browser_manager.close_greet_chat_tab() 精确关闭临时标签页，
+            # 不影响回复引擎的 _chat_tab，也不关闭搜索标签页
+            if greet_chat_instance is not None and self.browser_manager is not None:
+                try:
+                    self.browser_manager.close_greet_chat_tab()
+                    self._random_delay(1, 2)
+                    self._log("INFO", "已关闭打招呼临时聊天标签页，回到搜索标签页")
+                except Exception as e:
+                    self._log("DEBUG", f"关闭打招呼临时标签页异常: {e}")
+            elif greet_chat_instance is not None:
+                # 兜底：直接关闭
+                try:
+                    greet_chat_instance.close_current_tab()
+                    self._random_delay(1, 2)
+                except Exception:
+                    pass
 
-            return True
+            return True, ""
 
         except Exception as e:
             self._log("WARN", "发送消息异常: " + str(e))
             import traceback
             self._log("WARN", traceback.format_exc())
+            # 异常路径也要清理临时聊天标签页，避免标签页累积
+            if self.browser_manager is not None:
+                try:
+                    self.browser_manager.close_greet_chat_tab()
+                except Exception:
+                    pass
             # 如果消息已发送但后续步骤出错，仍标记为成功
             if message_sent:
                 self._log("WARN", "消息已发送但后续步骤出错，标记为成功")
                 self._mark_chatted(job)
-                return True
-            return False
+                return True, ""
+            return False, f"发送消息异常: {e}"
 
     def _send_images_after_message(self):
         """在发送消息之后上传图片。"""

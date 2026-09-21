@@ -59,6 +59,7 @@ from boss_bot.reply_record import (
     ReplyRecordStore, GreetRecordStore,
     export_reply_records, export_greet_records,
 )
+from boss_bot.message_store import MessageStore
 
 # ===================== 日志缓冲区 =====================
 
@@ -589,6 +590,108 @@ def api_account_status(idx: int):
     if acc_status is None:
         return jsonify({"status": "error", "message": "账号状态获取失败"}), 404
     return jsonify(acc_status)
+
+
+@app.route("/api/accounts/<int:idx>/check_cookie", methods=["POST", "GET"])
+def api_account_check_cookie(idx: int):
+    """检测指定账号的 Cookie 是否有效。
+
+    使用 DrissionPage 启动浏览器，加载 Cookie 后访问 BOSS 直聘首页，
+    检查登录状态。参考 auto_boss 项目的 check_login_status 方法。
+
+    Returns:
+        {
+            "status": "ok",
+            "valid": bool,           # Cookie 是否有效
+            "logged_in": bool,       # 是否已登录
+            "reason": str,           # 失效原因
+            "current_url": str,      # 检测时的页面 URL
+            "checks": dict,          # 各项检查结果
+            "cookie_file": str,      # Cookie 文件路径
+        }
+    """
+    try:
+        cfg = _ensure_config()
+        if idx < 0 or idx >= len(cfg.greet.accounts):
+            return jsonify({"status": "error", "message": "账号索引超出范围"}), 404
+
+        acc = cfg.greet.accounts[idx]
+        cookie_file_name = acc.cookie_file or "zhipin_cookies.json"
+        # Cookie 文件路径相对于项目根目录
+        cookie_file_path = str(PROJECT_ROOT / cookie_file_name)
+
+        # 先做简单检测（不启动浏览器）
+        from boss_bot.browser_launcher import check_cookie_valid_simple, check_cookie_valid
+        simple_result = check_cookie_valid_simple(cookie_file_path)
+        if not simple_result["checks"].get("file_exists", False):
+            return jsonify({
+                "status": "ok",
+                "valid": False,
+                "logged_in": False,
+                "reason": simple_result["reason"],
+                "current_url": "",
+                "checks": simple_result["checks"],
+                "cookie_file": cookie_file_name,
+            })
+
+        # 启动浏览器做完整检测
+        browser_cfg = cfg.browser
+        result = check_cookie_valid(
+            cookie_file=cookie_file_path,
+            headless=True,
+            chrome_path=browser_cfg.chrome_path,
+            browser_type=browser_cfg.browser_type,
+        )
+
+        return jsonify({
+            "status": "ok",
+            "valid": result["valid"],
+            "logged_in": result["logged_in"],
+            "reason": result["reason"],
+            "current_url": result["current_url"],
+            "checks": result["checks"],
+            "cookie_file": cookie_file_name,
+        })
+    except Exception as e:
+        logger.exception("检测 Cookie 有效性失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/accounts/<int:idx>/check_cookie_simple", methods=["POST", "GET"])
+def api_account_check_cookie_simple(idx: int):
+    """快速检测指定账号的 Cookie 是否有效（不启动浏览器，仅检查文件）。
+
+    Returns:
+        {
+            "status": "ok",
+            "valid": bool,
+            "reason": str,
+            "checks": dict,
+            "cookie_file": str,
+        }
+    """
+    try:
+        cfg = _ensure_config()
+        if idx < 0 or idx >= len(cfg.greet.accounts):
+            return jsonify({"status": "error", "message": "账号索引超出范围"}), 404
+
+        acc = cfg.greet.accounts[idx]
+        cookie_file_name = acc.cookie_file or "zhipin_cookies.json"
+        cookie_file_path = str(PROJECT_ROOT / cookie_file_name)
+
+        from boss_bot.browser_launcher import check_cookie_valid_simple
+        result = check_cookie_valid_simple(cookie_file_path)
+
+        return jsonify({
+            "status": "ok",
+            "valid": result["valid"],
+            "logged_in": result["logged_in"],
+            "reason": result["reason"],
+            "checks": result["checks"],
+            "cookie_file": cookie_file_name,
+        })
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 # ===================== 配置 API =====================
@@ -1477,12 +1580,17 @@ def api_reply_records_grouped():
     - last_message: 最新收到的消息
     - last_reply: 最新回复的内容
     - records: 该聊天对象的所有记录列表（按时间正序）
+    - messages: 该聊天对象的完整对话消息列表（来自 message_store，含HR消息和bot回复）
 
     返回的分组列表按 last_time 倒序排列（最新的在前）。
     """
     try:
         store = _ensure_reply_store()
         records = store.get_all()
+
+        # 加载完整对话消息（来自 message_store）
+        msg_store = MessageStore()
+        full_chats = {c["chat_name"]: c for c in msg_store.get_all_chats_detail()}
 
         # 按 chat_name 分组
         groups = {}
@@ -1496,6 +1604,7 @@ def api_reply_records_grouped():
                     "last_message": "",
                     "last_reply": "",
                     "records": [],
+                    "messages": [],
                 }
             d = r.to_dict()
             groups[chat_name]["records"].append(d)
@@ -1507,8 +1616,38 @@ def api_reply_records_grouped():
                 groups[chat_name]["last_message"] = d.get("received_message", "") or ""
                 groups[chat_name]["last_reply"] = d.get("reply_content", "") or ""
 
+        # 合并完整对话消息（来自 message_store）
+        for chat_name, full in full_chats.items():
+            if chat_name in groups:
+                groups[chat_name]["messages"] = full.get("messages", [])
+                groups[chat_name]["job_name"] = full.get("job_name", "")
+                # 如果 message_store 的时间更新，则更新 last_time
+                full_last_time = full.get("last_time", "") or full.get("updated_at", "")
+                if full_last_time and full_last_time > groups[chat_name]["last_time"]:
+                    groups[chat_name]["last_time"] = full_last_time
+                    last_msg = full.get("last_message", "")
+                    if last_msg:
+                        groups[chat_name]["last_message"] = last_msg
+                # 用 message_store 的消息数为准（更准确）
+                groups[chat_name]["full_message_count"] = full.get("message_count", 0)
+                groups[chat_name]["unread_count"] = full.get("unread_count", 0)
+            else:
+                # message_store 中有但 reply_records 中没有（例如只有 HR 消息未回复）
+                groups[chat_name] = {
+                    "chat_name": chat_name,
+                    "message_count": 0,
+                    "last_time": full.get("last_time", "") or full.get("updated_at", ""),
+                    "last_message": full.get("last_message", ""),
+                    "last_reply": "",
+                    "records": [],
+                    "messages": full.get("messages", []),
+                    "job_name": full.get("job_name", ""),
+                    "full_message_count": full.get("message_count", 0),
+                    "unread_count": full.get("unread_count", 0),
+                }
+
         # 转为列表，按最后消息时间倒序排列
-        result = sorted(groups.values(), key=lambda x: x["last_time"], reverse=True)
+        result = sorted(groups.values(), key=lambda x: x.get("last_time", ""), reverse=True)
         return jsonify({
             "status": "ok",
             "groups": result,
@@ -1517,6 +1656,63 @@ def api_reply_records_grouped():
         })
     except Exception as e:
         logger.exception("获取分组回复记录失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/chats")
+def api_chats():
+    """获取所有聊天会话列表（完整对话消息，用于前端聊天界面）。
+
+    返回每个会话的：
+    - chat_name: 聊天对象名称
+    - job_name: 岗位名称
+    - updated_at: 最后更新时间
+    - message_count: 消息总数
+    - unread_count: 未读数
+    - last_message: 最新消息内容
+    - last_time: 最新消息时间
+    - messages: 完整消息列表
+    """
+    try:
+        msg_store = MessageStore()
+        chats = msg_store.get_all_chats_detail()
+        return jsonify({
+            "status": "ok",
+            "chats": chats,
+            "total": len(chats),
+        })
+    except Exception as e:
+        logger.exception("获取聊天列表失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/chats/<path:chat_name>")
+def api_chat_detail(chat_name: str):
+    """获取指定聊天会话的完整消息列表。
+
+    Args:
+        chat_name: 聊天对象名称（URL 路径参数）
+    """
+    try:
+        msg_store = MessageStore()
+        detail = msg_store.get_chat_detail(chat_name)
+        return jsonify({
+            "status": "ok",
+            "chat": detail,
+        })
+    except Exception as e:
+        logger.exception("获取聊天详情失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/chats/<path:chat_name>/mark_read", methods=["POST"])
+def api_chat_mark_read(chat_name: str):
+    """标记指定聊天会话的所有 HR 消息为已读。"""
+    try:
+        msg_store = MessageStore()
+        msg_store.mark_chat_read(chat_name)
+        return jsonify({"status": "ok", "message": "已标记为已读"})
+    except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
@@ -1535,6 +1731,210 @@ def api_greet_records():
         })
     except Exception as e:
         logger.exception("获取打招呼记录列表失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ===================== 数据按天归档 API =====================
+
+def _get_archive_dir():
+    """获取归档目录路径，确保目录存在。"""
+    archive_dir = PROJECT_ROOT / "data" / "archive"
+    archive_dir.mkdir(parents=True, exist_ok=True)
+    return archive_dir
+
+
+def _get_active_bot_loop():
+    """获取当前活动的 UnifiedBotLoop 实例（用于调用归档方法）。"""
+    global _multi_manager
+    if _multi_manager is not None:
+        # MultiAccountManager._loops 是 dict: account_index -> UnifiedBotLoop
+        loops = getattr(_multi_manager, '_loops', {})
+        if loops:
+            # 取第一个活动的 loop
+            for loop in loops.values():
+                return loop
+    return None
+
+
+@app.route("/api/archive/list")
+def api_archive_list():
+    """列出所有归档日期。
+
+    Returns:
+        {
+            "status": "ok",
+            "archives": [
+                {"date": "2026-09-20", "greet_count": 50, "reply_count": 30, "size_kb": 12.5},
+                ...
+            ]
+        }
+    """
+    try:
+        archive_dir = _get_archive_dir()
+        result = []
+        for subdir in sorted(archive_dir.iterdir(), reverse=True):
+            if not subdir.is_dir():
+                continue
+            try:
+                from datetime import date as _date
+                _date.fromisoformat(subdir.name)  # 验证目录名是有效日期
+            except ValueError:
+                continue
+            # 统计该日期的记录数和大小
+            greet_count = 0
+            reply_count = 0
+            total_size = 0
+            for f in subdir.glob("*.json"):
+                try:
+                    total_size += f.stat().st_size
+                    with open(f, "r", encoding="utf-8") as fp:
+                        data = json.load(fp)
+                    if f.name == "greet_records.json":
+                        greet_count = len(data.get("records", []))
+                    elif f.name == "reply_records.json":
+                        reply_count = len(data.get("records", []))
+                except Exception:
+                    pass
+            result.append({
+                "date": subdir.name,
+                "greet_count": greet_count,
+                "reply_count": reply_count,
+                "size_kb": round(total_size / 1024, 1),
+            })
+        return jsonify({"status": "ok", "archives": result})
+    except Exception as e:
+        logger.exception("获取归档列表失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/archive/<date>")
+def api_archive_download(date: str):
+    """下载指定日期的归档数据。
+
+    Args:
+        date: 日期字符串 YYYY-MM-DD
+
+    Returns:
+        JSON 文件下载（包含 greet_records + reply_records）
+    """
+    try:
+        archive_dir = _get_archive_dir()
+        subdir = archive_dir / date
+        if not subdir.exists():
+            return jsonify({"status": "error", "message": f"归档日期 {date} 不存在"}), 404
+
+        result = {"date": date, "greet_records": [], "reply_records": []}
+        for filename, key in (("greet_records.json", "greet_records"),
+                              ("reply_records.json", "reply_records")):
+            f = subdir / filename
+            if f.exists():
+                try:
+                    with open(f, "r", encoding="utf-8") as fp:
+                        data = json.load(fp)
+                    result[key] = data.get("records", [])
+                except Exception:
+                    pass
+
+        # 写入临时文件并返回下载
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False,
+                                         encoding="utf-8") as tmp:
+            json.dump(result, tmp, ensure_ascii=False, indent=2)
+            tmp_path = tmp.name
+
+        return send_file(
+            tmp_path,
+            as_attachment=True,
+            download_name=f"archive_{date}.json",
+            mimetype="application/json",
+        )
+    except Exception as e:
+        logger.exception("下载归档数据失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/archive/<date>/view")
+def api_archive_view(date: str):
+    """查看指定日期的归档数据（JSON 返回，不下载）。
+
+    Args:
+        date: 日期字符串 YYYY-MM-DD
+
+    Returns:
+        {"status": "ok", "date": ..., "greet_records": [...], "reply_records": [...]}
+    """
+    try:
+        archive_dir = _get_archive_dir()
+        subdir = archive_dir / date
+        if not subdir.exists():
+            return jsonify({"status": "error", "message": f"归档日期 {date} 不存在"}), 404
+
+        result = {"date": date, "greet_records": [], "reply_records": []}
+        for filename, key in (("greet_records.json", "greet_records"),
+                              ("reply_records.json", "reply_records")):
+            f = subdir / filename
+            if f.exists():
+                try:
+                    with open(f, "r", encoding="utf-8") as fp:
+                        data = json.load(fp)
+                    result[key] = data.get("records", [])
+                except Exception:
+                    pass
+        return jsonify({"status": "ok", **result})
+    except Exception as e:
+        logger.exception("查看归档数据失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/archive/auto_clean", methods=["POST"])
+def api_archive_auto_clean():
+    """手动触发清理超过10天的归档数据。"""
+    try:
+        archive_dir = _get_archive_dir()
+        from datetime import date as _date, timedelta
+        retention_days = 10
+        today = _date.today()
+        cleaned = []
+        for subdir in archive_dir.iterdir():
+            if not subdir.is_dir():
+                continue
+            try:
+                archive_date = _date.fromisoformat(subdir.name)
+                age_days = (today - archive_date).days
+                if age_days > retention_days:
+                    shutil.rmtree(str(subdir))
+                    cleaned.append({"date": subdir.name, "age_days": age_days})
+            except ValueError:
+                continue
+            except Exception as e:
+                logger.warning(f"清理归档 {subdir.name} 失败: {e}")
+        return jsonify({
+            "status": "ok",
+            "message": f"已清理 {len(cleaned)} 个过期归档",
+            "cleaned": cleaned,
+            "retention_days": retention_days,
+        })
+    except Exception as e:
+        logger.exception("清理归档失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/archive/trigger", methods=["POST"])
+def api_archive_trigger():
+    """手动触发数据归档（将当前数据归档到今天，并清空当前数据）。
+
+    用于跨天时手动触发归档，或在运行中需要归档时调用。
+    """
+    try:
+        loop = _get_active_bot_loop()
+        if loop is None:
+            return jsonify({"status": "error", "message": "机器人未运行，无法归档"}), 400
+        # 强制归档：重置 _last_archived_date 触发归档
+        loop._last_archived_date = None
+        loop._check_and_archive_daily_data()
+        return jsonify({"status": "ok", "message": "数据归档已触发"})
+    except Exception as e:
+        logger.exception("触发归档失败")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 

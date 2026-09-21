@@ -948,7 +948,10 @@ class BrowserManager:
         self._account_index = account_index
         self._instance: Optional[BrowserInstance] = None
         self._search_tab = None   # 搜索/打招呼标签页
-        self._chat_tab = None     # 聊天回复标签页
+        self._chat_tab = None     # 聊天回复标签页（回复引擎专用，长期存在）
+        # 打招呼引擎专用：点"沟通"按钮后BOSS会打开新标签页，用完即关。
+        # 与 _chat_tab 严格区分，避免抢占回复引擎的聊天标签页。
+        self._greet_chat_tab = None
         self._is_logged_in = False
 
         # 每个账号使用不同的调试端口，避免端口冲突
@@ -1022,10 +1025,14 @@ class BrowserManager:
         return self._search_tab
 
     def get_chat_page(self) -> BrowserInstance:
-        """获取聊天回复页面 tab（包装为 BrowserInstance）
+        """获取聊天回复页面 tab（包装为 BrowserInstance）— 回复引擎专用
 
         如果尚未创建聊天标签页，则创建一个并导航到聊天页。
         回复引擎使用此标签页进行聊天消息回复操作。
+
+        重要：此方法是回复引擎专用，不会被打招呼引擎抢占。
+        打招呼引擎点"沟通"按钮后打开的新标签页请使用 get_greet_chat_tab() 获取，
+        用完后调用 close_greet_chat_tab() 关闭，避免与回复引擎的 _chat_tab 混淆。
 
         Returns:
             BrowserInstance 包装的聊天标签页实例
@@ -1041,9 +1048,78 @@ class BrowserManager:
                 chromium=self._instance._get_browser() if _IS_MACOS else None,
                 tab=raw_tab if _IS_MACOS else None,
             )
-            logger.info("已创建聊天回复标签页")
+            logger.info("已创建回复引擎专用聊天标签页 (_chat_tab)")
 
         return self._chat_tab
+
+    def get_greet_chat_tab(self, url: str = "") -> BrowserInstance:
+        """获取打招呼引擎专用的临时聊天标签页 — 用完必须关闭
+
+        打招呼引擎点"沟通"按钮后，BOSS 直聘会打开新标签页进行聊天。
+        此方法创建/复用一个独立的临时标签页供打招呼引擎使用，
+        严格与回复引擎的 _chat_tab 区分，避免抢占。
+
+        使用流程：
+            tab = browser_manager.get_greet_chat_tab()
+            # 在 tab 中输入并发送打招呼消息
+            browser_manager.close_greet_chat_tab()  # 用完必须关闭！
+
+        Args:
+            url: 初始导航 URL，为空则不导航
+
+        Returns:
+            BrowserInstance 包装的临时聊天标签页实例
+        """
+        if self._instance is None:
+            self.launch()
+
+        if self._greet_chat_tab is None:
+            raw_tab = self._instance.new_tab(url) if url else self._instance.new_tab()
+            self._greet_chat_tab = BrowserInstance(
+                chrome_page=raw_tab if not _IS_MACOS else None,
+                chromium=self._instance._get_browser() if _IS_MACOS else None,
+                tab=raw_tab if _IS_MACOS else None,
+            )
+            logger.info("已创建打招呼引擎临时聊天标签页 (_greet_chat_tab)")
+        elif url:
+            try:
+                self._greet_chat_tab.get(url)
+            except Exception as e:
+                logger.warning(f"导航打招呼临时标签页失败: {e}")
+
+        return self._greet_chat_tab
+
+    def close_greet_chat_tab(self):
+        """关闭打招呼引擎专用的临时聊天标签页
+
+        打招呼引擎发送完消息后必须调用此方法，避免新标签页累积。
+        关闭后 _greet_chat_tab 置为 None，下次调用 get_greet_chat_tab() 会创建新标签页。
+        """
+        if self._greet_chat_tab is None:
+            return
+        try:
+            self._greet_chat_tab.close_current_tab()
+            logger.info("已关闭打招呼引擎临时聊天标签页")
+        except Exception as e:
+            logger.warning(f"关闭打招呼临时标签页异常: {e}")
+        finally:
+            self._greet_chat_tab = None
+
+    def get_greet_chat_raw_tab(self):
+        """获取打招呼临时标签页的底层 tab 对象（DrissionPage 原生）
+
+        用于打招呼引擎需要在原生 tab 上执行操作的场景。
+        如果 _greet_chat_tab 不存在则返回 None。
+
+        Returns:
+            DrissionPage tab 对象或 None
+        """
+        if self._greet_chat_tab is None:
+            return None
+        # BrowserInstance 内部 _page (Windows) 或 _tab (macOS) 即为原生 tab
+        if _IS_MACOS:
+            return self._greet_chat_tab._tab
+        return self._greet_chat_tab._page
 
     def check_login(self) -> bool:
         """检查登录状态
@@ -1153,6 +1229,7 @@ class BrowserManager:
         """
         self._search_tab = None
         self._chat_tab = None
+        self._greet_chat_tab = None
         self._is_logged_in = False
 
         if self._instance is not None:
@@ -1169,3 +1246,223 @@ class BrowserManager:
         """上下文管理器出口"""
         self.close()
         return False
+
+# ──────────────────────────────────────────────────────────────
+# Cookie 有效性检测（参考 auto_boss.check_login_status）
+# ──────────────────────────────────────────────────────────────
+
+def check_cookie_valid(cookie_file: str,
+                       headless: bool = True,
+                       chrome_path: str = "",
+                       browser_type: str = "chrome",
+                       timeout: int = 20) -> dict:
+    """检测 Cookie 是否有效（参考 auto_boss 项目的 check_login_status 方法）。
+
+    使用 DrissionPage 启动浏览器，加载 Cookie 后访问 BOSS 直聘首页，
+    检查以下条件判断登录状态：
+    1. 检查 .user-info 元素是否存在（登录后显示）
+    2. 检查 URL 是否跳转到登录页（包含 "login" 或 "user" 或 "passport"）
+    3. 检查 .header-login-btn 文本是否为 "登录/注册"
+
+    Args:
+        cookie_file: Cookie 文件路径
+        headless: 是否无头模式（默认 True）
+        chrome_path: 浏览器路径（空则自动检测）
+        browser_type: 浏览器类型
+        timeout: 总超时时间（秒）
+
+    Returns:
+        dict:
+        {
+            "valid": bool,           # Cookie 是否有效
+            "logged_in": bool,       # 是否已登录
+            "reason": str,           # 失效原因（valid=False 时有值）
+            "current_url": str,      # 检测时的页面 URL
+            "checks": dict,          # 各项检查结果
+        }
+    """
+    result = {
+        "valid": False,
+        "logged_in": False,
+        "reason": "",
+        "current_url": "",
+        "checks": {
+            "user_info_found": False,
+            "url_is_login_page": False,
+            "header_btn_is_login": False,
+        },
+    }
+
+    # 1. 检查 Cookie 文件是否存在
+    if not cookie_file or not os.path.exists(cookie_file):
+        result["reason"] = f"Cookie 文件不存在: {cookie_file}"
+        return result
+
+    # 2. 检查 Cookie 文件是否非空
+    try:
+        with open(cookie_file, "r", encoding="utf-8") as f:
+            cookies = json.load(f)
+        if not cookies:
+            result["reason"] = "Cookie 文件为空"
+            return result
+    except Exception as e:
+        result["reason"] = f"Cookie 文件解析失败: {e}"
+        return result
+
+    # 3. 启动浏览器检测
+    instance = None
+    try:
+        instance = launch_browser(
+            headless=headless,
+            chrome_path=chrome_path,
+            browser_type=browser_type,
+        )
+
+        # 先访问 BOSS 直聘首页，再加载 Cookie
+        instance.get("https://www.zhipin.com/")
+        time.sleep(1)
+
+        # 加载 Cookie
+        try:
+            instance.load_cookies(cookie_file)
+        except Exception as e:
+            result["reason"] = f"加载 Cookie 失败: {e}"
+            return result
+
+        # 刷新页面使 Cookie 生效
+        instance.get("https://www.zhipin.com/web/geek/job-recommend")
+        time.sleep(2)
+
+        # 获取当前 URL
+        try:
+            current_url = instance.url or ""
+        except Exception:
+            current_url = ""
+        result["current_url"] = current_url
+
+        # 检查 1: URL 是否跳转到登录页
+        url_lower = current_url.lower()
+        is_login_url = any(kw in url_lower for kw in ("login", "passport", "user/?ka"))
+        result["checks"]["url_is_login_page"] = is_login_url
+        if is_login_url:
+            result["reason"] = f"URL 跳转到登录页: {current_url}"
+            return result
+
+        # 检查 2: .user-info 元素是否存在（登录后显示）
+        try:
+            user_ele = instance.ele(".user-info", timeout=3)
+            if user_ele:
+                result["checks"]["user_info_found"] = True
+                result["valid"] = True
+                result["logged_in"] = True
+                return result
+        except Exception:
+            pass
+
+        # 检查 3: .header-login-btn 文本是否为 "登录/注册"
+        try:
+            login_btn = instance.ele(".header-login-btn", timeout=3)
+            if login_btn:
+                btn_text = ""
+                try:
+                    btn_text = login_btn.text or ""
+                except Exception:
+                    pass
+                if "登录/注册" in btn_text or "登录" in btn_text:
+                    result["checks"]["header_btn_is_login"] = True
+                    result["reason"] = f"登录按钮文本为: {btn_text}"
+                    return result
+                else:
+                    # 按钮文本不是"登录/注册"，说明已登录
+                    result["valid"] = True
+                    result["logged_in"] = True
+                    return result
+        except Exception:
+            pass
+
+        # 检查 4: .user-nav 元素（auto_boss 也用此选择器）
+        try:
+            user_nav = instance.ele(".user-nav", timeout=3)
+            if user_nav:
+                nav_text = ""
+                try:
+                    nav_text = user_nav.text or ""
+                except Exception:
+                    pass
+                if nav_text.strip() and "登录/注册" not in nav_text:
+                    result["valid"] = True
+                    result["logged_in"] = True
+                    return result
+        except Exception:
+            pass
+
+        # 所有检查都未明确判断，默认无效
+        result["reason"] = "未找到登录态元素，Cookie 可能已失效"
+        return result
+
+    except Exception as e:
+        result["reason"] = f"检测过程异常: {e}"
+        return result
+    finally:
+        if instance is not None:
+            try:
+                instance.quit()
+            except Exception:
+                pass
+
+
+def check_cookie_valid_simple(cookie_file: str) -> dict:
+    """简单检测 Cookie 是否有效（不启动浏览器，仅检查文件和关键字段）。
+
+    用于快速预检，避免每次都启动浏览器。
+
+    Args:
+        cookie_file: Cookie 文件路径
+
+    Returns:
+        dict: 同 check_cookie_valid 返回结构
+    """
+    result = {
+        "valid": False,
+        "logged_in": False,
+        "reason": "",
+        "current_url": "",
+        "checks": {
+            "file_exists": False,
+            "has_wbct": False,      # wbct 是 BOSS 直聘的关键登录 Cookie
+            "has_boss_token": False,
+        },
+    }
+
+    if not cookie_file or not os.path.exists(cookie_file):
+        result["reason"] = f"Cookie 文件不存在: {cookie_file}"
+        return result
+
+    result["checks"]["file_exists"] = True
+
+    try:
+        with open(cookie_file, "r", encoding="utf-8") as f:
+            cookies = json.load(f)
+        if not cookies:
+            result["reason"] = "Cookie 文件为空"
+            return result
+
+        # 检查关键 Cookie 字段
+        for c in cookies:
+            name = c.get("name", "") if isinstance(c, dict) else ""
+            if name == "wbct":
+                result["checks"]["has_wbct"] = True
+            if name in ("boss_token", "token", "wt2"):
+                result["checks"]["has_boss_token"] = True
+
+        # 简单检测：只要有 wbct 或 boss_token 就认为可能有效
+        if result["checks"]["has_wbct"] or result["checks"]["has_boss_token"]:
+            result["valid"] = True
+            result["logged_in"] = True
+            return result
+
+        result["reason"] = "Cookie 文件缺少关键登录字段（wbct/boss_token）"
+        return result
+    except Exception as e:
+        result["reason"] = f"Cookie 文件解析失败: {e}"
+        return result

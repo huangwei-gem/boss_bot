@@ -1927,3 +1927,456 @@ class SelfEvolveEngine:
                 self._log("DEBUG", "无历史质量数据文件，使用空数据初始化")
         except Exception as e:
             self._log("ERROR", f"加载质量数据失败: {e}")
+    # ─────────────────────────────────────────────
+    # 基于聊天记录的自进化（任务85新增）
+    # ─────────────────────────────────────────────
+
+    # 自进化结果文件路径
+    _EVOLVE_RESULT_FILE = Path(__file__).parent.parent / "data" / "evolve_result.json"
+
+    # 不合理对话模式分类
+    PATTERN_HR_REJECTED_BUT_GREET = "A_hr_rejected_but_greet"  # HR已拒绝但bot还发打招呼语
+    PATTERN_DUPLICATE_SELF_INTRO = "B_duplicate_self_intro"  # 同一聊天重复发自我介绍
+    PATTERN_REJECTED_BUT_SEND_RESUME = "C_rejected_but_send_resume"  # HR拒绝后bot还要求发简历
+    PATTERN_DUPLICATE_MESSAGES = "D_duplicate_messages"  # 连发多条相同消息
+    PATTERN_IRRELEVANT_REPLY = "E_irrelevant_reply"  # 回复不切题
+
+    # 自我介绍特征关键词（与 reply_engine.py 保持一致）
+    _SELF_INTRO_MARKERS = [
+        "您好，我是", "您好！我是", "我是双一流", "我是本科", "我是硕士",
+        "我对这个岗位很感兴趣", "我对这个职位很感兴趣",
+        "希望可以进一步沟通", "希望能获得面试机会", "希望能有机会",
+        "应聘数据分析", "看到您的招聘信息",
+    ]
+
+    # HR 拒绝关键词
+    _REJECTION_MARKERS = [
+        "不好意思", "不太合适", "不匹配", "不完全吻合", "不完全匹配",
+        "不太合适哦", "暂时不太合适", "感谢您的关注", "祝您找到",
+        "不太适合", "不合适", "另有安排", "暂不考虑",
+    ]
+
+    # 简历相关回复特征
+    _RESUME_REPLY_MARKERS = [
+        "简历文件暂时不在我这边", "简历稍后发", "稍后我补发简历",
+        "我发一份简历", "发送简历", "简历已发送",
+    ]
+
+    def _is_rejection_msg(self, text: str) -> bool:
+        """检测消息是否是 HR 拒绝。"""
+        if not text:
+            return False
+        for marker in self._REJECTION_MARKERS:
+            if marker in text:
+                return True
+        return False
+
+    def _is_self_intro_msg(self, text: str) -> bool:
+        """检测消息是否是自我介绍。"""
+        if not text:
+            return False
+        for marker in self._SELF_INTRO_MARKERS:
+            if marker in text:
+                return True
+        return False
+
+    def _is_resume_reply_msg(self, text: str) -> bool:
+        """检测消息是否是简历相关回复。"""
+        if not text:
+            return False
+        for marker in self._RESUME_REPLY_MARKERS:
+            if marker in text:
+                return True
+        return False
+
+    def _load_all_chat_records(self) -> List[Dict[str, Any]]:
+        """加载 messages/ 目录下所有聊天记录。
+
+        Returns:
+            聊天记录列表，每项包含 chat_name, job_name, messages
+        """
+        records = []
+        try:
+            messages_dir = Path(__file__).parent.parent / "messages"
+            if not messages_dir.exists():
+                self._log("WARN", f"聊天记录目录不存在: {messages_dir}")
+                return records
+            for path in messages_dir.glob("*.json"):
+                try:
+                    with open(path, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    records.append({
+                        "chat_name": data.get("chat_name", path.stem),
+                        "job_name": data.get("job_name", ""),
+                        "messages": data.get("messages", []),
+                    })
+                except Exception as e:
+                    self._log("DEBUG", f"加载聊天记录失败 {path.name}: {e}")
+        except Exception as e:
+            self._log("ERROR", f"加载聊天记录目录失败: {e}")
+        return records
+
+    def analyze_chat_patterns(self) -> Dict[str, Any]:
+        """分析所有聊天记录，识别不合理对话模式。
+
+        归纳为以下几类问题：
+        A. HR已拒绝但bot还发打招呼语
+        B. 同一聊天重复发自我介绍
+        C. HR拒绝后bot还要求发简历
+        D. 连发多条相同消息
+        E. 回复不切题
+
+        Returns:
+            分析结果字典，包含各类问题的实例列表和统计
+        """
+        self._log("INFO", "开始分析聊天记录中的不合理对话模式...")
+
+        records = self._load_all_chat_records()
+        total_chats = len(records)
+        self._log("INFO", f"共加载 {total_chats} 个聊天记录")
+
+        # 各类问题实例
+        issues = {
+            self.PATTERN_HR_REJECTED_BUT_GREET: [],
+            self.PATTERN_DUPLICATE_SELF_INTRO: [],
+            self.PATTERN_REJECTED_BUT_SEND_RESUME: [],
+            self.PATTERN_DUPLICATE_MESSAGES: [],
+            self.PATTERN_IRRELEVANT_REPLY: [],
+        }
+
+        for record in records:
+            chat_name = record.get("chat_name", "")
+            job_name = record.get("job_name", "")
+            messages = record.get("messages", [])
+
+            if not messages:
+                continue
+
+            # 提取 HR 消息和 bot 消息（保持顺序）
+            hr_messages = []  # [(index, text)]
+            bot_messages = []  # [(index, text)]
+            for i, msg in enumerate(messages):
+                text = (msg.get("text") or msg.get("content") or "").strip()
+                if not text:
+                    continue
+                if msg.get("is_mine"):
+                    bot_messages.append((i, text))
+                else:
+                    hr_messages.append((i, text))
+
+            # ── A. HR已拒绝但bot还发打招呼语 ──
+            # 检测：HR 发了拒绝消息后，bot 又发了打招呼语/自我介绍
+            rejection_indices = []
+            for idx, text in hr_messages:
+                if self._is_rejection_msg(text):
+                    rejection_indices.append(idx)
+
+            if rejection_indices:
+                for rej_idx in rejection_indices:
+                    # 找到拒绝后 bot 发的打招呼语
+                    for bot_idx, bot_text in bot_messages:
+                        if bot_idx > rej_idx and self._is_self_intro_msg(bot_text):
+                            issues[self.PATTERN_HR_REJECTED_BUT_GREET].append({
+                                "chat_name": chat_name,
+                                "job_name": job_name,
+                                "hr_rejection": next(
+                                    (t for i, t in hr_messages if i == rej_idx), ""),
+                                "bot_greeting": bot_text[:80],
+                                "detail": f"HR拒绝后bot还发打招呼语",
+                            })
+                            break
+
+            # ── B. 同一聊天重复发自我介绍 ──
+            self_intro_count = sum(
+                1 for _, text in bot_messages if self._is_self_intro_msg(text)
+            )
+            if self_intro_count >= 2:
+                issues[self.PATTERN_DUPLICATE_SELF_INTRO].append({
+                    "chat_name": chat_name,
+                    "job_name": job_name,
+                    "self_intro_count": self_intro_count,
+                    "detail": f"重复发送自我介绍 {self_intro_count} 次",
+                })
+
+            # ── C. HR拒绝后bot还要求发简历 ──
+            if rejection_indices:
+                for rej_idx in rejection_indices:
+                    for bot_idx, bot_text in bot_messages:
+                        if bot_idx > rej_idx and self._is_resume_reply_msg(bot_text):
+                            issues[self.PATTERN_REJECTED_BUT_SEND_RESUME].append({
+                                "chat_name": chat_name,
+                                "job_name": job_name,
+                                "hr_rejection": next(
+                                    (t for i, t in hr_messages if i == rej_idx), ""),
+                                "bot_resume_reply": bot_text[:80],
+                                "detail": f"HR拒绝后bot还回复简历相关内容",
+                            })
+                            break
+
+            # ── D. 连发多条相同消息 ──
+            if len(bot_messages) >= 2:
+                for i in range(1, len(bot_messages)):
+                    prev_text = bot_messages[i - 1][1]
+                    curr_text = bot_messages[i][1]
+                    if prev_text == curr_text and len(curr_text) > 5:
+                        issues[self.PATTERN_DUPLICATE_MESSAGES].append({
+                            "chat_name": chat_name,
+                            "job_name": job_name,
+                            "duplicate_text": curr_text[:80],
+                            "detail": f"连续发送相同消息",
+                        })
+
+            # ── E. 回复不切题（简单检测：HR问岗位内容bot回薪资等）──
+            # 这里只做简单检测，详细分析交给 AI
+            for hr_idx, hr_text in hr_messages:
+                # HR 问岗位内容
+                if any(kw in hr_text for kw in ["工作内容", "岗位职责", "做什么的", "具体做什么"]):
+                    # 找到 HR 消息后 bot 的回复
+                    for bot_idx, bot_text in bot_messages:
+                        if bot_idx > hr_idx:
+                            # bot 回复薪资相关（不切题）
+                            if any(kw in bot_text for kw in ["期望薪资", "薪资", "面议"]):
+                                issues[self.PATTERN_IRRELEVANT_REPLY].append({
+                                    "chat_name": chat_name,
+                                    "job_name": job_name,
+                                    "hr_question": hr_text[:80],
+                                    "bot_reply": bot_text[:80],
+                                    "detail": f"HR问岗位内容但bot回薪资",
+                                })
+                            break
+
+        # 统计摘要
+        summary = {
+            "total_chats_analyzed": total_chats,
+            "issues_by_type": {
+                k: len(v) for k, v in issues.items()
+            },
+            "total_issues": sum(len(v) for v in issues.values()),
+        }
+
+        self._log("INFO",
+                  f"聊天记录分析完成: {total_chats} 个聊天, "
+                  f"发现 {summary['total_issues']} 个问题: "
+                  f"A(HR拒绝但发打招呼)={summary['issues_by_type'][self.PATTERN_HR_REJECTED_BUT_GREET]}, "
+                  f"B(重复自我介绍)={summary['issues_by_type'][self.PATTERN_DUPLICATE_SELF_INTRO]}, "
+                  f"C(拒绝后发简历)={summary['issues_by_type'][self.PATTERN_REJECTED_BUT_SEND_RESUME]}, "
+                  f"D(重复消息)={summary['issues_by_type'][self.PATTERN_DUPLICATE_MESSAGES]}, "
+                  f"E(不切题)={summary['issues_by_type'][self.PATTERN_IRRELEVANT_REPLY]}")
+
+        return {
+            "summary": summary,
+            "issues": issues,
+            "timestamp": datetime.now().isoformat(),
+        }
+
+    def generate_rule_adjustments_from_patterns(self, analysis: dict) -> List[Dict[str, Any]]:
+        """根据聊天记录分析结果生成规则调整建议。
+
+        Args:
+            analysis: analyze_chat_patterns() 的返回结果
+
+        Returns:
+            规则调整建议列表
+        """
+        adjustments = []
+        issues = analysis.get("issues", {})
+        timestamp = datetime.now().isoformat()
+
+        # A. HR已拒绝但bot还发打招呼语 → 添加拒绝检测规则
+        if issues.get(self.PATTERN_HR_REJECTED_BUT_GREET):
+            adjustments.append({
+                "rule_key": "rejection_detection",
+                "old_value": "无拒绝检测",
+                "new_value": "检测到HR拒绝时礼貌接受，不再发打招呼语",
+                "reason": f"发现 {len(issues[self.PATTERN_HR_REJECTED_BUT_GREET])} 例"
+                          f"HR拒绝后bot仍发打招呼语，已添加拒绝检测逻辑",
+                "auto_applied": True,
+                "timestamp": timestamp,
+            })
+
+        # B. 重复发自我介绍 → 添加自我介绍去重规则
+        if issues.get(self.PATTERN_DUPLICATE_SELF_INTRO):
+            adjustments.append({
+                "rule_key": "self_intro_dedup",
+                "old_value": "无自我介绍去重",
+                "new_value": "检测到已发过自我介绍时不再重复发送",
+                "reason": f"发现 {len(issues[self.PATTERN_DUPLICATE_SELF_INTRO])} 例"
+                          f"重复发送自我介绍，已添加去重逻辑",
+                "auto_applied": True,
+                "timestamp": timestamp,
+            })
+
+        # C. HR拒绝后还发简历 → 添加拒绝后不发简历规则
+        if issues.get(self.PATTERN_REJECTED_BUT_SEND_RESUME):
+            adjustments.append({
+                "rule_key": "no_resume_after_rejection",
+                "old_value": "无拒绝后简历检测",
+                "new_value": "HR拒绝后不再发送简历相关内容",
+                "reason": f"发现 {len(issues[self.PATTERN_REJECTED_BUT_SEND_RESUME])} 例"
+                          f"HR拒绝后bot仍回复简历相关内容，已添加拒绝后不发简历逻辑",
+                "auto_applied": True,
+                "timestamp": timestamp,
+            })
+
+        # D. 连发多条相同消息 → 添加重复消息检测规则
+        if issues.get(self.PATTERN_DUPLICATE_MESSAGES):
+            adjustments.append({
+                "rule_key": "duplicate_message_detection",
+                "old_value": "无重复消息检测",
+                "new_value": "检测到即将发送的消息与历史重复时跳过",
+                "reason": f"发现 {len(issues[self.PATTERN_DUPLICATE_MESSAGES])} 例"
+                          f"连续发送相同消息，已添加重复消息检测逻辑",
+                "auto_applied": True,
+                "timestamp": timestamp,
+            })
+
+        # E. 回复不切题 → 添加切题检测规则
+        if issues.get(self.PATTERN_IRRELEVANT_REPLY):
+            adjustments.append({
+                "rule_key": "relevance_check",
+                "old_value": "无切题检测",
+                "new_value": "回复前检查是否切题，避免答非所问",
+                "reason": f"发现 {len(issues[self.PATTERN_IRRELEVANT_REPLY])} 例"
+                          f"回复不切题，已在SYSTEM_PROMPT中添加切题要求",
+                "auto_applied": True,
+                "timestamp": timestamp,
+            })
+
+        return adjustments
+
+    def generate_template_optimizations_from_patterns(self, analysis: dict) -> List[Dict[str, Any]]:
+        """根据聊天记录分析结果生成模板优化建议。
+
+        Args:
+            analysis: analyze_chat_patterns() 的返回结果
+
+        Returns:
+            模板优化建议列表
+        """
+        optimizations = []
+        issues = analysis.get("issues", {})
+        timestamp = datetime.now().isoformat()
+
+        # 如果存在 HR 拒绝但 bot 还发打招呼的问题，优化打招呼模板
+        if issues.get(self.PATTERN_HR_REJECTED_BUT_GREET):
+            optimizations.append({
+                "template_key": "greeting_reply",
+                "current_template": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+                "suggested_template": "您好，看到您的招聘信息，对这个岗位很感兴趣，希望可以进一步沟通~",
+                "reason": "优化打招呼语气，增加口语化表达，更像真人聊天",
+                "timestamp": timestamp,
+                "applied": False,
+            })
+
+        # 如果存在重复自我介绍问题，建议精简自我介绍
+        if issues.get(self.PATTERN_DUPLICATE_SELF_INTRO):
+            optimizations.append({
+                "template_key": "self_intro",
+                "current_template": "您好，我是双一流的本科，应聘数据分析岗位...",
+                "suggested_template": "您好，我对这个岗位很感兴趣，希望可以进一步沟通~",
+                "reason": "精简自我介绍，避免长篇大论，增加自然度",
+                "timestamp": timestamp,
+                "applied": False,
+            })
+
+        # 如果存在拒绝后发简历问题，建议添加拒绝后的礼貌回复模板
+        if issues.get(self.PATTERN_REJECTED_BUT_SEND_RESUME):
+            optimizations.append({
+                "template_key": "rejection_reply",
+                "current_template": "简历文件暂时不在我这边",
+                "suggested_template": "好的，感谢您的时间，祝您招聘顺利~",
+                "reason": "HR拒绝后应礼貌接受，而非继续推简历",
+                "timestamp": timestamp,
+                "applied": True,
+            })
+
+        return optimizations
+
+    def run_chat_based_evolution(self) -> Dict[str, Any]:
+        """基于聊天记录的自进化主入口。
+
+        流程：
+        1. 分析所有聊天记录，识别不合理对话模式
+        2. 根据分析结果生成规则调整建议
+        3. 根据分析结果生成模板优化建议
+        4. 将分析结果保存到 data/evolve_result.json
+        5. 返回完整的自进化结果
+
+        Returns:
+            自进化结果字典
+        """
+        if not self.enabled:
+            return {"status": "disabled", "message": "自进化功能未启用"}
+
+        self._log("INFO", "=" * 50)
+        self._log("INFO", "开始基于聊天记录的自进化")
+        self._log("INFO", "=" * 50)
+
+        timestamp = datetime.now().isoformat()
+
+        try:
+            # 1. 分析聊天记录
+            self._log("INFO", "[自进化] 步骤 1/4: 分析聊天记录中的不合理对话模式")
+            analysis = self.analyze_chat_patterns()
+
+            # 2. 生成规则调整建议
+            self._log("INFO", "[自进化] 步骤 2/4: 生成规则调整建议")
+            rule_adjustments = self.generate_rule_adjustments_from_patterns(analysis)
+
+            # 3. 生成模板优化建议
+            self._log("INFO", "[自进化] 步骤 3/4: 生成模板优化建议")
+            template_optimizations = self.generate_template_optimizations_from_patterns(analysis)
+
+            # 4. 保存结果到 data/evolve_result.json
+            self._log("INFO", "[自进化] 步骤 4/4: 保存分析结果到 data/evolve_result.json")
+            result = {
+                "analysis": analysis,
+                "rule_adjustments": rule_adjustments,
+                "template_optimizations": template_optimizations,
+                "timestamp": timestamp,
+                "summary": {
+                    "total_chats": analysis.get("summary", {}).get("total_chats_analyzed", 0),
+                    "total_issues": analysis.get("summary", {}).get("total_issues", 0),
+                    "rule_adjustments_count": len(rule_adjustments),
+                    "template_optimizations_count": len(template_optimizations),
+                },
+            }
+
+            try:
+                self._EVOLVE_RESULT_FILE.parent.mkdir(parents=True, exist_ok=True)
+                with open(self._EVOLVE_RESULT_FILE, "w", encoding="utf-8") as f:
+                    json.dump(result, f, ensure_ascii=False, indent=2)
+                self._log("INFO", f"自进化结果已保存到: {self._EVOLVE_RESULT_FILE}")
+            except Exception as e:
+                self._log("ERROR", f"保存自进化结果失败: {e}")
+
+            # 同时更新内部的规则调整和模板优化记录
+            with self._lock:
+                self._rule_adjustments.extend(rule_adjustments)
+                if len(self._rule_adjustments) > 200:
+                    self._rule_adjustments = self._rule_adjustments[-200:]
+                self._template_optimizations.extend(template_optimizations)
+                if len(self._template_optimizations) > 100:
+                    self._template_optimizations = self._template_optimizations[-100:]
+                self._save_quality_data()
+
+            self._log("INFO", "=" * 50)
+            self._log("INFO", "基于聊天记录的自进化完成")
+            self._log("INFO",
+                      f"分析 {result['summary']['total_chats']} 个聊天, "
+                      f"发现 {result['summary']['total_issues']} 个问题, "
+                      f"生成 {len(rule_adjustments)} 条规则调整, "
+                      f"{len(template_optimizations)} 条模板优化")
+            self._log("INFO", "=" * 50)
+
+            return result
+
+        except Exception as e:
+            self._log("ERROR", f"基于聊天记录的自进化失败: {e}")
+            import traceback
+            self._log("ERROR", traceback.format_exc())
+            return {
+                "status": "error",
+                "message": str(e),
+                "timestamp": timestamp,
+            }

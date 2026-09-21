@@ -421,6 +421,100 @@ class BossChatHandler:
 
         return messages
 
+    def read_all_messages(self, max_scroll_rounds: int = 5,
+                          scroll_wait_ms: int = 800) -> List[Dict]:
+        """
+        读取当前聊天中所有可见消息（完整聊天记录同步）。
+
+        与 read_latest_messages 的区别：
+        - 先向上滚动聊天区域加载更多历史消息（滚动到顶部等待加载，
+          重复几次直到消息数量不再增加或达到最大滚动次数）
+        - 然后读取所有 .message-item 元素（不只最新 count 条）
+        - 每条消息包含：text, time, is_mine, isFriend
+        - 不调用 save_messages（避免覆盖式保存丢失旧消息），
+          由调用方通过 message_store.merge_messages 合并去重
+
+        Args:
+            max_scroll_rounds: 向上滚动加载历史的最大轮次（默认5）
+            scroll_wait_ms: 每次滚动后等待加载的毫秒数（默认800）
+
+        Returns:
+            完整消息列表（按页面顺序，旧消息在前，新消息在后）
+        """
+        messages = []
+        try:
+            # 第一步：向上滚动加载更多历史消息
+            try:
+                self.page.run_js(f'''(
+                    function() {{
+                        var chatContent = document.querySelector(".chat-content")
+                                     || document.querySelector(".message-list")
+                                     || document.querySelector(".chat-message-wrap")
+                                     || document.querySelector(".message-wrap");
+                        if (!chatContent) return JSON.stringify({{ok: false, reason: "no_container"}});
+                        var prevCount = -1;
+                        var rounds = 0;
+                        // 同步滚动若干次（每次滚动后由 Python 侧等待异步加载）
+                        while (rounds < {max_scroll_rounds}) {{
+                            var curCount = document.querySelectorAll(".message-item").length;
+                            if (curCount === prevCount) {{
+                                // 数量未变，可能已加载完所有历史
+                                break;
+                            }}
+                            prevCount = curCount;
+                            // 滚动到顶部触发加载更多
+                            chatContent.scrollTop = 0;
+                            rounds++;
+                        }}
+                        return JSON.stringify({{ok: true, rounds: rounds, finalCount: prevCount}});
+                    }}
+                )()''', as_expr=True)
+            except Exception as e:
+                logger.debug(f"滚动加载历史异常（不影响后续读取）: {e}")
+
+            # 每次滚动后等待页面异步加载更多历史消息
+            for _ in range(max_scroll_rounds):
+                time.sleep(scroll_wait_ms / 1000.0)
+                # 检查消息数量是否还在增长，若不再增长则提前结束等待
+                try:
+                    cur_count_js = self.page.run_js(
+                        'document.querySelectorAll(".message-item").length', as_expr=True
+                    )
+                    if cur_count_js is None:
+                        break
+                except Exception:
+                    break
+
+            # 第二步：读取所有 .message-item 元素
+            result = self.page.run_js('''(
+                function() {
+                    var items = document.querySelectorAll(".message-item");
+                    var result = [];
+                    for (var i = 0; i < items.length; i++) {
+                        var item = items[i];
+                        var textEl = item.querySelector(".text-content");
+                        var timeEl = item.querySelector(".item-time .time");
+                        var cls = item.className || "";
+                        result.push({
+                            text: textEl ? textEl.textContent.trim() : "",
+                            time: timeEl ? timeEl.textContent.trim() : "",
+                            isFriend: cls.indexOf("item-friend") >= 0,
+                            is_mine: cls.indexOf("item-friend") < 0
+                        });
+                    }
+                    return JSON.stringify(result);
+                }
+            )()''', as_expr=True)
+
+            if result:
+                messages = json.loads(result)
+
+            logger.info(f"[read_all_messages] 读取到完整消息数: {len(messages)}")
+        except Exception as e:
+            logger.error(f"读取所有消息失败: {e}")
+
+        return messages
+
     def get_boss_name(self) -> str:
         """获取当前聊天对象的名称
 

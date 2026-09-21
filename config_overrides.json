@@ -42,5 +42,16 @@
     "DEFAULT_REPLY": "好的，感谢您的消息，我会尽快回复您。",
     "RESUME_DUPLICATE_REPLY": "您好，简历刚刚已经发您了，您看一下，有任何问题随时沟通~",
     "RESUME_UNAVAILABLE_REPLY": "不好意思，简历文件暂时不在我这边，稍后我补发给您，可以先看看我主页的在线简历~"
+  },
+  "user_profile": {
+    "available_interview_time": "工作日下午",
+    "contact": "",
+    "education": "本科学历",
+    "experience": "",
+    "highlights": [],
+    "name": "求职者",
+    "position": "数据分析",
+    "salary_expectation": "面议",
+    "skills": []
   }
 }

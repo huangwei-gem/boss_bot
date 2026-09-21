@@ -28,10 +28,13 @@ import threading
 import time
 import random
 import os
-from datetime import datetime
+import json
+import shutil
+from datetime import datetime, date
+from pathlib import Path
 from typing import Optional, Callable
 
-from boss_bot.unified_config import UnifiedConfig
+from boss_bot.unified_config import UnifiedConfig, BASE_DIR
 from boss_bot.browser_launcher import BrowserManager
 from boss_bot.greet_engine import GreetEngine
 from boss_bot.reply_engine import ReplyEngine
@@ -159,6 +162,17 @@ class UnifiedBotLoop:
         self._greet_enabled = True
         self._reply_enabled = True
         self._page_timeout = 30
+
+        # 数据按天归档配置
+        # data/archive/YYYY-MM-DD/ 存放每天的 greet_records + reply_records
+        # 保留最近 10 天的归档数据，超过自动清理
+        self._archive_dir = Path(BASE_DIR) / "data" / "archive"
+        self._archive_dir.mkdir(parents=True, exist_ok=True)
+        self._archive_retention_days = 10
+        # 记录已归档的日期，避免同一天多次归档
+        self._last_archived_date: Optional[str] = None
+        # 启动时自动检查并执行归档（如果是新的一天）
+        self._check_and_archive_daily_data()
 
     # ─────────────────────────────────────────────
     # 日志
@@ -324,6 +338,170 @@ class UnifiedBotLoop:
         self._logged_in = True
 
     # ─────────────────────────────────────────────
+    # 数据按天归档
+    # ─────────────────────────────────────────────
+
+    def _check_and_archive_daily_data(self):
+        """检查是否是新的一天，如果是则归档当前数据并清空。
+
+        归档逻辑：
+        1. 获取当前日期 YYYY-MM-DD
+        2. 如果与 _last_archived_date 不同（新的一天）：
+           a. 将 data/greet_records.json 和 data/reply_records.json 复制到 data/archive/YYYY-MM-DD/
+           b. 清空当前数据文件（开始新一天的数据）
+           c. 删除超过 10 天的归档数据
+           d. 更新 _last_archived_date
+        """
+        try:
+            today_str = date.today().isoformat()  # YYYY-MM-DD
+            if self._last_archived_date == today_str:
+                return  # 同一天，不重复归档
+
+            # 首次启动：只记录日期，不归档（避免把今天已有的数据归档掉）
+            if self._last_archived_date is None:
+                self._last_archived_date = today_str
+                # 启动时清理过期归档
+                self._clean_old_archives()
+                return
+
+            # 新的一天：归档昨天的数据
+            self._log("INFO", f"检测到新的一天（{today_str}），开始归档数据...")
+
+            # 归档目录：data/archive/YYYY-MM-DD/
+            archive_subdir = self._archive_dir / self._last_archived_date
+            archive_subdir.mkdir(parents=True, exist_ok=True)
+
+            # 复制 greet_records.json 和 reply_records.json 到归档目录
+            data_dir = Path(BASE_DIR) / "data"
+            for filename in ("greet_records.json", "reply_records.json"):
+                src = data_dir / filename
+                if src.exists():
+                    dst = archive_subdir / filename
+                    try:
+                        shutil.copy2(str(src), str(dst))
+                        self._log("DEBUG", f"已归档 {filename} 到 {archive_subdir}")
+                    except Exception as e:
+                        self._log("WARN", f"归档 {filename} 失败: {e}")
+
+            # 清空当前数据文件（开始新一天的数据）
+            for filename in ("greet_records.json", "reply_records.json"):
+                src = data_dir / filename
+                try:
+                    with open(src, "w", encoding="utf-8") as f:
+                        json.dump({"records": [], "total": 0,
+                                   "last_saved": datetime.now().isoformat()}, f,
+                                  ensure_ascii=False, indent=2)
+                    self._log("DEBUG", f"已清空 {filename}")
+                except Exception as e:
+                    self._log("WARN", f"清空 {filename} 失败: {e}")
+
+            # 更新归档日期
+            self._last_archived_date = today_str
+
+            # 清理过期归档
+            self._clean_old_archives()
+
+            self._log("INFO", f"数据归档完成，新一天数据已清空")
+        except Exception as e:
+            self._log("WARN", f"数据归档检查异常: {e}")
+
+    def _clean_old_archives(self):
+        """清理超过保留天数的归档数据。"""
+        try:
+            if not self._archive_dir.exists():
+                return
+            today = date.today()
+            retention = self._archive_retention_days
+
+            for subdir in self._archive_dir.iterdir():
+                if not subdir.is_dir():
+                    continue
+                try:
+                    # 目录名应为 YYYY-MM-DD
+                    archive_date = date.fromisoformat(subdir.name)
+                    age_days = (today - archive_date).days
+                    if age_days > retention:
+                        shutil.rmtree(str(subdir))
+                        self._log("INFO", f"已清理过期归档: {subdir.name}（{age_days}天前）")
+                except ValueError:
+                    # 目录名不是有效日期，跳过
+                    continue
+                except Exception as e:
+                    self._log("WARN", f"清理归档 {subdir.name} 失败: {e}")
+        except Exception as e:
+            self._log("WARN", f"清理过期归档异常: {e}")
+
+    def get_archive_list(self) -> list:
+        """获取所有归档日期列表（用于前端展示）。
+
+        Returns:
+            归档日期字典列表，每个含 date, greet_count, reply_count, size_kb
+        """
+        result = []
+        try:
+            if not self._archive_dir.exists():
+                return result
+            for subdir in sorted(self._archive_dir.iterdir(), reverse=True):
+                if not subdir.is_dir():
+                    continue
+                try:
+                    archive_date = date.fromisoformat(subdir.name)
+                except ValueError:
+                    continue
+                # 统计该日期的记录数和大小
+                greet_count = 0
+                reply_count = 0
+                total_size = 0
+                for f in subdir.glob("*.json"):
+                    try:
+                        total_size += f.stat().st_size
+                        with open(f, "r", encoding="utf-8") as fp:
+                            data = json.load(fp)
+                        if f.name == "greet_records.json":
+                            greet_count = len(data.get("records", []))
+                        elif f.name == "reply_records.json":
+                            reply_count = len(data.get("records", []))
+                    except Exception:
+                        pass
+                result.append({
+                    "date": subdir.name,
+                    "greet_count": greet_count,
+                    "reply_count": reply_count,
+                    "size_kb": round(total_size / 1024, 1),
+                })
+        except Exception as e:
+            self._log("WARN", f"获取归档列表异常: {e}")
+        return result
+
+    def get_archive_data(self, archive_date: str) -> dict:
+        """获取指定日期的归档数据。
+
+        Args:
+            archive_date: 日期字符串 YYYY-MM-DD
+
+        Returns:
+            {"greet_records": [...], "reply_records": [...], "date": ...}
+        """
+        result = {"date": archive_date, "greet_records": [], "reply_records": []}
+        try:
+            subdir = self._archive_dir / archive_date
+            if not subdir.exists():
+                return result
+            for filename, key in (("greet_records.json", "greet_records"),
+                                  ("reply_records.json", "reply_records")):
+                f = subdir / filename
+                if f.exists():
+                    try:
+                        with open(f, "r", encoding="utf-8") as fp:
+                            data = json.load(fp)
+                        result[key] = data.get("records", [])
+                    except Exception:
+                        pass
+        except Exception as e:
+            self._log("WARN", f"获取归档数据异常: {e}")
+        return result
+
+    # ─────────────────────────────────────────────
     # 初始化与登录
     # ─────────────────────────────────────────────
 
@@ -483,9 +661,12 @@ class UnifiedBotLoop:
             browser_instance=chat_page,
         )
 
+        self._msg_store = MessageStore()
+
         self._reply_engine = ReplyEngine(
             account_name=self.account_name,
             account_index=self.account_index,
+            message_store=self._msg_store,
         )
         self._state_store = StateStore()
         # 启动时自动清除之前的人工接管暂停状态
@@ -494,7 +675,7 @@ class UnifiedBotLoop:
             self._state_store.resume()
         self._stats = Stats()
         self._notifier = Notifier()
-        self._msg_store = MessageStore()
+
 
         # 初始化打招呼引擎 — 使用搜索标签页
         self._log("DEBUG", "正在初始化打招呼引擎（GreetEngine）...")
@@ -650,7 +831,51 @@ class UnifiedBotLoop:
                     if self._greet_engine._is_already_chatted(job):
                         self._log("INFO", f"⏭️ 已沟通过: {job.get('job_name', '')}")
                         self._stats_dict["greet_skipped"] += 1
+                        # 写入 greet_records，记录具体跳过原因
+                        self._greet_engine._emit_greet_event(job, "already", skip_reason="已沟通过")
+                        self._greet_engine._record_greet(job, is_skipped=True, skip_reason="已沟通过")
                         continue
+
+                    # ── 对话历史检查：如果该岗位的 HR 已经拒绝过，不再发打招呼 ──
+                    if self._msg_store is not None:
+                        try:
+                            job_name_to_check = job.get("job_name", "")
+                            company_to_check = job.get("company", "") or job.get("company_location", "")
+                            # 遍历所有已有聊天记录，检查是否有匹配该岗位且 HR 已拒绝的
+                            chat_list = self._msg_store.get_chat_list()
+                            should_skip_greet = False
+                            for chat in chat_list:
+                                chat_job_name = chat.get("job_name", "")
+                                chat_name = chat.get("chat_name", "")
+                                # 岗位名匹配（包含关系，因为岗位名可能带后缀如"查看职位"）
+                                if job_name_to_check and \
+                                        job_name_to_check in chat_job_name:
+                                    # 检查该聊天中 HR 是否已拒绝
+                                    dialog = self._msg_store.get_full_dialog(chat_name)
+                                    if dialog:
+                                        for msg in dialog:
+                                            if not msg.get("is_mine"):
+                                                content = (msg.get("text") or msg.get("content") or "").strip()
+                                                if self._reply_engine and \
+                                                        self._reply_engine._is_rejection(content):
+                                                    should_skip_greet = True
+                                                    self._log("INFO",
+                                                              f"⏭️ [{chat_name}] 该岗位HR已拒绝过，"
+                                                              f"跳过打招呼避免骚扰")
+                                                    break
+                                    if should_skip_greet:
+                                        break
+                            if should_skip_greet:
+                                self._stats_dict["greet_skipped"] += 1
+                                self._greet_engine._emit_greet_event(
+                                    job, "skip", skip_reason="该岗位HR已拒绝过，跳过打招呼")
+                                self._greet_engine._record_greet(
+                                    job, is_skipped=True,
+                                    skip_reason="该岗位HR已拒绝过，跳过打招呼",
+                                )
+                                continue
+                        except Exception as e:
+                            self._log("DEBUG", f"打招呼前对话历史检查异常（不影响流程）: {e}")
 
                     # AI 智能匹配分析 — 热重载所有运行时可变配置
                     self._hot_reload_config()
@@ -660,6 +885,9 @@ class UnifiedBotLoop:
                         if ai_result is None and self._greet_engine._init_ai() is not None:
                             self._log("WARN", f"🤖 AI 判定不匹配，跳过: {job.get('job_name', '')}")
                             self._stats_dict["greet_skipped"] += 1
+                            # 写入 greet_records，记录具体跳过原因
+                            self._greet_engine._emit_greet_event(job, "ai_skip", skip_reason="AI判定不匹配")
+                            self._greet_engine._record_greet(job, is_skipped=True, skip_reason="AI判定不匹配")
                             continue
                         if ai_result and ai_result.get("suggested_greeting"):
                             job["_ai_suggested_greeting"] = ai_result["suggested_greeting"]
@@ -741,6 +969,9 @@ class UnifiedBotLoop:
                 # 热重载所有运行时可变配置（AI/频率/间隔/开关等）
                 self._hot_reload_config()
 
+                # 检查是否是新的一天，如果是则归档数据
+                self._check_and_archive_daily_data()
+
                 self._current_mode = "reply"
                 self._run_reply_round()
 
@@ -771,6 +1002,15 @@ class UnifiedBotLoop:
             if self._state_store.is_paused():
                 info = self._state_store.pause_info()
                 self._log("INFO", f"人工接管模式中（{info.get('reason', '')}），仅监控不回复")
+
+            # 关键修复：每次回复轮次都重新获取回复引擎专用的聊天标签页，
+            # 确保不被打招呼引擎的临时标签页抢占。
+            # get_chat_page() 返回的是 _chat_tab，与打招呼引擎的 _greet_chat_tab 严格区分。
+            chat_page = self.browser_manager.get_chat_page()
+            if self._chat_handler is not None:
+                # 同步 chat_handler 的浏览器实例为专用聊天标签页
+                self._chat_handler.browser = chat_page
+                self._chat_handler.page = chat_page.page
 
             # 导航到聊天页面（使用聊天标签页）
             self._log("DEBUG", "正在导航到聊天页面...")
@@ -820,8 +1060,52 @@ class UnifiedBotLoop:
         self._log("INFO", f"--- 正在处理与 [{name}] 的聊天 ---")
         self._log("DEBUG", f"聊天会话信息: {chat_info}")
 
+        # ── 上下文检查：在进入聊天前先检查 message_store 中的对话历史 ──
+        # 如果 HR 已经拒绝过，不再发任何消息（避免骚扰）
+        # 如果已有对话历史且最新是己方消息，跳过（避免重复发送）
+        try:
+            if self._msg_store is not None:
+                prior_dialog = self._msg_store.get_full_dialog(name)
+                if prior_dialog:
+                    # 检查 HR 是否已拒绝过
+                    for msg in prior_dialog:
+                        if not msg.get("is_mine"):
+                            content = (msg.get("text") or msg.get("content") or "").strip()
+                            if self._reply_engine and \
+                                    self._reply_engine._is_rejection(content):
+                                self._log("INFO",
+                                          f"⏭️ [{name}] HR已拒绝过，跳过本次回复避免骚扰")
+                                skip_reason = "HR已拒绝过，不再回复"
+                                self._emit_reply_event(
+                                    contact_name=name, job_name="",
+                                    message_received=content, reply_sent="",
+                                    ai_model="", intent="rejection",
+                                    status="skipped",
+                                )
+                                self._reply_engine._add_record(
+                                    chat_name=name, job_name="",
+                                    received_message=content, reply_content=None,
+                                    reply_source="skip", reply_intent="rejection",
+                                    reply_reason=skip_reason,
+                                    is_skipped=True, skip_reason=skip_reason,
+                                )
+                                try:
+                                    self._msg_store.append_skip_record(
+                                        chat_name=name, skip_reason=skip_reason,
+                                        job_name="", received_message=content,
+                                    )
+                                except Exception:
+                                    pass
+                                return
+                    self._log("DEBUG",
+                              f"[{name}] 已有 {len(prior_dialog)} 条对话历史，"
+                              f"HR未拒绝，正常处理新消息")
+        except Exception as e:
+            self._log("WARN", f"上下文检查异常（不影响后续流程）: {e}")
+
         if not self._chat_handler.enter_chat(chat_info):
             self._log("WARN", f"会话 [{name}] 切换校验失败，本次跳过")
+            skip_reason = "会话切换校验失败"
             self._emit_reply_event(
                 contact_name=name, job_name="",
                 message_received="", reply_sent="",
@@ -833,18 +1117,27 @@ class UnifiedBotLoop:
                 received_message="", reply_content=None,
                 reply_source="skip", reply_intent="",
                 reply_reason="会话切换校验失败，本次跳过",
-                is_skipped=True, skip_reason="会话切换校验失败",
+                is_skipped=True, skip_reason=skip_reason,
             )
+            # 写入完整对话消息存储
+            try:
+                self._msg_store.append_skip_record(
+                    chat_name=name, skip_reason=skip_reason,
+                    job_name="", received_message="",
+                )
+            except Exception:
+                pass
             return
 
         context_count = self.config.reply.context_message_count
-        self._log("DEBUG", f"正在读取最近 {context_count} 条消息...")
-        messages = self._chat_handler.read_latest_messages(count=context_count)
-        self._log("DEBUG", f"读取到消息数: {len(messages)}")
+        self._log("DEBUG", f"正在读取所有可见消息（完整聊天记录同步）...")
+        messages = self._chat_handler.read_all_messages()
+        self._log("DEBUG", f"读取到完整消息数: {len(messages)}")
         if not messages:
             self._log("INFO", "未读取到消息，跳过")
             boss_name = self._chat_handler.get_boss_name()
             job_name = self._chat_handler.get_job_name()
+            skip_reason = "未读取到消息"
             self._emit_reply_event(
                 contact_name=name, job_name=job_name,
                 message_received="", reply_sent="",
@@ -856,20 +1149,41 @@ class UnifiedBotLoop:
                 received_message="", reply_content=None,
                 reply_source="skip", reply_intent="",
                 reply_reason="未读取到消息，跳过",
-                is_skipped=True, skip_reason="未读取到消息",
+                is_skipped=True, skip_reason=skip_reason,
             )
+            try:
+                self._msg_store.append_skip_record(
+                    chat_name=name, skip_reason=skip_reason,
+                    job_name=job_name, received_message="",
+                )
+            except Exception:
+                pass
             return
 
+        # 将完整消息列表合并到 message_store（去重保存完整对话历史）
+        try:
+            job_name_for_merge = self._chat_handler.get_job_name()
+            merged_total = self._msg_store.merge_messages(
+                chat_name=name, new_messages=messages,
+                job_name=job_name_for_merge,
+            )
+            self._log("DEBUG", f"合并后完整对话消息总数: {merged_total}")
+        except Exception as e:
+            self._log("WARN", f"合并完整消息失败（不影响后续流程）: {e}")
+
         latest_other_msg = None
+        latest_other_msg_time = ""
         for msg in reversed(messages):
             if not msg.get("is_mine"):
                 latest_other_msg = msg.get("text", "")
+                latest_other_msg_time = msg.get("time", "")
                 break
 
         if not latest_other_msg:
             self._log("INFO", "最新消息是自己发的，无需回复")
             boss_name = self._chat_handler.get_boss_name()
             job_name = self._chat_handler.get_job_name()
+            skip_reason = "最新消息是自己发的，无需回复"
             self._emit_reply_event(
                 contact_name=name, job_name=job_name,
                 message_received="", reply_sent="",
@@ -880,18 +1194,29 @@ class UnifiedBotLoop:
                 chat_name=name, job_name=job_name,
                 received_message="", reply_content=None,
                 reply_source="skip", reply_intent="",
-                reply_reason="最新消息是自己发的，无需回复",
-                is_skipped=True, skip_reason="最新消息是自己发的，无需回复",
+                reply_reason=skip_reason,
+                is_skipped=True, skip_reason=skip_reason,
             )
+            try:
+                self._msg_store.append_skip_record(
+                    chat_name=name, skip_reason=skip_reason,
+                    job_name=job_name, received_message="",
+                )
+            except Exception:
+                pass
             return
 
         self._log("INFO", f"对方最新消息: {latest_other_msg[:80]}")
+
+        # 完整消息已通过 merge_messages 合并保存到 message_store，
+        # 不再单独调用 append_hr_message 保存最新一条 HR 消息（避免重复）
 
         if self._state_store.was_handled(name, latest_other_msg):
             self._log("INFO", "该消息已处理过，跳过（防重复回复）")
             self._stats.record_skip()
             boss_name = self._chat_handler.get_boss_name()
             job_name = self._chat_handler.get_job_name()
+            skip_reason = "该消息已处理过，防重复回复"
             self._emit_reply_event(
                 contact_name=name, job_name=job_name,
                 message_received=latest_other_msg, reply_sent="",
@@ -902,17 +1227,40 @@ class UnifiedBotLoop:
                 chat_name=name, job_name=job_name,
                 received_message=latest_other_msg, reply_content=None,
                 reply_source="skip", reply_intent="",
-                reply_reason="该消息已处理过，防重复回复",
-                is_skipped=True, skip_reason="该消息已处理过，防重复回复",
+                reply_reason=skip_reason,
+                is_skipped=True, skip_reason=skip_reason,
             )
+            try:
+                self._msg_store.append_skip_record(
+                    chat_name=name, skip_reason=skip_reason,
+                    job_name=job_name, received_message=latest_other_msg,
+                )
+            except Exception:
+                pass
             return
 
         boss_name = self._chat_handler.get_boss_name()
         job_name = self._chat_handler.get_job_name()
         self._log("DEBUG", f"聊天对象: boss_name={boss_name}, job_name={job_name}")
 
+        # 从 message_store 获取完整对话历史（所有HR消息+所有我的回复+时间顺序），
+        # 而不只传页面读取的最新消息，让AI能看到完整上下文
+        try:
+            full_dialog = self._msg_store.get_full_dialog(name)
+            if full_dialog:
+                # 优先使用 message_store 中的完整对话历史
+                messages_for_reply = full_dialog
+                self._log("DEBUG", f"使用完整对话历史: {len(full_dialog)} 条消息")
+            else:
+                # 回退：使用页面读取的消息
+                messages_for_reply = messages
+                self._log("DEBUG", f"回退使用页面消息: {len(messages)} 条")
+        except Exception as e:
+            self._log("WARN", f"获取完整对话历史失败，回退使用页面消息: {e}")
+            messages_for_reply = messages
+
         action, content, meta = self._reply_engine.get_reply(
-            messages, boss_name, job_name, chat_name=name
+            messages_for_reply, boss_name, job_name, chat_name=name
         )
         self._log("DEBUG", f"回复引擎决策: action={action}, meta={meta}")
 
@@ -951,13 +1299,10 @@ class UnifiedBotLoop:
                 self._state_store.mark_resume_sent(name)
                 self._stats.record_reply(source=meta.get("source", "rule"), action="resume")
                 self._stats_dict["resume_sent"] += 1
-                self._msg_store.append_message(name, {
-                    "text": "[简历已发送]",
-                    "is_mine": True,
-                    "source": "bot",
-                    "action": "resume",
-                    "time": datetime.now().strftime("%H:%M"),
-                }, job_name)
+                self._msg_store.append_bot_message(
+                    name, "[简历已发送]", job_name,
+                    reply_source=meta.get("source", ""), action="resume",
+                )
                 self._log("INFO", "已发送简历")
                 self._emit_reply_event(
                     contact_name=name, job_name=job_name,
@@ -971,13 +1316,10 @@ class UnifiedBotLoop:
                 self._log("WARN", "简历发送失败，降级为文字告知")
                 self._reply_engine.wait_human_delay()
                 self._chat_handler.send_text(RESUME_UNAVAILABLE_REPLY)
-                self._msg_store.append_message(name, {
-                    "text": RESUME_UNAVAILABLE_REPLY,
-                    "is_mine": True,
-                    "source": "bot",
-                    "action": "text_fallback",
-                    "time": datetime.now().strftime("%H:%M"),
-                }, job_name)
+                self._msg_store.append_bot_message(
+                    name, RESUME_UNAVAILABLE_REPLY, job_name,
+                    reply_source=meta.get("source", ""), action="text_fallback",
+                )
                 self._notifier.send_notification(
                     title="简历发送失败",
                     content=f"[{name}]（{job_name or '未知岗位'}）请求简历但发送失败，已回复降级话术。",
@@ -997,14 +1339,10 @@ class UnifiedBotLoop:
             if self._chat_handler.send_text(content):
                 self._stats.record_reply(source=meta.get("source", "rule"), action="text")
                 self._stats_dict["reply_sent"] += 1
-                self._msg_store.append_message(name, {
-                    "text": content,
-                    "is_mine": True,
-                    "source": "bot",
-                    "action": "text",
-                    "reply_source": meta.get("source", ""),
-                    "time": datetime.now().strftime("%H:%M"),
-                }, job_name)
+                self._msg_store.append_bot_message(
+                    name, content, job_name,
+                    reply_source=meta.get("source", ""), action="text",
+                )
                 self._log("INFO", f"已回复: {content[:30]}...")
                 self._emit_reply_event(
                     contact_name=name, job_name=job_name,
@@ -1016,6 +1354,7 @@ class UnifiedBotLoop:
             else:
                 self._stats.record_reply(source=meta.get("source", "rule"), action="skip")
                 self._log("WARN", "发送文字失败")
+                skip_reason = "发送文字失败"
                 self._emit_reply_event(
                     contact_name=name, job_name=job_name,
                     message_received=latest_other_msg, reply_sent=content or "",
@@ -1023,6 +1362,14 @@ class UnifiedBotLoop:
                     intent=meta.get("intent", ""),
                     status="error",
                 )
+                # 写入跳过原因到完整对话消息存储
+                try:
+                    self._msg_store.append_skip_record(
+                        chat_name=name, skip_reason=skip_reason,
+                        job_name=job_name, received_message=latest_other_msg,
+                    )
+                except Exception:
+                    pass
 
         else:
             self._log("INFO", "无合适回复，跳过")
@@ -1035,6 +1382,32 @@ class UnifiedBotLoop:
                 intent=meta.get("intent", ""),
                 status="skipped",
             )
+            # 记录跳过原因，便于后续分析
+            skip_reason = "无合适回复，跳过"
+            if action == "none":
+                if meta.get("source") == "default":
+                    skip_reason = "规则/意图/AI均未命中，跳过回复"
+                elif meta.get("source") == "":
+                    skip_reason = "未匹配任何回复来源，跳过回复"
+                else:
+                    skip_reason = f"action=none source={meta.get('source', '')}，跳过回复"
+            elif not content:
+                skip_reason = "回复内容为空，跳过"
+            self._reply_engine._add_record(
+                chat_name=name, job_name=job_name,
+                received_message=latest_other_msg, reply_content=None,
+                reply_source="skip", reply_intent=meta.get("intent", ""),
+                reply_reason=skip_reason,
+                is_skipped=True, skip_reason=skip_reason,
+            )
+            # 写入跳过原因到完整对话消息存储
+            try:
+                self._msg_store.append_skip_record(
+                    chat_name=name, skip_reason=skip_reason,
+                    job_name=job_name, received_message=latest_other_msg,
+                )
+            except Exception:
+                pass
 
         self._state_store.mark_handled(name, latest_other_msg, action or "none")
         self._reply_engine.record_reply()

@@ -331,7 +331,62 @@ a{color:var(--accent);text-decoration:none}
 .record-tab-content{display:none;flex:1;overflow-y:auto}
 .record-tab-content.active{display:block}
 
-/* ── 回复记录聊天折叠列表（类似QQ/微信） ── */
+/* ── 回复记录聊天界面（一比一模仿BOSS直聘） ── */
+.boss-chat-wrap{display:flex;width:100%;height:100%;min-height:480px;overflow:hidden;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--bd)}
+.boss-chat-sidebar{flex:0 0 280px;display:flex;flex-direction:column;border-right:1px solid var(--bd);background:var(--surface-soft);overflow:hidden}
+.boss-chat-sidebar-header{padding:12px 16px;border-bottom:1px solid var(--bd);font-size:13px;font-weight:600;color:var(--fg);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.boss-chat-sidebar-header .chat-count-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--accent-light);color:var(--accent);font-weight:600}
+.boss-chat-list{flex:1;overflow-y:auto;min-height:0}
+.boss-chat-item{display:flex;align-items:center;padding:12px 14px;cursor:pointer;transition:background var(--dur) var(--ease);border-bottom:1px solid var(--bd);gap:10px}
+.boss-chat-item:hover{background:var(--surface-hover)}
+.boss-chat-item.active{background:var(--accent-light);border-left:3px solid var(--accent);padding-left:11px}
+.boss-chat-item-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6bfa);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex-shrink:0;box-shadow:0 2px 8px rgba(91,124,250,.2)}
+.boss-chat-item-info{flex:1;min-width:0;overflow:hidden;display:flex;flex-direction:column;gap:2px}
+.boss-chat-item-name{font-size:13px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.boss-chat-item-preview{font-size:11.5px;color:var(--fg-3rd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.boss-chat-item-meta{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.boss-chat-item-time{font-size:10px;color:var(--fg-4th);white-space:nowrap}
+.boss-chat-item-badge{display:inline-block;background:var(--danger);color:#fff;border-radius:10px;padding:0 6px;font-size:10px;min-width:16px;height:16px;text-align:center;font-weight:600;line-height:16px}
+.boss-chat-item-badge.badge-zero{display:none}
+.boss-chat-main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;background:var(--surface)}
+.boss-chat-header{padding:12px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px;flex-shrink:0;background:var(--surface-soft)}
+.boss-chat-header-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6bfa);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+.boss-chat-header-info{flex:1;min-width:0}
+.boss-chat-header-name{font-size:14px;font-weight:600;color:var(--fg)}
+.boss-chat-header-job{font-size:11.5px;color:var(--fg-3rd);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.boss-chat-header-actions{display:flex;gap:6px;align-items:center}
+.boss-chat-header-actions .chat-header-btn{font-size:11px;padding:4px 10px;border-radius:6px;background:var(--surface);border:1px solid var(--bd);color:var(--fg-2nd);cursor:pointer;transition:all var(--dur) var(--ease)}
+.boss-chat-header-actions .chat-header-btn:hover{background:var(--surface-hover);color:var(--fg)}
+.boss-chat-messages{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:14px;min-height:0}
+.boss-chat-messages-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--fg-4th);font-size:13px}
+.boss-msg-row{display:flex;gap:8px;align-items:flex-start;animation:msgFadeIn .25s ease}
+.boss-msg-row.hr{justify-content:flex-start}
+.boss-msg-row.me{justify-content:flex-end}
+.boss-msg-row.system{justify-content:center}
+.boss-msg-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6bfa);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.boss-msg-avatar.me{background:linear-gradient(135deg,#10b981,#34d399)}
+.boss-msg-avatar.system{background:var(--fg-4th);font-size:10px}
+.boss-msg-bubble{max-width:70%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5;word-break:break-word;white-space:pre-wrap;position:relative;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.boss-msg-row.hr .boss-msg-bubble{background:#fff;color:#333;border-top-left-radius:4px;border:1px solid var(--bd-2)}
+[data-theme="dark"] .boss-msg-row.hr .boss-msg-bubble{background:rgba(255,255,255,.08);color:var(--fg)}
+.boss-msg-row.me .boss-msg-bubble{background:linear-gradient(135deg,#5b7cfa,#4365e8);color:#fff;border-top-right-radius:4px}
+.boss-msg-row.system .boss-msg-bubble{background:var(--warning-bg);color:var(--warning);font-size:11.5px;padding:6px 12px;border-radius:8px;max-width:90%;text-align:center}
+.boss-msg-meta{display:flex;gap:6px;align-items:center;margin-top:4px;font-size:10px;color:var(--fg-4th)}
+.boss-msg-row.me .boss-msg-meta{justify-content:flex-end}
+.boss-msg-time{font-size:10px;color:var(--fg-4th)}
+.boss-msg-source{font-size:10px;padding:1px 6px;border-radius:4px;background:var(--surface-soft);color:var(--fg-3rd)}
+.boss-msg-source.ai{background:var(--accent-light);color:var(--accent)}
+.boss-msg-source.rule{background:var(--success-bg);color:var(--success)}
+.boss-msg-source.skip{background:var(--warning-bg);color:var(--warning)}
+.boss-msg-source.intent{background:var(--info-bg);color:var(--info)}
+.boss-chat-empty{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--fg-4th)}
+.boss-chat-empty-icon{font-size:48px;opacity:.3}
+.boss-chat-empty-text{font-size:13px;font-weight:500}
+.boss-chat-empty-hint{font-size:11px;color:var(--fg-4th)}
+@keyframes msgFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.boss-chat-loading{padding:20px;text-align:center;color:var(--fg-3rd);font-size:12px}
+
+/* 兼容旧聊天折叠列表样式（保留以兼容旧代码） */
 .chat-list-container{overflow-y:auto;max-height:calc(100vh - 200px);min-height:100%}
 .chat-card{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--bd);cursor:pointer;transition:background var(--dur) var(--ease);flex-wrap:wrap}
 .chat-card:hover{background:var(--surface-hover)}
@@ -353,6 +408,14 @@ a{color:var(--accent);text-decoration:none}
 .chat-message-row .msg-reply{color:var(--accent);flex:1;min-width:0;word-break:break-word;white-space:pre-wrap}
 .chat-message-row .msg-source{font-size:10.5px;color:var(--fg-3rd);flex-shrink:0;width:50px;text-align:right;white-space:nowrap}
 .chat-message-row .msg-status-skip{color:var(--warning);font-size:10.5px;flex-shrink:0;width:40px;text-align:right;white-space:nowrap}
+
+/* ── Cookie 状态指示器 ── */
+.cookie-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;margin-left:4px;cursor:pointer;transition:all var(--dur) var(--ease)}
+.cookie-status-dot.valid{background:var(--success);box-shadow:0 0 6px rgba(16,185,129,.5)}
+.cookie-status-dot.invalid{background:var(--danger);box-shadow:0 0 6px rgba(239,68,68,.5);animation:pulse 1.5s ease-in-out infinite}
+.cookie-status-dot.unknown{background:var(--fg-4th)}
+.cookie-status-dot.checking{background:var(--warning);animation:pulse 1s ease-in-out infinite}
+.account-tab .cookie-status-dot{margin-left:6px}
 
 /* Modal */
 .modal-overlay{position:fixed;inset:0;background:var(--modal-overlay);z-index:1000;display:flex;align-items:center;justify-content:center;animation:fadeIn .15s ease}
@@ -653,7 +716,7 @@ a{color:var(--accent);text-decoration:none}
     </div>
     <div class="content">
       <div class="stats-grid">
-        <div class="stat-card accent"><div class="stat-label">总任务</div><div class="stat-value" id="statTotal">0</div><div class="stat-sub">全部任务</div></div>
+        <div class="stat-card accent"><div class="stat-label">总任务</div><div class="stat-value" id="statTotal">0</div><div class="stat-sub" id="statTotalSub">每日上限 150</div></div>
         <div class="stat-card success"><div class="stat-label">已投递</div><div class="stat-value" id="statApplied">0</div><div class="stat-sub">成功投递</div></div>
         <div class="stat-card warning"><div class="stat-label">已跳过</div><div class="stat-value" id="statSkipped">0</div><div class="stat-sub">已过滤</div></div>
         <div class="stat-card success"><div class="stat-label">已回复</div><div class="stat-value" id="statReplySent">0</div><div class="stat-sub">AI回复</div></div>
@@ -672,6 +735,7 @@ a{color:var(--accent);text-decoration:none}
         <button class="btn btn-success btn-sm" id="btnResumeReply" onclick="resumeReply()" style="display:none">恢复回复</button>
         <button class="btn btn-ghost btn-sm" onclick="downloadReplyRecords()">下载回复记录</button>
         <button class="btn btn-ghost btn-sm" onclick="downloadGreetRecords()">下载打招呼记录</button>
+        <button class="btn btn-ghost btn-sm" onclick="showArchiveModal()">历史数据</button>
       </div>
       <div class="panel-row">
         <div class="panel panel-full">
@@ -682,7 +746,7 @@ a{color:var(--accent);text-decoration:none}
           </div>
           <div class="record-tab-content active" id="greetTabContent" style="padding:0;flex:1;overflow-y:auto">
             <table class="greet-table" id="greetTable">
-              <thead><tr><th>时间</th><th>岗位</th><th>公司</th><th>薪资</th><th>状态</th><th>AI</th></tr></thead>
+              <thead><tr><th>时间</th><th>岗位</th><th>公司</th><th>薪资</th><th>状态</th><th>跳过原因</th><th>AI</th></tr></thead>
               <tbody id="greetTableBody"></tbody>
             </table>
             <div class="empty-state" id="greetEmpty" style="height:100%;min-height:200px">
@@ -694,8 +758,23 @@ a{color:var(--accent);text-decoration:none}
             </div>
           </div>
           <div class="record-tab-content" id="replyTabContent" style="padding:0;flex:1;overflow-y:auto">
-            <div id="replyChatList" class="chat-list-container"></div>
-            <div class="empty-state" id="replyEmpty" style="height:100%;min-height:200px">
+            <div id="bossChatWrap" class="boss-chat-wrap">
+              <div class="boss-chat-sidebar">
+                <div class="boss-chat-sidebar-header">
+                  <span>聊天列表</span>
+                  <span class="chat-count-badge" id="bossChatCount">0</span>
+                </div>
+                <div class="boss-chat-list" id="bossChatList"></div>
+              </div>
+              <div class="boss-chat-main" id="bossChatMain">
+                <div class="boss-chat-empty">
+                  <div class="boss-chat-empty-icon">💬</div>
+                  <div class="boss-chat-empty-text">暂无回复记录</div>
+                  <div class="boss-chat-empty-hint">启动机器人后，收到消息将自动回复并记录在此</div>
+                </div>
+              </div>
+            </div>
+            <div class="empty-state" id="replyEmpty" style="height:100%;min-height:200px;display:none">
               <div class="empty-icon" style="font-size:36px;opacity:0.3">💬</div>
               <div class="empty-desc" style="font-size:13px;font-weight:600;margin-top:8px">暂无回复记录</div>
               <div class="empty-hint" style="font-size:11px;color:var(--fg-3rd);margin-top:4px">
@@ -1449,7 +1528,7 @@ function loadConfig() {
     if (!config.retry) config.retry = {};
     config.browser = Object.assign({headless:false,viewport_width:1280,viewport_height:800,page_load_timeout:30,custom_user_agent:'',proxy:'',browser_type:'chrome'}, config.browser);
     config.login = Object.assign({wait_timeout:300,clear_cookies_on_failure:true}, config.login);
-    config.rate_limit = Object.assign({enabled:true,max_per_hour:30,max_per_day:100}, config.rate_limit);
+    config.rate_limit = Object.assign({enabled:true,max_per_hour:30,max_per_day:150}, config.rate_limit);
     config.retry = Object.assign({max_attempts:3,base_delay:2,backoff_factor:2}, config.retry);
     if (!config.ai) config.ai = {};
     config.ai = Object.assign({enabled:true,api_key:'',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,providers:[]}, config.ai);
@@ -1681,6 +1760,8 @@ function renderConfigPreview() {
 }
 
 // ── 账号渲染 ──
+// Cookie 状态缓存：account_index -> {valid, reason, checking}
+let cookieStatusCache = {};
 function renderAccounts() {
   const c = document.getElementById('accountTabs');
   const badge = document.getElementById('accBadge');
@@ -1690,11 +1771,83 @@ function renderAccounts() {
       if (accountStatuses[i].running) statusClass = 'running';
       else if (accountStatuses[i].needs_login) statusClass = 'needs_login';
     }
+    // Cookie 状态红点
+    var cookieCls = 'cookie-status-dot unknown';
+    var cookieTitle = 'Cookie 状态未知，点击检测';
+    if (cookieStatusCache[i]) {
+      if (cookieStatusCache[i].checking) {
+        cookieCls = 'cookie-status-dot checking';
+        cookieTitle = '正在检测 Cookie...';
+      } else if (cookieStatusCache[i].valid === true) {
+        cookieCls = 'cookie-status-dot valid';
+        cookieTitle = 'Cookie 有效';
+      } else if (cookieStatusCache[i].valid === false) {
+        cookieCls = 'cookie-status-dot invalid';
+        cookieTitle = 'Cookie 失效: ' + (cookieStatusCache[i].reason || '需要重新登录');
+      }
+    }
     return '<div class="account-tab'+(i===activeAccountIdx?' active':'')+'" onclick="switchAccount('+i+')">'+
       '<span class="acc-status-dot '+statusClass+'"></span>'+
-      escHtml(a.name||'未命名')+'<span class="badge">'+(a.jobs||[]).length+'</span></div>';
+      escHtml(a.name||'未命名')+'<span class="badge">'+(a.jobs||[]).length+'</span>'+
+      '<span class="'+cookieCls+'" title="'+escAttr(cookieTitle)+'" onclick="event.stopPropagation();checkAccountCookie('+i+')"></span></div>';
   }).join('');
   if (badge) badge.textContent = config.accounts.length;
+}
+
+// 检测指定账号的 Cookie 有效性
+function checkAccountCookie(idx) {
+  if (cookieStatusCache[idx] && cookieStatusCache[idx].checking) return;
+  cookieStatusCache[idx] = {checking: true, valid: null, reason: ''};
+  renderAccounts();
+  addLog('INFO', '正在检测账号 ' + idx + ' 的 Cookie 有效性...');
+  fetch('/api/accounts/'+idx+'/check_cookie', {method: 'POST'})
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data && data.status === 'ok') {
+        cookieStatusCache[idx] = {
+          checking: false,
+          valid: data.valid,
+          reason: data.reason || '',
+          logged_in: data.logged_in,
+          current_url: data.current_url || '',
+          checks: data.checks || {}
+        };
+        if (data.valid) {
+          addLog('SUCCESS', '账号 ' + idx + ' Cookie 有效，已登录');
+        } else {
+          addLog('WARN', '账号 ' + idx + ' Cookie 失效: ' + (data.reason || '需要重新登录'));
+        }
+      } else {
+        cookieStatusCache[idx] = {checking: false, valid: false, reason: (data && data.message) || '检测失败'};
+        addLog('ERROR', '检测 Cookie 失败: ' + (data && data.message || '未知错误'));
+      }
+      renderAccounts();
+    })
+    .catch(function(e) {
+      cookieStatusCache[idx] = {checking: false, valid: false, reason: e.message};
+      addLog('ERROR', '检测 Cookie 异常: ' + e.message);
+      renderAccounts();
+    });
+}
+
+// 批量检测所有账号的 Cookie 状态（简单检测，不启动浏览器）
+function checkAllAccountCookies() {
+  config.accounts.forEach(function(a, i) {
+    fetch('/api/accounts/'+i+'/check_cookie_simple', {method: 'POST'})
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data && data.status === 'ok') {
+          cookieStatusCache[i] = {
+            checking: false,
+            valid: data.valid,
+            reason: data.reason || '',
+            logged_in: data.logged_in || false
+          };
+          renderAccounts();
+        }
+      })
+      .catch(function(){});
+  });
 }
 
 function setEl(id, cls) { var e = document.getElementById(id); if (e) e.className = cls; }
@@ -1717,7 +1870,7 @@ function renderAdvSettings() {
   const rl = config.rate_limit || {};
   setEl('advRateLimit', 'toggle-switch' + (rl.enabled !== false ? ' on' : ''));
   setVal('advRatePerHour', rl.max_per_hour != null ? rl.max_per_hour : 30);
-  setVal('advRatePerDay', rl.max_per_day != null ? rl.max_per_day : 100);
+  setVal('advRatePerDay', rl.max_per_day != null ? rl.max_per_day : 150);
 
   const lg = config.login || {};
   setVal('advLoginWait', lg.wait_timeout != null ? lg.wait_timeout : 300);
@@ -1791,7 +1944,7 @@ function onAdvChange() {
   if (!config.rate_limit) config.rate_limit = {};
   config.rate_limit.enabled = document.getElementById('advRateLimit').classList.contains('on');
   config.rate_limit.max_per_hour = parseInt(document.getElementById('advRatePerHour').value) || 30;
-  config.rate_limit.max_per_day = parseInt(document.getElementById('advRatePerDay').value) || 100;
+  config.rate_limit.max_per_day = parseInt(document.getElementById('advRatePerDay').value) || 150;
 
   if (!config.login) config.login = {};
   config.login.wait_timeout = parseInt(document.getElementById('advLoginWait').value) || 300;
@@ -2261,6 +2414,17 @@ function updateStats() {
   if(s) s.textContent=stats.skipped;
   if(rs) rs.textContent=stats.reply_sent||0;
   if(rsk) rsk.textContent=stats.reply_skipped||0;
+  // 动态更新每日上限显示（从配置读取 max_per_day）
+  var sub = document.getElementById('statTotalSub');
+  if (sub) {
+    var dailyLimit = 150;
+    try {
+      if (config && config.rate_limit && config.rate_limit.max_per_day) {
+        dailyLimit = config.rate_limit.max_per_day;
+      }
+    } catch(e) {}
+    sub.textContent = '每日上限 ' + dailyLimit;
+  }
 }
 
 function escHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
@@ -2333,11 +2497,20 @@ function buildGreetRowHtml(data, isPending) {
   if (isPending) {
     statusHtml += ' <span class="greet-pending-bar"></span>';
   }
+  // 跳过原因列：仅在 skipped/failed 状态显示 skip_reason，其他状态显示 —
+  var skipReasonHtml = '<span style="color:var(--fg-4th)">—</span>';
+  if (!isPending && data.skip_reason) {
+    var statusKey = data.status || '';
+    if (statusKey === 'skip' || statusKey === 'ai_skip' || statusKey === 'already' || statusKey === 'error' || data.is_skipped) {
+      skipReasonHtml = '<span style="color:var(--fg-3rd);font-size:11px" title="'+escAttr(data.skip_reason)+'">'+escHtml(data.skip_reason)+'</span>';
+    }
+  }
   return '<td>'+escHtml(time)+'</td>'
     +'<td title="'+escAttr(data.job_name||'')+'">'+escHtml(data.job_name||'—')+'</td>'
     +'<td title="'+escAttr(data.company||'')+'">'+escHtml(data.company||'—')+'</td>'
     +'<td>'+escHtml(data.salary||'—')+'</td>'
     +'<td>'+statusHtml+'</td>'
+    +'<td>'+skipReasonHtml+'</td>'
     +'<td>'+aiBadge+'</td>';
 }
 
@@ -2381,9 +2554,10 @@ function addGreetRecord(data){
   while(body.children.length>200) body.removeChild(body.firstChild);
 }
 
-// ── 回复记录聊天折叠列表 ──
+// ── 回复记录聊天界面（一比一模仿BOSS直聘） ──
 // 内存缓存：chat_name -> 分组数据，用于实时更新
 let replyChatCache = {};
+let activeBossChat = null;  // 当前选中的聊天对象
 
 function formatChatTime(ts) {
   // 从 ISO 时间戳中提取 HH:MM:SS
@@ -2411,6 +2585,23 @@ function formatChatDate(ts) {
   return s.slice(0, 16);
 }
 
+function formatChatTimeShort(ts) {
+  // 简短时间格式：今天显示 HH:MM，昨天显示"昨天"，更早显示 MM-DD
+  if (!ts) return '';
+  var s = String(ts);
+  var parts = s.split('T');
+  if (parts.length < 2) return s.slice(0, 16);
+  var datePart = parts[0];
+  var timePart = parts[1].slice(0, 5);
+  var today = new Date();
+  var todayStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+  var yest = new Date(today.getTime() - 86400000);
+  var yestStr = yest.getFullYear() + '-' + String(yest.getMonth()+1).padStart(2,'0') + '-' + String(yest.getDate()).padStart(2,'0');
+  if (datePart === todayStr) return timePart;
+  if (datePart === yestStr) return '昨天';
+  return datePart.length >= 10 ? datePart.slice(5) : datePart;
+}
+
 function getReplySourceLabel(replySource) {
   if (replySource === 'ai') return 'AI';
   if (replySource === 'rule') return '规则';
@@ -2421,54 +2612,212 @@ function getReplySourceLabel(replySource) {
   return '—';
 }
 
-function buildChatCardHtml(g) {
-  var chatName = g.chat_name || '(未知)';
-  var avatarText = chatName ? chatName.charAt(0) : '?';
-  var preview = g.last_reply || g.last_message || '';
-  if (preview.length > 40) preview = preview.substring(0, 40) + '...';
-  var count = g.message_count || 0;
-  var badgeCls = count === 0 ? 'chat-badge chat-badge-zero' : 'chat-badge';
+function getReplySourceClass(replySource) {
+  if (replySource === 'ai') return 'ai';
+  if (replySource === 'rule') return 'rule';
+  if (replySource === 'intent') return 'intent';
+  if (replySource === 'skip') return 'skip';
+  return '';
+}
+
+// 渲染左侧聊天列表
+function renderBossChatList(groups) {
+  var list = document.getElementById('bossChatList');
+  var countBadge = document.getElementById('bossChatCount');
+  if (!list) return;
+  if (!groups || groups.length === 0) {
+    list.innerHTML = '<div class="boss-chat-loading">暂无聊天记录</div>';
+    if (countBadge) countBadge.textContent = '0';
+    return;
+  }
+  if (countBadge) countBadge.textContent = groups.length;
   var html = '';
-  html += '<div class="chat-card" data-chat-name="'+escAttr(chatName)+'" onclick="toggleChatCard(this)">';
-  html += '  <div class="chat-avatar">'+escHtml(avatarText)+'</div>';
-  html += '  <div class="chat-info">';
-  html += '    <div class="chat-name">'+escHtml(chatName)+'</div>';
-  html += '    <div class="chat-preview">'+escHtml(preview)+'</div>';
-  html += '  </div>';
-  html += '  <div class="chat-meta">';
-  html += '    <div class="chat-time">'+escHtml(formatChatDate(g.last_time))+'</div>';
-  html += '    <div class="'+badgeCls+'">'+count+'</div>';
-  html += '  </div>';
-  html += '  <div class="chat-detail">';
-  // 按时间倒序显示所有消息（最新的在最上面）
-  var records = (g.records || []).slice().reverse();
-  records.forEach(function(r) {
-    var t = formatChatTime(r.timestamp || r.time || '');
-    var received = r.received_message || r.incoming_message || r.message || '';
-    var reply = r.reply_content || r.reply_message || r.reply || '';
-    var source = getReplySourceLabel(r.reply_source || '');
-    var isSkipped = r.is_skipped || r.status === 'skipped' || r.status === 'skip';
-    var statusHtml = isSkipped ? '<span class="msg-status-skip">跳过</span>' : '';
-    html += '<div class="chat-message-row">';
-    html += '  <span class="msg-time">'+escHtml(t)+'</span>';
-    html += '  <span class="msg-received">收到: '+escHtml(received)+'</span>';
-    html += '  <span class="msg-reply">回复: '+escHtml(reply)+'</span>';
-    html += '  <span class="msg-source">'+escHtml(source)+'</span>';
-    html += statusHtml;
+  groups.forEach(function(g) {
+    var chatName = g.chat_name || '(未知)';
+    var avatarText = chatName ? chatName.charAt(0) : '?';
+    var preview = g.last_message || g.last_reply || '';
+    if (preview.length > 30) preview = preview.substring(0, 30) + '...';
+    var unread = g.unread_count || 0;
+    var lastTime = g.last_time || g.updated_at || '';
+    var isActive = (activeBossChat === chatName) ? ' active' : '';
+    var badgeCls = unread > 0 ? 'boss-chat-item-badge' : 'boss-chat-item-badge badge-zero';
+    html += '<div class="boss-chat-item'+isActive+'" data-chat-name="'+escAttr(chatName)+'" onclick="selectBossChat(\''+escAttr(chatName)+'\')">';
+    html += '  <div class="boss-chat-item-avatar">'+escHtml(avatarText)+'</div>';
+    html += '  <div class="boss-chat-item-info">';
+    html += '    <div class="boss-chat-item-name">'+escHtml(chatName)+'</div>';
+    html += '    <div class="boss-chat-item-preview">'+escHtml(preview)+'</div>';
+    html += '  </div>';
+    html += '  <div class="boss-chat-item-meta">';
+    html += '    <div class="boss-chat-item-time">'+escHtml(formatChatTimeShort(lastTime))+'</div>';
+    html += '    <div class="'+badgeCls+'">'+unread+'</div>';
+    html += '  </div>';
     html += '</div>';
   });
+  list.innerHTML = html;
+}
+
+// 选中某个聊天，渲染右侧聊天内容
+function selectBossChat(chatName) {
+  activeBossChat = chatName;
+  // 更新左侧选中状态
+  var items = document.querySelectorAll('.boss-chat-item');
+  items.forEach(function(item) {
+    if (item.getAttribute('data-chat-name') === chatName) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+  // 渲染右侧聊天内容
+  renderBossChatDetail(chatName);
+  // 标记已读
+  fetch('/api/chats/'+encodeURIComponent(chatName)+'/mark_read', {method:'POST'}).then(function(){
+    // 更新未读数
+    var g = replyChatCache[chatName];
+    if (g) {
+      g.unread_count = 0;
+      renderBossChatList(Object.keys(replyChatCache).map(function(k){return replyChatCache[k];}).sort(function(a,b){return (b.last_time||'') > (a.last_time||'') ? 1 : -1;}));
+    }
+  }).catch(function(){});
+}
+
+// 渲染右侧聊天内容（消息气泡）
+function renderBossChatDetail(chatName) {
+  var main = document.getElementById('bossChatMain');
+  if (!main) return;
+  var g = replyChatCache[chatName];
+  if (!g) {
+    main.innerHTML = '<div class="boss-chat-empty"><div class="boss-chat-empty-icon">💬</div><div class="boss-chat-empty-text">未找到聊天记录</div></div>';
+    return;
+  }
+  var chatNameDisplay = g.chat_name || chatName;
+  var jobName = g.job_name || '';
+  var avatarText = chatNameDisplay ? chatNameDisplay.charAt(0) : '?';
+  // 优先使用完整消息列表（messages），否则从 records 构造
+  var messages = g.messages || [];
+  var records = g.records || [];
+  var html = '';
+  // 头部
+  html += '<div class="boss-chat-header">';
+  html += '  <div class="boss-chat-header-avatar">'+escHtml(avatarText)+'</div>';
+  html += '  <div class="boss-chat-header-info">';
+  html += '    <div class="boss-chat-header-name">'+escHtml(chatNameDisplay)+'</div>';
+  html += '    <div class="boss-chat-header-job">'+escHtml(jobName || '未知岗位')+'</div>';
+  html += '  </div>';
+  html += '  <div class="boss-chat-header-actions">';
+  html += '    <button class="chat-header-btn" onclick="refreshBossChatDetail(\''+escAttr(chatName)+'\')">刷新</button>';
   html += '  </div>';
   html += '</div>';
+  // 消息列表
+  html += '<div class="boss-chat-messages" id="bossChatMessages">';
+  if (messages.length > 0) {
+    // 使用完整消息列表（来自 message_store）
+    messages.forEach(function(msg) {
+      html += renderBossMessageBubble(msg, chatNameDisplay);
+    });
+  } else if (records.length > 0) {
+    // 兼容模式：从 reply_records 构造（旧数据）
+    records.forEach(function(r) {
+      var t = formatChatTime(r.timestamp || r.time || '');
+      var received = r.received_message || '';
+      var reply = r.reply_content || '';
+      var source = r.reply_source || '';
+      var isSkipped = r.is_skipped || r.status === 'skipped';
+      // HR 消息
+      if (received) {
+        html += '<div class="boss-msg-row hr">';
+        html += '  <div class="boss-msg-avatar">'+escHtml(avatarText)+'</div>';
+        html += '  <div><div class="boss-msg-bubble">'+escHtml(received)+'</div>';
+        html += '  <div class="boss-msg-meta"><span class="boss-msg-time">'+escHtml(t)+'</span></div></div>';
+        html += '</div>';
+      }
+      // 我的回复
+      if (reply) {
+        html += '<div class="boss-msg-row me">';
+        html += '  <div><div class="boss-msg-bubble">'+escHtml(reply)+'</div>';
+        html += '  <div class="boss-msg-meta"><span class="boss-msg-time">'+escHtml(t)+'</span><span class="boss-msg-source '+getReplySourceClass(source)+'">'+escHtml(getReplySourceLabel(source))+'</span></div></div>';
+        html += '</div>';
+      }
+      // 跳过
+      if (isSkipped && !reply) {
+        var skipReason = r.skip_reason || '跳过';
+        html += '<div class="boss-msg-row system"><div class="boss-msg-bubble">[跳过] '+escHtml(skipReason)+'</div></div>';
+      }
+    });
+  } else {
+    html += '<div class="boss-chat-messages-empty">暂无消息</div>';
+  }
+  html += '</div>';
+  main.innerHTML = html;
+  // 滚动到底部
+  var msgs = document.getElementById('bossChatMessages');
+  if (msgs) msgs.scrollTop = msgs.scrollHeight;
+}
+
+// 渲染单条消息气泡
+function renderBossMessageBubble(msg, chatName) {
+  var avatarText = chatName ? chatName.charAt(0) : '?';
+  var content = msg.content || msg.text || '';
+  var timestamp = msg.timestamp || msg.time || '';
+  var t = formatChatTime(timestamp);
+  var sender = msg.sender || (msg.is_mine ? 'bot' : 'hr');
+  var isMine = msg.is_mine || sender === 'bot';
+  var isSystem = sender === 'system' || msg.is_skipped;
+  var html = '';
+  if (isSystem) {
+    // 系统消息（跳过记录等）
+    var skipReason = msg.skip_reason || content;
+    html += '<div class="boss-msg-row system">';
+    html += '  <div class="boss-msg-bubble">[跳过] '+escHtml(skipReason)+'</div>';
+    html += '</div>';
+  } else if (isMine) {
+    // 我的回复（右侧气泡）
+    var source = msg.reply_source || msg.source || '';
+    html += '<div class="boss-msg-row me">';
+    html += '  <div><div class="boss-msg-bubble">'+escHtml(content)+'</div>';
+    html += '  <div class="boss-msg-meta"><span class="boss-msg-time">'+escHtml(t)+'</span>';
+    if (source && source !== 'bot') {
+      html += '<span class="boss-msg-source '+getReplySourceClass(source)+'">'+escHtml(getReplySourceLabel(source))+'</span>';
+    }
+    html += '</div></div>';
+    html += '</div>';
+  } else {
+    // HR 消息（左侧气泡）
+    html += '<div class="boss-msg-row hr">';
+    html += '  <div class="boss-msg-avatar">'+escHtml(avatarText)+'</div>';
+    html += '  <div><div class="boss-msg-bubble">'+escHtml(content)+'</div>';
+    html += '  <div class="boss-msg-meta"><span class="boss-msg-time">'+escHtml(t)+'</span></div></div>';
+    html += '</div>';
+  }
   return html;
 }
 
+// �0刷新聊天详情
+function refreshBossChatDetail(chatName) {
+  fetch('/api/chats/'+encodeURIComponent(chatName)).then(function(r){return r.json();}).then(function(data){
+    if (data && data.status === 'ok' && data.chat) {
+      var chat = data.chat;
+      replyChatCache[chatName] = {
+        chat_name: chatName,
+        job_name: chat.job_name || '',
+        updated_at: chat.updated_at || '',
+        last_time: chat.updated_at || '',
+        last_message: (chat.messages && chat.messages.length > 0) ? (chat.messages[chat.messages.length-1].content || chat.messages[chat.messages.length-1].text || '') : '',
+        messages: chat.messages || [],
+        records: [],
+        unread_count: 0,
+        message_count: (chat.messages || []).length
+      };
+      renderBossChatDetail(chatName);
+    }
+  }).catch(function(e){console.error('刷新聊天详情失败:', e);});
+}
+
 function renderReplyChatList(groups) {
-  var container = document.getElementById('replyChatList');
   var empty = document.getElementById('replyEmpty');
-  if (!container) return;
   if (!groups || groups.length === 0) {
-    container.innerHTML = '';
     if (empty) empty.style.display = 'flex';
+    renderBossChatList([]);
     return;
   }
   if (empty) empty.style.display = 'none';
@@ -2477,11 +2826,15 @@ function renderReplyChatList(groups) {
   groups.forEach(function(g) {
     replyChatCache[g.chat_name || '(未知)'] = g;
   });
-  var html = '';
-  groups.forEach(function(g) {
-    html += buildChatCardHtml(g);
-  });
-  container.innerHTML = html;
+  // 渲染左侧聊天列表
+  renderBossChatList(groups);
+  // 自动选中第一个聊天
+  if (!activeBossChat && groups.length > 0) {
+    selectBossChat(groups[0].chat_name || '(未知)');
+  } else if (activeBossChat && replyChatCache[activeBossChat]) {
+    // 重新渲染当前选中的聊天详情
+    renderBossChatDetail(activeBossChat);
+  }
   // 更新tab计数为分组数
   replyRecordCount = groups.length;
   var el = document.getElementById('replyTabCount');
@@ -2496,7 +2849,9 @@ function loadReplyChatList() {
 }
 
 function toggleChatCard(card) {
-  card.classList.toggle('expanded');
+  // 兼容旧调用，改为选中聊天
+  var chatName = card.getAttribute('data-chat-name');
+  if (chatName) selectBossChat(chatName);
 }
 
 // 实时新增/更新一条回复记录到聊天列表
@@ -2532,7 +2887,7 @@ function addReplyRecord(data){
   if (g) {
     g.records.push(newRecord);
     g.message_count += 1;
-    if (timestamp > g.last_time) {
+    if (timestamp > (g.last_time || '')) {
       g.last_time = timestamp;
       g.last_message = receivedMsg;
       g.last_reply = replyMsg;
@@ -2544,7 +2899,8 @@ function addReplyRecord(data){
       last_time: timestamp,
       last_message: receivedMsg,
       last_reply: replyMsg,
-      records: [newRecord]
+      records: [newRecord],
+      messages: []
     };
     replyChatCache[chatName] = g;
   }
@@ -2554,6 +2910,7 @@ function addReplyRecord(data){
   groups.sort(function(a, b) { return (b.last_time || '') > (a.last_time || '') ? 1 : -1; });
   renderReplyChatList(groups);
 }
+
 
 function clearGreetTable(){
   var gb = document.getElementById('greetTableBody');
@@ -2874,8 +3231,27 @@ startNotifPolling();
 fetch('/api/greet_records').then(function(r){return r.json();}).then(function(data){
   if(!data || !data.records || !data.records.length) return;
   data.records.forEach(function(rec){
+    // 根据后端 status 字段映射前端状态
+    // 后端 status: pending/applied/skipped/failed
+    // 前端 greetStatusMap: success/skip/ai_skip/already/error/pending
+    var feStatus = 'success';
+    if (rec.status === 'applied' || (!rec.is_skipped && rec.is_greeted)) {
+      feStatus = 'success';
+    } else if (rec.status === 'skipped' || rec.is_skipped) {
+      // 根据跳过原因细分
+      var reason = rec.skip_reason || '';
+      if (reason.indexOf('AI') >= 0 || reason.indexOf('不匹配') >= 0) {
+        feStatus = 'ai_skip';
+      } else if (reason.indexOf('已沟通') >= 0) {
+        feStatus = 'already';
+      } else {
+        feStatus = 'skip';
+      }
+    } else if (rec.status === 'failed') {
+      feStatus = 'error';
+    }
     addGreetRecord({
-      status: rec.is_skipped ? 'skip' : 'success',
+      status: feStatus,
       job_name: rec.job_name || '',
       company: rec.company || '',
       salary: rec.salary || '',
@@ -2912,6 +3288,11 @@ fetch('/api/reply_records/grouped').then(function(r){return r.json();}).then(fun
   if (stats.reply_skipped < replySkipped) stats.reply_skipped = replySkipped;
   updateStats();
 }).catch(function(e){console.error('加载回复记录失败:',e);});
+
+// 页面加载后自动检测所有账号的 Cookie 状态（简单检测，不启动浏览器）
+setTimeout(function() {
+  try { checkAllAccountCookies(); } catch(e) {}
+}, 2000);
 
 function closeLoginModal() {
   const modal = document.getElementById("loginModal");
@@ -3048,6 +3429,104 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
   </div>
 </div>
+
+<!-- Archive Modal (历史数据) -->
+<div class="login-modal-overlay" id="archiveModal" style="display:none">
+  <div class="login-modal" style="max-width:600px">
+    <div class="login-modal-header">
+      <div class="login-modal-icon">历史数据归档（保留最近10天）</div>
+    </div>
+    <div class="login-modal-body">
+      <div class="login-modal-desc" id="archiveModalDesc">加载中...</div>
+      <div id="archiveList" style="max-height:400px;overflow-y:auto;margin:12px 0"></div>
+      <div class="login-modal-actions">
+        <button class="login-modal-btn login-modal-btn-secondary" onclick="closeArchiveModal()">关闭</button>
+        <button class="login-modal-btn login-modal-btn-secondary" onclick="triggerArchive()">立即归档今天数据</button>
+        <button class="login-modal-btn login-modal-btn-secondary" onclick="autoCleanArchives()">清理过期归档</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 历史数据归档相关函数 ──
+function showArchiveModal() {
+  var modal = document.getElementById('archiveModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+  }
+  loadArchiveList();
+}
+
+function closeArchiveModal() {
+  var modal = document.getElementById('archiveModal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
+}
+
+function loadArchiveList() {
+  var desc = document.getElementById('archiveModalDesc');
+  var list = document.getElementById('archiveList');
+  if (desc) desc.textContent = '加载中...';
+  if (list) list.innerHTML = '';
+  fetch('/api/archive/list').then(function(r){return r.json();}).then(function(data){
+    if (data.status !== 'ok') {
+      if (desc) desc.textContent = '加载失败: ' + (data.message || '');
+      return;
+    }
+    var archives = data.archives || [];
+    if (desc) desc.textContent = '共 ' + archives.length + ' 个归档日期（保留最近10天）';
+    if (!list) return;
+    if (archives.length === 0) {
+      list.innerHTML = '<div style="text-align:center;color:var(--fg-3rd);padding:20px">暂无归档数据</div>';
+      return;
+    }
+    var html = '<table class="greet-table" style="width:100%"><thead><tr><th>日期</th><th>打招呼</th><th>回复</th><th>大小</th><th>操作</th></tr></thead><tbody>';
+    archives.forEach(function(a) {
+      html += '<tr>';
+      html += '<td>' + escHtml(a.date) + '</td>';
+      html += '<td>' + (a.greet_count || 0) + '</td>';
+      html += '<td>' + (a.reply_count || 0) + '</td>';
+      html += '<td>' + (a.size_kb || 0) + ' KB</td>';
+      html += '<td><button class="btn btn-ghost btn-sm" onclick="downloadArchive(\'' + escAttr(a.date) + '\')">下载</button></td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    list.innerHTML = html;
+  }).catch(function(e){
+    if (desc) desc.textContent = '加载失败: ' + e;
+  });
+}
+
+function downloadArchive(date) {
+  window.open('/api/archive/' + encodeURIComponent(date), '_blank');
+}
+
+function triggerArchive() {
+  fetch('/api/archive/trigger', {method:'POST'}).then(function(r){return r.json();}).then(function(data){
+    if (data.status === 'ok') {
+      addLog('SUCCESS', '数据归档已触发');
+      loadArchiveList();
+    } else {
+      addLog('ERROR', '归档失败: ' + (data.message || ''));
+    }
+  }).catch(function(e){ addLog('ERROR', '归档请求失败: ' + e); });
+}
+
+function autoCleanArchives() {
+  fetch('/api/archive/auto_clean', {method:'POST'}).then(function(r){return r.json();}).then(function(data){
+    if (data.status === 'ok') {
+      addLog('SUCCESS', data.message || '清理完成');
+      loadArchiveList();
+    } else {
+      addLog('ERROR', '清理失败: ' + (data.message || ''));
+    }
+  }).catch(function(e){ addLog('ERROR', '清理请求失败: ' + e); });
+}
+</script>
 
 </body>
 </html>
