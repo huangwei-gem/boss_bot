@@ -1642,24 +1642,13 @@ class GreetEngine:
                                 break
                         except Exception:
                             pass
-                    # 如果新标签页中没有聊天页，回退到 latest_tab
+                    # 关键修复：删除 latest_tab 回退逻辑。
+                    # latest_tab 返回最近激活的标签页，如果回复引擎刚操作过 _chat_tab，
+                    # latest_tab 就会返回回复引擎的聊天标签页，导致打招呼引擎在回复标签页上发消息。
+                    # 如果 tab_ids 差集没找到新标签页，chat_tab 保持 None，
+                    # 后续会尝试在当前搜索标签页(instance)上查找输入框（BOSS可能in-page导航）。
                     if chat_tab is None:
-                        latest = browser.latest_tab
-                        latest_url = latest.url or ""
-                        self._log("INFO", f"latest_tab URL: {latest_url}")
-                        if "chat" in latest_url or "message" in latest_url:
-                            # 确认 latest_tab 不在 pre_tab_ids 中（确实是新打开的）
-                            latest_id = None
-                            try:
-                                # DrissionPage: tab.tab_id 或 tab._tab_id 获取标签页ID
-                                latest_id = getattr(latest, 'tab_id', None) or getattr(latest, '_tab_id', None)
-                            except Exception:
-                                pass
-                            if latest_id is None or latest_id not in pre_tab_ids:
-                                chat_tab = latest
-                                self._log("INFO", f"使用 latest_tab 作为聊天标签页: {latest_url}")
-                            else:
-                                self._log("DEBUG", "latest_tab 是已有标签页，不作为聊天标签页")
+                        self._log("DEBUG", "tab_ids 差集未找到新聊天标签页，将检查当前搜索标签页是否in-page导航")
                 except Exception as e:
                     self._log("DEBUG", f"获取新打开标签页失败: {e}")
 
@@ -1739,32 +1728,24 @@ class GreetEngine:
                 except Exception as e:
                     self._log("DEBUG", f"在聊天标签页查找输入框失败: {e}")
             
-            # 如果聊天标签页没找到，尝试 latest_tab（不管URL是什么）
-            if not input_area and browser:
+            # 关键修复：删除 latest_tab 回退逻辑。
+            # latest_tab 可能返回回复引擎的 _chat_tab，导致打招呼引擎在回复标签页上发消息。
+            # 如果 chat_tab 没找到输入框，检查当前搜索标签页是否已导航到聊天页（BOSS可能in-page导航）
+            if not input_area:
                 try:
-                    latest = browser.latest_tab
-                    # 不修改 instance，直接在 latest 上查找
-                    for sel in ["#chat-input", ".chat-input", ".input-area", "tag:textarea", "[contenteditable=true]"]:
-                        try:
-                            input_area = latest.ele(sel, timeout=2)
-                            if input_area:
-                                self._log("INFO", f"在latest_tab找到输入框: {sel} (url={latest.url})")
-                                # 将 latest 包装为 greet_chat_instance 用于后续操作
-                                try:
-                                    from boss_bot.browser_launcher import BrowserInstance, _IS_MACOS
-                                    greet_chat_instance = BrowserInstance(
-                                        chrome_page=latest if not _IS_MACOS else None,
-                                        chromium=browser if _IS_MACOS else None,
-                                        tab=latest if _IS_MACOS else None,
-                                    )
-                                    # 同步注册到 browser_manager
-                                    if self.browser_manager is not None:
-                                        self.browser_manager._greet_chat_tab = greet_chat_instance
-                                except Exception:
-                                    pass
-                                break
-                        except Exception:
-                            pass
+                    current_url = instance.url or ""
+                    self._log("DEBUG", f"当前搜索标签页URL: {current_url}")
+                    if "chat" in current_url or "message" in current_url:
+                        # BOSS在搜索标签页内in-page导航到了聊天页
+                        for sel in ["#chat-input", ".chat-input", ".input-area", "tag:textarea", "[contenteditable=true]"]:
+                            try:
+                                input_area = instance.ele(sel, timeout=2)
+                                if input_area:
+                                    self._log("INFO", f"在搜索标签页(in-page导航)找到输入框: {sel}")
+                                    greet_chat_instance = instance
+                                    break
+                            except Exception:
+                                pass
                 except Exception:
                     pass
             
@@ -1790,14 +1771,13 @@ class GreetEngine:
                     if browser:
                         all_tabs = browser.tab_ids
                         # 获取回复引擎 _chat_tab 的 tab_id，用于排除
+                        # 关键修复：使用 browser_manager.get_reply_tab_id() 方法替代内联获取，
+                        # 统一排除逻辑，避免多处重复代码导致不一致
                         reply_chat_tab_id = None
-                        if self.browser_manager is not None and self.browser_manager._chat_tab is not None:
-                            try:
-                                reply_raw = self.browser_manager._chat_tab._page or self.browser_manager._chat_tab._tab
-                                if reply_raw is not None:
-                                    reply_chat_tab_id = getattr(reply_raw, 'tab_id', None) or getattr(reply_raw, '_tab_id', None)
-                            except Exception:
-                                pass
+                        if self.browser_manager is not None:
+                            reply_chat_tab_id = self.browser_manager.get_reply_tab_id()
+                        if reply_chat_tab_id:
+                            self._log("DEBUG", f"回复引擎专用标签页 tab_id: {reply_chat_tab_id}，遍历时将排除")
                         if len(all_tabs) > 1:
                             self._log("INFO", f"当前页面未找到输入框，遍历 {len(all_tabs)} 个标签页（排除回复引擎标签页）")
                             for tab_id in all_tabs:
@@ -1815,6 +1795,13 @@ class GreetEngine:
                                         try:
                                             input_area = tab.ele(sel, timeout=3)
                                             if input_area:
+                                                # 守护日志：确认找到输入框的标签页不是回复引擎的标签页
+                                                if reply_chat_tab_id:
+                                                    current_tab_id = getattr(tab, 'tab_id', None) or getattr(tab, '_tab_id', None)
+                                                    if current_tab_id == reply_chat_tab_id:
+                                                        self._log("ERROR", "严重BUG：打招呼引擎试图使用回复引擎标签页！跳过此标签页。")
+                                                        input_area = None
+                                                        continue
                                                 self._log("INFO", f"在标签页 {tab_url} 中找到输入框: {sel}")
                                                 # 包装为 greet_chat_instance，不修改 instance
                                                 try:

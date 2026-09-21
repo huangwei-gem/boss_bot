@@ -1121,6 +1121,25 @@ class BrowserManager:
             return self._greet_chat_tab._tab
         return self._greet_chat_tab._page
 
+    def get_reply_tab_id(self):
+        """获取回复引擎专用 _chat_tab 的 tab_id，供打招呼引擎排除用。
+
+        打招呼引擎在遍历所有标签页查找输入框时，必须排除回复引擎的 _chat_tab，
+        避免在回复引擎的聊天标签页上发送打招呼消息（严重BUG）。
+
+        Returns:
+            tab_id 字符串或 None（_chat_tab 不存在或无法获取 tab_id 时）
+        """
+        if self._chat_tab is None:
+            return None
+        try:
+            raw = self._chat_tab._page or self._chat_tab._tab
+            if raw is not None:
+                return getattr(raw, 'tab_id', None) or getattr(raw, '_tab_id', None)
+        except Exception:
+            pass
+        return None
+
     def check_login(self) -> bool:
         """检查登录状态
 
