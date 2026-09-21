@@ -171,34 +171,201 @@ class SelfEvolveEngine:
     # 消息来源识别
     # ─────────────────────────────────────────────
 
-    def classify_message_source(self, message_text: str,
-                                 conversation_history: Optional[List[dict]] = None) -> str:
-        """识别消息来源：AI 回复 vs 用户回复。
+    # reply_records.json 缓存（避免每次 classify 都重新读文件）
+    # 结构: {"records": [...], "loaded_at": float(timestamp)}
+    _reply_records_cache: Dict[str, Any] = {"records": [], "loaded_at": 0.0}
+    # 缓存有效期（秒）：5 分钟内不重复读文件
+    _REPLY_RECORDS_CACHE_TTL = 300
 
-        通过以下特征判断：
-        - AI 回复通常匹配已配置的回复模板风格
-        - AI 回复通常更正式、更完整
-        - 用户回复通常包含新的内容、提问、拒绝等
-        - 消息存储中 is_mine 标记
+    def _load_reply_records_for_classify(self) -> List[Dict[str, Any]]:
+        """加载 reply_records.json 用于消息来源匹配。
+
+        优先使用 ReplyRecordStore（线程安全、已加载），失败时直接读 JSON 文件。
+        结果缓存 5 分钟，避免每次 classify 都重新读文件。
+
+        Returns:
+            回复记录列表，每条至少包含 reply_content 和 timestamp 字段
+        """
+        now = time.time()
+        cache = SelfEvolveEngine._reply_records_cache
+        if cache["records"] and (now - cache["loaded_at"]) < self._REPLY_RECORDS_CACHE_TTL:
+            return cache["records"]
+
+        records: List[Dict[str, Any]] = []
+
+        # 优先用 ReplyRecordStore（与 reply_record.py 同源，含已发送记录）
+        try:
+            from boss_bot.reply_record import _get_reply_store
+            store = _get_reply_store()
+            raw = store.get_all()
+            for r in raw:
+                records.append({
+                    "reply_content": r.reply_content or "",
+                    "timestamp": r.timestamp or "",
+                    "chat_name": r.chat_name or "",
+                })
+        except Exception as e:
+            self._log("DEBUG", f"ReplyRecordStore 加载失败，回退到直接读 JSON: {e}")
+            records = []
+            # 兜底：直接读 data/reply_records.json
+            try:
+                reply_file = Path(__file__).parent.parent / "data" / "reply_records.json"
+                if reply_file.exists():
+                    with open(reply_file, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                    for item in data.get("records", []):
+                        records.append({
+                            "reply_content": item.get("reply_content", "") or "",
+                            "timestamp": item.get("timestamp", "") or "",
+                            "chat_name": item.get("chat_name", "") or "",
+                        })
+            except Exception as e2:
+                self._log("DEBUG", f"直接读 reply_records.json 失败: {e2}")
+
+        # 更新缓存
+        SelfEvolveEngine._reply_records_cache = {
+            "records": records,
+            "loaded_at": now,
+        }
+        return records
+
+    @staticmethod
+    def _parse_msg_time(time_str: str) -> Optional[datetime]:
+        """将消息时间字符串解析为 datetime。
+
+        支持格式：
+        - "19:37" → 当天 19:37
+        - "昨天 21:35" → 昨天 21:35
+        - "2026-09-18 19:37" → 该日期 19:37
+        - ISO 格式 "2026-09-18T20:38:42.690993" → 直接解析
+
+        解析失败返回 None。
+        """
+        if not time_str:
+            return None
+        s = time_str.strip()
+        try:
+            # ISO 格式
+            if "T" in s:
+                return datetime.fromisoformat(s)
+            # "昨天 HH:MM"
+            if s.startswith("昨天"):
+                m = re.match(r"昨天\s*(\d{1,2}):(\d{2})", s)
+                if m:
+                    return datetime.now().replace(
+                        hour=int(m.group(1)), minute=int(m.group(2)),
+                        second=0, microsecond=0
+                    ) - timedelta(days=1)
+                return None
+            # "YYYY-MM-DD HH:MM"
+            m = re.match(r"(\d{4})-(\d{2})-(\d{2})\s+(\d{1,2}):(\d{2})", s)
+            if m:
+                return datetime(
+                    int(m.group(1)), int(m.group(2)), int(m.group(3)),
+                    int(m.group(4)), int(m.group(5))
+                )
+            # "HH:MM" → 当天
+            m = re.match(r"(\d{1,2}):(\d{2})", s)
+            if m:
+                return datetime.now().replace(
+                    hour=int(m.group(1)), minute=int(m.group(2)),
+                    second=0, microsecond=0
+                )
+        except (ValueError, TypeError):
+            return None
+        return None
+
+    def classify_message_source(self, message_text: str,
+                                 conversation_history: Optional[List[dict]] = None,
+                                 timestamp: Optional[str] = None) -> str:
+        """识别消息来源：AI 回复 vs 人工手动回复 vs HR 回复。
+
+        优先级：
+        1. reply_records.json 精确匹配 content + timestamp（±5 分钟误差）
+        2. reply_records.json 模糊匹配 content（reply_content 字段）
+        3. 对话历史 is_mine 标记（己方消息 → ai 或 human；对方消息 → hr）
+        4. 文本模式特征匹配（fallback：AI 模板特征词）
+
+        BOSS 直聘前端不区分 AI 自动发送 vs 人工手动发送，
+        需用 reply_records.json 按 content + timestamp 匹配判断：
+        - 若消息内容出现在 reply_records.json 的 reply_content 字段中，
+          则该消息是 AI 发送的（reply_source 字段记录了具体来源）。
+        - 若 content 匹配多条记录，用 timestamp 进一步筛选（±5 分钟误差）。
 
         Args:
             message_text: 消息文本内容
             conversation_history: 对话历史，包含 is_mine 标记
+                [{"text": str, "is_mine": bool, "time": str, ...}]
+            timestamp: 消息时间戳（可选，格式如 "19:37" / "昨天 21:35" /
+                "2026-09-18T20:38:42"，用于与 reply_records.json 精确匹配）
 
         Returns:
-            "ai" 表示 AI 回复，"user" 表示用户回复
+            "ai" — AI 自动回复（reply_records.json 命中）
+            "human" — 人工手动回复（己方消息但 reply_records.json 未命中）
+            "hr" — HR/对方发送的消息
         """
         if not message_text:
-            return "user"
+            return "hr"
 
-        # 优先检查对话历史中的 is_mine 标记
+        text = message_text.strip()
+
+        # ── 优先级 1 & 2：reply_records.json 匹配 ──
+        # 若消息内容出现在 reply_records.json 的 reply_content 字段中，
+        # 则该消息是 AI 发送的。
+        try:
+            records = self._load_reply_records_for_classify()
+        except Exception as e:
+            self._log("DEBUG", f"加载 reply_records 失败，跳过精确匹配: {e}")
+            records = []
+
+        if records:
+            # 收集所有 content 匹配的记录
+            matched_records = [
+                r for r in records
+                if r.get("reply_content") and text == r["reply_content"].strip()
+            ]
+
+            if matched_records and timestamp:
+                # 优先级 1：content + timestamp 精确匹配（±5 分钟误差）
+                msg_time = self._parse_msg_time(timestamp)
+                if msg_time is not None:
+                    tolerance = timedelta(minutes=5)
+                    for r in matched_records:
+                        rec_time = self._parse_msg_time(r.get("timestamp", ""))
+                        if rec_time is not None and abs(msg_time - rec_time) <= tolerance:
+                            return "ai"
+                    # timestamp 未匹配上任何记录，但仍是 content 精确命中
+                    # → 仍判定为 AI（content 唯一性已足够强）
+
+            if matched_records:
+                # 优先级 2：content 精确匹配（无 timestamp 或 timestamp 解析失败）
+                return "ai"
+
+            # 模糊匹配：消息文本包含某条 reply_content（或反之）
+            # 仅当文本较长时启用，避免短文本误匹配
+            if len(text) >= 10:
+                for r in records:
+                    rc = r.get("reply_content", "").strip()
+                    if not rc or len(rc) < 10:
+                        continue
+                    # 完全包含关系（双向）
+                    if text in rc or rc in text:
+                        return "ai"
+
+        # ── 优先级 3：对话历史 is_mine 标记 ──
+        # 己方消息 → 需进一步区分 ai/human（已在上面 reply_records 匹配过）
+        # 对方消息 → hr
         if conversation_history:
             for msg in reversed(conversation_history):
-                if msg.get("text", "").strip() == message_text.strip():
-                    return "ai" if msg.get("is_mine") else "user"
+                if msg.get("text", "").strip() == text:
+                    if msg.get("is_mine"):
+                        # 己方消息但 reply_records 未命中 → 人工手动回复
+                        return "human"
+                    else:
+                        return "hr"
 
+        # ── 优先级 4：文本模式特征匹配（fallback） ──
         # 检查是否匹配 AI 回复模板特征
-        text = message_text.strip()
         ai_marker_count = sum(1 for marker in _AI_REPLY_MARKERS if marker in text)
 
         # AI 回复通常包含多个模板特征词，且较长、较正式
@@ -223,11 +390,150 @@ class SelfEvolveEngine:
         except Exception:
             pass
 
-        # 用户回复特征：较短、口语化、包含提问或拒绝
-        if len(text) < 15 and any(c in text for c in "？?吗嘛呢吧"):
-            return "user"
+        # 无法确定时默认返回 "human"（保守判断：己方消息但无证据是 AI）
+        # 调用方可结合 conversation_history 的 is_mine 进一步判断
+        return "human"
 
-        return "user"
+    # ─────────────────────────────────────────────
+    # 对话结果检测
+    # ─────────────────────────────────────────────
+
+    # HR 明确拒绝关键词（detect_conversation_outcome 用）
+    _REJECT_PATTERNS = [
+        re.compile(r"(不合适|不符合|不匹配|不考虑|抱歉|遗憾)", re.IGNORECASE),
+        re.compile(r"(不需要|不用了|算了|放弃|拒绝)", re.IGNORECASE),
+        re.compile(r"(已招满|已关闭|已结束|暂停招聘|停止招聘)", re.IGNORECASE),
+        re.compile(r"(太远|薪资太低|经验不足|学历不够|年龄不符)", re.IGNORECASE),
+        re.compile(r"(再看看|再考虑|有合适再联系|有消息通知)", re.IGNORECASE),
+        re.compile(r"(祝您|祝你).*(找到|求职|发展).*(顺利|成功|如意)", re.IGNORECASE),
+    ]
+
+    # 约面试关键词
+    _INTERVIEW_PATTERNS = [
+        re.compile(r"(面试|面谈|聊聊|沟通一下|详谈)", re.IGNORECASE),
+        re.compile(r"(来公司|到公司|线下|当面|碰面)", re.IGNORECASE),
+        re.compile(r"(电话|视频|腾讯会议|钉钉|微信聊)", re.IGNORECASE),
+        re.compile(r"(什么时候|哪天|几点|方便.*时间|安排.*时间)", re.IGNORECASE),
+        re.compile(r"(offer|入职|录用|录取|报到|入职培训)", re.IGNORECASE),
+        re.compile(r"(发个.*offer|发.*offer|发录用|发入职)", re.IGNORECASE),
+    ]
+
+    # 对话中断时间阈值（小时）：双方最后一条消息超过此时间未回复视为 abandoned
+    _ABANDONED_THRESHOLD_HOURS = 72
+
+    def detect_conversation_outcome(self, messages: List[dict]) -> str:
+        """分析对话的最终结果。
+
+        基于 messages 列表（含 sender/status 字段）判断对话结局：
+        - "rejected": HR 明确拒绝（含拒绝关键词）
+        - "interview": 约面试（含面试/见面/来公司等关键词）
+        - "read_no_reply": HR 已读不回（我方最后消息 status=read，且无后续 HR 消息）
+        - "ongoing": 继续沟通（最后消息是 HR 发的，且无拒绝意图）
+        - "abandoned": 对话中断（双方都长时间未回复，超过 72 小时）
+
+        判定优先级：
+        1. 空消息列表 → "abandoned"
+        2. 提取最后一条非系统消息，判断发送者
+        3. 若最后消息是 HR 发的：
+           - 含拒绝关键词 → "rejected"
+           - 含面试关键词 → "interview"
+           - 否则 → "ongoing"
+        4. 若最后消息是我方发的：
+           - 检查我方最后消息的 status
+           - status="read" 且之后无 HR 消息 → "read_no_reply"
+           - 距最后消息超过 72 小时 → "abandoned"
+           - 否则 → "ongoing"（仍在等待 HR 回复）
+        5. 检查整段对话是否含拒绝/面试关键词（兜底）
+
+        Args:
+            messages: 消息列表，每条至少包含：
+                - sender: "hr" / "me" / "system"
+                - text: 消息文本
+                - status: "delivered" / "read" / None（仅我方消息）
+                - time: 时间戳（可选，用于判断 abandoned）
+
+        Returns:
+            "rejected" / "interview" / "read_no_reply" / "ongoing" / "abandoned"
+        """
+        if not messages:
+            return "abandoned"
+
+        # 过滤掉系统消息，只保留 HR 和我方的对话消息
+        conversation_msgs = [
+            m for m in messages
+            if m.get("sender") in ("hr", "me")
+        ]
+        if not conversation_msgs:
+            return "abandoned"
+
+        # 取最后一条对话消息
+        last_msg = conversation_msgs[-1]
+        last_sender = last_msg.get("sender", "")
+        last_text = (last_msg.get("text") or "").strip()
+
+        # ── 若最后消息是 HR 发的 ──
+        if last_sender == "hr":
+            # 检查拒绝关键词
+            for pattern in self._REJECT_PATTERNS:
+                if pattern.search(last_text):
+                    return "rejected"
+            # 检查面试关键词
+            for pattern in self._INTERVIEW_PATTERNS:
+                if pattern.search(last_text):
+                    return "interview"
+            # HR 最后发言且无拒绝意图 → 继续沟通
+            return "ongoing"
+
+        # ── 若最后消息是我方发的 ──
+        if last_sender == "me":
+            # 检查我方最后消息的已读状态
+            last_status = last_msg.get("status")
+
+            # 找到最后的 HR 消息（如果有）
+            last_hr_msg = None
+            for m in reversed(conversation_msgs):
+                if m.get("sender") == "hr":
+                    last_hr_msg = m
+                    break
+
+            # 我方最后消息已读，且之后无 HR 回复 → 已读不回
+            if last_status == "read" and last_hr_msg is None:
+                return "read_no_reply"
+            # 我方最后消息已读，且 HR 在我方最后消息之前发言
+            # （即 HR 已读但未回复）→ 已读不回
+            if last_status == "read" and last_hr_msg is not None:
+                # 判断 last_hr_msg 是否在 last_msg 之前
+                last_hr_idx = conversation_msgs.index(last_hr_msg)
+                last_msg_idx = len(conversation_msgs) - 1
+                if last_hr_idx < last_msg_idx:
+                    return "read_no_reply"
+
+            # 检查是否对话中断（距最后消息超过 72 小时）
+            last_time_str = last_msg.get("time") or last_msg.get("timestamp")
+            if last_time_str:
+                last_time = self._parse_msg_time(last_time_str)
+                if last_time is not None:
+                    hours_elapsed = (datetime.now() - last_time).total_seconds() / 3600
+                    if hours_elapsed >= self._ABANDONED_THRESHOLD_HOURS:
+                        return "abandoned"
+
+            # 仍在等待 HR 回复 → 继续沟通
+            return "ongoing"
+
+        # ── 兜底：检查整段对话是否含拒绝/面试关键词 ──
+        all_text = " ".join(
+            (m.get("text") or "").strip()
+            for m in conversation_msgs
+            if m.get("sender") == "hr"
+        )
+        for pattern in self._REJECT_PATTERNS:
+            if pattern.search(all_text):
+                return "rejected"
+        for pattern in self._INTERVIEW_PATTERNS:
+            if pattern.search(all_text):
+                return "interview"
+
+        return "ongoing"
 
     # ─────────────────────────────────────────────
     # 回复效果评估

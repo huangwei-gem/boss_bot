@@ -515,6 +515,212 @@ class BossChatHandler:
 
         return messages
 
+    def read_messages_rich(self, max_scroll_rounds: int = 5,
+                           scroll_wait_ms: int = 800) -> List[Dict]:
+        """读取消息并返回完整元数据（type/status/timestamp/sender/msg_id）。
+
+        基于 tools/chat_page_structure.json 提取的真实 DOM 结构：
+        - HR 消息: .message-item.item-friend（左侧气泡）
+        - 我方消息: .message-item.item-myself（右侧气泡）
+        - 系统消息: .message-item.item-system（居中）
+        - 消息 ID: data-mid 属性（每条消息唯一）
+        - 送达状态: .message-status.status-delivery（文本"[送达]"）
+        - 已读状态: .message-status.status-read（文本"[已读]"）
+        - 时间戳: .item-time .time（格式如 "19:37" / "昨天 21:35"）
+        - 文本内容: .text-content
+
+        与 read_all_messages 的区别：
+        - read_all_messages 仅返回 text/time/is_mine/isFriend 四字段
+        - read_messages_rich 返回 sender/msg_id/status/msg_type 等完整元数据
+        - sender 用三态互斥 class（item-friend/item-myself/item-system）精确区分
+        - status 仅我方消息有值（delivered/read），HR/系统消息为 None
+
+        Args:
+            max_scroll_rounds: 向上滚动加载历史的最大轮次（默认 5）
+            scroll_wait_ms: 每次滚动后等待加载的毫秒数（默认 800）
+
+        Returns:
+            消息列表（按页面顺序，旧消息在前，新消息在后），每条包含：
+            - text: 消息文本（.text-content 的 textContent，已 trim）
+            - time: 时间戳（.item-time .time 的 textContent，已 trim）
+            - sender: "hr" / "me" / "system"
+            - msg_id: data-mid 属性值（无则空字符串）
+            - status: "delivered" / "read" / None（仅我方消息有值）
+            - msg_type: "text" / "image" / "resume" / "system"
+        """
+        messages: List[Dict] = []
+        try:
+            # 第一步：向上滚动加载更多历史消息（与 read_all_messages 同策略）
+            try:
+                self.page.run_js(f'''(
+                    function() {{
+                        var chatContent = document.querySelector(".chat-content")
+                                     || document.querySelector(".message-list")
+                                     || document.querySelector(".chat-message-wrap")
+                                     || document.querySelector(".message-wrap");
+                        if (!chatContent) return JSON.stringify({{ok: false, reason: "no_container"}});
+                        var prevCount = -1;
+                        var rounds = 0;
+                        while (rounds < {max_scroll_rounds}) {{
+                            var curCount = document.querySelectorAll(".message-item").length;
+                            if (curCount === prevCount) break;
+                            prevCount = curCount;
+                            chatContent.scrollTop = 0;
+                            rounds++;
+                        }}
+                        return JSON.stringify({{ok: true, rounds: rounds, finalCount: prevCount}});
+                    }}
+                )()''', as_expr=True)
+            except Exception as e:
+                logger.debug(f"滚动加载历史异常（不影响后续读取）: {e}")
+
+            for _ in range(max_scroll_rounds):
+                time.sleep(scroll_wait_ms / 1000.0)
+                try:
+                    cur_count_js = self.page.run_js(
+                        'document.querySelectorAll(".message-item").length', as_expr=True
+                    )
+                    if cur_count_js is None:
+                        break
+                except Exception:
+                    break
+
+            # 第二步：用 JS 提取完整元数据
+            # 注意：sender 用三态互斥 class 精确区分（item-friend/item-myself/item-system）
+            #       status 仅我方消息有值，HR/系统消息保持 None
+            #       msg_type 判定优先级：system > image > resume > text
+            result = self.page.run_js('''(
+                function() {
+                    var items = document.querySelectorAll('.message-item');
+                    var result = [];
+                    for (var i = 0; i < items.length; i++) {
+                        var item = items[i];
+                        var cls = item.className || "";
+                        var textEl = item.querySelector('.text-content');
+                        var timeEl = item.querySelector('.item-time .time');
+
+                        // 判断发送者（三态互斥）
+                        var sender = "system";
+                        if (cls.indexOf('item-friend') >= 0) sender = "hr";
+                        else if (cls.indexOf('item-myself') >= 0) sender = "me";
+
+                        // 判断消息状态（仅我方消息）
+                        var status = null;
+                        if (sender === "me") {
+                            var statusEl = item.querySelector('.message-status');
+                            if (statusEl) {
+                                var statusCls = statusEl.className || "";
+                                if (statusCls.indexOf('status-read') >= 0) status = "read";
+                                else if (statusCls.indexOf('status-delivery') >= 0) status = "delivered";
+                            }
+                        }
+
+                        // 判断消息类型
+                        var msgType = "text";
+                        if (sender === "system") msgType = "system";
+                        else if (item.querySelector('img.image-circle')) msgType = "image";
+                        else if (item.querySelector('[class*="resume"]')) msgType = "resume";
+
+                        result.push({
+                            text: textEl ? textEl.textContent.trim() : "",
+                            time: timeEl ? timeEl.textContent.trim() : "",
+                            sender: sender,
+                            msg_id: item.getAttribute('data-mid') || "",
+                            status: status,
+                            msg_type: msgType
+                        });
+                    }
+                    return JSON.stringify(result);
+                }
+            )()''', as_expr=True)
+
+            if result:
+                messages = json.loads(result)
+
+            logger.info(f"[read_messages_rich] 读取到完整元数据消息数: {len(messages)}")
+        except Exception as e:
+            logger.error(f"读取消息元数据失败: {e}")
+
+        return messages
+
+    def get_chat_conversations(self) -> List[Dict]:
+        """获取聊天列表侧边栏所有会话。
+
+        基于 tools/chat_page_structure.json 提取的真实 DOM 结构：
+        - 列表容器: .user-list
+        - 会话项: .friend-content
+        - 会话名称: .name-text
+        - 最后消息: .last-msg-text
+        - 未读数: .notice-badge（如 <span class="notice-badge">3</span>）
+        - 选中状态: .friend-content.selected
+
+        与 get_unread_chats 的区别：
+        - get_unread_chats 仅返回有未读标记的会话
+        - get_chat_conversations 返回所有会话（含已读/未读/选中状态）
+        - 额外返回 is_selected 字段，便于定位当前正在聊的会话
+
+        Returns:
+            会话列表（按侧边栏顺序），每个含：
+            - index: 在侧边栏中的索引（用于 enter_chat）
+            - name: 会话名称（.name-text 的 textContent，已 trim）
+            - last_message: 最后一条消息预览（.last-msg-text，已 trim）
+            - unread_count: 未读消息数（int，0 表示无未读）
+            - is_selected: 是否为当前选中会话（bool）
+        """
+        self.go_to_chat()
+        time.sleep(1)
+
+        conversations: List[Dict] = []
+        try:
+            result = self.page.run_js('''(
+                function() {
+                    var friendEls = document.querySelectorAll(".friend-content");
+                    var result = [];
+                    for (var i = 0; i < friendEls.length; i++) {
+                        var el = friendEls[i];
+                        var cls = el.className || "";
+
+                        var nameEl = el.querySelector(".name-text");
+                        var name = nameEl ? nameEl.textContent.trim() : "未知";
+
+                        var previewEl = el.querySelector(".last-msg-text");
+                        var lastMsg = previewEl ? previewEl.textContent.trim() : "";
+
+                        // 未读数：.notice-badge 文本为数字时计入，否则 0
+                        var unread = 0;
+                        var badge = el.querySelector(".notice-badge");
+                        if (badge && badge.offsetParent !== null) {
+                            var countText = badge.textContent.trim();
+                            if (countText) {
+                                var parsed = parseInt(countText);
+                                unread = isNaN(parsed) ? 1 : parsed;
+                            }
+                        }
+
+                        // 选中状态：.friend-content.selected
+                        var isSelected = cls.indexOf("selected") >= 0;
+
+                        result.push({
+                            index: i,
+                            name: name,
+                            last_message: lastMsg,
+                            unread_count: unread,
+                            is_selected: isSelected
+                        });
+                    }
+                    return JSON.stringify(result);
+                }
+            )()''', as_expr=True)
+
+            if result:
+                conversations = json.loads(result)
+
+        except Exception as e:
+            logger.error(f"获取聊天会话列表失败: {e}")
+
+        logger.debug(f"[get_chat_conversations] 共 {len(conversations)} 个会话")
+        return conversations
+
     def get_boss_name(self) -> str:
         """获取当前聊天对象的名称
 

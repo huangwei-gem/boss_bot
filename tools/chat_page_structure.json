@@ -1,0 +1,1069 @@
+{
+  "_meta": {
+    "extracted_at": "2026-09-21 21:22:24",
+    "browser": "cloakbrowser",
+    "browser_path": "C:\\Users\\35796\\orca\\boss_bot\\cloakbrowser\\chrome.exe",
+    "url": "https://www.zhipin.com/web/geek/chat",
+    "cookie_file": "C:\\Users\\35796\\orca\\boss_bot\\zhipin_cookies.json",
+    "cookie_count": 18,
+    "script": "tools/extract_chat_structure.py",
+    "description": "BOSS直聘聊天页面完整DOM结构，用于AI自进化区分HR/AI/人工消息"
+  },
+  "message_items": [
+    {
+      "index": 0,
+      "outerHTML": "<li data-v-a2f29c4e=\"\" data-mid=\"388511429534465\" class=\"message-item item-system\"><div class=\"item-time\"><span class=\"time\"> 19:37</span></div><div class=\"message-content\"><!----><div class=\"text\"><!----><!----><p><span class=\"text-content\">此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递</span></p></div></div><!----></li>",
+      "className": "message-item item-system",
+      "tagName": "LI",
+      "dataAttrs": {
+        "data-v-a2f29c4e": "",
+        "data-mid": "388511429534465"
+      },
+      "children": [
+        {
+          "tag": "DIV",
+          "class": "item-time",
+          "text": " 19:37",
+          "selector": "div.item-time"
+        },
+        {
+          "tag": "DIV",
+          "class": "message-content",
+          "text": "此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+          "selector": "div.message-content"
+        }
+      ],
+      "textContent": " 19:37此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+      "isFriend": false,
+      "isMine": false,
+      "isSystem": true,
+      "timeEl": {
+        "text": "19:37",
+        "class": "time",
+        "tag": "SPAN",
+        "outerHTML": "<span class=\"time\"> 19:37</span>"
+      },
+      "textEl": {
+        "text": "此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+        "class": "text-content",
+        "html": "此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递"
+      },
+      "msgType": "system",
+      "status": "unknown",
+      "hasAvatar": false,
+      "autoSendMarkers": [],
+      "source_session_index": 0
+    },
+    {
+      "index": 1,
+      "outerHTML": "<li data-v-a2f29c4e=\"\" data-mid=\"388511429534466\" class=\"message-item item-friend\"><!----><div class=\"message-content\"><div data-v-c31836e4=\"\" class=\"figure\"><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-c31836e4=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20241222/607f1f3d68754fd03c754121a5aba3beb5e6428aa71fade5169714199cd40b060cc7cc72a73c3d9a_s.jpg.webp\" alt=\"\" class=\"image-circle\"></div><div class=\"text\"><!----><!----><p><span class=\"text-content\">你好，黄维，我对你的经历很感兴趣。该岗位提供日结保底66-133元，礼物提成50%，正常播日均薪资大概200-400元，支持居家办公、时间自由，无经验也可免费培训。有空聊聊吗？</span></p></div></div><!----></li>",
+      "className": "message-item item-friend",
+      "tagName": "LI",
+      "dataAttrs": {
+        "data-v-a2f29c4e": "",
+        "data-mid": "388511429534466"
+      },
+      "children": [
+        {
+          "tag": "DIV",
+          "class": "message-content",
+          "text": "你好，黄维，我对你的经历很感兴趣。该岗位提供日结保底66-133元，礼物提成50%，正常播日均薪资大概200-400元，支持居家办公、时间自由，无经验也可免费培训。有空聊聊吗？",
+          "selector": "div.message-content"
+        }
+      ],
+      "textContent": "你好，黄维，我对你的经历很感兴趣。该岗位提供日结保底66-133元，礼物提成50%，正常播日均薪资大概200-400元，支持居家办公、时间自由，无经验也可免费培训。有空聊聊吗？",
+      "isFriend": true,
+      "isMine": false,
+      "isSystem": false,
+      "timeEl": null,
+      "textEl": {
+        "text": "你好，黄维，我对你的经历很感兴趣。该岗位提供日结保底66-133元，礼物提成50%，正常播日均薪资大概200-400元，支持居家办公、时间自由，无经验也可免费培训。有空聊聊吗？",
+        "class": "text-content",
+        "html": "你好，黄维，我对你的经历很感兴趣。该岗位提供日结保底66-133元，礼物提成50%，正常播日均薪资大概200-400元，支持居家办公、时间自由，无经验也可免费培训。有空聊聊吗？"
+      },
+      "msgType": "text",
+      "status": "unknown",
+      "hasAvatar": true,
+      "autoSendMarkers": [],
+      "source_session_index": 0
+    },
+    {
+      "index": 0,
+      "outerHTML": "<li data-v-a2f29c4e=\"\" data-mid=\"388186628186883\" class=\"message-item item-friend\"><div class=\"item-time\"><span class=\"time\">昨天 21:35</span></div><div class=\"message-content\"><div data-v-c31836e4=\"\" class=\"figure\"><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-c31836e4=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20250501/607f1f3d68754fd0398ff4d4834af1f1a7f1c37263d8f96d621b846807cb9c0ba4644070f0f5c57d_s.png.webp\" alt=\"\" class=\"image-circle\"></div><div class=\"text\"><!----><!----><p><span class=\"text-content\">哈喽呀，我们老板无意中看到你的简历，阅人三十载的老油条啪的一下坐起来，嘱咐我一定要把你招入我们公司，像您这般美貌才能于一体的求职者真的太难找了，能互相了解一下吗</span></p></div></div><!----></li>",
+      "className": "message-item item-friend",
+      "tagName": "LI",
+      "dataAttrs": {
+        "data-v-a2f29c4e": "",
+        "data-mid": "388186628186883"
+      },
+      "children": [
+        {
+          "tag": "DIV",
+          "class": "item-time",
+          "text": "昨天 21:35",
+          "selector": "div.item-time"
+        },
+        {
+          "tag": "DIV",
+          "class": "message-content",
+          "text": "哈喽呀，我们老板无意中看到你的简历，阅人三十载的老油条啪的一下坐起来，嘱咐我一定要把你招入我们公司，像您这般美貌才能于一体的求职者真的太难找了，能互相了解一下吗",
+          "selector": "div.message-content"
+        }
+      ],
+      "textContent": "昨天 21:35哈喽呀，我们老板无意中看到你的简历，阅人三十载的老油条啪的一下坐起来，嘱咐我一定要把你招入我们公司，像您这般美貌才能于一体的求职者真的太难找了，能互相了解一下吗",
+      "isFriend": true,
+      "isMine": false,
+      "isSystem": false,
+      "timeEl": {
+        "text": "昨天 21:35",
+        "class": "time",
+        "tag": "SPAN",
+        "outerHTML": "<span class=\"time\">昨天 21:35</span>"
+      },
+      "textEl": {
+        "text": "哈喽呀，我们老板无意中看到你的简历，阅人三十载的老油条啪的一下坐起来，嘱咐我一定要把你招入我们公司，像您这般美貌才能于一体的求职者真的太难找了，能互相了解一下吗",
+        "class": "text-content",
+        "html": "哈喽呀，我们老板无意中看到你的简历，阅人三十载的老油条啪的一下坐起来，嘱咐我一定要把你招入我们公司，像您这般美貌才能于一体的求职者真的太难找了，能互相了解一下吗"
+      },
+      "msgType": "text",
+      "status": "unknown",
+      "hasAvatar": true,
+      "autoSendMarkers": [],
+      "source_session_index": 1
+    },
+    {
+      "index": 1,
+      "outerHTML": "<li data-v-a2f29c4e=\"\" data-mid=\"388345591927552\" class=\"message-item item-myself\"><div class=\"item-time\"><span class=\"time\"> 08:22</span></div><div class=\"message-content\"><!----><div class=\"text\"><!----><i class=\"message-status status-read\"> 已读 </i><p><span class=\"text-content\">您好，这是我的简历</span></p></div></div><!----></li>",
+      "className": "message-item item-myself",
+      "tagName": "LI",
+      "dataAttrs": {
+        "data-v-a2f29c4e": "",
+        "data-mid": "388345591927552"
+      },
+      "children": [
+        {
+          "tag": "DIV",
+          "class": "item-time",
+          "text": " 08:22",
+          "selector": "div.item-time"
+        },
+        {
+          "tag": "DIV",
+          "class": "message-content",
+          "text": " 已读 您好，这是我的简历",
+          "selector": "div.message-content"
+        }
+      ],
+      "textContent": " 08:22 已读 您好，这是我的简历",
+      "isFriend": false,
+      "isMine": true,
+      "isSystem": false,
+      "timeEl": {
+        "text": "08:22",
+        "class": "time",
+        "tag": "SPAN",
+        "outerHTML": "<span class=\"time\"> 08:22</span>"
+      },
+      "textEl": {
+        "text": "您好，这是我的简历",
+        "class": "text-content",
+        "html": "您好，这是我的简历"
+      },
+      "msgType": "text",
+      "status": "message-status status-read",
+      "hasAvatar": false,
+      "autoSendMarkers": [],
+      "source_session_index": 1
+    },
+    {
+      "index": 2,
+      "outerHTML": "<li data-v-a2f29c4e=\"\" data-mid=\"388345591931648\" class=\"message-item item-system\"><!----><div class=\"text\"><span class=\"hyper-link\">附件简历请求已发送</span><!----></div><!----></li>",
+      "className": "message-item item-system",
+      "tagName": "LI",
+      "dataAttrs": {
+        "data-v-a2f29c4e": "",
+        "data-mid": "388345591931648"
+      },
+      "children": [
+        {
+          "tag": "DIV",
+          "class": "text",
+          "text": "附件简历请求已发送",
+          "selector": "div.text"
+        }
+      ],
+      "textContent": "附件简历请求已发送",
+      "isFriend": false,
+      "isMine": false,
+      "isSystem": true,
+      "timeEl": null,
+      "textEl": null,
+      "msgType": "system",
+      "status": "unknown",
+      "hasAvatar": false,
+      "autoSendMarkers": [],
+      "source_session_index": 1
+    },
+    {
+      "index": 3,
+      "outerHTML": "<li data-v-a2f29c4e=\"\" data-mid=\"388345592136449\" class=\"message-item item-system\"><!----><div class=\"message-content\"><div><div data-v-5704d76a=\"\" class=\"message-card-wrap boss-green\"><div data-v-5704d76a=\"\" class=\"message-card-top-wrap\"><div data-v-5704d76a=\"\" class=\"message-card-top-icon-content\"><img data-v-5704d76a=\"\" src=\"https://img.bosszhipin.com/static/file/2023/sutjt40zcw1687268041703.png\" alt=\"\" class=\"message-card-top-icon\"></div><div data-v-5704d76a=\"\" class=\"message-card-top-content\"><h3 data-v-5704d76a=\"\" class=\"message-card-top-title message-card-top-text\">数据分析简历-黄维.docx</h3><!----></div></div><div data-v-5704d76a=\"\" class=\"message-card-buttons\"><span data-v-5704d76a=\"\" class=\"card-btn one-btn\">点击预览附件简历</span></div></div><!----></div></div><!----></li>",
+      "className": "message-item item-system",
+      "tagName": "LI",
+      "dataAttrs": {
+        "data-v-a2f29c4e": "",
+        "data-mid": "388345592136449"
+      },
+      "children": [
+        {
+          "tag": "DIV",
+          "class": "message-content",
+          "text": "数据分析简历-黄维.docx点击预览附件简历",
+          "selector": "div.message-content"
+        }
+      ],
+      "textContent": "数据分析简历-黄维.docx点击预览附件简历",
+      "isFriend": false,
+      "isMine": false,
+      "isSystem": true,
+      "timeEl": null,
+      "textEl": null,
+      "msgType": "system",
+      "status": "unknown",
+      "hasAvatar": false,
+      "autoSendMarkers": [],
+      "source_session_index": 1
+    },
+    {
+      "index": 4,
+      "outerHTML": "<li data-v-a2f29c4e=\"\" data-mid=\"388511302660865\" class=\"message-item item-system\"><!----><div class=\"message-content\"><!----><div class=\"text\"><!----><!----><p><span class=\"text-content\">对方已同意，您的附件简历已发送给对方</span></p></div></div><!----></li>",
+      "className": "message-item item-system",
+      "tagName": "LI",
+      "dataAttrs": {
+        "data-v-a2f29c4e": "",
+        "data-mid": "388511302660865"
+      },
+      "children": [
+        {
+          "tag": "DIV",
+          "class": "message-content",
+          "text": "对方已同意，您的附件简历已发送给对方",
+          "selector": "div.message-content"
+        }
+      ],
+      "textContent": "对方已同意，您的附件简历已发送给对方",
+      "isFriend": false,
+      "isMine": false,
+      "isSystem": true,
+      "timeEl": null,
+      "textEl": {
+        "text": "对方已同意，您的附件简历已发送给对方",
+        "class": "text-content",
+        "html": "对方已同意，您的附件简历已发送给对方"
+      },
+      "msgType": "system",
+      "status": "unknown",
+      "hasAvatar": false,
+      "autoSendMarkers": [],
+      "source_session_index": 1
+    },
+    {
+      "index": 5,
+      "outerHTML": "<li data-v-a2f29c4e=\"\" data-mid=\"388511305544450\" class=\"message-item item-friend\"><!----><div class=\"message-content\"><div data-v-c31836e4=\"\" class=\"figure\"><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-c31836e4=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20250501/607f1f3d68754fd0398ff4d4834af1f1a7f1c37263d8f96d621b846807cb9c0ba4644070f0f5c57d_s.png.webp\" alt=\"\" class=\"image-circle\"></div><div class=\"text\"><!----><!----><p><span class=\"text-content\">我们是在抖音平台的多人聊天室直播，平均3-6人一起播，不需要开视频露脸，无才艺声音要求。<br>你只需要进入我们直播间上麦和其它主播一起配合聊天互动就可以<br>话题不限，生活，日常，爱好，音乐等都可以，不违规违法涉黄涉政即可。</span></p></div></div><!----></li>",
+      "className": "message-item item-friend",
+      "tagName": "LI",
+      "dataAttrs": {
+        "data-v-a2f29c4e": "",
+        "data-mid": "388511305544450"
+      },
+      "children": [
+        {
+          "tag": "DIV",
+          "class": "message-content",
+          "text": "我们是在抖音平台的多人聊天室直播，平均3-6人一起播，不需要开视频露脸，无才艺声音要求。你只需要进入我们直播间上麦和其它主播一起配合聊天互动就可以话题不限，生活，日常，爱好，音乐等都可以，不违规违法涉黄涉政即可。",
+          "selector": "div.message-content"
+        }
+      ],
+      "textContent": "我们是在抖音平台的多人聊天室直播，平均3-6人一起播，不需要开视频露脸，无才艺声音要求。你只需要进入我们直播间上麦和其它主播一起配合聊天互动就可以话题不限，生活，日常，爱好，音乐等都可以，不违规违法涉黄涉政即可。",
+      "isFriend": true,
+      "isMine": false,
+      "isSystem": false,
+      "timeEl": null,
+      "textEl": {
+        "text": "我们是在抖音平台的多人聊天室直播，平均3-6人一起播，不需要开视频露脸，无才艺声音要求。你只需要进入我们直播间上麦和其它主播一起配合聊天互动就可以话题不限，生活，日常，爱好，音乐等都可以，不违规违法涉黄涉政即可。",
+        "class": "text-content",
+        "html": "我们是在抖音平台的多人聊天室直播，平均3-6人一起播，不需要开视频露脸，无才艺声音要求。<br>你只需要进入我们直播间上麦和其它主播一起配合聊天互动就可以<br>话题不限，生活，日常，爱好，音乐等都可以，不违规违法涉黄涉政即可。"
+      },
+      "msgType": "text",
+      "status": "unknown",
+      "hasAvatar": true,
+      "autoSendMarkers": [],
+      "source_session_index": 1
+    },
+    {
+      "index": 6,
+      "outerHTML": "<li data-v-a2f29c4e=\"\" data-mid=\"388511308825346\" class=\"message-item item-friend\"><!----><div class=\"message-content\"><div data-v-c31836e4=\"\" class=\"figure\"><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-c31836e4=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20250501/607f1f3d68754fd0398ff4d4834af1f1a7f1c37263d8f96d621b846807cb9c0ba4644070f0f5c57d_s.png.webp\" alt=\"\" class=\"image-circle\"></div><div data-v-e548b958=\"\"><div data-v-5704d76a=\"\" data-v-e548b958=\"\" class=\"message-dialog-both message-card-wrap green\"><div data-v-5704d76a=\"\" class=\"message-card-top-wrap\"><span data-v-e548b958=\"\" data-v-5704d76a=\"\" class=\"dialog-icon weixin\"></span><div data-v-5704d76a=\"\" class=\"message-card-top-content\"><h3 data-v-5704d76a=\"\" class=\"message-card-top-title message-card-top-text\">我想要和您交换微信，您是否同意</h3><!----></div></div><div data-v-5704d76a=\"\" class=\"message-card-buttons\"><span data-v-5704d76a=\"\" class=\"card-btn\">拒绝</span><span data-v-5704d76a=\"\" class=\"card-btn\">同意</span></div></div><div data-v-e548b958=\"\"><!----><!----></div></div></div><!----></li>",
+      "className": "message-item item-friend",
+      "tagName": "LI",
+      "dataAttrs": {
+        "data-v-a2f29c4e": "",
+        "data-mid": "388511308825346"
+      },
+      "children": [
+        {
+          "tag": "DIV",
+          "class": "message-content",
+          "text": "我想要和您交换微信，您是否同意拒绝同意",
+          "selector": "div.message-content"
+        }
+      ],
+      "textContent": "我想要和您交换微信，您是否同意拒绝同意",
+      "isFriend": true,
+      "isMine": false,
+      "isSystem": false,
+      "timeEl": null,
+      "textEl": null,
+      "msgType": "image",
+      "status": "unknown",
+      "hasAvatar": true,
+      "autoSendMarkers": [],
+      "source_session_index": 1
+    },
+    {
+      "index": 0,
+      "outerHTML": "<li data-v-a2f29c4e=\"\" data-mid=\"388491559637763\" class=\"message-item item-myself\"><div class=\"item-time\"><span class=\"time\"> 18:16</span></div><div class=\"message-content\"><!----><div class=\"text\"><!----><i class=\"message-status status-delivery\"> 送达 </i><p><span class=\"text-content\">您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。</span></p></div></div><!----></li>",
+      "className": "message-item item-myself",
+      "tagName": "LI",
+      "dataAttrs": {
+        "data-v-a2f29c4e": "",
+        "data-mid": "388491559637763"
+      },
+      "children": [
+        {
+          "tag": "DIV",
+          "class": "item-time",
+          "text": " 18:16",
+          "selector": "div.item-time"
+        },
+        {
+          "tag": "DIV",
+          "class": "message-content",
+          "text": " 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+          "selector": "div.message-content"
+        }
+      ],
+      "textContent": " 18:16 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "isFriend": false,
+      "isMine": true,
+      "isSystem": false,
+      "timeEl": {
+        "text": "18:16",
+        "class": "time",
+        "tag": "SPAN",
+        "outerHTML": "<span class=\"time\"> 18:16</span>"
+      },
+      "textEl": {
+        "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+        "class": "text-content",
+        "html": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+      },
+      "msgType": "text",
+      "status": "message-status status-delivery",
+      "hasAvatar": false,
+      "autoSendMarkers": [],
+      "source_session_index": 5
+    },
+    {
+      "index": 1,
+      "outerHTML": "<li data-v-a2f29c4e=\"\" data-mid=\"388491559662337\" class=\"message-item item-friend\"><!----><div class=\"message-content\"><!----><div data-v-75186e06=\"\" class=\"articles-center\"><div data-v-5704d76a=\"\" data-v-75186e06=\"\" class=\"message-card-wrap blue\"><div data-v-5704d76a=\"\" class=\"message-card-top-wrap\"><div data-v-5704d76a=\"\" class=\"message-card-top-icon-content\"><img data-v-5704d76a=\"\" src=\"https://img.bosszhipin.com/beijin/icon/bed51f39faf420a15620181baffee482f7aba6f40b0808dd3b1d96fc3abbc5af.png\" alt=\"\" class=\"message-card-top-icon\"></div><div data-v-5704d76a=\"\" class=\"message-card-top-content\"><h3 data-v-5704d76a=\"\" class=\"message-card-top-title\">你与该职位竞争者PK情况</h3><p data-v-5704d76a=\"\" class=\"message-card-top-sub-title\">共<img class=\"msg-blur\" src=\"https://img.bosszhipin.com/static/file/2022/4jo15bijai1661828091546.png\">人投递，你超过<img class=\"msg-blur\" src=\"https://img.bosszhipin.com/static/file/2022/4jo15bijai1661828091546.png\">竞争者</p><p data-v-75186e06=\"\" data-v-5704d76a=\"\" class=\"description\"><span data-v-75186e06=\"\" data-v-5704d76a=\"\" class=\"highlight\">优秀竞争者会<img class=\"msg-blur\" src=\"https://img.bosszhipin.com/static/file/2022/4jo15bijai1661828091546.png\">，建议你<img class=\"msg-blur\" src=\"https://img.bosszhipin.com/static/file/2022/4jo15bijai1661828091546.png\"></span><span data-v-75186e06=\"\" data-v-5704d76a=\"\" class=\"extend-content\"><img data-v-75186e06=\"\" data-v-5704d76a=\"\" src=\"https://img.bosszhipin.com/beijin/upload/item/20221117/e84be512208dcc09157a98865417e868a1479b8b1716626d6bb61e3b7bce0931da574d19d1d82c88.png\" alt=\"\"><img data-v-75186e06=\"\" data-v-5704d76a=\"\" src=\"https://img.bosszhipin.com/beijin/upload/item/20221117/e84be512208dcc0959c56b5fcfc87b73038030bf85aed70c6bb61e3b7bce0931da574d19d1d82c88.png\" alt=\"\"><img data-v-75186e06=\"\" data-v-5704d76a=\"\" src=\"https://img.bosszhipin.com/beijin/upload/item/20221117/e84be512208dcc090c404fb7bd0bae3c5643c2b7253d5c396bb61e3b7bce0931da574d19d1d82c88.png\" alt=\"\"></span></p></div></div><div data-v-5704d76a=\"\" class=\"message-card-buttons\"><span data-v-5704d76a=\"\" class=\"card-btn one-btn\">查看详细分析</span></div></div></div><!----></div><!----></li>",
+      "className": "message-item item-friend",
+      "tagName": "LI",
+      "dataAttrs": {
+        "data-v-a2f29c4e": "",
+        "data-mid": "388491559662337"
+      },
+      "children": [
+        {
+          "tag": "DIV",
+          "class": "message-content",
+          "text": "你与该职位竞争者PK情况共人投递，你超过竞争者优秀竞争者会，建议你查看详细分析",
+          "selector": "div.message-content"
+        }
+      ],
+      "textContent": "你与该职位竞争者PK情况共人投递，你超过竞争者优秀竞争者会，建议你查看详细分析",
+      "isFriend": true,
+      "isMine": false,
+      "isSystem": false,
+      "timeEl": null,
+      "textEl": null,
+      "msgType": "text",
+      "status": "unknown",
+      "hasAvatar": false,
+      "autoSendMarkers": [],
+      "source_session_index": 5
+    },
+    {
+      "index": 0,
+      "outerHTML": "<li data-v-a2f29c4e=\"\" data-mid=\"388491252552449\" class=\"message-item item-myself\"><div class=\"item-time\"><span class=\"time\"> 18:14</span></div><div class=\"message-content\"><!----><div class=\"text\"><!----><i class=\"message-status status-read\"> 已读 </i><p><span class=\"text-content\">您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。</span></p></div></div><!----></li>",
+      "className": "message-item item-myself",
+      "tagName": "LI",
+      "dataAttrs": {
+        "data-v-a2f29c4e": "",
+        "data-mid": "388491252552449"
+      },
+      "children": [
+        {
+          "tag": "DIV",
+          "class": "item-time",
+          "text": " 18:14",
+          "selector": "div.item-time"
+        },
+        {
+          "tag": "DIV",
+          "class": "message-content",
+          "text": " 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+          "selector": "div.message-content"
+        }
+      ],
+      "textContent": " 18:14 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "isFriend": false,
+      "isMine": true,
+      "isSystem": false,
+      "timeEl": {
+        "text": "18:14",
+        "class": "time",
+        "tag": "SPAN",
+        "outerHTML": "<span class=\"time\"> 18:14</span>"
+      },
+      "textEl": {
+        "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+        "class": "text-content",
+        "html": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+      },
+      "msgType": "text",
+      "status": "message-status status-read",
+      "hasAvatar": false,
+      "autoSendMarkers": [],
+      "source_session_index": 7
+    },
+    {
+      "index": 1,
+      "outerHTML": "<li data-v-a2f29c4e=\"\" data-mid=\"388491252577026\" class=\"message-item item-friend\"><!----><div class=\"message-content\"><!----><div data-v-75186e06=\"\" class=\"articles-center\"><div data-v-5704d76a=\"\" data-v-75186e06=\"\" class=\"message-card-wrap blue\"><div data-v-5704d76a=\"\" class=\"message-card-top-wrap\"><div data-v-5704d76a=\"\" class=\"message-card-top-icon-content\"><img data-v-5704d76a=\"\" src=\"https://img.bosszhipin.com/beijin/icon/bed51f39faf420a15620181baffee482f7aba6f40b0808dd3b1d96fc3abbc5af.png\" alt=\"\" class=\"message-card-top-icon\"></div><div data-v-5704d76a=\"\" class=\"message-card-top-content\"><h3 data-v-5704d76a=\"\" class=\"message-card-top-title\">你与该职位竞争者PK情况</h3><p data-v-5704d76a=\"\" class=\"message-card-top-sub-title\">共<img class=\"msg-blur\" src=\"https://img.bosszhipin.com/static/file/2022/4jo15bijai1661828091546.png\">人投递，你超过<img class=\"msg-blur\" src=\"https://img.bosszhipin.com/static/file/2022/4jo15bijai1661828091546.png\">竞争者</p><p data-v-75186e06=\"\" data-v-5704d76a=\"\" class=\"description\"><span data-v-75186e06=\"\" data-v-5704d76a=\"\" class=\"highlight\">优秀竞争者会<img class=\"msg-blur\" src=\"https://img.bosszhipin.com/static/file/2022/4jo15bijai1661828091546.png\">，建议你<img class=\"msg-blur\" src=\"https://img.bosszhipin.com/static/file/2022/4jo15bijai1661828091546.png\"></span><span data-v-75186e06=\"\" data-v-5704d76a=\"\" class=\"extend-content\"><img data-v-75186e06=\"\" data-v-5704d76a=\"\" src=\"https://img.bosszhipin.com/beijin/upload/item/20221117/e84be512208dcc09056d180a2c815b9dea313c3c5a3ee7be6bb61e3b7bce0931da574d19d1d82c88.png\" alt=\"\"><img data-v-75186e06=\"\" data-v-5704d76a=\"\" src=\"https://img.bosszhipin.com/beijin/upload/item/20221117/e84be512208dcc09dab29b9fcc627789fc585d2b3bf64a976bb61e3b7bce0931da574d19d1d82c88.png\" alt=\"\"><img data-v-75186e06=\"\" data-v-5704d76a=\"\" src=\"https://img.bosszhipin.com/beijin/upload/item/20221117/e84be512208dcc096228fc5f864f33bdb67a3cd746975a976bb61e3b7bce0931da574d19d1d82c88.png\" alt=\"\"></span></p></div></div><div data-v-5704d76a=\"\" class=\"message-card-buttons\"><span data-v-5704d76a=\"\" class=\"card-btn one-btn\">查看详细分析</span></div></div></div><!----></div><!----></li>",
+      "className": "message-item item-friend",
+      "tagName": "LI",
+      "dataAttrs": {
+        "data-v-a2f29c4e": "",
+        "data-mid": "388491252577026"
+      },
+      "children": [
+        {
+          "tag": "DIV",
+          "class": "message-content",
+          "text": "你与该职位竞争者PK情况共人投递，你超过竞争者优秀竞争者会，建议你查看详细分析",
+          "selector": "div.message-content"
+        }
+      ],
+      "textContent": "你与该职位竞争者PK情况共人投递，你超过竞争者优秀竞争者会，建议你查看详细分析",
+      "isFriend": true,
+      "isMine": false,
+      "isSystem": false,
+      "timeEl": null,
+      "textEl": null,
+      "msgType": "text",
+      "status": "unknown",
+      "hasAvatar": false,
+      "autoSendMarkers": [],
+      "source_session_index": 7
+    },
+    {
+      "index": 0,
+      "outerHTML": "<li data-v-a2f29c4e=\"\" data-mid=\"388493314323200\" class=\"message-item item-friend\"><div class=\"item-time\"><span class=\"time\"> 18:23</span></div><div class=\"message-content\"><div data-v-c31836e4=\"\" class=\"figure\"><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-c31836e4=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20250220/607f1f3d68754fd0c8ab5235ff1b770614ee0ef5816c97f7315e35273fc09392665a458d9c8cb8c5_s.png.webp\" alt=\"\" class=\"image-circle\"></div><div class=\"text\"><!----><!----><p><span class=\"text-content\">黄维，你好</span></p></div></div><!----></li>",
+      "className": "message-item item-friend",
+      "tagName": "LI",
+      "dataAttrs": {
+        "data-v-a2f29c4e": "",
+        "data-mid": "388493314323200"
+      },
+      "children": [
+        {
+          "tag": "DIV",
+          "class": "item-time",
+          "text": " 18:23",
+          "selector": "div.item-time"
+        },
+        {
+          "tag": "DIV",
+          "class": "message-content",
+          "text": "黄维，你好",
+          "selector": "div.message-content"
+        }
+      ],
+      "textContent": " 18:23黄维，你好",
+      "isFriend": true,
+      "isMine": false,
+      "isSystem": false,
+      "timeEl": {
+        "text": "18:23",
+        "class": "time",
+        "tag": "SPAN",
+        "outerHTML": "<span class=\"time\"> 18:23</span>"
+      },
+      "textEl": {
+        "text": "黄维，你好",
+        "class": "text-content",
+        "html": "黄维，你好"
+      },
+      "msgType": "text",
+      "status": "unknown",
+      "hasAvatar": true,
+      "autoSendMarkers": [],
+      "source_session_index": 2
+    },
+    {
+      "index": 1,
+      "outerHTML": "<li data-v-a2f29c4e=\"\" data-mid=\"388493314372355\" class=\"message-item item-friend\"><!----><div class=\"message-content\"><!----><div data-v-75186e06=\"\" class=\"articles-center\"><div data-v-5704d76a=\"\" data-v-75186e06=\"\" class=\"message-card-wrap blue\"><div data-v-5704d76a=\"\" class=\"message-card-top-wrap\"><div data-v-5704d76a=\"\" class=\"message-card-top-icon-content\"><img data-v-5704d76a=\"\" src=\"https://img.bosszhipin.com/beijin/icon/bed51f39faf420a15620181baffee482f7aba6f40b0808dd3b1d96fc3abbc5af.png\" alt=\"\" class=\"message-card-top-icon\"></div><div data-v-5704d76a=\"\" class=\"message-card-top-content\"><h3 data-v-5704d76a=\"\" class=\"message-card-top-title\">你与该职位竞争者PK情况</h3><p data-v-5704d76a=\"\" class=\"message-card-top-sub-title\">共<img class=\"msg-blur\" src=\"https://img.bosszhipin.com/static/file/2022/4jo15bijai1661828091546.png\">人投递，你超过<img class=\"msg-blur\" src=\"https://img.bosszhipin.com/static/file/2022/4jo15bijai1661828091546.png\">竞争者</p><p data-v-75186e06=\"\" data-v-5704d76a=\"\" class=\"description\"><span data-v-75186e06=\"\" data-v-5704d76a=\"\" class=\"highlight\">优秀竞争者会<img class=\"msg-blur\" src=\"https://img.bosszhipin.com/static/file/2022/4jo15bijai1661828091546.png\">，建议你<img class=\"msg-blur\" src=\"https://img.bosszhipin.com/static/file/2022/4jo15bijai1661828091546.png\"></span><span data-v-75186e06=\"\" data-v-5704d76a=\"\" class=\"extend-content\"><img data-v-75186e06=\"\" data-v-5704d76a=\"\" src=\"https://img.bosszhipin.com/beijin/upload/item/20221117/e84be512208dcc09095058edb5e6d5d9273d3250d5a0c4c56bb61e3b7bce0931da574d19d1d82c88.png\" alt=\"\"><img data-v-75186e06=\"\" data-v-5704d76a=\"\" src=\"https://img.bosszhipin.com/beijin/upload/item/20221117/e84be512208dcc09ba9684830b5f873d7f98f2d5757b12c86bb61e3b7bce0931da574d19d1d82c88.png\" alt=\"\"><img data-v-75186e06=\"\" data-v-5704d76a=\"\" src=\"https://img.bosszhipin.com/beijin/upload/item/20221117/e84be512208dcc09f663dc109c9552b92d74732363d6a4056bb61e3b7bce0931da574d19d1d82c88.png\" alt=\"\"></span></p></div></div><div data-v-5704d76a=\"\" class=\"message-card-buttons\"><span data-v-5704d76a=\"\" class=\"card-btn one-btn\">查看详细分析</span></div></div></div><!----></div><!----></li>",
+      "className": "message-item item-friend",
+      "tagName": "LI",
+      "dataAttrs": {
+        "data-v-a2f29c4e": "",
+        "data-mid": "388493314372355"
+      },
+      "children": [
+        {
+          "tag": "DIV",
+          "class": "message-content",
+          "text": "你与该职位竞争者PK情况共人投递，你超过竞争者优秀竞争者会，建议你查看详细分析",
+          "selector": "div.message-content"
+        }
+      ],
+      "textContent": "你与该职位竞争者PK情况共人投递，你超过竞争者优秀竞争者会，建议你查看详细分析",
+      "isFriend": true,
+      "isMine": false,
+      "isSystem": false,
+      "timeEl": null,
+      "textEl": null,
+      "msgType": "text",
+      "status": "unknown",
+      "hasAvatar": false,
+      "autoSendMarkers": [],
+      "source_session_index": 2
+    },
+    {
+      "index": 2,
+      "outerHTML": "<li data-v-a2f29c4e=\"\" data-mid=\"388493323469568\" class=\"message-item item-friend\"><!----><div class=\"message-content\"><div data-v-c31836e4=\"\" class=\"figure\"><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-c31836e4=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20250220/607f1f3d68754fd0c8ab5235ff1b770614ee0ef5816c97f7315e35273fc09392665a458d9c8cb8c5_s.png.webp\" alt=\"\" class=\"image-circle\"></div><div class=\"text\"><!----><!----><p><span class=\"text-content\">目前在招一名实习生，薪资3k，合同签至26年12月底，一周5天，岗位是检查鸿蒙手机上的APP的各项数据然后填到表格上办公环境很好，不签三方协议，如果结课了。考虑了可以聊聊，电话面试~</span></p></div></div><!----></li>",
+      "className": "message-item item-friend",
+      "tagName": "LI",
+      "dataAttrs": {
+        "data-v-a2f29c4e": "",
+        "data-mid": "388493323469568"
+      },
+      "children": [
+        {
+          "tag": "DIV",
+          "class": "message-content",
+          "text": "目前在招一名实习生，薪资3k，合同签至26年12月底，一周5天，岗位是检查鸿蒙手机上的APP的各项数据然后填到表格上办公环境很好，不签三方协议，如果结课了。考虑了可以聊聊，电话面试~",
+          "selector": "div.message-content"
+        }
+      ],
+      "textContent": "目前在招一名实习生，薪资3k，合同签至26年12月底，一周5天，岗位是检查鸿蒙手机上的APP的各项数据然后填到表格上办公环境很好，不签三方协议，如果结课了。考虑了可以聊聊，电话面试~",
+      "isFriend": true,
+      "isMine": false,
+      "isSystem": false,
+      "timeEl": null,
+      "textEl": {
+        "text": "目前在招一名实习生，薪资3k，合同签至26年12月底，一周5天，岗位是检查鸿蒙手机上的APP的各项数据然后填到表格上办公环境很好，不签三方协议，如果结课了。考虑了可以聊聊，电话面试~",
+        "class": "text-content",
+        "html": "目前在招一名实习生，薪资3k，合同签至26年12月底，一周5天，岗位是检查鸿蒙手机上的APP的各项数据然后填到表格上办公环境很好，不签三方协议，如果结课了。考虑了可以聊聊，电话面试~"
+      },
+      "msgType": "text",
+      "status": "unknown",
+      "hasAvatar": true,
+      "autoSendMarkers": [],
+      "source_session_index": 2
+    }
+  ],
+  "message_items_total": 16,
+  "chat_list": {
+    "selector": ".user-list",
+    "className": "user-list",
+    "childCount": 1,
+    "items": [
+      {
+        "index": 0,
+        "className": "friend-content selected",
+        "name": "王女士",
+        "company": "语新文化传媒",
+        "jobTitle": "王经理",
+        "lastMsg": "你好，黄维，我对你的经历很感兴趣。该岗位提供日结保底66-133元，礼物提成50%，正常播日均薪资大概200-400元，支持居家办公、时间自由，无经验也可免费培训。有空聊聊吗？",
+        "time": "19:37",
+        "unread": null,
+        "statusClass": null,
+        "statusText": null,
+        "isSelected": true,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content selected\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><!----><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20241222/607f1f3d68754fd03c754121a5aba3beb5e6428aa71fade5169714199cd40b060cc7cc72a73c3d9a_s.jpg.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">19:37</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">王女士</span><span>语新文化传媒</span><i class=\"vline\"></i><span>王经理</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><!----><span class=\"last-msg-text\">你好，黄维，我对你的经历很感兴趣。该岗位提供日结保底66-133元，礼物提成50%，正常播日均薪资大概200-400元，支持居家办公、时间自由，无经验也可免费培训。有空聊聊吗？</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5545/static/images/icon-operater.e346c7"
+      },
+      {
+        "index": 1,
+        "className": "friend-content",
+        "name": "周先生",
+        "company": "杭州大火",
+        "jobTitle": "高级人事专员",
+        "lastMsg": "您正在与Boss周先生沟通",
+        "time": "19:36",
+        "unread": "3",
+        "statusClass": null,
+        "statusText": null,
+        "isSelected": false,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><span data-v-4ef04e05=\"\" class=\"notice-badge\">3</span><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20250501/607f1f3d68754fd0398ff4d4834af1f1a7f1c37263d8f96d621b846807cb9c0ba4644070f0f5c57d_s.png.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">19:36</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">周先生</span><span>杭州大火</span><i class=\"vline\"></i><span>高级人事专员</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><!----><span class=\"last-msg-text\">您正在与Boss周先生沟通</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5545/static/images/icon-operater.e346c736.png\" draggable=\"false\" class=\"ico"
+      },
+      {
+        "index": 2,
+        "className": "friend-content",
+        "name": "李女士",
+        "company": "中软国际",
+        "jobTitle": "高级HR",
+        "lastMsg": "目前在招一名实习生，薪资3k，合同签至26年12月底，一周5天，岗位是检查鸿蒙手机上的APP的各项数据然后填到表格上办公环境很好，不签三方协议，如果结课了。考虑了可以聊聊，电话面试~",
+        "time": "18:23",
+        "unread": "2",
+        "statusClass": null,
+        "statusText": null,
+        "isSelected": false,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><span data-v-4ef04e05=\"\" class=\"notice-badge\">2</span><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20250220/607f1f3d68754fd0c8ab5235ff1b770614ee0ef5816c97f7315e35273fc09392665a458d9c8cb8c5_s.png.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">18:23</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">李女士</span><span>中软国际</span><i class=\"vline\"></i><span>高级HR</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><!----><span class=\"last-msg-text\">目前在招一名实习生，薪资3k，合同签至26年12月底，一周5天，岗位是检查鸿蒙手机上的APP的各项数据然后填到表格上办公环境很好，不签三方协议，如果结课了。考虑了可以聊聊，电话面试~</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/"
+      },
+      {
+        "index": 3,
+        "className": "friend-content",
+        "name": "胡先生",
+        "company": "美团外卖",
+        "jobTitle": "助理站长",
+        "lastMsg": "亲，在吗？",
+        "time": "18:18",
+        "unread": "4",
+        "statusClass": null,
+        "statusText": null,
+        "isSelected": false,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><span data-v-4ef04e05=\"\" class=\"notice-badge\">4</span><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20260318/607f1f3d68754fd094373d9a103123ec3cd668d0d31800f0d04087c588fe204300e97184865da294_s.png.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">18:18</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">胡先生</span><span>美团外卖</span><i class=\"vline\"></i><span>助理站长</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><!----><span class=\"last-msg-text\">亲，在吗？</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5545/static/images/icon-operater.e346c736.png\" draggable=\"false\" class=\"icon-operate "
+      },
+      {
+        "index": 4,
+        "className": "friend-content",
+        "name": "曾女士",
+        "company": "宝宝秀文化传媒",
+        "jobTitle": "人事主管",
+        "lastMsg": "黄维，你好",
+        "time": "18:17",
+        "unread": "1",
+        "statusClass": null,
+        "statusText": null,
+        "isSelected": false,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><span data-v-4ef04e05=\"\" class=\"notice-badge\">1</span><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20260609/607f1f3d68754fd039f9867e9e6dc910375de1ed993f6fda3f74e0fa8e2a6deceeddced8fd30eccf_s.jpg.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">18:17</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">曾女士</span><span>宝宝秀文化传媒</span><i class=\"vline\"></i><span>人事主管</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><!----><span class=\"last-msg-text\">黄维，你好</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5545/static/images/icon-operater.e346c736.png\" draggable=\"false\" class=\"icon-opera"
+      },
+      {
+        "index": 5,
+        "className": "friend-content",
+        "name": "李女士",
+        "company": "湖南潜水艇品牌管理",
+        "jobTitle": "招聘者",
+        "lastMsg": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+        "time": "18:16",
+        "unread": null,
+        "statusClass": "message-status status-delivery",
+        "statusText": "[送达]",
+        "isSelected": false,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><!----><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/boss/avatar/avatar_4.png?x-oss-process=image/resize,l_900,h_600/format,webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">18:16</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">李女士</span><span>湖南潜水艇品牌管理</span><i class=\"vline\"></i><span>招聘者</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><i class=\"message-status status-delivery\"> [送达] </i><span class=\"last-msg-text\">您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5545/static/images/icon-operater.e346c736.png\" draggable=\"false\" class=\"icon-operate list-operate\"><img sr"
+      },
+      {
+        "index": 6,
+        "className": "friend-content",
+        "name": "邵语桐",
+        "company": "语新文化传媒",
+        "jobTitle": "HR",
+        "lastMsg": "亲，在吗？",
+        "time": "18:16",
+        "unread": null,
+        "statusClass": null,
+        "statusText": null,
+        "isSelected": false,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><!----><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20251219/607f1f3d68754fd009ba3765df02f4a98dce6e2991a948366bb61e3b7bce0931da574d19d1d82c88_s.jpg.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">18:16</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">邵语桐&nbsp;</span><span>语新文化传媒</span><i class=\"vline\"></i><span>HR</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><!----><span class=\"last-msg-text\">亲，在吗？</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5545/static/images/icon-operater.e346c736.png\" draggable=\"false\" class=\"icon-operate list-operate\"><img src=\"https://static.zh"
+      },
+      {
+        "index": 7,
+        "className": "friend-content",
+        "name": "伍金林",
+        "company": "天择教育(互联网+)",
+        "jobTitle": "总经理",
+        "lastMsg": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+        "time": "18:14",
+        "unread": null,
+        "statusClass": "message-status status-read",
+        "statusText": "[已读]",
+        "isSelected": false,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><!----><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/boss/avatar/avatar_6.png?x-oss-process=image/resize,l_900,h_600/format,webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">18:14</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">伍金林</span><span>天择教育(互联网+)</span><i class=\"vline\"></i><span>总经理</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><i class=\"message-status status-read\"> [已读] </i><span class=\"last-msg-text\">您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5545/static/images/icon-operater.e346c736.png\" draggable=\"false\" class=\"icon-operate list-operate\"><img src=\""
+      },
+      {
+        "index": 8,
+        "className": "friend-content",
+        "name": "赵纪红",
+        "company": "芒果tv",
+        "jobTitle": "招聘者",
+        "lastMsg": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+        "time": "18:14",
+        "unread": null,
+        "statusClass": "message-status status-delivery",
+        "statusText": "[送达]",
+        "isSelected": false,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><!----><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20260825/607f1f3d68754fd09506805cd5873610a1c3ecdbab74f84da14ca2381c5f87d3a9edbe53014bf1c1_s.jpg.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">18:14</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">赵纪红</span><span>芒果tv</span><i class=\"vline\"></i><span>招聘者</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><i class=\"message-status status-delivery\"> [送达] </i><span class=\"last-msg-text\">您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5545/static/images/icon-operater.e346c736.png\" draggable=\"false\" "
+      },
+      {
+        "index": 9,
+        "className": "friend-content",
+        "name": "李女士",
+        "company": "深圳市极客星球电...",
+        "jobTitle": "招聘者",
+        "lastMsg": "感谢您的时间，理解您的考虑，祝您招聘顺利~",
+        "time": "18:13",
+        "unread": null,
+        "statusClass": "message-status status-delivery",
+        "statusText": "[送达]",
+        "isSelected": false,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><!----><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20251113/607f1f3d68754fd0ed012296971057b44380811a9c6af8dec4dd26a4528e652a82fdc39f905404ee_s.jpg.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">18:13</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">李女士</span><span>深圳市极客星球电...</span><i class=\"vline\"></i><span>招聘者</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><i class=\"message-status status-delivery\"> [送达] </i><span class=\"last-msg-text\">感谢您的时间，理解您的考虑，祝您招聘顺利~</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5545/static/images/icon-operater.e346c736.png\" draggable=\"false\" "
+      },
+      {
+        "index": 10,
+        "className": "friend-content",
+        "name": "陈女士",
+        "company": "东源智行",
+        "jobTitle": "HR",
+        "lastMsg": "您的附件简历 数据分析简... 已发送给Boss点击查看附件",
+        "time": "18:13",
+        "unread": null,
+        "statusClass": null,
+        "statusText": null,
+        "isSelected": false,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><!----><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20260803/607f1f3d68754fd0f72a22f431045ee574ace83ce6c3b9e6a303d7e462a1e77141d103566c6d2067_s.jpg.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">18:13</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">陈女士</span><span>东源智行</span><i class=\"vline\"></i><span>HR</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><!----><span class=\"last-msg-text\">您的附件简历 数据分析简... 已发送给Boss点击查看附件</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5545/static/images/icon-operater.e346c736.png\" draggable=\"false\" class=\"icon-operate list-operate\"><img src=\""
+      },
+      {
+        "index": 11,
+        "className": "friend-content",
+        "name": "康女士",
+        "company": "牛数科技",
+        "jobTitle": "行政经理",
+        "lastMsg": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+        "time": "18:12",
+        "unread": null,
+        "statusClass": "message-status status-delivery",
+        "statusText": "[送达]",
+        "isSelected": false,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><!----><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20230906/607f1f3d68754fd0f2095c1e818d739dcbc1c6422b51fb580f48fcfaff00b41c74abd14c30adfb40_s.png.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">18:12</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">康女士</span><span>牛数科技</span><i class=\"vline\"></i><span>行政经理</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><i class=\"message-status status-delivery\"> [送达] </i><span class=\"last-msg-text\">您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5545/static/images/icon-operater.e346c736.png\" draggable=\"false\""
+      },
+      {
+        "index": 12,
+        "className": "friend-content",
+        "name": "彭壹华",
+        "company": "中沪航企业",
+        "jobTitle": "经理",
+        "lastMsg": "你好，详情微信详聊发电话，资料电话有误。",
+        "time": "17:12",
+        "unread": null,
+        "statusClass": null,
+        "statusText": null,
+        "isSelected": false,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><!----><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20220705/607f1f3d68754fd0fbdc129ac2268203d858993833acfb3c7fcb1a1fe338aa132057ddfb9813bd04_s.jpg?x-oss-process=image/resize,l_900,h_600/format,webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">17:12</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">彭壹华</span><span>中沪航企业</span><i class=\"vline\"></i><span>经理</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><!----><span class=\"last-msg-text\">你好，详情微信详聊发电话，资料电话有误。</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5545/static/images/icon-operater.e346c736.png\" draggable=\"false\" class=\""
+      },
+      {
+        "index": 13,
+        "className": "friend-content",
+        "name": "胡先生",
+        "company": "雷特科技",
+        "jobTitle": "招聘经理",
+        "lastMsg": "你好，方便聊一下嘛，我们这个岗位主要是把产品卖给欧美。类似独自经营一家跨境网店，需要较强的皮实+思考能力。提供五险一金+双休，并且有未来无限的薪资可能，期待你的回应哈",
+        "time": "11:54",
+        "unread": "1",
+        "statusClass": null,
+        "statusText": null,
+        "isSelected": false,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><span data-v-4ef04e05=\"\" class=\"notice-badge\">1</span><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/boss/avatar/avatar_14.png?x-oss-process=image/resize,l_900,h_600/format,webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">11:54</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">胡先生</span><span>雷特科技</span><i class=\"vline\"></i><span>招聘经理</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><!----><span class=\"last-msg-text\">你好，方便聊一下嘛，我们这个岗位主要是把产品卖给欧美。类似独自经营一家跨境网店，需要较强的皮实+思考能力。提供五险一金+双休，并且有未来无限的薪资可能，期待你的回应哈</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5545/static/images/icon-operater.e346c736.png\" dragg"
+      },
+      {
+        "index": 14,
+        "className": "friend-content",
+        "name": "蒋欢",
+        "company": "果伊人果业",
+        "jobTitle": "人力行政主管",
+        "lastMsg": "我们已经认真审阅了您的简历，但很遗憾，您的经验并不完全符合我们当前项目的需求。祝您在BOSS直聘找到更好的机会！",
+        "time": "11:34",
+        "unread": "1",
+        "statusClass": null,
+        "statusText": null,
+        "isSelected": false,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><span data-v-4ef04e05=\"\" class=\"notice-badge\">1</span><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20250326/607f1f3d68754fd083a2aea6e0b7bf437375446221e4426284a03833ec1f458118c46851f21f8531_s.png.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">11:34</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">蒋欢</span><span>果伊人果业</span><i class=\"vline\"></i><span>人力行政主管</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><!----><span class=\"last-msg-text\">我们已经认真审阅了您的简历，但很遗憾，您的经验并不完全符合我们当前项目的需求。祝您在BOSS直聘找到更好的机会！</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5545/static/images/icon-operater"
+      },
+      {
+        "index": 15,
+        "className": "friend-content",
+        "name": "曾意鹏",
+        "company": "湘爱电商",
+        "jobTitle": "hrbp主管",
+        "lastMsg": "非常感谢您的关注，可能方向和目前岗位需求会有偏差，我们已将简历纳入公司人才库，后期有机会再合作哦🌹",
+        "time": "10:12",
+        "unread": "1",
+        "statusClass": null,
+        "statusText": null,
+        "isSelected": false,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><span data-v-4ef04e05=\"\" class=\"notice-badge\">1</span><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20260820/607f1f3d68754fd0016644a53af06ae52b2250b1872b0f7688a2650708e26472627e08a9ecd461fa_s.jpg.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">10:12</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">曾意鹏</span><span>湘爱电商</span><i class=\"vline\"></i><span>hrbp主管</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><!----><span class=\"last-msg-text\">非常感谢您的关注，可能方向和目前岗位需求会有偏差，我们已将简历纳入公司人才库，后期有机会再合作哦🌹</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5545/static/images/icon-operater.e346c"
+      },
+      {
+        "index": 16,
+        "className": "friend-content",
+        "name": "汪雨荷",
+        "company": "长沙励泽教育科技",
+        "jobTitle": "人事专员",
+        "lastMsg": "哈喽，之前消息看到未回复，咱们岗位对新人很友好，小白可入，师傅一带一，还有内部培训。办公室内勤岗位，不用外跑、不用打电话，没有试岗期，晋升规则公开，感兴趣我给你细说岗位信息。",
+        "time": "10:01",
+        "unread": "3",
+        "statusClass": null,
+        "statusText": null,
+        "isSelected": false,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><span data-v-4ef04e05=\"\" class=\"notice-badge\">3</span><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20260616/607f1f3d68754fd00b282c695757a6aba1c368bb038276e2d497d66675d15843343dd93989bed209_s.jpeg.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">10:01</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">汪雨荷</span><span>长沙励泽教育科技</span><i class=\"vline\"></i><span>人事专员</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><!----><span class=\"last-msg-text\">哈喽，之前消息看到未回复，咱们岗位对新人很友好，小白可入，师傅一带一，还有内部培训。办公室内勤岗位，不用外跑、不用打电话，没有试岗期，晋升规则公开，感兴趣我给你细说岗位信息。</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new"
+      },
+      {
+        "index": 17,
+        "className": "friend-content",
+        "name": "贾女士",
+        "company": "长沙笠川科技有限公司",
+        "jobTitle": "招聘者",
+        "lastMsg": "对方已同意，您的附件简历已发送给对方",
+        "time": "09:50",
+        "unread": "1",
+        "statusClass": null,
+        "statusText": null,
+        "isSelected": false,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><span data-v-4ef04e05=\"\" class=\"notice-badge\">1</span><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20240605/607f1f3d68754fd0b476c7fd1b3584b57e93d30283332f04c2475ef3e17a0f2b7e9ccf7fab50eea6_s.jpg.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">09:50</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">贾女士</span><span>长沙笠川科技有限公司</span><i class=\"vline\"></i><span>招聘者</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><!----><span class=\"last-msg-text\">对方已同意，您的附件简历已发送给对方</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5545/static/images/icon-operater.e346c736.png\" draggable=\"false\" cl"
+      },
+      {
+        "index": 18,
+        "className": "friend-content",
+        "name": "曾女士",
+        "company": "尚美科技",
+        "jobTitle": "人事经理",
+        "lastMsg": "您正在与Boss曾女士沟通",
+        "time": "09:48",
+        "unread": "2",
+        "statusClass": null,
+        "statusText": null,
+        "isSelected": false,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><span data-v-4ef04e05=\"\" class=\"notice-badge\">2</span><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20260917/607f1f3d68754fd023e67b185ed917abc0c4499493f666a5a5b7689a997f8858c00272d69137e126_s.jpg.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">09:48</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">曾女士</span><span>尚美科技</span><i class=\"vline\"></i><span>人事经理</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><!----><span class=\"last-msg-text\">您正在与Boss曾女士沟通</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5545/static/images/icon-operater.e346c736.png\" draggable=\"false\" class=\"icon-"
+      },
+      {
+        "index": 19,
+        "className": "friend-content",
+        "name": "周女士",
+        "company": "长沙笠川科技有限公司",
+        "jobTitle": "人事",
+        "lastMsg": "不好意思，该岗位需要影视方向的专业，感谢您的关注，可以看看其他岗位哦",
+        "time": "09:27",
+        "unread": "1",
+        "statusClass": null,
+        "statusText": null,
+        "isSelected": false,
+        "outerHTML": "<div data-v-3d67f5a8=\"\" d-c=\"62001\" class=\"friend-content\"><div data-v-4ef04e05=\"\" data-v-3d67f5a8=\"\" class=\"figure\"><span data-v-4ef04e05=\"\" class=\"notice-badge\">1</span><img data-v-298b8c96=\"\" data-v-351a13af=\"\" data-v-4ef04e05=\"\" src=\"https://img.bosszhipin.com/beijin/upload/avatar/20251121/607f1f3d68754fd09d0338e29b4750aaf6908ce63888f666d209cef5850cf09bdbc2f4c28da0b2e7_s.jpg.webp\" alt=\"\" class=\"image-circle\"><!----></div><div data-v-3d67f5a8=\"\" class=\"text\"><div data-v-3d67f5a8=\"\"><span class=\"time\">09:27</span><!----><!----></div><div data-v-3d67f5a8=\"\" class=\"title-box\"><span class=\"name-box\"><span class=\"name-text\">周女士</span><span>长沙笠川科技有限公司</span><i class=\"vline\"></i><span>人事</span><!----></span><!----></div><div data-v-3d67f5a8=\"\" class=\"gray last-msg\"><!----><!----><span class=\"last-msg-text\">不好意思，该岗位需要影视方向的专业，感谢您的关注，可以看看其他岗位哦</span><div class=\"user-operation\"><img src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5545/static/images/icon-operater.e346c736.png\" dragg"
+      }
+    ],
+    "total_sessions": 40
+  },
+  "chat_header": {
+    "selector": ".top-info-content",
+    "className": "top-info-content",
+    "textContent": "王女士语新文化传媒王经理更多置顶备注不感兴趣黑名单删除举报急招（在家就行）哔哩哔哩兼职不露脸主播9-10K长沙查看职位",
+    "outerHTML": "<div data-v-3ef7662f=\"\" data-v-29cd61d6=\"\" class=\"top-info-content\"><div data-v-5afcf6c0=\"\" data-v-3ef7662f=\"\" class=\"user-info-wrap\"><div data-v-5afcf6c0=\"\" class=\"user-info\"><div data-v-5afcf6c0=\"\" class=\"base-info\"><div data-v-5afcf6c0=\"\" class=\"name-content\"><span data-v-5afcf6c0=\"\" class=\"name-text\">王女士</span><!----></div><span data-v-5afcf6c0=\"\">语新文化传媒</span><!----><i data-v-5afcf6c0=\"\" class=\"vline\"></i><span data-v-5afcf6c0=\"\" class=\"base-title\">王经理</span><!----></div><div data-v-5afcf6c0=\"\" class=\"right-content\"><!----><!----><div data-v-5afcf6c0=\"\" class=\"ui-dropmenu-v1 ui-dropmenu\"><div class=\"ui-dropmenu-label\"><div data-v-5afcf6c0=\"\" class=\"top-operation-item\"><img data-v-5afcf6c0=\"\" src=\"https://static.zhipin.com/fe-zhipin-geek/web/chat-new/v5545/static/images/conversation-top-more.01352f18.png\" alt=\"\">更多</div><!----></div><div class=\"ui-dropmenu-list\"><div data-v-5afcf6c0=\"\"><ul data-v-5afcf6c0=\"\" class=\"more-setting\"><li data-v-5afcf6c0=\"\"><svg data-v-72755f3d=\"\" data-v-5afcf6c0=\"\" aria-hidden=\"true\" width=\"18\" height=\"18\" class=\"boss-svg svg-icon\" svgClass=\"boss-svg\"><use data-v-72755f3d=\"\" xlink:href=\"#icon-icon-set-top\"></use></svg><span data-v-5afcf6c0=\"\">置顶</span></li><li data-v-5afcf6c0=\"\"><svg data-v-72755f3d=\"\" data-v-5afcf6c0=\"\" aria-hidden=\"true\" width=\"18\" height=\"18\" class=\"boss-svg svg-icon\" svgClass=\"boss-svg\"><use data-v-72755f3d=\"\" xlink:href=\"#icon-icon-remark\"></use></svg><span data-v-5afcf6c0=\"\">备注</span></li><li data-v-5afcf6c0=\"\"><svg data-v-72755f3d=\"\" data-v-5afcf6c0=\"\" aria-hidden=\"true\" width=\"18\" height=\"18\" class=\"boss-svg svg-icon\" svgClass=\"boss-svg\"><use data-v-72755f3d=\"\" xlink:href=\"#icon-icon-not-interested\"></use></svg><span data-v-5afcf6c0=\"\">不感兴趣</span></li><li data-v-5afcf6c0=\"\"><svg data-v-72755f3d=\"\" data-v-5afcf6c0=\"\" aria-hidden=\"true\" width=\"18\" height=\"18\" class=\"boss-svg svg-icon\" svgClass=\"boss-svg\"><use data-v-72755f3d=\"\" xlink:href=\"#icon-icon-black-list\"></use></svg><span data-v-5afcf6c0=\"\">黑名单</span></",
+    "name": "王女士",
+    "company": null,
+    "position": "急招（在家就行）哔哩哔哩兼职不露脸主播9-10K长沙查看职位",
+    "online": null
+  },
+  "message_types": {
+    "text": {
+      "selector": ".message-item .text-content",
+      "description": "文本消息：.text-content 有内容"
+    },
+    "image": {
+      "selector": ".message-item img.image-circle",
+      "description": "图片/头像消息：img.image-circle"
+    },
+    "resume": {
+      "selector": ".message-item [class*=\"resume\"]",
+      "description": "简历消息：含resume相关class"
+    },
+    "system": {
+      "selector": ".message-item.item-system",
+      "description": "系统通知：.message-item.item-system（系统自动匹配职位等提示）"
+    },
+    "exchange_contact": {
+      "selector": ".message-item [class*=\"exchange\"], .message-item [class*=\"wechat\"], .message-item [class*=\"phone\"]",
+      "description": "交换微信/电话：含exchange/wechat/phone相关class"
+    },
+    "detected_counts": {
+      "text": 11,
+      "image": 1,
+      "resume": 0,
+      "system": 4,
+      "exchange": 0
+    }
+  },
+  "message_status": {
+    "selectors": {
+      "delivered": ".message-status.status-delivery",
+      "read": ".message-status.status-read",
+      "sending": ".message-status.status-sending",
+      "failed": ".message-status.status-fail"
+    },
+    "description": "BOSS直聘我方消息状态：[送达]=status-delivery，[已读]=status-read",
+    "counts": {
+      "delivery": 9,
+      "read": 5,
+      "sending": 0,
+      "fail": 0
+    },
+    "samples": [
+      {
+        "class": "message-status status-delivery",
+        "text": "[送达]"
+      },
+      {
+        "class": "message-status status-read",
+        "text": "[已读]"
+      },
+      {
+        "class": "message-status status-delivery",
+        "text": "[送达]"
+      },
+      {
+        "class": "message-status status-delivery",
+        "text": "[送达]"
+      },
+      {
+        "class": "message-status status-delivery",
+        "text": "[送达]"
+      },
+      {
+        "class": "message-status status-delivery",
+        "text": "[送达]"
+      },
+      {
+        "class": "message-status status-read",
+        "text": "[已读]"
+      },
+      {
+        "class": "message-status status-delivery",
+        "text": "[送达]"
+      },
+      {
+        "class": "message-status status-delivery",
+        "text": "[送达]"
+      },
+      {
+        "class": "message-status status-delivery",
+        "text": "[送达]"
+      }
+    ]
+  },
+  "sender_detection": {
+    "hr_message": {
+      "selector": ".message-item.item-friend",
+      "description": "HR发的消息（左侧气泡，含.figure头像）",
+      "count": 9
+    },
+    "my_message": {
+      "selector": ".message-item.item-myself",
+      "description": "我发的消息（右侧气泡，明确标记item-myself类）",
+      "count": 3
+    },
+    "system_message": {
+      "selector": ".message-item.item-system",
+      "description": "系统消息（居中显示，如\"系统自动向您匹配该职位\"）",
+      "count": 4
+    },
+    "auto_vs_human": {
+      "has_marker": false,
+      "markers_found": [],
+      "description": "BOSS直聘前端不区分AI自动发送vs人工手动发送。需用reply_records.json匹配时间戳判断：若消息时间戳与reply_records中AI回复时间匹配，则为AI自动发送。"
+    },
+    "class_based_detection": {
+      "hr_message": ".message-item.item-friend",
+      "my_message": ".message-item.item-myself",
+      "system_message": ".message-item.item-system",
+      "description": "BOSS直聘用三个互斥的class区分消息方向：item-friend(HR)、item-myself(我方)、item-system(系统)"
+    }
+  },
+  "css_selectors": {
+    "message_item": ".message-item",
+    "hr_message": ".message-item.item-friend",
+    "my_message": ".message-item.item-myself",
+    "system_message": ".message-item.item-system",
+    "text_content": ".text-content",
+    "timestamp": ".item-time .time",
+    "chat_content": ".chat-content",
+    "input_box": "#chat-input",
+    "send_button": ".btn-send",
+    "chat_name": ".name-text",
+    "job_name": ".position-content",
+    "friend_list": ".user-list",
+    "friend_item": ".friend-content",
+    "unread_count": ".notice-badge",
+    "chat_header": ".top-info-content",
+    "message_status_delivered": ".message-status.status-delivery",
+    "message_status_read": ".message-status.status-read",
+    "message_id_attr": "data-mid",
+    "last_msg_text": ".last-msg-text",
+    "name_box": ".name-box",
+    "figure_avatar": ".figure img",
+    "message_items_total": 2,
+    "input_box_actual": "div#chat-input.chat-input",
+    "send_button_actual": "button.btn-v2.btn-sure-v2.btn-send.disabled",
+    "my_message_class": "item-myself",
+    "hr_message_class": "item-friend",
+    "system_message_class": "item-system"
+  },
+  "page_info": {
+    "title": "BOSS直聘",
+    "url": "https://www.zhipin.com/web/geek/chat",
+    "extracted_at": "2026-09-21T13:22:02.945Z"
+  },
+  "message_items_sampled": 16,
+  "chat_header_samples": [
+    {
+      "session_index": 0,
+      "name": "王女士",
+      "company": null,
+      "position": "急招（在家就行）哔哩哔哩兼职不露脸主播9-10K长沙查看职位",
+      "selector": ".top-info-content"
+    },
+    {
+      "session_index": 1,
+      "name": "周先生",
+      "company": null,
+      "position": "抖音线上回复日结两三百9-13K长沙查看职位",
+      "selector": ".top-info-content"
+    },
+    {
+      "session_index": 5,
+      "name": "李女士",
+      "company": null,
+      "position": "12-20K市场洞察/市场分析主管+电商品类研究13-20K长沙查看职位",
+      "selector": ".top-info-content"
+    },
+    {
+      "session_index": 7,
+      "name": "伍金林",
+      "company": null,
+      "position": "Python统计分析师助理150-200元/天长沙查看职位",
+      "selector": ".top-info-content"
+    },
+    {
+      "session_index": 2,
+      "name": "李女士",
+      "company": null,
+      "position": "数据标注3-4K长沙查看职位",
+      "selector": ".top-info-content"
+    }
+  ]
+}
