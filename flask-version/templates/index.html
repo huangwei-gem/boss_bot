@@ -2905,10 +2905,26 @@ function addReplyRecord(data){
     replyChatCache[chatName] = g;
   }
 
+  // 实时更新消息列表（用于右侧聊天对话气泡渲染）
+  if (!g.messages) g.messages = [];
+  // 添加HR消息气泡
+  if (receivedMsg) {
+    g.messages.push({text: receivedMsg, content: receivedMsg, is_mine: false, time: timestamp, sender: 'hr'});
+  }
+  // 添加我方回复气泡
+  if (replyMsg) {
+    g.messages.push({text: replyMsg, content: replyMsg, is_mine: true, time: timestamp, sender: 'me', reply_source: replySource});
+  }
+
   // 重新渲染整个列表（按 last_time 倒序）
   var groups = Object.keys(replyChatCache).map(function(k) { return replyChatCache[k]; });
   groups.sort(function(a, b) { return (b.last_time || '') > (a.last_time || '') ? 1 : -1; });
   renderReplyChatList(groups);
+
+  // 如果当前正在查看这个聊天，实时更新右侧对话内容
+  if (activeBossChat === chatName) {
+    renderBossChatDetail(chatName);
+  }
 }
 
 
