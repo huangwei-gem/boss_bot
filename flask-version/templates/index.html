@@ -742,47 +742,34 @@ a{color:var(--accent);text-decoration:none}
       <div class="panel-row">
         <div class="panel panel-full">
           <div class="panel-header"><span class="panel-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="panel-title">投递记录</span><div class="panel-actions"><button class="btn btn-ghost btn-sm" onclick="clearGreetTable()">清空</button></div></div>
-          <div class="record-tabs">
+          <div class="record-tabs" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <button class="record-tab active" onclick="switchRecordTab('greet')">打招呼记录 <span class="tab-count" id="greetTabCount">0</span></button>
             <button class="record-tab" onclick="switchRecordTab('reply')">回复记录 <span class="tab-count" id="replyTabCount">0</span></button>
-          </div>
-          <div class="record-filter-bar" id="greetFilterBar" style="display:flex;flex-wrap:wrap;gap:6px;padding:6px 8px;border-bottom:1px solid var(--border-2nd);background:var(--bg-2nd);align-items:center;font-size:11px">
-            <label style="color:var(--fg-3rd)">开始日期</label>
-            <input type="date" id="greetFilterDateStart" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
-            <label style="color:var(--fg-3rd)">结束日期</label>
-            <input type="date" id="greetFilterDateEnd" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
-            <label style="color:var(--fg-3rd)">最低薪资(K)</label>
-            <input type="number" id="greetFilterSalaryMin" placeholder="如5" style="width:60px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
-            <label style="color:var(--fg-3rd)">岗位关键词</label>
-            <input type="text" id="greetFilterJob" placeholder="如数据分析" style="width:100px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
-            <label style="color:var(--fg-3rd)">状态</label>
-            <select id="greetFilterStatus" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
-              <option value="">全部</option>
-              <option value="success">成功</option>
-              <option value="skip">跳过</option>
-              <option value="ai_skip">AI跳过</option>
-              <option value="already">已沟通</option>
-              <option value="error">失败</option>
-            </select>
-            <button class="btn btn-ghost btn-sm" onclick="applyGreetFilter()">筛选</button>
-            <button class="btn btn-ghost btn-sm" onclick="resetGreetFilter()">重置</button>
-            <span id="greetFilterCount" style="margin-left:auto;color:var(--fg-3rd)"></span>
-          </div>
-          <div class="record-tab-content active" id="greetTabContent" style="padding:0;flex:1;overflow-y:auto">
-            <table class="greet-table" id="greetTable">
-              <thead><tr><th>时间</th><th>岗位</th><th>公司</th><th>薪资</th><th>状态</th><th>跳过原因</th><th>AI</th></tr></thead>
-              <tbody id="greetTableBody"></tbody>
-            </table>
-            <div class="empty-state" id="greetEmpty" style="height:100%;min-height:200px">
-              <div class="empty-icon" style="font-size:36px;opacity:0.3">📋</div>
-              <div class="empty-desc" style="font-size:13px;font-weight:600;margin-top:8px">暂无投递记录</div>
-              <div class="empty-hint" style="font-size:11px;color:var(--fg-3rd);margin-top:4px">
-                点击上方 <span style="color:var(--accent);font-weight:600">启动</span> 按钮开始自动投递
-              </div>
+            <!-- 打招呼筛选栏（和tab同一行） -->
+            <div id="greetFilterBar" style="display:flex;align-items:center;gap:4px;flex:1;justify-content:flex-end;flex-wrap:wrap;font-size:11px">
+              <label style="color:var(--fg-3rd)">开始日期</label>
+              <input type="date" id="greetFilterDateStart" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
+              <label style="color:var(--fg-3rd)">结束日期</label>
+              <input type="date" id="greetFilterDateEnd" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
+              <label style="color:var(--fg-3rd)">最低薪资(K)</label>
+              <input type="number" id="greetFilterSalaryMin" placeholder="如5" style="width:60px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
+              <label style="color:var(--fg-3rd)">岗位关键词</label>
+              <input type="text" id="greetFilterJob" placeholder="如数据分析" style="width:100px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
+              <label style="color:var(--fg-3rd)">状态</label>
+              <select id="greetFilterStatus" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
+                <option value="">全部</option>
+                <option value="success">成功</option>
+                <option value="skip">跳过</option>
+                <option value="ai_skip">AI跳过</option>
+                <option value="already">已沟通</option>
+                <option value="error">失败</option>
+              </select>
+              <button class="btn btn-ghost btn-sm" onclick="applyGreetFilter()">筛选</button>
+              <button class="btn btn-ghost btn-sm" onclick="resetGreetFilter()">重置</button>
+              <span id="greetFilterCount" style="color:var(--fg-3rd)"></span>
             </div>
-          </div>
-          <div class="record-tab-content" id="replyTabContent" style="padding:0;flex:1;overflow-y:auto">
-            <div class="record-filter-bar" id="replyFilterBar" style="display:flex;flex-wrap:wrap;gap:6px;padding:6px 8px;border-bottom:1px solid var(--border-2nd);background:var(--bg-2nd);align-items:center;font-size:11px">
+            <!-- 回复筛选栏（和tab同一行，默认隐藏） -->
+            <div id="replyFilterBar" style="display:none;align-items:center;gap:4px;flex:1;justify-content:flex-end;flex-wrap:wrap;font-size:11px">
               <label style="color:var(--fg-3rd)">开始日期</label>
               <input type="date" id="replyFilterDateStart" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
               <label style="color:var(--fg-3rd)">结束日期</label>
@@ -808,8 +795,24 @@ a{color:var(--accent);text-decoration:none}
               </select>
               <button class="btn btn-ghost btn-sm" onclick="applyReplyFilter()">筛选</button>
               <button class="btn btn-ghost btn-sm" onclick="resetReplyFilter()">重置</button>
-              <span id="replyFilterCount" style="margin-left:auto;color:var(--fg-3rd)"></span>
+              <span id="replyFilterCount" style="color:var(--fg-3rd)"></span>
             </div>
+          </div>
+          <div class="record-tab-content active" id="greetTabContent" style="padding:0;flex:1;overflow-y:auto">
+            <table class="greet-table" id="greetTable">
+              <thead><tr><th>时间</th><th>岗位</th><th>公司</th><th>薪资</th><th>状态</th><th>跳过原因</th><th>AI</th></tr></thead>
+              <tbody id="greetTableBody"></tbody>
+            </table>
+            <div class="empty-state" id="greetEmpty" style="height:100%;min-height:200px">
+              <div class="empty-icon" style="font-size:36px;opacity:0.3">📋</div>
+              <div class="empty-desc" style="font-size:13px;font-weight:600;margin-top:8px">暂无投递记录</div>
+              <div class="empty-hint" style="font-size:11px;color:var(--fg-3rd);margin-top:4px">
+                点击上方 <span style="color:var(--accent);font-weight:600">启动</span> 按钮开始自动投递
+              </div>
+            </div>
+          </div>
+          <div class="record-tab-content" id="replyTabContent" style="padding:0;flex:1;overflow-y:auto">
+
             <div id="bossChatWrap" class="boss-chat-wrap">
               <div class="boss-chat-sidebar">
                 <div class="boss-chat-sidebar-header">
@@ -2522,16 +2525,22 @@ function switchRecordTab(tab) {
   var contents = document.querySelectorAll('.record-tab-content');
   tabs.forEach(function(t){ t.classList.remove('active'); });
   contents.forEach(function(c){ c.classList.remove('active'); });
+  var greetBar = document.getElementById('greetFilterBar');
+  var replyBar = document.getElementById('replyFilterBar');
   if (tab === 'greet') {
     var gt = document.querySelector('.record-tab[onclick*="greet"]');
     var gc = document.getElementById('greetTabContent');
     if (gt) gt.classList.add('active');
     if (gc) gc.classList.add('active');
+    if (greetBar) greetBar.style.display = 'flex';
+    if (replyBar) replyBar.style.display = 'none';
   } else {
     var rt = document.querySelector('.record-tab[onclick*="reply"]');
     var rc = document.getElementById('replyTabContent');
     if (rt) rt.classList.add('active');
     if (rc) rc.classList.add('active');
+    if (greetBar) greetBar.style.display = 'none';
+    if (replyBar) replyBar.style.display = 'flex';
   }
 }
 
@@ -2544,6 +2553,8 @@ function buildGreetRowHtml(data, isPending) {
   }
   // 显示完整时间格式 YYYY-MM-DD HH:MM:SS
   const time=data.time||data.timestamp||'';
+  const timeFull=formatFullTimestamp(time);   // 完整时间戳（title）
+  const timeDisplay=formatHumanTime(time);    // 人性化时间（显示）
   const aiScore=data.ai_score||0;
   const aiBadge=aiScore>0?(aiScore>=70?'<span class="greet-ai-badge">'+aiScore+'分</span>':'<span class="greet-ai-badge greet-ai-badge-nomatch">'+aiScore+'分</span>'):'<span style="color:var(--fg-4th)">—</span>';
   var statusHtml = '<span class="greet-status '+st.cls+'">'+st.label+'</span>';
@@ -2558,7 +2569,7 @@ function buildGreetRowHtml(data, isPending) {
       skipReasonHtml = '<span style="color:var(--fg-3rd);font-size:11px" title="'+escAttr(data.skip_reason)+'">'+escHtml(data.skip_reason)+'</span>';
     }
   }
-  return '<td>'+escHtml(time)+'</td>'
+  return '<td title="'+escAttr(timeFull)+'">'+escHtml(timeDisplay)+'</td>'
     +'<td title="'+escAttr(data.job_name||'')+'">'+escHtml(data.job_name||'—')+'</td>'
     +'<td title="'+escAttr(data.company||'')+'">'+escHtml(data.company||'—')+'</td>'
     +'<td>'+escHtml(data.salary||'—')+'</td>'
@@ -2642,6 +2653,40 @@ function formatFullTimestamp(ts) {
   }
   // 只有时间或只有日期，原样返回
   return s;
+}
+
+// 人性化时间显示：刚刚/X分钟前/X小时前/昨天 HH:MM/前天 HH:MM/X天前/完整日期
+// 完整时间戳通过 title 属性保留（鼠标悬停可见），满足可追溯性
+function formatHumanTime(ts) {
+  if (!ts) return '';
+  var s = String(ts);
+  // 解析出日期部分和时间部分
+  var parts = s.split(/[T ]/);
+  if (parts.length < 2) return s;
+  var datePart = parts[0];          // YYYY-MM-DD
+  var timePart = parts[1].split('.')[0]; // HH:MM:SS
+
+  // 构造 Date 对象（兼容本地时区）
+  var recDate = new Date(datePart + 'T' + timePart);
+  if (isNaN(recDate.getTime())) return datePart + ' ' + timePart.substring(0, 5);
+
+  var now = new Date();
+  var diffMs = now - recDate;
+  var diffMin = Math.floor(diffMs / 60000);
+  var diffHour = Math.floor(diffMin / 60);
+  var diffDay = Math.floor(diffHour / 24);
+
+  var timeShort = timePart.substring(0, 5); // HH:MM
+
+  if (diffMs < 0) return timeShort;                 // 未来时间兜底
+  if (diffMin < 1) return '刚刚';
+  if (diffMin < 60) return diffMin + '分钟前';
+  if (diffHour < 24) return diffHour + '小时前';
+  if (diffDay === 1) return '昨天 ' + timeShort;
+  if (diffDay === 2) return '前天 ' + timeShort;
+  if (diffDay < 7) return diffDay + '天前';
+  // 超过7天显示完整日期
+  return datePart + ' ' + timeShort;
 }
 
 function formatChatDate(ts) {
@@ -2795,7 +2840,8 @@ function renderBossChatDetail(chatName) {
   } else if (records.length > 0) {
     // 兼容模式：从 reply_records 构造（旧数据）
     records.forEach(function(r) {
-      var t = formatFullTimestamp(r.timestamp || r.time || '');
+      var tFull = formatFullTimestamp(r.timestamp || r.time || '');
+      var t = formatHumanTime(r.timestamp || r.time || '');
       var received = r.received_message || '';
       var reply = r.reply_content || '';
       var source = r.reply_source || '';
@@ -2805,14 +2851,14 @@ function renderBossChatDetail(chatName) {
         html += '<div class="boss-msg-row hr">';
         html += '  <div class="boss-msg-avatar">'+escHtml(avatarText)+'</div>';
         html += '  <div><div class="boss-msg-bubble">'+escHtml(received)+'</div>';
-        html += '  <div class="boss-msg-meta"><span class="boss-msg-time">'+escHtml(t)+'</span></div></div>';
+        html += '  <div class="boss-msg-meta"><span class="boss-msg-time" title="'+escAttr(tFull)+'">'+escHtml(t)+'</span></div></div>';
         html += '</div>';
       }
       // 我的回复
       if (reply) {
         html += '<div class="boss-msg-row me">';
         html += '  <div><div class="boss-msg-bubble">'+escHtml(reply)+'</div>';
-        html += '  <div class="boss-msg-meta"><span class="boss-msg-time">'+escHtml(t)+'</span>';
+        html += '  <div class="boss-msg-meta"><span class="boss-msg-time" title="'+escAttr(tFull)+'">'+escHtml(t)+'</span>';
         if (source) {
           html += '<span class="boss-msg-source '+getReplySourceClass(source)+'">'+escHtml(getReplySourceLabel(source))+'</span>';
         }
@@ -2840,8 +2886,9 @@ function renderBossMessageBubble(msg, chatName) {
   var avatarText = chatName ? chatName.charAt(0) : '?';
   var content = msg.content || msg.text || '';
   var timestamp = msg.timestamp || msg.time || '';
-  // 显示完整时间格式 YYYY-MM-DD HH:MM:SS
-  var t = formatFullTimestamp(timestamp);
+  // 人性化时间显示，完整时间戳放 title
+  var tFull = formatFullTimestamp(timestamp);
+  var t = formatHumanTime(timestamp);
   var sender = msg.sender || (msg.is_mine ? 'bot' : 'hr');
   var isMine = msg.is_mine || sender === 'bot' || sender === 'me';
   var isSystem = sender === 'system' || msg.is_skipped;
@@ -2857,7 +2904,7 @@ function renderBossMessageBubble(msg, chatName) {
     var source = msg.reply_source || msg.source || '';
     html += '<div class="boss-msg-row me">';
     html += '  <div><div class="boss-msg-bubble">'+escHtml(content)+'</div>';
-    html += '  <div class="boss-msg-meta"><span class="boss-msg-time">'+escHtml(t)+'</span>';
+    html += '  <div class="boss-msg-meta"><span class="boss-msg-time" title="'+escAttr(tFull)+'">'+escHtml(t)+'</span>';
     // 始终显示来源标签（包括 ai/rule/intent/default/manual/skip）
     if (source) {
       html += '<span class="boss-msg-source '+getReplySourceClass(source)+'">'+escHtml(getReplySourceLabel(source))+'</span>';
@@ -2869,7 +2916,7 @@ function renderBossMessageBubble(msg, chatName) {
     html += '<div class="boss-msg-row hr">';
     html += '  <div class="boss-msg-avatar">'+escHtml(avatarText)+'</div>';
     html += '  <div><div class="boss-msg-bubble">'+escHtml(content)+'</div>';
-    html += '  <div class="boss-msg-meta"><span class="boss-msg-time">'+escHtml(t)+'</span></div></div>';
+    html += '  <div class="boss-msg-meta"><span class="boss-msg-time" title="'+escAttr(tFull)+'">'+escHtml(t)+'</span></div></div>';
     html += '</div>';
   }
   return html;

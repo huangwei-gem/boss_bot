@@ -1117,102 +1117,208 @@ class GreetEngine:
 
         self._log("INFO", f"共找到 {len(full_job_urls)} 个岗位链接")
 
-        processed_jobs = []
-        rec_list_ele = instance.ele(SELECTOR_REC_JOB_LIST, timeout=3)
-        if rec_list_ele:
-            job_name_list = rec_list_ele.texts()
-            self._log("INFO", f"从 rec-job-list 解析出 {len(job_name_list)} 条文本")
-            for idx, job_str in enumerate(job_name_list):
-                parts = job_str.split("\n")
-                if len(parts) < 4:
+        # ── 反爬解码：BOSS直聘用 Unicode 私用区字符（E030-E039）代替数字 ──
+        # \ue030→0, \ue031→1, ..., \ue039→9；其他私用区字符（E000-F8FF）跳过
+        def _decode_anti_scrape(text):
+            """将BOSS直聘的反爬Unicode字符映射回数字。"""
+            if not text:
+                return text
+            result = []
+            for ch in text:
+                code = ord(ch)
+                if 0xe030 <= code <= 0xe039:
+                    result.append(str(code - 0xe030))
+                elif 0xe000 <= code <= 0xf8ff:
+                    # 其他私用区字符直接跳过
                     continue
-                # ── 关键：BOSS直聘反爬，用Unicode私用区字符代替数字 ──
-                # \ue030→0, \ue031→1, ..., \ue039→9
-                # 必须先映射数字，再做薪资解析
-                def _decode_anti_scrape(text):
-                    """将BOSS直聘的反爬Unicode字符映射回数字。"""
-                    result = []
-                    for ch in text:
-                        code = ord(ch)
-                        if 0xe030 <= code <= 0xe039:
-                            result.append(str(code - 0xe030))
-                        elif 0xe000 <= code <= 0xf8ff:
-                            # 其他私用区字符直接跳过
-                            continue
-                        else:
-                            result.append(ch)
-                    return ''.join(result)
-
-                parts = [_decode_anti_scrape(p) for p in parts]
-                first_part = parts[0]
-                if idx < 3:
-                    self._log("DEBUG", f"解码后文本[{idx}]: parts={parts}")
-
-                # 薪资解析：数字已解码，用通用正则匹配
-                salary_pattern = r'(\d+\D{1,2}\d+[Kk]·?\d*薪?|\d+\D{1,2}\d+元/[月天小时]|\d+\D{1,2}\d+[Kk]|\d+K·?\d*薪?)'
-                salary_match = re.search(salary_pattern, first_part)
-                if salary_match:
-                    salary_start = salary_match.start()
-                    job_name = first_part[:salary_start].strip()
-                    salary = salary_match.group()
                 else:
-                    job_name = first_part.strip()
-                    salary = ""
-                    if len(parts) > 1:
-                        second_part = parts[1].strip()
-                        salary_match2 = re.search(salary_pattern, second_part)
-                        if salary_match2:
-                            salary = salary_match2.group()
-                        elif second_part and ("K" in second_part or "元" in second_part):
-                            salary = second_part
+                    result.append(ch)
+            return ''.join(result)
 
-                # 清理岗位名末尾的破折号
-                job_name = job_name.rstrip("-–—").strip()
+        processed_jobs = []
 
-                # ── 公司名和地点解析 ──
-                # parts[3] 格式通常是 "公司名 城市·区域·子区域" 或 "公司名 城市"
-                company_location = parts[3] if len(parts) > 3 else ""
-                company = ""
-                location = ""
-                if "·" in company_location:
-                    # 格式: "公司名 城市·区域·子区域"
-                    # 按 "·" 分割，第一段是 "公司名 城市"，后面是区域
-                    dot_parts = company_location.split("·")
-                    first_segment = dot_parts[0].strip()
-                    # 从第一段中分离公司名和城市
-                    if " " in first_segment:
-                        sp = first_segment.rsplit(" ", 1)
-                        company = sp[0].strip()
-                        location = sp[1].strip() + "·" + "·".join(dot_parts[1:])
-                    else:
-                        company = first_segment
-                        location = "·".join(dot_parts[1:])
-                elif " " in company_location:
-                    # 格式: "公司名 城市"（空格分隔）
-                    sp = company_location.rsplit(" ", 1)
-                    company = sp[0].strip()
-                    location = sp[1].strip()
-                else:
-                    company = company_location.strip()
+        # ── 逆向结果：用精确 CSS 选择器分别提取每个字段 ──
+        # 真实结构：div.job-card-wrap > li.job-card-box >
+        #   div.job-info > div.job-title > a.job-name + span.job-salary
+        #            > ul.tag-list > li (经验/学历)
+        #   div.job-card-footer > a.boss-info > span.boss-name (公司名)
+        #                      > span.company-location (地区)
+        # 关键：岗位名(.job-name)是干净的，反爬字符只在薪资(.job-salary)里。
+        # 旧代码用 rec-job-list.texts() 整体解析，把岗位名和薪资合并到同一段，
+        # 导致正则无法分离，数字被混入岗位名，薪资只剩"K"。
+        job_cards = (
+            instance.eles(".job-card-wrap", timeout=5)
+            or instance.eles("li.job-card-box", timeout=3)
+            or instance.eles(".job-card-wrapper", timeout=3)
+            or instance.eles(".job-card-left", timeout=3)
+        )
+        self._log("INFO", f"找到 {len(job_cards)} 个岗位卡片(.job-card-wrap)")
 
-                self._log("DEBUG", f"解析岗位: name={job_name}, salary={salary}, company={company}, location={location}")
-                processed_jobs.append({
-                    "job_name": job_name,
-                    "salary": salary,
-                    "experience": parts[1] if len(parts) > 1 else "",
-                    "education": parts[2] if len(parts) > 2 else "",
-                    "company": company,
-                    "company_location": company_location,
-                    "location": location,
-                    "url": full_job_urls[idx] if idx < len(full_job_urls) else "",
-                    "query": self._query,
-                })
+        if job_cards:
+            for idx, card in enumerate(job_cards):
+                try:
+                    # 岗位名：a.job-name（干净，无反爬字符）
+                    name_el = card.ele(".job-name", timeout=1)
+                    job_name = _decode_anti_scrape(name_el.text if name_el else "")
+
+                    # 薪资：span.job-salary（反爬Unicode，必须解码）
+                    sal_el = card.ele(".job-salary", timeout=1) or card.ele(".salary", timeout=1)
+                    salary = _decode_anti_scrape(sal_el.text if sal_el else "")
+
+                    # 标签：.tag-list li（经验、学历等）
+                    tag_els = card.eles(".tag-list li", timeout=1)
+                    tags = [_decode_anti_scrape(t.text).strip() for t in tag_els if t.text]
+                    experience = tags[0] if len(tags) > 0 else ""
+                    education = tags[1] if len(tags) > 1 else ""
+
+                    # 公司名：.boss-name（逆向发现不是 .company-name）
+                    comp_el = card.ele(".boss-name", timeout=1) or card.ele(".company-name", timeout=1)
+                    company = _decode_anti_scrape(comp_el.text if comp_el else "")
+
+                    # 地区：.company-location（逆向发现不是 .job-area）
+                    area_el = card.ele(".company-location", timeout=1) or card.ele(".job-area", timeout=1)
+                    location = _decode_anti_scrape(area_el.text if area_el else "").strip()
+
+                    # URL：优先从 .job-name 的 href 获取
+                    url = ""
+                    if name_el:
+                        href = name_el.attr("href")
+                        if href:
+                            url = "https://www.zhipin.com" + href if href.startswith("/") else href
+                    if not url:
+                        url = full_job_urls[idx] if idx < len(full_job_urls) else ""
+
+                    # 兜底：精确选择器都没拿到时，回退到 texts() 按\n分割
+                    if not job_name and not salary and not company:
+                        card_texts = card.texts()
+                        if card_texts:
+                            parts = [_decode_anti_scrape(p) for p in card_texts[0].split("\n")]
+                            if parts:
+                                first_part = parts[0]
+                                salary_pattern = r'(\d+\D{1,2}\d+[Kk]·?\d*薪?|\d+\D{1,2}\d+元/[月天小时]|\d+\D{1,2}\d+[Kk]|\d+K·?\d*薪?)'
+                                salary_match = re.search(salary_pattern, first_part)
+                                if salary_match:
+                                    job_name = first_part[:salary_match.start()].strip()
+                                    salary = salary_match.group()
+                                else:
+                                    job_name = first_part.strip()
+                                if len(parts) > 1 and not experience:
+                                    experience = parts[1]
+                                if len(parts) > 2 and not education:
+                                    education = parts[2]
+                                if len(parts) > 3 and not company:
+                                    company_location_raw = parts[3]
+                                    if "·" in company_location_raw:
+                                        dot_parts = company_location_raw.split("·")
+                                        first_segment = dot_parts[0].strip()
+                                        if " " in first_segment:
+                                            sp = first_segment.rsplit(" ", 1)
+                                            company = sp[0].strip()
+                                            location = sp[1].strip() + "·" + "·".join(dot_parts[1:])
+                                        else:
+                                            company = first_segment
+                                            location = "·".join(dot_parts[1:])
+                                    elif " " in company_location_raw:
+                                        sp = company_location_raw.rsplit(" ", 1)
+                                        company = sp[0].strip()
+                                        location = sp[1].strip()
+                                    else:
+                                        company = company_location_raw.strip()
+
+                    # 清理岗位名末尾的破折号
+                    job_name = job_name.rstrip("-–—").strip()
+
+                    if idx < 3:
+                        self._log("DEBUG", f"解析岗位[{idx}]: name={job_name}, salary={salary}, company={company}, location={location}")
+
+                    processed_jobs.append({
+                        "job_name": job_name,
+                        "salary": salary,
+                        "experience": experience,
+                        "education": education,
+                        "company": company,
+                        "company_location": ((company + " " + location).strip()) if (company or location) else "",
+                        "location": location,
+                        "url": url,
+                        "query": self._query,
+                    })
+                except Exception as e:
+                    self._log("WARN", f"解析卡片 {idx} 失败: {e}")
+                    # 失败时用链接兜底
+                    if idx < len(full_job_urls):
+                        processed_jobs.append({
+                            "job_name": "", "salary": "", "url": full_job_urls[idx],
+                            "query": self._query,
+                        })
         else:
-            self._log("INFO", "未找到 rec-job-list，直接使用链接")
-            for u in full_job_urls:
-                processed_jobs.append({
-                    "job_name": "", "salary": "", "url": u, "query": self._query
-                })
+            self._log("INFO", "未找到岗位卡片，回退到 rec-job-list 文本解析")
+            rec_list_ele = instance.ele(SELECTOR_REC_JOB_LIST, timeout=3)
+            if rec_list_ele:
+                job_name_list = rec_list_ele.texts()
+                self._log("INFO", f"从 rec-job-list 解析出 {len(job_name_list)} 条文本")
+                for idx, job_str in enumerate(job_name_list):
+                    parts = job_str.split("\n")
+                    if len(parts) < 4:
+                        continue
+                    parts = [_decode_anti_scrape(p) for p in parts]
+                    first_part = parts[0]
+                    if idx < 3:
+                        self._log("DEBUG", f"解码后文本[{idx}]: parts={parts}")
+
+                    salary_pattern = r'(\d+\D{1,2}\d+[Kk]·?\d*薪?|\d+\D{1,2}\d+元/[月天小时]|\d+\D{1,2}\d+[Kk]|\d+K·?\d*薪?)'
+                    salary_match = re.search(salary_pattern, first_part)
+                    if salary_match:
+                        job_name = first_part[:salary_match.start()].strip()
+                        salary = salary_match.group()
+                    else:
+                        job_name = first_part.strip()
+                        salary = ""
+                        if len(parts) > 1:
+                            second_part = parts[1].strip()
+                            salary_match2 = re.search(salary_pattern, second_part)
+                            if salary_match2:
+                                salary = salary_match2.group()
+                            elif second_part and ("K" in second_part or "元" in second_part):
+                                salary = second_part
+
+                    job_name = job_name.rstrip("-–—").strip()
+                    company_location = parts[3] if len(parts) > 3 else ""
+                    company = ""
+                    location = ""
+                    if "·" in company_location:
+                        dot_parts = company_location.split("·")
+                        first_segment = dot_parts[0].strip()
+                        if " " in first_segment:
+                            sp = first_segment.rsplit(" ", 1)
+                            company = sp[0].strip()
+                            location = sp[1].strip() + "·" + "·".join(dot_parts[1:])
+                        else:
+                            company = first_segment
+                            location = "·".join(dot_parts[1:])
+                    elif " " in company_location:
+                        sp = company_location.rsplit(" ", 1)
+                        company = sp[0].strip()
+                        location = sp[1].strip()
+                    else:
+                        company = company_location.strip()
+
+                    processed_jobs.append({
+                        "job_name": job_name,
+                        "salary": salary,
+                        "experience": parts[1] if len(parts) > 1 else "",
+                        "education": parts[2] if len(parts) > 2 else "",
+                        "company": company,
+                        "company_location": company_location,
+                        "location": location,
+                        "url": full_job_urls[idx] if idx < len(full_job_urls) else "",
+                        "query": self._query,
+                    })
+            else:
+                self._log("INFO", "未找到 rec-job-list，直接使用链接")
+                for u in full_job_urls:
+                    processed_jobs.append({
+                        "job_name": "", "salary": "", "url": u, "query": self._query
+                    })
 
         self._log("INFO", f"解析出 {len(processed_jobs)} 条岗位信息")
         self.jobs = processed_jobs
