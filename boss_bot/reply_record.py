@@ -31,6 +31,34 @@ from boss_bot.unified_config import BASE_DIR
 
 logger = logging.getLogger(__name__)
 
+
+def _now_str() -> str:
+    """返回当前时间的标准字符串格式: YYYY-MM-DD HH:MM:SS"""
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _normalize_timestamp(ts: Optional[str]) -> str:
+    """规范化时间戳:
+    - None / 空字符串 → 当前时间
+    - ISO 格式 (含 'T') → 'YYYY-MM-DD HH:MM:SS'
+    - 其他保持原样
+    """
+    if not ts:
+        return _now_str()
+    s = str(ts).strip()
+    if not s:
+        return _now_str()
+    if "T" in s:
+        # ISO 格式: 2026-09-18T14:23:45.123456 → 2026-09-18 14:23:45
+        try:
+            parts = s.split("T")
+            date_part = parts[0]
+            time_part = parts[1].split(".")[0]
+            return f"{date_part} {time_part}"
+        except Exception:
+            return s
+    return s
+
 # ─────────────────────────────────────────────
 # 路径常量
 # ─────────────────────────────────────────────
@@ -117,7 +145,7 @@ class ReplyRecord:
         account_index: int = 0,
         timestamp: Optional[str] = None,
     ):
-        self.timestamp = timestamp or datetime.now().isoformat()
+        self.timestamp = _normalize_timestamp(timestamp)
         self.chat_name = chat_name
         self.job_name = job_name
         self.received_message = _truncate(received_message, MAX_RECEIVED_MESSAGE_LEN)
@@ -136,7 +164,7 @@ class ReplyRecord:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "timestamp": self.timestamp,
+            "timestamp": _normalize_timestamp(self.timestamp),
             "chat_name": self.chat_name,
             "job_name": self.job_name,
             "received_message": self.received_message,
@@ -241,7 +269,7 @@ class GreetRecord:
         greeting_message: str = "",
         timestamp: Optional[str] = None,
     ):
-        self.timestamp = timestamp or datetime.now().isoformat()
+        self.timestamp = _normalize_timestamp(timestamp)
         self.job_name = job_name
         self.job_url = job_url
         self.company = company
@@ -295,7 +323,7 @@ class GreetRecord:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "timestamp": self.timestamp,
+            "timestamp": _normalize_timestamp(self.timestamp),
             "job_name": self.job_name,
             "job_url": self.job_url,
             "company": self.company,
@@ -392,7 +420,7 @@ class ReplyRecordStore:
             data = {
                 "records": [r.to_dict() for r in self._records[-MAX_REPLY_RECORDS:]],
                 "total": len(self._records),
-                "last_saved": datetime.now().isoformat(),
+                "last_saved": _now_str(),
             }
             with open(self.path, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
@@ -492,7 +520,7 @@ class GreetRecordStore:
             data = {
                 "records": [r.to_dict() for r in self._records[-MAX_GREET_RECORDS:]],
                 "total": len(self._records),
-                "last_saved": datetime.now().isoformat(),
+                "last_saved": _now_str(),
             }
             with open(self.path, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
@@ -780,6 +808,7 @@ def record_reply(
     skip_reason: str = "",
     account_name: str = "",
     account_index: int = 0,
+    timestamp: Optional[str] = None,
 ) -> ReplyRecord:
     """便捷函数：创建并保存一条回复记录。
 
@@ -802,6 +831,7 @@ def record_reply(
         skip_reason=skip_reason,
         account_name=account_name,
         account_index=account_index,
+        timestamp=timestamp,
     )
     _get_reply_store().add(record)
     return record
@@ -832,6 +862,7 @@ def record_greet(
     account_index: int = 0,
     status: str = "",
     greeting_message: str = "",
+    timestamp: Optional[str] = None,
 ) -> GreetRecord:
     """便捷函数：创建并保存一条打招呼记录。
 
@@ -863,6 +894,7 @@ def record_greet(
         account_index=account_index,
         status=status,
         greeting_message=greeting_message,
+        timestamp=timestamp,
     )
     _get_greet_store().add(record)
     return record

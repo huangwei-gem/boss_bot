@@ -1565,14 +1565,18 @@ def api_export_greet_records():
 def api_reply_records():
     """获取回复记录列表（前端展示用，不分页）。
 
-    返回全部记录（倒序），确保前端能看到完整数据。
+    返回全部记录（按 timestamp 降序），确保前端能看到完整数据。
     之前限制 200 条会导致文件有 358 条但前端只显示 200 条的不一致问题。
     """
     try:
         store = _ensure_reply_store()
         records = store.get_all()
-        # 返回全部记录（倒序），不再限制 200 条
-        result = [r.to_dict() for r in reversed(records)]
+        # 按 timestamp 降序排列（最新的在前）
+        result = sorted(
+            (r.to_dict() for r in records),
+            key=lambda x: x.get("timestamp", "") or "",
+            reverse=True,
+        )
         return jsonify({
             "status": "ok",
             "total": len(records),
@@ -1734,14 +1738,18 @@ def api_chat_mark_read(chat_name: str):
 def api_greet_records():
     """获取打招呼记录列表（前端展示用，不分页）。
 
-    返回全部记录（倒序），确保前端能看到完整数据。
+    返回全部记录（按 timestamp 降序），确保前端能看到完整数据。
     之前限制 200 条会导致文件有 225 条但前端只显示 200 条的不一致问题。
     """
     try:
         store = _ensure_greet_store()
         records = store.get_all()
-        # 返回全部记录（倒序），不再限制 200 条
-        result = [r.to_dict() for r in reversed(records)]
+        # 按 timestamp 降序排列（最新的在前）
+        result = sorted(
+            (r.to_dict() for r in records),
+            key=lambda x: x.get("timestamp", "") or "",
+            reverse=True,
+        )
         return jsonify({
             "status": "ok",
             "total": len(records),

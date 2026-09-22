@@ -42,7 +42,7 @@
     }
   ],
   "ai": {
-    "enabled": false,
+    "enabled": true,
     "api_key": "sk-P5tZ5ljBOWyNi85fVzabu633Vp88cmP78d4G7279f6k9KNQj",
     "api_base": "https://apihub.agnes-ai.com/v1",
     "model": "agnes-2.5-flash",
@@ -213,6 +213,14 @@
     "custom_user_agent": "",
     "proxy": "",
     "browser_type": "chrome"
+  },
+  "greet": {
+    "enabled": true,
+    "rate_limit": {
+      "enabled": true,
+      "max_per_day": 150,
+      "max_per_hour": 30
+    }
   },
   "importance_keywords": [
     "offer",

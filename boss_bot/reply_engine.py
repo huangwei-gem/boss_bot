@@ -20,6 +20,7 @@ BOSS 自动回复机器人 - 回复引擎
 import random
 import time
 import logging
+from datetime import datetime
 from typing import Optional, Tuple
 
 import boss_bot.config as config
@@ -573,6 +574,8 @@ class ReplyEngine:
             # 自动填充账号信息（如果调用方未指定）
             kwargs.setdefault("account_name", self._account_name)
             kwargs.setdefault("account_index", self._account_index)
+            # 自动填充时间戳（如果调用方未指定）
+            kwargs.setdefault("timestamp", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             # 关键字段缺失警告（帮助定位调用方未传字段的问题）
             if not kwargs.get("chat_name"):
                 logger.debug(f"[回复记录] chat_name 为空，received_message={kwargs.get('received_message', '')[:50]}")

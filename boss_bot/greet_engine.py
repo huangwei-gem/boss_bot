@@ -23,6 +23,7 @@ import time
 import threading
 import hashlib
 import logging
+from datetime import datetime
 from functools import wraps
 from typing import Optional, Callable
 from pathlib import Path
@@ -649,6 +650,7 @@ class GreetEngine:
                 account_name=self._cookie_file or "",
                 status=status,
                 greeting_message=greeting_message,
+                timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             )
             self._greet_store.add(record)
         except Exception as e:
@@ -786,14 +788,14 @@ class GreetEngine:
             else:
                 self.skipped_count += 1
                 self._log("WARN", f"⏭️ 跳过: {job_name}（原因: {fail_reason}）")
-                self._emit_greet_event(job_info, "skip")
+                self._emit_greet_event(job_info, "skip", skip_reason=fail_reason or "投递失败-原因未知")
                 self._record_greet(job_info, is_skipped=True, skip_reason=fail_reason or "投递失败-原因未知")
             self._report_progress()
             return success
         except Exception as e:
             self._log("WARN", f"发送打招呼异常: {e}")
             self.skipped_count += 1
-            self._emit_greet_event(job_info, "error")
+            self._emit_greet_event(job_info, "error", skip_reason=f"发送异常: {e}")
             self._report_progress()
             self._record_greet(job_info, is_skipped=True, skip_reason=f"发送异常: {e}")
             return False

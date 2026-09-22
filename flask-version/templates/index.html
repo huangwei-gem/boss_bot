@@ -379,6 +379,8 @@ a{color:var(--accent);text-decoration:none}
 .boss-msg-source.rule{background:var(--success-bg);color:var(--success)}
 .boss-msg-source.skip{background:var(--warning-bg);color:var(--warning)}
 .boss-msg-source.intent{background:var(--info-bg);color:var(--info)}
+.boss-msg-source.manual{background:#fff7e6;color:#fa8c16;border:1px solid #ffd591}
+.boss-msg-source.default{background:var(--surface-soft);color:var(--fg-4th)}
 .boss-chat-empty{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--fg-4th)}
 .boss-chat-empty-icon{font-size:48px;opacity:.3}
 .boss-chat-empty-text{font-size:13px;font-weight:500}
@@ -744,6 +746,28 @@ a{color:var(--accent);text-decoration:none}
             <button class="record-tab active" onclick="switchRecordTab('greet')">打招呼记录 <span class="tab-count" id="greetTabCount">0</span></button>
             <button class="record-tab" onclick="switchRecordTab('reply')">回复记录 <span class="tab-count" id="replyTabCount">0</span></button>
           </div>
+          <div class="record-filter-bar" id="greetFilterBar" style="display:flex;flex-wrap:wrap;gap:6px;padding:6px 8px;border-bottom:1px solid var(--border-2nd);background:var(--bg-2nd);align-items:center;font-size:11px">
+            <label style="color:var(--fg-3rd)">开始日期</label>
+            <input type="date" id="greetFilterDateStart" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
+            <label style="color:var(--fg-3rd)">结束日期</label>
+            <input type="date" id="greetFilterDateEnd" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
+            <label style="color:var(--fg-3rd)">最低薪资(K)</label>
+            <input type="number" id="greetFilterSalaryMin" placeholder="如5" style="width:60px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
+            <label style="color:var(--fg-3rd)">岗位关键词</label>
+            <input type="text" id="greetFilterJob" placeholder="如数据分析" style="width:100px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
+            <label style="color:var(--fg-3rd)">状态</label>
+            <select id="greetFilterStatus" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
+              <option value="">全部</option>
+              <option value="success">成功</option>
+              <option value="skip">跳过</option>
+              <option value="ai_skip">AI跳过</option>
+              <option value="already">已沟通</option>
+              <option value="error">失败</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="applyGreetFilter()">筛选</button>
+            <button class="btn btn-ghost btn-sm" onclick="resetGreetFilter()">重置</button>
+            <span id="greetFilterCount" style="margin-left:auto;color:var(--fg-3rd)"></span>
+          </div>
           <div class="record-tab-content active" id="greetTabContent" style="padding:0;flex:1;overflow-y:auto">
             <table class="greet-table" id="greetTable">
               <thead><tr><th>时间</th><th>岗位</th><th>公司</th><th>薪资</th><th>状态</th><th>跳过原因</th><th>AI</th></tr></thead>
@@ -758,6 +782,34 @@ a{color:var(--accent);text-decoration:none}
             </div>
           </div>
           <div class="record-tab-content" id="replyTabContent" style="padding:0;flex:1;overflow-y:auto">
+            <div class="record-filter-bar" id="replyFilterBar" style="display:flex;flex-wrap:wrap;gap:6px;padding:6px 8px;border-bottom:1px solid var(--border-2nd);background:var(--bg-2nd);align-items:center;font-size:11px">
+              <label style="color:var(--fg-3rd)">开始日期</label>
+              <input type="date" id="replyFilterDateStart" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
+              <label style="color:var(--fg-3rd)">结束日期</label>
+              <input type="date" id="replyFilterDateEnd" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
+              <label style="color:var(--fg-3rd)">岗位关键词</label>
+              <input type="text" id="replyFilterJob" placeholder="如数据分析" style="width:100px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
+              <label style="color:var(--fg-3rd)">来源</label>
+              <select id="replyFilterSource" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
+                <option value="">全部</option>
+                <option value="ai">机器自动</option>
+                <option value="rule">规则匹配</option>
+                <option value="intent">意图匹配</option>
+                <option value="default">兜底回复</option>
+                <option value="manual">人工发送</option>
+                <option value="skip">跳过</option>
+              </select>
+              <label style="color:var(--fg-3rd)">状态</label>
+              <select id="replyFilterStatus" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
+                <option value="">全部</option>
+                <option value="replied">已回复</option>
+                <option value="skipped">跳过</option>
+                <option value="error">失败</option>
+              </select>
+              <button class="btn btn-ghost btn-sm" onclick="applyReplyFilter()">筛选</button>
+              <button class="btn btn-ghost btn-sm" onclick="resetReplyFilter()">重置</button>
+              <span id="replyFilterCount" style="margin-left:auto;color:var(--fg-3rd)"></span>
+            </div>
             <div id="bossChatWrap" class="boss-chat-wrap">
               <div class="boss-chat-sidebar">
                 <div class="boss-chat-sidebar-header">
@@ -2490,7 +2542,8 @@ function buildGreetRowHtml(data, isPending) {
   } else {
     st = greetStatusMap[data.status] || {label:data.status, cls:'greet-status-skip'};
   }
-  const time=data.time||new Date().toLocaleTimeString();
+  // 显示完整时间格式 YYYY-MM-DD HH:MM:SS
+  const time=data.time||data.timestamp||'';
   const aiScore=data.ai_score||0;
   const aiBadge=aiScore>0?(aiScore>=70?'<span class="greet-ai-badge">'+aiScore+'分</span>':'<span class="greet-ai-badge greet-ai-badge-nomatch">'+aiScore+'分</span>'):'<span style="color:var(--fg-4th)">—</span>';
   var statusHtml = '<span class="greet-status '+st.cls+'">'+st.label+'</span>';
@@ -2527,11 +2580,11 @@ function addGreetRecord(data){
     const tr=document.createElement('tr');
     tr.setAttribute('data-job-url', jobUrl);
     tr.innerHTML = buildGreetRowHtml(data, true);
-    body.appendChild(tr);
+    body.insertBefore(tr, body.firstChild);
     const panel=body.parentElement;
-    if(panel) panel.scrollTop=panel.scrollHeight;
+    if(panel) panel.scrollTop=0;
     bumpGreetTabCount();
-    while(body.children.length>200) body.removeChild(body.firstChild);
+    while(body.children.length>200) body.removeChild(body.lastChild);
     return;
   }
 
@@ -2544,14 +2597,14 @@ function addGreetRecord(data){
     }
   }
 
-  // 找不到对应的 pending 行，创建新行（兼容旧逻辑）
+  // 找不到对应的 pending 行，创建新行并插入到最前面（按时间降序）
   const tr=document.createElement('tr');
   tr.innerHTML = buildGreetRowHtml(data, false);
-  body.appendChild(tr);
+  body.insertBefore(tr, body.firstChild);
   const panel=body.parentElement;
-  if(panel) panel.scrollTop=panel.scrollHeight;
+  if(panel) panel.scrollTop=0;
   bumpGreetTabCount();
-  while(body.children.length>200) body.removeChild(body.firstChild);
+  while(body.children.length>200) body.removeChild(body.lastChild);
 }
 
 // ── 回复记录聊天界面（一比一模仿BOSS直聘） ──
@@ -2569,6 +2622,26 @@ function formatChatTime(ts) {
   }
   // 兼容已经只有时间的情况
   return String(ts).slice(0, 8);
+}
+
+function formatFullTimestamp(ts) {
+  // 显示完整时间格式 YYYY-MM-DD HH:MM:SS
+  if (!ts) return '';
+  var s = String(ts);
+  // 兼容 ISO 格式 "2026-09-18T14:23:45.123456"
+  if (s.indexOf('T') >= 0) {
+    var parts = s.split('T');
+    var datePart = parts[0];
+    var timePart = parts[1].split('.')[0];
+    return datePart + ' ' + timePart;
+  }
+  // 兼容 "2026-09-18 14:23:45" 或 "2026-09-18 14:23:45.123456"
+  if (s.indexOf(' ') >= 0) {
+    var parts2 = s.split(' ');
+    return parts2[0] + ' ' + parts2[1].split('.')[0];
+  }
+  // 只有时间或只有日期，原样返回
+  return s;
 }
 
 function formatChatDate(ts) {
@@ -2603,11 +2676,13 @@ function formatChatTimeShort(ts) {
 }
 
 function getReplySourceLabel(replySource) {
-  if (replySource === 'ai') return 'AI';
-  if (replySource === 'rule') return '规则';
-  if (replySource === 'intent') return '意图';
-  if (replySource === 'default') return '默认';
+  if (replySource === 'ai') return '机器自动';
+  if (replySource === 'rule') return '规则匹配';
+  if (replySource === 'intent') return '意图匹配';
+  if (replySource === 'default') return '兜底回复';
+  if (replySource === 'manual') return '人工发送';
   if (replySource === 'skip') return '跳过';
+  if (replySource === 'rejection') return '拒绝接受';
   if (replySource) return replySource;
   return '—';
 }
@@ -2616,6 +2691,8 @@ function getReplySourceClass(replySource) {
   if (replySource === 'ai') return 'ai';
   if (replySource === 'rule') return 'rule';
   if (replySource === 'intent') return 'intent';
+  if (replySource === 'manual') return 'manual';
+  if (replySource === 'default') return 'default';
   if (replySource === 'skip') return 'skip';
   return '';
 }
@@ -2718,7 +2795,7 @@ function renderBossChatDetail(chatName) {
   } else if (records.length > 0) {
     // 兼容模式：从 reply_records 构造（旧数据）
     records.forEach(function(r) {
-      var t = formatChatTime(r.timestamp || r.time || '');
+      var t = formatFullTimestamp(r.timestamp || r.time || '');
       var received = r.received_message || '';
       var reply = r.reply_content || '';
       var source = r.reply_source || '';
@@ -2735,7 +2812,11 @@ function renderBossChatDetail(chatName) {
       if (reply) {
         html += '<div class="boss-msg-row me">';
         html += '  <div><div class="boss-msg-bubble">'+escHtml(reply)+'</div>';
-        html += '  <div class="boss-msg-meta"><span class="boss-msg-time">'+escHtml(t)+'</span><span class="boss-msg-source '+getReplySourceClass(source)+'">'+escHtml(getReplySourceLabel(source))+'</span></div></div>';
+        html += '  <div class="boss-msg-meta"><span class="boss-msg-time">'+escHtml(t)+'</span>';
+        if (source) {
+          html += '<span class="boss-msg-source '+getReplySourceClass(source)+'">'+escHtml(getReplySourceLabel(source))+'</span>';
+        }
+        html += '</div></div>';
         html += '</div>';
       }
       // 跳过
@@ -2759,9 +2840,10 @@ function renderBossMessageBubble(msg, chatName) {
   var avatarText = chatName ? chatName.charAt(0) : '?';
   var content = msg.content || msg.text || '';
   var timestamp = msg.timestamp || msg.time || '';
-  var t = formatChatTime(timestamp);
+  // 显示完整时间格式 YYYY-MM-DD HH:MM:SS
+  var t = formatFullTimestamp(timestamp);
   var sender = msg.sender || (msg.is_mine ? 'bot' : 'hr');
-  var isMine = msg.is_mine || sender === 'bot';
+  var isMine = msg.is_mine || sender === 'bot' || sender === 'me';
   var isSystem = sender === 'system' || msg.is_skipped;
   var html = '';
   if (isSystem) {
@@ -2776,7 +2858,8 @@ function renderBossMessageBubble(msg, chatName) {
     html += '<div class="boss-msg-row me">';
     html += '  <div><div class="boss-msg-bubble">'+escHtml(content)+'</div>';
     html += '  <div class="boss-msg-meta"><span class="boss-msg-time">'+escHtml(t)+'</span>';
-    if (source && source !== 'bot') {
+    // 始终显示来源标签（包括 ai/rule/intent/default/manual/skip）
+    if (source) {
       html += '<span class="boss-msg-source '+getReplySourceClass(source)+'">'+escHtml(getReplySourceLabel(source))+'</span>';
     }
     html += '</div></div>';
@@ -2863,12 +2946,13 @@ function addReplyRecord(data){
   if (!chatName) chatName = '(未知)';
   var receivedMsg = data.received_message || data.incoming_message || data.message || '';
   var replyMsg = data.reply_content || data.reply_message || data.reply || '';
-  var replySource = data.reply_source || '';
-  var timestamp = data.timestamp || '';
+  var replySource = data.reply_source || data.source || '';
+  var timestamp = data.timestamp || data.time || '';
   if (!timestamp) {
-    // 用当前时间构造一个 ISO 时间戳
+    // 用当前时间构造一个标准格式时间戳 YYYY-MM-DD HH:MM:SS
     var now = new Date();
-    timestamp = now.toISOString();
+    var pad = function(n) { return String(n).padStart(2, '0'); };
+    timestamp = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
   }
   var newRecord = {
     timestamp: timestamp,
@@ -2885,7 +2969,7 @@ function addReplyRecord(data){
   // 更新内存缓存
   var g = replyChatCache[chatName];
   if (g) {
-    g.records.push(newRecord);
+    g.records.unshift(newRecord);
     g.message_count += 1;
     if (timestamp > (g.last_time || '')) {
       g.last_time = timestamp;
@@ -2909,11 +2993,27 @@ function addReplyRecord(data){
   if (!g.messages) g.messages = [];
   // 添加HR消息气泡
   if (receivedMsg) {
-    g.messages.push({text: receivedMsg, content: receivedMsg, is_mine: false, time: timestamp, sender: 'hr'});
+    g.messages.push({text: receivedMsg, content: receivedMsg, is_mine: false, time: timestamp, timestamp: timestamp, sender: 'hr'});
   }
   // 添加我方回复气泡
   if (replyMsg) {
-    g.messages.push({text: replyMsg, content: replyMsg, is_mine: true, time: timestamp, sender: 'me', reply_source: replySource});
+    g.messages.push({text: replyMsg, content: replyMsg, is_mine: true, time: timestamp, timestamp: timestamp, sender: 'me', reply_source: replySource});
+  }
+
+  // 同步更新 allReplyGroups 缓存
+  var foundInAll = false;
+  for (var i = 0; i < allReplyGroups.length; i++) {
+    if (allReplyGroups[i].chat_name === chatName) {
+      allReplyGroups[i].records = g.records;
+      allReplyGroups[i].messages = g.messages;
+      allReplyGroups[i].last_time = g.last_time;
+      allReplyGroups[i].message_count = g.message_count;
+      foundInAll = true;
+      break;
+    }
+  }
+  if (!foundInAll) {
+    allReplyGroups.unshift(g);
   }
 
   // 重新渲染整个列表（按 last_time 倒序）
@@ -2936,6 +3036,174 @@ function clearGreetTable(){
   greetRecordCount = 0;
   var el = document.getElementById('greetTabCount');
   if (el) el.textContent = '0';
+  // 清空筛选缓存
+  allGreetRecords = [];
+  var fc = document.getElementById('greetFilterCount');
+  if (fc) fc.textContent = '';
+}
+
+// ── 记录筛选功能 ──
+// 缓存所有打招呼记录（用于前端筛选）
+let allGreetRecords = [];
+// 缓存所有回复记录分组（用于前端筛选）
+let allReplyGroups = [];
+
+// 解析薪资数值（如 "10-15K·13薪" → 10）
+function parseSalaryMin(salary) {
+  if (!salary) return 0;
+  var s = String(salary).trim();
+  // 匹配第一个数字
+  var m = s.match(/(\d+)/);
+  return m ? parseInt(m[1]) : 0;
+}
+
+// 从时间字符串中提取日期部分 YYYY-MM-DD
+function extractDate(ts) {
+  if (!ts) return '';
+  var s = String(ts);
+  // 兼容 "2026-09-18 14:23:45" 和 "2026-09-18T14:23:45"
+  var parts = s.split(/[T ]/);
+  return parts[0] || '';
+}
+
+// 打招呼记录筛选
+function applyGreetFilter() {
+  var dateStart = (document.getElementById('greetFilterDateStart') || {}).value || '';
+  var dateEnd = (document.getElementById('greetFilterDateEnd') || {}).value || '';
+  var salaryMin = parseInt((document.getElementById('greetFilterSalaryMin') || {}).value || '0') || 0;
+  var jobKw = ((document.getElementById('greetFilterJob') || {}).value || '').trim().toLowerCase();
+  var statusFilter = (document.getElementById('greetFilterStatus') || {}).value || '';
+
+  var filtered = allGreetRecords.filter(function(rec) {
+    // 时间范围筛选
+    var recDate = extractDate(rec.timestamp || rec.time || '');
+    if (dateStart && recDate && recDate < dateStart) return false;
+    if (dateEnd && recDate && recDate > dateEnd) return false;
+    // 最低薪资筛选
+    if (salaryMin > 0) {
+      var sal = parseSalaryMin(rec.salary || '');
+      if (sal < salaryMin) return false;
+    }
+    // 岗位关键词筛选
+    if (jobKw) {
+      var jobName = (rec.job_name || '').toLowerCase();
+      if (jobName.indexOf(jobKw) < 0) return false;
+    }
+    // 状态筛选
+    if (statusFilter) {
+      var feStatus = rec._feStatus || 'success';
+      if (feStatus !== statusFilter) return false;
+    }
+    return true;
+  });
+
+  // 重新渲染表格
+  var body = document.getElementById('greetTableBody');
+  var empty = document.getElementById('greetEmpty');
+  if (body) body.innerHTML = '';
+  if (filtered.length === 0) {
+    if (empty) empty.style.display = 'flex';
+  } else {
+    if (empty) empty.style.display = 'none';
+    filtered.forEach(function(rec) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = buildGreetRowHtml(rec, false);
+      body.appendChild(tr);
+    });
+  }
+  var fc = document.getElementById('greetFilterCount');
+  if (fc) fc.textContent = '共 ' + filtered.length + ' / ' + allGreetRecords.length + ' 条';
+}
+
+function resetGreetFilter() {
+  var ds = document.getElementById('greetFilterDateStart'); if (ds) ds.value = '';
+  var de = document.getElementById('greetFilterDateEnd'); if (de) de.value = '';
+  var sm = document.getElementById('greetFilterSalaryMin'); if (sm) sm.value = '';
+  var jk = document.getElementById('greetFilterJob'); if (jk) jk.value = '';
+  var st = document.getElementById('greetFilterStatus'); if (st) st.value = '';
+  applyGreetFilter();
+}
+
+// 回复记录筛选
+function applyReplyFilter() {
+  var dateStart = (document.getElementById('replyFilterDateStart') || {}).value || '';
+  var dateEnd = (document.getElementById('replyFilterDateEnd') || {}).value || '';
+  var jobKw = ((document.getElementById('replyFilterJob') || {}).value || '').trim().toLowerCase();
+  var sourceFilter = (document.getElementById('replyFilterSource') || {}).value || '';
+  var statusFilter = (document.getElementById('replyFilterStatus') || {}).value || '';
+
+  var filteredGroups = allReplyGroups.map(function(g) {
+    // 对每个分组，筛选 records 和 messages
+    var newG = Object.assign({}, g);
+    // 筛选 records
+    var filteredRecords = (g.records || []).filter(function(r) {
+      var recDate = extractDate(r.timestamp || r.time || '');
+      if (dateStart && recDate && recDate < dateStart) return false;
+      if (dateEnd && recDate && recDate > dateEnd) return false;
+      if (jobKw) {
+        var jobName = (r.job_name || '').toLowerCase();
+        if (jobName.indexOf(jobKw) < 0) return false;
+      }
+      if (sourceFilter) {
+        var src = r.reply_source || '';
+        if (src !== sourceFilter) return false;
+      }
+      if (statusFilter) {
+        var isSkipped = r.is_skipped || false;
+        if (statusFilter === 'replied' && isSkipped) return false;
+        if (statusFilter === 'skipped' && !isSkipped) return false;
+        if (statusFilter === 'error') {
+          if ((r.status || '') !== 'error' && (r.status || '') !== 'failed') return false;
+        }
+      }
+      return true;
+    });
+    // 筛选 messages
+    var filteredMessages = (g.messages || []).filter(function(msg) {
+      var recDate = extractDate(msg.timestamp || msg.time || '');
+      if (dateStart && recDate && recDate < dateStart) return false;
+      if (dateEnd && recDate && recDate > dateEnd) return false;
+      if (jobKw) {
+        var jobName = (g.job_name || '').toLowerCase();
+        if (jobName.indexOf(jobKw) < 0) return false;
+      }
+      if (sourceFilter) {
+        // 只筛选我方回复消息
+        if (msg.is_mine || msg.sender === 'bot' || msg.sender === 'me') {
+          var src = msg.reply_source || msg.source || '';
+          if (src !== sourceFilter) return false;
+        }
+      }
+      if (statusFilter === 'skipped') {
+        if (msg.sender !== 'system' && !msg.is_skipped) return true; // HR消息保留
+        return msg.sender === 'system' || msg.is_skipped;
+      }
+      return true;
+    });
+    newG.records = filteredRecords;
+    newG.messages = filteredMessages;
+    newG.message_count = filteredRecords.length;
+    return newG;
+  }).filter(function(g) {
+    // 过滤掉空分组
+    return (g.records && g.records.length > 0) || (g.messages && g.messages.length > 0);
+  });
+
+  // 重新渲染
+  renderReplyChatList(filteredGroups);
+  var totalRecords = filteredGroups.reduce(function(s, g) { return s + (g.records || []).length; }, 0);
+  var totalAllRecords = allReplyGroups.reduce(function(s, g) { return s + (g.records || []).length; }, 0);
+  var fc = document.getElementById('replyFilterCount');
+  if (fc) fc.textContent = '共 ' + totalRecords + ' / ' + totalAllRecords + ' 条';
+}
+
+function resetReplyFilter() {
+  var ds = document.getElementById('replyFilterDateStart'); if (ds) ds.value = '';
+  var de = document.getElementById('replyFilterDateEnd'); if (de) de.value = '';
+  var jk = document.getElementById('replyFilterJob'); if (jk) jk.value = '';
+  var sf = document.getElementById('replyFilterSource'); if (sf) sf.value = '';
+  var st = document.getElementById('replyFilterStatus'); if (st) st.value = '';
+  applyReplyFilter();
 }
 
 // ── 风控通知中心 ──
@@ -3246,6 +3514,8 @@ startNotifPolling();
 // 加载历史打招呼记录
 fetch('/api/greet_records').then(function(r){return r.json();}).then(function(data){
   if(!data || !data.records || !data.records.length) return;
+  // 清空表格并缓存所有记录用于筛选
+  allGreetRecords = [];
   data.records.forEach(function(rec){
     // 根据后端 status 字段映射前端状态
     // 后端 status: pending/applied/skipped/failed
@@ -3266,18 +3536,22 @@ fetch('/api/greet_records').then(function(r){return r.json();}).then(function(da
     } else if (rec.status === 'failed') {
       feStatus = 'error';
     }
-    addGreetRecord({
+    var row = {
       status: feStatus,
       job_name: rec.job_name || '',
       company: rec.company || '',
       salary: rec.salary || '',
       url: rec.job_url || '',
-      time: (rec.timestamp||'').slice(11,19),
+      time: rec.timestamp || '',
+      timestamp: rec.timestamp || '',
       is_skipped: rec.is_skipped,
       skip_reason: rec.skip_reason || '',
       ai_score: rec.ai_score || '',
-      actual_greeting_sent: rec.actual_greeting_sent || ''
-    });
+      actual_greeting_sent: rec.actual_greeting_sent || '',
+      _feStatus: feStatus
+    };
+    allGreetRecords.push(row);
+    addGreetRecord(row);
   });
   // 用历史记录数修正统计卡片（避免总任务显示0但实际有记录）
   var histCount = data.records.length;
@@ -3292,10 +3566,11 @@ fetch('/api/greet_records').then(function(r){return r.json();}).then(function(da
 // 加载历史回复记录（聊天折叠列表）
 fetch('/api/reply_records/grouped').then(function(r){return r.json();}).then(function(data){
   if(!data || data.status !== 'ok') return;
-  renderReplyChatList(data.groups || []);
+  allReplyGroups = data.groups || [];
+  renderReplyChatList(allReplyGroups);
   // 用历史记录数修正回复统计卡片
   var allRecords = [];
-  (data.groups || []).forEach(function(g) {
+  allReplyGroups.forEach(function(g) {
     (g.records || []).forEach(function(r) { allRecords.push(r); });
   });
   var replySent = allRecords.filter(function(r){return !r.is_skipped;}).length;
