@@ -1320,6 +1320,51 @@ class GreetEngine:
             self._last_ai_result = None
             return None, 0
 
+    def _is_data_analysis_job(self, job: dict) -> tuple[bool, str]:
+        """岗位名称预过滤：检查是否是数据分析相关岗位。
+
+        在 AI 智能匹配之前做基础关键词校验，避免搜索"数据分析"返回的
+        不相关岗位（如数据库运维、数据标注、财务分析等）直接进入投递流程。
+
+        Returns:
+            (是否匹配, 原因说明)。匹配为 True 时可继续后续流程；
+            匹配为 False 时应直接跳过该岗位。
+        """
+        job_name = job.get("job_name", "").strip()
+        if not job_name:
+            return False, "岗位名称为空"
+
+        # 强排除词：包含这些词的岗位直接跳过
+        # 注意："反欺诈数据分析"是数据分析岗位，放在 hard_include 中，故不在此处
+        hard_exclude = [
+            "数据标注", "数据库运维", "数据库开发", "大数据开发",
+            "大数据产品", "财务分析", "财务成本分析", "项目分析", "数据管理-咨询",
+            "数据工程师", "数据专员", "数据运营专员",
+            "行业分析", "供应链数据分析",
+            "电商管培生", "管培生",
+            "数据库中高级", "数据库工程师",
+        ]
+        for kw in hard_exclude:
+            if kw in job_name:
+                return False, f"岗位含排除关键词'{kw}'"
+
+        # 强包含词：包含这些词的岗位直接通过
+        # "反欺诈数据分析"虽然含"数据分析"，但显式列出以表明 include 优先
+        hard_include = [
+            "数据分析", "数据分析师", "数据分析专员", "数据分析专家",
+            "数据分析主管", "数据分析工程师", "数据分析讲师",
+            "BI分析", "数据运营分析", "数据挖掘分析",
+            "大数据分析", "电商数据分析", "商品数据分析",
+            "反欺诈数据分析", "游戏数据分析",
+        ]
+        for kw in hard_include:
+            if kw in job_name:
+                return True, f"岗位含核心关键词'{kw}'"
+
+        # 灰色地带：不含强包含词也不含强排除词，需要 AI 进一步判断
+        # 例如 "分析专员"、"数据运营"、"运营分析" 等
+        return True, "未命中关键词，需AI进一步判断"
+
     def _step_browse_jobs(self):
         """遍历岗位列表并投递。"""
         resolved_images = self._resolve_images()
@@ -1349,6 +1394,16 @@ class GreetEngine:
                 self._save_chat_log(job, skipped=True)
                 self._emit_greet_event(job, "already", skip_reason="已沟通过")
                 self._record_greet(job, is_skipped=True, skip_reason="已沟通过")
+                continue
+
+            # 岗位名称预过滤（在AI之前做基础关键词校验）
+            is_match, filter_reason = self._is_data_analysis_job(job)
+            if not is_match:
+                self._log("INFO", f"⏭️ 岗位预过滤不通过: {job.get('job_name', '')}（{filter_reason}）")
+                self.skipped_count += 1
+                self._report_progress()
+                self._emit_greet_event(job, "skip", skip_reason=f"岗位预过滤不匹配: {filter_reason}")
+                self._record_greet(job, is_skipped=True, skip_reason=f"岗位预过滤不匹配: {filter_reason}")
                 continue
 
             # AI 智能匹配
