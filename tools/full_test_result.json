@@ -1,0 +1,202 @@
+{
+  "A1.Toggle开关全部可见": {
+    "pass": true,
+    "detail": "7个开关"
+  },
+  "A1.OFF状态开关可见": {
+    "pass": true,
+    "detail": "2个OFF"
+  },
+  "A2.筛选栏与tab同一行": {
+    "pass": true,
+    "detail": "sameParent=True"
+  },
+  "A3.筛选生效": {
+    "pass": true,
+    "detail": "200→48"
+  },
+  "A3.重置恢复": {
+    "pass": true,
+    "detail": "重置后=229"
+  },
+  "A4.回复tab筛选栏显示": {
+    "pass": true,
+    "detail": "display=flex"
+  },
+  "A4.含来源下拉": {
+    "pass": true,
+    "detail": ""
+  },
+  "A5.无乱码": {
+    "pass": true,
+    "detail": ""
+  },
+  "A5.时间人性化": {
+    "pass": true,
+    "detail": ""
+  },
+  "A6.Toggle切换有效": {
+    "pass": true,
+    "detail": "True→False→True"
+  },
+  "B1.账号列表存在": {
+    "pass": true,
+    "detail": "2个账号"
+  },
+  "B2.账号启用开关存在": {
+    "pass": true,
+    "detail": ""
+  },
+  "B2.账号启用开关可见": {
+    "pass": true,
+    "detail": ""
+  },
+  "B3.Cookie相关UI存在": {
+    "pass": true,
+    "detail": ""
+  },
+  "C1.AI开关存在": {
+    "pass": true,
+    "detail": ""
+  },
+  "C1.AI开关开启": {
+    "pass": true,
+    "detail": ""
+  },
+  "C2.AI接口已配置": {
+    "pass": true,
+    "detail": "22个接口"
+  },
+  "C3.AI阈值显示": {
+    "pass": true,
+    "detail": "阈值=70"
+  },
+  "C4.AI开关提示存在": {
+    "pass": true,
+    "detail": ""
+  },
+  "D1.回复记录tab存在": {
+    "pass": true,
+    "detail": ""
+  },
+  "D1.回复记录数>0": {
+    "pass": true,
+    "detail": "40条"
+  },
+  "D2.聊天界面存在": {
+    "pass": true,
+    "detail": ""
+  },
+  "D2.聊天侧边栏存在": {
+    "pass": true,
+    "detail": ""
+  },
+  "D2.聊天详情区存在": {
+    "pass": true,
+    "detail": ""
+  },
+  "D3.消息来源标记存在": {
+    "pass": true,
+    "detail": ""
+  },
+  "E1.日志面板存在": {
+    "pass": true,
+    "detail": "102个日志元素"
+  },
+  "E2.日志有内容": {
+    "pass": true,
+    "detail": ""
+  },
+  "F1.投递限制显示": {
+    "pass": true,
+    "detail": "每天150份"
+  },
+  "F2.advHeadless存在可见": {
+    "pass": true,
+    "detail": ""
+  },
+  "F2.advRateLimit存在可见": {
+    "pass": true,
+    "detail": ""
+  },
+  "F2.advClearCookies存在可见": {
+    "pass": true,
+    "detail": ""
+  },
+  "F2.advTestMode存在可见": {
+    "pass": true,
+    "detail": ""
+  },
+  "F3.个人画像-姓名": {
+    "pass": true,
+    "detail": ""
+  },
+  "F3.个人画像-学历": {
+    "pass": true,
+    "detail": ""
+  },
+  "F3.个人画像-技能": {
+    "pass": true,
+    "detail": ""
+  },
+  "G1.下载按钮存在": {
+    "pass": true,
+    "detail": "['Excel 导出', '下载回复记录', '下载打招呼记录']"
+  },
+  "G2.历史数据按钮存在": {
+    "pass": true,
+    "detail": ""
+  },
+  "G3.清空按钮存在": {
+    "pass": true,
+    "detail": ""
+  },
+  "H1.启动按钮存在可见": {
+    "pass": true,
+    "detail": "启动"
+  },
+  "H2.运行状态显示": {
+    "pass": true,
+    "detail": ""
+  },
+  "H2.统计数据显示": {
+    "pass": true,
+    "detail": ""
+  },
+  "I1.毛玻璃效果存在": {
+    "pass": true,
+    "detail": "28个元素"
+  },
+  "J1./api/status接口": {
+    "pass": true,
+    "detail": ""
+  },
+  "J2./api/config接口": {
+    "pass": true,
+    "detail": ""
+  },
+  "J3./api/logs接口": {
+    "pass": true,
+    "detail": ""
+  },
+  "J4./api/greet_records接口": {
+    "pass": true,
+    "detail": ""
+  },
+  "J4.打招呼记录数>0": {
+    "pass": true,
+    "detail": "229条"
+  },
+  "J5./api/reply_records接口": {
+    "pass": true,
+    "detail": ""
+  },
+  "J5.回复记录数>0": {
+    "pass": true,
+    "detail": "238条"
+  },
+  "J6./api/user_profile接口": {
+    "pass": true,
+    "detail": ""
+  }
+}
