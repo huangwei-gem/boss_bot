@@ -744,11 +744,11 @@ a{color:var(--accent);text-decoration:none}
       <div class="panel-row">
         <div class="panel panel-full">
           <div class="panel-header"><span class="panel-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="panel-title">投递记录</span><div class="panel-actions"><button class="btn btn-ghost btn-sm" onclick="clearGreetTable()">清空</button></div></div>
-          <div class="record-tabs" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <div class="record-tabs" style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto">
             <button class="record-tab active" onclick="switchRecordTab('greet')">打招呼记录 <span class="tab-count" id="greetTabCount">0</span></button>
             <button class="record-tab" onclick="switchRecordTab('reply')">回复记录 <span class="tab-count" id="replyTabCount">0</span></button>
             <!-- 打招呼筛选栏（和tab同一行） -->
-            <div id="greetFilterBar" style="display:flex;align-items:center;gap:4px;flex:1;justify-content:flex-end;flex-wrap:wrap;font-size:11px">
+            <div id="greetFilterBar" style="display:flex;align-items:center;gap:4px;flex:1;justify-content:flex-end;flex-wrap:nowrap;overflow-x:auto;font-size:11px">
               <label style="color:var(--fg-3rd)">开始日期</label>
               <input type="date" id="greetFilterDateStart" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
               <label style="color:var(--fg-3rd)">结束日期</label>
@@ -771,7 +771,7 @@ a{color:var(--accent);text-decoration:none}
               <span id="greetFilterCount" style="color:var(--fg-3rd)"></span>
             </div>
             <!-- 回复筛选栏（和tab同一行，默认隐藏） -->
-            <div id="replyFilterBar" style="display:none;align-items:center;gap:4px;flex:1;justify-content:flex-end;flex-wrap:wrap;font-size:11px">
+            <div id="replyFilterBar" style="display:none;align-items:center;gap:4px;flex:1;justify-content:flex-end;flex-wrap:nowrap;overflow-x:auto;font-size:11px">
               <label style="color:var(--fg-3rd)">开始日期</label>
               <input type="date" id="replyFilterDateStart" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
               <label style="color:var(--fg-3rd)">结束日期</label>

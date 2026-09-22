@@ -1,0 +1,31 @@
+{
+  "test1": {
+    "total": 7,
+    "all_visible": true,
+    "off_visible": true,
+    "off_count": 2
+  },
+  "test2": {
+    "same_row": true,
+    "same_parent": true
+  },
+  "test3": {
+    "before": 200,
+    "after": 48,
+    "reset": 229,
+    "works": true
+  },
+  "test4": {
+    "reply_filter_visible": true
+  },
+  "test5": {
+    "has_garbled": false,
+    "time_humanized": true
+  },
+  "test6": {
+    "initial": true,
+    "after_click": false,
+    "final": true,
+    "works": true
+  }
+}
