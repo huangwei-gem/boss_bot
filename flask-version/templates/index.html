@@ -2580,7 +2580,7 @@ function buildGreetRowHtml(data, isPending) {
     +'<td>'+aiBadge+'</td>';
 }
 
-function addGreetRecord(data){
+function addGreetRecord(data, prepend){
   const body=document.getElementById('greetTableBody');
   if(!body) return;
   const empty=document.getElementById('greetEmpty');
@@ -2610,12 +2610,18 @@ function addGreetRecord(data){
     }
   }
 
-  // 找不到对应的 pending 行，创建新行并插入到最前面（按时间降序）
+  // 找不到对应的 pending 行，创建新行
+  // prepend=true(默认): 插入到最前面（实时新增用）
+  // prepend=false: 追加到末尾（批量加载历史用，API已按时间降序返回）
   const tr=document.createElement('tr');
   tr.innerHTML = buildGreetRowHtml(data, false);
-  body.insertBefore(tr, body.firstChild);
-  const panel=body.parentElement;
-  if(panel) panel.scrollTop=0;
+  if (prepend === false) {
+    body.appendChild(tr);
+  } else {
+    body.insertBefore(tr, body.firstChild);
+    const panel=body.parentElement;
+    if(panel) panel.scrollTop=0;
+  }
   bumpGreetTabCount();
   while(body.children.length>200) body.removeChild(body.lastChild);
 }
@@ -3600,7 +3606,7 @@ fetch('/api/greet_records').then(function(r){return r.json();}).then(function(da
       _feStatus: feStatus
     };
     allGreetRecords.push(row);
-    addGreetRecord(row);
+    addGreetRecord(row, false);  // false=追加到末尾，API已按时间降序返回
   });
   // 用历史记录数修正统计卡片（避免总任务显示0但实际有记录）
   var histCount = data.records.length;

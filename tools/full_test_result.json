@@ -81,7 +81,7 @@
   },
   "D1.回复记录数>0": {
     "pass": true,
-    "detail": "40条"
+    "detail": "41条"
   },
   "D2.聊天界面存在": {
     "pass": true,
@@ -101,7 +101,7 @@
   },
   "E1.日志面板存在": {
     "pass": true,
-    "detail": "102个日志元素"
+    "detail": "192个日志元素"
   },
   "E2.日志有内容": {
     "pass": true,
@@ -193,7 +193,7 @@
   },
   "J5.回复记录数>0": {
     "pass": true,
-    "detail": "238条"
+    "detail": "243条"
   },
   "J6./api/user_profile接口": {
     "pass": true,
