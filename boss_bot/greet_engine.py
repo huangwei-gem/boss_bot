@@ -1757,8 +1757,8 @@ class GreetEngine:
             pre_tab_ids = set(browser.tab_ids) if browser else set()
             chat_btn.click()
             self._log("INFO", "已点击沟通按钮，等待输入框...")
-            # 等待聊天窗口加载
-            self._random_delay(3, 5)
+            # 等待聊天窗口加载（参考原项目auto_boss: timeout=10秒）
+            self._random_delay(5, 8)
 
             # 尝试获取新打开的聊天标签页（BOSS 点"沟通"后通常新开标签页）
             # 关键修复：新标签页严格通过 browser_manager.get_greet_chat_tab() 管理，
@@ -1859,7 +1859,7 @@ class GreetEngine:
                     )
                     for sel in ["#chat-input", ".chat-input", ".input-area", "tag:textarea", "[contenteditable=true]"]:
                         try:
-                            input_area = greet_chat_instance.ele(sel, timeout=3)
+                            input_area = greet_chat_instance.ele(sel, timeout=10)
                             if input_area:
                                 self._log("INFO", f"在聊天标签页找到输入框: {sel}")
                                 break
@@ -1871,32 +1871,16 @@ class GreetEngine:
             # 关键修复：删除 latest_tab 回退逻辑。
             # latest_tab 可能返回回复引擎的 _chat_tab，导致打招呼引擎在回复标签页上发消息。
             # 如果 chat_tab 没找到输入框，检查当前搜索标签页是否已导航到聊天页（BOSS可能in-page导航）
-            if not input_area:
-                try:
-                    current_url = instance.url or ""
-                    self._log("DEBUG", f"当前搜索标签页URL: {current_url}")
-                    if "chat" in current_url or "message" in current_url:
-                        # BOSS在搜索标签页内in-page导航到了聊天页
-                        for sel in ["#chat-input", ".chat-input", ".input-area", "tag:textarea", "[contenteditable=true]"]:
-                            try:
-                                input_area = instance.ele(sel, timeout=2)
-                                if input_area:
-                                    self._log("INFO", f"在搜索标签页(in-page导航)找到输入框: {sel}")
-                                    greet_chat_instance = instance
-                                    break
-                            except Exception:
-                                pass
-                except Exception:
-                    pass
-            
-            # 如果还没找到，尝试当前页面
+            # 关键修复2：参考原项目auto_boss，点击沟通后聊天窗口在当前页面弹出（不新开标签页），
+            # URL不变，所以不检查URL是否含"chat"，直接在当前页面查找输入框
             if not input_area:
                 try:
                     for sel in ["#chat-input", ".chat-input", ".input-area", "tag:textarea", "[contenteditable=true]"]:
                         try:
-                            input_area = instance.ele(sel, timeout=2)
+                            input_area = instance.ele(sel, timeout=10)
                             if input_area:
                                 self._log("INFO", f"在当前页面找到输入框: {sel}")
+                                greet_chat_instance = instance
                                 break
                         except Exception:
                             pass
@@ -1933,7 +1917,7 @@ class GreetEngine:
                                     # 优先 #chat-input / .chat-input（BOSS直聘实际使用的选择器）
                                     for sel in ["#chat-input", ".chat-input", ".input-area", "tag:textarea", "[contenteditable=true]"]:
                                         try:
-                                            input_area = tab.ele(sel, timeout=3)
+                                            input_area = tab.ele(sel, timeout=5)
                                             if input_area:
                                                 # 守护日志：确认找到输入框的标签页不是回复引擎的标签页
                                                 if reply_chat_tab_id:
@@ -1975,7 +1959,7 @@ class GreetEngine:
                         for iframe in iframes:
                             try:
                                 for sel in ["#chat-input", ".chat-input", ".input-area", "tag:textarea", "[contenteditable=true]"]:
-                                    input_area = iframe.ele(sel, timeout=3)
+                                    input_area = iframe.ele(sel, timeout=5)
                                     if input_area:
                                         self._log("INFO", f"在iframe中找到输入框: {sel}")
                                         break
@@ -2124,7 +2108,7 @@ class GreetEngine:
         # 检查聊天窗口是否打开
         input_area = None
         try:
-            input_area = instance.ele(".input-area", timeout=3)
+            input_area = instance.ele(".input-area", timeout=10)
         except Exception:
             pass
 
