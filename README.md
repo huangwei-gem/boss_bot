@@ -16,6 +16,7 @@
 - [防骚扰与发送闸门](#防骚扰与发送闸门)
 - [AI 接口体检与容灾链](#ai-接口体检与容灾链)
 - [多账号](#多账号)
+- [聊天记录与 BOSS 对齐](#聊天记录与-boss-对齐)
 - [配置说明](#配置说明)
 - [配置生效范围（重要）](#配置生效范围重要)
 - [测试](#测试)
@@ -217,7 +218,7 @@ Cookie 点由 `GET /api/accounts/cookies` 供数（只查文件，不启动浏�
 | 登录 Cookie | 账号配置里的 `cookie_file`，回落到全局 |
 | 会话状态（防重复回复/发简历）、人工接管 | `bot_state.json` / `bot_state_account_N.json` |
 | 统计 | `bot_stats.json` / `bot_stats_account_N.json` |
-| 聊天记录 | `messages/` / `messages/aN_*.json` |
+| 聊天记录 | `messages/姓名#公司.json` / `messages/aN_姓名#公司.json`（旧数据在 `messages/legacy/`） |
 | 打招呼记录、回复记录 | **共用** `data/greet_records.json`、`data/reply_records.json`，每条带 `account_index`，接口按 `?account=` 过滤，导出与清空同样按账号收口 |
 | 打招呼话术、简历图片、消息间隔、岗位任务 | 各自 `accounts[N]` |
 | 每日上限计数 | 按 `account_index` 过滤 |
@@ -239,6 +240,34 @@ Cookie 点由 `GET /api/accounts/cookies` 供数（只查文件，不启动浏�
 python -X utf8 tools/backfill_greet_record_account.py           # 预演，打印会改多少条
 python -X utf8 tools/backfill_greet_record_account.py --apply   # 真正写盘，自动留 .bak
 ```
+
+## 聊天记录与 BOSS 对齐
+
+回复记录 / 聊天面板的目标是「和 BOSS 上看到的一模一样」。下面三条口径都是真机实测定下来的
+（`tools/compare_boss_chat.py`、`tools/probe_chat_identity.py`，账号0 侧栏 34 行）：
+
+| 问题 | 实测结论 | 做法 |
+|------|----------|------|
+| 同昵称是几个人 | 只用姓名 30/34 唯一，陈女士 / 唐女士 / 刘女士 / 易女士 各 2 个 | 会话身份 = **姓名 + 公司**（公司就挂在侧栏那一行的 `.name-box` 上，不用点开就能读到；取不到时退到岗位名），文件 `messages/姓名#公司.json` |
+| 顺序按什么排 | 线上时间标签只在分段处出现（存量 306 条里 123 条没有 time），`昨天 21:54`、`09-23 21:37` 还解析不成时间戳 | 顺序与去重都按 `data-mid`（雪花 id，同一会话内自上而下单调递增，实测全部验证）；时间标签原样显示，前端不再换算一次 |
+| 卡片与自记条目 | 简历 / PK 分析这类卡片 `.text-content` 是空的、`innerText` 才有内容；`[简历已发送]` 线上根本没有这条 | 每条消息带 `kind`：`bubble` 气泡 / `card` 卡片 / `system` BOSS 系统条 / `action` 引擎自记（默认不画，勾「显示引擎标记」才显示） |
+
+点开会话也不假设「点到的就是选中的」：侧栏会随时重排，所以 `enter_chat` 要求
+**点击行 = `selected` 行 = 顶栏姓名** 三者对齐（同名但公司不同同样判失败），
+对不上就跳过这一段，绝不把消息记进别人的文件里。
+
+存量数据按新规矩重采（全程只读，不点任何发送/打招呼按钮）：
+
+```bash
+python -X utf8 tools/resync_boss_chat.py              # 归档旧文件 + 全部重采 + 逐条校验
+python -X utf8 tools/resync_boss_chat.py --limit 8 --no-archive
+python -X utf8 tools/compare_boss_chat.py --n 5       # 只看差异，不写数据
+```
+
+`resync` 的验收口径是「本地尾部 N 条 == 线上这一屏」，逐条比正文、方向和时间标签。
+BOSS 每个会话只给 2-3 条历史（`.chat-content` 的 `scrollHeight == clientHeight`，滚动和滚轮都加载不出更多），
+所以更早的历史只能靠机器人运行时逐轮攒下来，没法事后补。旧文件不做拆分——同名的两段对话
+在同一个文件里已经分不干净了——整体挪到 `messages/legacy/` 保留。
 
 ## 配置说明
 

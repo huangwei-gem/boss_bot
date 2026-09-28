@@ -26,8 +26,19 @@ def _safe_filename(name: str) -> str:
     return re.sub(r'[^\w\u4e00-\u9fff]', '_', name)[:50]
 
 
+_JOB_NOISE = re.compile(r"(查看职位|查看详情|职位详情|了解更多|查看详情)")
+
+# data-mid 是雪花 id（实测 15 位，390857683964420），同一会话内自上而下单调递增
+_MID_RE = re.compile(r"^\d{6,}$")
+
+
 class MessageStore:
-    """消息存储（JSON 文件持久化 + 内存缓存，线程安全）"""
+    """消息存储（JSON 文件持久化 + 内存缓存，线程安全）
+
+    会话身份 = 昵称 + 岗位：BOSS 侧栏只显示"陈女士"，而同时聊着两个岗位的
+    陈女士是两段对话（实测账号0 的 34 个会话里有 4 组重名昵称）。只按昵称存
+    会把两段对话合进一个文件，前端再怎么排都对不上线上。
+    """
 
     CACHE_TTL = 30  # 缓存有效期（秒）
 
@@ -42,47 +53,99 @@ class MessageStore:
         self.account_index = account_index
         self._locks = {}
         self._global_lock = threading.Lock()
-        # 内存缓存：chat_name -> (data dict, 时间戳)
+        # 内存缓存：chat_id -> (data dict, 时间戳)
         self._cache = {}
-        # 跨账号读取时的 chat_name -> path 映射缓存
+        # 跨账号读取时的 chat_id -> path 映射缓存
         self._alias_cache = {}
 
-    def _get_lock(self, chat_name: str) -> threading.Lock:
+    @staticmethod
+    def job_key(job_name: str) -> str:
+        """身份尾串：去掉"查看职位"这类尾巴噪声，同一岗位两次读取稳定同键"""
+        return _safe_filename(_JOB_NOISE.sub("", job_name or "").strip())[:24]
+
+    @classmethod
+    def chat_id(cls, chat_name: str, company: str = "", job_name: str = "") -> str:
+        """会话身份 = 姓名 +（公司 或 岗位）
+
+        优先公司：它就挂在侧栏那一行上（.name-box 的第二截），不需要"点开才知道是谁"。
+        实测 34 行里只用姓名有 4 组重名，加上公司后 34/34 唯一。
+        公司取不到时退到岗位名（详情头部读得到）。
+        """
+        name = (chat_name or "").strip()
+        key = cls.job_key(company or job_name)
+        return f"{name}#{key}" if key else name
+
+    def _get_lock(self, key: str) -> threading.Lock:
         with self._global_lock:
-            if chat_name not in self._locks:
-                self._locks[chat_name] = threading.Lock()
-            return self._locks[chat_name]
+            if key not in self._locks:
+                self._locks[key] = threading.Lock()
+            return self._locks[key]
 
     @property
     def _prefix(self) -> str:
         """账号0 沿用原文件名，历史数据不用迁移；其余账号加 aN_ 前缀"""
         return "" if self.account_index <= 0 else f"a{self.account_index}_"
 
-    def _path(self, chat_name: str) -> Path:
-        return self.base_dir / f"{self._prefix}{_safe_filename(chat_name)}.json"
+    def _path(self, chat_name: str, company: str = "", job_name: str = "") -> Path:
+        return self.base_dir / f"{self._prefix}" \
+                               f"{_safe_filename(self.chat_id(chat_name, company, job_name))}.json"
 
-    def _read_path(self, chat_name: str) -> Path:
-        """读取用路径：先读本账号的，没有再按 chat_name 找别人的会话文件。
-
-        Web 端默认用账号0 的实例去浏览全部聊天，需要这个回落。
-        """
-        own = self._path(chat_name)
-        if own.exists():
-            return own
-        hit = self._alias_cache.get(chat_name)
-        if hit and hit.exists():
-            return hit
+    def _own_files(self):
+        """本账号的文件。账号0 的前缀是空的，glob 会把 a1_ 的文件一起吃进来，
+        所以必须按文件名里的 aN_ 再筛一遍，否则账号0 会读到账号2 的对话。"""
         for path in sorted(self.base_dir.glob("*.json")):
             if path.name.endswith(".meta.json"):
                 continue
-            try:
-                with open(path, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-            except Exception:
+            m = re.match(r"^a(\d+)_", path.name)
+            if m and int(m.group(1)) != self.account_index:
                 continue
-            if data.get("chat_name") == chat_name:
-                self._alias_cache[chat_name] = path
-                return path
+            yield path
+
+    def _candidates(self, chat_name: str, company: str = "",
+                    job_name: str = "") -> list:
+        """按身份挑该读哪个文件：本账号优先，其次跨账号。
+
+        Web 端默认拿账号0 的实例浏览全部聊天，所以要允许跨账号；但同昵称是两段
+        对话，给了身份尾串（公司/岗位）就必须对得上，否则两个"陈女士"会互相串，
+        界面内容就跟 BOSS 对不上了。
+        """
+        want = self.job_key(company or job_name)
+        seen = set()
+        exact, loose = [], []
+        for paths in (list(self._own_files()), sorted(self.base_dir.glob("*.json"))):
+            for path in paths:
+                if path.name.endswith(".meta.json") or path in seen:
+                    continue
+                seen.add(path)
+                try:
+                    with open(path, "r", encoding="utf-8") as f:
+                        data = json.load(f)
+                except Exception:
+                    continue
+                if data.get("chat_name") != chat_name:
+                    continue
+                have = self.job_key(data.get("company")
+                                    or data.get("job_name") or "")
+                if want and have and have == want:
+                    exact.append(path)
+                elif not want or not have:
+                    loose.append(path)
+        return exact + loose
+
+    def _read_path(self, chat_name: str, company: str = "",
+                   job_name: str = "") -> Path:
+        """读取用路径：先按 姓名+公司 找，再退到能对上身份的老文件。"""
+        cid = self.chat_id(chat_name, company, job_name)
+        own = self._path(chat_name, company, job_name)
+        if own.exists():
+            return own
+        hit = self._alias_cache.get(cid)
+        if hit and hit.exists():
+            return hit
+        found = self._candidates(chat_name, company, job_name)
+        if found:
+            self._alias_cache[cid] = found[0]
+            return found[0]
         return own
 
     def _cache_valid(self, chat_name: str) -> bool:
@@ -97,30 +160,36 @@ class MessageStore:
     def _cache_put(self, chat_name: str, data: dict):
         self._cache[chat_name] = (data, time.time())
 
-    def save_messages(self, chat_name: str, messages: list, job_name: str = ""):
+    def save_messages(self, chat_name: str, messages: list,
+                      job_name: str = "", company: str = ""):
         """保存一个会话的完整消息列表（覆盖式）"""
-        lock = self._get_lock(chat_name)
+        cid = self.chat_id(chat_name, company, job_name)
+        lock = self._get_lock(cid)
         with lock:
-            path = self._path(chat_name)
+            path = self._path(chat_name, company, job_name)
             data = {
                 "chat_name": chat_name,
+                "chat_id": cid,
                 "account_index": self.account_index,
+                "company": company,
                 "job_name": job_name,
                 "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "messages": messages,
             }
             try:
                 write_json_atomic(path, data)
-                self._cache_put(chat_name, data)
+                self._cache_put(cid, data)
             except Exception as e:
                 import logging
                 logging.getLogger(__name__).error(f"保存消息失败: {e}")
 
-    def append_message(self, chat_name: str, message: dict, job_name: str = ""):
+    def append_message(self, chat_name: str, message: dict,
+                       job_name: str = "", company: str = ""):
         """追加一条消息到会话文件"""
-        lock = self._get_lock(chat_name)
+        cid = self.chat_id(chat_name, company, job_name)
+        lock = self._get_lock(cid)
         with lock:
-            path = self._path(chat_name)
+            path = self._path(chat_name, company, job_name)
             try:
                 if path.exists():
                     with open(path, "r", encoding="utf-8") as f:
@@ -128,20 +197,109 @@ class MessageStore:
                 else:
                     data = {
                         "chat_name": chat_name,
+                        "chat_id": cid,
                         "account_index": self.account_index,
+                        "company": company,
                         "job_name": job_name,
                         "updated_at": "",
                         "messages": [],
                     }
-                data["messages"].append(message)
+                data["messages"].append(self._norm_msg(message))
                 data["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 if job_name:
                     data["job_name"] = job_name
+                if company:
+                    data["company"] = company
                 write_json_atomic(path, data)
-                self._cache_put(chat_name, data)
+                self._cache_put(cid, data)
             except Exception as e:
                 import logging
                 logging.getLogger(__name__).error(f"追加消息失败: {e}")
+
+    @staticmethod
+    def _mid_of(msg: dict) -> str:
+        """BOSS 给每条消息的 data-mid（旧字段名 msg_id 也认）"""
+        return str(msg.get("mid") or msg.get("msg_id") or "").strip()
+
+    def _norm_msg(self, msg: dict) -> dict:
+        """统一字段：正文、方向、mid、kind。
+
+        kind 决定前端怎么画，也是"和 BOSS 一致"的关键：
+        - bubble：线上真实气泡
+        - card：线上那张 .text-content 为空、innerText 有内容的卡片（简历/PK 分析/职位卡）
+        - system：BOSS 自己的系统提示
+        - action：我们自记的动作标记（如 [简历已发送]），线上并没有这条气泡
+        把 card/action 当正文存，界面就会长出线上看不到的行。
+        """
+        out = dict(msg)
+        text = (out.get("content") or out.get("text") or "").strip()
+        # card_text 优先于 block：block 是线上整块原文（带分段时间标签），
+        # 已归一化过的消息再读一次会因取 block 把刚去掉的时间标签带回来
+        block = (out.get("card_text") or out.get("block") or "").strip()
+        mid = self._mid_of(out)
+        if mid:
+            out["mid"] = mid
+            out.pop("msg_id", None)
+        if "is_mine" not in out:
+            out["is_mine"] = out.get("sender") in ("me", "bot")
+        if "isFriend" not in out:
+            out["isFriend"] = not out["is_mine"]
+        if "sender" not in out:
+            out["sender"] = "me" if out["is_mine"] else "hr"
+
+        kind = out.get("kind")
+        msg_type = out.get("msg_type")
+        if not kind:
+            if out.get("is_action"):
+                kind = "action"
+            elif not text and block:
+                kind = "card"
+            elif msg_type in ("image", "resume", "file", "job", "card"):
+                kind = "card"
+            elif msg_type == "system" or out.get("is_system") or out.get("sender") == "system":
+                kind = "system"
+            else:
+                kind = "bubble"
+        out["kind"] = kind
+        out["content"] = text
+        out["text"] = text
+        if kind in ("card", "system"):
+            ct = text or block
+            # 卡片的整块文本开头会把分段时间标签一起带进来（"08:56 你与该职位…PK…"），
+            # 而时间已经单独存在 time 字段里，线上也只在分段处显示一次，不去掉就重复
+            lbl = (out.get("time") or "").strip()
+            if lbl and ct.startswith(lbl):
+                ct = ct[len(lbl):].lstrip()
+            out["card_text"] = ct
+        return out
+
+    @classmethod
+    def _order_by_mid(cls, msgs: list) -> list:
+        """按 data-mid 升序 —— 唯一可靠的顺序键。
+
+        线上时间标签只在分段处出现（实测存量 306 条里 123 条没有 time），
+        而且 "昨天 21:54"、"09-23 21:37" 这类文本解析不出时间戳、"HH:MM" 又会被
+        当成"今天"，按它重排必然把昨天的消息排到今天之后。mid 是雪花 id，
+        同一会话内自上而下单调递增（实测三组会话全部验证）。
+        没有 mid 的（老数据、自记标记）沿用上一条有 mid 消息的位置，保持稳定。
+        """
+        first = 0
+        for m in msgs:
+            mid = cls._mid_of(m)
+            if mid.isdigit():
+                first = int(mid)
+                break
+        last = 0
+        keyed = []
+        for idx, m in enumerate(msgs):
+            mid = cls._mid_of(m)
+            if mid.isdigit():
+                last = int(mid)
+                keyed.append((last, idx))
+            else:
+                keyed.append(((last or first) if (last or first) else 0, idx))
+        order = sorted(range(len(msgs)), key=lambda i: keyed[i])
+        return [msgs[i] for i in order]
 
     @staticmethod
     def _msg_key(msg: dict) -> str:
@@ -158,164 +316,84 @@ class MessageStore:
         t = (msg.get("time") or msg.get("timestamp") or "").strip()
         return f"{content}|{t}"
 
-    @staticmethod
-    def _parse_time_for_sort(msg: dict) -> float:
-        """从消息中解析时间用于排序，失败返回 0.0。
-
-        支持多种格式：
-        - HH:MM（当天时间）
-        - YYYY-MM-DD HH:MM:SS
-        - ISO 格式（带 T）
-        - YYYY-MM-DD HH:MM
-        """
-        t = msg.get("time") or msg.get("timestamp") or ""
-        if not t:
-            return 0.0
-        t = t.strip()
-        # 尝试常见格式
-        formats = [
-            "%Y-%m-%d %H:%M:%S",
-            "%Y-%m-%d %H:%M",
-            "%Y-%m-%dT%H:%M:%S",
-            "%Y-%m-%dT%H:%M:%S.%f",
-            "%H:%M",
-        ]
-        for fmt in formats:
-            try:
-                dt = datetime.strptime(t, fmt)
-                # 仅时间格式（HH:MM）视为当天
-                if fmt == "%H:%M":
-                    dt = dt.replace(
-                        year=datetime.now().year,
-                        month=datetime.now().month,
-                        day=datetime.now().day,
-                    )
-                return dt.timestamp()
-            except ValueError:
-                continue
-        # 尝试 ISO 解析
-        try:
-            return datetime.fromisoformat(t).timestamp()
-        except Exception:
-            return 0.0
-
     def merge_messages(self, chat_name: str, new_messages: list,
-                       job_name: str = "") -> int:
-        """将页面读取的新消息与已存储消息合并去重后保存。
+                       job_name: str = "", company: str = "") -> int:
+        """把页面读到的消息并进「姓名+公司」这一路会话。
 
-        去重逻辑：按 content+time 去重（相同内容和时间的消息视为同一条）。
-        合并后按时间排序（若能解析时间），保存合并后的完整消息列表。
+        去重按 data-mid（线上每条都有、唯一且稳定）；没有 mid 的退到 content+time。
+        顺序按 mid 升序，不再按时间标签重排 —— 时间线上只在分段处出现，
+        "昨天 21:54" 这类还解析不成时间戳，重排就是把顺序搞乱的元凶。
 
         Args:
-            chat_name: 聊天对象名称
+            chat_name: 聊天对象称呼（BOSS 侧栏显示的名字）
             new_messages: 页面读取的新消息列表
-            job_name: 岗位名称
+            job_name: 岗位名称（详情头部读到，公司缺失时当身份）
+            company: 公司名（侧栏行上直接读到的身份判据）
 
         Returns:
             合并后的消息总数
         """
         if not new_messages:
-            return len(self.get_messages(chat_name))
+            return len(self.get_messages(chat_name, job_name, company))
 
-        lock = self._get_lock(chat_name)
+        cid = self.chat_id(chat_name, company, job_name)
+        lock = self._get_lock(cid)
         with lock:
-            path = self._path(chat_name)
+            read_path = self._read_path(chat_name, company, job_name)
+            data = None
+            existing_msgs: list = []
             try:
-                # 读取已存储的消息
-                if path.exists():
-                    with open(path, "r", encoding="utf-8") as f:
+                if read_path.exists():
+                    with open(read_path, "r", encoding="utf-8") as f:
                         data = json.load(f)
-                else:
-                    data = {
-                        "chat_name": chat_name,
-                        "account_index": self.account_index,
-                        "job_name": job_name,
-                        "updated_at": "",
-                        "messages": [],
-                    }
+                    existing_msgs = data.get("messages", []) or []
+            except Exception:
+                data = None
+            if data is None:
+                data = {"chat_name": chat_name}
 
-                existing_msgs = data.get("messages", [])
+            seen_keys = set()
+            merged = []
+            for raw in list(existing_msgs) + list(new_messages):
+                norm = self._norm_msg(raw)
+                # 线上真的什么都没有才丢；卡片这类正文为空但有整块文本的要留下
+                if not norm["text"] and not norm.get("card_text") and not norm.get("mid"):
+                    continue
+                key = self._msg_key(norm)
+                if key in seen_keys:
+                    continue
+                seen_keys.add(key)
+                merged.append(norm)
 
-                # 按 content+time 去重合并
-                seen_keys = set()
-                merged = []
+            merged = self._order_by_mid(merged)
 
-                # 先放入已存储消息
-                for msg in existing_msgs:
-                    key = self._msg_key(msg)
-                    # 已存储消息可能也有重复，去重
-                    if key in seen_keys:
-                        continue
-                    seen_keys.add(key)
-                    merged.append(msg)
-
-                # 再合并新消息
-                new_added = 0
-                for msg in new_messages:
-                    # 规范化字段：确保同时有 content/text 和 is_mine/isFriend
-                    content = (msg.get("content") or msg.get("text") or "").strip()
-                    if not content:
-                        continue
-                    norm_msg = dict(msg)
-                    norm_msg["content"] = content
-                    norm_msg["text"] = content
-                    # is_mine / isFriend 互补
-                    if "is_mine" in msg and "isFriend" not in msg:
-                        norm_msg["isFriend"] = not msg["is_mine"]
-                    elif "isFriend" in msg and "is_mine" not in msg:
-                        norm_msg["is_mine"] = not msg["isFriend"]
-                    # sender 字段（用于前端区分气泡）
-                    if "sender" not in norm_msg:
-                        norm_msg["sender"] = "hr" if not norm_msg.get("is_mine", False) else "bot"
-
-                    key = self._msg_key(norm_msg)
-                    if key in seen_keys:
-                        continue
-                    seen_keys.add(key)
-                    merged.append(norm_msg)
-                    new_added += 1
-
-                # 按时间排序，但岗位卡/简历卡这类消息 BOSS 不给时间戳：
-                # 直接丢到末尾会让它们和线上顺序错位（线上是夹在对话中间的），
-                # 所以沿用 DOM 里前一条有时间消息的时间，保持原有相对位置
-                last_ts = 0.0
-                effective = []
-                for idx, m in enumerate(merged):
-                    ts = self._parse_time_for_sort(m)
-                    if ts > 0:
-                        last_ts = ts
-                        effective.append((ts, idx))
-                    else:
-                        effective.append((last_ts if last_ts > 0 else 0.0, idx))
-                # 开头就没有时间的，向前借用第一条有时间消息的时间，避免整段被排到最后
-                first_ts = next((t for t, _ in effective if t > 0), 0.0)
-                effective = [(t if t > 0 else first_ts, i) for t, i in effective]
-                order = sorted(range(len(merged)), key=lambda i: effective[i])
-                merged = [merged[i] for i in order]
-
-                # 保存合并后的完整消息列表
-                data["messages"] = merged
-                data["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                if job_name:
-                    data["job_name"] = job_name
+            data["chat_name"] = chat_name
+            data["chat_id"] = cid
+            data["account_index"] = self.account_index
+            if job_name:
+                data["job_name"] = job_name
+            if company:
+                data["company"] = company
+            data["messages"] = merged
+            data["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            path = self._path(chat_name, company, job_name)
+            try:
                 write_json_atomic(path, data)
-                self._cache_put(chat_name, data)
-
+                self._cache_put(cid, data)
                 import logging
                 logging.getLogger(__name__).info(
-                    f"[merge_messages] chat={chat_name} "
-                    f"existing={len(existing_msgs)} new={len(new_messages)} "
-                    f"new_added={new_added} merged_total={len(merged)}"
-                )
+                    f"[merge_messages] 会话={cid} "
+                    f"已存={len(existing_msgs)} 本次读取={len(new_messages)} "
+                    f"合并后={len(merged)}")
                 return len(merged)
             except Exception as e:
                 import logging
                 logging.getLogger(__name__).error(f"合并消息失败: {e}")
-                return len(self.get_messages(chat_name))
+                return len(self.get_messages(chat_name, job_name, company))
 
     def append_hr_message(self, chat_name: str, content: str,
                           job_name: str = "", timestamp: str = "",
-                          extra: dict = None) -> dict:
+                          extra: dict = None, company: str = "") -> dict:
         """追加一条 HR 发来的消息（左侧气泡）。
 
         Args:
@@ -336,19 +414,20 @@ class MessageStore:
             "content": content,
             "text": content,
             "is_mine": False,
+            "kind": "bubble",
             "timestamp": ts,
             "time": time_short,
             "job_name": job_name,
         }
         if extra:
             msg.update(extra)
-        self.append_message(chat_name, msg, job_name)
+        self.append_message(chat_name, msg, job_name, company)
         return msg
 
     def append_bot_message(self, chat_name: str, content: str,
                            job_name: str = "", timestamp: str = "",
                            reply_source: str = "", action: str = "text",
-                           extra: dict = None) -> dict:
+                           extra: dict = None, company: str = "") -> dict:
         """追加一条机器人回复消息（右侧气泡）。
 
         Args:
@@ -365,11 +444,15 @@ class MessageStore:
         """
         # 统一时间戳格式为 YYYY-MM-DD HH:MM:SS
         ts = timestamp or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # 真的发出去的文字线上有对应气泡；[简历已发送] 这类是引擎自记的动作，
+        # 标成 action 让前端画成居中小字，而不是伪装成一条线上气泡
+        kind = "bubble" if action in ("text", "text_fallback") else "action"
         msg = {
             "sender": "bot",
             "content": content,
             "text": content,
             "is_mine": True,
+            "kind": kind,
             "source": "bot",
             "reply_source": reply_source,
             "action": action,
@@ -379,12 +462,12 @@ class MessageStore:
         }
         if extra:
             msg.update(extra)
-        self.append_message(chat_name, msg, job_name)
+        self.append_message(chat_name, msg, job_name, company)
         return msg
 
     def append_skip_record(self, chat_name: str, skip_reason: str,
                            job_name: str = "", received_message: str = "",
-                           timestamp: str = "") -> dict:
+                           timestamp: str = "", company: str = "") -> dict:
         """追加一条跳过记录到会话（用于完整对话上下文）。
 
         Args:
@@ -404,6 +487,7 @@ class MessageStore:
             "content": f"[跳过] {skip_reason}",
             "text": f"[跳过] {skip_reason}",
             "is_mine": False,
+            "kind": "action",
             "is_skipped": True,
             "skip_reason": skip_reason,
             "received_message": received_message,
@@ -411,41 +495,50 @@ class MessageStore:
             "time": ts[11:16] if len(ts) >= 16 else datetime.now().strftime("%H:%M"),
             "job_name": job_name,
         }
-        self.append_message(chat_name, msg, job_name)
+        self.append_message(chat_name, msg, job_name, company)
         return msg
 
-    def get_messages(self, chat_name: str) -> list:
-        """读取一个会话的所有消息（优先走缓存）"""
-        if self._cache_valid(chat_name):
-            return self._cache_get(chat_name).get("messages", [])
-        path = self._read_path(chat_name)
+    def get_messages(self, chat_name: str, job_name: str = "",
+                     company: str = "") -> list:
+        """读取一路会话的所有消息（优先走缓存）"""
+        cid = self.chat_id(chat_name, company, job_name)
+        if self._cache_valid(cid):
+            return self._cache_get(cid).get("messages", [])
+        path = self._read_path(chat_name, company, job_name)
         try:
             if path.exists():
                 with open(path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                self._cache_put(chat_name, data)
+                self._cache_put(cid, data)
                 return data.get("messages", [])
         except Exception:
             pass
         return []
 
-    def get_full_dialog(self, chat_name: str, limit: int = 50) -> list:
+    def get_full_dialog(self, chat_name: str, limit: int = 50,
+                        job_name: str = "", company: str = "") -> list:
         """获取完整对话历史（用于 AI 上下文）。
 
         Args:
             chat_name: 聊天对象名称
             limit: 最多返回消息数
+            job_name: 岗位名称（公司缺失时参与定位会话）
+            company: 公司名（与称呼一起定位会话）
 
         Returns:
             消息列表，每条含 sender/content/timestamp/is_mine 等字段
         """
-        msgs = self.get_messages(chat_name)
+        msgs = self.get_messages(chat_name, job_name, company)
         if limit > 0 and len(msgs) > limit:
             return msgs[-limit:]
         return msgs
 
     def get_chat_list(self) -> list:
-        """获取所有有消息记录的会话列表（含各账号的会话）"""
+        """获取所有有消息记录的会话列表（含各账号的会话）
+
+        同昵称不同岗位是两条会话，所以列表里同时给出 chat_id（身份）和
+        chat_name（显示用），前端点进来按 chat_id 定位，才不会串到别人的对话里。
+        """
         result = []
         for path in self.base_dir.glob("*.json"):
             if path.name.endswith(".meta.json"):
@@ -455,9 +548,15 @@ class MessageStore:
                     data = json.load(f)
                 msgs = data.get("messages", [])
                 m = re.match(r"^a(\d+)_", path.name)
+                chat_name = data.get("chat_name", path.stem)
+                job_name = data.get("job_name", "")
+                company = data.get("company", "")
                 result.append({
-                    "chat_name": data.get("chat_name", path.stem),
-                    "job_name": data.get("job_name", ""),
+                    "chat_name": chat_name,
+                    "chat_id": data.get("chat_id")
+                                 or self.chat_id(chat_name, company, job_name),
+                    "company": company,
+                    "job_name": job_name,
                     "account_index": data.get(
                         "account_index", int(m.group(1)) if m else 0),
                     "updated_at": data.get("updated_at", ""),
@@ -469,26 +568,30 @@ class MessageStore:
         result.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
         return result
 
-    def get_chat_detail(self, chat_name: str) -> dict:
-        """获取一个会话的完整详情（含消息列表，优先走缓存）"""
-        if self._cache_valid(chat_name):
-            return self._cache_get(chat_name)
-        path = self._read_path(chat_name)
+    def get_chat_detail(self, chat_name: str, job_name: str = "",
+                        company: str = "") -> dict:
+        """获取一路会话的完整详情（含消息列表，优先走缓存）"""
+        cid = self.chat_id(chat_name, company, job_name)
+        if self._cache_valid(cid):
+            return self._cache_get(cid)
+        path = self._read_path(chat_name, company, job_name)
         try:
             if path.exists():
                 with open(path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                self._cache_put(chat_name, data)
+                self._cache_put(cid, data)
                 return data
         except Exception:
             pass
-        return {"chat_name": chat_name, "job_name": "", "updated_at": "", "messages": []}
+        return {"chat_name": chat_name, "chat_id": cid, "company": company,
+                "job_name": job_name, "updated_at": "", "messages": []}
 
     def get_all_chats_detail(self) -> list:
         """获取所有会话的完整详情列表（用于前端聊天界面展示）。
 
         每个会话包含：
-        - chat_name: 聊天对象名称
+        - chat_name: 聊天对象称呼（BOSS 侧栏显示的名字）
+        - chat_id: 会话身份（姓名+岗位，前端据此定位）
         - job_name: 岗位名称
         - updated_at: 最后更新时间
         - message_count: 消息总数
@@ -509,6 +612,8 @@ class MessageStore:
                     data = json.load(f)
                 msgs = data.get("messages", [])
                 chat_name = data.get("chat_name", path.stem)
+                job_name = data.get("job_name", "")
+                company = data.get("company", "")
                 m = re.match(r"^a(\d+)_", path.name)
                 account_index = data.get(
                     "account_index", int(m.group(1)) if m else 0)
@@ -523,11 +628,15 @@ class MessageStore:
                 last_content = ""
                 if last_msg:
                     last_time = last_msg.get("timestamp", "") or last_msg.get("time", "")
-                    last_content = last_msg.get("content", "") or last_msg.get("text", "")
+                    last_content = (last_msg.get("content", "") or last_msg.get("text", "")
+                                    or last_msg.get("card_text", ""))
                 result.append({
                     "chat_name": chat_name,
+                    "chat_id": data.get("chat_id")
+                                 or self.chat_id(chat_name, company, job_name),
                     "account_index": account_index,
-                    "job_name": data.get("job_name", ""),
+                    "company": company,
+                    "job_name": job_name,
                     "updated_at": data.get("updated_at", ""),
                     "message_count": len(msgs),
                     "unread_count": unread_count,
@@ -540,11 +649,35 @@ class MessageStore:
         result.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
         return result
 
-    def mark_chat_read(self, chat_name: str):
-        """标记一个会话的所有 HR 消息为已读。"""
-        lock = self._get_lock(chat_name)
+    def renormalize(self) -> int:
+        """把已存的文件按当前归一化规则重写一遍（迁移用，不开浏览器）。
+
+        归一化规则会变（比如卡片文本不再重复分段时间标签），存量文件就得跟着刷一次，
+        否则界面上老会话还是按旧规则显示，和新采到的对不齐。
+        """
+        count = 0
+        for path in self._own_files():
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception:
+                continue
+            msgs = data.get("messages", []) or []
+            new_msgs = [self._norm_msg(m) for m in msgs]
+            if new_msgs == msgs:
+                continue
+            data["messages"] = new_msgs
+            write_json_atomic(path, data)
+            count += 1
+        return count
+
+    def mark_chat_read(self, chat_name: str, job_name: str = "",
+                       company: str = ""):
+        """标记一路会话的所有 HR 消息为已读。"""
+        cid = self.chat_id(chat_name, company, job_name)
+        lock = self._get_lock(cid)
         with lock:
-            path = self._read_path(chat_name)
+            path = self._read_path(chat_name, company, job_name)
             try:
                 if path.exists():
                     with open(path, "r", encoding="utf-8") as f:
@@ -554,7 +687,7 @@ class MessageStore:
                             m["is_read"] = True
                     data["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     write_json_atomic(path, data)
-                    self._cache_put(chat_name, data)
+                    self._cache_put(cid, data)
             except Exception as e:
                 import logging
                 logging.getLogger(__name__).error(f"标记已读失败: {e}")

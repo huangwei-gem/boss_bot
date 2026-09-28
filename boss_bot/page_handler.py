@@ -281,12 +281,29 @@ class BossChatHandler:
                         var nameEl = el.querySelector(".name-text");
                         var name = nameEl ? nameEl.textContent.trim() : "未知";
 
+                        // 公司：重名昵称唯一可靠的判据（实测 34 行 (姓名,公司) 全唯一，
+                        // 只用姓名有 4 组撞车），且它就挂在行上，不依赖"点开的是谁"
+                        var box = el.querySelector(".name-box");
+                        var company = "";
+                        if (box) {
+                            var spans = [];
+                            for (var k = 0; k < box.children.length; k++) {
+                                var c = box.children[k];
+                                if (c.tagName === "SPAN") {
+                                    var t = (c.textContent || "").trim();
+                                    if (t) spans.push(t);
+                                }
+                            }
+                            company = spans.length > 1 ? spans[1] : "";
+                        }
+
                         var previewEl = el.querySelector(".last-msg-text");
                         var preview = previewEl ? previewEl.textContent.trim() : "";
 
                         unread.push({
                             index: i,
                             name: name,
+                            company: company,
                             preview: preview,
                             unread_count: count
                         });
@@ -307,43 +324,104 @@ class BossChatHandler:
         logger.debug(f"发现 {len(unread_chats)} 个未读会话")
         return unread_chats
 
+    def read_selected_row(self) -> Dict:
+        """读侧栏里当前真正带 selected 态的那一行（身份以它为准，不靠点击时的索引）
+
+        BOSS 会随时重排侧栏：按索引点第 i 行之后，第 i 行可能已经不是刚才那个人，
+        而"选中"落在别的行上。所以点完必须回头看 selected 落在哪，用它身上的
+        姓名+公司当身份 —— 这两个字段就在行里，不需要点开，也就不会张冠李戴。
+        """
+        try:
+            result = self.page.run_js('''(
+                function() {
+                    var items = document.querySelectorAll(".friend-content");
+                    for (var i = 0; i < items.length; i++) {
+                        var it = items[i];
+                        if ((it.className || "").indexOf("selected") < 0) continue;
+                        var q = function(s) {
+                            var e = it.querySelector(s);
+                            return e ? (e.textContent || "").trim() : "";
+                        };
+                        // .name-box 里依次是 姓名 / 公司 / 头衔（后两个是裸 span）
+                        var box = it.querySelector(".name-box");
+                        var spans = [];
+                        if (box) {
+                            for (var k = 0; k < box.children.length; k++) {
+                                var c = box.children[k];
+                                if (c.tagName === "SPAN") {
+                                    var t = (c.textContent || "").trim();
+                                    if (t) spans.push(t);
+                                }
+                            }
+                        }
+                        return JSON.stringify({
+                            index: i,
+                            name: q(".name-text"),
+                            company: spans.length > 1 ? spans[1] : "",
+                            title: spans.length > 2 ? spans[2] : ""
+                        });
+                    }
+                    return "";
+                }
+            )()''', as_expr=True)
+            return json.loads(result) if result else {}
+        except Exception as e:
+            logger.debug(f"读取选中会话行失败: {e}")
+            return {}
+
     def enter_chat(self, chat_info: dict, retries: int = 2) -> bool:
         """点击进入某个聊天并校验切换成功，等待聊天内容加载。
 
-        策略：优先按名称点击（更可靠），回退到按索引点击。
-        切换后校验页面顶栏姓名与目标会话一致，防止读到错误会话的消息。
+        校验不能只看顶栏姓名：实测侧栏 34 行里有 4 组重名昵称（两个陈女士分属
+        小智时代科技/艾秒广告），姓名一样，点错一个照样"姓名对得上"。所以要求
+        点击的那一行确实变成 selected，且 selected 行的姓名与目标一致。
         返回 True=切换成功并确认；False=校验失败（调用方应跳过该会话）。
         """
         idx = chat_info.get('index', 0)
         expected_name = chat_info.get('name', '')
+        expected_company = chat_info.get('company', '')
 
         for attempt in range(1, retries + 2):
-            # 优先按名称点击（更可靠，不受 DOM 重新排序影响）
-            if expected_name:
-                click_result = self.page.run_js(f'''(
-                    function() {{
-                        var friends = document.querySelectorAll(".friend-content");
-                        for (var i = 0; i < friends.length; i++) {{
-                            var nameEl = friends[i].querySelector(".name-text");
-                            if (nameEl && nameEl.textContent.trim() === "{expected_name}") {{
-                                friends[i].click();
-                                return "clicked_by_name";
+            # 按 姓名+公司 定位行：实测 34 行里 (姓名,公司) 唯一 34/34，
+            # 只用姓名则有 4 组撞车。公司字段为空的行退到按索引点，再靠下面
+            # 的 selected 复核兜住。
+            click_result = self.page.run_js(f'''(
+                function() {{
+                    var friends = document.querySelectorAll(".friend-content");
+                    var want = {{n: {json.dumps(expected_name, ensure_ascii=False)},
+                                c: {json.dumps(expected_company, ensure_ascii=False)}}};
+                    function info(el) {{
+                        var e = el.querySelector(".name-text");
+                        var name = e ? e.textContent.trim() : "";
+                        var box = el.querySelector(".name-box"), comp = "";
+                        if (box) {{
+                            var spans = [];
+                            for (var k = 0; k < box.children.length; k++) {{
+                                var c = box.children[k];
+                                if (c.tagName === "SPAN") {{
+                                    var t = (c.textContent || "").trim();
+                                    if (t) spans.push(t);
+                                }}
                             }}
+                            comp = spans.length > 1 ? spans[1] : "";
                         }}
-                        return "name_not_found";
+                        return {{name: name, company: comp}};
                     }}
-                )()''', as_expr=True)
-                if click_result == "name_not_found":
-                    # 回退到按索引点击
-                    self.page.run_js(
-                        f'document.querySelectorAll(".friend-content")[{idx}].click()',
-                        as_expr=True
-                    )
-            else:
-                self.page.run_js(
-                    f'document.querySelectorAll(".friend-content")[{idx}].click()',
-                    as_expr=True
-                )
+                    for (var i = 0; i < friends.length; i++) {{
+                        var got = info(friends[i]);
+                        if (want.n && got.name === want.n &&
+                            (!want.c || got.company === want.c)) {{
+                            friends[i].click();
+                            return "ok";
+                        }}
+                    }}
+                    if (friends[{idx}]) {{ friends[{idx}].click(); return "by_index"; }}
+                    return "not_found";
+                }}
+            )()''', as_expr=True)
+            if click_result == "not_found":
+                logger.warning(f"侧栏找不到会话 [{expected_name}]，跳过")
+                return False
             time.sleep(3)
 
             # 等待输入框加载
@@ -356,21 +434,32 @@ class BossChatHandler:
                     break
                 time.sleep(0.5)
 
-            # 校验会话切换是否正确
-            actual_name = self.get_boss_name()
-            if not expected_name or not actual_name or actual_name == expected_name:
-                if not actual_name and expected_name:
-                    logger.warning(
-                        f"无法获取当前会话名称（选择器可能不匹配），"
-                        f"跳过校验直接处理 [{expected_name}]"
-                    )
-                return True
+            # 校验"选中的就是我要的那一行"：selected 行的姓名/公司 与 顶栏姓名 三方对齐
+            sel = self.read_selected_row()
+            header_name = self.get_boss_name()
+            head_ok = (not header_name or not expected_name
+                       or header_name == expected_name)
+            if not sel:
+                # 读到 0 行 selected（BOSS 改了类名等）时不能整轮罢工：
+                # 这时只剩顶栏姓名可核，同名风险由调用方按岗位/公司再判
+                logger.debug(f"侧栏没有 selected 标记，退回顶栏姓名核对 [{expected_name}]")
+                if head_ok:
+                    return True
+            else:
+                sel_ok = (not expected_name or sel.get("name") == expected_name) \
+                    and (not expected_company or sel.get("company") == expected_company)
+                if sel_ok and head_ok:
+                    if click_result == "by_index":
+                        logger.debug(f"按索引点开会话 [{expected_name}]，selected 复核通过")
+                    return True
             logger.warning(
                 f"会话切换校验失败（第 {attempt}/{retries + 1} 次）: "
-                f"期望 [{expected_name}], 实际 [{actual_name}]，重试..."
+                f"期望[{expected_name}|{expected_company}], "
+                f"selected={sel.get('index')}/{sel.get('name')}|{sel.get('company')}, "
+                f"顶栏={header_name!r}，重试..."
             )
 
-        logger.error(f"会话 [{expected_name}] 切换校验最终失败，应跳过该会话")
+        logger.error(f"会话 [{expected_name}|{expected_company}] 切换校验最终失败，应跳过该会话")
         return False
 
     # 实测线上结构（2026-09-27 抓取 .chat-record 子树）：
@@ -536,6 +625,9 @@ class BossChatHandler:
                     break
 
             # 第二步：读取所有 .message-item 元素
+            # mid 与 block 必须一起取：mid 是线上每条都有的唯一键（顺序与去重靠它），
+            # block 是整块文本 —— 卡片类消息 .text-content 是空的，只取 text 就会
+            # 存成空气泡，界面上多出一行线上看不到的空内容
             result = self.page.run_js('''(
                 function() {
                     var items = document.querySelectorAll(".message-item");
@@ -543,13 +635,18 @@ class BossChatHandler:
                     for (var i = 0; i < items.length; i++) {
                         var item = items[i];
                         var textEl = item.querySelector(".text-content");
-                        var timeEl = item.querySelector(".item-time .time");
+                        var timeEl = item.querySelector(".item-time .time")
+                                  || item.querySelector(".time");
                         var cls = item.className || "";
+                        var sys = cls.indexOf("item-system") >= 0;
                         result.push({
                             text: textEl ? textEl.textContent.trim() : "",
                             time: timeEl ? timeEl.textContent.trim() : "",
                             isFriend: cls.indexOf("item-friend") >= 0,
-                            is_mine: cls.indexOf("item-friend") < 0
+                            is_mine: cls.indexOf("item-friend") < 0 && !sys,
+                            is_system: sys,
+                            mid: item.getAttribute("data-mid") || "",
+                            block: (item.innerText || "").replace(/\\s+/g, " ").trim().slice(0, 300)
                         });
                     }
                     return JSON.stringify(result);
@@ -733,6 +830,22 @@ class BossChatHandler:
                         var nameEl = el.querySelector(".name-text");
                         var name = nameEl ? nameEl.textContent.trim() : "未知";
 
+                        // 公司挂在 .name-box 的裸 span 上（姓名/公司/头衔三截）：
+                        // 重名昵称靠它区分，实测 34 行 (姓名,公司) 唯一
+                        var box = el.querySelector(".name-box");
+                        var company = "";
+                        if (box) {
+                            var spans = [];
+                            for (var k = 0; k < box.children.length; k++) {
+                                var c = box.children[k];
+                                if (c.tagName === "SPAN") {
+                                    var t = (c.textContent || "").trim();
+                                    if (t) spans.push(t);
+                                }
+                            }
+                            company = spans.length > 1 ? spans[1] : "";
+                        }
+
                         var previewEl = el.querySelector(".last-msg-text");
                         var lastMsg = previewEl ? previewEl.textContent.trim() : "";
 
@@ -753,6 +866,7 @@ class BossChatHandler:
                         result.push({
                             index: i,
                             name: name,
+                            company: company,
                             last_message: lastMsg,
                             unread_count: unread,
                             is_selected: isSelected

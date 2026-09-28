@@ -164,41 +164,104 @@ def main():
 
     acct0_store, acct0_chats = chat_candidates(0)
     _, acct1_chats = chat_candidates(1)
-    acct0_names = {c["chat_name"] for c in acct0_chats}
+
+    def ui_rows(page):
+        """前端画出来的每一行：正文（气泡或卡片）+ 左右方向 + 时间标签"""
+        raw = js(page, '''(function(){var b=document.getElementById("bossChatMessages");
+          if(!b)return "[]";var rows=b.querySelectorAll(".boss-msg-row"),o=[];
+          for(var i=0;i<rows.length;i++){
+            var el=rows[i].querySelector(".boss-msg-bubble")
+                  ||rows[i].querySelector(".boss-msg-card");
+            var t=rows[i].querySelector(".boss-msg-time");
+            // 方向要看 class 里的 me 这个词，不能用 indexOf：
+            // "system" 里也含 "me"，系统条会被误判成我方消息
+            var mine=/(^|\\s)me(\\s|$)/.test(rows[i].className);
+            o.push({mine:mine,
+                    text:(el?(el.textContent||""):"").replace(/\\s+/g," ").trim(),
+                    time:(t?(t.textContent||""):"").trim()});}
+          return JSON.stringify(o);})()''')
+        # js() 已经把 JSON 字符串还原成对象了，这里不能再 loads 一次
+        return raw if isinstance(raw, list) else json.loads(raw or "[]")
+
+    def expected_rows(store, chat):
+        """后端该画成什么样：卡片/系统行也要有可见文本，引擎自记的 action 不进气泡序列"""
+        msgs = store.get_messages(chat["chat_name"], chat.get("job_name", ""),
+                                  chat.get("company", ""))
+        out = []
+        for m in msgs:
+            if m.get("kind") == "action":
+                continue
+            text = ((m.get("text") or m.get("content") or m.get("card_text") or "")
+                    .replace("\n", " ").strip())
+            out.append({"mine": bool(m.get("is_mine")), "text": text,
+                        "time": (m.get("time") or "").strip()})
+        return out
 
     for acct, cand in ((0, acct0_chats), (1, acct1_chats)):
-        # 两个号聊到同名 HR 时前端缓存按名字索引会撞车（已知问题），
-        # 这里只挑另一个号没有的会话，测的是"读到本账号的文件"
-        uniq = [c for c in cand if c["chat_name"] not in acct0_names] if acct else cand
-        if not uniq:
+        if not cand:
             continue
         store = MessageStore(account_index=acct)
-        target = max(uniq, key=lambda c: c["message_count"])
-        name = target["chat_name"]
-        tag = f"聊天(账号{acct + 1})"
-        js(page, f'selectBossChat({json.dumps(name)})')
+        target = max(cand, key=lambda c: c["message_count"])
+        # 选择会话必须用身份（姓名+公司），昵称本身在两个号上都会撞车
+        js(page, f'selectBossChat({json.dumps(target["chat_id"], ensure_ascii=False)})')
         time.sleep(2)
-        ui = js(page, '''(function(){var b=document.getElementById("bossChatMessages");
-          if(!b)return "[]";var rows=b.querySelectorAll(".boss-msg-row"),o=[];
-          for(var i=0;i<rows.length;i++){var el=rows[i].querySelector(".boss-msg-bubble")
-            ||rows[i].querySelector(".boss-msg-card");
-          o.push({mine:rows[i].className.indexOf("me")>=0,
-                  text:(el?(el.textContent||""):"").replace(/\\s+/g," ").trim()});}
-          return JSON.stringify(o);})()''')
-        be = [m for m in store.get_messages(name)
-              if (m.get("text") or m.get("content") or "").strip()]
-        check(tag, "前端气泡数 = 后端消息数", len(ui) == len(be),
+        ui = ui_rows(page)
+        be = expected_rows(store, target)
+        name = f'{target["chat_name"]}|{(target.get("company") or "")[:10]}'
+        tag = f"聊天(账号{acct + 1})"
+        check(tag, "前端行数 = 后端消息数", len(ui) == len(be),
               f"{name} 前端{len(ui)} 后端{len(be)}")
-        bad = 0
-        for a, b in zip(ui, be):
-            ta = (a["text"] or "")[:14]
-            tb = ((b.get("text") or b.get("content") or "").replace("\n", " ").strip())[:14]
-            if ta and tb and ta not in tb and tb not in ta:
-                bad += 1
-        check(tag, "逐条顺序与文本一致", bad == 0, f"{bad} 条错位")
-        mine_ok = all(a["mine"] == bool(b.get("is_mine")) for a, b in zip(ui, be))
+        bad = sum(1 for a, b in zip(ui, be) if a["text"] != b["text"])
+        check(tag, "逐条文本与线上存储一致", bad == 0, f"{bad} 条文本不符")
+        order_bad = sum(1 for a, b in zip(ui, be)
+                        if a["text"] and b["text"] and a["text"] != b["text"])
+        check(tag, "顺序一致（不重排）", order_bad == 0, f"{order_bad} 处错位")
+        time_bad = sum(1 for a, b in zip(ui, be) if a["time"] != b["time"])
+        check(tag, "时间标签照搬线上", time_bad == 0, f"{time_bad} 条时间不符")
+        mine_ok = all(a["mine"] == b["mine"] for a, b in zip(ui, be))
         check(tag, "我方/对方方向正确", mine_ok)
         page.get_screenshot(path=os.path.join(SHOTS, f"chat_a{acct}.png"))
+
+    # ── 4b. 同昵称的两段对话必须互不串台 ──
+    # 实测侧栏 34 行里 4 组重名（陈女士/唐女士/刘女士/易女士），
+    # 以前按昵称存文件，点开一个就把两个人的话并在一起显示
+    names = {}
+    for c in acct0_chats:
+        names.setdefault(c["chat_name"], []).append(c)
+    dups = {k: v for k, v in names.items() if len(v) > 1}
+    if dups:
+        name, two = next(iter(dups.items()))
+        per_identity = []
+        for chat in two:
+            js(page, 'selectBossChat(%s)' % json.dumps(chat["chat_id"], ensure_ascii=False))
+            time.sleep(1.6)
+            rows = ui_rows(page)
+            be = expected_rows(MessageStore(account_index=0), chat)
+            per_identity.append((chat["chat_id"], rows, be,
+                                 {m.get("mid") for m in
+                                  MessageStore(account_index=0).get_messages(
+                                      chat["chat_name"], chat.get("job_name", ""),
+                                      chat.get("company", ""))
+                                  if m.get("mid")}))
+        each_matches_own_file = all(len(r) == len(b) and
+                                    all(a["text"] == c["text"] for a, c in zip(r, b))
+                                    for _, r, b, _ in per_identity)
+        # 两路的正文可以撞车（PK 分析卡那句话 BOSS 给谁都一样），
+        # 真正能证明"没并成一个文件"的是 data-mid：线上每条唯一
+        mids = [s for _, _, _, s in per_identity]
+        disjoint = all(mids) and not set.intersection(*[set(s) for s in mids])
+        check("会话身份", f"同昵称 {name}×{len(two)} 各自显示自己那一路",
+              each_matches_own_file, "点开后读到的不是该身份自己的文件")
+        check("会话身份", f"同昵称 {name}×{len(two)} 的 data-mid 互不重叠",
+              disjoint, f"mid 集合={mids}")
+    else:
+        check("会话身份", "存在同昵称多路会话可供校验", False,
+              "当前账号没有重名会话，这条没真正验到")
+    check("会话身份", "列表把身份显示出来（姓名+公司）",
+          js(page, '''(function(){var it=document.querySelectorAll(".boss-chat-item-job");
+            for(var i=0;i<it.length;i++){if((it[i].textContent||"").trim())return true;}
+            return false;})()'''),
+          "副标题（公司）没显示，同名会话在列表里分不出来")
 
     # ── 5. AI 体检（真实网络请求） ──
     js(page, 'toggleAiProviders()')

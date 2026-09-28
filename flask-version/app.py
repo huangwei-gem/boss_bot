@@ -1973,6 +1973,30 @@ def _normalize_ts(ts: str) -> str:
     return ""
 
 
+def _chat_id_for_record(chat_index, msg_store, record) -> str:
+    """把一条回复记录归到它真正所属的那一路会话。
+
+    记录本身只带 姓名+岗位，而会话身份是 姓名+公司，所以要拿记录的岗位去同名的
+    几路会话里对：实测两个"陈女士"的岗位完全不同（数据分析师 / 运营实习生），
+    岗位能唯一对上；对不上时（同名多路且岗位都不匹配）只能退回按岗位自己拼一个
+    身份，绝不能塞进同名会话里 —— 那正是界面顺序和内容对不上 BOSS 的来历。
+
+    chat_index 由调用方一次建好（(姓名, 账号) -> 会话列表），逐条记录查表，
+    免得每条记录都重扫一遍 messages 目录。
+    """
+    name = record.chat_name or "(未知)"
+    job = (record.job_name or "").strip()
+    cands = chat_index.get((name, int(record.account_index or 0)), [])
+    if len(cands) == 1:
+        return cands[0]["chat_id"]
+    if job:
+        hits = [c for c in cands
+                if job in (c.get("job_name") or "") or (c.get("job_name") or "") in job]
+        if len(hits) == 1:
+            return hits[0]["chat_id"]
+    return msg_store.chat_id(name, "", job)
+
+
 @app.route("/api/reply_records/grouped")
 def api_reply_records_grouped():
     """获取按聊天对象分组的回复记录。
@@ -1996,16 +2020,26 @@ def api_reply_records_grouped():
 
         # 加载完整对话消息（来自 message_store，全目录扫描，含各账号）
         msg_store = MessageStore()
-        full_chats = {c["chat_name"]: c for c in msg_store.get_all_chats_detail()
-                      if account is None or int(c.get("account_index") or 0) == account}
+        all_chats = [c for c in msg_store.get_all_chats_detail()
+                     if account is None or int(c.get("account_index") or 0) == account]
+        # 分组键必须是会话身份而不是昵称：实测侧栏 34 行里 4 组重名昵称
+        # （两个陈女士分属小智时代科技/艾秒广告），按昵称分组会把两段对话并成一组
+        full_chats = {c["chat_id"]: c for c in all_chats}
+        chat_index = {}
+        for c in all_chats:
+            chat_index.setdefault(
+                (c.get("chat_name", ""), int(c.get("account_index") or 0)), []).append(c)
 
-        # 按 chat_name 分组
+        # 按会话身份分组
         groups = {}
         for r in records:
-            chat_name = r.chat_name or "(未知)"
-            if chat_name not in groups:
-                groups[chat_name] = {
-                    "chat_name": chat_name,
+            cid = _chat_id_for_record(chat_index, msg_store, r)
+            if cid not in groups:
+                full = full_chats.get(cid) or {}
+                groups[cid] = {
+                    "chat_name": r.chat_name or "(未知)",
+                    "chat_id": cid,
+                    "company": full.get("company", ""),
                     "account_index": int(r.account_index or 0),
                     "account_name": r.account_name or "",
                     "message_count": 0,
@@ -2013,37 +2047,29 @@ def api_reply_records_grouped():
                     "last_message": "",
                     "last_reply": "",
                     "records": [],
-                    "messages": [],
+                    "messages": full.get("messages", []) or [],
+                    "job_name": full.get("job_name", ""),
+                    "full_message_count": full.get("message_count", 0),
+                    "unread_count": full.get("unread_count", 0),
                 }
             d = r.to_dict()
-            groups[chat_name]["records"].append(d)
-            groups[chat_name]["message_count"] += 1
+            groups[cid]["records"].append(d)
+            groups[cid]["message_count"] += 1
             # 更新最新消息（按 timestamp 字符串比较）
             timestamp = d.get("timestamp", "") or ""
-            if timestamp > groups[chat_name]["last_time"]:
-                groups[chat_name]["last_time"] = timestamp
-                groups[chat_name]["last_message"] = d.get("received_message", "") or ""
-                groups[chat_name]["last_reply"] = d.get("reply_content", "") or ""
+            if timestamp > groups[cid]["last_time"]:
+                groups[cid]["last_time"] = timestamp
+                groups[cid]["last_message"] = d.get("received_message", "") or ""
+                groups[cid]["last_reply"] = d.get("reply_content", "") or ""
 
-        # 合并完整对话消息（来自 message_store）
-        for chat_name, full in full_chats.items():
-            if chat_name in groups:
-                groups[chat_name]["messages"] = full.get("messages", [])
-                groups[chat_name]["job_name"] = full.get("job_name", "")
-                # 如果 message_store 的时间更新，则更新 last_time
-                full_last_time = full.get("last_time", "") or full.get("updated_at", "")
-                if full_last_time and full_last_time > groups[chat_name]["last_time"]:
-                    groups[chat_name]["last_time"] = full_last_time
-                    last_msg = full.get("last_message", "")
-                    if last_msg:
-                        groups[chat_name]["last_message"] = last_msg
-                # 用 message_store 的消息数为准（更准确）
-                groups[chat_name]["full_message_count"] = full.get("message_count", 0)
-                groups[chat_name]["unread_count"] = full.get("unread_count", 0)
-            else:
-                # message_store 中有但 reply_records 中没有（例如只有 HR 消息未回复）
-                groups[chat_name] = {
-                    "chat_name": chat_name,
+        # 补上只有 HR 消息、还没回复过的会话（reply_records 里没有，message_store 里有）
+        for cid, full in full_chats.items():
+            g = groups.get(cid)
+            if g is None:
+                groups[cid] = {
+                    "chat_name": full.get("chat_name", ""),
+                    "chat_id": cid,
+                    "company": full.get("company", ""),
                     "account_index": int(full.get("account_index") or 0),
                     "account_name": full.get("account_name", ""),
                     "message_count": 0,
@@ -2056,6 +2082,19 @@ def api_reply_records_grouped():
                     "full_message_count": full.get("message_count", 0),
                     "unread_count": full.get("unread_count", 0),
                 }
+                continue
+            g["messages"] = full.get("messages", []) or g["messages"]
+            g["job_name"] = full.get("job_name", "") or g.get("job_name", "")
+            g["company"] = full.get("company", "") or g.get("company", "")
+            # message_store 的时间更新就用它，消息数以 message_store 为准（更准确）
+            full_last_time = full.get("last_time", "") or full.get("updated_at", "")
+            if full_last_time and full_last_time > g["last_time"]:
+                g["last_time"] = full_last_time
+                last_msg = full.get("last_message", "")
+                if last_msg:
+                    g["last_message"] = last_msg
+            g["full_message_count"] = full.get("message_count", 0)
+            g["unread_count"] = full.get("unread_count", 0)
 
         # 转为列表，按最后消息时间倒序排列（统一时间戳格式后排序）
         result = sorted(groups.values(), key=lambda x: _normalize_ts(x.get("last_time", "")), reverse=True)
@@ -2113,15 +2152,20 @@ def api_chat_detail(chat_name: str):
     """获取指定聊天会话的完整消息列表。
 
     Args:
-        chat_name: 聊天对象名称（URL 路径参数）
+        chat_name: 聊天对象称呼（URL 路径参数）
     Query:
         account: 账号索引。BOSS 只显示"杨女士"这类称呼，两个账号聊到同名 HR
             时落在不同文件（aN_前缀），不带账号就会读到另一个账号的会话。
+        company: 公司名。实测侧栏 34 行只用姓名有 4 组重名，加上公司后全唯一，
+            所以定位会话靠 姓名+公司（它就挂在侧栏行上，不依赖"点开的是谁"）。
+        job: 岗位名称。公司取不到时的兜底身份（详情头部读得到）。
     """
     try:
         account = _account_arg()
+        company = (request.args.get("company") or "").strip()
+        job = (request.args.get("job") or "").strip()
         msg_store = _msg_store(0 if account is None else account)
-        detail = msg_store.get_chat_detail(chat_name)
+        detail = msg_store.get_chat_detail(chat_name, job, company)
         return jsonify({
             "status": "ok",
             "chat": detail,
@@ -2133,11 +2177,13 @@ def api_chat_detail(chat_name: str):
 
 @app.route("/api/chats/<path:chat_name>/mark_read", methods=["POST"])
 def api_chat_mark_read(chat_name: str):
-    """标记指定聊天会话的所有 HR 消息为已读（?account=N 指定账号）。"""
+    """标记指定会话的所有 HR 消息为已读（?account=N&company=公司[&job=岗位]）。"""
     try:
         account = _account_arg()
+        company = (request.args.get("company") or "").strip()
+        job = (request.args.get("job") or "").strip()
         msg_store = _msg_store(0 if account is None else account)
-        msg_store.mark_chat_read(chat_name)
+        msg_store.mark_chat_read(chat_name, job, company)
         return jsonify({"status": "ok", "message": "已标记为已读"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500

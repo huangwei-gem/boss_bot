@@ -1331,6 +1331,14 @@ class UnifiedBotLoop:
             # [跳过] 系统消息污染。跳过原因仍通过 reply_records 记录。
             return
 
+        # 切换校验通过后，身份以"当前 selected 那一行"为准重新取一次公司名：
+        # 侧栏会重排，进来之前快照里的行号可能已经不是同一个人了
+        sel = self._chat_handler.read_selected_row() or {}
+        chat_company = (sel.get("company") or chat_info.get("company") or "").strip()
+        if sel.get("name") and sel.get("name") != name:
+            self._log("WARN", f"选中行是 [{sel.get('name')}]，不是目标 [{name}]，本次跳过")
+            return
+
         context_count = self.config.reply.context_message_count
         self._log("DEBUG", f"正在读取所有可见消息（完整聊天记录同步）...")
         messages = self._chat_handler.read_all_messages()
@@ -1358,11 +1366,13 @@ class UnifiedBotLoop:
             return
 
         # 将完整消息列表合并到 message_store（去重保存完整对话历史）
+        # 身份用 姓名+公司：公司就在侧栏那一行上，实测 34 行里 (姓名,公司) 全唯一，
+        # 而只用姓名有 4 组重名（两个陈女士分属小智时代科技/艾秒广告）。
         try:
             job_name_for_merge = self._chat_handler.get_job_name()
             merged_total = self._msg_store.merge_messages(
                 chat_name=name, new_messages=messages,
-                job_name=job_name_for_merge,
+                job_name=job_name_for_merge, company=chat_company,
             )
             self._log("DEBUG", f"合并后完整对话消息总数: {merged_total}")
         except Exception as e:
@@ -1371,7 +1381,8 @@ class UnifiedBotLoop:
         latest_other_msg = None
         latest_other_msg_time = ""
         for msg in reversed(messages):
-            if not msg.get("is_mine"):
+            # 卡片类条目正文为空（线上是张卡片），不能当"对方最新说了什么"
+            if not msg.get("is_mine") and (msg.get("text") or "").strip():
                 latest_other_msg = msg.get("text", "")
                 latest_other_msg_time = msg.get("time", "")
                 break
@@ -1456,29 +1467,16 @@ class UnifiedBotLoop:
         # 从 message_store 获取完整对话历史（所有HR消息+所有我的回复+时间顺序），
         # 而不只传页面读取的最新消息，让AI能看到完整上下文
         try:
-            full_dialog = self._msg_store.get_full_dialog(name)
-            stored_job = ""
-            try:
-                stored_job = ((self._msg_store.get_chat_detail(name) or {})
-                              .get("job_name") or "").strip()
-            except Exception as e:
-                self._log("DEBUG", f"读取会话岗位名失败（按无冲突处理）: {e}")
-            live_job = (self._chat_handler.get_job_name() or "").strip()
-            # 会话文件按昵称存，两个"杨女士"会落到同一个文件。岗位名对不上就说明这份
-            # 历史属于同名的另一个 HR，只能改用页面实时读到的这段对话。
-            job_conflict = bool(stored_job and live_job) and not (
-                stored_job in live_job or live_job in stored_job)
-            if full_dialog and not job_conflict:
+            # 会话按 姓名+公司 存，同名的两个 HR 已经是两个文件，
+            # 不需要再靠"岗位名对不对得上"去怀疑这份历史是不是别人的
+            full_dialog = self._msg_store.get_full_dialog(
+                name, company=chat_company)
+            if full_dialog:
                 messages_for_reply = full_dialog
                 self._log("DEBUG", f"使用完整对话历史: {len(full_dialog)} 条消息")
             else:
                 messages_for_reply = messages
-                if job_conflict:
-                    self._log("WARN",
-                              f"[{name}] 会话文件岗位({stored_job[:20]})与当前对话"
-                              f"({live_job[:20]})不一致，按同名不同人处理，只用页面消息")
-                else:
-                    self._log("DEBUG", f"回退使用页面消息: {len(messages)} 条")
+                self._log("DEBUG", f"回退使用页面消息: {len(messages)} 条")
         except Exception as e:
             self._log("WARN", f"获取完整对话历史失败，回退使用页面消息: {e}")
             messages_for_reply = messages
@@ -1534,6 +1532,7 @@ class UnifiedBotLoop:
                 self._msg_store.append_bot_message(
                     name, "[简历已发送]", job_name,
                     reply_source=meta.get("source", ""), action="resume",
+                    company=chat_company,
                 )
                 self._log("INFO", "已发送简历")
                 # 落到 reply_records：接收简历数靠这条统计，重启才不会丢
@@ -1562,6 +1561,7 @@ class UnifiedBotLoop:
                 self._msg_store.append_bot_message(
                     name, RESUME_UNAVAILABLE_REPLY, job_name,
                     reply_source=meta.get("source", ""), action="text_fallback",
+                    company=chat_company,
                 )
                 self._notifier.send_notification(
                     title="简历发送失败",
@@ -1587,6 +1587,7 @@ class UnifiedBotLoop:
                 self._msg_store.append_bot_message(
                     name, content, job_name,
                     reply_source=meta.get("source", ""), action="text",
+                    company=chat_company,
                 )
                 self._log("INFO", f"已回复: {content[:30]}...")
                 self._emit_reply_event(

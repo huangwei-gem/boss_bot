@@ -43,7 +43,16 @@ JS_BOSS_LIST = '''(
       var nameEl=items[i].querySelector(".name-text");
       if(!nameEl) continue;
       var badge=items[i].querySelector(".notice-badge");
+      // 公司就在行上（.name-box 里的第 2 个 span）：同昵称靠它分人，
+      // 实测 34 行只用姓名有 4 组重名，加上公司后全唯一
+      var box=items[i].querySelector(".name-box"), spans=[];
+      if(box) for(var k=0;k<box.children.length;k++){
+        var c=box.children[k];
+        if(c.tagName==="SPAN"){var t=(c.textContent||"").trim(); if(t) spans.push(t);}
+      }
       out.push({name:nameEl.textContent.trim(),
+                company:spans.length>1?spans[1]:"",
+                selected:(items[i].className||"").indexOf("selected")>=0,
                 unread:badge?badge.textContent.trim():"",
                 preview:(items[i].querySelector(".last-msg-text")||{}).textContent||""});
     }
@@ -88,7 +97,8 @@ JS_UI_BUBBLES = '''(
     var rows=box.querySelectorAll(".boss-msg-row");
     var out=[];
     for(var i=0;i<rows.length;i++){
-      var mine=rows[i].className.indexOf("me")>=0;
+      // 方向看 class 里的 me 这个词："system" 也含 me，用 indexOf 会把系统条算成我方
+      var mine=/(^|\\s)me(\\s|$)/.test(rows[i].className);
       var b=rows[i].querySelector(".boss-msg-bubble")
              || rows[i].querySelector(".boss-msg-card")
              || rows[i].querySelector(".boss-msg-img")
@@ -185,7 +195,10 @@ def main():
     start_flask()
     from boss_bot.message_store import MessageStore
     store = MessageStore(account_index=0)
-    backend_chats = {c["chat_name"]: c for c in store.get_chat_list()}
+    backend_chats = {c["chat_id"]: c for c in store.get_chat_list()}
+    backend_by_name = {}
+    for _cid, _c in backend_chats.items():
+        backend_by_name.setdefault(_c["chat_name"], []).append(_c)
     print(f"   后端已存会话 {len(backend_chats)} 个")
 
     print("2) 起破解版浏览器，打开 BOSS 聊天页 ...")
@@ -201,38 +214,70 @@ def main():
     report["summary"]["boss_conversations"] = len(boss_list)
     report["summary"]["backend_conversations"] = len(backend_chats)
 
-    # 会话名集合比对（BOSS 只显示姓+女士，重名会合并，这里按集合差报告）
+    def identity_of(boss_row):
+        """BOSS 行 → 后端会话：先按 姓名+公司 精确认，认不出才算同名唯一的那条"""
+        cands = backend_by_name.get(boss_row["name"]) or []
+        comp = (boss_row.get("company") or "").strip()
+        if comp:
+            hits = [c for c in cands if (c.get("company") or "").strip() == comp]
+            if hits:
+                return hits[0]
+        return cands[0] if len(cands) == 1 else None
+
+    # 会话身份集合比对：BOSS 有而后端没有的，按 姓名 报（重名不再互相顶替）
     boss_names = [b["name"] for b in boss_list if b["name"]]
-    missing_in_backend = [n for n in boss_names if n not in backend_chats]
+    missing_in_backend = [n for n in boss_names if n not in backend_by_name]
     report["summary"]["boss_not_in_backend"] = missing_in_backend[:20]
     report["summary"]["boss_not_in_backend_count"] = len(missing_in_backend)
 
     # 只比对线上和后端都有的会话
-    targets = [b for b in boss_list if b["name"] in backend_chats][:args.chats]
+    targets = [b for b in boss_list if identity_of(b)][:args.chats]
     print(f"3) 逐会话比对（{len(targets)} 个）...")
 
     dash = page.new_tab(DASH)
     time.sleep(4)
 
     for t in targets:
-        name = t["name"]
-        row = {"chat_name": name, "issues": []}
-        # A 端：点进 BOSS 会话读 DOM
+        name, comp = t["name"], t.get("company") or ""
+        chat = identity_of(t)
+        row = {"chat_name": name, "chat_id": chat["chat_id"],
+               "company": comp, "issues": []}
+        # A 端：点进 BOSS 会话读 DOM。按 姓名+公司 定位行 —— 侧栏 34 行里
+        # 有 4 组重名昵称，只按姓名点就会随机打开其中一个，比的就不是同一段对话
         clicked = boss.run_js(f'''(
             function(){{
               var items=document.querySelectorAll(".friend-content");
+              var wantN={json.dumps(name)}, wantC={json.dumps(comp)};
+              function compOf(el){{
+                var box=el.querySelector(".name-box"),sp=[];
+                if(box) for(var k=0;k<box.children.length;k++){{
+                  var c=box.children[k];
+                  if(c.tagName==="SPAN"){{var x=(c.textContent||"").trim(); if(x)sp.push(x);}}
+                }}
+                return sp.length>1?sp[1]:"";
+              }}
               for(var i=0;i<items.length;i++){{
                 var n=items[i].querySelector(".name-text");
-                if(n && n.textContent.trim()==={json.dumps(name)}){{items[i].click();return 1;}}
+                if(!n||n.textContent.trim()!==wantN) continue;
+                if(wantC && compOf(items[i])!==wantC) continue;
+                items[i].click(); return i;
               }}
-              return 0;
+              return -1;
             }}
         )()''', as_expr=True)
-        if not clicked:
+        if clicked in (-1, None):
             row["issues"].append("BOSS 侧栏里点不到该会话")
             report["chats"].append(row)
             continue
         time.sleep(3)
+        # 点完复核 selected 落在哪一行：侧栏会重排，点第 i 行不等于选中第 i 行
+        after = json.loads(boss.run_js(JS_BOSS_LIST, as_expr=True) or "[]")
+        sel = [b for b in after if b.get("selected")]
+        if len(sel) != 1 or sel[0]["name"] != name \
+                or (comp and (sel[0].get("company") or "") != comp):
+            row["issues"].append(
+                f"点击行 #{clicked}，但 selected 是 "
+                f"{[(b['name'], b.get('company')) for b in sel]}")
         boss_msgs = json.loads(boss.run_js(JS_BOSS_MSGS, as_expr=True) or "[]")
         boss_msgs = [m for m in boss_msgs if m["text"]]
         header = boss.run_js(
@@ -244,15 +289,17 @@ def main():
         if header and header != name:
             row["issues"].append(f"BOSS 头部姓名({header})与侧栏({name})不一致")
 
-        # B 端：后端存储
-        be = store.get_messages(name)
-        be_norm = [{"text": norm(m.get("text") or m.get("content")),
-                    "mine": bool(m.get("is_mine"))} for m in be]
+        # B 端：后端存储（按 姓名+公司 取那一路；引擎自记的 action 线上没有，不比）
+        be = store.get_messages(name, chat.get("job_name", ""), comp)
+        be_norm = [{"text": norm(m.get("text") or m.get("content") or m.get("card_text")),
+                    "mine": bool(m.get("is_mine"))}
+                   for m in be if m.get("kind") != "action"]
         be_norm = [m for m in be_norm if m["text"]]
         row["backend_count"] = len(be_norm)
 
-        # C 端：前端渲染
-        dash.run_js(f'selectBossChat({json.dumps(name)})', as_expr=True)
+        # C 端：前端渲染（按身份选中；按昵称选会把同名的两路混成一路）
+        dash.run_js('selectBossChat(%s)' % json.dumps(chat["chat_id"], ensure_ascii=False),
+                    as_expr=True)
         time.sleep(2)
         ui = json.loads(dash.run_js(JS_UI_BUBBLES, as_expr=True) or "[]")
         ui_norm = [{"text": norm(m["text"]), "mine": m["mine"]} for m in ui if norm(m["text"])]

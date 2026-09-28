@@ -25,9 +25,16 @@ def isolate_runtime_records(tmp_path_factory):
     metrics.METRICS_FILE = data_dir / "metrics.json"
     metrics._store = None
 
+    # 聊天会话文件也要隔离：MessageStore 不传 base_dir 时默认落在仓库的 messages/，
+    # 测试里一次 mark_read 就会改写真实对话记录（把 HR 消息标成已读）
+    from boss_bot import config as CFG
+    original_base = CFG.BASE_DIR
+    CFG.BASE_DIR = data_dir / "runtime_base"
+
     yield
 
     reply_record._reply_store = None
     reply_record._greet_store = None
     metrics.METRICS_FILE = original_file
     metrics._store = None
+    CFG.BASE_DIR = original_base

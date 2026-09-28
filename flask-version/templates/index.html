@@ -403,6 +403,8 @@ a{color:var(--accent);text-decoration:none}
 .boss-chat-item-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6bfa);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex-shrink:0;box-shadow:0 2px 8px rgba(91,124,250,.2)}
 .boss-chat-item-info{flex:1;min-width:0;overflow:hidden;display:flex;flex-direction:column;gap:2px}
 .boss-chat-item-name{font-size:13px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 同昵称不同岗位是两个会话，列表里必须带岗位才分得开 */
+.boss-chat-item-job{font-size:10px;font-weight:400;color:var(--fg-4th);margin-left:6px}
 .boss-chat-item-preview{font-size:11.5px;color:var(--fg-3rd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .boss-chat-item-meta{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
 .boss-chat-item-time{font-size:10px;color:var(--fg-4th);white-space:nowrap}
@@ -439,6 +441,7 @@ a{color:var(--accent);text-decoration:none}
 .boss-msg-card{border:1px solid var(--bd-2);border-radius:10px;padding:9px 12px;background:var(--bg-2);font-size:12.5px;line-height:1.45;max-width:280px}
 .boss-msg-card-title{font-weight:600;color:var(--fg);margin-bottom:3px;word-break:break-all}
 .boss-msg-card-sub{font-size:11.5px;color:var(--fg-3rd)}
+.boss-msg-card-text{font-size:12.5px;color:var(--fg-2nd);line-height:1.45;white-space:pre-wrap;word-break:break-word}
 .boss-msg-divider{text-align:center;font-size:11px;color:var(--fg-3rd);margin:10px 0}
 .boss-msg-row.system{justify-content:center}
 .boss-msg-meta{display:flex;gap:6px;align-items:center;margin-top:4px;font-size:10px;color:var(--fg-4th)}
@@ -460,6 +463,13 @@ a{color:var(--accent);text-decoration:none}
 /* 底部监控视图提示（一比一复刻BOSS直聘聊天页面底部输入区，但只读） */
 .boss-chat-footer{flex-shrink:0;padding:10px 18px;border-top:1px solid var(--bd);background:var(--surface-soft);display:flex;align-items:center;justify-content:center}
 .boss-chat-footer-hint{font-size:11.5px;color:var(--fg-4th);font-style:italic}
+/* 引擎自记标记（[简历已发送] 这类线上没有的条目）：居中小字，不伪装成气泡 */
+.boss-msg-row.engine-mark{justify-content:center}
+.boss-msg-mark{font-size:11px;color:var(--fg-4th);background:var(--bd-1);
+  border-radius:10px;padding:3px 10px;max-width:80%;text-align:center}
+.boss-chat-marks{font-size:11.5px;color:var(--fg-3rd);display:flex;align-items:center;
+  gap:5px;cursor:pointer;user-select:none}
+.boss-chat-marks input{width:13px;height:13px;accent-color:var(--accent);cursor:pointer}
 
 /* 兼容旧聊天折叠列表样式（保留以兼容旧代码） */
 .chat-list-container{overflow-y:auto;max-height:calc(100vh - 200px);min-height:100%}
@@ -3310,7 +3320,10 @@ function addGreetRecord(data, prepend){
 // ── 回复记录聊天界面（一比一模仿BOSS直聘） ──
 // 内存缓存：chat_name -> 分组数据，用于实时更新
 let replyChatCache = {};
-let activeBossChat = null;  // 当前选中的聊天对象
+let activeBossChat = null;  // 当前选中的聊天会话身份（姓名+岗位，不是昵称）
+// 引擎自记标记（[简历已发送] 这类线上没有的条目）默认不显示，
+// 默认视图要和 BOSS 聊天页一致；勾上开关才把它们带出来
+let showEngineMarks = false;
 
 function formatChatTime(ts) {
   // 从 ISO 时间戳中提取 HH:MM:SS
@@ -3446,18 +3459,24 @@ function renderBossChatList(groups) {
   if (countBadge) countBadge.textContent = groups.length;
   var html = '';
   groups.forEach(function(g) {
+    var key = chatKey(g);
     var chatName = g.chat_name || '(未知)';
     var avatarText = chatName ? chatName.charAt(0) : '?';
     var preview = g.last_message || g.last_reply || '';
     if (preview.length > 30) preview = preview.substring(0, 30) + '...';
     var unread = g.unread_count || 0;
     var lastTime = g.last_time || g.updated_at || '';
-    var isActive = (activeBossChat === chatName) ? ' active' : '';
+    var isActive = (activeBossChat === key) ? ' active' : '';
     var badgeCls = unread > 0 ? 'boss-chat-item-badge' : 'boss-chat-item-badge badge-zero';
-    html += '<div class="boss-chat-item'+isActive+'" data-chat-name="'+escAttr(chatName)+'" onclick="selectBossChat(\''+escAttr(chatName)+'\')">';
+    // BOSS 那一行显示的是「姓名 + 公司 + 头衔」，副标题跟着用公司，
+    // 同名的两个 HR（实测 4 组）才分得开；没有公司记录时才退回岗位
+    var subLine = (g.company || g.job_name || '').slice(0, 18);
+    html += '<div class="boss-chat-item'+isActive+'" data-chat-key="'+escAttr(key)+'" onclick="selectBossChat(\''+escAttr(key)+'\')">';
     html += '  <div class="boss-chat-item-avatar">'+escHtml(avatarText)+'</div>';
     html += '  <div class="boss-chat-item-info">';
-    html += '    <div class="boss-chat-item-name">'+escHtml(chatName)+'</div>';
+    html += '    <div class="boss-chat-item-name">'+escHtml(chatName)
+         +   (subLine ? '<span class="boss-chat-item-job">'+escHtml(subLine)+'</span>' : '')
+         +   '</div>';
     html += '    <div class="boss-chat-item-preview">'+escHtml(preview)+'</div>';
     html += '  </div>';
     html += '  <div class="boss-chat-item-meta">';
@@ -3470,51 +3489,75 @@ function renderBossChatList(groups) {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-// 会话属于哪个账号就按哪个账号读：BOSS 只显示"杨女士"这类称呼，两个号聊到
-// 同名 HR 时不带 account 会读到（甚至标已读标到）另一个账号的对话
-function chatAccountParam(chatName) {
-  var g = replyChatCache[chatName];
-  var idx = g ? g.account_index : null;
-  if (idx === null || idx === undefined) idx = (dataScope === 'all' ? 0 : Number(dataScope));
-  return '?account=' + idx;
+// 会话身份：BOSS 侧栏一行显示「姓名+公司」，同昵称是两段不同对话
+// （实测 34 行里 4 组重名，加上公司后 34/34 唯一）。用昵称当 key 会把两段
+// 对话并成一个，界面上的顺序和内容就都对不上线上了。
+function chatKey(g) {
+  if (!g) return '';
+  if (g.chat_id) return g.chat_id;
+  var tail = g.company || g.job_name || '';
+  return tail ? ((g.chat_name || '') + '#' + tail) : (g.chat_name || '');
+}
+
+function chatParams(key) {
+  var g = replyChatCache[key] || {};
+  var idx = (g.account_index === null || g.account_index === undefined)
+    ? (dataScope === 'all' ? 0 : Number(dataScope)) : g.account_index;
+  var qs = '?account=' + idx;
+  // 公司与岗位都带上：后端按 姓名+（公司 或 岗位）定位，缺一个就可能串到同名的人
+  if (g.company) qs += '&company=' + encodeURIComponent(g.company);
+  if (g.job_name) qs += '&job=' + encodeURIComponent(g.job_name);
+  return qs;
 }
 
 // 选中某个聊天，渲染右侧聊天内容
-function selectBossChat(chatName) {
-  activeBossChat = chatName;
+function selectBossChat(key) {
+  activeBossChat = key;
   // 更新左侧选中状态
   var items = document.querySelectorAll('.boss-chat-item');
   items.forEach(function(item) {
-    if (item.getAttribute('data-chat-name') === chatName) {
+    if (item.getAttribute('data-chat-key') === key) {
       item.classList.add('active');
     } else {
       item.classList.remove('active');
     }
   });
   // 渲染右侧聊天内容
-  renderBossChatDetail(chatName);
+  renderBossChatDetail(key);
   // 标记已读
-  fetch('/api/chats/'+encodeURIComponent(chatName)+'/mark_read'+chatAccountParam(chatName), {method:'POST'}).then(function(){
+  fetch('/api/chats/'+encodeURIComponent(displayChatName(key))+'/mark_read'+chatParams(key), {method:'POST'}).then(function(){
     // 更新未读数
-    var g = replyChatCache[chatName];
+    var g = replyChatCache[key];
     if (g) {
       g.unread_count = 0;
-      renderBossChatList(Object.keys(replyChatCache).map(function(k){return replyChatCache[k];}).sort(function(a,b){return (b.last_time||'') > (a.last_time||'') ? 1 : -1;}));
+      renderBossChatList(Object.keys(replyChatCache).map(function(k){return replyChatCache[k];}));
     }
   }).catch(function(){});
 }
 
+// 昵称还是路由参数（岗位用 query 区分身份），显示与请求都取缓存里的名字
+function displayChatName(key) {
+  var g = replyChatCache[key] || {};
+  return g.chat_name || key.split('#')[0] || '(未知)';
+}
+
+// 引擎标记开关：改完立刻重画当前会话，不能等刷新
+function toggleEngineMarks(on) {
+  showEngineMarks = !!on;
+  if (activeBossChat) renderBossChatDetail(activeBossChat);
+}
+
 // 渲染右侧聊天内容（消息气泡）
-function renderBossChatDetail(chatName) {
+function renderBossChatDetail(key) {
   var main = document.getElementById('bossChatMain');
   if (!main) return;
-  var g = replyChatCache[chatName];
+  var g = replyChatCache[key];
   if (!g) {
     main.innerHTML = '<div class="boss-chat-empty"><div class="boss-chat-empty-icon"><i data-lucide="message-circle"></i></div><div class="boss-chat-empty-text">未找到聊天记录</div></div>';
     if (typeof lucide !== 'undefined') lucide.createIcons();
     return;
   }
-  var chatNameDisplay = g.chat_name || chatName;
+  var chatNameDisplay = g.chat_name || displayChatName(key);
   var jobName = g.job_name || '';
   var avatarText = chatNameDisplay ? chatNameDisplay.charAt(0) : '?';
   // 优先使用完整消息列表（messages），否则从 records 构造
@@ -3529,32 +3572,24 @@ function renderBossChatDetail(chatName) {
   html += '    <div class="boss-chat-header-job">'+escHtml(jobName || '未知岗位')+'</div>';
   html += '  </div>';
   html += '  <div class="boss-chat-header-actions">';
-  html += '    <button class="chat-header-btn" onclick="refreshBossChatDetail(\''+escAttr(chatName)+'\')">刷新</button>';
+  html += '    <button class="chat-header-btn" onclick="refreshBossChatDetail(\''+escAttr(key)+'\')">刷新</button>';
   html += '  </div>';
   html += '</div>';
   // 消息列表
   html += '<div class="boss-chat-messages" id="bossChatMessages">';
   if (messages.length > 0) {
-    // 使用完整消息列表（来自 message_store），按时间正序（最旧在上，最新在下）
-    // 一比一复刻BOSS直聘聊天页面：https://www.zhipin.com/web/geek/chat
-    // 关键修复：过滤掉 sender==system 或 content 以 [跳过] 开头的消息，
-    // 只显示真实 HR 消息和 bot 回复，避免界面被系统消息污染。
+    // 顺序与内容都以 message_store 为准（后端按 data-mid 排，mid 是线上每条都有且
+    // 单调递增的 id）。前端不再重排、也不再过滤真实气泡，否则又会对不上线上。
+    // 唯一可选的是"引擎标记"（[简历已发送] 这类线上并不存在的自记条目），
+    // 默认不显示，勾上才出现 —— 这样默认视图就是 BOSS 的样子。
     var visibleMsgs = messages.filter(function(msg) {
-      var sender = (msg.sender || (msg.is_mine ? 'bot' : 'hr') || '').toString();
-      var content = (msg.content || msg.text || '').toString();
-      if (sender === 'system') return false;
-      if (content.indexOf('[跳过]') === 0) return false;
-      if (msg.is_skipped === true && sender !== 'bot' && sender !== 'hr') return false;
-      return true;
+      if (showEngineMarks) return true;
+      return (msg.kind || '') !== 'action';
     });
-    // 顺序以后端数组为准，前端不再重排：BOSS 的时间是"昨天 10:30"这类相对文本，
-    // 按字符串 localeCompare 会把没有时间戳的岗位卡/简历卡顶到最上面，
-    // 和线上（卡片夹在对话中间）以及后端存储顺序都不一致。
-    var sortedMsgs = visibleMsgs;
-    if (sortedMsgs.length === 0) {
+    if (visibleMsgs.length === 0) {
       html += '<div class="boss-chat-messages-empty">暂无消息</div>';
     } else {
-      sortedMsgs.forEach(function(msg) {
+      visibleMsgs.forEach(function(msg) {
         html += renderBossMessageBubble(msg, chatNameDisplay);
       });
     }
@@ -3609,6 +3644,9 @@ function renderBossChatDetail(chatName) {
   html += '</div>';
   // 底部监控视图提示（一比一复刻BOSS直聘聊天页面底部输入区，但只读）
   html += '<div class="boss-chat-footer">';
+  html += '  <label class="boss-chat-marks" title="引擎标记指 [简历已发送] 这类我们自记的条目，BOSS 线上并没有这条气泡">';
+  html += '    <input type="checkbox" onchange="toggleEngineMarks(this.checked)"' + (showEngineMarks ? ' checked' : '') + '> 显示引擎标记';
+  html += '  </label>';
   html += '  <div class="boss-chat-footer-hint">此为监控视图，实际回复由机器人自动发送</div>';
   html += '</div>';
   main.innerHTML = html;
@@ -3623,41 +3661,54 @@ function renderBossMessageBubble(msg, chatName) {
   var avatarText = chatName ? chatName.charAt(0) : '?';
   var content = msg.content || msg.text || '';
   var timestamp = msg.timestamp || msg.time || '';
-  // 人性化时间显示，完整时间戳放 title
+  // 时间照搬线上：BOSS 在分段处写的就是"昨天 21:54"/"09-23 21:37"/"10:43"，
+  // 前端再按字符串换算一次就会和线上显示不一样（还排错过顺序）。
+  // 只有我们自记的条目没有时间文本时才回落到人性化时间戳。
+  var rawTime = (msg.time || '').trim();
   var tFull = formatFullTimestamp(timestamp);
-  var t = formatHumanTime(timestamp);
+  var t = rawTime || formatHumanTime(timestamp);
   var sender = msg.sender || (msg.is_mine ? 'bot' : 'hr');
   var isMine = msg.is_mine || sender === 'bot' || sender === 'me';
-  var type = msg.type || 'text';
-  // 机器人自己写的跳过说明不是线上消息，继续排除；
-  // 但线上真实存在的系统条（type=system）要照常渲染，否则和 BOSS 不一致
-  if (content.indexOf('[跳过]') === 0) {
-    return '';
+  var type = msg.type || msg.msg_type || 'text';
+  var cardText = msg.card_text || msg.block || content;
+  // kind 是后端按线上 DOM 定的真实形态：bubble 气泡 / card 卡片（线上正文区就是空的，
+  // 只有整块文本）/ system BOSS 自己的系统条 / action 引擎自记标记。
+  // 老数据没有 kind，就按类型和"正文为空但有整块文本"推，避免画出线上没有的空气泡。
+  var kind = msg.kind || (type === 'system' || sender === 'system' ? 'system'
+            : (!content && cardText ? 'card' : 'bubble'));
+
+  if (kind === 'action') {
+    // 线上没有这条气泡，画成居中小字，不伪装成对话内容
+    return '<div class="boss-msg-row engine-mark"><div class="boss-msg-mark">'
+         + escHtml(content || cardText) + '</div></div>';
   }
-  if (sender === 'system' && type !== 'system') {
-    return '';
+  if (kind === 'system') {
+    return '<div class="boss-msg-row system"><div class="boss-msg-bubble">'
+         + escHtml(content || cardText) + '</div></div>';
   }
 
   // 气泡正文：按消息类型给不同形态，非文字消息不再显示为空白
   var body = '';
-  if (type === 'system') {
-    return '<div class="boss-msg-row system"><div class="boss-msg-bubble">'
-         + escHtml(content) + '</div></div>';
-  } else if (type === 'image') {
+  if (type === 'image') {
     body = msg.media
       ? '<img class="boss-msg-img" src="' + escAttr(msg.media) + '" alt="图片" loading="lazy">'
         + (content ? '<div class="boss-msg-card-sub" style="margin-top:4px">' + escHtml(content) + '</div>' : '')
       : '<div class="boss-msg-card"><div class="boss-msg-card-title">[图片]</div>'
-        + '<div class="boss-msg-card-sub">' + escHtml(content) + '</div></div>';
+        + '<div class="boss-msg-card-sub">' + escHtml(cardText) + '</div></div>';
   } else if (type === 'resume') {
     body = '<div class="boss-msg-card"><div class="boss-msg-card-title">📎 附件简历</div>'
-         + '<div class="boss-msg-card-sub">' + escHtml(content) + '</div></div>';
+         + '<div class="boss-msg-card-sub">' + escHtml(cardText) + '</div></div>';
   } else if (type === 'job_card') {
     body = '<div class="boss-msg-card"><div class="boss-msg-card-title">职位卡片</div>'
-         + '<div class="boss-msg-card-sub">' + escHtml(content) + '</div></div>';
+         + '<div class="boss-msg-card-sub">' + escHtml(cardText) + '</div></div>';
   } else if (type === 'voice') {
     body = '<div class="boss-msg-card"><div class="boss-msg-card-title">🔊 语音消息</div>'
-         + '<div class="boss-msg-card-sub">' + escHtml(content) + '</div></div>';
+         + '<div class="boss-msg-card-sub">' + escHtml(cardText) + '</div></div>';
+  } else if (kind === 'card') {
+    // 卡片就显示线上那段整块文本（PK 分析、职位卡等）。不加"卡片消息"这类线上
+    // 没有的标题，否则界面凭空多一行，和 BOSS 对不上
+    body = '<div class="boss-msg-card"><div class="boss-msg-card-text">'
+         + escHtml(cardText) + '</div></div>';
   } else {
     body = '<div class="boss-msg-bubble">' + escHtml(content) + '</div>';
   }
@@ -3695,23 +3746,26 @@ function renderBossMessageBubble(msg, chatName) {
 }
 
 // �0刷新聊天详情
-function refreshBossChatDetail(chatName) {
-  fetch('/api/chats/'+encodeURIComponent(chatName)+chatAccountParam(chatName))
+function refreshBossChatDetail(key) {
+  fetch('/api/chats/'+encodeURIComponent(displayChatName(key))+chatParams(key))
     .then(function(r){return r.json();}).then(function(data){
     if (data && data.status === 'ok' && data.chat) {
       var chat = data.chat;
-      var prev = replyChatCache[chatName] || {};
-      replyChatCache[chatName] = Object.assign(prev, {
-        chat_name: chatName,
+      var prev = replyChatCache[key] || {};
+      var msgs = chat.messages || [];
+      var last = msgs.length ? msgs[msgs.length-1] : null;
+      replyChatCache[key] = Object.assign(prev, {
+        chat_name: chat.chat_name || displayChatName(key),
+        chat_id: chat.chat_id || key,
         job_name: chat.job_name || '',
         updated_at: chat.updated_at || '',
         last_time: chat.updated_at || '',
-        last_message: (chat.messages && chat.messages.length > 0) ? (chat.messages[chat.messages.length-1].content || chat.messages[chat.messages.length-1].text || '') : '',
-        messages: chat.messages || [],
+        last_message: last ? (last.content || last.text || last.card_text || '') : '',
+        messages: msgs,
         unread_count: 0,
-        message_count: (chat.messages || []).length
+        message_count: msgs.length
       });
-      renderBossChatDetail(chatName);
+      renderBossChatDetail(key);
     }
   }).catch(function(e){console.error('刷新聊天详情失败:', e);});
 }
@@ -3731,16 +3785,16 @@ function renderReplyChatList(groups) {
     var tb = (b.last_time || b.updated_at || '').toString();
     return tb.localeCompare(ta); // 倒序：新的在上
   });
-  // 更新内存缓存
+  // 更新内存缓存（按会话身份，同昵称不同岗位是两条）
   replyChatCache = {};
   sortedGroups.forEach(function(g) {
-    replyChatCache[g.chat_name || '(未知)'] = g;
+    replyChatCache[chatKey(g)] = g;
   });
   // 渲染左侧聊天列表
   renderBossChatList(sortedGroups);
   // 自动选中第一个聊天；切账号后原选中的会话可能不在新范围里，同样回到第一个
   if ((!activeBossChat || !replyChatCache[activeBossChat]) && sortedGroups.length > 0) {
-    selectBossChat(sortedGroups[0].chat_name || '(未知)');
+    selectBossChat(chatKey(sortedGroups[0]));
   } else if (activeBossChat && replyChatCache[activeBossChat]) {
     // 重新渲染当前选中的聊天详情
     renderBossChatDetail(activeBossChat);
@@ -3761,8 +3815,23 @@ function loadReplyChatList() {
 
 function toggleChatCard(card) {
   // 兼容旧调用，改为选中聊天
-  var chatName = card.getAttribute('data-chat-name');
-  if (chatName) selectBossChat(chatName);
+  var key = card.getAttribute('data-chat-key') || card.getAttribute('data-chat-name');
+  if (key) selectBossChat(key);
+}
+
+// 实时事件只有"陈女士 + 岗位"这点信息，而缓存按 chat_id 存；
+// 同昵称不同岗位是两条会话，按昵称直接索引会写进错的那条。
+function findChatKey(chatName, jobName, company) {
+  var keys = Object.keys(replyChatCache);
+  for (var i = 0; i < keys.length; i++) {
+    var g = replyChatCache[keys[i]];
+    if (!g || g.chat_name !== chatName) continue;
+    // 同名有几路时先认公司，再认岗位；都认不出才算新的一路，
+    // 免得把 A 公司的回复并进 B 公司的会话里
+    if (company && g.company) { if (g.company === company) return keys[i]; continue; }
+    if (!jobName || !g.job_name || g.job_name === jobName) return keys[i];
+  }
+  return chatName + '#' + (company || jobName || '');
 }
 
 // 实时新增/更新一条回复记录到聊天列表
@@ -3795,8 +3864,10 @@ function addReplyRecord(data){
     reply_reason: data.reply_reason || ''
   };
 
-  // 更新内存缓存
-  var g = replyChatCache[chatName];
+  // 更新内存缓存（按会话身份，不按昵称）
+  var jobName = data.job_name || '';
+  var key = findChatKey(chatName, jobName, data.company || '');
+  var g = replyChatCache[key];
   if (g) {
     g.records.unshift(newRecord);
     g.message_count += 1;
@@ -3808,6 +3879,9 @@ function addReplyRecord(data){
   } else {
     g = {
       chat_name: chatName,
+      chat_id: key,
+      company: data.company || '',
+      job_name: jobName,
       // 新建的分组要记住归属，否则点进去读详情时会退回账号0 的文件
       account_index: Number(data.account_index != null ? data.account_index
                         : (dataScope === 'all' ? 0 : dataScope)),
@@ -3819,24 +3893,29 @@ function addReplyRecord(data){
       records: [newRecord],
       messages: []
     };
-    replyChatCache[chatName] = g;
+    replyChatCache[key] = g;
   }
 
   // 实时更新消息列表（用于右侧聊天对话气泡渲染）
   if (!g.messages) g.messages = [];
+  // 线上气泡的时间是"10:43"这种，事件给的是完整时间戳，截成分段标签保持一致
+  var hhmm = (timestamp || '').slice(11, 16) || timestamp;
   // 添加HR消息气泡
   if (receivedMsg) {
-    g.messages.push({text: receivedMsg, content: receivedMsg, is_mine: false, time: timestamp, timestamp: timestamp, sender: 'hr'});
+    g.messages.push({text: receivedMsg, content: receivedMsg, is_mine: false, kind: 'bubble',
+                     time: hhmm, timestamp: timestamp, sender: 'hr'});
   }
   // 添加我方回复气泡
   if (replyMsg) {
-    g.messages.push({text: replyMsg, content: replyMsg, is_mine: true, time: timestamp, timestamp: timestamp, sender: 'me', reply_source: replySource});
+    g.messages.push({text: replyMsg, content: replyMsg, is_mine: true, kind: 'bubble',
+                     time: hhmm, timestamp: timestamp, sender: 'me',
+                     reply_source: replySource});
   }
 
   // 同步更新 allReplyGroups 缓存
   var foundInAll = false;
   for (var i = 0; i < allReplyGroups.length; i++) {
-    if (allReplyGroups[i].chat_name === chatName) {
+    if (chatKey(allReplyGroups[i]) === key || allReplyGroups[i].chat_name === chatName) {
       allReplyGroups[i].records = g.records;
       allReplyGroups[i].messages = g.messages;
       allReplyGroups[i].last_time = g.last_time;
@@ -3854,9 +3933,9 @@ function addReplyRecord(data){
   groups.sort(function(a, b) { return (b.last_time || '') > (a.last_time || '') ? 1 : -1; });
   renderReplyChatList(groups);
 
-  // 如果当前正在查看这个聊天，实时更新右侧对话内容
-  if (activeBossChat === chatName) {
-    renderBossChatDetail(chatName);
+  // 如果当前正在查看这个会话，实时更新右侧对话内容
+  if (activeBossChat === key) {
+    renderBossChatDetail(key);
   }
 }
 

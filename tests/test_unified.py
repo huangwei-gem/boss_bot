@@ -2276,28 +2276,31 @@ class RejectionDecisionTest:
 
 
 class _FakeChatStore:
-    """按昵称存文件的会话库 — 复现两个"杨女士"共用一个文件的真实结构"""
+    """按 姓名+公司 存文件的会话库 — 同名不同公司是两个文件，不再共用一路对话"""
 
     def __init__(self, detail, dialog):
         self._detail = detail
         self._dialog = dialog
         self.merged = []
+        self.dialog_reads = []
 
-    def get_chat_detail(self, name):
+    def get_chat_detail(self, name, job_name="", company=""):
         return self._detail
 
-    def get_full_dialog(self, name, limit=50):
+    def get_full_dialog(self, name, limit=50, job_name="", company=""):
+        self.dialog_reads.append((name, company))
         return self._dialog
 
-    def merge_messages(self, chat_name, new_messages, job_name=""):
-        self.merged.append((chat_name, job_name))
+    def merge_messages(self, chat_name, new_messages, job_name="", company=""):
+        self.merged.append((chat_name, job_name, company))
         return len(new_messages)
 
 
 class ProcessSingleChatRejectionTest:
     """_process_single_chat 的跳过必须来自当前会话本身"""
 
-    def _make_loop(self, live_messages, live_job, stored_detail, stored_dialog):
+    def _make_loop(self, live_messages, live_job, stored_detail, stored_dialog,
+                   selected_company="某某科技"):
         from boss_bot.main_loop import UnifiedBotLoop
         with patch('boss_bot.main_loop.BrowserManager'):
             loop = UnifiedBotLoop()
@@ -2306,6 +2309,9 @@ class ProcessSingleChatRejectionTest:
         loop._chat_handler.read_all_messages.return_value = live_messages
         loop._chat_handler.get_boss_name.return_value = "杨女士"
         loop._chat_handler.get_job_name.return_value = live_job
+        # 会话身份以"点完之后真正 selected 的那一行"为准
+        loop._chat_handler.read_selected_row.return_value = {
+            "index": 3, "name": "杨女士", "company": selected_company, "title": "HR"}
         loop._msg_store = _FakeChatStore(stored_detail, stored_dialog)
         loop._reply_engine = MagicMock()
         loop._reply_engine.get_reply.return_value = ("none", None, {})
@@ -2357,17 +2363,32 @@ class ProcessSingleChatRejectionTest:
         loop._process_single_chat({"name": "杨女士"})
         loop._reply_engine.get_reply.assert_called_once()
 
-    def test_same_name_other_job_history_not_used_as_context(self):
-        """同名不同岗位 — 那份历史属于另一个人，只能用页面实时消息"""
+    def test_会话身份用姓名加公司(self):
+        """同名的两个 HR 分开存：落文件时带上 selected 行上的公司，不再靠岗位猜"""
         loop = self._make_loop(
             live_messages=[_hr("方便聊一下吗")],
             live_job="供应链数据分析员",
-            stored_detail={"chat_name": "杨女士", "job_name": "java开发工程师"},
+            stored_detail={"chat_name": "杨女士", "company": "某某科技"},
             stored_dialog=[_hr("抱歉，暂不合适"), _hr("随便看看")],
         )
+        loop._process_single_chat({"name": "杨女士", "company": "某某科技"})
+        assert loop._msg_store.merged == [("杨女士", "供应链数据分析员", "某某科技")]
+        # 取历史也用同一个身份，否则读到的是另一个"杨女士"的对话
+        assert loop._msg_store.dialog_reads == [("杨女士", "某某科技")]
+
+    def test_selected行不是目标时不记录(self):
+        """侧栏会重排：点完发现 selected 是别人，就不能把消息写进目标会话里"""
+        loop = self._make_loop(
+            live_messages=[_hr("方便聊一下吗")],
+            live_job="数据分析",
+            stored_detail={"chat_name": "杨女士", "job_name": "数据分析"},
+            stored_dialog=[],
+        )
+        loop._chat_handler.read_selected_row.return_value = {
+            "index": 9, "name": "李女士", "company": "另一家", "title": "HR"}
         loop._process_single_chat({"name": "杨女士"})
-        passed = loop._reply_engine.get_reply.call_args.args[0]
-        assert passed is loop._chat_handler.read_all_messages.return_value
+        assert loop._msg_store.merged == []
+        loop._reply_engine.get_reply.assert_not_called()
 
     def test_greet_round_does_not_scan_other_chats(self):
         """打招呼侧不能再按昵称扫别的会话，同名会误伤"""
@@ -2502,8 +2523,10 @@ class AccountIsolationTest:
         a1.save_messages("杨女士", [{"text": "B账号的对话", "is_mine": False}], "岗位乙")
         assert a0.get_messages("杨女士")[0]["text"] == "A账号的对话"
         assert a1.get_messages("杨女士")[0]["text"] == "B账号的对话"
+        # 文件名带会话身份（姓名+岗位）：同昵称不同岗位是两段对话，
+        # 只按昵称存会让两个 HR 的消息混在一个文件里，界面就和 BOSS 对不上
         names = sorted(p.name for p in tmp_path.glob("*.json"))
-        assert names == ["a1_杨女士.json", "杨女士.json"]
+        assert names == ["a1_杨女士_岗位乙.json", "杨女士_岗位甲.json"]
 
     def test_default_account_still_sees_all_chats(self, tmp_path):
         """Web 端用账号0 的实例列会话，账号2 的也要能看到"""
