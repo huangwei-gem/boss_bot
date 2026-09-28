@@ -10,11 +10,15 @@ import json
 from pathlib import Path
 
 from boss_bot.config import USER_PROFILE
-from boss_bot.unified_config import OVERRIDES_FILE
+from boss_bot.unified_config import OVERRIDES_FILE, USER_PROFILE_FILE
 
-# 从 config_overrides.json 加载覆盖配置（兼容原 _OVERRIDES 接口）
+
 def _load_overrides() -> dict:
-    """加载 config_overrides.json 中的覆盖配置"""
+    """加载 config_overrides.json 中的覆盖配置。
+
+    每次生成提示词都重新读盘：前端改的就是这个文件里的 system_rules /
+    user_prompt_template，import 时快照一次等于让提示词编辑框变成摆设。
+    """
     try:
         if OVERRIDES_FILE.exists():
             with open(OVERRIDES_FILE, "r", encoding="utf-8") as f:
@@ -22,8 +26,6 @@ def _load_overrides() -> dict:
     except Exception:
         pass
     return {}
-
-_OVERRIDES = _load_overrides()
 
 # AI 系统提示词 - 行为准则（固定部分）
 _SYSTEM_RULES_DEFAULT = """你的回复要求：
@@ -56,8 +58,7 @@ _SYSTEM_RULES_DEFAULT = """你的回复要求：
 19. 不要在拒绝后继续表达"我也能胜任""希望有机会"等推销话语，这会显得不懂读空气
 20. 检查"最近对话记录"中"我:"发过的消息，如果即将回复的内容与之高度相似（如自我介绍、问候语），必须换一种表达或直接不再发送"""
 
-_SYSTEM_RULES = _OVERRIDES.get("system_rules") or _SYSTEM_RULES_DEFAULT
-USER_PROMPT_TEMPLATE = _OVERRIDES.get("user_prompt_template") or """当前聊天上下文：
+_USER_PROMPT_DEFAULT = """当前聊天上下文：
 - 招聘方称呼：{boss_name}
 - 招聘岗位：{job_name}
 - 最近对话记录：
@@ -67,9 +68,43 @@ USER_PROMPT_TEMPLATE = _OVERRIDES.get("user_prompt_template") or """当前聊天
 请根据对话历史和最新消息，给出合适的回复。只输出回复内容，不要解释。"""
 
 
+def _system_rules() -> str:
+    return _load_overrides().get("system_rules") or _SYSTEM_RULES_DEFAULT
+
+
+def user_prompt_template() -> str:
+    return _load_overrides().get("user_prompt_template") or _USER_PROMPT_DEFAULT
+
+
+_PROFILE_CACHE: dict = {"mtime": None, "data": None}
+
+
+def current_profile() -> dict:
+    """当前个人画像（按 mtime 缓存）—— 画像改了，提示词就要跟着改。
+
+    config.USER_PROFILE 是进程启动时的快照，/api/user_profile 只写文件，
+    直接用它会让"改了画像但 AI 还在报旧学历/旧方向"。
+    """
+    try:
+        mtime = Path(USER_PROFILE_FILE).stat().st_mtime
+    except OSError:
+        mtime = None
+    if _PROFILE_CACHE["mtime"] != mtime or _PROFILE_CACHE["data"] is None:
+        data = None
+        try:
+            with open(USER_PROFILE_FILE, "r", encoding="utf-8") as f:
+                loaded = json.load(f)
+            if isinstance(loaded, dict):
+                data = loaded
+        except (OSError, ValueError):
+            data = None
+        _PROFILE_CACHE.update(mtime=mtime, data=data or dict(USER_PROFILE))
+    return _PROFILE_CACHE["data"]
+
+
 def build_system_prompt(profile: dict = None) -> str:
     """根据个人画像生成系统提示词"""
-    p = profile or USER_PROFILE
+    p = profile or current_profile()
     skills = p.get("skills")
     if isinstance(skills, list):
         skills = "、".join(str(s) for s in skills)
@@ -91,14 +126,8 @@ def build_system_prompt(profile: dict = None) -> str:
 
     return (
         "你是一个正在找工作的求职者，正在 BOSS 直聘上与招聘方（HR/Boss）聊天。\n\n"
-        "你的背景：\n" + "\n".join(background_lines) + "\n\n" + _SYSTEM_RULES
+        "你的背景：\n" + "\n".join(background_lines) + "\n\n" + _system_rules()
     )
-
-
-# 默认系统提示词（模块加载时生成一次）
-SYSTEM_PROMPT = build_system_prompt()
-
-# 用户消息模板 - 带多轮上下文（已在上方从覆盖加载）
 
 
 def build_conversation_history(messages: list) -> str:
@@ -143,9 +172,9 @@ def build_user_prompt(boss_name: str, job_name: str, message: str,
     history_messages = messages
     if exclude_latest and messages and message:
         history_messages = _exclude_latest_message(messages, message)
-    return USER_PROMPT_TEMPLATE.format(
+    return user_prompt_template().format(
         boss_name=boss_name or "HR",
-        job_name=job_name or USER_PROFILE.get("position", "目标岗位"),
+        job_name=job_name or current_profile().get("position", "目标岗位"),
         history=build_conversation_history(history_messages),
         message=message,
     )

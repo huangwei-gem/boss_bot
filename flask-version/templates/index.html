@@ -251,6 +251,15 @@ a{color:var(--accent);text-decoration:none}
 .ai-health-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 12px}
 .ai-health-summary{font-size:12px;color:var(--fg-3rd)}
 .ai-health-summary b{color:var(--fg)}
+/* AI 判分质量：绿=没兜底，黄=少量，红=两成以上岗位其实没被 AI 筛过 */
+.ai-quality-line{font-size:11px;color:var(--fg-3rd);margin:2px 0 8px;padding:4px 8px;border-radius:7px;
+  background:var(--side-input-bg);border:1px solid var(--bd-2);line-height:1.5}
+.ai-quality-line b{color:var(--fg)}
+.ai-quality-line.ok{border-color:rgba(52,199,123,.35)}
+.ai-quality-line.ok b{color:var(--success)}
+.ai-quality-line.warn b{color:var(--warning)}
+.ai-quality-line.bad{border-color:rgba(255,95,95,.4)}
+.ai-quality-line.bad b{color:var(--danger)}
 .ai-status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:1px;background:var(--fg-4th)}
 .ai-status-dot.available{background:var(--success)}
 .ai-status-dot.unavailable{background:var(--danger)}
@@ -790,6 +799,8 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
         <div style="font-size:10px;color:var(--warning);margin-bottom:4px;display:flex;align-items:center;gap:4px"><i data-lucide="alert-triangle" style="font-size:11px"></i> 此开关仅控制打招呼的AI岗位解析，自动回复AI始终开启</div>
         <div class="acc-field-row" style="padding:6px 8px;border-radius:8px;background:var(--side-input-bg);border:1px solid var(--bd-2)"><label style="font-size:12px;font-weight:600">启用 AI</label><span id="aiEnabled" class="toggle-switch ai-switch" onclick="toggleAiEnabled()" style="margin-left:auto"></span></div>
         <div class="acc-field-row"><label>匹配阈值</label><input class="side-form-input" id="aiThreshold" type="number" min="0" max="100" placeholder="70" onchange="onAiChange()"></div>
+        <div class="acc-field-row" title="一次岗位判分允许模型输出多少 token。带思考(reasoning)的接口会把预算花在思考上，不够就正文为空、这次判分作废换下一个接口">
+          <label>判分预算 tokens</label><input class="side-form-input" id="aiAnalyzeMaxTokens" type="number" min="512" max="8192" step="128" placeholder="1600" onchange="onAiChange()"></div>
         <button class="adv-toggle" id="aiProvToggle" onclick="toggleAiProviders()">
           AI 接口列表 <span class="arrow">></span>
           <span id="aiProvSummary" style="margin-left:4px;font-size:10px;color:var(--fg-3rd);font-weight:400"></span>
@@ -799,6 +810,7 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
             <button class="side-btn side-btn-ghost side-btn-sm" id="btnAiHealthAll" onclick="runAiHealth()">全部接口体检</button>
             <span class="ai-health-summary" id="aiHealthSummary">未检测</span>
           </div>
+          <div class="ai-quality-line" id="aiQualityLine" title="兜底 = AI 没给出判断，这个岗位按默认话术直接打招呼了，等于没筛">判分质量：未统计</div>
           <div style="font-size:10px;color:var(--fg-4th);line-height:1.5;margin:-4px 0 8px">体检会给每个接口真实发一条 4 个字的测试消息，只有返回了内容才算可用；推理模型正文为空但 reasoning 有内容的也算可用。不可用的接口会标出具体原因（Key 失效 / 额度用尽 / 模型名不对 / 地址不对）。</div>
           <div id="aiProviders" style="margin-top:8px"></div>
         </div>
@@ -1125,9 +1137,10 @@ const cityList = ['北京','上海','广州','深圳','杭州','成都','长沙'
 // ── AI 配置渲染 ──
 function renderAiConfig() {
   if (!config.ai) config.ai = {};
-  config.ai = Object.assign({enabled:true,api_key:'',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,providers:[]}, config.ai);
+  config.ai = Object.assign({enabled:true,api_key:'',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,analyze_max_tokens:1600,providers:[]}, config.ai);
   setEl('aiEnabled', 'toggle-switch ai-switch' + (config.ai.enabled ? ' on' : ''));
   setVal('aiThreshold', config.ai.match_threshold || 70);
+  setVal('aiAnalyzeMaxTokens', config.ai.analyze_max_tokens || 1600);
   setVal('customFilterKeywords', (config.ai.custom_filter_keywords || []).join(', '));
   setVal('customScoringPrompt', config.ai.custom_scoring_prompt || '');
   const badge = document.getElementById('aiBadge');
@@ -1193,6 +1206,24 @@ function loadAiHealth() {
     renderAiHealthSummary(d);
     if (typeof renderAiConfig === 'function') renderAiConfig();
   }).catch(function(e) { console.error('AI 体检结果读取失败:', e); });
+}
+
+// AI 判分质量：真判分 / 兜底默认通过。兜底高的时候说明"筛岗"其实没在跑。
+function loadAiQuality() {
+  var el = document.getElementById('aiQualityLine');
+  if (!el) return;
+  fetch('/api/ai/quality' + scopeQs()).then(function(r){return r.json()}).then(function(d) {
+    if (!d || d.status !== 'ok') return;
+    if (!d.total) { el.textContent = '判分质量：暂无记录'; el.className = 'ai-quality-line'; return; }
+    var pct = Math.round((d.fallback_rate || 0) * 100);
+    var txt = '判分质量：真判分 <b>' + d.judged + '</b> · 兜底 <b>' + d.fallback + '</b>（' + pct + '%）';
+    if (d.avg_duration_ms) txt += ' · 平均 ' + (d.avg_duration_ms / 1000).toFixed(1) + 's';
+    el.innerHTML = txt;
+    el.className = 'ai-quality-line ' + (pct >= 20 ? 'bad' : (pct > 0 ? 'warn' : 'ok'));
+    el.title = '兜底 = AI 没给出判断，这个岗位按默认话术直接打招呼了，等于没筛。'
+             + '范围：' + scopeLabel() + '，共 ' + d.total + ' 条记录'
+             + (d.max_duration_ms ? '，最慢 ' + (d.max_duration_ms / 1000).toFixed(1) + 's' : '');
+  }).catch(function() {});
 }
 
 function renderAiHealthSummary(d) {
@@ -1299,6 +1330,7 @@ function onAiChange() {
   if (!config.ai) config.ai = {};
   config.ai.enabled = document.getElementById('aiEnabled').classList.contains('on');
   config.ai.match_threshold = parseInt(document.getElementById('aiThreshold').value) || 70;
+  config.ai.analyze_max_tokens = parseInt(document.getElementById('aiAnalyzeMaxTokens').value) || 1600;
   var providers = config.ai.providers || [];
   if (providers.length > 0) {
     config.ai.api_key = providers[0].api_key || '';
@@ -1434,17 +1466,18 @@ function closeExcelModal() {
 }
 
 // ── AI 提示词弹窗 ──
-// 前端默认提示词兜底（与后端 prompts.py 保持一致，当后端返回空时使用）
-const DEFAULT_SYSTEM_RULES = "你的回复要求：\n1. 语气专业、礼貌、真诚，不要过于机械\n2. 简洁明了，控制在 1-2 句话，不要长篇大论\n3. 展现积极态度和学习能力\n4. 不要编造不存在的工作经历或技能\n5. 如果对方问了你不知道的问题，诚实说可以面谈详细了解\n6. 不要使用 emoji，保持专业\n7. 只输出回复内容本身，不要加引号或任何前缀\n8. 结合上面的对话历史自然接续话题，不要重复已经说过的内容\n9. 严格禁止声称已经完成了无法确认的事情（如\"已投递简历\"\"已发送材料\"\"已经报名\"），除非对话历史中确实发生过；对方要求你做某事时，回复\"稍后完成/马上处理\"即可\n10. 如果对方的岗位与你的求职方向明显不符，礼貌说明求职方向并询问是否有相关岗位，不要强行迎合";
-const DEFAULT_USER_PROMPT_TEMPLATE = "当前聊天上下文：\n- 招聘方称呼：{boss_name}\n- 招聘岗位：{job_name}\n- 最近对话记录：\n{history}\n- 对方最新消息：{message}\n\n请根据对话历史和最新消息，给出合适的回复。只输出回复内容，不要解释。";
+// 默认值只从后端 /api/ai/prompts 的 defaults 取（那份就是 prompts.py 里引擎真正在用的）。
+// 前端自己抄一份的后果：抄本只有 10 条规则而引擎默认 20 条，点「恢复默认」
+// 就把削弱版写进 config_overrides.json，之后每条 AI 回复都少了上下文约束。
+let aiPromptDefaults = null;
 
 function showPromptModal() {
   fetch('/api/ai/prompts').then(function(r){return r.json()}).then(function(data) {
     if (data.status !== 'ok') { addLog('ERROR', '加载提示词失败'); return; }
     const prompts = data.prompts || {};
-    // 后端已返回默认值，这里再加前端兜底
-    const systemRules = prompts.system_rules || DEFAULT_SYSTEM_RULES;
-    const userPromptTemplate = prompts.user_prompt_template || DEFAULT_USER_PROMPT_TEMPLATE;
+    aiPromptDefaults = data.defaults || {};
+    const systemRules = prompts.system_rules || aiPromptDefaults.system_rules || '';
+    const userPromptTemplate = prompts.user_prompt_template || aiPromptDefaults.user_prompt_template || '';
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.id = 'promptModal';
@@ -1467,11 +1500,20 @@ function showPromptModal() {
 }
 
 function resetPromptModal() {
-  var sys = document.getElementById('promptSystem');
-  var usr = document.getElementById('promptUser');
-  if (sys) sys.value = DEFAULT_SYSTEM_RULES;
-  if (usr) usr.value = DEFAULT_USER_PROMPT_TEMPLATE;
-  addLog('INFO', '已恢复默认提示词，点击「保存」生效');
+  var fill = function(def) {
+    var sys = document.getElementById('promptSystem');
+    var usr = document.getElementById('promptUser');
+    if (!sys || !usr) return;
+    sys.value = (def && def.system_rules) || '';
+    usr.value = (def && def.user_prompt_template) || '';
+    if (!sys.value && !usr.value) { addLog('ERROR', '拿不到后端默认提示词，请刷新重试'); return; }
+    addLog('INFO', '已恢复引擎默认提示词，点击「保存」生效');
+  };
+  if (aiPromptDefaults && aiPromptDefaults.system_rules) { fill(aiPromptDefaults); return; }
+  fetch('/api/ai/prompts').then(function(r){return r.json()}).then(function(data) {
+    aiPromptDefaults = (data && data.defaults) || {};
+    fill(aiPromptDefaults);
+  }).catch(function(e){ addLog('ERROR', '加载默认提示词失败: ' + e); });
 }
 
 function closePromptModal() {
@@ -1965,7 +2007,7 @@ function loadConfig() {
     config.rate_limit = Object.assign({enabled:true,max_per_hour:30,max_per_day:150}, config.rate_limit);
     config.retry = Object.assign({max_attempts:3,base_delay:2,backoff_factor:2}, config.retry);
     if (!config.ai) config.ai = {};
-    config.ai = Object.assign({enabled:true,api_key:'',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,providers:[]}, config.ai);
+    config.ai = Object.assign({enabled:true,api_key:'',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,analyze_max_tokens:1600,providers:[]}, config.ai);
     if (!config.resume) config.resume = {};
     config.resume = Object.assign({school:'某某大学',major:'统计学',degree:'本科',skills:['Excel','SQL','Python','数据分析'],experience:'负责业务数据报表与洞察分析',target_position:'数据分析师',self_intro:'做事严谨细心，学习能力强'}, config.resume);
     if (!config.accounts || !config.accounts.length) {
@@ -3041,6 +3083,7 @@ function applyScopeToView() {
   loadMetrics(true);
   loadGreetRecords();
   loadReplyChatList();
+  loadAiQuality();
   updatePauseButtons();
   setControls(scopeRunning());
 }

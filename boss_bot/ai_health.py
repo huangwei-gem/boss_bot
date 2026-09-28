@@ -208,6 +208,8 @@ def report_runtime_result(provider, ok: bool, error: str = "", path=None):
              "api_base": getattr(provider, "api_base", "")}
     key = provider_key(entry)
     timed_out = "超时" in (error or "") or "timeout" in (error or "").lower()
+    # 截断是接口级稳定问题（thinking 吃满预算），和超时一样值得记 strike
+    truncated = "截断" in (error or "")
     with _runtime_lock:
         data = load_health(path)
         store = dict(data.get("results") or {})
@@ -219,12 +221,13 @@ def report_runtime_result(provider, ok: bool, error: str = "", path=None):
                 # 真调用成功了，撤掉运行时判的死刑，交回给下一次体检定夺
                 store.pop(key, None)
                 changed = True
-        elif timed_out:
+        elif timed_out or truncated:
+            kind = "超时" if timed_out else "正文被截断（max_tokens 不够）"
             strikes = _runtime_strikes.get(key, 0) + 1
             _runtime_strikes[key] = strikes
             if strikes >= RUNTIME_STRIKES_TO_MARK and cur.get("source") != "runtime":
                 store[key] = dict(cur, **entry, status=STATUS_UNAVAILABLE,
-                                  reason=f"真实岗位分析连续 {strikes} 次超时（短探活通过不算数）",
+                                  reason=f"真实岗位分析连续 {strikes} 次{kind}（短探活通过不算数）",
                                   error=(error or "")[:200],
                                   latency_ms=0, reply="",
                                   source="runtime",

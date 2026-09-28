@@ -3097,19 +3097,19 @@ class AiResponseParseDiagnosticTest:
         assert out["score"] == 80
 
     def test_空正文说成未返回正文(self):
-        out = self._call({"choices": [{"message": {"content": ""}}]})
-        assert out["ai_error"] is True
-        assert "未返回正文" in out["reason"]
+        with pytest.raises(Exception) as ei:
+            self._call({"choices": [{"message": {"content": ""}}]})
+        assert "未返回正文" in str(ei.value)
 
     def test_有正文没JSON说成没JSON并带前文(self):
-        out = self._call({"choices": [{"message": {"content": "这个岗位不太合适，原因很多。"}}]})
-        assert out["ai_error"] is True
-        assert "没有 JSON" in out["reason"]
+        with pytest.raises(Exception) as ei:
+            self._call({"choices": [{"message": {"content": "这个岗位不太合适，原因很多。"}}]})
+        assert "没有 JSON" in str(ei.value)
 
     def test_缺字段说成缺字段(self):
-        out = self._call({"code": 429, "msg": "rate limited"})
-        assert out["ai_error"] is True
-        assert "响应缺少字段 choices" in out["reason"]
+        with pytest.raises(Exception) as ei:
+            self._call({"code": 429, "msg": "rate limited"})
+        assert "响应缺少字段 choices" in str(ei.value)
 
     def test_推理内容兜底(self):
         out = self._call({"choices": [{"message": {"content": "",

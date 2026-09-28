@@ -32,7 +32,7 @@ from boss_bot.config import (
 )
 from boss_bot.rules import RuleEngine
 from boss_bot.intent import classify
-from boss_bot.prompts import SYSTEM_PROMPT, build_user_prompt
+from boss_bot.prompts import build_system_prompt, build_user_prompt
 from boss_bot.reply_record import ReplyRecord, ReplyRecordStore, _get_reply_store
 
 logger = logging.getLogger(__name__)
@@ -778,6 +778,7 @@ class ReplyEngine:
         random.shuffle(shuffled)
 
         # 容灾链可能有二十多个接口，不设上限的话一条消息最坏要串行等完全部
+        # （实测 429 限流 + 30s 超时叠加时，一条消息能拖到十几分钟）
         deadline = time.time() + AI_REQUEST_TIMEOUT * AI_MAX_ATTEMPTS
         attempts = 0
 
@@ -790,7 +791,6 @@ class ReplyEngine:
                 break
             attempts += 1
 
-        for i, provider in enumerate(shuffled):
             # 兼容两种 provider 字段命名：config 快照用 key/url，热重载用 api_key/api_base
             api_key = provider.get("key") or provider.get("api_key") or ""
             model = provider.get("model") or ""
@@ -821,26 +821,34 @@ class ReplyEngine:
                 continue
 
         # 全部模型都失败
-        logger.error("所有 AI 模型均调用失败")
+        logger.error(f"{attempts} 个 AI 接口均调用失败")
         return None
 
     def _call_chat(self, client, model, message, boss_name, job_name, history):
         user_prompt = build_user_prompt(boss_name, job_name, message, history)
+        # 每次现取：前端改了 system_rules 或个人画像，下一条回复就该用新的
+        system_prompt = build_system_prompt()
         response = client.chat.completions.create(
             model=model,
             max_tokens=self._ai_max_tokens,
             messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
         )
         raw_content = response.choices[0].message.content
+        # 推理型接口可能把话全写在 reasoning_content 里，正文返回 None
+        reasoning = getattr(response.choices[0].message, "reasoning_content", None) or ""
+        text = (raw_content or "").strip() or reasoning.strip()
+        if not text:
+            # 空回复不能当成"这轮不回复"，要报错让容灾链换下一个接口
+            raise RuntimeError("接口没有回复正文（content 与 reasoning_content 均为空）")
         # 保存 AI 元信息供回复记录使用
-        self._last_ai_system_prompt = SYSTEM_PROMPT
+        self._last_ai_system_prompt = system_prompt
         self._last_ai_user_prompt = user_prompt
         self._last_ai_model = model
-        self._last_ai_raw_response = raw_content
-        return raw_content.strip()
+        self._last_ai_raw_response = raw_content if raw_content else reasoning
+        return text
 
     # ---------- 频控与延迟 ----------
 

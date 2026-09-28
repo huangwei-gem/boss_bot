@@ -149,16 +149,39 @@ python -m boss_bot --web                # 起管理界面
 
 判分结果缓存 24 小时（`data/ai_cache.json`），但**超时/解析失败的结果不缓存**，否则坏判定会在缓存期内一直复用。
 
-**体检的盲区**：探活用 4 个字的短提示词，有些接口短消息秒回、真岗位提示词却 30 秒不回话，体检于是永远标它"可用"。现在真实调用的超时会回写体检表：同一接口**连续两次**真超时才标不可用（原因写作"真实岗位分析连续 2 次超时"），之后它能真回话时标记自动撤销，体检自己测出的结论不会被覆盖。
+**体检的盲区**：探活用 4 个字的短提示词，有些接口短消息秒回、真岗位提示词却 30 秒不回话，体检于是永远标它"可用"。现在真实调用的超时**和截断**都会回写体检表：同一接口连续两次才标不可用（原因写作"真实岗位分析连续 2 次超时 / 正文被截断"），之后它能真回话时标记自动撤销，体检自己测出的结论不会被覆盖。
 
-实测节奏（22 个接口、头两个就是这种"探活得通、真问不回"的）：第 1 个岗位仍要白等约 61 秒并落到默认通过，慢接口随即进 5 分钟冷却；第 2 个岗位起实测 5.5~5.8 秒给出真实评分。也就是说**每轮运行最多一个岗位没被 AI 筛过**，不会一路放行。
+**什么才算"这次判分失败"**（2026-09-28 修正，这是 AI 筛岗静默失效的主因）：过去接口回空正文、回一段没有 JSON 的话、回一个被截断的思考，全都算"这个接口成功了"——于是既不换下一个接口，又把坏接口回报成健康，岗位直接落到"默认通过"，界面和日志都看不出来。现在这几类一律抛异常走容灾切换：
+
+| 返回长什么样 | 现在的判定 |
+| --- | --- |
+| `finish_reason=length` 且正文为空 | 正文被截断（thinking 写了 N 字，max_tokens 不够） |
+| `content` 与 `reasoning_content` 都空 | 模型未返回正文 |
+| 正文里没有 JSON / JSON 不闭合 | 响应里没有 JSON / JSON 不完整 |
+| 有 JSON 但既没 `score` 也没 `is_match` | 无法判分（旧代码带着默认 50 分回去，反而把岗位误判成"不匹配"丢掉） |
+
+只有**全部**接口都拿不到判分才落到"默认通过"，并且这条记录会打上 `ai_error`。只给分不给结论的返回按 `ai.match_threshold` 折算出 `is_match`，分数一律钳到 0~100。
+
+**判分预算** `ai.analyze_max_tokens`（默认 1600，界面「判分预算 tokens」）：带思考的接口会把 token 花在 reasoning 上。实测同一岗位同一提示词，1024 时 AskDiandian-Dots3 稳定正文为空（思考写了 1770 字后被截断），提到 1600 后 15.7 秒给出 85 分的真实判分。
+
+**JSON 提取**：纯 JSON、` ```json ` 代码块、前后夹带中文说明都吃得住；括号按字符串状态配对，尾随说明里出现 `}` 也不会把 JSON 切坏。
+
+**自定义筛选关键词=硬否决**：过去只是提示词里一句"适当扣分"，模型给高分照样放行。现在要求命中任一条件时把 `is_match` 置 false 并回填 `veto_hit`，容灾链见到 `veto_hit` 直接判不匹配、把分数压到阈值以下——外包驻场、城市不对、学历不符这类条件这才算拦得住。
+
+**提示词/画像改了立刻生效**：`system_rules`、`user_prompt_template`、个人画像过去在进程启动时快照一次，界面上编辑完要重启才生效；现在每次生成回复都现读。AI 阈值/预算/否决关键词/接口列表变更后，容灾链在下一个岗位重建（配置没变不重建，免得清空冷却表又开始重踩已知坏接口）。界面「恢复默认」提示词用的也是引擎真正在用的那份默认值（后端 `defaults` 字段）——以前前端和 app.py 各抄了一份只有 10 条规则的副本，点一次就把削弱版写进配置，丢掉"先读完整上下文""被拒绝后别再推销"这些约束。
+
+**判分质量面板**：AI 卡片里的「判分质量」显示 真判分 / 兜底 / 平均耗时（`GET /api/ai/quality?account=N`，来自打招呼记录的 `ai_error`、`ai_duration_ms`，并按接口给出 `by_model`）。兜底率高就是"AI 名义上开着、实际没在筛"，界面按 >0% 黄、≥20% 红标色。
+
+实测节奏（22 个接口、头两个就是那种"探活得通、真问不回"的）：第 1 个岗位仍要白等约 61 秒并落到默认通过，慢接口随即进 5 分钟冷却；第 2 个岗位起实测 5.5~5.8 秒给出真实评分。也就是说**每轮运行最多一个岗位没被 AI 筛过**，不会一路放行。
 
 怀疑 AI 没在真筛岗位时：
 
 ```bash
-python tools/diagnose_ai_parse.py      # 真实调用几个岗位，打印原始响应与解析结论
-python tools/ai_health_check.py        # 命令行跑一轮全量体检
+python tools/measure_ai_quality.py --failover  # 逐个接口真判分 + 生产解析判定 + 容灾链整体
+python tools/ai_health_check.py                # 命令行跑一轮全量体检
 ```
+
+实测（19 个有 Key 的接口，`max_tokens=1600`）：6 个能给出可信判分，其余是 429/404/403 且都在 1 秒内失败；容灾链整体 7.9 秒拿到真实评分与理由，没有兜底。
 
 ## 多账号
 
@@ -229,7 +252,7 @@ python -X utf8 tools/backfill_greet_record_account.py --apply   # 真正写盘�
 | `retry` | `max_attempts` 真正被使用：岗位详情导航重试、聊天输入框查找重试 |
 | `accounts` | 多账号列表（城市、关键词、翻页数、招呼语、简历图片、间隔、独立 Cookie） |
 | `greet.enabled` / `reply.enabled` | 两个总开关 |
-| `ai` | `enabled`、`providers`、`match_threshold`、`max_tokens`、`fail_action`、`rate_limit_wait`、`custom_filter_keywords`、`custom_scoring_prompt`、`skip_unhealthy` |
+| `ai` | `enabled`、`providers`、`match_threshold`、`max_tokens`（回复输出预算）、`analyze_max_tokens`（岗位判分输出预算，带思考的接口要给够）、`fail_action`、`rate_limit_wait`、`custom_filter_keywords`（硬否决条件）、`custom_scoring_prompt`、`skip_unhealthy` |
 | `reply` | `check_interval`、`context_message_count`、`max_replies_per_hour`、`min_delay`/`max_delay`、`pause_on_important`、`resume_send_once`、`chat_url` |
 | `resume` | 简历信息（学校/专业/学位/技能/经验/目标岗位/自我介绍） |
 | `templates` / `reply_rules` / `importance_keywords` | 话术模板、关键词规则、重要事件词 |
@@ -247,7 +270,7 @@ python -X utf8 tools/backfill_greet_record_account.py --apply   # 真正写盘�
 
 ## 配置生效范围（重要）
 
-主循环每轮热重载配置，以下改动**不用重启**：AI 接口列表与阈值、自定义筛选词与打分提示词、跳过不可用接口、打招呼频率限制与重试次数、回复延迟/每小时上限/`max_tokens`/`fail_action`/限流等待、两个总开关、演练模式、自进化开关、话术与规则、个人画像。
+主循环每轮热重载配置，以下改动**不用重启**：AI 接口列表与阈值、判分预算 `analyze_max_tokens`、自定义筛选词与打分提示词、跳过不可用接口、打招呼频率限制与重试次数、回复延迟/每小时上限/`max_tokens`/`fail_action`/限流等待、两个总开关、演练模式、自进化开关、话术与规则、个人画像、AI 提示词（`system_rules` / `user_prompt_template`，每次生成回复现读）。
 
 以下改动**需要重启**（构造时读取）：浏览器路径与 profile、端口、Cookie 文件路径、账号列表增删、简历图片文件、日志目录、通知 Webhook。
 
@@ -258,16 +281,17 @@ python -X utf8 tools/backfill_greet_record_account.py --apply   # 真正写盘�
 两套都要跑：单元测试管逻辑，真机浏览器套件管"打开来真的能用"。
 
 ```bash
-pytest tests/ -q                      # 330 项，约 15 秒，全部离线（不碰真实数据、不联网）
+pytest tests/ -q                      # 381 项，约 15 秒，全部离线（不碰真实数据、不联网）
 ```
 
 真机套件全部使用项目内 `cloakbrowser/chrome.exe`，且**只做读/切/筛/存配置，绝不点发送、打招呼、发简历**：
 
 ```bash
-python tools/e2e_dashboard.py         # 56 项：界面渲染、指标卡、记录筛选、开关往返、弹窗、主题、断线横幅、无 JS 报错；含 18 项多账号范围断言
+python tools/e2e_dashboard.py         # 62 项：界面渲染、指标卡、记录筛选、开关往返、弹窗、主题、断线横幅、无 JS 报错；含 18 项多账号范围 + 7 项 AI 预算/判分质量/提示词默认值断言
 python tools/e2e_live_boss.py         # 26 项：反爬自检、登录态、会话读取、岗位解析、AI 真实判分、多账号归属（含另开账号2 浏览器比对会话）
 python tools/verify_dashboard_ui.py   # 14 项：指标卡口径 + AI 体检展示，产出 tools/verify_dashboard.png
 python tools/verify_three_way.py      # BOSS 页面 / 后端存储 / 前端显示 三端逐条比对
+python tools/measure_ai_quality.py    # 逐个接口真判分 + 生产解析判定（要联网，只发分析请求）
 ```
 
 多账号范围这一层用"拦住 fetch / window.open / confirm，只记不真发"的方式验证控制路由与文案，所以不会真的改动运行状态。
@@ -289,7 +313,7 @@ python tools/verify_three_way.py      # BOSS 页面 / 后端存储 / 前端显�
 
 **「AI 已拒绝过」大量误跳过** → 已修复为只看当前会话；历史误判记录已清理，备份在 `data/reply_records.bak_before_purge_*.json`。
 
-**打招呼像卡死 / 岗位没被 AI 筛** → 十有八九是容灾链在等死接口。看日志有没有 `AI 分析异常` / `AI 响应无法解析`，跑 `python tools/diagnose_ai_parse.py`，再点界面「全部接口体检」。确认 `ai.skip_unhealthy` 为 `true`。
+**打招呼像卡死 / 岗位没被 AI 筛** → 先看 AI 卡片里的「判分质量」：兜底率就是"没被 AI 真正判过的岗位占比"。日志里找 `AI 分析异常`（后面会带上具体原因：正文被截断 / 没有 JSON / 未返回正文 / 无法判分），再跑 `python tools/measure_ai_quality.py --failover` 逐个接口看生产解析吃不吃得下，最后点界面「全部接口体检」。确认 `ai.skip_unhealthy` 为 `true`；带思考的接口把 `ai.analyze_max_tokens` 调大（界面「判分预算 tokens」）。
 
 **被跳转到 `.../web/geek/jobs?_security_check=...`** → BOSS 风控。在弹出的浏览器里手动过一次验证，或放慢节奏（调大 `rate_limit.max_per_hour` 的反面：把间隔调大、每天上限调小）。机器人此时会暂停等待。
 
@@ -323,14 +347,15 @@ boss_bot/
 │   ├── config.py                # 兼容层（模块级常量）
 │   ├── browser_launcher.py      # DrissionPage 封装：多浏览器、双标签页、Cookie
 │   ├── main_loop.py             # 主循环：双线程并行、健康检查、热重载、多账号
-│   ├── greet_engine.py          # 打招呼：搜索/详情/AI 容灾链/发送
-│   ├── reply_engine.py          # 回复：四级决策链
+│   ├── greet_engine.py          # 打招呼：搜索/详情/AI 容灾链（判分预算、截断识别、硬否决）/发送
+│   ├── reply_engine.py          # 回复：四级决策链 + AI 容灾尝试上限
 │   ├── page_handler.py          # BOSS 页面操作与选择器
 │   ├── metrics.py               # 漏斗指标持久化（累计/当日/按账号 + 回填）
-│   ├── ai_health.py             # AI 接口体检（真实探测、错误分类、落盘合并、真实超时回写）
-│   ├── reply_record.py          # 投递/回复记录存储与 Excel 导出（按账号筛选/删除）
+│   ├── ai_health.py             # AI 接口体检（真实探测、错误分类、落盘合并、真实超时/截断回写）
+│   ├── reply_record.py          # 投递/回复记录存储与 Excel 导出（按账号筛选/删除、AI 判分质量）
 │   ├── message_store.py         # 聊天记录（按账号前缀、时间排序）
-│   ├── state_store.py / stats.py / notify.py / intent.py / rules.py / prompts.py
+│   ├── state_store.py / stats.py / notify.py / intent.py / rules.py
+│   ├── prompts.py               # 回复提示词（每次现读规则/模板/画像，改了立刻生效）
 │   └── self_evolve.py           # 回复效果记录与评估
 ├── flask-version/
 │   ├── app.py                   # Flask + SocketIO（REST API、实时推送、体检后台线程）
@@ -338,6 +363,9 @@ boss_bot/
 ├── tests/
 │   ├── conftest.py              # 会话级隔离：测试不写生产数据
 │   ├── test_unified.py          # 单元/集成测试（配置、引擎、闸门、结构检查）
+│   ├── test_ai_failover.py      # AI 判分链路：不可用输出的容灾切换、截断、预算、硬否决、提示词热生效
+│   ├── test_multi_account.py    # 多账号范围与归属
+│   └── test_ai_health_runtime.py# 真实调用结果回写体检
 │   ├── test_multi_account.py    # 多账号隔离与数据范围
 │   └── test_ai_health_runtime.py # 真实超时回写体检 + 容灾链跳过
 ├── tools/                       # 真机实测与诊断脚本（见「测试」小节）

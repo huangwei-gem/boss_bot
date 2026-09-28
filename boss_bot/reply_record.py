@@ -239,6 +239,8 @@ class GreetRecord:
         account_index: 账号索引
         status: 状态 (pending/applied/skipped/failed)
         greeting_message: 使用的打招呼语（实际发送或配置的）
+        ai_error: AI 是否没给出判断（True 表示这个岗位其实没被 AI 筛过）
+        ai_duration_ms: 本次 AI 判分耗时（含容灾切换的总时间）
     """
 
     def __init__(
@@ -267,6 +269,8 @@ class GreetRecord:
         account_index: int = 0,
         status: str = "",
         greeting_message: str = "",
+        ai_error: bool = False,
+        ai_duration_ms: int = 0,
         timestamp: Optional[str] = None,
     ):
         self.timestamp = _normalize_timestamp(timestamp)
@@ -300,6 +304,9 @@ class GreetRecord:
         self.skip_reason = _truncate(skip_reason, MAX_SKIP_REASON_LEN)
         self.account_name = account_name
         self.account_index = account_index
+        # AI 这次到底有没有给出判断：True = 接口全挂/输出不可用，落到"默认通过"
+        self.ai_error = bool(ai_error)
+        self.ai_duration_ms = int(ai_duration_ms or 0)
         # 状态：pending/applied/skipped/failed
         # 若调用方未提供，则根据 is_greeted/is_skipped 自动推导
         if status:
@@ -348,6 +355,8 @@ class GreetRecord:
             "account_index": self.account_index,
             "status": self.status,
             "greeting_message": self.greeting_message,
+            "ai_error": self.ai_error,
+            "ai_duration_ms": self.ai_duration_ms,
         }
 
     @classmethod
@@ -378,6 +387,8 @@ class GreetRecord:
             account_index=data.get("account_index", 0),
             status=data.get("status", ""),
             greeting_message=data.get("greeting_message", ""),
+            ai_error=data.get("ai_error", False),
+            ai_duration_ms=data.get("ai_duration_ms", 0),
         )
 
 
@@ -566,6 +577,7 @@ class GreetRecordStore:
         date: Optional[str] = None,
         account_name: Optional[str] = None,
         account_index: Optional[int] = None,
+        ai_error: Optional[bool] = None,
     ) -> List[GreetRecord]:
         """按条件筛选打招呼记录。
 
@@ -573,6 +585,7 @@ class GreetRecordStore:
             date: 日期字符串，如 "2026-09-18"
             account_name: 账号名称
             account_index: 账号索引
+            ai_error: 只看"AI 没给出判断"（True）或只看真判分（False）的记录
 
         Returns:
             符合条件的记录列表
@@ -586,8 +599,49 @@ class GreetRecordStore:
                     continue
                 if account_index is not None and int(r.account_index or 0) != int(account_index):
                     continue
+                if ai_error is not None and bool(r.ai_error) != bool(ai_error):
+                    continue
                 results.append(r)
             return results
+
+    def quality_stats(self, account_index: Optional[int] = None) -> Dict[str, Any]:
+        """AI 判分质量汇总 —— 回答"筛岗到底有没有真在跑"。
+
+        以前只有日志里一行"AI 匹配度"，界面看不出有多少岗位其实落到了
+        "默认通过"（等于没筛）。兜底率和平均耗时是判断该不该换接口的依据。
+
+        分母只算"真的跑过 AI"的记录：早期那批 AI 没启用时留下的记录
+        （没有接口名、没有耗时、没有兜底标记）混进去会得到一个假的兜底率。
+        """
+        with self._lock:
+            records = [r for r in self._records
+                       if account_index is None
+                       or int(r.account_index or 0) == int(account_index)]
+
+        def tracked(r: GreetRecord) -> bool:
+            return bool(r.ai_error) or bool((r.ai_model or "").strip()) or r.ai_duration_ms > 0
+
+        judged_records = [r for r in records if tracked(r)]
+        total = len(judged_records)
+        fallback = sum(1 for r in judged_records if r.ai_error)
+        timed = [r.ai_duration_ms for r in judged_records if r.ai_duration_ms]
+        by_model: Dict[str, Dict[str, int]] = {}
+        for r in judged_records:
+            if not r.ai_model:
+                continue
+            slot = by_model.setdefault(r.ai_model, {"total": 0, "fallback": 0})
+            slot["total"] += 1
+            slot["fallback"] += 1 if r.ai_error else 0
+        return {
+            "total": total,
+            "judged": total - fallback,
+            "fallback": fallback,
+            "fallback_rate": round(fallback / total, 4) if total else 0.0,
+            "avg_duration_ms": int(sum(timed) / len(timed)) if timed else 0,
+            "max_duration_ms": max(timed) if timed else 0,
+            "untracked": len(records) - total,
+            "by_model": by_model,
+        }
 
     def count(self) -> int:
         """获取记录总数。"""

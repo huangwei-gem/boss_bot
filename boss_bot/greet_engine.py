@@ -138,6 +138,14 @@ class AIProviderConfig:
         return bool(self.api_key and self.api_base and self.model)
 
 
+class AIResponseUnusable(Exception):
+    """接口回了话，但没回可信判分（空正文/截断/没有 JSON/没有 score）。
+
+    必须走异常而不是返回兜底 dict：兜底 dict 会被容灾链当成"这个接口成功了"，
+    于是既不换下一个接口，又把坏接口回报成健康 —— AI 筛岗静默失效。
+    """
+
+
 class AIAnalyzerChain:
     """多 AI 容灾链：按顺序尝试多个 AI 接口，自动切换。
 
@@ -151,6 +159,9 @@ class AIAnalyzerChain:
     # 单个岗位最多尝试多少个接口、最多花多少秒
     MAX_ATTEMPTS_PER_JOB = 4
     JOB_BUDGET_SECONDS = 60
+    # 带 thinking 的接口实测 1024 token 会被思考吃光（正文为空 + finish=length），
+    # 默认给到 1600；真被截断时换接口，不再原地"默认通过"。
+    DEFAULT_ANALYZE_MAX_TOKENS = 1600
     # 接口失败后的冷却时间（秒）：鉴权/额度类错误冷却更久
     COOLDOWN_AUTH_SECONDS = 1800
     COOLDOWN_OTHER_SECONDS = 300
@@ -165,6 +176,7 @@ class AIAnalyzerChain:
         custom_filter_keywords: list = None,
         custom_scoring_prompt: str = "",
         skip_unhealthy: bool = True,
+        analyze_max_tokens: int = 0,
     ):
         self.providers = []
         for p in providers:
@@ -194,10 +206,13 @@ class AIAnalyzerChain:
         self.log_cb = log_callback
         self.custom_filter_keywords = custom_filter_keywords or []
         self.custom_scoring_prompt = custom_scoring_prompt or ""
+        self.analyze_max_tokens = analyze_max_tokens or self.DEFAULT_ANALYZE_MAX_TOKENS
 
         self.analyzed_count = 0
         self.match_count = 0
         self.cache_hit_count = 0
+        # 没能真判分、落到"默认通过"的岗位数 —— 面板用它回答"AI 到底筛没筛"
+        self.fallback_count = 0
         self._resume = None
         self._resume_hash = ""
 
@@ -289,6 +304,7 @@ class AIAnalyzerChain:
         「AI 说这个岗位不匹配」和「AI 没给出判断」——两者的处理方式相反。
         """
         if not self.providers:
+            self.fallback_count += 1
             return {"score": 50, "is_match": True, "ai_error": True,
                     "reason": "未配置 AI 接口，按默认话术通过", "suggested_greeting": ""}
 
@@ -299,9 +315,15 @@ class AIAnalyzerChain:
             if cache_key in cache:
                 self.cache_hit_count += 1
                 self._log("INFO", f"缓存命中: {job.get('job_name', '')}")
+                # 命中的记录也要带上当初判分的接口名，否则面板会把它当"没跑 AI"
+                self.last_model_name = (cache[cache_key] or {}).get("model", "")
+                self.last_raw_response = None
                 return cache[cache_key]["result"]
 
         # 依次尝试 provider — 受单岗位尝试数与总耗时双重限制
+        # 上一个岗位的接口名/原文不能留到这条记录上（by_model 统计会算错）
+        self.last_model_name = ""
+        self.last_raw_response = None
         prompt = self._build_prompt(job)
         # 保存 prompt 信息供 GreetRecord 记录使用
         self.last_system_prompt = prompt[0]["content"] if len(prompt) > 0 else None
@@ -350,6 +372,7 @@ class AIAnalyzerChain:
                     cache = self._load_cache()
                     cache[cache_key] = {
                         "result": result,
+                        "model": provider.model,
                         "cached_at": time.time(),
                         "_expires_at": time.time() + self.cache_ttl,
                     }
@@ -371,17 +394,94 @@ class AIAnalyzerChain:
 
         # 全部失败
         self._log("ERROR", f"所有 AI 接口均失败，最后错误: {last_error}")
+        self.fallback_count += 1
         return {"score": 50, "is_match": True, "ai_error": True,
                 "reason": f"AI 分析异常: {last_error}，默认通过", "suggested_greeting": ""}
 
+    def _extract_json(self, text: str) -> dict:
+        """从模型正文里抠出那个 JSON 对象。
+
+        三种真实输出都得吃下（实测样本）：纯 JSON、```json 代码块、
+        前后夹带中文说明。括号按字符串状态配对，避免尾随说明里的 "}"
+        把截取区间带偏（旧实现用首 { 到末 }，遇到 "（详见附录}）" 直接解析失败）。
+        """
+        body = text.strip()
+        fence = re.search(r"```(?:json)?\s*(.+?)\s*```", body, re.S)
+        if fence:
+            body = fence.group(1).strip()
+        start = body.find("{")
+        if start < 0:
+            raise AIResponseUnusable(f"响应里没有 JSON（前 60 字：{body[:60]}）")
+
+        depth = 0
+        in_str = False
+        escaped = False
+        for i in range(start, len(body)):
+            ch = body[i]
+            if in_str:
+                if escaped:
+                    escaped = False
+                elif ch == "\\":
+                    escaped = True
+                elif ch == '"':
+                    in_str = False
+            elif ch == '"':
+                in_str = True
+            elif ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    try:
+                        return json.loads(body[start:i + 1])
+                    except json.JSONDecodeError as e:
+                        raise AIResponseUnusable(f"JSON 不完整: {e}")
+        raise AIResponseUnusable(f"JSON 没有闭合（末 40 字：{body[-40:]}）")
+
+    def _normalize_result(self, result) -> dict:
+        """把模型给的 JSON 收敛成一份可信判分，缺判分就抛。"""
+        if not isinstance(result, dict):
+            raise AIResponseUnusable(f"返回的不是 JSON 对象：{str(result)[:60]}")
+
+        score = None
+        raw_score = result.get("score")
+        if raw_score is not None:
+            try:
+                score = max(0, min(100, int(float(raw_score))))
+            except (TypeError, ValueError):
+                score = None
+
+        is_match = result.get("is_match")
+        if score is None and not isinstance(is_match, bool):
+            raise AIResponseUnusable(
+                "返回里没有可用的 score/is_match，无法判分"
+                f"（前 60 字：{json.dumps(result, ensure_ascii=False)[:60]}）")
+
+        if score is None:
+            # 只给了结论没给分：按阈值折算一个分，别让调用方拿默认 50 误判
+            score = self.match_threshold if is_match else max(0, self.match_threshold - 1)
+        if not isinstance(is_match, bool):
+            is_match = score >= self.match_threshold
+
+        result["score"] = score
+        result["is_match"] = is_match
+
+        # 自定义筛选条件是硬否决：模型自己承认命中就不能因为分高而放行
+        veto = str(result.get("veto_hit") or "").strip()
+        if veto and is_match:
+            result["is_match"] = False
+            result["score"] = min(score, max(0, self.match_threshold - 1))
+            result["reason"] = f"命中硬性筛选条件「{veto}」，不予通过。{result.get('reason', '')}"
+        return result
+
     def _call_provider_api(self, provider: AIProviderConfig, messages: list) -> dict:
-        """调用指定 AI 接口。"""
+        """调用指定 AI 接口，返回一份可信判分；拿不到就抛 AIResponseUnusable。"""
         url = f"{provider.api_base}/chat/completions"
         payload = json.dumps({
             "model": provider.model,
             "messages": messages,
             "temperature": 0.3,
-            "max_tokens": 1024,
+            "max_tokens": self.analyze_max_tokens,
             "chat_template_kwargs": {"enable_thinking": True},
         }).encode("utf-8")
 
@@ -398,24 +498,37 @@ class AIAnalyzerChain:
             raise Exception(f"请求超时（{provider.timeout}s）")
 
         try:
-            message = data["choices"][0]["message"]
-            content = message.get("content", "") or message.get("reasoning_content", "")
-            self.last_raw_response = content
-            json_start = content.find("{")
-            json_end = content.rfind("}") + 1
-            if json_start >= 0 and json_end > json_start:
-                result = json.loads(content[json_start:json_end])
-                return result
-            if not content:
-                # 空正文通常是推理模型把话都放在 reasoning_content 之外还没写完，
-                # 或者接口直接回了空 choices —— 和"格式不对"要能区分开
-                raise ValueError("模型未返回正文（content 与 reasoning_content 均为空）")
-            raise ValueError(f"响应里没有 JSON（前 60 字：{content[:60]}）")
-        except (KeyError, IndexError, json.JSONDecodeError, ValueError) as e:
-            detail = f"响应缺少字段 {e.args[0]}" if isinstance(e, KeyError) else str(e)
-            self._log("WARN", f"解析 AI 响应失败: {e}")
-            return {"score": 50, "is_match": True, "ai_error": True,
-                    "reason": f"AI 响应无法解析: {detail}", "suggested_greeting": ""}
+            choice = data["choices"][0]
+        except (KeyError, IndexError, TypeError):
+            raise AIResponseUnusable(
+                f"响应缺少字段 choices（{str(data.get('msg') or data)[:120]}）")
+
+        return self._parse_completion(choice)
+
+    def _parse_completion(self, choice: dict) -> dict:
+        """把一次 chat completion 的 choice 收敛成判分，不可用就抛。
+
+        单独拆出来是为了让诊断脚本（tools/measure_ai_quality.py）用的是
+        生产同一份判定，而不是自己抄一套"看起来能解析"。
+        """
+        message = choice.get("message") or {}
+        finish = choice.get("finish_reason") or ""
+        content = (message.get("content") or "").strip()
+        reasoning = (message.get("reasoning_content") or "").strip()
+        self.last_raw_response = content or reasoning
+
+        if not content and finish == "length":
+            # 推理型接口把预算全花在 thinking 上，正文一个字没写：
+            # 这不是"这个岗位不匹配"，是这个接口这次没给出判断
+            raise AIResponseUnusable(
+                f"正文被截断（thinking 写了 {len(reasoning)} 字，"
+                f"max_tokens={self.analyze_max_tokens} 不够）")
+
+        body = content or reasoning
+        if not body:
+            raise AIResponseUnusable("模型未返回正文（content 与 reasoning_content 均为空）")
+
+        return self._normalize_result(self._extract_json(body))
 
     def _build_prompt(self, job: dict) -> list:
         """构建 AI 分析提示词。"""
@@ -444,13 +557,19 @@ class AIAnalyzerChain:
         if self.custom_filter_keywords:
             keywords_str = "、".join(self.custom_filter_keywords)
             user_msg += (
-                f"【用户自定义筛选条件】\n"
-                f"请额外关注以下关键词/条件：{keywords_str}\n"
-                "如果岗位明显不符合这些条件，应在reason中说明并适当扣分。\n\n"
+                f"【用户硬性筛选条件】\n"
+                f"以下是求职者设定的否决条件：{keywords_str}\n"
+                "只要岗位命中其中任意一条（例如岗位是外包驻场、城市不在范围内、"
+                "学历/经验要求不满足），is_match 必须为 false，"
+                "并把命中的那条原样写进 veto_hit；没命中则 veto_hit 留空字符串。\n"
+                "命中否决条件时不要因为薪资或其它方面不错而加分放行。\n\n"
             )
+        veto_field = ('  "veto_hit": "命中的否决条件原文，没有则留空",\n'
+                      if self.custom_filter_keywords else "")
         user_msg += (
             "请分析匹配度，按以下 JSON 格式返回（不要包含其他内容）：\n"
             '{\n  "score": 0-100,\n  "is_match": true/false,\n'
+            + veto_field +
             '  "reason": "匹配分析简要说明",\n'
             '  "strengths": ["优势1", "优势2"],\n'
             '  "weaknesses": ["劣势1", "劣势2"],\n'
@@ -589,6 +708,8 @@ class GreetEngine:
         self._last_ai_user_prompt = None
         self._last_ai_model = ""
         self._last_ai_raw_response = None
+        # AI 本次有没有真给出判断（见 _record_greet 的 ai_error）+ 本次判分耗时
+        self._last_ai_duration_ms = 0
 
         # 从配置加载参数
         self._load_config_params()
@@ -614,18 +735,40 @@ class GreetEngine:
         self._retry_base_delay = retry_cfg.base_delay
         self._retry_backoff_factor = retry_cfg.backoff_factor
 
-        ai_cfg = self.config.ai
-        self._ai_enabled = ai_cfg.enabled
-        self._ai_threshold = ai_cfg.match_threshold
-        self._ai_custom_filter_keywords = ai_cfg.custom_filter_keywords
-        self._ai_custom_scoring_prompt = ai_cfg.custom_scoring_prompt
+        self._apply_ai_config()
 
         # 岗位去重集合（基于URL+公司名+岗位名，仅当前运行期间有效）
         self._applied_job_keys = set()
 
+        self.reload_runtime_settings()
+
+    def _apply_ai_config(self):
+        """把 config.ai 摊平成引擎字段；配置真的变了就丢掉容灾链，让它按新配置重建。
+
+        热重载只换 config 对象不会重建容灾链 —— 阈值、否决关键词、单次预算改了
+        要重启才生效，这正是"改了必须生效"的反例。签名相同则什么都不动，
+        免得每轮热重载把冷却表清零、又开始重踩已知坏接口。
+        """
+        ai = self.config.ai
+        sig = (ai.enabled, ai.match_threshold, ai.analyze_max_tokens,
+               tuple(ai.custom_filter_keywords or []), ai.custom_scoring_prompt,
+               ai.skip_unhealthy,
+               tuple((p.name, p.model, p.api_base, bool(p.api_key)) for p in ai.providers))
+        if getattr(self, "_ai_config_sig", None) == sig:
+            return
+        rebuilt = self._ai_analyzer is not None
+        self._ai_config_sig = sig
+
+        self._ai_enabled = ai.enabled
+        self._ai_threshold = ai.match_threshold
+        self._ai_custom_filter_keywords = ai.custom_filter_keywords
+        self._ai_custom_scoring_prompt = ai.custom_scoring_prompt
+        self._ai_skip_unhealthy = ai.skip_unhealthy
+        self._analyze_max_tokens = ai.analyze_max_tokens
+
         # AI providers 列表（从 UnifiedConfig 转换为 AIAnalyzerChain 所需格式）
         self._ai_providers = []
-        for p in ai_cfg.providers:
+        for p in ai.providers:
             self._ai_providers.append({
                 "name": p.name,
                 "api_key": p.api_key,
@@ -634,16 +777,18 @@ class GreetEngine:
                 "timeout": p.timeout,
             })
         # 兼容旧格式
-        if not self._ai_providers and ai_cfg.api_key:
+        if not self._ai_providers and ai.api_key:
             self._ai_providers.append({
                 "name": "默认",
-                "api_key": ai_cfg.api_key,
-                "api_base": ai_cfg.api_base,
-                "model": ai_cfg.model,
+                "api_key": ai.api_key,
+                "api_base": ai.api_base,
+                "model": ai.model,
                 "timeout": 30,
             })
 
-        self.reload_runtime_settings()
+        if rebuilt:
+            self._log("INFO", "AI 配置已变更，下一个岗位按新配置重建容灾链")
+            self._ai_analyzer = None
 
     def reload_runtime_settings(self):
         """从 self.config 重读「改了就该立刻生效」的字段。
@@ -661,7 +806,7 @@ class GreetEngine:
             "self_intro": self.config.resume.self_intro,
         }
 
-        self._ai_skip_unhealthy = self.config.ai.skip_unhealthy
+        self._apply_ai_config()
 
         rl = self.config.greet.rate_limit
         self._rate_limit_enabled = rl.enabled
@@ -793,6 +938,8 @@ class GreetEngine:
             record = GreetRecord(
                 job_name=job.get("job_name", ""),
                 job_url=job.get("url", ""),
+                ai_error=bool(ai_result.get("ai_error")),
+                ai_duration_ms=self._last_ai_duration_ms,
                 company=job.get("company", job.get("company_location", "")),
                 salary=job.get("salary", ""),
                 job_description=job.get("jd_description", job.get("description", "")),
@@ -1279,6 +1426,7 @@ class GreetEngine:
                     custom_filter_keywords=self._ai_custom_filter_keywords,
                     custom_scoring_prompt=self._ai_custom_scoring_prompt,
                     skip_unhealthy=self._ai_skip_unhealthy,
+                    analyze_max_tokens=self._analyze_max_tokens,
                 )
             else:
                 self._log("WARN", "AI 已启用但未配置任何 provider")
@@ -1295,6 +1443,7 @@ class GreetEngine:
         analyzer = self._init_ai()
         if not analyzer:
             # 分析器都建不起来同样属于「AI 不可用」，不能当成不匹配把岗位全丢掉
+            self._last_ai_duration_ms = 0
             return {"score": 50, "is_match": True, "ai_error": True,
                     "reason": "AI 分析器初始化失败，按默认通过", "suggested_greeting": ""}, 0
         ai_job = {
@@ -1317,6 +1466,7 @@ class GreetEngine:
             self._last_ai_user_prompt = analyzer.last_user_prompt
             self._last_ai_model = analyzer.last_model_name
             self._last_ai_raw_response = analyzer.last_raw_response
+            self._last_ai_duration_ms = int(duration * 1000)
             self._log("INFO", f"🤖 AI 匹配度: {score}/100 ({duration:.1f}s) —— {result.get('reason', '')[:80]}")
             if result.get("ai_error"):
                 # AI 没给出判断（接口全挂/无法解析）≠ AI 判定不匹配，按默认话术放行
@@ -1326,6 +1476,7 @@ class GreetEngine:
         except Exception as e:
             self._log("WARN", f"AI 分析异常，按通过处理: {e}")
             self._last_ai_result = {"ai_error": True, "reason": f"AI 分析异常: {e}"}
+            self._last_ai_duration_ms = 0
             return {"score": 50, "is_match": True, "ai_error": True,
                     "reason": f"AI 分析异常: {e}", "suggested_greeting": ""}, 0
 

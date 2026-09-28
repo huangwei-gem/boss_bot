@@ -219,6 +219,41 @@ def main():
             break
     check("AI", "单个重测后状态更新", "available" in st or "unavailable" in st, st)
 
+    # ── 5b. 判分预算 / 判分质量 / 提示词默认值 ──
+    budget = js(page, 'document.getElementById("aiAnalyzeMaxTokens").value')
+    check("AI", "判分预算输入框已按配置回填", str(budget or "").isdigit() and int(budget) >= 512,
+          f"值={budget}")
+    cfg_budget = js(page, '''(function(){var x=new XMLHttpRequest();
+      x.open("GET","/api/config",false);x.send();
+      return JSON.parse(x.responseText).config.ai.analyze_max_tokens;})()''')
+    check("AI", "预算已存进后端配置", int(cfg_budget or 0) == int(budget),
+          f"后端 {cfg_budget} vs 界面 {budget}")
+
+    quality = js(page, 'document.getElementById("aiQualityLine").textContent') or ""
+    check("AI", "判分质量行有统计", ("判分质量" in quality) and
+          ("真判分" in quality or "暂无记录" in quality), quality[:60])
+    qapi = js(page, '''(function(){var x=new XMLHttpRequest();
+      x.open("GET","/api/ai/quality",false);x.send();return JSON.parse(x.responseText);})()''')
+    check("AI", "判分质量接口给出兜底率", qapi.get("status") == "ok" and
+          "fallback_rate" in qapi and qapi.get("total", 0) >= 1,
+          {k: qapi.get(k) for k in ("total", "judged", "fallback", "fallback_rate")})
+
+    # 「恢复默认」必须用引擎那份 20 条的默认规则，不是前端抄本
+    js(page, 'typeof DEFAULT_SYSTEM_RULES')
+    stale = js(page, '(function(){try{return String(eval("DEFAULT_SYSTEM_RULES")).length;}'+
+                     'catch(e){return "none";}})()')
+    check("AI", "前端不再自带默认规则抄本", str(stale) == "none", stale)
+    js(page, 'showPromptModal()')
+    time.sleep(1.5)
+    js(page, 'resetPromptModal()')
+    time.sleep(1.0)
+    sys_rules = js(page, 'document.getElementById("promptSystem").value') or ""
+    check("AI", "恢复默认拿到的是引擎默认规则",
+          "必须根据完整对话上下文回复" in sys_rules and "语气专业" in sys_rules,
+          f"{len(sys_rules)} 字")
+    # 只读校验，不点保存：用户改过的提示词不能被测试覆盖
+    js(page, 'closePromptModal()')
+
     # ── 6. 配置保存回路（改→存→读回→还原） ──
     orig = js(page, 'document.getElementById("aiThreshold").value')
     js(page, '''(function(){var e=document.getElementById("aiThreshold");

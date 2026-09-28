@@ -1486,34 +1486,20 @@ def api_ai_analyze():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
-# AI 提示词默认值（与 boss_bot/prompts.py 保持一致）
-_DEFAULT_SYSTEM_RULES = """你的回复要求：
-1. 语气专业、礼貌、真诚，不要过于机械
-2. 简洁明了，控制在 1-2 句话，不要长篇大论
-3. 展现积极态度和学习能力
-4. 不要编造不存在的工作经历或技能
-5. 如果对方问了你不知道的问题，诚实说可以面谈详细了解
-6. 不要使用 emoji，保持专业
-7. 只输出回复内容本身，不要加引号或任何前缀
-8. 结合上面的对话历史自然接续话题，不要重复已经说过的内容
-9. 严格禁止声称已经完成了无法确认的事情（如"已投递简历""已发送材料""已经报名"），除非对话历史中确实发生过；对方要求你做某事时，回复"稍后完成/马上处理"即可
-10. 如果对方的岗位与你的求职方向明显不符，礼貌说明求职方向并询问是否有相关岗位，不要强行迎合"""
-
-_DEFAULT_USER_PROMPT_TEMPLATE = """当前聊天上下文：
-- 招聘方称呼：{boss_name}
-- 招聘岗位：{job_name}
-- 最近对话记录：
-{history}
-- 对方最新消息：{message}
-
-请根据对话历史和最新消息，给出合适的回复。只输出回复内容，不要解释。"""
+# AI 提示词默认值直接取引擎真正在用的那份（boss_bot/prompts.py）。
+# 以前这里抄了一份只有 10 条的副本，而 prompts.py 的默认值有 20 条 ——
+# 界面点一次「恢复默认」就把削弱版写进 config_overrides.json，
+# 之后每条 AI 回复都丢了"先读完整上下文""被拒绝后别再推销"这些约束。
+from boss_bot.prompts import (_SYSTEM_RULES_DEFAULT as _DEFAULT_SYSTEM_RULES,
+                              _USER_PROMPT_DEFAULT as _DEFAULT_USER_PROMPT_TEMPLATE)
 
 
 @app.route("/api/ai/prompts", methods=["GET"])
 def api_get_ai_prompts():
     """获取当前 AI 提示词配置（system_rules, user_prompt_template）。
 
-    当 config_overrides.json 中未配置时，返回 prompts.py 中的默认值。
+    未配置时返回 prompts.py 的默认值；defaults 一并返回，
+    「恢复默认」按钮用它，前端不必再抄一份可能过期的副本。
     """
     try:
         overrides = {}
@@ -1524,7 +1510,9 @@ def api_get_ai_prompts():
             "system_rules": overrides.get("system_rules", "") or _DEFAULT_SYSTEM_RULES,
             "user_prompt_template": overrides.get("user_prompt_template", "") or _DEFAULT_USER_PROMPT_TEMPLATE,
         }
-        return jsonify({"status": "ok", "prompts": prompts})
+        return jsonify({"status": "ok", "prompts": prompts,
+                        "defaults": {"system_rules": _DEFAULT_SYSTEM_RULES,
+                                     "user_prompt_template": _DEFAULT_USER_PROMPT_TEMPLATE}})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
@@ -2152,6 +2140,23 @@ def api_chat_mark_read(chat_name: str):
         msg_store.mark_chat_read(chat_name)
         return jsonify({"status": "ok", "message": "已标记为已读"})
     except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/ai/quality")
+def api_ai_quality():
+    """AI 判分质量：真判分多少、兜底多少、平均多久。
+
+    「AI 筛岗有没有生效」以前只能翻日志。兜底率（ai_error 占比）才是关键：
+    兜底=这个岗位没被 AI 看过，按默认话术直接打招呼了。
+    """
+    try:
+        account = _account_arg()
+        stats = _get_greet_store().quality_stats(account_index=account)
+        stats["scope"] = account
+        return jsonify({"status": "ok", **stats})
+    except Exception as e:
+        logger.exception("读取 AI 判分质量失败")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
