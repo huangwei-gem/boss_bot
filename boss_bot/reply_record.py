@@ -27,7 +27,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 
-from boss_bot.unified_config import BASE_DIR
+from boss_bot.unified_config import BASE_DIR, write_json_atomic
 
 logger = logging.getLogger(__name__)
 
@@ -416,14 +416,12 @@ class ReplyRecordStore:
     def _save(self):
         """保存记录到文件（不加锁，由调用方负责加锁）。"""
         try:
-            self.path.parent.mkdir(parents=True, exist_ok=True)
             data = {
                 "records": [r.to_dict() for r in self._records[-MAX_REPLY_RECORDS:]],
                 "total": len(self._records),
                 "last_saved": _now_str(),
             }
-            with open(self.path, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
+            write_json_atomic(self.path, data)
         except Exception as e:
             logger.error(f"保存回复记录失败: {e}")
 
@@ -480,6 +478,10 @@ class ReplyRecordStore:
             self._records = []
             self._save()
 
+    def clear_all(self):
+        """清空所有记录（clear 的语义别名，供 API 层调用）。"""
+        self.clear()
+
 
 # ─────────────────────────────────────────────
 # GreetRecordStore — 打招呼记录存储
@@ -516,14 +518,12 @@ class GreetRecordStore:
     def _save(self):
         """保存记录到文件（不加锁，由调用方负责加锁）。"""
         try:
-            self.path.parent.mkdir(parents=True, exist_ok=True)
             data = {
                 "records": [r.to_dict() for r in self._records[-MAX_GREET_RECORDS:]],
                 "total": len(self._records),
                 "last_saved": _now_str(),
             }
-            with open(self.path, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
+            write_json_atomic(self.path, data)
         except Exception as e:
             logger.error(f"保存打招呼记录失败: {e}")
 
@@ -574,6 +574,10 @@ class GreetRecordStore:
         with self._lock:
             self._records = []
             self._save()
+
+    def clear_all(self):
+        """清空所有记录（clear 的语义别名，供 API 层调用）。"""
+        self.clear()
 
 
 # ─────────────────────────────────────────────

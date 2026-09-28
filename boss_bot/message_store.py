@@ -19,6 +19,8 @@ import re
 from datetime import datetime
 from pathlib import Path
 
+from boss_bot.unified_config import write_json_atomic
+
 
 def _safe_filename(name: str) -> str:
     return re.sub(r'[^\w\u4e00-\u9fff]', '_', name)[:50]
@@ -29,16 +31,21 @@ class MessageStore:
 
     CACHE_TTL = 30  # 缓存有效期（秒）
 
-    def __init__(self, base_dir=None):
+    def __init__(self, base_dir=None, account_index: int = 0):
         from boss_bot.config import BASE_DIR, TEST_MODE
         # 测试模式下隔离目录，避免 mock 测试数据污染前端真实消息列表
         dirname = "messages_test" if TEST_MODE else "messages"
         self.base_dir = Path(base_dir) if base_dir else Path(BASE_DIR) / dirname
         self.base_dir.mkdir(parents=True, exist_ok=True)
+        # 多账号：BOSS 只显示"杨女士"这类称呼，两个账号聊到同名 HR 时
+        # 必须落到不同文件，否则互相覆盖对话历史
+        self.account_index = account_index
         self._locks = {}
         self._global_lock = threading.Lock()
         # 内存缓存：chat_name -> (data dict, 时间戳)
         self._cache = {}
+        # 跨账号读取时的 chat_name -> path 映射缓存
+        self._alias_cache = {}
 
     def _get_lock(self, chat_name: str) -> threading.Lock:
         with self._global_lock:
@@ -46,8 +53,37 @@ class MessageStore:
                 self._locks[chat_name] = threading.Lock()
             return self._locks[chat_name]
 
+    @property
+    def _prefix(self) -> str:
+        """账号0 沿用原文件名，历史数据不用迁移；其余账号加 aN_ 前缀"""
+        return "" if self.account_index <= 0 else f"a{self.account_index}_"
+
     def _path(self, chat_name: str) -> Path:
-        return self.base_dir / f"{_safe_filename(chat_name)}.json"
+        return self.base_dir / f"{self._prefix}{_safe_filename(chat_name)}.json"
+
+    def _read_path(self, chat_name: str) -> Path:
+        """读取用路径：先读本账号的，没有再按 chat_name 找别人的会话文件。
+
+        Web 端默认用账号0 的实例去浏览全部聊天，需要这个回落。
+        """
+        own = self._path(chat_name)
+        if own.exists():
+            return own
+        hit = self._alias_cache.get(chat_name)
+        if hit and hit.exists():
+            return hit
+        for path in sorted(self.base_dir.glob("*.json")):
+            if path.name.endswith(".meta.json"):
+                continue
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception:
+                continue
+            if data.get("chat_name") == chat_name:
+                self._alias_cache[chat_name] = path
+                return path
+        return own
 
     def _cache_valid(self, chat_name: str) -> bool:
         entry = self._cache.get(chat_name)
@@ -68,13 +104,13 @@ class MessageStore:
             path = self._path(chat_name)
             data = {
                 "chat_name": chat_name,
+                "account_index": self.account_index,
                 "job_name": job_name,
                 "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "messages": messages,
             }
             try:
-                with open(path, "w", encoding="utf-8") as f:
-                    json.dump(data, f, ensure_ascii=False, indent=2)
+                write_json_atomic(path, data)
                 self._cache_put(chat_name, data)
             except Exception as e:
                 import logging
@@ -92,6 +128,7 @@ class MessageStore:
                 else:
                     data = {
                         "chat_name": chat_name,
+                        "account_index": self.account_index,
                         "job_name": job_name,
                         "updated_at": "",
                         "messages": [],
@@ -100,8 +137,7 @@ class MessageStore:
                 data["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 if job_name:
                     data["job_name"] = job_name
-                with open(path, "w", encoding="utf-8") as f:
-                    json.dump(data, f, ensure_ascii=False, indent=2)
+                write_json_atomic(path, data)
                 self._cache_put(chat_name, data)
             except Exception as e:
                 import logging
@@ -109,11 +145,15 @@ class MessageStore:
 
     @staticmethod
     def _msg_key(msg: dict) -> str:
-        """构造消息去重键：按 content+time 去重。
+        """构造消息去重键。
 
-        优先使用 content 字段，回退到 text；时间取 time/timestamp 任一。
-        相同内容和时间的消息视为同一条。
+        优先用 BOSS 给每条消息的 data-mid（线上唯一且稳定）；没有 mid 的
+        旧数据退回 content+time。HR 重复发同一句话时 content+time 会把两条
+        合并成一条，导致界面和线上对不上。
         """
+        mid = str(msg.get("mid") or "").strip()
+        if mid:
+            return f"mid|{mid}"
         content = (msg.get("content") or msg.get("text") or "").strip()
         t = (msg.get("time") or msg.get("timestamp") or "").strip()
         return f"{content}|{t}"
@@ -188,6 +228,7 @@ class MessageStore:
                 else:
                     data = {
                         "chat_name": chat_name,
+                        "account_index": self.account_index,
                         "job_name": job_name,
                         "updated_at": "",
                         "messages": [],
@@ -234,20 +275,30 @@ class MessageStore:
                     merged.append(norm_msg)
                     new_added += 1
 
-                # 按时间排序（若能解析时间），无法解析的保持原顺序
-                merged_with_ts = [(self._parse_time_for_sort(m), idx, m)
-                                  for idx, m in enumerate(merged)]
-                # 稳定排序：能解析时间的按时间排序，不能的（ts=0）保持原相对顺序
-                merged_with_ts.sort(key=lambda x: (x[0] if x[0] > 0 else float("inf"), x[1]))
-                merged = [m for _, _, m in merged_with_ts]
+                # 按时间排序，但岗位卡/简历卡这类消息 BOSS 不给时间戳：
+                # 直接丢到末尾会让它们和线上顺序错位（线上是夹在对话中间的），
+                # 所以沿用 DOM 里前一条有时间消息的时间，保持原有相对位置
+                last_ts = 0.0
+                effective = []
+                for idx, m in enumerate(merged):
+                    ts = self._parse_time_for_sort(m)
+                    if ts > 0:
+                        last_ts = ts
+                        effective.append((ts, idx))
+                    else:
+                        effective.append((last_ts if last_ts > 0 else 0.0, idx))
+                # 开头就没有时间的，向前借用第一条有时间消息的时间，避免整段被排到最后
+                first_ts = next((t for t, _ in effective if t > 0), 0.0)
+                effective = [(t if t > 0 else first_ts, i) for t, i in effective]
+                order = sorted(range(len(merged)), key=lambda i: effective[i])
+                merged = [merged[i] for i in order]
 
                 # 保存合并后的完整消息列表
                 data["messages"] = merged
                 data["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 if job_name:
                     data["job_name"] = job_name
-                with open(path, "w", encoding="utf-8") as f:
-                    json.dump(data, f, ensure_ascii=False, indent=2)
+                write_json_atomic(path, data)
                 self._cache_put(chat_name, data)
 
                 import logging
@@ -271,20 +322,22 @@ class MessageStore:
             chat_name: 聊天对象名称
             content: 消息文本内容
             job_name: 岗位名称
-            timestamp: ISO 时间戳，为空则取当前时间
+            timestamp: 时间戳，为空则取当前时间
             extra: 额外字段（如 raw_time）
 
         Returns:
             构造的消息 dict
         """
-        ts = timestamp or datetime.now().isoformat()
+        # 统一时间戳格式为 YYYY-MM-DD HH:MM:SS
+        ts = timestamp or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        time_short = ts[11:16] if len(ts) >= 16 else datetime.now().strftime("%H:%M")
         msg = {
             "sender": "hr",
             "content": content,
             "text": content,
             "is_mine": False,
             "timestamp": ts,
-            "time": ts[11:16] if len(ts) >= 16 else datetime.now().strftime("%H:%M"),
+            "time": time_short,
             "job_name": job_name,
         }
         if extra:
@@ -302,7 +355,7 @@ class MessageStore:
             chat_name: 聊天对象名称
             content: 回复内容
             job_name: 岗位名称
-            timestamp: ISO 时间戳，为空则取当前时间
+            timestamp: 时间戳，为空则取当前时间
             reply_source: 回复来源（rule/intent/ai/default/skip）
             action: 动作类型（text/resume/skip）
             extra: 额外字段
@@ -310,7 +363,8 @@ class MessageStore:
         Returns:
             构造的消息 dict
         """
-        ts = timestamp or datetime.now().isoformat()
+        # 统一时间戳格式为 YYYY-MM-DD HH:MM:SS
+        ts = timestamp or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         msg = {
             "sender": "bot",
             "content": content,
@@ -320,7 +374,7 @@ class MessageStore:
             "reply_source": reply_source,
             "action": action,
             "timestamp": ts,
-            "time": datetime.now().strftime("%H:%M"),
+            "time": ts[11:16] if len(ts) >= 16 else datetime.now().strftime("%H:%M"),
             "job_name": job_name,
         }
         if extra:
@@ -338,12 +392,13 @@ class MessageStore:
             skip_reason: 跳过原因
             job_name: 岗位名称
             received_message: 收到的消息（可能为空）
-            timestamp: ISO 时间戳
+            timestamp: 时间戳
 
         Returns:
             构造的消息 dict
         """
-        ts = timestamp or datetime.now().isoformat()
+        # 统一时间戳格式为 YYYY-MM-DD HH:MM:SS
+        ts = timestamp or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         msg = {
             "sender": "system",
             "content": f"[跳过] {skip_reason}",
@@ -353,7 +408,7 @@ class MessageStore:
             "skip_reason": skip_reason,
             "received_message": received_message,
             "timestamp": ts,
-            "time": datetime.now().strftime("%H:%M"),
+            "time": ts[11:16] if len(ts) >= 16 else datetime.now().strftime("%H:%M"),
             "job_name": job_name,
         }
         self.append_message(chat_name, msg, job_name)
@@ -363,7 +418,7 @@ class MessageStore:
         """读取一个会话的所有消息（优先走缓存）"""
         if self._cache_valid(chat_name):
             return self._cache_get(chat_name).get("messages", [])
-        path = self._path(chat_name)
+        path = self._read_path(chat_name)
         try:
             if path.exists():
                 with open(path, "r", encoding="utf-8") as f:
@@ -390,16 +445,21 @@ class MessageStore:
         return msgs
 
     def get_chat_list(self) -> list:
-        """获取所有有消息记录的会话列表"""
+        """获取所有有消息记录的会话列表（含各账号的会话）"""
         result = []
         for path in self.base_dir.glob("*.json"):
+            if path.name.endswith(".meta.json"):
+                continue
             try:
                 with open(path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                 msgs = data.get("messages", [])
+                m = re.match(r"^a(\d+)_", path.name)
                 result.append({
                     "chat_name": data.get("chat_name", path.stem),
                     "job_name": data.get("job_name", ""),
+                    "account_index": data.get(
+                        "account_index", int(m.group(1)) if m else 0),
                     "updated_at": data.get("updated_at", ""),
                     "message_count": len(msgs),
                     "last_message": msgs[-1] if msgs else None,
@@ -413,7 +473,7 @@ class MessageStore:
         """获取一个会话的完整详情（含消息列表，优先走缓存）"""
         if self._cache_valid(chat_name):
             return self._cache_get(chat_name)
-        path = self._path(chat_name)
+        path = self._read_path(chat_name)
         try:
             if path.exists():
                 with open(path, "r", encoding="utf-8") as f:
@@ -442,11 +502,16 @@ class MessageStore:
         """
         result = []
         for path in self.base_dir.glob("*.json"):
+            if path.name.endswith(".meta.json"):
+                continue
             try:
                 with open(path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                 msgs = data.get("messages", [])
                 chat_name = data.get("chat_name", path.stem)
+                m = re.match(r"^a(\d+)_", path.name)
+                account_index = data.get(
+                    "account_index", int(m.group(1)) if m else 0)
                 # 计算未读数：sender=hr 且未读标记
                 unread_count = sum(1 for m in msgs
                                     if m.get("sender") == "hr"
@@ -461,6 +526,7 @@ class MessageStore:
                     last_content = last_msg.get("content", "") or last_msg.get("text", "")
                 result.append({
                     "chat_name": chat_name,
+                    "account_index": account_index,
                     "job_name": data.get("job_name", ""),
                     "updated_at": data.get("updated_at", ""),
                     "message_count": len(msgs),
@@ -478,7 +544,7 @@ class MessageStore:
         """标记一个会话的所有 HR 消息为已读。"""
         lock = self._get_lock(chat_name)
         with lock:
-            path = self._path(chat_name)
+            path = self._read_path(chat_name)
             try:
                 if path.exists():
                     with open(path, "r", encoding="utf-8") as f:
@@ -487,8 +553,7 @@ class MessageStore:
                         if m.get("sender") == "hr" or not m.get("is_mine", False):
                             m["is_read"] = True
                     data["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    with open(path, "w", encoding="utf-8") as f:
-                        json.dump(data, f, ensure_ascii=False, indent=2)
+                    write_json_atomic(path, data)
                     self._cache_put(chat_name, data)
             except Exception as e:
                 import logging

@@ -33,9 +33,14 @@ from boss_bot.config import (
 from boss_bot.rules import RuleEngine
 from boss_bot.intent import classify
 from boss_bot.prompts import SYSTEM_PROMPT, build_user_prompt
-from boss_bot.reply_record import ReplyRecord, ReplyRecordStore
+from boss_bot.reply_record import ReplyRecord, ReplyRecordStore, _get_reply_store
 
 logger = logging.getLogger(__name__)
+
+# 单次 AI 请求超时（秒）。不设超时会在网络异常时长时间挂住回复线程。
+AI_REQUEST_TIMEOUT = 30
+# 一条消息最多尝试几个 AI 接口（容灾链常有二十多个，全试会拖死回复线程）
+AI_MAX_ATTEMPTS = 4
 
 # 意图 -> 动作/话术模板（从个人画像渲染占位符）
 INTENT_REPLIES = {
@@ -104,6 +109,33 @@ def _is_rejection(message: str) -> bool:
     return False
 
 
+def conversation_rejected(dialog: list) -> bool:
+    """这段对话自己是否以 HR 的拒绝收尾。
+
+    只看传进来的这一份对话，不做任何跨会话、按昵称的拼接：BOSS 只显示"胡女士""杨女士"
+    这类称呼，同一个昵称背后往往是不同的人，唯一可信的依据就是这段记录自身的收尾。
+
+    规则：HR 发的最后一条文本消息命中拒绝关键词 → True；
+    拒绝之后 HR 又发过别的消息 → False（对话还在继续，不算已拒绝）。
+
+    Args:
+        dialog: 同一段会话的消息列表 [{"text"/"content", "is_mine", "type"}]
+
+    Returns:
+        True 表示这段对话被 HR 拒绝了，False 表示没拒绝或根本没有聊天记录
+    """
+    last_hr_text = ""
+    for msg in dialog or []:
+        if msg.get("is_mine"):
+            continue
+        if (msg.get("type") or "text") != "text":
+            continue
+        content = (msg.get("text") or msg.get("content") or "").strip()
+        if content:
+            last_hr_text = content
+    return bool(last_hr_text) and _is_rejection(last_hr_text)
+
+
 def _is_self_intro(message: str) -> bool:
     """检测消息是否是自我介绍（用于检测重复发送）。
 
@@ -120,6 +152,47 @@ def _is_self_intro(message: str) -> bool:
         if marker in text:
             return True
     return False
+
+
+# ─────────────────────────────────────────────
+# 骗子职业关键词检测（不调用 AI，纯关键词匹配）
+# 命中 2 个以上关键词才判定为骗子，避免误杀
+# ─────────────────────────────────────────────
+SCAM_KEYWORDS = [
+    "日结", "居家办公", "远程办公", "兼职", "时间自由",
+    "高额提成", "礼物提成", "客流奖", "签单奖",
+    "主播", "直播", "播日", "无经验也可", "免费培训",
+    "月入", "保底", "日薪", "时薪",
+    "0门槛", "零门槛", "上手简单", "小白可做",
+    "不限学历不限经验",
+    "生活照", "身高体重", "底薪几千", "上万",
+]
+
+
+def _is_scam_job(message: str, job_name: str = "") -> tuple:
+    """检测是否是骗子职业。返回 (is_scam, reason)。
+
+    通过关键词匹配判断，命中 2 个以上关键词才判定为骗子，
+    避免单一关键词误杀正常岗位。
+
+    Args:
+        message: HR 发来的消息文本
+        job_name: 岗位名称（可选）
+
+    Returns:
+        (是否骗子, 原因说明)。命中时 reason 包含命中的关键词列表；
+        未命中时 reason 为空字符串。
+    """
+    if not message and not job_name:
+        return False, ""
+    text = (message + " " + job_name).lower()
+    matched = []
+    for kw in SCAM_KEYWORDS:
+        if kw in text:
+            matched.append(kw)
+    if len(matched) >= 2:
+        return True, f"疑似骗子岗位（命中: {', '.join(matched)}）"
+    return False, ""
 
 
 def _is_duplicate_reply(message: str, history: list,
@@ -223,7 +296,7 @@ class ReplyEngine:
         self._hour_start = time.time()
         self._cache = ReplyCache()
         self._self_evolve = self_evolve
-        self._record_store = ReplyRecordStore()
+        self._record_store = _get_reply_store()
         self._account_name = account_name
         self._account_index = account_index
         # message_store 实例（可选），用于获取完整对话历史传给 AI
@@ -233,6 +306,14 @@ class ReplyEngine:
         self._last_ai_user_prompt: Optional[str] = None
         self._last_ai_model: str = ""
         self._last_ai_raw_response: Optional[str] = None
+        # 运行时可调项 — 主循环热重载会刷新；默认取 config 快照
+        self._ai_providers: list = list(config.AI_PROVIDERS)
+        self._min_delay: float = MIN_DELAY
+        self._max_delay: float = MAX_DELAY
+        self._max_replies_per_hour: int = config.MAX_REPLIES_PER_HOUR
+        self._ai_max_tokens: int = config.AI_MAX_TOKENS
+        self._ai_fail_action: str = config.AI_FAIL_ACTION
+        self._ai_rate_limit_wait: int = config.AI_RATE_LIMIT_WAIT
 
     # ---------- 决策入口 ----------
 
@@ -273,24 +354,18 @@ class ReplyEngine:
         return _is_duplicate_reply(message, history, similarity_threshold)
 
     def _has_been_rejected(self, history: list) -> bool:
-        """检查对话历史中 HR 是否已经拒绝过。
+        """检查这段对话是否以 HR 的拒绝收尾。
 
-        遍历所有 HR 消息，如果任何一条命中拒绝关键词，则认为已经被拒绝。
+        只认最后一条 HR 消息：历史上出现过拒绝、但 HR 后来又主动说过话的，
+        说明对话还在继续，不能算已拒绝。
 
         Args:
-            history: 完整对话历史
+            history: 同一段会话的消息列表
 
         Returns:
             True 表示 HR 已拒绝过，False 表示未拒绝
         """
-        if not history:
-            return False
-        for msg in history:
-            if not msg.get("is_mine"):
-                content = (msg.get("text") or msg.get("content") or "").strip()
-                if _is_rejection(content):
-                    return True
-        return False
+        return conversation_rejected(history)
 
     def _has_sent_self_intro(self, history: list) -> bool:
         """检查对话历史中是否已经发送过自我介绍。
@@ -320,11 +395,10 @@ class ReplyEngine:
         Returns:
             (动作类型, 回复内容, 元信息)
         """
-        # 如果有 message_store 实例且指定了 chat_name，
-        # 优先从 message_store.get_full_dialog 获取前 30 条对话作为完整上下文，
-        # 这样AI能看到所有HR消息+所有我的回复+时间顺序
-        # 关键修改：limit=30，确保AI能看到前30句完整对话
-        if self._message_store is not None and chat_name:
+        # 只有调用方没给出对话列表（比如只传了一条消息文本）时，才回落到 store 里的历史。
+        # 主循环已经按"岗位必须一致"校验过再选历史了，这里不能再按昵称覆盖：
+        # 会话文件以昵称存，两个"杨女士"会共用同一个文件。
+        if self._message_store is not None and chat_name and not isinstance(messages, list):
             try:
                 full_dialog = self._message_store.get_full_dialog(chat_name, limit=30)
                 if full_dialog:
@@ -349,9 +423,9 @@ class ReplyEngine:
                 logger.debug(f"[自进化] 评估历史回复异常: {e}")
 
         # ── 0. HR 拒绝检测（最高优先级，不调用 AI，直接礼貌接受）──
-        # 检测两种场景：
-        #   a) 最新消息就是拒绝 → 礼貌接受
-        #   b) 历史中 HR 已拒绝过，且最新消息不是新的邀约/提问 → 不再推销
+        # 检测两种场景，判定依据都只是"这一段对话自己"：
+        #   a) HR 最后一条消息就是拒绝 → 礼貌接受
+        #   b) HR 在这条消息之前已经拒绝过，且这条消息没有重新邀约/兴趣信号 → 不再推销
         if latest and _is_rejection(latest):
             reply = random.choice(REJECTION_REPLIES)
             logger.info(f"[拒绝检测] HR拒绝，礼貌接受: {reply[:30]}")
@@ -367,26 +441,52 @@ class ReplyEngine:
             )
             return ("text", reply, meta)
 
-        # 历史中已拒绝过，且最新消息没有明确邀约/兴趣信号 → 不再推销，跳过
-        if self._has_been_rejected(history) and latest:
-            # 检查最新消息是否有明确的邀约或兴趣信号（如"再聊聊""约面试"）
-            re_engage_signals = ["再聊聊", "约面试", "可以聊聊", "聊聊看",
-                                 "有兴趣", "感兴趣", "再考虑",
-                                 "面试", "来公司", "约一下"]
-            is_re_engage = any(sig in latest for sig in re_engage_signals)
-            if not is_re_engage:
-                logger.info(f"[拒绝检测] HR历史已拒绝，最新消息无重新邀约信号，跳过推销")
-                meta["source"] = "rejection"
-                meta["intent"] = "rejection"
-                self._log_decision(chat_name, latest, meta, "none", decision_start)
+        # HR 在这条消息之前拒绝过（拒绝是它前面最后一条 HR 文本），且这条消息没有明确
+        # 邀约/兴趣信号 → 不再推销，跳过
+        if latest:
+            prior_hr_messages = [m for m in history
+                                 if not m.get("is_mine")
+                                 and (m.get("type") or "text") == "text"][:-1]
+            if conversation_rejected(prior_hr_messages):
+                # 检查最新消息是否有明确的邀约或兴趣信号（如"再聊聊""约面试"）
+                re_engage_signals = ["再聊聊", "约面试", "可以聊聊", "聊聊看",
+                                     "有兴趣", "感兴趣", "再考虑",
+                                     "面试", "来公司", "约一下"]
+                is_re_engage = any(sig in latest for sig in re_engage_signals)
+                if not is_re_engage:
+                    logger.info(f"[拒绝检测] 该会话HR先前已拒绝，最新消息无重新邀约信号，跳过推销")
+                    meta["source"] = "rejection"
+                    meta["intent"] = "rejection"
+                    self._log_decision(chat_name, latest, meta, "none", decision_start)
+                    self._add_record(
+                        chat_name=chat_name, job_name=job_name, received_message=latest,
+                        reply_content=None, reply_source="skip",
+                        reply_intent="rejection",
+                        reply_reason="该会话聊天记录以HR拒绝收尾且无重新邀约信号，跳过推销避免骚扰",
+                        is_skipped=True, skip_reason="该会话HR已拒绝，不再推销",
+                    )
+                    return ("none", None, meta)
+
+        # ── 0.5. 骗子职业检测（不调用 AI，纯关键词匹配，命中2个以上判定）──
+        # 在规则/意图/AI 之前拦截，避免对骗子岗位生成回复
+        if latest:
+            is_scam, scam_reason = _is_scam_job(latest, job_name or "")
+            if is_scam:
+                reply = (
+                    "您好，感谢您的介绍。不过我的求职方向是数据分析岗位，"
+                    "跟这个岗位不太匹配，就不耽误您时间了，祝您招聘顺利~"
+                )
+                logger.info(f"[骗子过滤] {scam_reason}，已自动拒绝")
+                meta["source"] = "scam_filter"
+                meta["intent"] = "scam_filter"
+                self._log_decision(chat_name, latest, meta, "text", decision_start)
                 self._add_record(
                     chat_name=chat_name, job_name=job_name, received_message=latest,
-                    reply_content=None, reply_source="skip",
-                    reply_intent="rejection",
-                    reply_reason="HR历史已拒绝且无重新邀约信号，跳过推销避免骚扰",
-                    is_skipped=True, skip_reason="HR历史已拒绝，不再推销",
+                    reply_content=reply, reply_source="scam_filter",
+                    reply_intent="scam_filter",
+                    reply_reason=f"骗子职业过滤命中，{scam_reason}",
                 )
-                return ("none", None, meta)
+                return ("text", reply, meta)
 
         # ── 1. 关键词规则直通（最高优先级）──
         if latest:
@@ -478,7 +578,7 @@ class ReplyEngine:
         # 3. AI 生成回复（带多轮历史）
         # 注意：自动回复AI始终开启，不受 ai.enabled 开关控制
         # ai.enabled 仅控制打招呼时的AI岗位解析，回复必须句句有回应
-        if any(config.AI_API_KEYS):
+        if any(pg.get("api_key") or pg.get("key") for pg in (self._ai_providers or config.AI_PROVIDERS)):
             logger.info("[AI回复] 规则/意图未命中，调用 AI 生成回复...")
             ai_reply = self._ask_ai(latest, boss_name, job_name, history)
             if ai_reply:
@@ -524,7 +624,7 @@ class ReplyEngine:
             logger.warning("[AI回复] 主备 API 均失败")
 
         # 4. 兜底
-        if config.AI_FAIL_ACTION == "default":
+        if self._ai_fail_action == "default":
             logger.info("[默认回复] 使用兜底话术")
             meta["source"] = "default"
             self._log_decision(chat_name, latest, meta, "text", decision_start)
@@ -533,7 +633,7 @@ class ReplyEngine:
                 chat_name=chat_name, job_name=job_name, received_message=latest,
                 reply_content=config.DEFAULT_REPLY, reply_source="default",
                 reply_intent=meta["intent"],
-                reply_reason="AI调用失败(AI_FAIL_ACTION=default)，使用兜底话术",
+                reply_reason="AI调用失败(ai.fail_action=default)，使用兜底话术",
             )
             return ("text", config.DEFAULT_REPLY, meta)
 
@@ -631,7 +731,7 @@ class ReplyEngine:
                 return reply
             except Exception as e:
                 if attempt == 0 and self._is_rate_limit_error(e):
-                    wait = config.AI_RATE_LIMIT_WAIT
+                    wait = self._ai_rate_limit_wait
                     logger.warning(f"[{api_name}] API 限流(429)，等待 {wait} 秒后重试...")
                     logger.info(f"[ai_call] api={api_name} ok=False error=rate_limit wait={wait}")
                     time.sleep(wait)
@@ -667,8 +767,8 @@ class ReplyEngine:
             logger.info(f"[缓存命中] 跳过 API 调用，直接返回缓存回复")
             return cached
 
-        # 检查是否有配置模型
-        providers = config.AI_PROVIDERS
+        # 检查是否有配置模型（热重载后以实例属性为准）
+        providers = self._ai_providers or config.AI_PROVIDERS
         if not providers:
             logger.info("未配置任何 AI 模型")
             return None
@@ -677,16 +777,35 @@ class ReplyEngine:
         shuffled = list(providers)
         random.shuffle(shuffled)
 
+        # 容灾链可能有二十多个接口，不设上限的话一条消息最坏要串行等完全部
+        deadline = time.time() + AI_REQUEST_TIMEOUT * AI_MAX_ATTEMPTS
+        attempts = 0
+
         for i, provider in enumerate(shuffled):
-            api_key = provider["key"]
-            model = provider["model"]
-            base_url = provider["url"]
+            if attempts >= AI_MAX_ATTEMPTS:
+                logger.info(f"已尝试 {attempts} 个 AI 接口仍未成功，本条改用兜底策略")
+                break
+            if time.time() > deadline:
+                logger.warning("AI 调用超出时间预算，本条改用兜底策略")
+                break
+            attempts += 1
+
+        for i, provider in enumerate(shuffled):
+            # 兼容两种 provider 字段命名：config 快照用 key/url，热重载用 api_key/api_base
+            api_key = provider.get("key") or provider.get("api_key") or ""
+            model = provider.get("model") or ""
+            base_url = provider.get("url") or provider.get("api_base") or ""
+            timeout = provider.get("timeout") or AI_REQUEST_TIMEOUT
             provider_name = f"{model}#{i+1}"
+            if not (api_key and model and base_url):
+                logger.warning(f"[{provider_name}] 配置不完整，跳过")
+                continue
 
             try:
                 from openai import OpenAI
 
-                client = OpenAI(api_key=api_key, base_url=base_url)
+                client = OpenAI(api_key=api_key, base_url=base_url,
+                                timeout=timeout, max_retries=0)
                 reply = self._call_with_rate_limit_retry(
                     client, model, message, boss_name, job_name, history, provider_name)
                 if reply:
@@ -709,7 +828,7 @@ class ReplyEngine:
         user_prompt = build_user_prompt(boss_name, job_name, message, history)
         response = client.chat.completions.create(
             model=model,
-            max_tokens=config.AI_MAX_TOKENS,
+            max_tokens=self._ai_max_tokens,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_prompt},
@@ -726,8 +845,8 @@ class ReplyEngine:
     # ---------- 频控与延迟 ----------
 
     def wait_human_delay(self):
-        """模拟人类操作延迟"""
-        delay = random.uniform(MIN_DELAY, MAX_DELAY)
+        """模拟人类操作延迟（区间可被主循环热重载更新）"""
+        delay = random.uniform(self._min_delay, self._max_delay)
         logger.debug(f"等待 {delay:.1f} 秒...")
         time.sleep(delay)
 
@@ -737,7 +856,7 @@ class ReplyEngine:
         if now - self._hour_start > 3600:
             self._reply_count = 0
             self._hour_start = now
-        return self._reply_count < config.MAX_REPLIES_PER_HOUR
+        return self._reply_count < self._max_replies_per_hour
 
     def record_reply(self):
         """记录一次回复"""

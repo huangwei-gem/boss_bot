@@ -124,8 +124,11 @@ class SelfEvolveEngine:
         self.enabled = (config or {}).get("enabled", True)
         self.log_cb = log_callback
         self._data_file = Path(data_file) if data_file else _EVOLUTION_DATA_FILE
-        # 质量评分数据文件（评分历史、规则调整、模板优化记录）
-        self._quality_data_file = _QUALITY_DATA_FILE
+        # 质量数据（规则调整、模板效果）跟着账号走：共用一个文件的话
+        # 账号2 的回复效果会算到账号1 头上。主账号仍用原文件名，兼容已有数据。
+        self._quality_data_file = _QUALITY_DATA_FILE.with_name(
+            self._data_file.stem.replace("evolution", "self_evolve") + ".json"
+        )
         self._lock = threading.Lock()
 
         # 进化数据结构

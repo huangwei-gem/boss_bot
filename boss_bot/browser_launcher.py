@@ -31,11 +31,16 @@ from urllib.request import urlopen
 from urllib.error import URLError
 from typing import Optional
 
+from boss_bot.unified_config import resolve_path
+
 logger = logging.getLogger("browser_launcher")
 
 # 平台检测
 _IS_MACOS = platform.system().lower() == "darwin"
 _IS_WINDOWS = platform.system().lower() == "windows"
+
+# 实测承载 BOSS 直聘登录态的 Cookie 名（缺这些或过期即需要重新登录）
+BOSS_AUTH_COOKIES = ("wt2", "zp_at", "bst", "wbg")
 
 
 # ──────────────────────────────────────────────────────────────
@@ -366,7 +371,10 @@ def _detect_default_browser() -> str:
 def _find_best_browser_path(browser_type: str = "chrome") -> tuple:
     """自动查找最佳浏览器路径
 
-    优先级：用户偏好 > 系统默认 > 配置指定 > 按优先级兜底
+    BOSS 直聘有反爬风控，原版 Chrome/Edge 会被 navigator.webdriver 等检测点识别，
+    因此项目内置的便携破解版（cloakbrowser/）优先级高于系统默认浏览器。
+
+    优先级：用户显式偏好 > 内置破解版 > 配置指定 > 系统默认 > 兜底
 
     Args:
         browser_type: 配置指定的浏览器类型，如 "chrome", "edge", "chromium"
@@ -382,16 +390,20 @@ def _find_best_browser_path(browser_type: str = "chrome") -> tuple:
     if _preferred_browser and _preferred_browser in available:
         return (available[_preferred_browser], _preferred_browser)
 
-    # 2. 系统默认浏览器
-    default = _detect_default_browser()
-    if default and default in available:
-        return (available[default], default)
+    # 2. 项目内置破解版（反检测），高于系统默认浏览器
+    if "portable" in available:
+        return (available["portable"], "portable")
 
     # 3. 配置指定的浏览器类型
     if browser_type in available:
         return (available[browser_type], browser_type)
 
-    # 4. 按优先级兜底: portable > chrome > edge > chromium
+    # 4. 系统默认浏览器
+    default = _detect_default_browser()
+    if default and default in available:
+        return (available[default], default)
+
+    # 5. 按优先级兜底: portable > chrome > edge > chromium
     for key in ("portable", "chrome", "edge", "chromium"):
         if key in available:
             return (available[key], key)
@@ -544,11 +556,18 @@ class BrowserInstance:
         return self._get_active().refresh()
 
     def close_current_tab(self):
-        """关闭当前标签页"""
-        if self._page is not None:
-            self._page.close_current_tab()
-        elif self._tab is not None:
-            self._tab.close()
+        """关闭本实例包装的那个标签页（精确关闭，不影响其它标签页）。
+
+        DrissionPage 4.1 的标签页对象只有 close()，没有 close_current_tab()；
+        而浏览器级对象的 close() 会带走整个浏览器，所以按对象类型区分处理。
+        """
+        obj = self._page if self._page is not None else self._tab
+        if obj is None:
+            return
+        if hasattr(obj, "get_tabs"):
+            logger.warning("close_current_tab 作用在浏览器级对象上，已跳过以避免关闭整个浏览器")
+            return
+        obj.close()
 
     def quit(self):
         """关闭浏览器"""
@@ -611,6 +630,9 @@ class BrowserInstance:
         """
         try:
             cookies = self._get_all_cookies()
+            filepath = str(resolve_path(filepath))
+            if filepath in ("", "."):
+                raise ValueError("未指定 Cookie 保存路径")
             with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(cookies, f, ensure_ascii=False, indent=2)
             logger.info(f"已保存 {len(cookies)} 个 Cookie 到 {filepath}")
@@ -629,6 +651,9 @@ class BrowserInstance:
         Returns:
             加载成功返回 True，文件不存在或加载失败返回 False
         """
+        filepath = str(resolve_path(filepath))
+        if filepath in ("", "."):
+            return False
         if not os.path.exists(filepath):
             return False
         try:
@@ -730,6 +755,11 @@ def launch_browser(
             )
 
     logger.info(f"浏览器路径 ({browser_type}): {chrome_path}")
+    if browser_type != "portable":
+        logger.warning(
+            "未使用项目内置破解版浏览器，BOSS 直聘风控可能拦截本次会话；"
+            "请将 cloakbrowser/chrome.exe 放到项目根目录，或在配置中指定其路径。"
+        )
 
     if _IS_MACOS:
         return _launch_macos(
@@ -873,6 +903,7 @@ def _launch_windows(
     co.set_argument('--no-first-run')
     co.set_argument('--no-default-browser-check')
     co.set_argument('--disable-features=DnsOverHttps')
+    co.set_argument('--disable-blink-features=AutomationControlled')
     co.set_argument(f'--window-size={viewport_width},{viewport_height}')
 
     # 设置用户数据目录（多账号隔离）
@@ -880,9 +911,12 @@ def _launch_windows(
         os.makedirs(user_data_dir, exist_ok=True)
         co.set_argument(f'--user-data-dir={user_data_dir}')
 
-    # 设置调试端口（多账号时每个账号使用不同端口）
+    # 设置调试端口（多账号时每个账号使用不同端口）。
+    # 必须走 set_local_port：DrissionPage 用 co.address 决定连哪个端口，
+    # 只加 --remote-debugging-port 参数的话 DrissionPage 仍按默认 9222 启动，
+    # 表现为所有账号挤同一个端口、多账号互相抢占浏览器。
     if port > 0:
-        co.set_argument(f'--remote-debugging-port={port}')
+        co.set_local_port(port)
 
     if headless:
         co.set_argument('--headless=new')
@@ -1448,8 +1482,10 @@ def check_cookie_valid_simple(cookie_file: str) -> dict:
         "current_url": "",
         "checks": {
             "file_exists": False,
-            "has_wbct": False,      # wbct 是 BOSS 直聘的关键登录 Cookie
-            "has_boss_token": False,
+            "has_auth_cookie": False,   # 是否含 BOSS 登录字段
+            "expired": False,           # 登录字段是否全部过期
+            "expires_in_days": None,    # 最短剩余天数
+            "cookie_names": [],
         },
     }
 
@@ -1466,21 +1502,51 @@ def check_cookie_valid_simple(cookie_file: str) -> dict:
             result["reason"] = "Cookie 文件为空"
             return result
 
-        # 检查关键 Cookie 字段
+        now = time.time()
+        auth_left = []          # 登录类 Cookie 各自的剩余有效秒数
+        found_names = []
         for c in cookies:
-            name = c.get("name", "") if isinstance(c, dict) else ""
-            if name == "wbct":
-                result["checks"]["has_wbct"] = True
-            if name in ("boss_token", "token", "wt2"):
-                result["checks"]["has_boss_token"] = True
+            if not isinstance(c, dict):
+                continue
+            name = c.get("name", "")
+            if name not in BOSS_AUTH_COOKIES:
+                continue
+            found_names.append(name)
+            expires = c.get("expires") or c.get("expirationDate") or -1
+            try:
+                expires = float(expires)
+            except (TypeError, ValueError):
+                expires = -1
+            # expires < 0 表示会话级 Cookie（关浏览器即失效），无法判断时长
+            auth_left.append(expires - now if expires > 0 else -1.0)
 
-        # 简单检测：只要有 wbct 或 boss_token 就认为可能有效
-        if result["checks"]["has_wbct"] or result["checks"]["has_boss_token"]:
-            result["valid"] = True
-            result["logged_in"] = True
+        result["checks"]["has_auth_cookie"] = bool(found_names)
+        result["checks"]["cookie_names"] = found_names
+
+        if not found_names:
+            result["reason"] = (
+                f"Cookie 文件缺少登录字段（需要 {'/'.join(BOSS_AUTH_COOKIES)} 之一），"
+                f"共 {len(cookies)} 条 Cookie"
+            )
             return result
 
-        result["reason"] = "Cookie 文件缺少关键登录字段（wbct/boss_token）"
+        # 只要还有一条登录 Cookie 没过期就认为可能可用；全部过期则明确报失效
+        usable = [s for s in auth_left if s == -1.0 or s > 0]
+        if not usable:
+            oldest = max(auth_left)
+            result["checks"]["expired"] = True
+            result["reason"] = f"登录 Cookie 已于 {-int(oldest / 86400)} 天前过期，请重新登录"
+            return result
+
+        timed = [s for s in usable if s > 0]
+        days_left = round(min(timed) / 86400, 1) if timed else None
+        result["valid"] = True
+        result["logged_in"] = True
+        result["checks"]["expires_in_days"] = days_left
+        result["reason"] = (
+            f"登录 Cookie 齐全（{', '.join(found_names)}）"
+            + (f"，最短剩余 {days_left} 天" if days_left is not None else "，含会话级 Cookie")
+        )
         return result
     except Exception as e:
         result["reason"] = f"Cookie 文件解析失败: {e}"

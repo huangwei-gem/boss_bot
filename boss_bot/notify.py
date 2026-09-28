@@ -44,10 +44,9 @@ class Notifier:
         with self._lock:
             records = self._records()
             records.append(record)
-            self.path.parent.mkdir(parents=True, exist_ok=True)
             try:
-                with open(self.path, "w", encoding="utf-8") as f:
-                    json.dump(records[-self.MAX_RECORDS:], f, ensure_ascii=False, indent=2)
+                from boss_bot.unified_config import write_json_atomic
+                write_json_atomic(self.path, records[-self.MAX_RECORDS:])
             except Exception as e:
                 logger.error(f"写入通知记录失败: {e}")
 

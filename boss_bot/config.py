@@ -18,6 +18,7 @@ from boss_bot.unified_config import (
     BASE_DIR,
     USER_PROFILE_FILE,
     BOT_CONFIG_FILE,
+    resolve_path,
     render_template,
     load_user_profile,
     _parse_ai_providers,
@@ -55,7 +56,7 @@ CHAT_URL = _cfg.reply.chat_url
 
 # ===================== 登录配置 =====================
 
-COOKIE_FILE = _cfg.login.cookie_file
+COOKIE_FILE = str(resolve_path(_cfg.login.cookie_file))
 
 # ===================== 个人画像配置 =====================
 

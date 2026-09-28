@@ -373,44 +373,94 @@ class BossChatHandler:
         logger.error(f"会话 [{expected_name}] 切换校验最终失败，应跳过该会话")
         return False
 
+    # 实测线上结构（2026-09-27 抓取 .chat-record 子树）：
+    #   ul.im-list > li.message-item[data-mid]（.item-myself / .item-friend）
+    #     .item-time > .time
+    #     .message-content > .text > i.message-status.status-delivery|status-read
+    #                        > p > .text-content
+    # 非文字消息（图片/简历卡片/系统条）没有 .text-content，旧实现因此读出空串。
+    _READ_ITEMS_JS = r"""
+    function one(root, sel) { return root ? root.querySelector(sel) : null; }
+    function textOf(el) { return el ? (el.textContent || '').replace(/\s+/g, ' ').trim() : ''; }
+    function statusOf(item) {
+        if (one(item, '.message-status.status-read')) return 'read';
+        if (one(item, '.message-status.status-delivery')) return 'delivery';
+        if (one(item, '.message-status.status-unread')) return 'unread';
+        return '';
+    }
+    function classBlob(item) {
+        var s = '';
+        item.querySelectorAll('*').forEach(function(e){
+            s += ' ' + (e.className || '').toString();
+        });
+        return s;
+    }
+    function classify(item, text) {
+        // 有 .text-content 就是普通文字 —— 必须先判，否则正文里出现
+        // "看了你的简历" 会被当成简历卡片
+        if (text) return 'text';
+        var cb = classBlob(item);
+        if (/竞争者|PK情况|职位详情/.test(textOf(item))
+            || /job-card|position|pk-|compet/i.test(cb)) return 'job_card';
+        if (/resume|attachment|file-item|send-file|doc-|pdf/i.test(cb)) return 'resume';
+        var img = one(item, '.message-content img, .text img');
+        if (img && !/avatar|figure|head/i.test(img.className || '')) return 'image';
+        if (one(item, 'audio, [class*="voice"]')) return 'voice';
+        if (one(item, '[class*="emoji"], [class*="sticker"]')) return 'emoji';
+        return 'other';
+    }
+    var out = [];
+    var nodes = document.querySelectorAll('.message-item, .message-tip-bar, .chat-record [class*="tip-bar"]');
+    for (var i = 0; i < nodes.length; i++) {
+        var it = nodes[i];
+        var cls = (it.className || '').toString();
+        if (/tip-bar/i.test(cls)) {
+            var tip = textOf(it);
+            if (tip) {   // 没有文字的系统条是占位噪音，丢掉
+                out.push({type: 'system', text: tip, time: '', is_mine: false,
+                          isFriend: false, status: '', mid: '', media: ''});
+            }
+            continue;
+        }
+        var body = textOf(one(it, '.text-content'));
+        var time = textOf(one(it, '.item-time .time')) || textOf(one(it, '.time'));
+        var img = one(it, '.message-content img');
+        var full = textOf(one(it, '.message-content')) || textOf(it);
+        var type = classify(it, body);
+        out.push({
+            type: type,
+            // 非文字消息退回到整条 innerText，不再留空白；卡片只保留标题行
+            text: body || (type === 'job_card' || type === 'resume'
+                           ? full.slice(0, 120) : full),
+            time: time,
+            isFriend: cls.indexOf('item-friend') >= 0,
+            is_mine: cls.indexOf('item-friend') < 0,
+            status: statusOf(it),
+            mid: it.getAttribute('data-mid') || '',
+            media: (img && img.src && type === 'image') ? img.src : ''
+        });
+    }
+    return JSON.stringify(out);
+    """
+
     def read_latest_messages(self, count: int = 5) -> List[Dict]:
-        """
-        读取当前聊天中最近的消息。
+        """读取当前聊天中最近的消息（结构见 _READ_ITEMS_JS 注释）。
 
-        实测 CSS（2026-09-09 浏览器验证）:
-        - 消息项: .message-item（li 元素，不是 div）
-        - 对方消息: .message-item.item-friend
-        - 我方消息: .message-item（无 item-friend class）
-        - 消息文字: .text-content
-        - 时间: .item-time .time
-
-        注意: DrissionPage 的 eles() 对 .message-item 返回 0，必须用 JS
+        Returns:
+            每条含 type/text/time/is_mine/status/mid/media；type 为
+            text|image|resume|job_card|emoji|voice|other|system
         """
         messages = []
         try:
             result = self.page.run_js(f'''(
                 function() {{
-                    var items = document.querySelectorAll(".message-item");
-                    var result = [];
-                    var start = Math.max(0, items.length - {count});
-                    for (var i = start; i < items.length; i++) {{
-                        var item = items[i];
-                        var textEl = item.querySelector(".text-content");
-                        var timeEl = item.querySelector(".item-time .time");
-                        var cls = item.className || "";
-                        result.push({{
-                            text: textEl ? textEl.textContent.trim() : "",
-                            time: timeEl ? timeEl.textContent.trim() : "",
-                            isFriend: cls.indexOf("item-friend") >= 0,
-                            is_mine: cls.indexOf("item-friend") < 0
-                        }});
-                    }}
-                    return JSON.stringify(result);
+                    {self._READ_ITEMS_JS}
                 }}
             )()''', as_expr=True)
 
             if result:
-                messages = json.loads(result)
+                all_items = json.loads(result)
+                messages = all_items[-count:] if count else all_items
 
             if messages:
                 boss_name = self.get_boss_name()
@@ -1141,11 +1191,15 @@ class BossChatHandler:
                             }
                         }
                         if (dialogVisible) return "dialog visible";
-                        return count > 0 ? "new_message" : "pending";
+                        return "pending";
                     }
                 )()''', as_expr=True)
-                if result in ("delivered", "new_message"):
-                    logger.info(f"简历送达验证通过（{result}）")
+                # 只认「消息列表里出现简历条目」这一种证据。
+                # 早先版本把"聊天里有任意消息"也当成功（new_message），于是任何有
+                # 历史消息的会话都会立刻返回 True → mark_resume_sent() 记下已发送 →
+                # resume_send_once 生效，那个会话再也收不到简历，而实际什么都没发出去。
+                if result == "delivered":
+                    logger.info("简历送达验证通过（消息列表出现简历条目）")
                     return True
             except Exception:
                 pass
@@ -1156,7 +1210,10 @@ class BossChatHandler:
     def check_health(self) -> str:
         """
         健康检查：检测登录态和验证码拦截。
-        返回: 'ok' | 'need_login' | 'captcha'
+        返回: 'ok' | 'need_login' | 'captcha' | 'unknown'
+
+        'unknown' 表示页面读不到（标签页已关/被跳转/JS 失败）。这种情况
+        不能当成 'ok'，否则风控拦截页会被误判为健康并继续自动操作。
         """
         if TEST_MODE:
             return "ok"
@@ -1174,7 +1231,7 @@ class BossChatHandler:
             )()''', as_expr=True)
             return result if result in ("ok", "captcha") else "ok"
         except Exception:
-            return "ok"
+            return "unknown"
 
     def close(self):
         """关闭浏览器

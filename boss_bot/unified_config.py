@@ -29,6 +29,68 @@ BOT_CONFIG_FILE = BASE_DIR / "bot_config.json"
 USER_PROFILE_FILE = BASE_DIR / "user_profile.json"
 OVERRIDES_FILE = BASE_DIR / "config_overrides.json"
 
+
+def write_json_atomic(path, data) -> None:
+    """原子写入 JSON：先写同目录临时文件，再 os.replace 覆盖目标。
+
+    直接 open(path, "w") 会先把文件截断再序列化，进程被杀掉或磁盘写满时就留下
+    半截 JSON；各存储的 _load() 遇到解析失败一律回退到空字典，等于静默清空
+    去重记录，表现为重启后重复回复、重复打招呼。
+
+    Args:
+        path: 目标文件路径（str / Path），父目录会自动创建
+        data: 可 json 序列化的对象
+    """
+    target = Path(str(path))
+    target.parent.mkdir(parents=True, exist_ok=True)
+    tmp = target.with_name(target.name + ".tmp")
+    try:
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, target)
+    except BaseException:
+        # 序列化中途失败要把临时文件清掉，否则目录里留下永远用不上的垃圾
+        try:
+            if tmp.exists():
+                tmp.unlink()
+        except OSError:
+            pass
+        raise
+
+
+def account_file(path, account_index: int) -> str:
+    """多账号数据分文件：账号0 沿用原路径（历史数据不迁移），其余加 _account_N。
+
+    两个账号共用一份 bot_state.json 时，账号2 会看到账号1 标记过的"已处理"消息
+    而不回复，人工接管/每日上限也会互相串。
+    """
+    if account_index <= 0:
+        return str(path)
+    p = Path(path)
+    return str(p.with_name(f"{p.stem}_account_{account_index}{p.suffix}"))
+
+
+def resolve_path(path) -> Path:
+    """把配置中的相对路径锚定到项目根目录。
+
+    配置文件里存的是 "zhipin_cookies.json" 这类相对路径，而进程 CWD 取决于启动方式
+    （start.bat 会先 cd 到 flask-version/）。不锚定的话同一份配置在不同启动方式下会
+    读写到不同文件，表现为登录态丢失。
+
+    Args:
+        path: 绝对或相对路径（str / Path）
+
+    Returns:
+        绝对 Path；空路径原样返回空 Path
+    """
+    p = Path(str(path).strip()) if path is not None else Path()
+    if str(p) in ("", "."):
+        return Path()
+    return p if p.is_absolute() else (BASE_DIR / p)
+
+
 # 默认打招呼话术
 DEFAULT_GREETING = (
     "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，"
@@ -264,6 +326,12 @@ class AIConfig:
     api_key: str = ""                    # 兼容旧格式
     api_base: str = "https://apihub.agnes-ai.com/v1"  # 兼容旧格式
     model: str = "agnes-2.5-flash"       # 兼容旧格式
+    custom_filter_keywords: list = field(default_factory=list)  # 用户自定义筛选关键词
+    custom_scoring_prompt: str = ""  # 用户自定义打分提示词（追加到系统默认提示词后）
+    # 容灾链是否跳过"体检明确不可用"的接口。关掉就是按原顺序硬试：
+    # 22 个接口里 16 个不可用时，单岗位判分会烧光 60s 预算并落到"默认通过"，
+    # 表现成"AI 筛岗没生效"。见 tools/e2e_live_boss.py 的耗时断言。
+    skip_unhealthy: bool = True
 
 
 @dataclass
@@ -357,10 +425,16 @@ class UnifiedConfig:
     log: LogConfig = field(default_factory=LogConfig)
     test_mode: bool = False
     test_page: str = ""
+    # 演练模式：照常搜索岗位、照常让 AI 判分和生成回复，只在最后一步不点发送。
+    # 用于换话术/换筛选标准后先确认"本来会发什么"，不消耗每日上限也不打扰 HR。
+    dry_run: bool = False
+    # 自进化：只做回复效果记录与评估（不自动改你写的规则/话术）
+    self_evolve_enabled: bool = True
 
     @classmethod
     def load(cls, config_path: Optional[str] = None,
-             profile_path: Optional[str] = None) -> "UnifiedConfig":
+             profile_path: Optional[str] = None,
+             overrides_path: Optional[str] = None) -> "UnifiedConfig":
         """加载统一配置。
 
         加载顺序：代码默认值 → JSON 配置文件 → 环境变量
@@ -368,6 +442,8 @@ class UnifiedConfig:
         Args:
             config_path: bot_config.json 路径，默认使用项目根目录下的
             profile_path: user_profile.json 路径，默认使用项目根目录下的
+            overrides_path: config_overrides.json 路径，默认使用项目根目录下的。
+                该文件是前端写入的运行时状态，测试需要隔离时指向一个不存在的路径。
 
         Returns:
             完整的 UnifiedConfig 实例
@@ -389,7 +465,7 @@ class UnifiedConfig:
 
         # ---- 加载 JSON 配置文件 ----
         bot_data = {}
-        cfg_path = Path(config_path) if config_path else BOT_CONFIG_FILE
+        cfg_path = Path(config_path or os.environ.get("BOSS_BOT_CONFIG") or BOT_CONFIG_FILE)
         if cfg_path.exists():
             try:
                 with open(cfg_path, "r", encoding="utf-8") as f:
@@ -408,9 +484,10 @@ class UnifiedConfig:
 
         # 加载覆盖文件
         overrides_data = {}
-        if OVERRIDES_FILE.exists():
+        ovr_path = Path(overrides_path) if overrides_path else OVERRIDES_FILE
+        if ovr_path.exists():
             try:
-                with open(OVERRIDES_FILE, "r", encoding="utf-8") as f:
+                with open(ovr_path, "r", encoding="utf-8") as f:
                     overrides_data = json.load(f)
             except (json.JSONDecodeError, OSError):
                 pass
@@ -433,6 +510,12 @@ class UnifiedConfig:
         if not isinstance(data, dict):
             return
 
+        # 演练模式 / 自进化记录：顶层开关，不属于任何子域
+        if "dry_run" in data:
+            self.dry_run = bool(data["dry_run"])
+        if "self_evolve_enabled" in data:
+            self.self_evolve_enabled = bool(data["self_evolve_enabled"])
+
         # 浏览器配置
         browser = data.get("browser", {})
         if isinstance(browser, dict):
@@ -451,6 +534,15 @@ class UnifiedConfig:
                 self.browser.proxy = str(browser["proxy"])
             if "browser_type" in browser:
                 self.browser.browser_type = str(browser["browser_type"])
+            # 浏览器可执行文件路径：browser_path 是 README/前端使用的名字，
+            # chrome_path 是内部字段名，两者都接受，显式配置优先于自动检测。
+            for key in ("browser_path", "chrome_path"):
+                if browser.get(key):
+                    self.browser.chrome_path = str(browser[key])
+            if browser.get("user_data_dir"):
+                self.browser.user_data_dir = str(browser["user_data_dir"])
+            if "debug_port" in browser:
+                self.browser.debug_port = int(browser["debug_port"])
 
         # 登录配置
         login = data.get("login", {})
@@ -509,6 +601,12 @@ class UnifiedConfig:
                     for i, p in enumerate(ai["providers"])
                     if isinstance(p, dict)
                 ]
+            if "custom_filter_keywords" in ai:
+                self.ai.custom_filter_keywords = list(ai["custom_filter_keywords"])
+            if "custom_scoring_prompt" in ai:
+                self.ai.custom_scoring_prompt = str(ai["custom_scoring_prompt"])
+            if "skip_unhealthy" in ai:
+                self.ai.skip_unhealthy = bool(ai["skip_unhealthy"])
 
         # 简历配置
         resume = data.get("resume", {})
@@ -528,10 +626,19 @@ class UnifiedConfig:
             if "self_intro" in resume:
                 self.resume.self_intro = str(resume["self_intro"])
 
+        # 打招呼总开关 — 显式配置优先。
+        # 之前这里只要 accounts 非空就无条件置 True，导致 bot_config.json / 前端
+        # 关掉「打招呼」完全无效（账号照样开始投递）。
+        greet_block = data.get("greet", {})
+        greet_enabled_explicit = isinstance(greet_block, dict) and "enabled" in greet_block
+        if greet_enabled_explicit:
+            self.greet.enabled = bool(greet_block["enabled"])
+
         # 账号/打招呼配置
         accounts = data.get("accounts", [])
         if isinstance(accounts, list) and accounts:
-            self.greet.enabled = True
+            if not greet_enabled_explicit:
+                self.greet.enabled = True
             parsed_accounts = []
             for acc in accounts:
                 if not isinstance(acc, dict):
@@ -719,6 +826,10 @@ class UnifiedConfig:
         self.test_mode = os.environ.get("BOSS_BOT_TEST_MODE", "") == "1"
         self.test_page = os.environ.get("BOSS_BOT_TEST_PAGE", "")
 
+        # 演练模式（命令行 --dry-run 经此变量下传，热重载不会丢）
+        if os.environ.get("BOSS_BOT_DRY_RUN", "") == "1":
+            self.dry_run = True
+
         # 浏览器：无头模式
         if os.environ.get("BOSS_BOT_HEADLESS", "") == "1":
             self.browser.headless = True
@@ -762,6 +873,8 @@ class UnifiedConfig:
             self.ai.fail_action = os.environ["AI_FAIL_ACTION"].lower()
         if os.environ.get("AI_RATE_LIMIT_WAIT"):
             self.ai.rate_limit_wait = int(os.environ["AI_RATE_LIMIT_WAIT"])
+        if os.environ.get("AI_SKIP_UNHEALTHY"):
+            self.ai.skip_unhealthy = os.environ["AI_SKIP_UNHEALTHY"].lower() != "false"
 
         # 回复配置
         if os.environ.get("PAUSE_ON_IMPORTANT"):
@@ -782,6 +895,15 @@ class UnifiedConfig:
             self.log.log_retention_days = int(os.environ["LOG_RETENTION_DAYS"])
         if os.environ.get("EVENT_LOG"):
             self.log.event_log_enabled = os.environ["EVENT_LOG"].lower() == "true"
+
+        # 单引擎运行模式（CLI --greet / --reply 通过此变量下传）。
+        # 必须走环境变量：主循环每轮热重载都会重新 load()，
+        # 只改内存里的 config 对象会在第一次热重载时被配置文件覆盖掉。
+        only_engine = os.environ.get("BOSS_BOT_ONLY_ENGINE", "").lower()
+        if only_engine == "greet":
+            self.reply.enabled = False
+        elif only_engine == "reply":
+            self.greet.enabled = False
 
     def _render_templates(self):
         """用个人画像渲染话术模板中的占位符。"""
@@ -841,13 +963,24 @@ class UnifiedConfig:
     def save(self, config_path: Optional[str] = None):
         """保存配置到 JSON 文件。
 
+        bot_config.json 里有 UnifiedConfig 没建模的顶层键（例如前端直接写入的
+        theme），to_dict() 不包含它们。整体覆盖写会把别的入口刚写进去的设置抹掉，
+        表现为"主题/高级设置在保存配置后弹回默认"，所以先读回旧文件再补空位。
+
         Args:
             config_path: 保存路径，默认为 bot_config.json
         """
         path = Path(config_path) if config_path else BOT_CONFIG_FILE
         data = self.to_dict()
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+        try:
+            if path.exists():
+                existing = json.loads(path.read_text(encoding="utf-8"))
+                if isinstance(existing, dict):
+                    for key, value in existing.items():
+                        data.setdefault(key, value)
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning(f"读取 {path.name} 以保留未建模字段失败: {e}")
+        write_json_atomic(path, data)
 
     def to_dict(self) -> dict:
         """将配置转为可序列化的字典。"""
@@ -860,6 +993,11 @@ class UnifiedConfig:
                 "custom_user_agent": self.browser.custom_user_agent,
                 "proxy": self.browser.proxy,
                 "browser_type": self.browser.browser_type,
+                # 这三项必须写回，否则 start.bat 里的 load().save() 会把用户
+                # 配置的破解版浏览器路径静默清掉
+                "browser_path": self.browser.chrome_path or "",
+                "user_data_dir": self.browser.user_data_dir or "",
+                "debug_port": self.browser.debug_port,
             },
             "login": {
                 "wait_timeout": self.login.wait_timeout,
@@ -883,6 +1021,9 @@ class UnifiedConfig:
                 "model": self.ai.model,
                 "match_threshold": self.ai.match_threshold,
                 "fail_action": self.ai.fail_action,
+                "custom_filter_keywords": list(self.ai.custom_filter_keywords),
+                "custom_scoring_prompt": self.ai.custom_scoring_prompt,
+                "skip_unhealthy": self.ai.skip_unhealthy,
                 "providers": [
                     {
                         "name": p.name,
@@ -925,6 +1066,11 @@ class UnifiedConfig:
                 }
                 for acc in self.greet.accounts
             ],
+            # 打招呼总开关必须写回，否则任何一次 save() 都会把
+            # bot_config.json 里的 greet 段整体抹掉，下次启动又自动变成启用
+            "greet": {
+                "enabled": self.greet.enabled,
+            },
             "reply": {
                 "enabled": self.reply.enabled,
                 "check_interval": self.reply.check_interval,
@@ -967,6 +1113,8 @@ class UnifiedConfig:
                 "contact": self.user_profile.contact,
                 "highlights": list(self.user_profile.highlights),
             },
+            "dry_run": self.dry_run,
+            "self_evolve_enabled": self.self_evolve_enabled,
         }
 
     def validate(self) -> list:
@@ -1098,9 +1246,22 @@ def load_config() -> dict:
 
 
 def save_config(cfg: dict) -> None:
-    """保存配置字典到 bot_config.json（兼容 auto_boss 接口）。"""
+    """保存配置字典到 bot_config.json（兼容 auto_boss 接口）。
+
+    前端 POST /api/config 会把整份配置回写，而 to_dict() 不含 theme 这类
+    未建模键 —— 不补空位的话，改完主题再点一次保存就把主题抹掉了。
+    """
+    data = dict(cfg)
+    try:
+        if BOT_CONFIG_FILE.exists():
+            existing = json.loads(BOT_CONFIG_FILE.read_text(encoding="utf-8"))
+            if isinstance(existing, dict):
+                for key, value in existing.items():
+                    data.setdefault(key, value)
+    except (json.JSONDecodeError, OSError) as e:
+        logger.warning(f"读取 bot_config.json 以保留未建模字段失败: {e}")
     with open(BOT_CONFIG_FILE, "w", encoding="utf-8") as f:
-        json.dump(cfg, f, ensure_ascii=False, indent=2)
+        json.dump(data, f, ensure_ascii=False, indent=2)
 
 
 def save_overrides(cfg: dict) -> None:

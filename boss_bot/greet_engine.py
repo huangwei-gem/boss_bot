@@ -24,15 +24,13 @@ import threading
 import hashlib
 import logging
 from datetime import datetime
-from functools import wraps
 from typing import Optional, Callable
-from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import URLError
 
-from boss_bot.unified_config import UnifiedConfig, BASE_DIR
+from boss_bot.unified_config import UnifiedConfig, BASE_DIR, write_json_atomic
 from boss_bot.browser_launcher import BrowserManager
-from boss_bot.reply_record import GreetRecordStore, GreetRecord
+from boss_bot.reply_record import GreetRecord, _get_greet_store
 
 # ─────────────────────────────────────────────
 # 路径常量
@@ -40,7 +38,6 @@ from boss_bot.reply_record import GreetRecordStore, GreetRecord
 DATA_DIR = BASE_DIR / "data"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-CHATS_LOG_FILE = DATA_DIR / "chats_log.json"
 CHATTED_DB_FILE = DATA_DIR / "chatted_jobs.json"
 CITY_DICT_FILE = DATA_DIR / "city_dict.json"
 AI_CACHE_FILE = DATA_DIR / "ai_cache.json"
@@ -124,30 +121,6 @@ CITY_CODES = {
 
 
 # ─────────────────────────────────────────────
-# 重试装饰器
-# ─────────────────────────────────────────────
-
-def retry(max_attempts: int = 3, base_delay: float = 2.0, backoff_factor: float = 2.0):
-    """重试装饰器：捕获 Exception，指数退避重试。"""
-    def decorator(func):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            last_exc = None
-            for attempt in range(1, max_attempts + 1):
-                try:
-                    return func(self, *args, **kwargs)
-                except Exception as e:
-                    last_exc = e
-                    if attempt < max_attempts:
-                        delay = base_delay * (backoff_factor ** (attempt - 1)) + random.uniform(0, 1)
-                        self._log("WARN", f"重试 {attempt}/{max_attempts}: {e}，等待 {delay:.1f}s")
-                        time.sleep(delay)
-            raise last_exc
-        return wrapper
-    return decorator
-
-
-# ─────────────────────────────────────────────
 # AI 分析器（多 AI 容灾链）
 # ─────────────────────────────────────────────
 
@@ -166,9 +139,21 @@ class AIProviderConfig:
 
 
 class AIAnalyzerChain:
-    """多 AI 容灾链：按顺序尝试多个 AI 接口，自动切换。"""
+    """多 AI 容灾链：按顺序尝试多个 AI 接口，自动切换。
+
+    容灾链可能有二十几个接口，每个 30s 超时。不加约束的话，一个岗位最坏要
+    串行等完全部接口（实测每个岗位 7~8 分钟），打招呼线程看起来就像卡死。
+    因此这里限制单岗位的尝试数量与总耗时，并对连续失败的接口做冷却。
+    """
 
     _cache_lock = threading.Lock()
+
+    # 单个岗位最多尝试多少个接口、最多花多少秒
+    MAX_ATTEMPTS_PER_JOB = 4
+    JOB_BUDGET_SECONDS = 60
+    # 接口失败后的冷却时间（秒）：鉴权/额度类错误冷却更久
+    COOLDOWN_AUTH_SECONDS = 1800
+    COOLDOWN_OTHER_SECONDS = 300
 
     def __init__(
         self,
@@ -177,6 +162,9 @@ class AIAnalyzerChain:
         cache_enabled: bool = True,
         cache_ttl_hours: int = 24,
         log_callback: Optional[Callable] = None,
+        custom_filter_keywords: list = None,
+        custom_scoring_prompt: str = "",
+        skip_unhealthy: bool = True,
     ):
         self.providers = []
         for p in providers:
@@ -190,11 +178,22 @@ class AIAnalyzerChain:
                 ))
             elif isinstance(p, AIProviderConfig):
                 self.providers.append(p)
+            elif hasattr(p, "name") and hasattr(p, "api_key"):
+                # duck typing: 支持 AIProvider dataclass 或任何具有相同属性的对象
+                self.providers.append(AIProviderConfig(
+                    name=getattr(p, "name", "AI"),
+                    api_key=getattr(p, "api_key", ""),
+                    api_base=getattr(p, "api_base", ""),
+                    model=getattr(p, "model", ""),
+                    timeout=getattr(p, "timeout", 30),
+                ))
 
         self.match_threshold = match_threshold
         self.cache_enabled = cache_enabled
         self.cache_ttl = cache_ttl_hours * 3600
         self.log_cb = log_callback
+        self.custom_filter_keywords = custom_filter_keywords or []
+        self.custom_scoring_prompt = custom_scoring_prompt or ""
 
         self.analyzed_count = 0
         self.match_count = 0
@@ -207,6 +206,61 @@ class AIAnalyzerChain:
         self.last_user_prompt = None
         self.last_model_name = ""
         self.last_raw_response = None
+        # 失败接口冷却表：provider.name -> 恢复时间戳
+        self._cooldown_until: dict = {}
+        # 是否按体检结果跳过已知不可用的接口
+        self._skip_unhealthy = skip_unhealthy
+        self._unhealthy_cache = None
+
+    HEALTH_STALE_SECONDS = 24 * 3600
+
+    def _unhealthy_names(self) -> set:
+        """体检在 24h 内明确标记"不可用"的接口名（缓存 5 分钟，避免每岗位读盘）。
+
+        容灾链的相对顺序不变，只是不再把 30s 预算浪费在已知打不通的接口上；
+        全部接口都被标记不可用时不生效（宁可慢，也不能完全不筛岗位）。
+        """
+        now = time.time()
+        if self._unhealthy_cache and now - self._unhealthy_cache[0] < 300:
+            return self._unhealthy_cache[1]
+        names: set = set()
+        try:
+            from boss_bot.ai_health import (HEALTH_FILE, STATUS_UNAVAILABLE,
+                                            provider_key, load_health)
+            data = load_health()
+            updated = data.get("updated_at") or ""
+            try:
+                from datetime import datetime as _dt
+                age = now - _dt.strptime(updated, "%Y-%m-%d %H:%M:%S").timestamp()
+            except ValueError:
+                age = self.HEALTH_STALE_SECONDS + 1  # 没有时间戳就当作过期
+            results = data.get("results") or {}
+            if age <= self.HEALTH_STALE_SECONDS and results:
+                for p in self.providers:
+                    entry = {"api_base": p.api_base, "model": p.model, "name": p.name}
+                    hit = results.get(provider_key(entry)) or results.get(
+                        provider_key(dict(entry, api_base=entry["api_base"] + "/")))
+                    if hit and hit.get("status") == STATUS_UNAVAILABLE:
+                        names.add(p.name)
+        except Exception as e:
+            self._log("DEBUG", f"读取 AI 体检结果失败，本次不跳过任何接口: {e}")
+            names = set()
+        self._unhealthy_cache = (now, names)
+        return names
+
+    def _cool_down(self, provider, error: Exception):
+        """把失败的接口临时拉黑，避免每个岗位都重踩同一个坑。
+
+        401/403/404/额度类错误短期内不会自己恢复，冷却时间长一些。
+        """
+        text = str(error).lower()
+        permanent = any(k in text for k in
+                        ("401", "403", "404", "free", "quota", "insufficient",
+                         "unauthorized", "invalid_api_key", "not found"))
+        seconds = (self.COOLDOWN_AUTH_SECONDS if permanent
+                   else self.COOLDOWN_OTHER_SECONDS)
+        self._cooldown_until[provider.name] = time.time() + seconds
+        self._log("WARN", f"接口 [{provider.name}] 冷却 {seconds // 60} 分钟")
 
     def _log(self, level: str, msg: str):
         if self.log_cb:
@@ -219,9 +273,14 @@ class AIAnalyzerChain:
         ).hexdigest()
 
     def analyze_job(self, job: dict) -> dict:
-        """分析单个岗位。依次尝试所有 provider，直到成功。"""
+        """分析单个岗位。依次尝试所有 provider，直到成功。
+
+        AI 完全不可用时返回带 `ai_error` 标记的结果，调用方据此区分
+        「AI 说这个岗位不匹配」和「AI 没给出判断」——两者的处理方式相反。
+        """
         if not self.providers:
-            return {"score": 50, "is_match": True, "reason": "未配置 AI 接口", "suggested_greeting": ""}
+            return {"score": 50, "is_match": True, "ai_error": True,
+                    "reason": "未配置 AI 接口，按默认话术通过", "suggested_greeting": ""}
 
         # 检查缓存
         if self.cache_enabled and self._resume_hash:
@@ -232,26 +291,50 @@ class AIAnalyzerChain:
                 self._log("INFO", f"缓存命中: {job.get('job_name', '')}")
                 return cache[cache_key]["result"]
 
-        # 依次尝试每个 provider
+        # 依次尝试 provider — 受单岗位尝试数与总耗时双重限制
         prompt = self._build_prompt(job)
         # 保存 prompt 信息供 GreetRecord 记录使用
         self.last_system_prompt = prompt[0]["content"] if len(prompt) > 0 else None
         self.last_user_prompt = prompt[1]["content"] if len(prompt) > 1 else None
         last_error = None
+        now = time.time()
+        deadline = now + self.JOB_BUDGET_SECONDS
+        attempts = 0
+        skipped_cooling = 0
+        unhealthy = self._unhealthy_names() if self._skip_unhealthy else set()
+        if unhealthy and len(unhealthy) >= len(self.providers):
+            # 一个都不剩说明体检结果本身不可信（或全部真挂了），照原顺序硬试
+            self._log("WARN", "体检显示所有接口都不可用，本轮不跳过任何接口")
+            unhealthy = set()
         for provider in self.providers:
             if not provider.is_valid():
                 self._log("WARN", f"AI 接口 '{provider.name}' 配置无效，跳过")
                 continue
+            if provider.name in unhealthy:
+                continue
+            until = self._cooldown_until.get(provider.name, 0)
+            if until > now:
+                skipped_cooling += 1
+                continue
+            if attempts >= self.MAX_ATTEMPTS_PER_JOB:
+                break
+            if time.time() >= deadline:
+                self._log("WARN", f"AI 分析超出 {self.JOB_BUDGET_SECONDS}s 预算，"
+                                  f"放弃剩余接口（已试 {attempts} 个）")
+                break
+            attempts += 1
             try:
                 self._log("INFO", f"通过 [{provider.name}] ({provider.model}) 分析...")
                 result = self._call_provider_api(provider, prompt)
+                self._cooldown_until.pop(provider.name, None)
                 self.last_model_name = provider.model
                 self.analyzed_count += 1
                 if result.get("is_match", False):
                     self.match_count += 1
 
-                # 写入缓存
-                if self.cache_enabled and self._resume_hash:
+                # 写入缓存 —— 只缓存真判断，超时/解析失败的结果缓存 24 小时
+                # 会让同一个岗位永远"默认通过"，等于悄悄跳过筛选
+                if self.cache_enabled and self._resume_hash and not result.get("ai_error"):
                     cache_key = self._make_cache_key(job.get("url", ""), self._resume_hash)
                     cache = self._load_cache()
                     cache[cache_key] = {
@@ -265,12 +348,19 @@ class AIAnalyzerChain:
 
             except Exception as e:
                 last_error = e
+                self._cool_down(provider, e)
                 self._log("WARN", f"[{provider.name}] 失败: {e}，尝试下一个...")
                 continue
 
+        if skipped_cooling:
+            self._log("INFO", f"{skipped_cooling} 个 AI 接口在冷却中，已跳过")
+        if unhealthy:
+            self._log("INFO", f"按体检结果跳过 {len(unhealthy)} 个已知不可用的 AI 接口")
+
         # 全部失败
         self._log("ERROR", f"所有 AI 接口均失败，最后错误: {last_error}")
-        return {"score": 50, "is_match": True, "reason": f"AI 分析异常: {last_error}，默认通过", "suggested_greeting": ""}
+        return {"score": 50, "is_match": True, "ai_error": True,
+                "reason": f"AI 分析异常: {last_error}，默认通过", "suggested_greeting": ""}
 
     def _call_provider_api(self, provider: AIProviderConfig, messages: list) -> dict:
         """调用指定 AI 接口。"""
@@ -304,13 +394,16 @@ class AIAnalyzerChain:
             if json_start >= 0 and json_end > json_start:
                 result = json.loads(content[json_start:json_end])
                 return result
-            else:
-                if content:
-                    return {"score": 50, "is_match": True, "reason": content[:200]}
-                raise ValueError("响应中未找到 JSON")
+            if not content:
+                # 空正文通常是推理模型把话都放在 reasoning_content 之外还没写完，
+                # 或者接口直接回了空 choices —— 和"格式不对"要能区分开
+                raise ValueError("模型未返回正文（content 与 reasoning_content 均为空）")
+            raise ValueError(f"响应里没有 JSON（前 60 字：{content[:60]}）")
         except (KeyError, IndexError, json.JSONDecodeError, ValueError) as e:
+            detail = f"响应缺少字段 {e.args[0]}" if isinstance(e, KeyError) else str(e)
             self._log("WARN", f"解析 AI 响应失败: {e}")
-            return {"score": 50, "is_match": True, "reason": "解析失败，默认通过"}
+            return {"score": 50, "is_match": True, "ai_error": True,
+                    "reason": f"AI 响应无法解析: {detail}", "suggested_greeting": ""}
 
     def _build_prompt(self, job: dict) -> list:
         """构建 AI 分析提示词。"""
@@ -319,6 +412,8 @@ class AIAnalyzerChain:
             "你是 Boss直聘智能投递助手的岗位匹配分析专家。你的任务是分析招聘岗位与求职者简历的匹配程度，"
             "给出评分和详细理由。请按 JSON 格式返回结果。"
         )
+        if self.custom_scoring_prompt:
+            system_msg += "\n\n【用户自定义打分要求】\n" + self.custom_scoring_prompt
         user_msg = (
             "【求职者简历】\n"
             f"教育背景：{resume.get('school', '')} "
@@ -333,6 +428,15 @@ class AIAnalyzerChain:
             f"岗位描述：{job.get('description', '')}\n"
             f"任职要求：{job.get('requirements', '')}\n"
             f"公司：{job.get('company', '')}\n\n"
+        )
+        if self.custom_filter_keywords:
+            keywords_str = "、".join(self.custom_filter_keywords)
+            user_msg += (
+                f"【用户自定义筛选条件】\n"
+                f"请额外关注以下关键词/条件：{keywords_str}\n"
+                "如果岗位明显不符合这些条件，应在reason中说明并适当扣分。\n\n"
+            )
+        user_msg += (
             "请分析匹配度，按以下 JSON 格式返回（不要包含其他内容）：\n"
             '{\n  "score": 0-100,\n  "is_match": true/false,\n'
             '  "reason": "匹配分析简要说明",\n'
@@ -364,10 +468,8 @@ class AIAnalyzerChain:
             return {}
 
     def _save_cache(self, cache: dict):
-        AI_CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
         with self._cache_lock:
-            with open(AI_CACHE_FILE, "w", encoding="utf-8") as f:
-                json.dump(cache, f, ensure_ascii=False, indent=2)
+            write_json_atomic(AI_CACHE_FILE, cache)
 
     def clear_cache(self):
         if AI_CACHE_FILE.exists():
@@ -409,9 +511,13 @@ class GreetEngine:
         progress_callback: Optional[Callable] = None,
         greet_event_cb: Optional[Callable] = None,
         wind_control_cb: Optional[Callable] = None,
+        account_index: int = 0,
     ):
         self.browser_manager = browser_manager
         self.config = config
+        # 话术/简历图片按账号取：写死 accounts[0] 会让账号2 用主账号的
+        # 打招呼语和简历，两个号发出去的内容一模一样
+        self.account_index = account_index
         self.log_cb = log_callback
         self.progress_cb = progress_callback
         self._greet_event_cb = greet_event_cb
@@ -424,8 +530,8 @@ class GreetEngine:
         self.running = False
         self._is_logged_in = False
         self._login_event = threading.Event()
-        # 风控触发标志 — 触发后停止投递，等待用户手动处理
-        self._wind_control_detected = False
+        # 已沟通岗位集合的进程内缓存（首次使用时读盘）
+        self._chatted_cache = None
 
         # 统计
         self.applied_count = 0
@@ -456,8 +562,8 @@ class GreetEngine:
         # AI 分析器
         self._ai_analyzer = None
 
-        # 打招呼记录存储
-        self._greet_store = GreetRecordStore()
+        # 打招呼记录存储（使用全局单例，确保与 API 层、清空操作共享同一实例）
+        self._greet_store = _get_greet_store()
 
         # 追踪最后一次 AI 分析的完整信息（供 GreetRecord 记录使用）
         self._last_ai_result = None
@@ -483,22 +589,21 @@ class GreetEngine:
 
         login_cfg = self.config.login
         self._login_wait_timeout = login_cfg.wait_timeout
-        self._clear_cookies_on_failure = login_cfg.clear_cookies_on_failure
         self._cookie_file = login_cfg.cookie_file
 
-        rl_cfg = self.config.greet.rate_limit
-        self._rate_limit_enabled = rl_cfg.enabled
-        self._max_per_hour = rl_cfg.max_per_hour
-        self._max_per_day = rl_cfg.max_per_day
-
+        # 频率限制 / 重试次数由 reload_runtime_settings() 统一赋值（见文件末尾）
         retry_cfg = self.config.greet.retry
-        self._retry_max_attempts = retry_cfg.max_attempts
         self._retry_base_delay = retry_cfg.base_delay
         self._retry_backoff_factor = retry_cfg.backoff_factor
 
         ai_cfg = self.config.ai
         self._ai_enabled = ai_cfg.enabled
         self._ai_threshold = ai_cfg.match_threshold
+        self._ai_custom_filter_keywords = ai_cfg.custom_filter_keywords
+        self._ai_custom_scoring_prompt = ai_cfg.custom_scoring_prompt
+
+        # 岗位去重集合（基于URL+公司名+岗位名，仅当前运行期间有效）
+        self._applied_job_keys = set()
 
         # AI providers 列表（从 UnifiedConfig 转换为 AIAnalyzerChain 所需格式）
         self._ai_providers = []
@@ -520,6 +625,14 @@ class GreetEngine:
                 "timeout": 30,
             })
 
+        self.reload_runtime_settings()
+
+    def reload_runtime_settings(self):
+        """从 self.config 重读「改了就该立刻生效」的字段。
+
+        构造时读一次是不够的：主循环每轮热重载会换掉 config 对象，
+        话术/简历图片/间隔若仍停留在首次快照，前端改了就要重启才生效。
+        """
         self._resume_cfg = {
             "school": self.config.resume.school,
             "major": self.config.resume.major,
@@ -530,9 +643,17 @@ class GreetEngine:
             "self_intro": self.config.resume.self_intro,
         }
 
-        # 从 greet.accounts 读取默认任务参数
-        if self.config.greet.accounts:
-            acc = self.config.greet.accounts[0]
+        self._ai_skip_unhealthy = self.config.ai.skip_unhealthy
+
+        rl = self.config.greet.rate_limit
+        self._rate_limit_enabled = rl.enabled
+        self._max_per_hour = rl.max_per_hour
+        self._max_per_day = rl.max_per_day
+        self._retry_max_attempts = self.config.greet.retry.max_attempts
+
+        # 从 greet.accounts 读取本账号的默认任务参数
+        acc = self._account()
+        if acc:
             self._min_interval = acc.message_interval_min
             self._max_interval = acc.message_interval_max
             self._cookie_file = acc.cookie_file
@@ -545,6 +666,13 @@ class GreetEngine:
                 self._greeting_message = job.greeting_message
                 self._greeting_source = "岗位配置"
                 self._image_files = job.image_files or self._image_files
+
+    def _account(self):
+        """本引擎所属账号的配置；索引越界时回落到第一个账号。"""
+        accounts = self.config.greet.accounts
+        if not accounts:
+            return None
+        return accounts[self.account_index] if self.account_index < len(accounts) else accounts[0]
 
     def _log(self, level: str, msg: str):
         """统一日志输出 — 回调 + 文件日志。"""
@@ -569,19 +697,28 @@ class GreetEngine:
             return
         try:
             ai = ai_result or self._last_ai_result or {}
-            self._greet_event_cb({
+            # 关键修复：确保 ai_reason 完整透传到前端
+            # 1. 优先使用 ai_result/skip_reason 中的 reason
+            # 2. 其次从 skip_reason 中提取（当 skip_reason 格式为 "AI判定不匹配: xxx"）
+            # 3. 最后回退到 self._last_ai_result
+            ai_reason = ai.get("reason", "")
+            if not ai_reason and skip_reason and "AI判定不匹配" in skip_reason:
+                # skip_reason 格式: "AI判定不匹配: 具体原因..."，提取冒号后的部分
+                ai_reason = skip_reason
+            emit_data = {
                 "job_name": job.get("job_name", ""),
                 "company": job.get("company", "") or job.get("company_location", ""),
                 "salary": job.get("salary", ""),
                 "status": status,
                 "ai_score": ai.get("score", 0),
-                "ai_reason": ai.get("reason", ""),
+                "ai_reason": ai_reason,
                 "ai_match": ai.get("is_match", False),
                 "greeting": job.get("_actual_greeting_sent", "")[:60],
                 "url": job.get("url", ""),
                 "skip_reason": skip_reason or job.get("_last_skip_reason", ""),
                 "is_skipped": status in ("skip", "ai_skip", "already", "error"),
-            })
+            }
+            self._greet_event_cb(emit_data)
         except Exception:
             pass
 
@@ -666,23 +803,6 @@ class GreetEngine:
 
     # ── 对外接口 ──
 
-    def start(self, tasks=None):
-        """启动打招呼任务。
-
-        Args:
-            tasks: 可选，多任务列表。每个任务为 dict，包含 query/city/scroll_pages/
-                   greeting_message/image_files/message_interval_min/message_interval_max/
-                   cookie_file 等字段。如果为 None，使用配置中的默认任务。
-        """
-        self.running = True
-        try:
-            self._run(tasks)
-        except Exception as e:
-            self._log("ERROR", f"引擎异常退出: {e}")
-            import traceback
-            self._log("ERROR", traceback.format_exc())
-        finally:
-            self.running = False
 
     def stop(self):
         """停止打招呼引擎。"""
@@ -778,7 +898,6 @@ class GreetEngine:
             success, fail_reason = self._apply_job(job_info)
             if success:
                 self.applied_count += 1
-                self._save_chat_log(job_info, skipped=False)
                 self._log("SUCCESS", f"✅ 已投递: {job_name}")
                 self._emit_greet_event(job_info, "success")
                 self._record_greet(
@@ -802,79 +921,6 @@ class GreetEngine:
 
     # ── 内部运行逻辑 ──
 
-    def _run(self, tasks=None):
-        """运行任务。如果传入 tasks，则为多任务模式（共用浏览器）。"""
-        # 构建任务列表
-        if tasks is not None:
-            self._tasks = tasks
-        else:
-            # 从配置构建默认任务列表
-            self._tasks = []
-            for acc in self.config.greet.accounts:
-                if not acc.enabled:
-                    continue
-                for job in acc.jobs:
-                    if not job.enabled:
-                        continue
-                    self._tasks.append({
-                        "query": job.query,
-                        "city": job.city,
-                        "scroll_pages": job.scroll_pages,
-                        "greeting_message": job.greeting_message,
-                        "image_files": job.image_files or acc.image_files,
-                        "message_interval_min": acc.message_interval_min,
-                        "message_interval_max": acc.message_interval_max,
-                        "cookie_file": acc.cookie_file,
-                    })
-            if not self._tasks:
-                self._tasks = [{
-                    "query": self._query,
-                    "city": self._city,
-                    "scroll_pages": self._scroll_pages,
-                    "greeting_message": self._greeting_message,
-                    "image_files": self._image_files,
-                    "message_interval_min": self._min_interval,
-                    "message_interval_max": self._max_interval,
-                    "cookie_file": self._cookie_file,
-                }]
-
-        # 启动浏览器
-        if not self._init_browser():
-            return
-
-        # 检查登录
-        if not self._check_and_handle_login():
-            return
-
-        # 逐任务执行
-        for task_idx, task in enumerate(self._tasks):
-            if not self.running:
-                break
-
-            self._log("INFO", f"━━━ 任务 [{task_idx+1}/{len(self._tasks)}] {task.get('query', '')} @ {task.get('city', '')} ━━━")
-
-            self._query = task.get("query", "")
-            self._city = task.get("city", "上海")
-            self._scroll_pages = task.get("scroll_pages", 5)
-            self._greeting_message = task.get("greeting_message", "")
-            self._image_files = task.get("image_files", [])
-            self._min_interval = task.get("message_interval_min", 3)
-            self._max_interval = task.get("message_interval_max", 8)
-            self._cookie_file = task.get("cookie_file", "zhipin_cookies.json")
-
-            # AI 配置随任务刷新（从全局配置读取）
-            self._ai_analyzer = None
-
-            self._log("INFO", f"🔍 搜索: {self._city} · {self._query}")
-            self._log("INFO", "正在获取岗位列表...")
-            self._parse_job_list()
-
-            if self.jobs:
-                self._step_browse_jobs()
-            else:
-                self._log("WARN", "没有找到岗位，跳过此任务")
-
-        self._log("INFO", "✅ 任务完成！")
 
     def _init_browser(self) -> bool:
         """初始化浏览器（通过 BrowserManager）。"""
@@ -896,111 +942,6 @@ class GreetEngine:
             self._log("ERROR", f"浏览器启动失败: {e}")
             return False
 
-    def _check_and_handle_login(self) -> bool:
-        """检查登录状态，处理登录流程。"""
-        instance = self.browser_manager.get_instance()
-        if instance is None:
-            self._log("ERROR", "浏览器未启动")
-            return False
-
-        try:
-            instance.get("https://www.zhipin.com")
-            self._random_delay(2, 3)
-
-            nav_ele = instance.ele(SELECTOR_NAV, timeout=5)
-            if nav_ele:
-                nav_text = nav_ele.text
-                if "登录/注册" in nav_text:
-                    self._log("WARN", "需要登录")
-                    if self._load_cookies():
-                        instance.get("https://www.zhipin.com")
-                        self._random_delay(2, 3)
-                        nav_ele2 = instance.ele(SELECTOR_NAV, timeout=3)
-                        if nav_ele2 and "登录/注册" not in nav_ele2.text:
-                            self._is_logged_in = True
-                            self._log("INFO", "Cookie 有效，已登录")
-                            self._save_cookies()
-                        else:
-                            self._clear_cookies()
-                            instance.get("https://www.zhipin.com/web/user/?ka=header-login")
-                            self._random_delay(1, 2)
-                            if self._login_required_cb:
-                                self._login_required_cb()
-                            self._log("INFO", "请手动登录，登录后点击「确认登录」")
-                            if not self._wait_for_login():
-                                self._log("ERROR", "登录超时")
-                                return False
-                            self._save_cookies()
-                            self._log("SUCCESS", "登录成功")
-                    else:
-                        instance.get("https://www.zhipin.com/web/user/?ka=header-login")
-                        self._random_delay(1, 2)
-                        if self._login_required_cb:
-                            self._login_required_cb()
-                        self._log("INFO", "请手动登录，登录后点击「确认登录」")
-                        if not self._wait_for_login():
-                            self._log("ERROR", "登录超时")
-                            return False
-                        self._save_cookies()
-                        self._log("SUCCESS", "登录成功")
-                else:
-                    self._is_logged_in = True
-                    self._log("INFO", "已登录状态")
-            else:
-                self._log("WARN", "需要登录")
-                instance.get("https://www.zhipin.com/web/user/?ka=header-login")
-                self._random_delay(1, 2)
-                if self._login_required_cb:
-                    self._login_required_cb()
-                self._log("INFO", "请手动登录，登录后点击「确认登录」")
-                if not self._wait_for_login():
-                    self._log("ERROR", "登录超时")
-                    return False
-                self._save_cookies()
-                self._log("SUCCESS", "登录成功")
-
-            self._log("INFO", "正在获取城市数据...")
-            self._capture_city_data()
-            return True
-        except Exception as e:
-            self._log("ERROR", "登录检查异常: " + str(e))
-            import traceback
-            self._log("ERROR", traceback.format_exc())
-            return False
-
-    def _capture_city_data(self):
-        """捕获城市数据（监听 city.json 数据包）。"""
-        instance = self.browser_manager.get_instance()
-        if instance is None:
-            return
-        try:
-            instance.listen.start("data/city.json")
-            instance.refresh()
-            self._random_delay(2, 4)
-            for packet in instance.listen.steps(timeout=10):
-                res = packet.response.body
-                if isinstance(res, dict) and "zpData" in res:
-                    city_list = res["zpData"].get("hotCityList", [])
-                    for city in city_list:
-                        if isinstance(city, dict):
-                            name = city.get("name", "")
-                            code = city.get("code", "")
-                            self._city_dict[name] = code
-                            self._log("INFO", f"城市: {name} -> {code}")
-                    if self._city_dict:
-                        self._log("SUCCESS", f"已获取 {len(self._city_dict)} 个城市数据")
-                        self._save_city_dict()
-                    break
-        except Exception as e:
-            self._log("WARN", f"城市数据捕获异常: {e}")
-
-    def _save_city_dict(self):
-        """保存城市数据到文件。"""
-        try:
-            with open(CITY_DICT_FILE, "w", encoding="utf-8") as f:
-                json.dump(self._city_dict, f, ensure_ascii=False, indent=2)
-        except Exception:
-            pass
 
     def _load_city_dict(self):
         """从文件加载之前捕获的城市数据。"""
@@ -1014,47 +955,6 @@ class GreetEngine:
         except Exception:
             pass
 
-    def _check_login_expired(self) -> bool:
-        """验证登录状态，检查当前页面是否被重定向到登录页。"""
-        instance = self.browser_manager.get_instance()
-        if instance is None:
-            return False
-        try:
-            current_url = instance.url
-            is_suspicious = "passport" in current_url or "login" in current_url or not current_url
-            if is_suspicious:
-                self._log("WARN", "检测到登录过期，需要重新登录")
-                instance.get("https://www.zhipin.com/web/user/?ka=header-login")
-                self._random_delay(1, 2)
-                if self._login_required_cb:
-                    self._login_required_cb()
-                self._log("INFO", "已打开登录页面，请在浏览器中完成登录")
-                self._log("INFO", "等待登录确认...")
-                if not self._wait_for_login():
-                    self._log("ERROR", "登录超时")
-                    return False
-                self._save_cookies()
-                self._log("SUCCESS", "登录成功")
-            return True
-        except Exception as e:
-            self._log("WARN", "登录检查异常: " + str(e))
-            if "断开" in str(e) or "disconnected" in str(e).lower():
-                self._log("INFO", "尝试重新连接浏览器...")
-                if self._reconnect_browser():
-                    self._log("INFO", "浏览器重连成功")
-                    return True
-                self._log("ERROR", "浏览器重连失败")
-                return False
-            return False
-
-    def _reconnect_browser(self) -> bool:
-        """浏览器断连后尝试重连。"""
-        try:
-            self.browser_manager.close()
-            return self._init_browser()
-        except Exception as e:
-            self._log("ERROR", f"重连失败: {e}")
-            return False
 
     def _wait_for_login(self) -> bool:
         """等待用户手动登录。"""
@@ -1335,41 +1235,6 @@ class GreetEngine:
         self._log("WARN", f"未找到城市 {city_name} 的编码")
         return ""
 
-    def _resolve_images(self) -> list:
-        """解析作品图片路径。"""
-        import glob
-        static_dir = BASE_DIR / "static"
-        dashboard_dir = static_dir / "dashboard"
-        dashboard_dir.mkdir(parents=True, exist_ok=True)
-
-        resolved = []
-
-        if self._image_files:
-            for img in self._image_files:
-                if isinstance(img, str):
-                    if img.startswith("dashboard/") or img.startswith("dashboard\\"):
-                        full_path = str(static_dir / img.replace("\\", "/"))
-                    elif os.path.isabs(img):
-                        full_path = img
-                    else:
-                        full_path = str(dashboard_dir / img)
-                    if os.path.isfile(full_path):
-                        resolved.append(full_path)
-                    else:
-                        self._log("WARN", f"配置图片不存在: {full_path}")
-
-        # 兜底：扫描 dashboard 目录
-        if not resolved:
-            for ext in ["*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp"]:
-                for f in glob.glob(str(dashboard_dir / ext)):
-                    resolved.append(f)
-
-        final_resolved = list(dict.fromkeys(resolved))
-        if final_resolved:
-            self._log("INFO", f"共准备 {len(final_resolved)} 张作品图片")
-        else:
-            self._log("WARN", "没有作品图片")
-        return final_resolved
 
     def _init_ai(self):
         """初始化 AI 分析器（懒加载）。"""
@@ -1383,6 +1248,9 @@ class GreetEngine:
                     providers=self._ai_providers,
                     match_threshold=self._ai_threshold,
                     log_callback=lambda msg: self._log("INFO", msg),
+                    custom_filter_keywords=self._ai_custom_filter_keywords,
+                    custom_scoring_prompt=self._ai_custom_scoring_prompt,
+                    skip_unhealthy=self._ai_skip_unhealthy,
                 )
             else:
                 self._log("WARN", "AI 已启用但未配置任何 provider")
@@ -1398,7 +1266,9 @@ class GreetEngine:
         """用 AI 分析岗位匹配度。返回 (匹配结果, 耗时秒数)，未启用时返回 (None, 0)。"""
         analyzer = self._init_ai()
         if not analyzer:
-            return None, 0
+            # 分析器都建不起来同样属于「AI 不可用」，不能当成不匹配把岗位全丢掉
+            return {"score": 50, "is_match": True, "ai_error": True,
+                    "reason": "AI 分析器初始化失败，按默认通过", "suggested_greeting": ""}, 0
         ai_job = {
             "job_name": job.get("job_name", ""),
             "salary": job.get("salary", ""),
@@ -1420,152 +1290,17 @@ class GreetEngine:
             self._last_ai_model = analyzer.last_model_name
             self._last_ai_raw_response = analyzer.last_raw_response
             self._log("INFO", f"🤖 AI 匹配度: {score}/100 ({duration:.1f}s) —— {result.get('reason', '')[:80]}")
+            if result.get("ai_error"):
+                # AI 没给出判断（接口全挂/无法解析）≠ AI 判定不匹配，按默认话术放行
+                self._log("WARN", "⚠️ AI 未能给出判断，本轮按默认通过继续打招呼")
+                return result, duration
             return (result, duration) if (is_match and score >= self._ai_threshold) else (None, duration)
         except Exception as e:
             self._log("WARN", f"AI 分析异常，按通过处理: {e}")
-            self._last_ai_result = None
-            return None, 0
+            self._last_ai_result = {"ai_error": True, "reason": f"AI 分析异常: {e}"}
+            return {"score": 50, "is_match": True, "ai_error": True,
+                    "reason": f"AI 分析异常: {e}", "suggested_greeting": ""}, 0
 
-    def _is_data_analysis_job(self, job: dict) -> tuple[bool, str]:
-        """岗位名称预过滤：检查是否是数据分析相关岗位。
-
-        只做最基础的检查：岗位名包含"数据分析"即通过，
-        其余全部交给AI智能匹配判断（ai.enabled=True时AI会做语义级过滤）。
-        不使用硬编码排除词/包含词列表，避免过度限制。
-
-        Returns:
-            (是否匹配, 原因说明)。匹配为 True 时可继续后续流程；
-            匹配为 False 时应直接跳过该岗位。
-        """
-        job_name = job.get("job_name", "").strip()
-        if not job_name:
-            return False, "岗位名称为空"
-
-        # 只做最基础检查：包含"数据分析"的直接通过
-        if "数据分析" in job_name:
-            return True, "岗位名包含'数据分析'"
-
-        # 其余岗位全部交给AI判断，不做硬编码限制
-        return True, "交给AI智能匹配判断"
-
-    def _step_browse_jobs(self):
-        """遍历岗位列表并投递。"""
-        resolved_images = self._resolve_images()
-        self._image_files = resolved_images
-        self._log("INFO", f"最终准备发送 {len(self._image_files)} 张作品图片")
-
-        self.total_jobs = len(self.jobs)
-        self._report_progress()
-
-        for idx, job in enumerate(self.jobs):
-            if not self.running:
-                break
-            if self._rate_limit_enabled and self.applied_count >= self._max_per_hour:
-                self._log("WARN", f"已达到每小时上限 {self._max_per_hour}，暂停 30 分钟")
-                if not self._wait_or_stop(1800):
-                    break
-            self._log("INFO", f"处理 [{idx+1}/{self.total_jobs}] {job.get('job_name', '未知岗位')}")
-            self._random_delay(self._min_interval, self._max_interval)
-            # 每个岗位重置打招呼语来源（可能被AI覆盖）
-            self._greeting_source = "岗位配置"
-
-            # 先检查是否已沟通过
-            if self._is_already_chatted(job):
-                self._log("INFO", f"⏭️ 已沟通过: {job.get('job_name', '')}")
-                self.skipped_count += 1
-                self._report_progress()
-                self._save_chat_log(job, skipped=True)
-                self._emit_greet_event(job, "already", skip_reason="已沟通过")
-                self._record_greet(job, is_skipped=True, skip_reason="已沟通过")
-                continue
-
-            # 岗位名称预过滤（在AI之前做基础关键词校验）
-            is_match, filter_reason = self._is_data_analysis_job(job)
-            if not is_match:
-                self._log("INFO", f"⏭️ 岗位预过滤不通过: {job.get('job_name', '')}（{filter_reason}）")
-                self.skipped_count += 1
-                self._report_progress()
-                self._emit_greet_event(job, "skip", skip_reason=f"岗位预过滤不匹配: {filter_reason}")
-                self._record_greet(job, is_skipped=True, skip_reason=f"岗位预过滤不匹配: {filter_reason}")
-                continue
-
-            # AI 智能匹配
-            has_ai = self._ai_enabled and bool(self._ai_providers)
-            if has_ai:
-                ai_result, ai_duration = self._analyze_job_with_ai(job)
-                if ai_result is None and self._init_ai() is not None:
-                    self._log("WARN", f"🤖 AI 判定不匹配，跳过: {job.get('job_name', '')}")
-                    self._fetch_jd_for_job(job)
-                    self.skipped_count += 1
-                    self._save_chat_log(job, skipped=True, ai_result=None, ai_duration=ai_duration)
-                    self._report_progress()
-                    self._emit_greet_event(job, "ai_skip", skip_reason="AI判定不匹配")
-                    self._record_greet(job, is_skipped=True, skip_reason="AI判定不匹配")
-                    continue
-                if ai_result and ai_result.get("suggested_greeting"):
-                    self._greeting_message = ai_result["suggested_greeting"]
-                    self._greeting_source = "AI定制"
-            else:
-                ai_result = None
-                ai_duration = 0
-
-            if not self._check_login_expired():
-                break
-
-            try:
-                # 推送"正在投递"状态到前端
-                self._emit_greet_event(job, "pending")
-                success, fail_reason = self._apply_job(job)
-                if success:
-                    self.applied_count += 1
-                    self._save_chat_log(job, skipped=False, ai_result=ai_result, ai_duration=ai_duration)
-                    self._log("SUCCESS", f"✅ 已投递: {job.get('job_name', '')}")
-                    self._emit_greet_event(job, "success", ai_result)
-                    self._record_greet(
-                        job, is_greeted=True,
-                        actual_greeting_sent=job.get("_actual_greeting_sent", ""),
-                    )
-                else:
-                    self.skipped_count += 1
-                    self._log("WARN", f"⏭️ 跳过: {job.get('job_name', '')}（原因: {fail_reason}）")
-                    self._emit_greet_event(job, "skip", ai_result,
-                                           skip_reason=fail_reason or "投递失败-原因未知")
-                    self._record_greet(job, is_skipped=True, skip_reason=fail_reason or "投递失败-原因未知")
-            except Exception as e:
-                self._log("WARN", f"投递异常: {e}")
-                self.skipped_count += 1
-                self._emit_greet_event(job, "error", skip_reason=f"投递异常: {e}")
-                self._record_greet(job, is_skipped=True, skip_reason=f"投递异常: {e}")
-            self._report_progress()
-
-    def _fetch_jd_for_job(self, job: dict):
-        """为 AI 跳过的岗位抓取 JD 信息（仅读取详情页，不投递）。"""
-        instance = self.browser_manager.get_instance()
-        if instance is None:
-            return
-        url = job.get("url", "")
-        if not url:
-            return
-        try:
-            instance.run_js(f"window.location.href = '{url}'")
-            self._random_delay(3, 5)
-            try:
-                job_desc_elem = instance.ele(".job-sec-text", timeout=3)
-                if job_desc_elem:
-                    job["jd_description"] = job_desc_elem.text
-            except Exception:
-                pass
-            try:
-                req_elem = instance.ele(".requirements", timeout=2)
-                if req_elem:
-                    job["jd_requirements"] = req_elem.text
-            except Exception:
-                pass
-            if not job.get("jd_requirements"):
-                job["jd_requirements"] = job.get("jd_description", "")
-            self._log("INFO", f"[JD] 已抓取: {job.get('job_name','')} ({len(job.get('jd_description',''))}字)")
-        except Exception as e:
-            self._log("WARN", f"[JD] 抓取失败: {e}")
 
     def _handle_disconnect(self) -> bool:
         """处理页面断开连接，尝试恢复。"""
@@ -1676,10 +1411,12 @@ class GreetEngine:
                     return False, "导航前页面断开且恢复失败"
                 instance = self.browser_manager.get_instance()
 
-            for _retry in range(3):
+            for _retry in range(self._retry_max_attempts):
                 try:
                     self._log("INFO", f"导航到: {url}")
-                    instance.run_js(f"window.location.href = '{url}'")
+                    # json.dumps 生成的是转义好的 JS 字符串字面量：岗位 URL 里出现
+                    # 单引号时手工拼 '...' 会截断语句，等于把页面 DOM 内容当代码执行
+                    instance.run_js(f"window.location.href = {json.dumps(url)}")
                     self._random_delay(3, 6)
                     self._log("INFO", f"导航后URL: {instance.url}")
                     break
@@ -1731,14 +1468,19 @@ class GreetEngine:
                 if job_desc_elem:
                     job_description = job_desc_elem.text
                     self._log("INFO", "岗位描述: " + job_description[:100] + "...")
-            except Exception:
-                pass
+            except Exception as e:
+                self._log("DEBUG", f"读取岗位描述失败: {e}")
             try:
                 req_elem = instance.ele(".requirements", timeout=2)
                 if req_elem:
                     job_requirements = req_elem.text
-            except Exception:
-                pass
+            except Exception as e:
+                self._log("DEBUG", f"读取任职要求失败: {e}")
+            if not job_description and not job_requirements:
+                # JD 是 AI 判分的主要依据，取不到时只凭标题/薪资很容易判成"不匹配"，
+                # 事后翻日志必须能看出是这一类原因，而不是 AI 乱打分
+                self._log("WARN", f"⚠️ 详情页未取到 JD（{job.get('job_name', '')}），"
+                                  f"AI 仅按标题/薪资判分，跳过原因可能失真")
             if not job_requirements:
                 job_requirements = job_description
             job["jd_description"] = job_description
@@ -1758,7 +1500,40 @@ class GreetEngine:
             chat_btn.click()
             self._log("INFO", "已点击沟通按钮，等待输入框...")
             # 等待聊天窗口加载（参考原项目auto_boss: timeout=10秒）
-            self._random_delay(5, 8)
+            # 关键修复：BOSS直聘点击"立即沟通"后聊天窗口为页面内弹出层（popup），
+            # 弹出层加载比新标签页慢，需要更长等待时间。从5-8秒增加到8-12秒。
+            self._random_delay(8, 12)
+
+            # 关键修复：不依赖弹窗容器检测，直接尝试查找输入框。
+            # BOSS直聘的弹窗可能用各种 class 名，硬编码检测列表容易漏判。
+            # 弹窗检测只作为辅助日志，不影响后续输入框查找流程。
+            # 如果能找到输入框，说明弹窗已弹出；找不到再检查风控/验证弹窗。
+            chat_popup_selectors = [
+                ".chat-container", ".chat-popup", ".chat-modal", ".drawer",
+                ".modal-content", ".message-input", "#chat-input", ".chat-input",
+                ".input-area", ".chat-footer",
+            ]
+            popup_detected = False
+            for popup_sel in chat_popup_selectors:
+                try:
+                    popup = instance.ele(popup_sel, timeout=2)
+                    if popup:
+                        self._log("DEBUG", f"检测到聊天弹窗容器: {popup_sel}")
+                        popup_detected = True
+                        break
+                except Exception:
+                    pass
+            if not popup_detected:
+                # 辅助日志：未检测到弹窗容器，但不中断流程，继续尝试查找输入框
+                self._log("INFO", "未检测到聊天弹窗容器（不影响流程，将继续查找输入框）")
+                # 检查是否有风控/验证弹窗（仅记录日志，不中断）
+                for risk_sel in [".error-tip", ".verify-modal", ".security-tip", ".risk-modal", ".captcha"]:
+                    try:
+                        risk_elem = instance.ele(risk_sel, timeout=1)
+                        if risk_elem:
+                            self._log("WARN", f"检测到风控/验证弹窗: {risk_sel}，文本: {risk_elem.text[:100] if risk_elem.text else ''}")
+                    except Exception:
+                        pass
 
             # 尝试获取新打开的聊天标签页（BOSS 点"沟通"后通常新开标签页）
             # 关键修复：新标签页严格通过 browser_manager.get_greet_chat_tab() 管理，
@@ -1811,8 +1586,9 @@ class GreetEngine:
             # 优先级：AI定制 > 岗位配置 > 默认模板
             greeting = self._greeting_message
             if not greeting:
-                if self.config.greet.accounts and self.config.greet.accounts[0].jobs:
-                    greeting = self.config.greet.accounts[0].jobs[0].greeting_message
+                acc = self._account()
+                if acc and acc.jobs:
+                    greeting = acc.jobs[0].greeting_message
             if not greeting:
                 from boss_bot.unified_config import DEFAULT_GREETING
                 greeting = DEFAULT_GREETING
@@ -1839,45 +1615,48 @@ class GreetEngine:
             except Exception:
                 pass
 
-            # 优先在聊天标签页查找输入框（如果有新标签页打开）
+            # ── 查找聊天输入框 ──
+            # 关键修复：BOSS直聘点击"立即沟通"后，聊天窗口是**页面内弹出层（popup）**，不是新标签页。
+            # 查找顺序调整为：①当前页面 → ②当前页面iframe → ③新标签页 → ④遍历所有标签页
             # 严格参考原项目 auto_boss: self.dp.ele(".input-area", timeout=10)
             input_area = None
             greet_chat_instance = None  # 打招呼专用的临时聊天 BrowserInstance
 
-            if chat_tab:
-                # 在新打开的聊天标签页中查找
-                # BOSS直聘聊天页面输入框实际是 #chat-input（contenteditable div，class=chat-input）
-                # 优先使用 #chat-input / .chat-input，再降级到 .input-area 等其他选择器
-                # 关键修复：不修改 instance._page/_tab（那会破坏搜索标签页），
-                # 而是创建一个独立的 BrowserInstance 包装 chat_tab 用于操作
+            # 统一的输入框选择器列表（按优先级排序）
+            # BOSS直聘聊天页面输入框实际是 #chat-input（contenteditable div，class=chat-input）
+            # 扩展选择器覆盖各种可能的聊天输入框形态
+            chat_input_selectors = [
+                "#chat-input",
+                ".chat-input",
+                ".input-area",
+                'textarea[placeholder*="回复"]',
+                'textarea[placeholder*="输入"]',
+                ".message-input textarea",
+                ".chat-footer textarea",
+                "tag:textarea",
+                "[contenteditable=true]",
+                'div[contenteditable="true"]',
+            ]
+
+            # 关键修复：增加重试机制（次数按 greet.retry.max_attempts 配置，递增等待）
+            # 日志显示"未找到输入框"时URL还在job_detail页面，
+            # 说明弹窗可能延迟弹出，需要重试查找
+            _input_attempts = max(1, self._retry_max_attempts)
+            for _input_retry in range(_input_attempts):
+                if input_area:
+                    break
+                if _input_retry > 0:
+                    _retry_wait = 3 + _input_retry * 2  # 第2次等5秒，第3次等7秒
+                    self._log("INFO", f"输入框查找重试 {_input_retry+1}/{_input_attempts}，等待 {_retry_wait} 秒...")
+                    time.sleep(_retry_wait)
+
+                # ① 优先在当前页面查找输入框（BOSS点击沟通后通常在当前页面弹出聊天窗口）
+                # 关键修复2：参考原项目auto_boss，点击沟通后聊天窗口在当前页面弹出（不新开标签页），
+                # URL不变，所以不检查URL是否含"chat"，直接在当前页面查找输入框
                 try:
-                    from boss_bot.browser_launcher import BrowserInstance, _IS_MACOS
-                    greet_chat_instance = BrowserInstance(
-                        chrome_page=chat_tab if not _IS_MACOS else None,
-                        chromium=browser if _IS_MACOS else None,
-                        tab=chat_tab if _IS_MACOS else None,
-                    )
-                    for sel in ["#chat-input", ".chat-input", ".input-area", "tag:textarea", "[contenteditable=true]"]:
+                    for sel in chat_input_selectors:
                         try:
-                            input_area = greet_chat_instance.ele(sel, timeout=10)
-                            if input_area:
-                                self._log("INFO", f"在聊天标签页找到输入框: {sel}")
-                                break
-                        except Exception:
-                            pass
-                except Exception as e:
-                    self._log("DEBUG", f"在聊天标签页查找输入框失败: {e}")
-            
-            # 关键修复：删除 latest_tab 回退逻辑。
-            # latest_tab 可能返回回复引擎的 _chat_tab，导致打招呼引擎在回复标签页上发消息。
-            # 如果 chat_tab 没找到输入框，检查当前搜索标签页是否已导航到聊天页（BOSS可能in-page导航）
-            # 关键修复2：参考原项目auto_boss，点击沟通后聊天窗口在当前页面弹出（不新开标签页），
-            # URL不变，所以不检查URL是否含"chat"，直接在当前页面查找输入框
-            if not input_area:
-                try:
-                    for sel in ["#chat-input", ".chat-input", ".input-area", "tag:textarea", "[contenteditable=true]"]:
-                        try:
-                            input_area = instance.ele(sel, timeout=10)
+                            input_area = instance.ele(sel, timeout=3)
                             if input_area:
                                 self._log("INFO", f"在当前页面找到输入框: {sel}")
                                 greet_chat_instance = instance
@@ -1887,59 +1666,21 @@ class GreetEngine:
                 except Exception:
                     pass
 
-            # 如果当前页面没找到，遍历所有标签页（不过滤URL）
-            # 关键：排除回复引擎专用的 _chat_tab，避免抢占
-            if not input_area:
-                try:
-                    browser = instance._get_browser() if hasattr(instance, '_get_browser') else None
-                    if browser:
-                        all_tabs = browser.tab_ids
-                        # 获取回复引擎 _chat_tab 的 tab_id，用于排除
-                        # 关键修复：使用 browser_manager.get_reply_tab_id() 方法替代内联获取，
-                        # 统一排除逻辑，避免多处重复代码导致不一致
-                        reply_chat_tab_id = None
-                        if self.browser_manager is not None:
-                            reply_chat_tab_id = self.browser_manager.get_reply_tab_id()
-                        if reply_chat_tab_id:
-                            self._log("DEBUG", f"回复引擎专用标签页 tab_id: {reply_chat_tab_id}，遍历时将排除")
-                        if len(all_tabs) > 1:
-                            self._log("INFO", f"当前页面未找到输入框，遍历 {len(all_tabs)} 个标签页（排除回复引擎标签页）")
-                            for tab_id in all_tabs:
-                                # 跳过回复引擎的 _chat_tab，避免打招呼引擎抢占
-                                if reply_chat_tab_id and tab_id == reply_chat_tab_id:
-                                    self._log("DEBUG", "  跳过回复引擎专用标签页")
-                                    continue
+                # ② 当前页面没找到，遍历当前页面的所有iframe查找
+                # 关键修复：BOSS直聘聊天输入框可能在iframe中，日志显示"发现 2 个iframe"
+                if not input_area:
+                    try:
+                        iframes = instance.eles("tag:iframe", timeout=2)
+                        if iframes:
+                            self._log("INFO", f"当前页面发现 {len(iframes)} 个iframe，尝试在iframe中查找输入框")
+                            for iframe in iframes:
                                 try:
-                                    tab = browser.get_tab(tab_id)
-                                    tab_url = tab.url
-                                    self._log("DEBUG", f"  检查标签页: {tab_url}")
-                                    # 不过滤URL，在每个标签页中尝试查找输入框
-                                    # 优先 #chat-input / .chat-input（BOSS直聘实际使用的选择器）
-                                    for sel in ["#chat-input", ".chat-input", ".input-area", "tag:textarea", "[contenteditable=true]"]:
+                                    for sel in chat_input_selectors:
                                         try:
-                                            input_area = tab.ele(sel, timeout=5)
+                                            input_area = iframe.ele(sel, timeout=3)
                                             if input_area:
-                                                # 守护日志：确认找到输入框的标签页不是回复引擎的标签页
-                                                if reply_chat_tab_id:
-                                                    current_tab_id = getattr(tab, 'tab_id', None) or getattr(tab, '_tab_id', None)
-                                                    if current_tab_id == reply_chat_tab_id:
-                                                        self._log("ERROR", "严重BUG：打招呼引擎试图使用回复引擎标签页！跳过此标签页。")
-                                                        input_area = None
-                                                        continue
-                                                self._log("INFO", f"在标签页 {tab_url} 中找到输入框: {sel}")
-                                                # 包装为 greet_chat_instance，不修改 instance
-                                                try:
-                                                    from boss_bot.browser_launcher import BrowserInstance, _IS_MACOS
-                                                    greet_chat_instance = BrowserInstance(
-                                                        chrome_page=tab if not _IS_MACOS else None,
-                                                        chromium=browser if _IS_MACOS else None,
-                                                        tab=tab if _IS_MACOS else None,
-                                                    )
-                                                    # 同步注册到 browser_manager
-                                                    if self.browser_manager is not None:
-                                                        self.browser_manager._greet_chat_tab = greet_chat_instance
-                                                except Exception:
-                                                    pass
+                                                self._log("INFO", f"在当前页面iframe中找到输入框: {sel}")
+                                                greet_chat_instance = instance
                                                 break
                                         except Exception:
                                             pass
@@ -1947,28 +1688,96 @@ class GreetEngine:
                                         break
                                 except Exception:
                                     pass
-                except Exception as e:
-                    self._log("DEBUG", f"标签页遍历失败: {e}")
+                    except Exception as e:
+                        self._log("DEBUG", f"当前页面iframe查找失败: {e}")
 
-            # 最后尝试在iframe中查找
-            if not input_area:
-                try:
-                    iframes = instance.eles("tag:iframe", timeout=2)
-                    if iframes:
-                        self._log("INFO", f"发现 {len(iframes)} 个iframe，尝试在iframe中查找输入框")
-                        for iframe in iframes:
+                # ③ 当前页面和iframe都没找到，再在新打开的聊天标签页中查找（如果有新标签页）
+                # 关键修复：不修改 instance._page/_tab（那会破坏搜索标签页），
+                # 而是创建一个独立的 BrowserInstance 包装 chat_tab 用于操作
+                if not input_area and chat_tab:
+                    try:
+                        from boss_bot.browser_launcher import BrowserInstance, _IS_MACOS
+                        greet_chat_instance = BrowserInstance(
+                            chrome_page=chat_tab if not _IS_MACOS else None,
+                            chromium=browser if _IS_MACOS else None,
+                            tab=chat_tab if _IS_MACOS else None,
+                        )
+                        for sel in chat_input_selectors:
                             try:
-                                for sel in ["#chat-input", ".chat-input", ".input-area", "tag:textarea", "[contenteditable=true]"]:
-                                    input_area = iframe.ele(sel, timeout=5)
-                                    if input_area:
-                                        self._log("INFO", f"在iframe中找到输入框: {sel}")
-                                        break
+                                input_area = greet_chat_instance.ele(sel, timeout=5)
                                 if input_area:
+                                    self._log("INFO", f"在聊天标签页找到输入框: {sel}")
                                     break
                             except Exception:
                                 pass
-                except Exception:
-                    pass
+                        if not input_area:
+                            # 重置 greet_chat_instance，避免误用未找到输入框的实例
+                            greet_chat_instance = None
+                    except Exception as e:
+                        self._log("DEBUG", f"在聊天标签页查找输入框失败: {e}")
+                        greet_chat_instance = None
+
+                # ④ 最后兜底：遍历所有标签页查找（不过滤URL）
+                # 关键：排除回复引擎专用的 _chat_tab，避免抢占
+                if not input_area:
+                    try:
+                        browser = instance._get_browser() if hasattr(instance, '_get_browser') else None
+                        if browser:
+                            all_tabs = browser.tab_ids
+                            # 获取回复引擎 _chat_tab 的 tab_id，用于排除
+                            # 关键修复：使用 browser_manager.get_reply_tab_id() 方法替代内联获取，
+                            # 统一排除逻辑，避免多处重复代码导致不一致
+                            reply_chat_tab_id = None
+                            if self.browser_manager is not None:
+                                reply_chat_tab_id = self.browser_manager.get_reply_tab_id()
+                            if reply_chat_tab_id:
+                                self._log("DEBUG", f"回复引擎专用标签页 tab_id: {reply_chat_tab_id}，遍历时将排除")
+                            if len(all_tabs) > 1:
+                                self._log("INFO", f"当前页面未找到输入框，遍历 {len(all_tabs)} 个标签页（排除回复引擎标签页）")
+                                for tab_id in all_tabs:
+                                    # 跳过回复引擎的 _chat_tab，避免打招呼引擎抢占
+                                    if reply_chat_tab_id and tab_id == reply_chat_tab_id:
+                                        self._log("DEBUG", "  跳过回复引擎专用标签页")
+                                        continue
+                                    try:
+                                        tab = browser.get_tab(tab_id)
+                                        tab_url = tab.url
+                                        self._log("DEBUG", f"  检查标签页: {tab_url}")
+                                        # 不过滤URL，在每个标签页中尝试查找输入框
+                                        for sel in chat_input_selectors:
+                                            try:
+                                                input_area = tab.ele(sel, timeout=3)
+                                                if input_area:
+                                                    # 守护日志：确认找到输入框的标签页不是回复引擎的标签页
+                                                    if reply_chat_tab_id:
+                                                        current_tab_id = getattr(tab, 'tab_id', None) or getattr(tab, '_tab_id', None)
+                                                        if current_tab_id == reply_chat_tab_id:
+                                                            self._log("ERROR", "严重BUG：打招呼引擎试图使用回复引擎标签页！跳过此标签页。")
+                                                            input_area = None
+                                                            continue
+                                                    self._log("INFO", f"在标签页 {tab_url} 中找到输入框: {sel}")
+                                                    # 包装为 greet_chat_instance，不修改 instance
+                                                    try:
+                                                        from boss_bot.browser_launcher import BrowserInstance, _IS_MACOS
+                                                        greet_chat_instance = BrowserInstance(
+                                                            chrome_page=tab if not _IS_MACOS else None,
+                                                            chromium=browser if _IS_MACOS else None,
+                                                            tab=tab if _IS_MACOS else None,
+                                                        )
+                                                        # 同步注册到 browser_manager
+                                                        if self.browser_manager is not None:
+                                                            self.browser_manager._greet_chat_tab = greet_chat_instance
+                                                    except Exception:
+                                                        pass
+                                                    break
+                                            except Exception:
+                                                pass
+                                        if input_area:
+                                            break
+                                    except Exception:
+                                        pass
+                    except Exception as e:
+                        self._log("DEBUG", f"标签页遍历失败: {e}")
 
             if not input_area:
                 self._log("WARN", "未找到输入框! 尝试打印页面上的input/textarea元素...")
@@ -1988,6 +1797,49 @@ class GreetEngine:
                 except Exception as e:
                     self._log("WARN", f"调试打印失败: {e}")
                     pass
+                # 关键修复：增加更详细DOM上下文日志，帮助诊断弹窗未弹出的原因
+                try:
+                    # 打印页面title
+                    self._log("WARN", f"页面title: {instance.title}")
+                except Exception:
+                    pass
+                # 检查是否有聊天弹窗容器
+                for _diag_sel in [".chat-container", ".chat-popup", ".chat-modal", ".drawer", ".modal-content"]:
+                    try:
+                        _diag_elem = instance.ele(_diag_sel, timeout=1)
+                        if _diag_elem:
+                            self._log("WARN", f"诊断: 发现弹窗容器 {_diag_sel}（可见）")
+                    except Exception:
+                        pass
+                # 检查"立即沟通"按钮是否还在
+                for _btn_sel in [".btn-greet", ".btn-startchat", ".btn btn-startchat"]:
+                    try:
+                        _btn_elem = instance.ele(_btn_sel, timeout=1)
+                        if _btn_elem:
+                            self._log("WARN", f"诊断: 沟通按钮仍在页面上: {_btn_sel}（文本: {_btn_elem.text}）")
+                    except Exception:
+                        pass
+                # 打印页面上所有button的文本（最多10个）
+                try:
+                    _all_btns = instance.eles("tag:button", timeout=2)
+                    self._log("WARN", f"页面共有 {len(_all_btns)} 个button元素")
+                    for _bi, _b in enumerate(_all_btns[:10]):
+                        try:
+                            _btxt = _b.text or ""
+                            self._log("WARN", f"  button{_bi}: {_btxt[:50]}")
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+                # 检查是否有错误提示/风控提示
+                for _risk_sel in [".error-tip", ".verify-modal", ".security-tip", ".risk-modal", ".captcha"]:
+                    try:
+                        _risk_elem = instance.ele(_risk_sel, timeout=1)
+                        if _risk_elem:
+                            _risk_txt = _risk_elem.text or ""
+                            self._log("WARN", f"诊断: 检测到风控/验证提示: {_risk_sel}（文本: {_risk_txt[:80]}）")
+                    except Exception:
+                        pass
                 return False, "未找到输入框"
             self._log("INFO", "找到输入框，输入消息...")
             input_area.input(greeting)
@@ -2215,14 +2067,6 @@ class GreetEngine:
             return
         time.sleep(random.uniform(min_sec, max_sec))
 
-    def _wait_or_stop(self, seconds: float) -> bool:
-        """等待指定秒数，期间检查是否被停止。"""
-        interval = 5
-        for _ in range(int(seconds / interval)):
-            if not self.running:
-                return False
-            time.sleep(interval)
-        return self.running
 
     # ── Cookie 管理 ──
 
@@ -2236,9 +2080,12 @@ class GreetEngine:
             paths_to_try = []
             if not os.path.isabs(cookie_name):
                 paths_to_try.append(str(DATA_DIR / cookie_name))
+                # 前端「我已登录」保存在项目根目录，这里也要能找到
+                paths_to_try.append(str(BASE_DIR / cookie_name))
             else:
                 paths_to_try.append(cookie_name)
             paths_to_try.append(str(DATA_DIR / "zhipin_cookies.json"))
+            paths_to_try.append(str(BASE_DIR / "zhipin_cookies.json"))
 
             loaded = False
             for p in paths_to_try:
@@ -2275,71 +2122,43 @@ class GreetEngine:
         except Exception as e:
             self._log("WARN", f"Cookie 保存失败: {e}")
 
-    def _clear_cookies(self):
-        """清除失效 Cookie。"""
-        if self._clear_cookies_on_failure:
-            try:
-                cookie_name = self._cookie_file if self._cookie_file else "zhipin_cookies.json"
-                dst = str(DATA_DIR / cookie_name) if not os.path.isabs(cookie_name) else cookie_name
-                if os.path.exists(dst):
-                    os.remove(dst)
-                self._log("INFO", f"已清除失效 Cookie: {dst}")
-            except Exception:
-                pass
 
     # ── 去重管理 ──
+
+    def _load_chatted(self) -> set:
+        """读取已沟通岗位集合，进程内缓存一次，避免每个岗位都重读整个文件。"""
+        if self._chatted_cache is None:
+            urls = set()
+            try:
+                if CHATTED_DB_FILE.exists():
+                    with open(CHATTED_DB_FILE, "r", encoding="utf-8") as f:
+                        urls = set(json.load(f))
+            except Exception as e:
+                self._log("WARN", f"读取去重库失败，按未沟通过处理: {e}")
+            self._chatted_cache = urls
+        return self._chatted_cache
 
     def _is_already_chatted(self, job: dict) -> bool:
         """检查是否已沟通过。"""
         url = job.get("url", "")
         if not url:
             return False
-        try:
-            if CHATTED_DB_FILE.exists():
-                with open(CHATTED_DB_FILE, "r", encoding="utf-8") as f:
-                    chatted = set(json.load(f))
-                return url in chatted
-        except Exception:
-            pass
-        return False
+        return url in self._load_chatted()
 
     def _mark_chatted(self, job: dict):
         """标记岗位为已沟通。"""
         url = job.get("url", "")
         if not url:
             return
+        chatted = self._load_chatted()
+        if url in chatted:
+            return
         try:
-            chatted = set()
-            if CHATTED_DB_FILE.exists():
-                with open(CHATTED_DB_FILE, "r", encoding="utf-8") as f:
-                    chatted = set(json.load(f))
             chatted.add(url)
-            with open(CHATTED_DB_FILE, "w", encoding="utf-8") as f:
-                json.dump(list(chatted), f, ensure_ascii=False)
-        except Exception:
-            pass
+            write_json_atomic(CHATTED_DB_FILE, sorted(chatted))
+        except Exception as e:
+            # 写失败必须报出来：静默丢一条就等于下次重复打招呼
+            self._log("WARN", f"写入去重库失败，可能重复打招呼: {e}")
 
     # ── 聊天日志 ──
 
-    def _save_chat_log(self, job: dict, skipped: bool = False, ai_result: dict = None, ai_duration: float = 0):
-        """保存聊天日志。"""
-        try:
-            logs = []
-            if CHATS_LOG_FILE.exists():
-                with open(CHATS_LOG_FILE, "r", encoding="utf-8") as f:
-                    logs = json.load(f)
-            logs.append({
-                "time": time.strftime("%Y-%m-%d %H:%M:%S"),
-                "job_name": job.get("job_name", ""),
-                "company": job.get("company", "") or job.get("company_location", ""),
-                "salary": job.get("salary", ""),
-                "query": self._query,
-                "city": self._city,
-                "skipped": skipped,
-                "ai_score": ai_result.get("score", "") if ai_result else "",
-                "ai_reason": ai_result.get("reason", "") if ai_result else "",
-            })
-            with open(CHATS_LOG_FILE, "w", encoding="utf-8") as f:
-                json.dump(logs[-500:], f, ensure_ascii=False, indent=2)
-        except Exception:
-            pass

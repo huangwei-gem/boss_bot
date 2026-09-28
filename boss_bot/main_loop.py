@@ -34,15 +34,17 @@ from datetime import datetime, date
 from pathlib import Path
 from typing import Optional, Callable
 
-from boss_bot.unified_config import UnifiedConfig, BASE_DIR
-from boss_bot.browser_launcher import BrowserManager
+from boss_bot.unified_config import UnifiedConfig, BASE_DIR, resolve_path, account_file
+from boss_bot.browser_launcher import BrowserManager, BOSS_AUTH_COOKIES
 from boss_bot.greet_engine import GreetEngine
-from boss_bot.reply_engine import ReplyEngine
+from boss_bot.reply_engine import ReplyEngine, conversation_rejected
 from boss_bot.page_handler import BossChatHandler
 from boss_bot.state_store import StateStore
 from boss_bot.stats import Stats
 from boss_bot.notify import Notifier
 from boss_bot.message_store import MessageStore
+from boss_bot.self_evolve import SelfEvolveEngine
+from boss_bot.metrics import get_metrics
 
 # DrissionPage 断连异常
 try:
@@ -51,6 +53,12 @@ except ImportError:
     PageDisconnectedError = None
 
 logger = logging.getLogger(__name__)
+
+# 打招呼两轮搜索之间的间隔秒数
+GREET_ROUND_INTERVAL = 30
+
+# 等待人工登录时的登录态轮询间隔（秒）
+LOGIN_POLL_INTERVAL = 5
 
 
 def _should_show_frontend(level: str, msg: str) -> bool:
@@ -104,7 +112,12 @@ class UnifiedBotLoop:
         self._logged_in = False
         self._needs_login = False
         self._greet_paused = False
+        # 只有"因为到达每日上限而暂停"才允许跨零点自动恢复；人工暂停不动
+        self._greet_paused_by_cap = False
+        self._greet_cap_paused_on = ""
         self._reply_paused = False
+        # 自进化引擎在 _init_engines 里构造（先置空，热重载/状态查询要能安全引用）
+        self._self_evolve = None
         self._current_mode = "idle"
         self._current_chat = None
         self._last_check = ""
@@ -128,13 +141,19 @@ class UnifiedBotLoop:
             "greet_rounds": 0,
             "reply_rounds": 0,
         }
+        # 累计/当日漏斗指标 — 持久化，重启和记录截断都不影响
+        self._metrics = get_metrics()
 
         # 共享浏览器管理器 — 使用指定账号的调试端口和独立用户数据目录
         browser_cfg = self.config.browser
-        user_data_dir = os.path.join("browser_data", f"account_{account_index}")
+        user_data_dir = str(resolve_path(
+            browser_cfg.user_data_dir
+            or Path("browser_data") / f"account_{account_index}"
+        ))
         self.browser_manager = BrowserManager(
             config=browser_cfg,
             account_index=account_index,
+            port=browser_cfg.debug_port + account_index,
             user_data_dir=user_data_dir,
         )
 
@@ -150,18 +169,16 @@ class UnifiedBotLoop:
         self._greet_engine: Optional[GreetEngine] = None
 
         # 浏览器重连计数 — 指数退避策略
+        self._reconnect_lock = threading.Lock()
         self._reconnect_attempts = 0
         self._max_reconnect_attempts = 10  # 允许更多次重连
         self._reconnect_base_delay = 2.0   # 基础延迟2秒
         self._reconnect_backoff_factor = 2.0  # 退避因子
         self._reconnect_max_delay = 60.0   # 最大延迟60秒
 
-        # 热重载配置默认值 — 运行时可被 _hot_reload_config() 覆盖
-        self._message_interval_min = 3
-        self._message_interval_max = 8
-        self._greet_enabled = True
-        self._reply_enabled = True
-        self._page_timeout = 30
+        # 打招呼/回复总开关 — 由 _hot_reload_config() 每轮刷新，线程内实时判断
+        self._greet_enabled = self.config.greet.enabled
+        self._reply_enabled = self.config.reply.enabled
 
         # 数据按天归档配置
         # data/archive/YYYY-MM-DD/ 存放每天的 greet_records + reply_records
@@ -218,15 +235,24 @@ class UnifiedBotLoop:
         if not self._reply_event_cb:
             return
         try:
+            # 同时发送两套字段名，确保前端 addReplyRecord 能正确映射：
+            # 前端期望 chat_name/boss_name, received_message, reply_content
+            # 后端原有 contact_name, message_received, reply_sent
             self._reply_event_cb({
                 "time": datetime.now().strftime("%H:%M:%S"),
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "contact_name": contact_name or "",
+                "chat_name": contact_name or "",
+                "boss_name": contact_name or "",
                 "job_name": job_name or "",
                 "message_received": message_received or "",
+                "received_message": message_received or "",
                 "reply_sent": reply_sent or "",
+                "reply_content": reply_sent or "",
                 "ai_model": ai_model or "",
                 "intent": intent or "",
                 "status": status,
+                "is_skipped": status in ("skipped", "skip", "error"),
             })
         except Exception:
             pass
@@ -285,6 +311,7 @@ class UnifiedBotLoop:
     def pause_greet(self):
         """暂停打招呼功能。回复功能不受影响。"""
         self._greet_paused = True
+        self._greet_paused_by_cap = False
         if self._greet_engine is not None:
             self._greet_engine.stop()
         self._log("INFO", "打招呼已暂停")
@@ -292,6 +319,7 @@ class UnifiedBotLoop:
     def resume_greet(self):
         """恢复打招呼功能。"""
         self._greet_paused = False
+        self._greet_paused_by_cap = False
         self._log("INFO", "打招呼已恢复")
 
     def pause_reply(self):
@@ -595,11 +623,7 @@ class UnifiedBotLoop:
             self._log("WARN", f"访问主站异常: {e}")
 
         # 使用账号特定的 Cookie 文件（优先账号配置，其次全局配置）
-        if self.account_index < len(self.config.greet.accounts):
-            acc_cookie = self.config.greet.accounts[self.account_index].cookie_file
-        else:
-            acc_cookie = ""
-        cookie_file = acc_cookie or self.config.login.cookie_file
+        cookie_file = self._cookie_file()
         self._log("DEBUG", f"Cookie 文件路径: {cookie_file}")
         if cookie_file:
             try:
@@ -617,6 +641,7 @@ class UnifiedBotLoop:
                         return True
                     else:
                         self._log("WARN", "Cookie 已过期，需要重新登录")
+                        self._discard_stale_cookies("启动时 Cookie 验证失败")
                 else:
                     self._log("INFO", "无 Cookie 文件或加载失败")
             except Exception as e:
@@ -631,10 +656,9 @@ class UnifiedBotLoop:
         except Exception:
             pass
 
-        self._log("INFO", "请在浏览器中手动登录 BOSS 直聘，登录完成后点击「我已登录」按钮")
+        self._log("INFO", "请在浏览器中登录 BOSS 直聘（扫码或手机号+验证码），登录成功后会自动继续")
 
-        # 等待用户确认登录
-        if not self._login_event.wait(timeout=self.config.login.wait_timeout):
+        if not self._wait_for_login(instance, cookie_file):
             self._log("ERROR", "登录超时，主循环退出")
             return False
 
@@ -649,6 +673,92 @@ class UnifiedBotLoop:
         self._needs_login = False
         return True
 
+    def _dry_run(self, what: str, detail: str = "") -> bool:
+        """演练模式：搜索、AI 判分、决策照常做，最后一下点击不发。
+
+        Returns:
+            True 表示处于演练模式，调用方必须跳过真实操作
+        """
+        if not self.config.dry_run:
+            return False
+        self._log("INFO", f"🧪 演练模式 | {what}"
+                          + (f": {detail[:60]}" if detail else "") + "（未真实操作）")
+        return True
+
+    def _cookie_file(self) -> str:
+        """本账号实际使用的 Cookie 文件：账号配置优先，全局配置兜底。
+
+        多账号下每个浏览器实例必须读自己那份，否则重连后会串号。
+        """
+        accounts = self.config.greet.accounts
+        acc_cookie = (accounts[self.account_index].cookie_file
+                      if self.account_index < len(accounts) else "")
+        return acc_cookie or self.config.login.cookie_file
+
+    def _discard_stale_cookies(self, reason: str):
+        """会话确认失效时删掉本地 Cookie，避免下一轮又拿死会话去撞风控。
+
+        由 login.clear_cookies_on_failure 控制（前端高级设置里的开关），
+        关掉时只记日志，保留 Cookie 供人工排查。
+        """
+        if not self.config.login.clear_cookies_on_failure:
+            self._log("DEBUG", f"{reason}：按配置保留 Cookie 文件")
+            return
+        path = self._cookie_file()
+        if not path:
+            return
+        try:
+            target = resolve_path(path)
+            if target.exists():
+                target.unlink()
+                self._log("INFO", f"{reason}：已删除失效 Cookie 文件 {target.name}，下次将走完整登录")
+        except OSError as e:
+            self._log("WARN", f"{reason}：删除 Cookie 文件失败: {e}")
+
+    def _wait_for_login(self, instance, cookie_file: str) -> bool:
+        """等待登录完成 — 自动检测为主，前端「我已登录」按钮只作兜底。
+
+        两级判定避免误判：先看浏览器里是否出现未过期的登录 Cookie，
+        再实际访问聊天页确认没被踢回登录页。
+        """
+        deadline = time.time() + self.config.login.wait_timeout
+        while time.time() < deadline and self._running and not self._stop_event.is_set():
+            if self._login_event.wait(timeout=LOGIN_POLL_INTERVAL):
+                self._log("INFO", "收到手动确认，按已登录继续")
+                return True
+            if self._has_live_auth_cookie(instance) and self._chat_page_reachable(instance):
+                self._log("SUCCESS", "检测到登录成功，自动继续（无需手动点击）")
+                return True
+        return False
+
+    def _has_live_auth_cookie(self, instance) -> bool:
+        """浏览器中是否存在未过期的 BOSS 登录 Cookie。"""
+        try:
+            now = time.time()
+            for c in instance._get_all_cookies() or []:
+                if not isinstance(c, dict) or c.get("name") not in BOSS_AUTH_COOKIES:
+                    continue
+                try:
+                    expires = float(c.get("expires") or -1)
+                except (TypeError, ValueError):
+                    expires = -1
+                if expires < 0 or expires > now:
+                    return True
+        except Exception:
+            pass
+        return False
+
+    def _chat_page_reachable(self, instance) -> bool:
+        """访问聊天页确认登录态（未登录会被重定向到登录页）。"""
+        try:
+            instance.get("https://www.zhipin.com/web/geek/chat")
+            self._stop_event.wait(timeout=2)   # 等 SPA 完成重定向
+            url = instance.url or ""
+            return "chat" in url and not any(
+                k in url for k in ("login", "/web/user", "passport"))
+        except Exception:
+            return False
+
     def _init_engines(self):
         """初始化打招呼引擎和回复相关组件。"""
         self._log("INFO", "正在初始化引擎...")
@@ -661,19 +771,34 @@ class UnifiedBotLoop:
             browser_instance=chat_page,
         )
 
-        self._msg_store = MessageStore()
+        self._msg_store = MessageStore(account_index=self.account_index)
 
+        # 自进化引擎：只做"回复效果记录 + 评估"，不会自动改你写的话术和规则。
+        # 以前生产链路根本没构造它，ReplyEngine._self_evolve 永远是 None，
+        # 2687 行代码加 5 个 /api/self_evolve 端点全都读到空数据。
+        self._self_evolve = SelfEvolveEngine(
+            config={"enabled": self.config.self_evolve_enabled},
+            log_callback=lambda msg: self._log("DEBUG", msg),
+            data_file=str(account_file(BASE_DIR / "data" / "evolution_data.json",
+                                       self.account_index)),
+        )
         self._reply_engine = ReplyEngine(
+            self_evolve=self._self_evolve,
             account_name=self.account_name,
             account_index=self.account_index,
             message_store=self._msg_store,
         )
-        self._state_store = StateStore()
+        # 每个账号一份 state/stats：共用的话账号2 会把账号1 处理过的消息当成
+        # "已处理"而不回复，人工接管和每日上限也会互相串
+        from boss_bot.config import STATE_FILE, STATS_FILE
+        self._state_store = StateStore(
+            path=account_file(STATE_FILE, self.account_index))
         # 启动时自动清除之前的人工接管暂停状态
         if self._state_store.is_paused():
             self._log("INFO", "检测到之前的人工接管暂停状态，自动恢复")
             self._state_store.resume()
-        self._stats = Stats()
+        self._stats = Stats(path=account_file(STATS_FILE, self.account_index))
+        self._metrics = get_metrics()
         self._notifier = Notifier()
 
 
@@ -685,6 +810,7 @@ class UnifiedBotLoop:
             log_callback=lambda msg: self._log("INFO", msg),
             progress_callback=self._on_greet_progress,
             greet_event_cb=self._greet_event_cb,
+            account_index=self.account_index,
         )
         # 关键：设置 running=True，否则 send_greeting 会直接返回 False
         self._greet_engine.running = True
@@ -699,8 +825,7 @@ class UnifiedBotLoop:
         """打招呼线程主循环 — 在搜索标签页中执行。"""
         self._log("INFO", "打招呼线程启动")
 
-        greet_enabled = self.config.greet.enabled
-        if not greet_enabled:
+        if not self.config.greet.enabled:
             self._log("INFO", "打招呼功能未启用，线程退出")
             return
 
@@ -708,7 +833,17 @@ class UnifiedBotLoop:
 
         while self._running and not self._stop_event.is_set():
             try:
+                # 总开关在每轮重新判断（前端可在不重启的情况下启用/停用）
+                if not self._greet_enabled:
+                    # 停用期间也要刷新配置，否则前端重新勾选后永远读不到
+                    self._hot_reload_config()
+                    self._stop_event.wait(timeout=10)
+                    continue
+
                 if self._greet_paused:
+                    # 因到达每日上限而暂停时，跨过零点要在暂停分支里自己醒过来：
+                    # 这一分支不会走到 _run_greet_round，放在轮次里永远执行不到
+                    self._maybe_auto_resume_greet()
                     self._stop_event.wait(timeout=10)
                     continue
 
@@ -723,12 +858,18 @@ class UnifiedBotLoop:
                 elif health == "need_login":
                     self._log("WARN", "登录态失效，等待重新登录...")
                     self._needs_login = True
+                    self._discard_stale_cookies("运行中检测到登录态失效")
                     self._stop_event.wait(timeout=30)
                     continue
                 elif health == "browser_disconnected":
                     self._log("WARN", "浏览器断开，尝试重连...")
                     self._try_reconnect_browser()
                     self._stop_event.wait(timeout=10)
+                    continue
+                elif health == "unknown":
+                    # 页面读不到时不盲发：可能是验证码页/标签页被关，先等下一轮再看
+                    self._log("WARN", "健康检查无法判断页面状态，本轮跳过打招呼")
+                    self._stop_event.wait(timeout=15)
                     continue
 
                 self._current_mode = "greet"
@@ -746,9 +887,8 @@ class UnifiedBotLoop:
                 else:
                     consecutive_empty_rounds = 0
 
-                # 打招呼间隔
-                greet_interval = self.config.greet.rate_limit.min_interval if hasattr(self.config.greet.rate_limit, 'min_interval') else 30
-                self._stop_event.wait(timeout=greet_interval)
+                # 两轮搜索之间的固定间隔（配置里没有这一项，别再假装可读）
+                self._stop_event.wait(timeout=GREET_ROUND_INTERVAL)
 
             except Exception as e:
                 self._log("ERROR", f"打招呼线程异常: {e}")
@@ -768,12 +908,16 @@ class UnifiedBotLoop:
         self._stats_dict["greet_rounds"] += 1
         any_jobs_found = False
 
+        # 配置每轮读一次即可：原来放在岗位循环里，每个岗位都要重读
+        # .env + bot_config + user_profile + overrides 四个文件
+        self._hot_reload_config()
+
         try:
             tasks = self._build_greet_tasks()
             self._log("DEBUG", f"构建打招呼任务数: {len(tasks)}")
             if not tasks:
                 self._log("WARN", "无打招呼任务可执行")
-                return
+                return False
 
             for task in tasks:
                 if not self._running or self._greet_paused:
@@ -827,6 +971,22 @@ class UnifiedBotLoop:
                             self._log("INFO", "计数器已重置，继续打招呼")
                             break
 
+                        # 每天上限 — 以持久化记录为准，重启进程不会重置（风控相关）
+                        max_per_day = self._greet_engine._max_per_day
+                        if max_per_day:
+                            # 上限是按 BOSS 账号算的，两个账号各 150，不能合计
+                            today_applied = sum(
+                                1 for r in self._greet_engine._greet_store.filter(
+                                    date=date.today().isoformat())
+                                if r.is_greeted and r.account_index == self.account_index
+                            )
+                            if today_applied >= max_per_day:
+                                self._log("WARN", f"已达到每日打招呼上限 {max_per_day}，本轮停止，明天继续")
+                                self._greet_paused = True
+                                self._greet_paused_by_cap = True
+                                self._greet_cap_paused_on = date.today().isoformat()
+                                break
+
                     # 去重检查：已沟通过的岗位跳过
                     if self._greet_engine._is_already_chatted(job):
                         self._log("INFO", f"⏭️ 已沟通过: {job.get('job_name', '')}")
@@ -836,73 +996,47 @@ class UnifiedBotLoop:
                         self._greet_engine._record_greet(job, is_skipped=True, skip_reason="已沟通过")
                         continue
 
-                    # ── 对话历史检查：如果该岗位的 HR 已经拒绝过，不再发打招呼 ──
-                    if self._msg_store is not None:
-                        try:
-                            job_name_to_check = job.get("job_name", "")
-                            company_to_check = job.get("company", "") or job.get("company_location", "")
-                            # 遍历所有已有聊天记录，检查是否有匹配该岗位且 HR 已拒绝的
-                            chat_list = self._msg_store.get_chat_list()
-                            should_skip_greet = False
-                            for chat in chat_list:
-                                chat_job_name = chat.get("job_name", "")
-                                chat_name = chat.get("chat_name", "")
-                                # 岗位名匹配（包含关系，因为岗位名可能带后缀如"查看职位"）
-                                if job_name_to_check and \
-                                        job_name_to_check in chat_job_name:
-                                    # 检查该聊天中 HR 是否已拒绝
-                                    dialog = self._msg_store.get_full_dialog(chat_name)
-                                    if dialog:
-                                        for msg in dialog:
-                                            if not msg.get("is_mine"):
-                                                content = (msg.get("text") or msg.get("content") or "").strip()
-                                                if self._reply_engine and \
-                                                        self._reply_engine._is_rejection(content):
-                                                    should_skip_greet = True
-                                                    self._log("INFO",
-                                                              f"⏭️ [{chat_name}] 该岗位HR已拒绝过，"
-                                                              f"跳过打招呼避免骚扰")
-                                                    break
-                                    if should_skip_greet:
-                                        break
-                            if should_skip_greet:
-                                self._stats_dict["greet_skipped"] += 1
-                                self._greet_engine._emit_greet_event(
-                                    job, "skip", skip_reason="该岗位HR已拒绝过，跳过打招呼")
-                                self._greet_engine._record_greet(
-                                    job, is_skipped=True,
-                                    skip_reason="该岗位HR已拒绝过，跳过打招呼",
-                                )
-                                continue
-                        except Exception as e:
-                            self._log("DEBUG", f"打招呼前对话历史检查异常（不影响流程）: {e}")
+                    # 已沟通过的岗位由 _is_already_chatted（按岗位 URL 去重）拦下：
+                    # 一条 URL 只属于一个 HR 发的一个岗位，这就是"岗位+HR 都是同一个"
+                    # 的唯一可靠依据。此处不再按昵称/岗位名扫描其他会话的聊天记录——
+                    # BOSS 只显示"杨女士""胡女士"，同名不同人，扫出来的拒绝属于别人。
 
-                    # AI 智能匹配分析 — 热重载所有运行时可变配置
-                    self._hot_reload_config()
+                    # AI 智能匹配分析 — 配置已在每轮开头热重载过
                     has_ai = self._greet_engine._ai_enabled and bool(self._greet_engine._ai_providers)
                     if has_ai:
                         ai_result, ai_duration = self._greet_engine._analyze_job_with_ai(job)
                         if ai_result is None and self._greet_engine._init_ai() is not None:
-                            self._log("WARN", f"🤖 AI 判定不匹配，跳过: {job.get('job_name', '')}")
+                            # 关键修复：从 self._last_ai_result 提取 AI 不匹配的具体原因，
+                            # 传给 skip_reason 让前端完整显示（与 greet_engine.py 保持一致）
+                            last_ai = self._greet_engine._last_ai_result or {}
+                            ai_reason = last_ai.get("reason", "") if last_ai else ""
+                            ai_skip_reason = (
+                                f"AI判定不匹配: {ai_reason}" if ai_reason else "AI判定不匹配"
+                            )
+                            self._log("WARN", f"🤖 AI 判定不匹配，跳过: {job.get('job_name', '')}（{ai_reason[:80] if ai_reason else ''}）")
                             self._stats_dict["greet_skipped"] += 1
                             # 写入 greet_records，记录具体跳过原因
-                            self._greet_engine._emit_greet_event(job, "ai_skip", skip_reason="AI判定不匹配")
-                            self._greet_engine._record_greet(job, is_skipped=True, skip_reason="AI判定不匹配")
+                            self._greet_engine._emit_greet_event(job, "ai_skip", skip_reason=ai_skip_reason)
+                            self._greet_engine._record_greet(job, is_skipped=True, skip_reason=ai_skip_reason)
                             continue
                         if ai_result and ai_result.get("suggested_greeting"):
                             job["_ai_suggested_greeting"] = ai_result["suggested_greeting"]
 
-                    # 随机间隔 — 优先使用热重载的配置值，回退到任务级配置
-                    min_interval = getattr(self, '_message_interval_min', task.get("message_interval_min", 3))
-                    max_interval = getattr(self, '_message_interval_max', task.get("message_interval_max", 8))
+                    # 随机间隔 — 账号级配置（前端「消息间隔」），每轮任务重建时已是最新值
+                    min_interval = task.get("message_interval_min", 3)
+                    max_interval = task.get("message_interval_max", 8)
                     delay = random.uniform(min_interval, max_interval)
                     self._stop_event.wait(timeout=delay)
                     if not self._running:
                         break
 
+                    if self._dry_run("本应打招呼",
+                                     f"{job.get('job_name', '')} @ {job.get('company', '')}"):
+                        continue
                     success = self._greet_engine.send_greeting(job)
                     if success:
                         self._stats_dict["greet_applied"] += 1
+                        self._metrics.bump(self.account_index, "greet_sent")
                     else:
                         self._stats_dict["greet_skipped"] += 1
 
@@ -955,19 +1089,47 @@ class UnifiedBotLoop:
         """回复线程主循环 — 在聊天标签页中执行。"""
         self._log("INFO", "回复线程启动")
 
-        reply_enabled = self.config.reply.enabled
-        if not reply_enabled:
+        if not self.config.reply.enabled:
             self._log("INFO", "回复功能未启用，线程退出")
             return
 
         while self._running and not self._stop_event.is_set():
             try:
+                if not self._reply_enabled:
+                    # 停用期间也要刷新配置，否则前端重新勾选后永远读不到
+                    self._hot_reload_config()
+                    self._stop_event.wait(timeout=10)
+                    continue
+
                 if self._reply_paused:
                     self._stop_event.wait(timeout=10)
                     continue
 
                 # 热重载所有运行时可变配置（AI/频率/间隔/开关等）
                 self._hot_reload_config()
+
+                # 登录态/风控检查：打招呼侧有，回复侧此前完全裸奔，
+                # 会话被踢或弹验证码时会空转一整轮才被发现
+                # 先对齐聊天标签页：否则健康检查读到的是打招呼侧正在跳转的页面，
+                # 搜索页上偶尔出现的风控提示会被误判成"回复侧被验证码拦截"
+                self._sync_chat_tab()
+                health = self._check_health()
+                if health == "captcha":
+                    self._log("ERROR", "⚠️ 回复侧检测到验证码/风控拦截！自动回复已暂停，请手动解除后恢复")
+                    if self._wind_control_cb:
+                        self._wind_control_cb("回复侧检测到验证码/风控拦截，请手动解除", "captcha")
+                    self._reply_paused = True
+                    continue
+                if health == "need_login":
+                    self._log("WARN", "回复侧检测到登录态失效，等待重新登录...")
+                    self._needs_login = True
+                    self._discard_stale_cookies("回复侧登录态失效")
+                    self._stop_event.wait(timeout=30)
+                    continue
+                if health == "browser_disconnected":
+                    self._try_reconnect_browser()
+                    self._stop_event.wait(timeout=10)
+                    continue
 
                 # 检查是否是新的一天，如果是则归档数据
                 self._check_and_archive_daily_data()
@@ -991,6 +1153,17 @@ class UnifiedBotLoop:
 
         self._log("INFO", "回复线程结束")
 
+    def _sync_chat_tab(self):
+        """把 chat_handler 指回回复侧专用的聊天标签页。
+
+        打招呼引擎会临时开自己的会话标签页，两边抢同一个 handler 时，
+        读到的是搜索/岗位页，健康检查和消息读取都会错位。
+        """
+        chat_page = self.browser_manager.get_chat_page()
+        if self._chat_handler is not None and chat_page is not None:
+            self._chat_handler.browser = chat_page
+            self._chat_handler.page = chat_page.page
+
     def _run_reply_round(self):
         """执行一轮回复任务：检查未读消息并回复。"""
         self._log("INFO", "━━━ 开始回复轮次 ━━━")
@@ -1004,13 +1177,8 @@ class UnifiedBotLoop:
                 self._log("INFO", f"人工接管模式中（{info.get('reason', '')}），仅监控不回复")
 
             # 关键修复：每次回复轮次都重新获取回复引擎专用的聊天标签页，
-            # 确保不被打招呼引擎的临时标签页抢占。
-            # get_chat_page() 返回的是 _chat_tab，与打招呼引擎的 _greet_chat_tab 严格区分。
-            chat_page = self.browser_manager.get_chat_page()
-            if self._chat_handler is not None:
-                # 同步 chat_handler 的浏览器实例为专用聊天标签页
-                self._chat_handler.browser = chat_page
-                self._chat_handler.page = chat_page.page
+            # 每次轮次都指回专用聊天标签页，避免被打招呼侧临时标签页抢占
+            self._sync_chat_tab()
 
             # 导航到聊天页面（使用聊天标签页）
             self._log("DEBUG", "正在导航到聊天页面...")
@@ -1060,48 +1228,9 @@ class UnifiedBotLoop:
         self._log("INFO", f"--- 正在处理与 [{name}] 的聊天 ---")
         self._log("DEBUG", f"聊天会话信息: {chat_info}")
 
-        # ── 上下文检查：在进入聊天前先检查 message_store 中的对话历史 ──
-        # 如果 HR 已经拒绝过，不再发任何消息（避免骚扰）
-        # 如果已有对话历史且最新是己方消息，跳过（避免重复发送）
-        try:
-            if self._msg_store is not None:
-                prior_dialog = self._msg_store.get_full_dialog(name)
-                if prior_dialog:
-                    # 检查 HR 是否已拒绝过
-                    for msg in prior_dialog:
-                        if not msg.get("is_mine"):
-                            content = (msg.get("text") or msg.get("content") or "").strip()
-                            if self._reply_engine and \
-                                    self._reply_engine._is_rejection(content):
-                                self._log("INFO",
-                                          f"⏭️ [{name}] HR已拒绝过，跳过本次回复避免骚扰")
-                                skip_reason = "HR已拒绝过，不再回复"
-                                self._emit_reply_event(
-                                    contact_name=name, job_name="",
-                                    message_received=content, reply_sent="",
-                                    ai_model="", intent="rejection",
-                                    status="skipped",
-                                )
-                                self._reply_engine._add_record(
-                                    chat_name=name, job_name="",
-                                    received_message=content, reply_content=None,
-                                    reply_source="skip", reply_intent="rejection",
-                                    reply_reason=skip_reason,
-                                    is_skipped=True, skip_reason=skip_reason,
-                                )
-                                try:
-                                    self._msg_store.append_skip_record(
-                                        chat_name=name, skip_reason=skip_reason,
-                                        job_name="", received_message=content,
-                                    )
-                                except Exception:
-                                    pass
-                                return
-                    self._log("DEBUG",
-                              f"[{name}] 已有 {len(prior_dialog)} 条对话历史，"
-                              f"HR未拒绝，正常处理新消息")
-        except Exception as e:
-            self._log("WARN", f"上下文检查异常（不影响后续流程）: {e}")
+        # 拒绝与否只能由"这段对话自己"判定，所以放到进入会话、读到页面实时消息之后再判。
+        # 这里不再按昵称预扫 message_store：昵称相同的两个人会被并进同一个文件，
+        # 提前扫出来的"已拒绝"其实属于另一个 HR，会造成误跳过。
 
         if not self._chat_handler.enter_chat(chat_info):
             self._log("WARN", f"会话 [{name}] 切换校验失败，本次跳过")
@@ -1119,14 +1248,8 @@ class UnifiedBotLoop:
                 reply_reason="会话切换校验失败，本次跳过",
                 is_skipped=True, skip_reason=skip_reason,
             )
-            # 写入完整对话消息存储
-            try:
-                self._msg_store.append_skip_record(
-                    chat_name=name, skip_reason=skip_reason,
-                    job_name="", received_message="",
-                )
-            except Exception:
-                pass
+            # 关键修复：不再把跳过原因存到 message_store，避免前端聊天界面被
+            # [跳过] 系统消息污染。跳过原因仍通过 reply_records 记录。
             return
 
         context_count = self.config.reply.context_message_count
@@ -1151,13 +1274,8 @@ class UnifiedBotLoop:
                 reply_reason="未读取到消息，跳过",
                 is_skipped=True, skip_reason=skip_reason,
             )
-            try:
-                self._msg_store.append_skip_record(
-                    chat_name=name, skip_reason=skip_reason,
-                    job_name=job_name, received_message="",
-                )
-            except Exception:
-                pass
+            # 关键修复：不再把跳过原因存到 message_store，避免前端聊天界面被
+            # [跳过] 系统消息污染。跳过原因仍通过 reply_records 记录。
             return
 
         # 将完整消息列表合并到 message_store（去重保存完整对话历史）
@@ -1197,16 +1315,34 @@ class UnifiedBotLoop:
                 reply_reason=skip_reason,
                 is_skipped=True, skip_reason=skip_reason,
             )
-            try:
-                self._msg_store.append_skip_record(
-                    chat_name=name, skip_reason=skip_reason,
-                    job_name=job_name, received_message="",
-                )
-            except Exception:
-                pass
+            # 关键修复：不再把跳过原因存到 message_store，避免前端聊天界面被
+            # [跳过] 系统消息污染。跳过原因仍通过 reply_records 记录。
             return
 
         self._log("INFO", f"对方最新消息: {latest_other_msg[:80]}")
+
+        # ── 防骚扰判定：依据只有当前这一段对话（同一 HR、同一岗位，页面实时读到什么算什么）──
+        # 只有当 HR 的拒绝是这段对话里对方最后一条消息、而且我们已经回过一句时，才跳过。
+        # 还没回过就不跳过 —— 交给回复引擎礼貌收尾一次，那是人的正常反应。
+        if conversation_rejected(messages) and messages[-1].get("is_mine"):
+            job_name = self._chat_handler.get_job_name()
+            self._log("INFO",
+                      f"⏭️ [{name} | {job_name}] 该会话HR已拒绝且已回复过，跳过避免骚扰")
+            skip_reason = "该会话HR已拒绝且已礼貌回复，不再骚扰"
+            self._emit_reply_event(
+                contact_name=name, job_name=job_name,
+                message_received=latest_other_msg, reply_sent="",
+                ai_model="", intent="rejection",
+                status="skipped",
+            )
+            self._reply_engine._add_record(
+                chat_name=name, job_name=job_name,
+                received_message=latest_other_msg, reply_content=None,
+                reply_source="skip", reply_intent="rejection",
+                reply_reason=skip_reason,
+                is_skipped=True, skip_reason=skip_reason,
+            )
+            return
 
         # 完整消息已通过 merge_messages 合并保存到 message_store，
         # 不再单独调用 append_hr_message 保存最新一条 HR 消息（避免重复）
@@ -1230,13 +1366,8 @@ class UnifiedBotLoop:
                 reply_reason=skip_reason,
                 is_skipped=True, skip_reason=skip_reason,
             )
-            try:
-                self._msg_store.append_skip_record(
-                    chat_name=name, skip_reason=skip_reason,
-                    job_name=job_name, received_message=latest_other_msg,
-                )
-            except Exception:
-                pass
+            # 关键修复：不再把跳过原因存到 message_store，避免前端聊天界面被
+            # [跳过] 系统消息污染。跳过原因仍通过 reply_records 记录。
             return
 
         boss_name = self._chat_handler.get_boss_name()
@@ -1247,14 +1378,28 @@ class UnifiedBotLoop:
         # 而不只传页面读取的最新消息，让AI能看到完整上下文
         try:
             full_dialog = self._msg_store.get_full_dialog(name)
-            if full_dialog:
-                # 优先使用 message_store 中的完整对话历史
+            stored_job = ""
+            try:
+                stored_job = ((self._msg_store.get_chat_detail(name) or {})
+                              .get("job_name") or "").strip()
+            except Exception as e:
+                self._log("DEBUG", f"读取会话岗位名失败（按无冲突处理）: {e}")
+            live_job = (self._chat_handler.get_job_name() or "").strip()
+            # 会话文件按昵称存，两个"杨女士"会落到同一个文件。岗位名对不上就说明这份
+            # 历史属于同名的另一个 HR，只能改用页面实时读到的这段对话。
+            job_conflict = bool(stored_job and live_job) and not (
+                stored_job in live_job or live_job in stored_job)
+            if full_dialog and not job_conflict:
                 messages_for_reply = full_dialog
                 self._log("DEBUG", f"使用完整对话历史: {len(full_dialog)} 条消息")
             else:
-                # 回退：使用页面读取的消息
                 messages_for_reply = messages
-                self._log("DEBUG", f"回退使用页面消息: {len(messages)} 条")
+                if job_conflict:
+                    self._log("WARN",
+                              f"[{name}] 会话文件岗位({stored_job[:20]})与当前对话"
+                              f"({live_job[:20]})不一致，按同名不同人处理，只用页面消息")
+                else:
+                    self._log("DEBUG", f"回退使用页面消息: {len(messages)} 条")
         except Exception as e:
             self._log("WARN", f"获取完整对话历史失败，回退使用页面消息: {e}")
             messages_for_reply = messages
@@ -1263,6 +1408,11 @@ class UnifiedBotLoop:
             messages_for_reply, boss_name, job_name, chat_name=name
         )
         self._log("DEBUG", f"回复引擎决策: action={action}, meta={meta}")
+
+        # 面试数：HR 这条消息的意图是邀约/敲定面试，同一个会话只算一次
+        if meta.get("intent") in ("invite_interview", "ask_interview"):
+            if self._metrics.add_interview(self.account_index, name):
+                self._log("SUCCESS", f"🎯 新增面试会话：[{name}]（{job_name or '未知岗位'}）")
 
         # 重要事件检测
         if self._notifier.notify_if_important(
@@ -1294,16 +1444,28 @@ class UnifiedBotLoop:
 
         # 执行回复
         if action == "resume":
+            if self._dry_run("本应发送简历", f"[{name}]（{job_name or '未知岗位'}）"):
+                return
             self._reply_engine.wait_human_delay()
             if self._chat_handler.send_resume():
                 self._state_store.mark_resume_sent(name)
                 self._stats.record_reply(source=meta.get("source", "rule"), action="resume")
                 self._stats_dict["resume_sent"] += 1
+                self._metrics.bump(self.account_index, "resume_sent")
                 self._msg_store.append_bot_message(
                     name, "[简历已发送]", job_name,
                     reply_source=meta.get("source", ""), action="resume",
                 )
                 self._log("INFO", "已发送简历")
+                # 落到 reply_records：接收简历数靠这条统计，重启才不会丢
+                self._reply_engine._add_record(
+                    chat_name=name, job_name=job_name,
+                    received_message=latest_other_msg,
+                    reply_content="[简历已发送]",
+                    reply_source=meta.get("source", ""),
+                    reply_intent=meta.get("intent", ""),
+                    reply_reason="HR索要简历，已发送附件简历",
+                )
                 self._emit_reply_event(
                     contact_name=name, job_name=job_name,
                     message_received=latest_other_msg, reply_sent="[简历已发送]",
@@ -1314,6 +1476,8 @@ class UnifiedBotLoop:
             else:
                 from boss_bot.config import RESUME_UNAVAILABLE_REPLY
                 self._log("WARN", "简历发送失败，降级为文字告知")
+                if self._dry_run("本应降级为文字告知", f"[{name}]"):
+                    return
                 self._reply_engine.wait_human_delay()
                 self._chat_handler.send_text(RESUME_UNAVAILABLE_REPLY)
                 self._msg_store.append_bot_message(
@@ -1335,6 +1499,8 @@ class UnifiedBotLoop:
                 )
 
         elif action == "text" and content:
+            if self._dry_run("本应回复", f"[{name}] {content}"):
+                return
             self._reply_engine.wait_human_delay()
             if self._chat_handler.send_text(content):
                 self._stats.record_reply(source=meta.get("source", "rule"), action="text")
@@ -1362,14 +1528,8 @@ class UnifiedBotLoop:
                     intent=meta.get("intent", ""),
                     status="error",
                 )
-                # 写入跳过原因到完整对话消息存储
-                try:
-                    self._msg_store.append_skip_record(
-                        chat_name=name, skip_reason=skip_reason,
-                        job_name=job_name, received_message=latest_other_msg,
-                    )
-                except Exception:
-                    pass
+                # 关键修复：不再把发送失败原因存到 message_store，避免前端聊天界面被
+                # [跳过] 系统消息污染。失败原因仍通过 reply_records 记录。
 
         else:
             self._log("INFO", "无合适回复，跳过")
@@ -1400,14 +1560,8 @@ class UnifiedBotLoop:
                 reply_reason=skip_reason,
                 is_skipped=True, skip_reason=skip_reason,
             )
-            # 写入跳过原因到完整对话消息存储
-            try:
-                self._msg_store.append_skip_record(
-                    chat_name=name, skip_reason=skip_reason,
-                    job_name=job_name, received_message=latest_other_msg,
-                )
-            except Exception:
-                pass
+            # 关键修复：不再把跳过原因存到 message_store，避免前端聊天界面被
+            # [跳过] 系统消息污染。跳过原因仍通过 reply_records 记录。
 
         self._state_store.mark_handled(name, latest_other_msg, action or "none")
         self._reply_engine.record_reply()
@@ -1420,74 +1574,122 @@ class UnifiedBotLoop:
         """热重载所有运行时可变配置。
 
         从配置文件重新加载，并同步到各运行引擎和主循环属性。
-        覆盖范围：
-          1. AI 配置（开关 + providers）
-          2. 频率限制（每小时/每天上限）
-          3. 消息间隔（打招呼最小/最大间隔）
-          4. 回复配置（回复间隔、每会话最大回复数）
-          5. 浏览器配置（页面超时）
-          6. 打招呼开关
-          7. 回复开关
-        任何配置加载异常都只记录日志并返回，不影响主循环运行。
+        覆盖范围（只写引擎真正读取的属性，避免"改了没生效"）：
+          1. 打招呼引擎的账号级参数（话术/简历图片/间隔/频率限制/重试次数）
+          2. AI 配置（打招呼侧受 ai.enabled 控制，回复侧始终启用）
+          3. 回复侧：延迟区间、每小时回复上限、max_tokens、失败兜底、限流等待
+          4. 打招呼、回复总开关
+          5. 人工接管暂停的自动恢复
+        整个过程只做日志与赋值，任何异常都不允许打断调用线程。
         """
         try:
             self.config = UnifiedConfig.load()
+
+            # 0. 引擎与主循环共用同一份新 config，并按新 config 重读
+            #    频率限制/话术/简历图片/账号参数（否则前端改了要重启才生效）
+            if self._greet_engine:
+                self._greet_engine.config = self.config
+                self._greet_engine.reload_runtime_settings()
+
+            # 1. AI 配置热重载
+            # 注意：ai.enabled 仅控制打招呼的AI岗位解析，不控制自动回复AI
+            # 自动回复AI始终开启（只要有API key），确保句句有回应
+            _ai_providers_as_dict = [
+                {
+                    "name": p.name,
+                    "api_key": p.api_key,
+                    "api_base": p.api_base,
+                    "model": p.model,
+                    "timeout": p.timeout,
+                }
+                for p in self.config.ai.providers
+            ]
+
+            if self._greet_engine:
+                self._greet_engine._ai_enabled = self.config.ai.enabled
+                self._greet_engine._ai_providers = _ai_providers_as_dict
+                # 只有 providers 列表真的变了才重建分析器：分析器里带着"坏接口冷却表"，
+                # 无条件置 None 会让每个岗位都把已确认失败的接口再踩一遍
+                fp = json.dumps([(p["name"], p["api_key"][-6:], p["api_base"], p["model"])
+                                 for p in _ai_providers_as_dict], ensure_ascii=False)
+                if getattr(self, "_ai_providers_fp", None) != fp:
+                    self._ai_providers_fp = fp
+                    self._greet_engine._ai_analyzer = None
+                self._greet_engine._ai_custom_filter_keywords = self.config.ai.custom_filter_keywords
+                self._greet_engine._ai_custom_scoring_prompt = self.config.ai.custom_scoring_prompt
+
+            if self._reply_engine:
+                # 回复引擎AI始终开启，不受 ai.enabled 开关控制
+                self._reply_engine._ai_providers = _ai_providers_as_dict
+                self._reply_engine._min_delay = self.config.reply.min_delay
+                self._reply_engine._max_delay = self.config.reply.max_delay
+                # 这几项以前只在进程启动时读一次快照，前端改了要重启才生效
+                self._reply_engine._max_replies_per_hour = self.config.reply.max_replies_per_hour
+                self._reply_engine._ai_max_tokens = self.config.ai.max_tokens
+                self._reply_engine._ai_fail_action = self.config.ai.fail_action
+                self._reply_engine._ai_rate_limit_wait = self.config.ai.rate_limit_wait
+            if self._self_evolve:
+                self._self_evolve.enabled = self.config.self_evolve_enabled
+
+            # 2. 打招呼 / 回复总开关
+            self._greet_enabled = self.config.greet.enabled
+            self._reply_enabled = self.config.reply.enabled
+
+            # 3. 人工接管状态自动恢复
+            self._maybe_auto_resume_reply()
         except Exception as e:
             self._log("WARN", f"热重载配置失败，保留旧配置: {e}")
+
+    def _maybe_auto_resume_greet(self):
+        """跨过零点后，因每日上限暂停的打招呼要自己恢复。
+
+        不恢复的话：当天投满 150 → _greet_paused=True → 进程一直开着，
+        第二天也不会再投，表现就是"机器人悄悄停了"。人工暂停不在此列。
+        """
+        if not self._greet_paused or not self._greet_paused_by_cap:
+            return
+        if self._greet_cap_paused_on == date.today().isoformat():
+            return  # 还是同一天，不必每 10 秒翻一遍记录文件
+        try:
+            eng = self._greet_engine
+            max_per_day = getattr(eng, "_max_per_day", 0) if eng else 0
+            if not max_per_day:
+                return
+            today_applied = sum(
+                1 for r in eng._greet_store.filter(date=date.today().isoformat())
+                if r.is_greeted and r.account_index == self.account_index)
+            if today_applied < max_per_day:
+                self._greet_paused = False
+                self._greet_paused_by_cap = False
+                self._log("SUCCESS",
+                          f"新的一天，今日已投 {today_applied}/{max_per_day}，打招呼自动恢复")
+        except Exception as e:
+            self._log("DEBUG", f"打招呼自动恢复检查失败（不影响流程）: {e}")
+
+    def _maybe_auto_resume_reply(self):
+        """重要事件驱动的暂停，在事件不再匹配关键词时自动恢复。
+
+        人工接管（前端「暂停回复」按钮）产生的暂停永不自动解除，
+        必须由用户点「恢复回复」——否则接管到一半机器人会把消息发出去。
+        """
+        if self._state_store is None:
+            return
+        if not (self._reply_paused or self._state_store.is_paused()):
             return
 
-        # 1. AI 配置热重载
-        # 注意：ai.enabled 仅控制打招呼的AI岗位解析，不控制自动回复AI
-        # 自动回复AI始终开启（只要有API key），确保句句有回应
-        if self._greet_engine:
-            self._greet_engine._ai_enabled = self.config.ai.enabled
-            self._greet_engine._ai_providers = self.config.ai.providers
+        pause_info = self._state_store.pause_info() if hasattr(self._state_store, "pause_info") else {}
+        pause_reason = str(pause_info.get("reason", ""))
+        if "人工接管" in pause_reason or "手动" in pause_reason:
+            return
 
-        if self._reply_engine:
-            # 回复引擎AI始终开启，不受 ai.enabled 开关控制
-            self._reply_engine._ai_enabled = True
-            self._reply_engine._ai_providers = self.config.ai.providers
-
-        # 2. 频率限制热重载 — 每小时/每天打招呼上限
-        if hasattr(self.config, 'greet') and self._greet_engine:
-            self._greet_engine._rate_per_hour = getattr(self.config.greet, 'rate_per_hour', 30)
-            self._greet_engine._rate_per_day = getattr(self.config.greet, 'rate_per_day', 100)
-
-        # 3. 消息间隔热重载 — 打招呼消息发送间隔
-        if hasattr(self.config, 'greet'):
-            self._message_interval_min = getattr(self.config.greet, 'message_interval_min', 3)
-            self._message_interval_max = getattr(self.config.greet, 'message_interval_max', 8)
-
-        # 4. 回复配置热重载 — 回复间隔和每会话最大回复数
-        if hasattr(self.config, 'reply') and self._reply_engine:
-            self._reply_engine._reply_interval_min = getattr(self.config.reply, 'reply_interval_min', 5)
-            self._reply_engine._reply_interval_max = getattr(self.config.reply, 'reply_interval_max', 15)
-            self._reply_engine._max_reply_per_conversation = getattr(self.config.reply, 'max_reply_per_conversation', 10)
-
-        # 5. 浏览器配置热重载 — 页面超时时间
-        if hasattr(self.config, 'browser'):
-            self._page_timeout = getattr(self.config.browser, 'page_timeout', 30)
-
-        # 6. 打招呼开关热重载
-        if hasattr(self.config, 'greet'):
-            self._greet_enabled = getattr(self.config.greet, 'enabled', True)
-
-        # 7. 回复开关热重载
-        if hasattr(self.config, 'reply'):
-            self._reply_enabled = getattr(self.config.reply, 'enabled', True)
-
-        # 8. 人工接管状态自动恢复 — 如果暂停原因已不再匹配重要关键词，自动恢复
-        if self._reply_paused or self._state_store.is_paused():
-            pause_info = self._state_store.pause_info() if hasattr(self._state_store, 'pause_info') else {}
-            pause_reason = pause_info.get('reason', '')
-            # 检查暂停原因中的消息是否还匹配当前的重要关键词
-            from boss_bot.config import IMPORTANCE_KEYWORDS
-            reason_text = pause_reason.lower()
-            still_important = any(kw.lower() in reason_text for kw in IMPORTANCE_KEYWORDS)
-            if not still_important:
-                self._reply_paused = False
-                self._state_store.resume()
-                self._log("INFO", "热重载检测到暂停原因已不再匹配重要关键词，自动恢复回复")
+        # 检查暂停原因中的消息是否还匹配当前的重要关键词
+        from boss_bot.config import IMPORTANCE_KEYWORDS
+        reason_text = pause_reason.lower()
+        still_important = any(kw.lower() in reason_text for kw in IMPORTANCE_KEYWORDS)
+        if not still_important:
+            self._reply_paused = False
+            self._state_store.resume()
+            self._log("INFO", "热重载检测到暂停原因已不再匹配重要关键词，自动恢复回复")
 
     # ─────────────────────────────────────────────
     # 健康检查与错误恢复
@@ -1518,59 +1720,66 @@ class UnifiedBotLoop:
 
         if self._chat_handler is not None:
             try:
-                return self._chat_handler.check_health()
-            except Exception:
-                pass
+                health = self._chat_handler.check_health()
+                return health if health in ("ok", "need_login", "captcha") else "unknown"
+            except Exception as e:
+                self._log("DEBUG", f"健康检查异常: {e}")
+                return "unknown"
 
         return "ok"
 
     def _try_reconnect_browser(self):
         """尝试重新连接浏览器（指数退避策略）。
 
+        打招呼和回复两个线程都可能在断连时调用，重连会关闭并重建浏览器实例
+        以及全部引擎，因此必须串行：后到的线程等前一个重连做完再继续。
+
         退避序列：2s → 4s → 8s → 16s → 32s → 60s → 60s → ...
         每次重连失败后等待时间按指数增长，上限为 _reconnect_max_delay。
         """
-        self._reconnect_attempts += 1
-        if self._reconnect_attempts > self._max_reconnect_attempts:
-            self._log("ERROR", f"已达到最大重连次数 {self._max_reconnect_attempts}，停止重连")
-            self._running = False
-            return
+        with self._reconnect_lock:
+            self._reconnect_attempts += 1
+            if self._reconnect_attempts > self._max_reconnect_attempts:
+                self._log("ERROR", f"已达到最大重连次数 {self._max_reconnect_attempts}，停止重连")
+                self._running = False
+                return
 
-        # 指数退避：base_delay * (backoff_factor ^ (attempts - 1))，上限 max_delay
-        delay = min(
-            self._reconnect_base_delay * (self._reconnect_backoff_factor ** (self._reconnect_attempts - 1)),
-            self._reconnect_max_delay
-        )
+            # 指数退避：base_delay * (backoff_factor ^ (attempts - 1))，上限 max_delay
+            delay = min(
+                self._reconnect_base_delay * (self._reconnect_backoff_factor ** (self._reconnect_attempts - 1)),
+                self._reconnect_max_delay
+            )
 
-        self._log("INFO", f"尝试重连浏览器（第 {self._reconnect_attempts} 次，等待 {delay:.1f}s）...")
-        # 在重连前先等待退避时间，避免短时间内频繁重连加重服务端压力
-        self._stop_event.wait(timeout=delay)
-        if not self._running:
-            return
+            self._log("INFO", f"尝试重连浏览器（第 {self._reconnect_attempts} 次，等待 {delay:.1f}s）...")
+            # 在重连前先等待退避时间，避免短时间内频繁重连加重服务端压力
+            self._stop_event.wait(timeout=delay)
+            if not self._running:
+                return
 
-        self._log("DEBUG", "正在关闭旧浏览器实例...")
+            self._log("DEBUG", "正在关闭旧浏览器实例...")
 
-        try:
-            self.browser_manager.close()
-            time.sleep(2)
-            self.browser_manager.launch()
-            self._log("INFO", "浏览器重连成功")
+            try:
+                self.browser_manager.close()
+                time.sleep(2)
+                self.browser_manager.launch()
+                self._log("INFO", "浏览器重连成功")
 
-            cookie_file = self.config.login.cookie_file
-            if cookie_file:
-                try:
-                    self.browser_manager.load_cookies(cookie_file)
-                except Exception:
-                    pass
+                cookie_file = self._cookie_file()
+                if cookie_file:
+                    try:
+                        if not self.browser_manager.load_cookies(cookie_file):
+                            self._log("WARN", "重连后 Cookie 加载未成功，可能需要重新登录")
+                    except Exception as e:
+                        self._log("WARN", f"重连后 Cookie 加载异常: {e}")
 
-            # 重新初始化所有引擎（回复 + 打招呼）
-            self._init_engines()
-            self._reconnect_attempts = 0
-            self._log("INFO", "引擎重新初始化完成，恢复运行")
+                # 重新初始化所有引擎（回复 + 打招呼）
+                self._init_engines()
+                self._reconnect_attempts = 0
+                self._log("INFO", "引擎重新初始化完成，恢复运行")
 
-        except Exception as e:
-            self._log("ERROR", f"浏览器重连失败: {e}")
-            # 不再固定等待10秒，由下次调用的指数退避决定等待时长
+            except Exception as e:
+                self._log("ERROR", f"浏览器重连失败: {e}")
+                # 不再固定等待10秒，由下次调用的指数退避决定等待时长
 
     # ─────────────────────────────────────────────
     # 上下文管理器支持

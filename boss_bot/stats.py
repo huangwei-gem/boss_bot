@@ -40,9 +40,8 @@ class Stats:
 
     def _save(self):
         try:
-            self.path.parent.mkdir(parents=True, exist_ok=True)
-            with open(self.path, "w", encoding="utf-8") as f:
-                json.dump(self._data, f, ensure_ascii=False, indent=2)
+            from boss_bot.unified_config import write_json_atomic
+            write_json_atomic(self.path, self._data)
         except Exception as e:
             import logging
             logging.getLogger(__name__).error(f"保存统计失败: {e}")
