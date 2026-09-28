@@ -5,7 +5,7 @@
 验证 UI 交互和日志输出。
 
 前置条件：Flask 服务运行在 http://localhost:5000
-运行方式：python tests/test_browser.py
+运行方式：python tests/e2e_browser.py
 """
 
 import os

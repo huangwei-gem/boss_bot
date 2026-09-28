@@ -12,6 +12,7 @@ import pytest
 import os
 import json
 import time
+import threading
 import tempfile
 import shutil
 from pathlib import Path
@@ -51,7 +52,8 @@ class UnifiedConfigTest:
         from boss_bot.unified_config import UnifiedConfig
         cfg = UnifiedConfig.load(
             config_path=str(tmp_path / "nonexistent.json"),
-            profile_path=str(tmp_path / "nonexistent_profile.json")
+            profile_path=str(tmp_path / "nonexistent_profile.json"),
+            overrides_path=str(tmp_path / "nonexistent_overrides.json")
         )
         assert cfg is not None
         assert cfg.browser.headless is False
@@ -70,7 +72,8 @@ class UnifiedConfigTest:
 
         cfg = UnifiedConfig.load(
             config_path=str(config_file),
-            profile_path=str(tmp_path / "nonexistent.json")
+            profile_path=str(tmp_path / "nonexistent.json"),
+            overrides_path=str(tmp_path / "nonexistent_overrides.json")
         )
         assert cfg.browser.headless is True
         assert cfg.browser.viewport_width == 1920
@@ -93,12 +96,109 @@ class UnifiedConfigTest:
 
         cfg = UnifiedConfig.load(
             config_path=str(tmp_path / "nonexistent.json"),
-            profile_path=str(profile_file)
+            profile_path=str(profile_file),
+            overrides_path=str(tmp_path / "nonexistent_overrides.json")
         )
         assert cfg.user_profile.name == "张三"
         assert cfg.user_profile.position == "Python开发"
         assert cfg.user_profile.skills == ["Python", "SQL"]
         assert cfg.user_profile.salary_expectation == "15-20K"
+
+    def test_overrides_beat_user_profile(self, tmp_path):
+        """config_overrides.json 是最高优先级的用户画像来源（前端保存走这里）"""
+        from boss_bot.unified_config import UnifiedConfig
+        profile_file = tmp_path / "user_profile.json"
+        profile_file.write_text(json.dumps({"name": "画像名字"}), encoding="utf-8")
+        overrides_file = tmp_path / "config_overrides.json"
+        overrides_file.write_text(
+            json.dumps({"user_profile": {"name": "覆盖名字"}}), encoding="utf-8")
+
+        cfg = UnifiedConfig.load(
+            config_path=str(tmp_path / "nonexistent.json"),
+            profile_path=str(profile_file),
+            overrides_path=str(overrides_file)
+        )
+        assert cfg.user_profile.name == "覆盖名字"
+
+    def test_load_browser_executable_keys(self, tmp_path):
+        """browser_path/chrome_path/user_data_dir/debug_port 必须真正生效（README 承诺可配）"""
+        from boss_bot.unified_config import UnifiedConfig
+        config_file = tmp_path / "bot_config.json"
+        config_file.write_text(json.dumps({
+            "browser": {
+                "browser_path": "C:/cloak/chrome.exe",
+                "user_data_dir": "C:/cloak/User Data",
+                "debug_port": 9333,
+            }
+        }), encoding="utf-8")
+
+        cfg = UnifiedConfig.load(
+            config_path=str(config_file),
+            profile_path=str(tmp_path / "nonexistent.json"),
+            overrides_path=str(tmp_path / "nonexistent_overrides.json")
+        )
+        assert cfg.browser.chrome_path == "C:/cloak/chrome.exe"
+        assert cfg.browser.user_data_dir == "C:/cloak/User Data"
+        assert cfg.browser.debug_port == 9333
+
+    def test_browser_path_survives_save_roundtrip(self, tmp_path):
+        """load().save() 不能把破解版浏览器路径写没了（start.bat 会执行这一步）"""
+        from boss_bot.unified_config import UnifiedConfig
+        config_file = tmp_path / "bot_config.json"
+        config_file.write_text(json.dumps({
+            "browser": {"browser_path": "D:/cloak/chrome.exe", "debug_port": 9444}
+        }), encoding="utf-8")
+
+        cfg = UnifiedConfig.load(
+            config_path=str(config_file),
+            profile_path=str(tmp_path / "none.json"),
+            overrides_path=str(tmp_path / "none_overrides.json")
+        )
+        cfg.save(str(config_file))
+        saved = json.loads(config_file.read_text(encoding="utf-8"))
+        assert saved["browser"]["browser_path"] == "D:/cloak/chrome.exe"
+        assert saved["browser"]["debug_port"] == 9444
+
+        again = UnifiedConfig.load(
+            config_path=str(config_file),
+            profile_path=str(tmp_path / "none.json"),
+            overrides_path=str(tmp_path / "none_overrides.json")
+        )
+        assert again.browser.chrome_path == "D:/cloak/chrome.exe"
+        assert again.browser.debug_port == 9444
+
+    def test_greet_enabled_is_honored(self, tmp_path):
+        """greet.enabled=false 必须真的关掉打招呼（曾经被 accounts 无条件覆盖成 True）"""
+        from boss_bot.unified_config import UnifiedConfig
+        config_file = tmp_path / "bot_config.json"
+        config_file.write_text(json.dumps({
+            "greet": {"enabled": False},
+            "accounts": [{"name": "主账号", "enabled": True,
+                          "jobs": [{"city": "上海", "query": "数据分析"}]}],
+        }), encoding="utf-8")
+
+        cfg = UnifiedConfig.load(
+            config_path=str(config_file),
+            profile_path=str(tmp_path / "none.json"),
+            overrides_path=str(tmp_path / "none_overrides.json")
+        )
+        assert cfg.greet.enabled is False
+        assert len(cfg.greet.accounts) == 1   # 账号本身照常解析
+
+    def test_greet_enabled_survives_save_roundtrip(self, tmp_path):
+        """save() 不能把 greet 段写没了，否则下次启动又自动启用"""
+        from boss_bot.unified_config import UnifiedConfig
+        config_file = tmp_path / "bot_config.json"
+        config_file.write_text(json.dumps({"greet": {"enabled": False}}), encoding="utf-8")
+
+        cfg = UnifiedConfig.load(
+            config_path=str(config_file),
+            profile_path=str(tmp_path / "none.json"),
+            overrides_path=str(tmp_path / "none_overrides.json")
+        )
+        cfg.save(str(config_file))
+        saved = json.loads(config_file.read_text(encoding="utf-8"))
+        assert saved["greet"]["enabled"] is False
 
     def test_save_and_reload(self, tmp_path):
         """测试保存和重新加载配置"""
@@ -984,7 +1084,6 @@ class ReplyEngineTest:
     def test_default_skip(self):
         """测试兜底跳过 — AI 未启用且无匹配时跳过"""
         from boss_bot.reply_engine import ReplyEngine
-        engine = ReplyEngine()
         with patch('boss_bot.reply_engine.config') as mock_config:
             mock_config.ENABLE_AI = False
             mock_config.AI_API_KEYS = []
@@ -995,6 +1094,8 @@ class ReplyEngineTest:
             mock_config.MAX_REPLIES_PER_HOUR = 30
             mock_config.MIN_DELAY = 2
             mock_config.MAX_DELAY = 5
+            # 引擎会把可热重载项快照到实例属性上，所以必须在 mock 生效后再构造
+            engine = ReplyEngine()
             action, content, meta = engine.get_reply("今天天气不错啊")
             assert action == "none"
             assert content is None
@@ -1003,7 +1104,6 @@ class ReplyEngineTest:
     def test_default_reply_when_configured(self):
         """测试配置为 default 时使用兜底话术"""
         from boss_bot.reply_engine import ReplyEngine
-        engine = ReplyEngine()
         with patch('boss_bot.reply_engine.config') as mock_config:
             mock_config.ENABLE_AI = False
             mock_config.AI_API_KEYS = []
@@ -1015,6 +1115,7 @@ class ReplyEngineTest:
             mock_config.MAX_REPLIES_PER_HOUR = 30
             mock_config.MIN_DELAY = 2
             mock_config.MAX_DELAY = 5
+            engine = ReplyEngine()
             action, content, meta = engine.get_reply("今天天气不错啊")
             assert action == "text"
             assert content == "兜底回复"
@@ -1234,67 +1335,32 @@ class AIAnalyzerChainTest:
         assert chain._resume_hash != ""
 
 
-class RetryDecoratorTest:
-    """retry 装饰器的单元测试"""
+class RetryConfigWiredTest:
+    """greet.retry 必须真的被运行时代码读取（否则前端改了没生效）"""
 
-    def test_retry_success_first_try(self):
-        """测试第一次就成功"""
-        from boss_bot.greet_engine import retry
-        call_count = 0
+    def _cfg(self, attempts):
+        from boss_bot.unified_config import UnifiedConfig
+        cfg = UnifiedConfig()
+        cfg.greet.retry.max_attempts = attempts
+        return cfg
 
-        class Dummy:
-            @retry(max_attempts=3, base_delay=0.01)
-            def succeed(self):
-                nonlocal call_count
-                call_count += 1
-                return "ok"
+    def test_打招呼引擎读到配置(self):
+        from boss_bot.greet_engine import GreetEngine
+        ge = GreetEngine(MagicMock(), self._cfg(5))
+        assert ge._retry_max_attempts == 5
 
-        d = Dummy()
-        result = d.succeed()
-        assert result == "ok"
-        assert call_count == 1
-
-    def test_retry_success_after_failure(self):
-        """测试失败后重试成功"""
-        from boss_bot.greet_engine import retry
-        call_count = 0
-
-        class Dummy:
-            def _log(self, level, msg):
-                pass
-
-            @retry(max_attempts=3, base_delay=0.01, backoff_factor=1.0)
-            def fail_then_succeed(self):
-                nonlocal call_count
-                call_count += 1
-                if call_count < 2:
-                    raise ValueError("临时错误")
-                return "ok"
-
-        d = Dummy()
-        result = d.fail_then_succeed()
-        assert result == "ok"
-        assert call_count == 2
-
-    def test_retry_all_fail(self):
-        """测试全部失败后抛出异常"""
-        from boss_bot.greet_engine import retry
-        call_count = 0
-
-        class Dummy:
-            def _log(self, level, msg):
-                pass
-
-            @retry(max_attempts=2, base_delay=0.01, backoff_factor=1.0)
-            def always_fail(self):
-                nonlocal call_count
-                call_count += 1
-                raise ValueError("永久错误")
-
-        d = Dummy()
-        with pytest.raises(ValueError, match="永久错误"):
-            d.always_fail()
-        assert call_count == 2
+    def test_热重载会把改动同步给引擎(self):
+        from boss_bot.main_loop import UnifiedBotLoop, UnifiedConfig
+        from boss_bot.greet_engine import GreetEngine
+        with patch("boss_bot.main_loop.BrowserManager"):
+            loop = UnifiedBotLoop(config=self._cfg(4))
+        loop._greet_engine = GreetEngine(MagicMock(), loop.config)
+        loop._reply_engine = None
+        loop._state_store = MagicMock()
+        loop._state_store.is_paused.return_value = False
+        with patch.object(UnifiedConfig, "load", return_value=self._cfg(9)):
+            loop._hot_reload_config()
+        assert loop._greet_engine._retry_max_attempts == 9
 
 
 # ===================== 主循环测试 =====================
@@ -1474,6 +1540,74 @@ class BrowserLauncherUtilTest:
         from boss_bot.browser_launcher import _is_port_open
         assert _is_port_open("127.0.0.1", 59999, timeout=0.5) is False
 
+    def test_portable_beats_system_default(self):
+        """BOSS 直聘有反爬：内置破解版必须优先于系统默认浏览器"""
+        from boss_bot import browser_launcher as bl
+        avail = {
+            "portable": "C:/proj/cloakbrowser/chrome.exe",
+            "chrome": "C:/Program Files/Google/Chrome/Application/chrome.exe",
+            "edge": "C:/Program Files (x86)/Microsoft/Edge/msedge.exe",
+        }
+        with patch.object(bl, "detect_available_browsers", return_value=avail), \
+             patch.object(bl, "_detect_default_browser", return_value="chrome"), \
+             patch.object(bl, "_preferred_browser", ""):
+            path, btype = bl._find_best_browser_path("chrome")
+        assert path == "C:/proj/cloakbrowser/chrome.exe"
+        assert btype == "portable"
+
+    def test_explicit_preference_beats_portable(self):
+        """用户在界面上手动选过浏览器时，尊重用户选择"""
+        from boss_bot import browser_launcher as bl
+        avail = {
+            "portable": "C:/proj/cloakbrowser/chrome.exe",
+            "edge": "C:/Edge/msedge.exe",
+        }
+        with patch.object(bl, "detect_available_browsers", return_value=avail), \
+             patch.object(bl, "_preferred_browser", "edge"):
+            path, btype = bl._find_best_browser_path("chrome")
+        assert path == "C:/Edge/msedge.exe"
+        assert btype == "edge"
+
+    def test_system_browser_used_when_no_portable(self):
+        """没有破解版时退回系统浏览器，不能报错"""
+        from boss_bot import browser_launcher as bl
+        avail = {"chrome": "C:/Chrome/chrome.exe"}
+        with patch.object(bl, "detect_available_browsers", return_value=avail), \
+             patch.object(bl, "_detect_default_browser", return_value="chrome"), \
+             patch.object(bl, "_preferred_browser", ""):
+            path, btype = bl._find_best_browser_path("chrome")
+        assert path == "C:/Chrome/chrome.exe"
+
+    def test_portable_path_detection_returns_exe(self):
+        """_get_portable_browser_path 要么返回真实存在的文件，要么返回空串"""
+        from boss_bot.browser_launcher import _get_portable_browser_path
+        path = _get_portable_browser_path()
+        assert path == "" or os.path.isfile(path)
+
+
+class ResolvePathTest:
+    """unified_config.resolve_path — 相对路径必须锚定到项目根目录"""
+
+    def test_relative_anchored_to_base_dir(self):
+        from boss_bot.unified_config import resolve_path, BASE_DIR
+        assert resolve_path("zhipin_cookies.json") == BASE_DIR / "zhipin_cookies.json"
+
+    def test_absolute_unchanged(self):
+        from boss_bot.unified_config import resolve_path
+        assert str(resolve_path("D:/other/cookies.json")) == os.path.normpath(
+            "D:/other/cookies.json")
+
+    def test_empty_returns_empty_path(self):
+        from boss_bot.unified_config import resolve_path
+        from pathlib import Path as _P
+        assert resolve_path("") == _P()
+        assert resolve_path(None) == _P()
+        assert resolve_path("   ") == _P()
+
+    def test_nested_relative(self):
+        from boss_bot.unified_config import resolve_path, BASE_DIR
+        assert resolve_path("browser_data/account_1") == BASE_DIR / "browser_data" / "account_1"
+
 
 # ===================== Flask 应用测试 =====================
 
@@ -1556,3 +1690,1428 @@ class FlaskAppTest:
         data = response.get_json()
         assert data["status"] == "ok"
         assert "browsers" in data
+
+
+# ===================== 热重载生效性测试 =====================
+
+class HotReloadEffectivenessTest:
+    """热重载必须写进引擎真正读取的属性 — 防止「前端改了没反应」"""
+
+    def _make_loop(self):
+        from boss_bot.main_loop import UnifiedBotLoop
+        from boss_bot.greet_engine import GreetEngine
+        with patch('boss_bot.main_loop.BrowserManager'):
+            loop = UnifiedBotLoop()
+        # 打招呼引擎用真身：热重载现在通过引擎自己的 reload_runtime_settings()
+        # 落地，换成 MagicMock 就只会自动造属性，测不出"改了没生效"
+        loop._greet_engine = GreetEngine(MagicMock(), loop.config)
+        loop._reply_engine = MagicMock()
+        loop._state_store = MagicMock()
+        loop._state_store.is_paused.return_value = False
+        return loop
+
+    def _reload(self, loop, cfg):
+        from boss_bot.main_loop import UnifiedConfig
+        with patch.object(UnifiedConfig, "load", return_value=cfg):
+            loop._hot_reload_config()
+
+    def test_rate_limit_lands_on_read_attributes(self):
+        """引擎读的是 _max_per_hour/_max_per_day，不是 _rate_per_hour"""
+        from boss_bot.unified_config import UnifiedConfig
+        loop = self._make_loop()
+        cfg = UnifiedConfig()
+        cfg.greet.rate_limit.enabled = True
+        cfg.greet.rate_limit.max_per_hour = 7
+        cfg.greet.rate_limit.max_per_day = 99
+        self._reload(loop, cfg)
+        assert loop._greet_engine._max_per_hour == 7
+        assert loop._greet_engine._max_per_day == 99
+        assert loop._greet_engine._rate_limit_enabled is True
+
+    def test_reply_delay_and_providers_landed(self):
+        """回复侧延迟区间与 provider 列表要落到 reply_engine 实例上"""
+        from boss_bot.unified_config import UnifiedConfig
+        loop = self._make_loop()
+        cfg = UnifiedConfig()
+        cfg.reply.min_delay = 11
+        cfg.reply.max_delay = 22
+        cfg.reply.max_replies_per_hour = 8
+        cfg.ai.max_tokens = 1234
+        cfg.ai.fail_action = "skip"
+        cfg.ai.rate_limit_wait = 45
+        self._reload(loop, cfg)
+        assert loop._reply_engine._min_delay == 11
+        assert loop._reply_engine._max_delay == 22
+        assert isinstance(loop._reply_engine._ai_providers, list)
+        # 这几项曾经只在启动时读一次快照，前端改了必须热重载可见
+        assert loop._reply_engine._max_replies_per_hour == 8
+        assert loop._reply_engine._ai_max_tokens == 1234
+        assert loop._reply_engine._ai_fail_action == "skip"
+        assert loop._reply_engine._ai_rate_limit_wait == 45
+
+    def test_greet_engine_receives_new_config(self):
+        """热重载要把新 config 交给引擎，账号级话术才能跟着变"""
+        from boss_bot.unified_config import UnifiedConfig
+        loop = self._make_loop()
+        cfg = UnifiedConfig()
+        cfg.greet.accounts[0].jobs[0].greeting_message = "改过的招呼语"
+        self._reload(loop, cfg)
+        assert loop._greet_engine.config is cfg
+        assert loop._greet_engine._greeting_message == "改过的招呼语"
+
+    def test_enable_switches_propagate_without_restart(self):
+        """打招呼/回复总开关热重载后立即可见"""
+        from boss_bot.unified_config import UnifiedConfig
+        loop = self._make_loop()
+        cfg = UnifiedConfig()
+        cfg.greet.enabled = False
+        cfg.reply.enabled = False
+        self._reload(loop, cfg)
+        assert loop._greet_enabled is False
+        assert loop._reply_enabled is False
+
+    def test_reload_failure_does_not_raise(self):
+        """配置读不出来时只记日志，绝不能把调用线程炸掉"""
+        from boss_bot.main_loop import UnifiedBotLoop, UnifiedConfig
+        with patch('boss_bot.main_loop.BrowserManager'):
+            loop = UnifiedBotLoop()
+        loop._greet_engine = MagicMock()
+        loop._reply_engine = MagicMock()
+        with patch.object(UnifiedConfig, "load", side_effect=RuntimeError("坏了")):
+            loop._hot_reload_config()
+
+    def test_reload_is_safe_when_engines_not_created(self):
+        """登录后才创建引擎，登录前热重载不能 AttributeError"""
+        from boss_bot.main_loop import UnifiedBotLoop, UnifiedConfig
+        with patch('boss_bot.main_loop.BrowserManager'):
+            loop = UnifiedBotLoop()
+        loop._greet_engine = None
+        loop._reply_engine = None
+        loop._state_store = None
+        with patch.object(UnifiedConfig, "load", return_value=UnifiedConfig()):
+            loop._hot_reload_config()
+        assert loop._greet_enabled is True
+
+
+class ManualPauseSurvivesTest:
+    """人工接管暂停不能被热重载自动解除"""
+
+    def _make_loop(self, reason):
+        from boss_bot.main_loop import UnifiedBotLoop
+        with patch('boss_bot.main_loop.BrowserManager'):
+            loop = UnifiedBotLoop()
+        loop._reply_paused = True
+        loop._state_store = MagicMock()
+        loop._state_store.is_paused.return_value = True
+        loop._state_store.pause_info.return_value = {"reason": reason}
+        return loop
+
+    def test_manual_takeover_not_auto_resumed(self):
+        loop = self._make_loop("手动暂停回复（人工接管）")
+        loop._maybe_auto_resume_reply()
+        assert loop._reply_paused is True
+        loop._state_store.resume.assert_not_called()
+
+    def test_stale_reason_auto_resumes(self):
+        loop = self._make_loop("一些不再匹配重要关键词的原因")
+        loop._maybe_auto_resume_reply()
+        assert loop._reply_paused is False
+        loop._state_store.resume.assert_called_once()
+
+    def test_missing_state_store_is_noop(self):
+        from boss_bot.main_loop import UnifiedBotLoop
+        with patch('boss_bot.main_loop.BrowserManager'):
+            loop = UnifiedBotLoop()
+        loop._state_store = None
+        loop._maybe_auto_resume_reply()
+
+
+# ===================== AI 不可用时不能全军覆没 =====================
+
+class AiOutageFailOpenTest:
+    """AI 挂了不等于「AI 判定不匹配」，不能把所有岗位都跳过"""
+
+    def test_all_providers_failed_marks_ai_error(self):
+        from boss_bot.greet_engine import AIAnalyzerChain
+        chain = AIAnalyzerChain(providers=[
+            {"name": "坏接口", "api_key": "sk-1", "api_base": "https://bad", "model": "m"}
+        ])
+        with patch.object(chain, "_call_provider_api", side_effect=RuntimeError("超时")):
+            result = chain.analyze_job({"job_name": "数据分析", "url": "u1"})
+        assert result["ai_error"] is True
+        assert result["is_match"] is True
+
+    def test_no_provider_marks_ai_error(self):
+        from boss_bot.greet_engine import AIAnalyzerChain
+        result = AIAnalyzerChain(providers=[]).analyze_job({"job_name": "x", "url": "u"})
+        assert result["ai_error"] is True
+
+    def _engine(self):
+        from boss_bot.greet_engine import GreetEngine
+        from boss_bot.unified_config import UnifiedConfig
+        return GreetEngine(MagicMock(), UnifiedConfig())
+
+    def test_outage_result_passes_gate(self):
+        """analyze_job 报 AI 不可用时，_analyze_job_with_ai 必须返回结果而不是 None"""
+        from boss_bot.greet_engine import AIAnalyzerChain
+        engine = self._engine()
+        with patch.object(engine, "_init_ai", return_value=AIAnalyzerChain(providers=[])):
+            result, _ = engine._analyze_job_with_ai({"job_name": "数据分析", "url": "u"})
+        assert result is not None
+        assert result.get("ai_error") is True
+
+    def test_analyzer_init_failure_passes_gate(self):
+        engine = self._engine()
+        with patch.object(engine, "_init_ai", return_value=None):
+            result, _ = engine._analyze_job_with_ai({"job_name": "数据分析", "url": "u"})
+        assert result is not None
+        assert result.get("ai_error") is True
+
+    def test_genuine_low_score_still_skipped(self):
+        """真正的不匹配（低分）仍然要跳过，不能被 fail-open 放水"""
+        engine = self._engine()
+        engine._ai_threshold = 70
+        chain = MagicMock()
+        chain.analyze_job.return_value = {"score": 10, "is_match": True, "reason": "不相关"}
+        chain.last_system_prompt = chain.last_user_prompt = None
+        chain.last_model_name = "m"
+        chain.last_raw_response = None
+        with patch.object(engine, "_init_ai", return_value=chain):
+            result, _ = engine._analyze_job_with_ai({"job_name": "销售", "url": "u"})
+        assert result is None
+
+
+class AiChainBudgetTest:
+    """容灾链不能串行试完 22 个接口 — 实测每岗位曾耗时 7~8 分钟"""
+
+    def _chain(self, n=22):
+        from boss_bot.greet_engine import AIAnalyzerChain
+        providers = [{"name": f"p{i}", "api_key": f"k{i}",
+                      "api_base": f"https://a{i}", "model": "m"} for i in range(n)]
+        return AIAnalyzerChain(providers=providers, cache_enabled=False)
+
+    def test_stops_after_max_attempts(self):
+        chain = self._chain(22)
+        calls = []
+        with patch.object(chain, "_call_provider_api",
+                          side_effect=lambda p, m: calls.append(p.name) or (_ for _ in ()).throw(RuntimeError("挂了"))):
+            chain.analyze_job({"job_name": "x", "url": "u"})
+        assert len(calls) == chain.MAX_ATTEMPTS_PER_JOB
+
+    def test_failed_provider_cools_down_and_is_skipped_next_job(self):
+        chain = self._chain(3)
+        with patch.object(chain, "_call_provider_api", side_effect=RuntimeError("403 FreeTier")):
+            chain.analyze_job({"job_name": "x", "url": "u1"})
+        assert set(chain._cooldown_until) == {"p0", "p1", "p2"}
+        # 第二个岗位不该再试这些接口，而是直接报 AI 不可用
+        second = []
+        with patch.object(chain, "_call_provider_api",
+                          side_effect=lambda p, m: second.append(p.name)):
+            result = chain.analyze_job({"job_name": "y", "url": "u2"})
+        assert second == []
+        assert result["ai_error"] is True
+
+    def test_success_clears_only_that_provider(self):
+        """成功只解除该接口的冷却；仍在冷却里的其它接口继续跳过"""
+        chain = self._chain(2)
+        chain._cooldown_until["p0"] = time.time() + 100
+        tried = []
+        with patch.object(chain, "_call_provider_api",
+                          side_effect=lambda p, m: (tried.append(p.name),
+                                                    {"score": 88, "is_match": True, "reason": "ok"})[1]):
+            result = chain.analyze_job({"job_name": "z", "url": "u3"})
+        assert result["score"] == 88
+        assert tried == ["p1"]
+        assert "p0" in chain._cooldown_until      # 冷却未到期，保留
+        assert "p1" not in chain._cooldown_until  # 成功后解除
+
+    def test_budget_limits_total_time(self):
+        """超出预算就放弃剩余接口，不能把 22 个全试完"""
+        chain = self._chain(22)
+        clock = [1000.0]
+
+        def fake_now():
+            clock[0] += 40.0     # 每次读时钟就"过去" 40 秒
+            return clock[0]
+
+        tried = []
+        with patch("boss_bot.greet_engine.time.time", side_effect=fake_now), \
+             patch.object(chain, "_call_provider_api",
+                          side_effect=lambda p, m: tried.append(p.name) or (_ for _ in ()).throw(RuntimeError("超时"))):
+            result = chain.analyze_job({"job_name": "w", "url": "u4"})
+        assert result["ai_error"] is True
+        assert len(tried) < 5, f"预算失效，试了 {len(tried)} 个接口"
+
+
+class CookieValidityCheckTest:
+    """Cookie 检测必须真的看过期时间 — 旧实现只看字段名，过期也报有效"""
+
+    def _write(self, tmp_path, cookies):
+        path = tmp_path / "cookies.json"
+        path.write_text(json.dumps(cookies), encoding="utf-8")
+        return str(path)
+
+    def test_valid_with_future_expiry(self, tmp_path):
+        from boss_bot.browser_launcher import check_cookie_valid_simple
+        now = time.time()
+        r = check_cookie_valid_simple(self._write(tmp_path, [
+            {"name": "wt2", "value": "x", "expires": now + 5 * 86400},
+            {"name": "zp_at", "value": "y", "expires": now + 2 * 86400},
+        ]))
+        assert r["valid"] is True
+        assert r["checks"]["expires_in_days"] == pytest.approx(2.0, abs=0.1)
+
+    def test_expired_reported_as_invalid(self, tmp_path):
+        from boss_bot.browser_launcher import check_cookie_valid_simple
+        now = time.time()
+        r = check_cookie_valid_simple(self._write(tmp_path, [
+            {"name": "wt2", "value": "x", "expires": now - 3 * 86400},
+            {"name": "bst", "value": "y", "expires": now - 1 * 86400},
+        ]))
+        assert r["valid"] is False
+        assert r["checks"]["expired"] is True
+        assert "过期" in r["reason"]
+
+    def test_missing_auth_cookie(self, tmp_path):
+        from boss_bot.browser_launcher import check_cookie_valid_simple
+        r = check_cookie_valid_simple(self._write(tmp_path, [
+            {"name": "BAIDUID", "value": "x", "expires": -1},
+        ]))
+        assert r["valid"] is False
+        assert "缺少登录字段" in r["reason"]
+
+    def test_session_cookie_counts_as_usable(self, tmp_path):
+        from boss_bot.browser_launcher import check_cookie_valid_simple
+        r = check_cookie_valid_simple(self._write(tmp_path, [
+            {"name": "wbg", "value": "x", "expires": -1},
+        ]))
+        assert r["valid"] is True
+        assert r["checks"]["expires_in_days"] is None
+
+    def test_real_login_cookie_names_recognized(self):
+        """字段名来自实测的真实会话，不能退回以前那个不存在的 wbct"""
+        from boss_bot.browser_launcher import BOSS_AUTH_COOKIES
+        assert "wbct" not in BOSS_AUTH_COOKIES
+        assert set(BOSS_AUTH_COOKIES) == {"wt2", "zp_at", "bst", "wbg"}
+
+
+class AutoLoginDetectionTest:
+    """登录成功要自动识别，不再强制人工点「我已登录」"""
+
+    def _loop(self, wait_timeout=300):
+        from boss_bot.main_loop import UnifiedBotLoop, UnifiedConfig
+        with patch('boss_bot.main_loop.BrowserManager'):
+            loop = UnifiedBotLoop()
+        loop.config = UnifiedConfig()
+        loop.config.login.wait_timeout = wait_timeout
+        loop._running = True
+        loop._stop_event = threading.Event()
+        return loop
+
+    def test_detects_login_without_manual_click(self):
+        import boss_bot.main_loop as ml
+        loop = self._loop()
+        instance = MagicMock()
+        instance._get_all_cookies.return_value = [
+            {"name": "wt2", "value": "x", "expires": time.time() + 86400}]
+        instance.url = "https://www.zhipin.com/web/geek/chat"
+        with patch.object(ml, "LOGIN_POLL_INTERVAL", 0.1):
+            assert loop._wait_for_login(instance, "cookies.json") is True
+
+    def test_expired_auth_cookie_does_not_count_as_logged_in(self):
+        import boss_bot.main_loop as ml
+        loop = self._loop(wait_timeout=0)     # 超时立刻到 → 不进循环
+        instance = MagicMock()
+        instance._get_all_cookies.return_value = [
+            {"name": "wt2", "value": "x", "expires": time.time() - 86400}]
+        assert loop._has_live_auth_cookie(instance) is False
+
+    def test_redirect_to_login_page_is_not_logged_in(self):
+        loop = self._loop()
+        instance = MagicMock()
+        instance.url = "https://www.zhipin.com/web/user/?ka=header-login"
+        assert loop._chat_page_reachable(instance) is False
+
+    def test_manual_button_still_works(self):
+        import boss_bot.main_loop as ml
+        loop = self._loop()
+        loop._login_event.set()
+        instance = MagicMock()
+        instance._get_all_cookies.return_value = []
+        with patch.object(ml, "LOGIN_POLL_INTERVAL", 0.1):
+            assert loop._wait_for_login(instance, "cookies.json") is True
+
+    def test_timeout_returns_false(self):
+        loop = self._loop(wait_timeout=0)
+        instance = MagicMock()
+        instance._get_all_cookies.return_value = []
+        assert loop._wait_for_login(instance, "cookies.json") is False
+
+    def test_stop_breaks_the_wait(self):
+        import boss_bot.main_loop as ml
+        loop = self._loop(wait_timeout=600)
+        loop._running = False
+        instance = MagicMock()
+        with patch.object(ml, "LOGIN_POLL_INTERVAL", 0.1):
+            assert loop._wait_for_login(instance, "cookies.json") is False
+
+
+# ===================== 回复引擎 AI 调用 =====================
+
+class ReplyAiCallTest:
+    """回复侧 AI：provider 字段两种命名都要认，且必须带超时"""
+
+    def _engine(self):
+        from boss_bot.reply_engine import ReplyEngine
+        return ReplyEngine()
+
+    def test_hot_reload_provider_shape_accepted(self):
+        engine = self._engine()
+        engine._ai_providers = [{
+            "name": "主", "api_key": "sk-1", "api_base": "https://a/v1",
+            "model": "m1", "timeout": 12,
+        }]
+        with patch("openai.OpenAI") as mock_oai, \
+             patch.object(engine, "_call_with_rate_limit_retry", return_value="在的"):
+            out = engine._ask_ai("在吗", "HR", "数据分析", [])
+        assert out == "在的"
+        assert mock_oai.call_args.kwargs["api_key"] == "sk-1"
+        assert mock_oai.call_args.kwargs["base_url"] == "https://a/v1"
+        assert mock_oai.call_args.kwargs["timeout"] == 12
+        assert mock_oai.call_args.kwargs["max_retries"] == 0
+
+    def test_legacy_provider_shape_still_works(self):
+        engine = self._engine()
+        engine._ai_providers = [{"key": "sk-2", "url": "https://b/v1", "model": "m2"}]
+        with patch("openai.OpenAI") as mock_oai, \
+             patch.object(engine, "_call_with_rate_limit_retry", return_value="好的"):
+            out = engine._ask_ai("在吗", "HR", "数据分析", [])
+        assert out == "好的"
+        assert mock_oai.call_args.kwargs["api_key"] == "sk-2"
+
+    def test_incomplete_provider_skipped_not_crash(self):
+        engine = self._engine()
+        engine._ai_providers = [{"key": "", "url": "", "model": ""}]
+        with patch.object(engine, "_call_with_rate_limit_retry") as call:
+            out = engine._ask_ai("在吗", "HR", "岗位", [])
+        call.assert_not_called()
+        assert out is None
+
+    def test_wait_human_delay_uses_instance_range(self):
+        engine = self._engine()
+        engine._min_delay = 41
+        engine._max_delay = 42
+        with patch("boss_bot.reply_engine.random.uniform", return_value=41.5) as uni, \
+             patch("boss_bot.reply_engine.time.sleep"):
+            engine.wait_human_delay()
+        assert (uni.call_args.args[0], uni.call_args.args[1]) == (41, 42)
+
+
+# ===================== 原子写入 =====================
+
+class AtomicWriteTest:
+    """write_json_atomic — 进程被杀不能留下半截 JSON"""
+
+    def test_roundtrip(self, tmp_path):
+        from boss_bot.unified_config import write_json_atomic
+        target = tmp_path / "sub" / "state.json"
+        write_json_atomic(target, {"a": 1, "中文": "值"})
+        assert json.loads(target.read_text(encoding="utf-8")) == {"a": 1, "中文": "值"}
+
+    def test_no_tmp_leftover(self, tmp_path):
+        from boss_bot.unified_config import write_json_atomic
+        target = tmp_path / "state.json"
+        write_json_atomic(target, {"a": 1})
+        assert list(tmp_path.iterdir()) == [target]
+
+    def test_failed_dump_keeps_original(self, tmp_path):
+        """序列化失败时旧文件必须仍然完整可读（原子写的全部意义）"""
+        from boss_bot.unified_config import write_json_atomic
+        target = tmp_path / "state.json"
+        write_json_atomic(target, {"keep": "me"})
+
+        class Boom:
+            pass
+
+        with pytest.raises(TypeError):
+            write_json_atomic(target, {"new": Boom()})
+        assert json.loads(target.read_text(encoding="utf-8")) == {"keep": "me"}
+        assert list(tmp_path.glob("*.tmp")) == []
+
+    def test_state_store_recovers_from_torn_file(self, tmp_path):
+        path = tmp_path / "bot_state.json"
+        path.write_text('{"chats": {"a": ', encoding="utf-8")
+        from boss_bot.state_store import StateStore
+        store = StateStore(path=str(path))
+        assert store.is_paused() is False
+        store.pause(reason="测试")
+        assert json.loads(path.read_text(encoding="utf-8"))["paused"]["reason"] == "测试"
+
+
+# ===================== 标签页精确关闭 =====================
+
+class TabCloseTest:
+    """close_current_tab 只能关掉自己那一个标签页"""
+
+    def test_tab_object_closed_precisely(self):
+        from boss_bot.browser_launcher import BrowserInstance
+        tab = MagicMock()
+        del tab.get_tabs
+        BrowserInstance(chrome_page=tab).close_current_tab()
+        tab.close.assert_called_once()
+
+    def test_browser_level_object_not_closed(self):
+        """浏览器级对象的 close() 会带走整个浏览器，必须拒绝"""
+        from boss_bot.browser_launcher import BrowserInstance
+
+        class FakePage:
+            def get_tabs(self):
+                return []
+
+            def close(self):
+                raise AssertionError("不能关闭整个浏览器")
+
+        BrowserInstance(chrome_page=FakePage()).close_current_tab()
+
+    def test_drissionpage_tab_has_no_close_current_tab(self):
+        """4.1 的标签页对象没有 close_current_tab，老代码调它必然抛异常"""
+        from DrissionPage._pages.chromium_tab import ChromiumTab
+        assert not hasattr(ChromiumTab, "close_current_tab")
+
+
+# ===================== 拒绝跳过的判定范围 =====================
+
+def _hr(text, **kw):
+    return {"text": text, "is_mine": False, **kw}
+
+
+def _me(text):
+    return {"text": text, "is_mine": True}
+
+
+class RejectionScopeTest:
+    """防骚扰跳过只能由当前这段对话的拒绝决定，不能拿昵称或岗位名去猜人。
+
+    BOSS 只显示"杨女士""胡女士"，同名的是不同的人，扫全部聊天记录必然误判。
+    """
+
+    def test_empty_history_is_not_rejected(self):
+        from boss_bot.reply_engine import conversation_rejected
+        assert conversation_rejected([]) is False
+        assert conversation_rejected(None) is False
+
+    def test_tail_rejection_counts(self):
+        from boss_bot.reply_engine import conversation_rejected
+        dialog = [_hr("您好，还招数据分析吗"),
+                  _me("招的，我有5年经验"),
+                  _hr("抱歉，经验跟岗位不太合适")]
+        assert conversation_rejected(dialog) is True
+
+    def test_rejection_is_not_searched_through_whole_history(self):
+        """拒绝之后 HR 又主动说话 — 对话还在继续，不算已拒绝"""
+        from boss_bot.reply_engine import conversation_rejected
+        dialog = [_hr("抱歉，不太合适"),
+                  _me("好的，祝您招聘顺利"),
+                  _hr("刚问错岗位了，我们这个其实很匹配你的简历")]
+        assert conversation_rejected(dialog) is False
+
+    def test_our_reply_after_rejection_keeps_it_rejected(self):
+        from boss_bot.reply_engine import conversation_rejected
+        assert conversation_rejected([_hr("暂不考虑"), _me("好的谢谢")]) is True
+
+    def test_non_text_tail_does_not_hide_rejection(self):
+        from boss_bot.reply_engine import conversation_rejected
+        dialog = [_hr("不合适"), _hr("", type="image")]
+        assert conversation_rejected(dialog) is True
+
+    def test_two_same_name_hr_scoped_independently(self):
+        """两个"杨女士"各判各的：一份对话以拒绝收尾，另一份不受影响"""
+        from boss_bot.reply_engine import conversation_rejected
+        assert conversation_rejected([_hr("简历看了，不合适")]) is True
+        assert conversation_rejected([_hr("方便下周来面试吗")]) is False
+
+
+class RejectionDecisionTest:
+    """get_reply 的拒绝分支只能看当前这段对话"""
+
+    def _engine(self):
+        from boss_bot.reply_engine import ReplyEngine
+        engine = ReplyEngine()
+        engine._ai_providers = []
+        engine._ask_ai = MagicMock(return_value=None)
+        return engine
+
+    def test_skip_only_when_this_conversation_was_rejected(self):
+        engine = self._engine()
+        dialog = [_hr("在吗"), _hr("抱歉不太合适"), _me("好的谢谢"), _hr("在忙吗")]
+        action, content, meta = engine.get_reply(
+            dialog, "杨女士", "数据分析岗", chat_name="杨女士")
+        assert action == "none"
+        assert meta["source"] == "rejection"
+
+    def test_re_engage_after_rejection_is_answered(self):
+        engine = self._engine()
+        dialog = [_hr("抱歉不太合适"), _me("好的谢谢"), _hr("再聊聊？想约你面试")]
+        action, content, meta = engine.get_reply(
+            dialog, "杨女士", "数据分析岗", chat_name="杨女士")
+        assert meta["source"] != "rejection"
+
+    def test_unanswered_rejection_gets_polite_closing(self):
+        engine = self._engine()
+        action, content, meta = engine.get_reply(
+            [_hr("简历跟岗位要求不匹配，算了")], "胡女士", "供应链数据分析", chat_name="胡女士")
+        assert action == "text"
+        assert meta["intent"] == "rejection"
+
+    def test_store_history_not_used_when_list_passed(self):
+        """调用方已经给了对话列表时，不能再按昵称覆盖成 store 里的合并历史"""
+        from boss_bot.reply_engine import ReplyEngine
+        store = MagicMock()
+        store.get_full_dialog.return_value = [_hr("抱歉，暂不合适")]
+        engine = ReplyEngine(message_store=store)
+        engine._ai_providers = []
+        engine._ask_ai = MagicMock(return_value=None)
+        engine.get_reply([_hr("方便聊一下吗")], "杨女士", "岗位A", chat_name="杨女士")
+        store.get_full_dialog.assert_not_called()
+
+
+class _FakeChatStore:
+    """按昵称存文件的会话库 — 复现两个"杨女士"共用一个文件的真实结构"""
+
+    def __init__(self, detail, dialog):
+        self._detail = detail
+        self._dialog = dialog
+        self.merged = []
+
+    def get_chat_detail(self, name):
+        return self._detail
+
+    def get_full_dialog(self, name, limit=50):
+        return self._dialog
+
+    def merge_messages(self, chat_name, new_messages, job_name=""):
+        self.merged.append((chat_name, job_name))
+        return len(new_messages)
+
+
+class ProcessSingleChatRejectionTest:
+    """_process_single_chat 的跳过必须来自当前会话本身"""
+
+    def _make_loop(self, live_messages, live_job, stored_detail, stored_dialog):
+        from boss_bot.main_loop import UnifiedBotLoop
+        with patch('boss_bot.main_loop.BrowserManager'):
+            loop = UnifiedBotLoop()
+        loop._chat_handler = MagicMock()
+        loop._chat_handler.enter_chat.return_value = True
+        loop._chat_handler.read_all_messages.return_value = live_messages
+        loop._chat_handler.get_boss_name.return_value = "杨女士"
+        loop._chat_handler.get_job_name.return_value = live_job
+        loop._msg_store = _FakeChatStore(stored_detail, stored_dialog)
+        loop._reply_engine = MagicMock()
+        loop._reply_engine.get_reply.return_value = ("none", None, {})
+        loop._state_store = MagicMock()
+        loop._state_store.was_handled.return_value = False
+        loop._state_store.is_paused.return_value = False
+        loop._notifier = MagicMock()
+        loop._notifier.notify_if_important.return_value = False
+        loop._stats = MagicMock()
+        loop._stats_dict = {"reply_skipped": 0, "reply_sent": 0, "important_events": 0}
+        loop._emit_reply_event = MagicMock()
+        loop._log = MagicMock()
+        return loop
+
+    def _skip_reasons(self, loop):
+        return [c.kwargs.get("skip_reason", "")
+                for c in loop._reply_engine._add_record.call_args_list]
+
+    def test_no_pre_enter_scan_by_nickname(self):
+        """store 里有同名 HR 的拒绝记录，也必须照常进入会话再判断"""
+        loop = self._make_loop(
+            live_messages=[_hr("方便聊一下吗")],
+            live_job="数据分析",
+            stored_detail={"chat_name": "杨女士", "job_name": "其他公司岗位"},
+            stored_dialog=[_hr("抱歉，暂不合适")],
+        )
+        loop._process_single_chat({"name": "杨女士"})
+        loop._chat_handler.enter_chat.assert_called_once()
+        assert not any("已拒绝" in r for r in self._skip_reasons(loop))
+
+    def test_rejected_and_already_answered_skips(self):
+        loop = self._make_loop(
+            live_messages=[_hr("抱歉，不合适"), _me("好的，祝您招聘顺利")],
+            live_job="数据分析",
+            stored_detail={"chat_name": "杨女士", "job_name": "数据分析"},
+            stored_dialog=[_hr("抱歉，不合适")],
+        )
+        loop._process_single_chat({"name": "杨女士"})
+        loop._reply_engine.get_reply.assert_not_called()
+        assert any("该会话HR已拒绝" in r for r in self._skip_reasons(loop))
+
+    def test_unanswered_rejection_still_replies(self):
+        loop = self._make_loop(
+            live_messages=[_hr("抱歉，不合适")],
+            live_job="数据分析",
+            stored_detail={"chat_name": "杨女士", "job_name": "数据分析"},
+            stored_dialog=[_hr("抱歉，不合适")],
+        )
+        loop._process_single_chat({"name": "杨女士"})
+        loop._reply_engine.get_reply.assert_called_once()
+
+    def test_same_name_other_job_history_not_used_as_context(self):
+        """同名不同岗位 — 那份历史属于另一个人，只能用页面实时消息"""
+        loop = self._make_loop(
+            live_messages=[_hr("方便聊一下吗")],
+            live_job="供应链数据分析员",
+            stored_detail={"chat_name": "杨女士", "job_name": "java开发工程师"},
+            stored_dialog=[_hr("抱歉，暂不合适"), _hr("随便看看")],
+        )
+        loop._process_single_chat({"name": "杨女士"})
+        passed = loop._reply_engine.get_reply.call_args.args[0]
+        assert passed is loop._chat_handler.read_all_messages.return_value
+
+    def test_greet_round_does_not_scan_other_chats(self):
+        """打招呼侧不能再按昵称扫别的会话，同名会误伤"""
+        import inspect
+        from boss_bot.main_loop import UnifiedBotLoop
+        src = inspect.getsource(UnifiedBotLoop._run_greet_round)
+        assert "get_chat_list" not in src
+        assert "get_full_dialog" not in src
+
+
+# ===================== 漏斗指标 =====================
+
+class MetricsStoreTest:
+    """累计/当日/分账号计数器 — 记录文件会截断，指标不能跟着丢"""
+
+    def _store(self, tmp_path):
+        from boss_bot.metrics import MetricsStore
+        return MetricsStore(path=str(tmp_path / "metrics.json"))
+
+    def test_bump_both_scopes(self, tmp_path):
+        s = self._store(tmp_path)
+        s.bump(0, "greet_sent")
+        s.bump(0, "greet_sent")
+        snap = s.snapshot()
+        assert snap["daily"]["greet_sent"] == 2
+        assert snap["total"]["greet_sent"] == 2
+
+    def test_accounts_do_not_share_counters(self, tmp_path):
+        s = self._store(tmp_path)
+        s.bump(0, "greet_sent", 3)
+        s.bump(1, "greet_sent", 5)
+        assert s.snapshot([0])["total"]["greet_sent"] == 3
+        assert s.snapshot([1])["total"]["greet_sent"] == 5
+        assert s.snapshot()["total"]["greet_sent"] == 8
+
+    def test_interview_deduped_per_conversation(self, tmp_path):
+        s = self._store(tmp_path)
+        assert s.add_interview(0, "杨女士") is True
+        assert s.add_interview(0, "杨女士") is False   # 同一个人反复问只算一次
+        assert s.add_interview(0, "胡女士") is True
+        assert s.add_interview(1, "杨女士") is True    # 换账号是另一个会话
+        snap = s.snapshot()
+        assert snap["total"]["interview"] == 3
+        assert snap["interview_chats_total"] == 3
+
+    def test_day_rollover_clears_today_keeps_total(self, tmp_path):
+        from datetime import date, timedelta
+        s = self._store(tmp_path)
+        s.bump(0, "resume_sent")
+        yesterday = (date.today() - timedelta(days=1)).isoformat()
+        s._data["date"] = yesterday
+        s._data["today"]["0"]["resume_sent"] = 42
+        snap = s.snapshot()
+        assert snap["daily"]["resume_sent"] == 0
+        assert snap["total"]["resume_sent"] == 1
+        assert snap["date"] == date.today().isoformat()
+
+    def test_survives_reload(self, tmp_path):
+        s = self._store(tmp_path)
+        s.bump(0, "greet_sent", 7)
+        s.add_interview(0, "李女士")
+        again = self._store(tmp_path)
+        assert again.snapshot()["total"]["greet_sent"] == 7
+        assert again.snapshot()["total"]["interview"] == 1
+
+    def test_unknown_field_ignored(self, tmp_path):
+        s = self._store(tmp_path)
+        s.bump(0, "nonsense")
+        assert s.snapshot()["total"] == {"greet_sent": 0, "resume_sent": 0,
+                                        "interview": 0}
+
+    def test_backfill_from_history_once(self, tmp_path):
+        """首次要把历史记录换算成累计值，否则用户看到的累计是 0"""
+        from datetime import date
+        from boss_bot import reply_record
+        from boss_bot.metrics import MetricsStore
+        today = date.today().isoformat()
+        greets = [reply_record.GreetRecord(is_greeted=True, account_index=0,
+                                          timestamp=f"{today} 10:00:00"),
+                  reply_record.GreetRecord(is_greeted=True, account_index=1,
+                                          timestamp="2026-01-01 10:00:00"),
+                  reply_record.GreetRecord(is_greeted=False, account_index=0,
+                                          timestamp=f"{today} 10:01:00")]
+        replies = [
+            reply_record.ReplyRecord(chat_name="杨女士", reply_intent="invite_interview",
+                                     account_index=0, timestamp=f"{today} 11:00:00"),
+            reply_record.ReplyRecord(chat_name="杨女士", reply_intent="invite_interview",
+                                     account_index=0, timestamp=f"{today} 12:00:00"),
+            reply_record.ReplyRecord(chat_name="杨女士", reply_content="[简历已发送]",
+                                     account_index=0, timestamp=f"{today} 12:01:00"),
+        ]
+        with patch("boss_bot.reply_record._get_greet_store",
+                   return_value=MagicMock(get_all=MagicMock(return_value=greets))), \
+             patch("boss_bot.reply_record._get_reply_store",
+                   return_value=MagicMock(get_all=MagicMock(return_value=replies))):
+            s = MetricsStore(path=str(tmp_path / "m.json"), backfill=True)
+        snap = s.snapshot()
+        assert snap["total"]["greet_sent"] == 2          # 只算成功的那两条
+        assert snap["daily"]["greet_sent"] == 1          # 今天只有账号0 那条
+        assert snap["total"]["interview"] == 1           # 同一会话两条只算一次
+        assert snap["total"]["resume_sent"] == 1
+        # 再建一次不该重复累加
+        again = MetricsStore(path=str(tmp_path / "m.json"), backfill=True)
+        assert again.snapshot()["total"]["greet_sent"] == 2
+
+
+# ===================== 多账号数据隔离 =====================
+
+class AccountIsolationTest:
+    """两个账号不能再共用 state/stats/聊天记录"""
+
+    def test_account_file_keeps_legacy_path_for_first_account(self, tmp_path):
+        from boss_bot.unified_config import account_file
+        p = str(tmp_path / "bot_state.json")
+        assert account_file(p, 0) == p
+        out = account_file(p, 1)
+        assert out.endswith("bot_state_account_1.json")
+
+    def test_stores_are_per_account(self):
+        import inspect
+        from boss_bot.main_loop import UnifiedBotLoop
+        src = inspect.getsource(UnifiedBotLoop._init_engines)
+        assert "StateStore(\n            path=account_file" in src or "account_file(STATE_FILE" in src
+        assert "account_file(STATS_FILE" in src
+        assert "MessageStore(account_index=self.account_index)" in src
+
+    def test_message_files_split_by_account(self, tmp_path):
+        from boss_bot.message_store import MessageStore
+        a0 = MessageStore(base_dir=tmp_path, account_index=0)
+        a1 = MessageStore(base_dir=tmp_path, account_index=1)
+        a0.save_messages("杨女士", [{"text": "A账号的对话", "is_mine": False}], "岗位甲")
+        a1.save_messages("杨女士", [{"text": "B账号的对话", "is_mine": False}], "岗位乙")
+        assert a0.get_messages("杨女士")[0]["text"] == "A账号的对话"
+        assert a1.get_messages("杨女士")[0]["text"] == "B账号的对话"
+        names = sorted(p.name for p in tmp_path.glob("*.json"))
+        assert names == ["a1_杨女士.json", "杨女士.json"]
+
+    def test_default_account_still_sees_all_chats(self, tmp_path):
+        """Web 端用账号0 的实例列会话，账号2 的也要能看到"""
+        from boss_bot.message_store import MessageStore
+        MessageStore(base_dir=tmp_path, account_index=1).save_messages(
+            "胡女士", [{"text": "只有账号2 有", "is_mine": False}], "岗位丙")
+        a0 = MessageStore(base_dir=tmp_path, account_index=0)
+        listing = a0.get_chat_list()
+        assert [c["chat_name"] for c in listing] == ["胡女士"]
+        assert listing[0]["account_index"] == 1
+        assert a0.get_messages("胡女士")[0]["text"] == "只有账号2 有"
+
+    def test_meta_files_not_listed_as_chats(self, tmp_path):
+        from boss_bot.message_store import MessageStore
+        ms = MessageStore(base_dir=tmp_path)
+        ms.save_messages("女士", [{"text": "正文", "is_mine": False}], "岗位")
+        (tmp_path / "女士.meta.json").write_text('{"chat_name": "女士"}', encoding="utf-8")
+        assert len(ms.get_chat_list()) == 1
+
+    def test_daily_cap_counted_per_account(self):
+        import inspect
+        from boss_bot.main_loop import UnifiedBotLoop
+        src = inspect.getsource(UnifiedBotLoop._run_greet_round)
+        assert "r.account_index == self.account_index" in src
+
+
+# ===================== AI 接口体检 =====================
+
+class AiHealthTest:
+    """体检必须真的发一条消息并拿到内容才算可用"""
+
+    class _BlankMessage:
+        """只有 content 为空、且没有 reasoning 属性的真实形状"""
+        content = "   "
+
+    def _provider(self):
+        return {"name": "测试", "api_key": "sk-1", "api_base": "https://a/v1",
+                "model": "m1"}
+
+    def test_reply_content_means_available(self):
+        from boss_bot.ai_health import probe_one, STATUS_AVAILABLE
+        with patch("openai.OpenAI") as mock_oai:
+            mock_oai.return_value.chat.completions.create.return_value = \
+                MagicMock(choices=[MagicMock(message=MagicMock(content="连接成功"))])
+            res = probe_one(self._provider())
+        assert res["status"] == STATUS_AVAILABLE
+        assert res["reply"] == "连接成功"
+        assert res["latency_ms"] is not None
+
+    def test_empty_reply_counts_as_unavailable(self):
+        from boss_bot.ai_health import probe_one, STATUS_UNAVAILABLE
+        with patch("openai.OpenAI") as mock_oai:
+            mock_oai.return_value.chat.completions.create.return_value = \
+                MagicMock(choices=[MagicMock(message=self._BlankMessage())])
+            res = probe_one(self._provider())
+        assert res["status"] == STATUS_UNAVAILABLE
+        assert "没有任何内容" in res["reason"]
+
+    def test_reasoning_only_reply_still_counts_as_alive(self):
+        """推理模型正文为空、话在 reasoning 字段 — 接口本身是好的"""
+        from boss_bot.ai_health import probe_one, STATUS_AVAILABLE
+
+        class Msg:
+            content = ""
+            reasoning_content = "用户要求只回四个字，我回复：连接成功"
+
+        with patch("openai.OpenAI") as mock_oai:
+            mock_oai.return_value.chat.completions.create.return_value = \
+                MagicMock(choices=[MagicMock(message=Msg())])
+            res = probe_one(self._provider())
+        assert res["status"] == STATUS_AVAILABLE
+        assert "reasoning" in res["note"]
+
+    def test_error_classified_in_chinese(self):
+        from boss_bot.ai_health import probe_one, classify_error
+        assert classify_error("Error code: 401 - Unauthorized") == "API Key 无效或已过期"
+        assert classify_error("insufficient quota") == "额度用尽或被限流"
+        assert classify_error("Connection error.") == "网络不通/域名解析失败"
+        with patch("openai.OpenAI", side_effect=RuntimeError("bad key")):
+            res = probe_one(self._provider())
+        assert res["status"] == "unavailable"
+        assert res["error"]
+
+    def test_incomplete_config_skipped_without_request(self):
+        from boss_bot.ai_health import probe_one
+        with patch("openai.OpenAI") as mock_oai:
+            res = probe_one({"name": "x", "api_key": "", "api_base": "", "model": ""})
+        mock_oai.assert_not_called()
+        assert "配置不完整" in res["reason"]
+
+    def test_request_has_timeout_and_no_retry(self):
+        from boss_bot.ai_health import probe_one
+        with patch("openai.OpenAI") as mock_oai:
+            mock_oai.return_value.chat.completions.create.return_value = \
+                MagicMock(choices=[MagicMock(message=MagicMock(content="ok"))])
+            probe_one(self._provider(), timeout=7)
+        assert mock_oai.call_args.kwargs["timeout"] == 7
+        assert mock_oai.call_args.kwargs["max_retries"] == 0
+
+    def test_merge_and_summarize(self, tmp_path):
+        from boss_bot.ai_health import merge_results, summarize, save_health, load_health
+        providers = [self._provider(), {"name": "坏", "api_key": "sk-2",
+                                        "api_base": "https://b/v1", "model": "m2"}]
+        results = [
+            {"name": "测试", "api_key": "", "api_base": "https://a/v1", "model": "m1",
+             "status": "available", "latency_ms": 300, "reply": "连接成功", "reason": ""},
+            {"name": "坏", "api_key": "", "api_base": "https://b/v1", "model": "m2",
+             "status": "unavailable", "latency_ms": 1200, "reply": "",
+             "reason": "API Key 无效或已过期"},
+        ]
+        merged = merge_results({}, results, providers)
+        assert summarize(merged["results"]) == {
+            "total": 2, "available": 1, "unavailable": 1, "avg_latency_ms": 750}
+        save_health(merged, path=tmp_path / "ai_health.json")
+        assert load_health(path=tmp_path / "ai_health.json")["results"]
+
+    def test_probe_all_reports_progress_per_provider(self):
+        from boss_bot.ai_health import probe_all
+        seen = []
+        with patch("boss_bot.ai_health.probe_one", return_value={"status": "available"}), \
+             patch("boss_bot.ai_health.time.sleep"):
+            out = probe_all([self._provider(), self._provider()],
+                            on_result=lambda i, p, r: seen.append(i))
+        assert seen == [0, 1]
+        assert len(out) == 2
+        assert out[0]["index"] == 0
+
+
+class CookieIsolationTest:
+    """Cookie 按账号选取 + 失效清理（前端「清除失效Cookie」开关的真实消费方）"""
+
+    def _make_loop(self, tmp_path, account_index=0, clear_on_failure=True,
+                   account_cookie="a1.json"):
+        from boss_bot.main_loop import UnifiedBotLoop
+        from boss_bot.unified_config import UnifiedConfig, AccountConfig
+        cfg = UnifiedConfig()
+        cfg.login.clear_cookies_on_failure = clear_on_failure
+        cfg.login.cookie_file = str(tmp_path / "global.json")
+        cfg.greet.accounts = [
+            AccountConfig(name="主账号", cookie_file=str(tmp_path / "a0.json")),
+            AccountConfig(name="账号2", cookie_file=str(tmp_path / account_cookie)),
+        ]
+        with patch("boss_bot.main_loop.BrowserManager"):
+            return UnifiedBotLoop(config=cfg, account_index=account_index)
+
+    def test_每个账号读自己的cookie文件(self, tmp_path):
+        loop = self._make_loop(tmp_path, account_index=1)
+        assert loop._cookie_file().endswith("a0.json") is False
+        assert loop._cookie_file().endswith("a1.json")
+
+    def test_账号未填时回落到全局(self, tmp_path):
+        loop = self._make_loop(tmp_path, account_index=1)
+        loop.config.greet.accounts[1].cookie_file = ""
+        assert loop._cookie_file().endswith("global.json")
+
+    def test_登录态失效时删除失效cookie(self, tmp_path):
+        loop = self._make_loop(tmp_path, account_index=0)
+        stale = tmp_path / "a0.json"
+        stale.write_text("[]", encoding="utf-8")
+        loop._discard_stale_cookies("测试")
+        assert not stale.exists()
+
+    def test_关闭开关时保留cookie供排查(self, tmp_path):
+        loop = self._make_loop(tmp_path, account_index=0, clear_on_failure=False)
+        keep = tmp_path / "a0.json"
+        keep.write_text("[]", encoding="utf-8")
+        loop._discard_stale_cookies("测试")
+        assert keep.exists()
+
+    def test_文件本就不存在时不报错(self, tmp_path):
+        loop = self._make_loop(tmp_path, account_index=0)
+        loop._discard_stale_cookies("测试")
+
+
+class CliEngineModeTest:
+    """命令行 --greet / --reply 经环境变量下传给配置（热重载不会冲掉）"""
+
+    def test_仅打招呼会关掉回复(self, monkeypatch):
+        from boss_bot.unified_config import UnifiedConfig
+        monkeypatch.setenv("BOSS_BOT_ONLY_ENGINE", "greet")
+        cfg = UnifiedConfig.load()
+        assert cfg.greet.enabled is True
+        assert cfg.reply.enabled is False
+
+    def test_仅回复会关掉打招呼(self, monkeypatch):
+        from boss_bot.unified_config import UnifiedConfig
+        monkeypatch.setenv("BOSS_BOT_ONLY_ENGINE", "reply")
+        cfg = UnifiedConfig.load()
+        assert cfg.greet.enabled is False
+        assert cfg.reply.enabled is True
+
+    def test_未指定时两边都按配置(self, monkeypatch):
+        from boss_bot.unified_config import UnifiedConfig
+        monkeypatch.delenv("BOSS_BOT_ONLY_ENGINE", raising=False)
+        cfg = UnifiedConfig.load()
+        assert cfg.greet.enabled is True and cfg.reply.enabled is True
+
+    def test_配置文件路径可用环境变量指定(self, monkeypatch, tmp_path):
+        from boss_bot.unified_config import UnifiedConfig
+        custom = tmp_path / "custom_config.json"
+        custom.write_text(json.dumps({"retry": {"max_attempts": 7}}),
+                          encoding="utf-8")
+        monkeypatch.setenv("BOSS_BOT_CONFIG", str(custom))
+        assert UnifiedConfig.load().greet.retry.max_attempts == 7
+
+
+class ConfigSavePreservesKeysTest:
+    """cfg.save() 不得抹掉 UnifiedConfig 未建模的顶层键（theme 等）"""
+
+    def test_保存后未建模字段仍在(self, tmp_path):
+        from boss_bot.unified_config import UnifiedConfig
+        target = tmp_path / "bot_config.json"
+        target.write_text(json.dumps({
+            "theme": "light",
+            "notify": {"sound": True, "desktop": False},
+            "retry": {"max_attempts": 5},
+        }), encoding="utf-8")
+        UnifiedConfig.load(config_path=str(target), overrides_path=str(tmp_path / "none.json")).save(str(target))
+        saved = json.loads(target.read_text(encoding="utf-8"))
+        assert saved["theme"] == "light"
+        assert saved["retry"]["max_attempts"] == 5
+
+    def test_已建模字段以内存值为准(self, tmp_path):
+        from boss_bot.unified_config import UnifiedConfig
+        target = tmp_path / "bot_config.json"
+        target.write_text(json.dumps({"rate_limit": {"max_per_day": 150}}), encoding="utf-8")
+        cfg = UnifiedConfig.load(config_path=str(target), overrides_path=str(tmp_path / "none.json"))
+        cfg.greet.rate_limit.max_per_day = 42
+        cfg.save(str(target))
+        saved = json.loads(target.read_text(encoding="utf-8"))
+        assert saved["rate_limit"]["max_per_day"] == 42
+
+
+class PerAccountGreetSettingsTest:
+    """打招呼话术/简历图片必须按账号取，且热重载能刷到新值"""
+
+    def _cfg(self, msg0="主号话术", msg1="二号话术", imgs1=None):
+        from boss_bot.unified_config import UnifiedConfig, AccountConfig, JobConfig
+        cfg = UnifiedConfig()
+        cfg.greet.accounts = [
+            AccountConfig(name="主账号", jobs=[JobConfig(greeting_message=msg0)]),
+            AccountConfig(name="账号2", image_files=imgs1 or [],
+                          jobs=[JobConfig(greeting_message=msg1)]),
+        ]
+        return cfg
+
+    def _engine(self, cfg, idx):
+        from boss_bot.greet_engine import GreetEngine
+        return GreetEngine(MagicMock(), cfg, account_index=idx)
+
+    def test_账号2用自己的话术(self):
+        ge = self._engine(self._cfg(), 1)
+        assert ge._greeting_message == "二号话术"
+
+    def test_主账号用自己的话术(self):
+        ge = self._engine(self._cfg(), 0)
+        assert ge._greeting_message == "主号话术"
+
+    def test_索引越界回落首个账号(self):
+        ge = self._engine(self._cfg(), 7)
+        assert ge._greeting_message == "主号话术"
+
+    def test_改话术后热重载即生效(self):
+        cfg = self._cfg()
+        ge = self._engine(cfg, 1)
+        assert ge._greeting_message == "二号话术"
+        cfg.greet.accounts[1].jobs[0].greeting_message = "改过的二号话术"
+        ge.reload_runtime_settings()
+        assert ge._greeting_message == "改过的二号话术"
+
+    def test_简历图片按账号取(self):
+        cfg = self._cfg()
+        cfg.greet.accounts[1].image_files = ["r2.pdf"]
+        assert self._engine(cfg, 1)._image_files == ["r2.pdf"]
+        assert self._engine(cfg, 0)._image_files == []
+
+
+class ReplyRuntimeFieldsTest:
+    """回复侧的每小时上限/兜底策略读的是可热重载的实例属性"""
+
+    def _engine(self):
+        from boss_bot.reply_engine import ReplyEngine
+        return ReplyEngine()
+
+    def test_上限改为零则不再回复(self):
+        eng = self._engine()
+        assert eng.can_reply() is True
+        eng._max_replies_per_hour = 0
+        assert eng.can_reply() is False
+
+    def test_默认值来自配置(self):
+        from boss_bot import config
+        eng = self._engine()
+        assert eng._max_replies_per_hour == config.MAX_REPLIES_PER_HOUR
+        assert eng._ai_max_tokens == config.AI_MAX_TOKENS
+        assert eng._ai_fail_action == config.AI_FAIL_ACTION
+
+
+class DryRunGateTest:
+    """演练模式：搜索与 AI 决策照做，最后一下发送必须被拦住"""
+
+    def _loop(self, dry):
+        from boss_bot.main_loop import UnifiedBotLoop
+        from boss_bot.unified_config import UnifiedConfig
+        cfg = UnifiedConfig()
+        cfg.dry_run = dry
+        with patch("boss_bot.main_loop.BrowserManager"):
+            return UnifiedBotLoop(config=cfg)
+
+    def test_演练模式下拦截发送动作(self):
+        loop = self._loop(True)
+        assert loop._dry_run("本应回复", "你好") is True
+
+    def test_正常模式不拦截(self):
+        assert self._loop(False)._dry_run("本应回复", "你好") is False
+
+    def test_热重载后可随时切换(self):
+        from boss_bot.unified_config import UnifiedConfig
+        loop = self._loop(False)
+        assert loop._dry_run("x") is False
+        loop.config = UnifiedConfig()
+        loop.config.dry_run = True
+        assert loop._dry_run("x") is True
+
+    def test_环境变量可开启(self, monkeypatch):
+        from boss_bot.unified_config import UnifiedConfig
+        monkeypatch.setenv("BOSS_BOT_DRY_RUN", "1")
+        assert UnifiedConfig.load().dry_run is True
+
+    def test_json配置可开启(self, tmp_path, monkeypatch):
+        from boss_bot.unified_config import UnifiedConfig
+        monkeypatch.delenv("BOSS_BOT_DRY_RUN", raising=False)
+        target = tmp_path / "bot_config.json"
+        target.write_text(json.dumps({"dry_run": True}), encoding="utf-8")
+        cfg = UnifiedConfig.load(config_path=str(target), overrides_path=str(tmp_path / "none.json"))
+        assert cfg.dry_run is True
+        assert cfg.to_dict()["dry_run"] is True
+
+    def test_真实发送点前都有演练闸门(self):
+        """main_loop 里每处真实发送前必须先问 _dry_run，漏一处就会误发"""
+        import pathlib
+        import re
+        src = pathlib.Path("boss_bot/main_loop.py").read_text(encoding="utf-8")
+        guarded = 0
+        for m in re.finditer(r"self\._(greet_engine\.send_greeting|chat_handler\.send_resume|"
+                             r"chat_handler\.send_text)\(", src):
+            before = src[:m.start()]
+            tail = before[-600:]
+            assert "_dry_run(" in tail, f"第 {src[:m.start()].count(chr(10)) + 1} 行发送前缺演练闸门"
+            guarded += 1
+        assert guarded >= 4, f"发送点数量异常: {guarded}"
+
+
+class GreetCapAutoResumeTest:
+    """投满每日上限暂停后，跨过零点要能自己恢复（人工暂停不恢复）"""
+
+    def _loop(self):
+        from boss_bot.main_loop import UnifiedBotLoop
+        with patch("boss_bot.main_loop.BrowserManager"):
+            loop = UnifiedBotLoop()
+        loop._reply_engine = None
+        loop._state_store = MagicMock()
+        loop._state_store.is_paused.return_value = False
+        eng = MagicMock()
+        eng._max_per_day = 150
+        eng._greet_store.filter.return_value = []   # 新的一天：今天还没投
+        loop._greet_engine = eng
+        return loop
+
+    def test_跨零点自动恢复(self):
+        loop = self._loop()
+        loop._greet_paused = True
+        loop._greet_paused_by_cap = True
+        loop._greet_cap_paused_on = "2000-01-01"    # 昨天投满的
+        loop._maybe_auto_resume_greet()
+        assert loop._greet_paused is False
+        assert loop._greet_paused_by_cap is False
+
+    def test_同一天不反复扫记录(self):
+        from datetime import date
+        loop = self._loop()
+        loop._greet_paused = True
+        loop._greet_paused_by_cap = True
+        loop._greet_cap_paused_on = date.today().isoformat()
+        loop._maybe_auto_resume_greet()
+        assert loop._greet_paused is True
+        loop._greet_engine._greet_store.filter.assert_not_called()
+
+    def test_人工暂停不自动恢复(self):
+        loop = self._loop()
+        loop._greet_paused = True
+        loop._greet_paused_by_cap = False
+        loop._greet_cap_paused_on = "2000-01-01"
+        loop._maybe_auto_resume_greet()
+        assert loop._greet_paused is True
+
+    def test_恢复检查在暂停分支里真的会被调到(self):
+        """暂停分支若不调用，跨零点恢复永远不会触发（曾真实错过）"""
+        import pathlib
+        import re
+        src = pathlib.Path("boss_bot/main_loop.py").read_text(encoding="utf-8")
+        m = re.search(r"if self\._greet_paused:\n(.*?)\n\s*continue", src, re.S)
+        assert m and "_maybe_auto_resume_greet()" in m.group(1)
+
+
+class GreetRoundDryRunTest:
+    """真跑一遍打招呼轮次：演练模式必须一次都不点发送"""
+
+    def _setup(self, dry):
+        from boss_bot.main_loop import UnifiedBotLoop, UnifiedConfig
+        cfg = UnifiedConfig()
+        cfg.dry_run = dry
+        with patch("boss_bot.main_loop.BrowserManager"):
+            loop = UnifiedBotLoop(config=cfg)
+        loop._running = True
+        loop._stop_event = MagicMock()
+        loop._hot_reload_config = lambda: None
+        loop._build_greet_tasks = lambda: [{"query": "数据分析", "city": "长沙",
+                                            "scroll_pages": 1,
+                                            "message_interval_min": 0,
+                                            "message_interval_max": 0}]
+        eng = MagicMock()
+        eng._max_per_day = 150
+        eng._greet_store.filter.return_value = []
+        # 关掉限流与 AI 分支，让轮次走最短路径到发送点
+        eng._rate_limit_enabled = False
+        eng._ai_enabled = False
+        eng.applied_count = 0
+        eng.skipped_count = 0
+        eng._init_ai.return_value = None
+        eng._last_ai_result = None
+        eng._analyze_job_with_ai.return_value = (None, 0)
+        eng.search_jobs.return_value = [{"job_name": "数据分析师", "company": "A",
+                                         "url": "https://www.zhipin.com/job_detail/x.html"}]
+        eng._is_already_chatted.return_value = False
+        eng.send_greeting.return_value = True
+        loop._greet_engine = eng
+        loop._metrics = MagicMock()
+        loop._greet_event_cb = None
+        return loop, eng
+
+    def test_演练模式不发送(self):
+        loop, eng = self._setup(dry=True)
+        loop._run_greet_round()
+        eng.send_greeting.assert_not_called()
+        assert loop._stats_dict["greet_applied"] == 0
+
+    def test_正常模式会发送(self):
+        loop, eng = self._setup(dry=False)
+        loop._run_greet_round()
+        assert eng.send_greeting.called
+        assert loop._stats_dict["greet_applied"] == 1
+
+
+class AiSkipUnhealthyTest:
+    """容灾链按体检结果跳过已知不可用的接口（相对顺序不变）"""
+
+    def _chain(self, tmp_path, updated_at, statuses, skip=True):
+        from boss_bot.greet_engine import AIAnalyzerChain
+        providers = [{"name": n, "api_key": "sk-" + n, "api_base": f"https://a{i}/v1",
+                      "model": f"m{i}"} for i, n in enumerate(["A", "B", "C"])]
+        health = {"updated_at": updated_at, "results": {}}
+        for p, st in zip(providers, statuses):
+            health["results"][f"{p['api_base']}|{p['model']}|{p['name']}"] = {
+                "name": p["name"], "api_base": p["api_base"], "model": p["model"],
+                "status": st, "latency_ms": 100, "reply": "连接成功", "reason": ""}
+        f = tmp_path / "ai_health.json"
+        f.write_text(json.dumps(health), encoding="utf-8")
+        chain = AIAnalyzerChain(providers=providers, match_threshold=70,
+                                cache_enabled=False, skip_unhealthy=skip)
+        return chain, f
+
+    def _usable(self, chain, tmp_path, f):
+        with patch("boss_bot.ai_health.HEALTH_FILE", f):
+            used = []
+
+            def fake_call(provider, messages):
+                used.append(provider.name)
+                return {"score": 90, "is_match": True, "reason": "匹配",
+                        "suggested_greeting": "hi"}
+            chain._call_provider_api = fake_call
+            chain._unhealthy_cache = None
+            chain.analyze_job({"job_name": "数据分析", "salary": "8-12K",
+                               "description": "x" * 200, "url": "u1",
+                               "requirements": "r", "company": "c"})
+            return used
+
+    def test_跳过体检不可用的接口(self, tmp_path):
+        chain, f = self._chain(tmp_path, "2026-09-28 00:00:00",
+                               ["unavailable", "unavailable", "available"])
+        with patch("boss_bot.greet_engine.time") as t:
+            t.time.return_value = __import__("datetime").datetime.strptime(
+                "2026-09-28 00:10:00", "%Y-%m-%d %H:%M:%S").timestamp()
+            t.sleep = time.sleep
+            used = self._usable(chain, tmp_path, f)
+        assert used == ["C"], used
+
+    def test_体检过旧则不跳过(self, tmp_path):
+        chain, f = self._chain(tmp_path, "2020-01-01 00:00:00",
+                               ["unavailable", "unavailable", "available"])
+        used = self._usable(chain, tmp_path, f)
+        assert used[0] == "A", used
+
+    def test_全部不可用时不跳过(self, tmp_path):
+        chain, f = self._chain(tmp_path, "2026-09-28 00:00:00",
+                               ["unavailable", "unavailable", "unavailable"])
+        with patch("boss_bot.greet_engine.time") as t:
+            t.time.return_value = __import__("datetime").datetime.strptime(
+                "2026-09-28 00:10:00", "%Y-%m-%d %H:%M:%S").timestamp()
+            t.sleep = time.sleep
+            used = self._usable(chain, tmp_path, f)
+        assert used[0] == "A", used
+
+    def test_开关关掉后按原顺序全试(self, tmp_path):
+        chain, f = self._chain(tmp_path, "2026-09-28 00:00:00",
+                               ["unavailable", "unavailable", "available"], skip=False)
+        used = self._usable(chain, tmp_path, f)
+        assert used[0] == "A", used
+
+    def test_配置项能读写往返(self, tmp_path):
+        from boss_bot.unified_config import UnifiedConfig
+        target = tmp_path / "bot_config.json"
+        target.write_text(json.dumps({"ai": {"skip_unhealthy": False}}), encoding="utf-8")
+        cfg = UnifiedConfig.load(config_path=str(target),
+                                 overrides_path=str(tmp_path / "none.json"))
+        assert cfg.ai.skip_unhealthy is False
+        assert cfg.to_dict()["ai"]["skip_unhealthy"] is False
+
+
+class SelfEvolveWiringTest:
+    """自进化引擎必须真的被构造并交给回复引擎（以前永远是 None）"""
+
+    def test_初始化时接线并按账号分文件(self, tmp_path, monkeypatch):
+        import boss_bot.main_loop as ML
+        import boss_bot.config as C
+        monkeypatch.setattr(C, "STATE_FILE", tmp_path / "state.json")
+        monkeypatch.setattr(C, "STATS_FILE", tmp_path / "stats.json")
+        monkeypatch.setattr(C, "NOTIFY_FILE", tmp_path / "notify.json")
+        monkeypatch.setattr(ML, "BASE_DIR", tmp_path)
+        from boss_bot.unified_config import UnifiedConfig
+        cfg = UnifiedConfig()
+        with patch.object(ML, "BossChatHandler"), patch.object(ML, "BrowserManager"):
+            loop = ML.UnifiedBotLoop(config=cfg, account_index=1)
+            loop._init_engines()
+        assert loop._self_evolve is not None
+        assert loop._reply_engine._self_evolve is loop._self_evolve
+        assert loop._self_evolve.enabled is True
+        assert "_account_1" in str(loop._self_evolve._data_file)
+        # 质量数据（模板效果/规则调整）也要按账号分开
+        assert "_account_1" in str(loop._self_evolve._quality_data_file)
+
+    def test_关闭开关后引擎不记录(self, tmp_path, monkeypatch):
+        import boss_bot.main_loop as ML
+        import boss_bot.config as C
+        monkeypatch.setattr(C, "STATE_FILE", tmp_path / "state.json")
+        monkeypatch.setattr(C, "STATS_FILE", tmp_path / "stats.json")
+        monkeypatch.setattr(ML, "BASE_DIR", tmp_path)
+        from boss_bot.unified_config import UnifiedConfig
+        cfg = UnifiedConfig()
+        cfg.self_evolve_enabled = False
+        with patch.object(ML, "BossChatHandler"), patch.object(ML, "BrowserManager"):
+            loop = ML.UnifiedBotLoop(config=cfg, account_index=0)
+            loop._init_engines()
+        assert loop._self_evolve.enabled is False
+
+
+class AiResponseParseDiagnosticTest:
+    """解析失败时必须说清是哪一种失败，否则只看到"默认通过"查不出原因"""
+
+    def _call(self, payload):
+        from boss_bot.greet_engine import AIAnalyzerChain, AIProviderConfig
+        chain = AIAnalyzerChain(providers=[{"name": "T", "api_key": "sk-t",
+                                            "api_base": "https://a/v1", "model": "m"}],
+                                cache_enabled=False)
+        provider = AIProviderConfig(name="T", api_key="sk-t",
+                                    api_base="https://a/v1", model="m")
+
+        class _Resp:
+            def read(self):
+                return json.dumps(payload).encode("utf-8")
+            def __enter__(self):
+                return self
+            def __exit__(self, *a):
+                return False
+
+        with patch("boss_bot.greet_engine.urlopen", return_value=_Resp()):
+            return chain._call_provider_api(provider, [])
+
+    def test_正常JSON(self):
+        out = self._call({"choices": [{"message": {"content": '```json\n{"score":80,"is_match":true,"reason":"对口"}\n```'}}]})
+        assert out["score"] == 80
+
+    def test_空正文说成未返回正文(self):
+        out = self._call({"choices": [{"message": {"content": ""}}]})
+        assert out["ai_error"] is True
+        assert "未返回正文" in out["reason"]
+
+    def test_有正文没JSON说成没JSON并带前文(self):
+        out = self._call({"choices": [{"message": {"content": "这个岗位不太合适，原因很多。"}}]})
+        assert out["ai_error"] is True
+        assert "没有 JSON" in out["reason"]
+
+    def test_缺字段说成缺字段(self):
+        out = self._call({"code": 429, "msg": "rate limited"})
+        assert out["ai_error"] is True
+        assert "响应缺少字段 choices" in out["reason"]
+
+    def test_推理内容兜底(self):
+        out = self._call({"choices": [{"message": {"content": "",
+                                     "reasoning_content": '{"score":40,"is_match":false,"reason":"不对口"}'}}]})
+        assert out["score"] == 40

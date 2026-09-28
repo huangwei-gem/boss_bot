@@ -1,0 +1,313 @@
+# -*- coding: utf-8 -*-
+"""三端一致性检测 — BOSS 线上 DOM / 后端存储 / 前端渲染 必须显示同一件事
+
+为什么单独做这个：界面是按前端好看写的，实际很容易出现
+"线上有 12 条、后端存 9 条、界面渲染 8 条"这种错位，
+而且方向（我方/对方）和送达/已读标签最容易悄悄不一致。
+
+三端各取一次数据，逐会话比对：
+  A 端 BOSS 线上：破解版浏览器打开 web/geek/chat，点进会话读 DOM（只读，绝不发消息）
+  B 端 后端：message_store 落盘的会话（也就是 /api/chats 给前端的数据）
+  C 端 前端：仪表盘渲染出来的气泡（含被前端过滤掉的系统消息规则）
+
+用法：python tools/verify_three_way.py [--chats 3]
+"""
+
+import argparse
+import io
+import re
+import json
+import os
+import sys
+import threading
+import time
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
+from DrissionPage import ChromiumOptions, ChromiumPage
+
+BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CLOAK = os.path.join(BASE, "cloakbrowser", "chrome.exe")
+PORT = 9401
+DASH = "http://127.0.0.1:5000"
+CHAT_URL = "https://www.zhipin.com/web/geek/chat"
+
+# BOSS 线上会话列表：昵称 + 岗位（岗位在右侧头部，列表里没有）
+JS_BOSS_LIST = '''(
+  function(){
+    var out=[];
+    var items=document.querySelectorAll(".friend-content");
+    for(var i=0;i<items.length;i++){
+      var nameEl=items[i].querySelector(".name-text");
+      if(!nameEl) continue;
+      var badge=items[i].querySelector(".notice-badge");
+      out.push({name:nameEl.textContent.trim(),
+                unread:badge?badge.textContent.trim():"",
+                preview:(items[i].querySelector(".last-msg-text")||{}).textContent||""});
+    }
+    return JSON.stringify(out);
+  }
+)()'''
+
+# BOSS 线上消息：独立实现，不复用 page_handler，避免"用同一段代码自证一致"
+JS_BOSS_MSGS = '''(
+  function(){
+    var out=[];
+    var items=document.querySelectorAll(".message-item");
+    for(var i=0;i<items.length;i++){
+      var it=items[i];
+      var te=it.querySelector(".text-content");
+      var text=te?(te.textContent||"").trim():"";
+      var card=!te;
+      // 岗位卡/简历卡没有 .text-content，取整行文本，否则两端都会漏算同一行
+      if(!text) text=(it.innerText||"").trim();
+      // 整行文本会把时间头也带进来，后端只存卡片正文，这里去掉时间再比
+      var tm=it.querySelector(".item-time");
+      if(tm && text) text=text.replace((tm.innerText||"").trim(),"").trim();
+      var st=it.querySelector("i.message-status");
+      var stCls=st?(st.className||""):"";
+      out.push({
+        text:text,
+        card:card,
+        mine:(it.className||"").indexOf("item-friend")<0,
+        status:stCls.indexOf("status-read")>=0?"read":(stCls.indexOf("status-delivery")>=0?"delivery":""),
+        time:((it.querySelector(".item-time .time")||{}).textContent||"").trim()
+      });
+    }
+    return JSON.stringify(out);
+  }
+)()'''
+
+# 前端渲染出来的气泡
+JS_UI_BUBBLES = '''(
+  function(){
+    var box=document.getElementById("bossChatMessages");
+    if(!box) return "[]";
+    var rows=box.querySelectorAll(".boss-msg-row");
+    var out=[];
+    for(var i=0;i<rows.length;i++){
+      var mine=rows[i].className.indexOf("me")>=0;
+      var b=rows[i].querySelector(".boss-msg-bubble")
+             || rows[i].querySelector(".boss-msg-card")
+             || rows[i].querySelector(".boss-msg-img")
+             || rows[i].querySelector(".boss-msg-divider");
+      var st=rows[i].querySelector(".boss-msg-status");
+      var c=b.querySelector?b.querySelector(".boss-msg-card-title"):null;
+      var txt=b?((b.textContent||b.getAttribute("alt")||"").trim()):"";
+      if(c) txt=txt.replace(c.textContent.trim(),"").trim();
+      out.push({text:txt,mine:mine,status:st?st.textContent.trim():""});
+    }
+    return JSON.stringify(out);
+  }
+)()'''
+
+report = {"chats": [], "errors": [], "summary": {}}
+
+
+def norm(s):
+    """归一化空白：BOSS 卡片 innerText 带换行，后端存的是拼接后的单行，
+    不统一就会把同一句话判成两条不同消息。"""
+    return re.sub(r"\s+", " ", (s or "").replace("\u00a0", " ")).strip()
+
+
+def squash(t):
+    """去掉所有空白再比。BOSS 把卡片文字拆成多个节点，innerText 会多出空格，
+    和后端存的连续文本不是同一个字符串，但内容确实是同一句。"""
+    return re.sub(r"\s+", "", norm(t))
+
+
+def same_text(a, b):
+    """两条文本是否指同一条消息。
+
+    纯文本要求完全相等；岗位卡/简历卡这类整行取 innerText 的，
+    BOSS 会把"优""查看详细分析"这类角标拆成独立节点，所以允许包含关系。
+    """
+    a, b = squash(a), squash(b)
+    if not a or not b:
+        return a == b
+    if a == b:
+        return True
+    shorter, longer = (a, b) if len(a) <= len(b) else (b, a)
+    return len(shorter) >= 10 and shorter in longer
+
+
+def start_flask():
+    sys.path.insert(0, os.path.join(BASE, "flask-version"))
+    import app as A
+    A._open_dashboard = lambda *a, **k: None
+    A._auto_ai_health = lambda *a, **k: None
+    kwargs = {"host": "127.0.0.1", "port": 5000, "debug": False, "use_reloader": False}
+    if A._socketio_kwargs.get("async_mode") == "threading":
+        kwargs["allow_unsafe_werkzeug"] = True
+    threading.Thread(target=lambda: A.socketio.run(A.app, **kwargs), daemon=True).start()
+    import urllib.request
+    for _ in range(60):
+        try:
+            if urllib.request.urlopen(DASH, timeout=2).status == 200:
+                return A
+        except Exception:
+            time.sleep(0.5)
+    raise RuntimeError("Flask 未就绪")
+
+
+def launch_browser():
+    assert os.path.exists(CLOAK), f"破解版浏览器不存在: {CLOAK}"
+    co = ChromiumOptions()
+    co.set_browser_path(CLOAK)
+    co.set_local_port(PORT)
+    # 用主账号的真实 profile：里面是已登录的 BOSS 会话
+    co.set_argument(f"--user-data-dir={os.path.join(BASE, 'browser_data', 'account_0')}")
+    co.set_argument("--disable-blink-features=AutomationControlled")
+    try:
+        return ChromiumPage(co)
+    except Exception as e:
+        # 最常见原因：同一个 user-data-dir 已被另一个 Chrome 实例占用
+        # （account_0 是正式 profile，机器人正在跑时也会占）
+        prof = os.path.join(BASE, 'browser_data', 'account_0')
+        print(f"浏览器起不来：{e}\n"
+              f"多半是 profile 被占用：{prof}\n"
+              f"查占用进程（只列不改）：\n"
+              f'  powershell -NoProfile -Command "Get-CimInstance Win32_Process '
+              f'-Filter \\"Name=\'chrome.exe\'\\" | Where-Object {{ $_.CommandLine -like \'*account_0*\' }} '
+              f'| Select-Object ProcessId,CreationDate"\n'
+              f"若机器人正在运行，请先在界面里点「停止」再跑本脚本。")
+        raise
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--chats", type=int, default=3, help="比对最近几个会话")
+    args = ap.parse_args()
+
+    print("1) 起后端 ...")
+    start_flask()
+    from boss_bot.message_store import MessageStore
+    store = MessageStore(account_index=0)
+    backend_chats = {c["chat_name"]: c for c in store.get_chat_list()}
+    print(f"   后端已存会话 {len(backend_chats)} 个")
+
+    print("2) 起破解版浏览器，打开 BOSS 聊天页 ...")
+    page = launch_browser()
+    boss = page.new_tab(CHAT_URL)
+    time.sleep(8)
+
+    boss_list = json.loads(boss.run_js(JS_BOSS_LIST, as_expr=True) or "[]")
+    print(f"   BOSS 侧栏会话 {len(boss_list)} 个")
+    if not boss_list:
+        report["errors"].append("BOSS 侧栏没读到会话：登录可能已失效，或被风控页拦截")
+        print("   !! 未读到会话，BOSS 端这条腿走不通（登录态/风控），先只做后端↔前端")
+    report["summary"]["boss_conversations"] = len(boss_list)
+    report["summary"]["backend_conversations"] = len(backend_chats)
+
+    # 会话名集合比对（BOSS 只显示姓+女士，重名会合并，这里按集合差报告）
+    boss_names = [b["name"] for b in boss_list if b["name"]]
+    missing_in_backend = [n for n in boss_names if n not in backend_chats]
+    report["summary"]["boss_not_in_backend"] = missing_in_backend[:20]
+    report["summary"]["boss_not_in_backend_count"] = len(missing_in_backend)
+
+    # 只比对线上和后端都有的会话
+    targets = [b for b in boss_list if b["name"] in backend_chats][:args.chats]
+    print(f"3) 逐会话比对（{len(targets)} 个）...")
+
+    dash = page.new_tab(DASH)
+    time.sleep(4)
+
+    for t in targets:
+        name = t["name"]
+        row = {"chat_name": name, "issues": []}
+        # A 端：点进 BOSS 会话读 DOM
+        clicked = boss.run_js(f'''(
+            function(){{
+              var items=document.querySelectorAll(".friend-content");
+              for(var i=0;i<items.length;i++){{
+                var n=items[i].querySelector(".name-text");
+                if(n && n.textContent.trim()==={json.dumps(name)}){{items[i].click();return 1;}}
+              }}
+              return 0;
+            }}
+        )()''', as_expr=True)
+        if not clicked:
+            row["issues"].append("BOSS 侧栏里点不到该会话")
+            report["chats"].append(row)
+            continue
+        time.sleep(3)
+        boss_msgs = json.loads(boss.run_js(JS_BOSS_MSGS, as_expr=True) or "[]")
+        boss_msgs = [m for m in boss_msgs if m["text"]]
+        header = boss.run_js(
+            'document.querySelector(".top-info-content .name-text") ? '
+            'document.querySelector(".top-info-content .name-text").textContent.trim() : ""',
+            as_expr=True)
+        row["boss_header_name"] = header
+        row["boss_count"] = len(boss_msgs)
+        if header and header != name:
+            row["issues"].append(f"BOSS 头部姓名({header})与侧栏({name})不一致")
+
+        # B 端：后端存储
+        be = store.get_messages(name)
+        be_norm = [{"text": norm(m.get("text") or m.get("content")),
+                    "mine": bool(m.get("is_mine"))} for m in be]
+        be_norm = [m for m in be_norm if m["text"]]
+        row["backend_count"] = len(be_norm)
+
+        # C 端：前端渲染
+        dash.run_js(f'selectBossChat({json.dumps(name)})', as_expr=True)
+        time.sleep(2)
+        ui = json.loads(dash.run_js(JS_UI_BUBBLES, as_expr=True) or "[]")
+        ui_norm = [{"text": norm(m["text"]), "mine": m["mine"]} for m in ui if norm(m["text"])]
+        row["ui_count"] = len(ui_norm)
+
+        # 比对 1：BOSS 线上每条消息后端都要有（BOSS 只渲染可视窗口，是子集关系）
+        def card_key(t):
+            return squash(t)[:12]
+        lost = []
+        for m in boss_msgs:
+            if m.get("card"):
+                ok = any(card_key(m["text"]) == card_key(x["text"]) for x in be_norm)
+            else:
+                ok = any(same_text(m["text"], x["text"]) for x in be_norm)
+            if not ok:
+                lost.append(m["text"])
+        if lost:
+            row["issues"].append(f"后端缺 {len(lost)} 条线上消息，例：{lost[0][:28]}")
+
+        # 比对 2：后端与前端条数/文本/方向必须完全一致
+        if len(be_norm) != len(ui_norm):
+            row["issues"].append(f"后端 {len(be_norm)} 条 vs 前端 {len(ui_norm)} 条")
+        else:
+            diff = [(i, a, b) for i, (a, b) in enumerate(zip(be_norm, ui_norm))
+                    if not same_text(a["text"], b["text"]) or a["mine"] != b["mine"]]
+            if diff:
+                i, a, b = diff[0]
+                row["issues"].append(
+                    f"第{i+1}条不一致 后端[{a['mine']}]{a['text'][:24]} vs 前端[{b['mine']}]{b['text'][:24]}")
+
+        # 比对 3：送达/已读标签不能凭空出现
+        ui_status = sum(1 for m in ui if m.get("status"))
+        be_status = sum(1 for m in be if m.get("status"))
+        if ui_status > be_status:
+            row["issues"].append(f"前端显示 {ui_status} 条送达/已读，后端只有 {be_status} 条")
+        row["ui_status_count"] = ui_status
+        row["backend_status_count"] = be_status
+        report["chats"].append(row)
+        flag = "OK " if not row["issues"] else "差异"
+        print(f"   [{flag}] {name}: 线上{row.get('boss_count','-')} / "
+              f"后端{row.get('backend_count','-')} / 前端{row.get('ui_count','-')}"
+              + ("" if not row["issues"] else "  -> " + "; ".join(row["issues"])))
+
+    bad = [c for c in report["chats"] if c["issues"]]
+    report["summary"]["checked"] = len(report["chats"])
+    report["summary"]["inconsistent"] = len(bad)
+    print("\n结论：")
+    print(f"  比对会话 {len(report['chats'])} 个，三端不一致 {len(bad)} 个")
+    print(f"  BOSS 有但后端没存的会话：{report['summary']['boss_not_in_backend_count']} 个"
+          f"（新会话未抓取/重名合并都会进这个名单）")
+    with open(os.path.join(BASE, "tools", "verify_three_way.json"), "w", encoding="utf-8") as f:
+        json.dump(report, f, ensure_ascii=False, indent=2)
+    print("  明细：tools/verify_three_way.json")
+    return 0 if not bad else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

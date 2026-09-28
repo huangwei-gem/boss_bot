@@ -170,10 +170,21 @@ def test_all_apis():
     # 浏览器 API
     test_api_get("/api/browser/list", ["browsers"], "GET /api/browser/list 浏览器列表")
 
-    # 个人画像 API
+    # 个人画像 API —— 这个接口是整体覆盖写盘，先存原值、测完还原，
+    # 否则跑一次 e2e 就把用户真实画像抹掉了
+    try:
+        _orig_profile = requests.get(f"{BASE_URL}/api/user_profile", timeout=10).json().get("profile")
+    except Exception:
+        _orig_profile = None
     test_api_get("/api/user_profile", ["profile"], "GET /api/user_profile 个人画像")
     test_api_post("/api/user_profile", {"profile": {"name": "测试用户"}},
                   name="POST /api/user_profile 保存个人画像")
+    if isinstance(_orig_profile, dict) and _orig_profile:
+        try:
+            requests.post(f"{BASE_URL}/api/user_profile", json={"profile": _orig_profile},
+                          timeout=15)
+        except Exception as e:
+            print(f"  [WARN] 个人画像还原失败，请手工检查 user_profile.json: {e}")
 
     # Cookie 上传 API（无文件时应返回错误）
     try:
