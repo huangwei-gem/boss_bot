@@ -26,6 +26,8 @@ data/
 logs/
 messages/
 bot_state.json
+bot_state_*.json
+bot_stats_*.json
 notifications.json
 flask-version/browser_data/
 
@@ -81,3 +83,25 @@ bot_stats.json
 reply_records_export.json
 zhipin_cookies_ref.json
 .arts/
+
+# 按账号生成的登录 Cookie（含真实会话，绝不能进版本库）
+zhipin_cookies_*.json
+browser_data_*/
+
+# 服务与测试日志
+*.log
+flask-version/*.log
+
+# 真机测试产物（截图与报告，本地生成）
+tools/e2e/
+tools/e2e_live/
+tools/*.png
+tools/verify_three_way.json
+tools/verify_dashboard_ui.json
+tools/full_test_result.json
+tools/message_types.json
+tools/real_chat_record.html
+tools/full_test_report.md
+
+# 本地临时目录
+.scratch/

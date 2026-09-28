@@ -203,7 +203,10 @@
         "timeout": 30
       }
     ],
-    "fail_action": "default"
+    "custom_filter_keywords": [],
+    "custom_scoring_prompt": "",
+    "fail_action": "default",
+    "skip_unhealthy": true
   },
   "browser": {
     "headless": false,
@@ -212,8 +215,12 @@
     "page_load_timeout": 30,
     "custom_user_agent": "",
     "proxy": "",
-    "browser_type": "chrome"
+    "browser_type": "chrome",
+    "browser_path": "",
+    "debug_port": 9222,
+    "user_data_dir": ""
   },
+  "dry_run": false,
   "greet": {
     "enabled": true,
     "rate_limit": {
@@ -304,6 +311,7 @@
     "base_delay": 2,
     "backoff_factor": 2
   },
+  "self_evolve_enabled": true,
   "templates": {
     "default_reply": "好的，感谢您的消息，我会尽快回复您。",
     "greeting_reply": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
@@ -323,5 +331,6 @@
     "position": "数据分析",
     "salary_expectation": "面议",
     "skills": []
-  }
+  },
+  "theme": "dark"
 }

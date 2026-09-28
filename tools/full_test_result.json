@@ -13,11 +13,11 @@
   },
   "A3.筛选生效": {
     "pass": true,
-    "detail": "200→48"
+    "detail": "200→51"
   },
   "A3.重置恢复": {
     "pass": true,
-    "detail": "重置后=229"
+    "detail": "重置后=236"
   },
   "A4.回复tab筛选栏显示": {
     "pass": true,
@@ -81,7 +81,7 @@
   },
   "D1.回复记录数>0": {
     "pass": true,
-    "detail": "41条"
+    "detail": "50条"
   },
   "D2.聊天界面存在": {
     "pass": true,
@@ -101,7 +101,7 @@
   },
   "E1.日志面板存在": {
     "pass": true,
-    "detail": "192个日志元素"
+    "detail": "72个日志元素"
   },
   "E2.日志有内容": {
     "pass": true,
@@ -185,7 +185,7 @@
   },
   "J4.打招呼记录数>0": {
     "pass": true,
-    "detail": "229条"
+    "detail": "236条"
   },
   "J5./api/reply_records接口": {
     "pass": true,
@@ -193,7 +193,7 @@
   },
   "J5.回复记录数>0": {
     "pass": true,
-    "detail": "243条"
+    "detail": "298条"
   },
   "J6./api/user_profile接口": {
     "pass": true,
