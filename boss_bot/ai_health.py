@@ -38,13 +38,26 @@ def classify_error(text: str) -> str:
     if any(k in t for k in ("401", "unauthorized", "invalid api key",
                             "invalid_api_key", "incorrect api key")):
         return "API Key 无效或已过期"
+    if any(k in t for k in ("freetier", "free tier can only be used")):
+        # 实测 6 个 OpenCode-* 接口都回这个：不是 Key 没权限，换任何第三方程序都一样，
+        # 写成"无权限"会把人引去换 Key
+        return "服务商限制：该免费额度只允许 OpenCode 客户端内调用，第三方程序用不了"
+    if "402" in t or "payment required" in t or "insufficient balance" in t:
+        return "需要付费额度（402）：该模型不免费或账户余额不足"
     if any(k in t for k in ("403", "forbidden", "permission")):
         return "无权限访问该模型"
+    if any(k in t for k in ("429", "rate limit", "quota", "insufficient")):
+        # 这条必须在 404/模型名 之前：限流报文里常带 "model" 字样
+        # （实测 AMD 回 429 'Too many requests for model'，先判 404 分支会说成"模型名不存在"，
+        # 人就跑去改一个没坏的模型名）
+        return "额度用尽或被限流"
     if any(k in t for k in ("404", "not found", "model", "does not exist")) \
             and "model" in t:
         return "模型名不存在"
     if "404" in t:
-        return "接口地址(base_url)不对"
+        # NVIDIA 实测：base_url 是对的、模型名写错（glm-5-3 → z-ai/glm-5.3）也回
+        # '404 page not found'，所以两种可能都要点出来，并给核对办法
+        return "404：模型名或接口地址(base_url)不对，用 GET {base_url}/models 核对官方模型名"
     if any(k in t for k in ("429", "rate limit", "quota", "insufficient")):
         return "额度用尽或被限流"
     if any(k in t for k in ("timeout", "timed out")):
@@ -79,42 +92,53 @@ def probe_one(provider: dict, timeout: int = PROBE_TIMEOUT) -> dict:
     if not api_key or not api_base or not model:
         out["reason"] = "配置不完整（缺 api_key / api_base / model）"
         return out
-    start = time.time()
-    try:
-        from openai import OpenAI
-        client = OpenAI(api_key=api_key, base_url=api_base,
-                        timeout=timeout, max_retries=0)
-        resp = client.chat.completions.create(
-            model=model,
-            max_tokens=PROBE_MAX_TOKENS,
-            messages=[{"role": "user", "content": PROBE_MESSAGE}],
-        )
-        reply = ""
-        in_reasoning = False
+    from openai import OpenAI
+    # 超时给一次重试：体检是逐个跑的，一次网络抖动就把接口标成不可用，
+    # 运行时容灾链就会跳过一个其实能用的（实测 AMD 那条"请求超时"现在连打 5 次全 200）
+    for attempt in (1, 2):
+        start = time.time()
         try:
-            msg = resp.choices[0].message
-            reply = (msg.content or "").strip()
-            if not reply:
-                # 有的推理模型只把话放在 reasoning 字段里，也算接口是活的
-                extra = (getattr(msg, "reasoning_content", None)
-                         or getattr(msg, "reasoning", None) or "").strip()
-                if extra:
-                    reply, in_reasoning = extra, True
-        except Exception:
+            # 构造客户端也要包在 try 里：key 非法时 OpenAI() 本身就抛，
+            # 那种异常不该逃出 probe_one（构造失败同样算这个接口不可用）
+            client = OpenAI(api_key=api_key, base_url=api_base,
+                            timeout=timeout, max_retries=0)
+            resp = client.chat.completions.create(
+                model=model,
+                max_tokens=PROBE_MAX_TOKENS,
+                messages=[{"role": "user", "content": PROBE_MESSAGE}],
+            )
             reply = ""
-        out["latency_ms"] = int((time.time() - start) * 1000)
-        if reply:
-            out["status"] = STATUS_AVAILABLE
-            out["reply"] = reply[:80]
-            if in_reasoning:
-                out["note"] = "正文为空，内容在 reasoning 字段"
-        else:
-            out["reason"] = "接口返回 200 但没有任何内容（把 max_tokens 提到 200 仍为空）"
-    except Exception as e:
-        out["latency_ms"] = int((time.time() - start) * 1000)
-        out["error"] = str(e)[:300]
-        out["reason"] = classify_error(str(e))
-        logger.debug(f"AI 体检失败 [{name}]: {e}")
+            in_reasoning = False
+            try:
+                msg = resp.choices[0].message
+                reply = (msg.content or "").strip()
+                if not reply:
+                    # 有的推理模型只把话放在 reasoning 字段里，也算接口是活的
+                    extra = (getattr(msg, "reasoning_content", None)
+                             or getattr(msg, "reasoning", None) or "").strip()
+                    if extra:
+                        reply, in_reasoning = extra, True
+            except Exception:
+                reply = ""
+            out["latency_ms"] = int((time.time() - start) * 1000)
+            if reply:
+                out["status"] = STATUS_AVAILABLE
+                out["reply"] = reply[:80]
+                if in_reasoning:
+                    out["note"] = "正文为空，内容在 reasoning 字段"
+                if attempt > 1:
+                    out["note"] = ((out["note"] + "；") if out["note"] else "") \
+                        + f"第 {attempt} 次才通（第 1 次超时）"
+            else:
+                out["reason"] = "接口返回 200 但没有任何内容（把 max_tokens 提到 200 仍为空）"
+            return out
+        except Exception as e:
+            out["latency_ms"] = int((time.time() - start) * 1000)
+            out["error"] = str(e)[:300]
+            out["reason"] = classify_error(str(e))
+            logger.debug(f"AI 体检失败 [{name}] 第 {attempt} 次: {e}")
+            if out["reason"] != "请求超时" or attempt == 2:
+                return out
     return out
 
 
@@ -168,11 +192,19 @@ def save_health(data: dict, path=None):
 
 
 def merge_results(existing: dict, results: list, providers: list) -> dict:
-    """把本轮探测结果并进去（按接口名+地址认，配置顺序变了也不错位）。"""
+    """把本轮探测结果并进去（按接口名+地址认，配置顺序变了也不错位）。
+
+    只保留配置里还存在的接口：删掉一个接口后它的体检行会一直留在
+    data/ai_health.json 里，前后端按行数列总数，就会出现"明明配了 19 个
+    却显示 22 个、其中 3 个永远不可用"这种假账。
+    """
     store = dict((existing or {}).get("results") or {})
     for r in results:
-        key = provider_key(r)
-        store[key] = r
+        store[provider_key(r)] = r
+    alive = {provider_key(p) for p in (providers or [])}
+    for key in list(store):
+        if key not in alive:
+            store.pop(key, None)
     return {
         "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "results": store,

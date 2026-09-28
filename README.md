@@ -321,7 +321,25 @@ python tools/e2e_live_boss.py         # 26 项：反爬自检、登录态、会�
 python tools/verify_dashboard_ui.py   # 14 项：指标卡口径 + AI 体检展示，产出 tools/verify_dashboard.png
 python tools/verify_three_way.py      # BOSS 页面 / 后端存储 / 前端显示 三端逐条比对
 python tools/measure_ai_quality.py    # 逐个接口真判分 + 生产解析判定（要联网，只发分析请求）
+python tools/diagnose_ai_providers.py --models   # 不可用接口归因：代理/直连各打一次 + 官方模型清单核对
 ```
+
+### 体检里"不可用"分别是什么原因
+
+`tools/diagnose_ai_providers.py` 会把同一个请求**走系统代理**和**不走代理**各打一次再归因。
+2026-09-28 实测 15 个不可用接口的结论：
+
+| 数量 | 现象 | 是不是代理的问题 | 能做什么 |
+|------|------|------------------|----------|
+| 6 | `403 FreeTierError：只能在 OpenCode 客户端内使用` | 不是 | 服务商策略，第三方程序一律拿不到，只能换付费模型或删掉这行 |
+| 4 | `404 page not found` | 不是 | 模型名写错了：官方清单里是 `z-ai/glm-5.3`、`moonshotai/kimi-k3`、`deepseek-ai/deepseek-v4.1-flash`。改成正确 slug 后请求能进模型，但该 Key 等 90s 不回话（代理和直连一样），实际仍不可用 |
+| 1 | `400 Model is unavailable` | 不是 | 免费模型已下线（同名付费版回 402 = 要付费） |
+| 3 | `配置不完整` | — | 界面上加了没填的空壳行，属残留，删掉即可 |
+| 1 | `请求超时` | 是（这一次） | 复查连打 5 次全 200、1.4~2.9s，是单次抖动；体检现在对超时先重试一次再判死 |
+
+关于代理：Windows 上 `requests` 不只认环境变量，**还会读注册表的代理设置**
+（`ProxyEnable=1` 时所有 AI 请求都从 `127.0.0.1:7897` 出去）。上面的对照里代理和直连结果一致，
+说明这批不可用不是家里代理造成的；判断这类问题用 `diagnose_ai_providers.py`，别靠猜。
 
 多账号范围这一层用"拦住 fetch / window.open / confirm，只记不真发"的方式验证控制路由与文案，所以不会真的改动运行状态。
 

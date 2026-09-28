@@ -114,3 +114,12 @@ tools/*_probe.json
 tools/*_full.json
 tools/*_cards_detail.json
 tools/message_types.json
+tools/ai_provider_diagnosis.json
+tools/*_probe.json
+
+# 本地备份（含 Key 与 HR 对话，绝不能进版本库）
+*.bak
+*.bak-*
+*.json.bak*
+bot_config.json.bak*
+*.backup

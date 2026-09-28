@@ -758,3 +758,133 @@ class RecordQualityFieldsTest:
         q = store.quality_stats()
         assert q["total"] == 2 and q["untracked"] == 2
         assert q["fallback_rate"] == pytest.approx(0.5)
+
+
+class HealthReasonTest:
+    """体检的原因要能直接照着修，不能都写成"无权限"这种含糊话"""
+
+    def test_opencode免费额度限制要说清是服务商策略(self):
+        """实测 6 个 OpenCode-* 接口都回 403 FreeTierError：
+        "OpenCode's free tier can only be used from within OpenCode" ——
+        这不是 Key 没权限，换任何第三方程序都一样，写"无权限"会误导人去改 Key"""
+        from boss_bot.ai_health import classify_error
+        msg = ("Error code: 403 - {'type': 'error', 'error': {'type': 'FreeTierError', "
+               "'message': \"OpenCode's free tier can only be used from within OpenCode\"}}")
+        assert "客户端" in classify_error(msg)
+        assert "服务商" in classify_error(msg) or "OpenCode" in classify_error(msg)
+
+    def test_要付费的接口不说成模型不存在(self):
+        from boss_bot.ai_health import classify_error
+        r = classify_error("Error code: 402 - {'error': {'message': 'Upstream failed'}}")
+        assert "付费" in r or "余额" in r or "402" in r
+
+    def test_模型名不存在要给出官方清单的意思(self):
+        from boss_bot.ai_health import classify_error
+        assert "模型名" in classify_error(
+            "Error code: 400 - {'error': {'message': 'Upstream request failed: "
+            "Model is unavailable.'}}")
+
+    def test_404区分base_url错和模型名错(self):
+        """实测 NVIDIA 用 glm-5-3 立刻回 404 page not found，
+        正确 slug 是 z-ai/glm-5.3 —— 两种可能都要点出来，别让人只盯着 base_url"""
+        from boss_bot.ai_health import classify_error
+        r = classify_error("404 page not found")
+        assert "模型名" in r and "base_url" in r
+        assert "模型名" in classify_error("Error code: 404 - {'error': {'message': 'model not found'}}")
+
+
+class HealthTimeoutTest:
+    """一次网络抖动不该把能用的接口踢出容灾链"""
+
+    def test_超时先重试一次再判不可用(self, monkeypatch):
+        """实测 AMD-DeepSeek 现在连打 5 次全 200（1.4~2.9s），
+        但体检留的是"请求超时"——单次抖动就把它标成不可用，运行时会跳过一个好接口"""
+        import openai
+        from boss_bot import ai_health
+
+        calls = []
+
+        class Completions:
+            def create(self, **kwargs):
+                calls.append(1)
+                if len(calls) == 1:
+                    raise openai.APITimeoutError(request=None)
+                msg = type("Msg", (), {"content": "连接成功",
+                                       "reasoning_content": None})()
+                return type("Resp", (), {"choices": [type("Ch", (), {"message": msg})()]})()
+
+        class FakeClient:
+            def __init__(self, **kwargs):
+                self.chat = type("Chat", (), {"completions": Completions()})()
+
+        monkeypatch.setattr(openai, "OpenAI", FakeClient)
+        out = ai_health.probe_one({"name": "AMD", "api_key": "k",
+                                   "api_base": "https://x/v1", "model": "m"},
+                                  timeout=2)
+        assert out["status"] == ai_health.STATUS_AVAILABLE, out
+        assert len(calls) == 2, "第一次超时后应当重试一次，而不是直接判死"
+        assert out.get("note"), "重试才成功的要留痕，不然看不出它抖过"
+
+    def test_连着两次超时才算不可用(self, monkeypatch):
+        """重试也只给一次机会：真挂死的接口不能白等第二轮以上"""
+        import openai
+        from boss_bot import ai_health
+
+        calls = []
+
+        class Completions:
+            def create(self, **kwargs):
+                calls.append(1)
+                raise openai.APITimeoutError(request=None)
+
+        class FakeClient:
+            def __init__(self, **kwargs):
+                self.chat = type("Chat", (), {"completions": Completions()})()
+
+        monkeypatch.setattr(openai, "OpenAI", FakeClient)
+        out = ai_health.probe_one({"name": "挂死", "api_key": "k",
+                                   "api_base": "https://x/v1", "model": "m"},
+                                  timeout=1)
+        assert out["status"] == ai_health.STATUS_UNAVAILABLE
+        assert len(calls) == 2
+        assert out["reason"] == "请求超时"
+
+
+class HealthReasonOrderTest:
+    """归因分支的先后顺序决定人能不能照着修"""
+
+    def test_限流429不能说成模型名不存在(self):
+        """实测 AMD 那条回 429（连续探测被限流），因为报错文本里带 "model"
+        就落到了"模型名不存在"，人会去改模型名，其实该等一会再打"""
+        from boss_bot.ai_health import classify_error
+        msg = ("Error code: 429 - {'detail': {'error': {'message': "
+               "'Too many requests for model', 'type': 'rate_limit_exceeded'}}}")
+        assert classify_error(msg) == "额度用尽或被限流"
+
+    def test_404要说清模型名也可能导致404(self):
+        """实测 NVIDIA 用 glm-5-3 回 '404 page not found'，
+        base_url 其实是对的、错的是模型名（官方是 z-ai/glm-5.3）；
+        只说"接口地址不对"会把人引去改一个没坏的字段"""
+        from boss_bot.ai_health import classify_error
+        r = classify_error("404 page not found")
+        assert "404" in r and "模型名" in r and "base_url" in r
+
+
+class HealthStaleRowTest:
+    """删掉的接口不能在体检表里继续占一行，否则 summary 的总数永远虚高"""
+
+    def test_merge会丢掉配置里已不存在的接口行(self):
+        from boss_bot.ai_health import merge_results
+        alive = {"api_base": "https://a/v1", "model": "m", "name": "在用的"}
+        existing = {"results": {
+            "https://a/v1|m|在用的": {"name": "在用的", "api_base": "https://a/v1",
+                                     "model": "m", "status": "available"},
+            "||新接口": {"name": "新接口", "api_base": "", "model": "",
+                        "status": "unavailable"},          # 空壳行，配置里已删
+            "https://old/v1|x|老的": {"name": "老的", "api_base": "https://old/v1",
+                                     "model": "x", "status": "available"},
+        }}
+        out = merge_results(existing, [], [alive])
+        keys = set(out["results"])
+        assert keys == {"https://a/v1|m|在用的"}, keys
+        assert out["summary"]["total"] == 1
