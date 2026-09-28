@@ -150,16 +150,32 @@ def main():
     js(page, 'resetGreetFilter && resetGreetFilter()')
     time.sleep(1)
 
-    # ── 4. 聊天面板：渲染顺序必须与后端数组一致 ──
+    # ── 4. 聊天面板：渲染顺序必须与后端数组一致，且按各自账号的文件读 ──
     from boss_bot.message_store import MessageStore
-    store = MessageStore(account_index=0)
-    listing = [c for c in store.get_chat_list() if c.get("message_count")]
     check("聊天", "会话列表渲染",
           js(page, 'document.querySelectorAll(".boss-chat-item").length') > 0,
           js(page, 'document.querySelectorAll(".boss-chat-item").length'))
-    if listing:
-        target = max(listing, key=lambda c: c["message_count"])
+
+    def chat_candidates(acct):
+        st = MessageStore(account_index=acct)
+        own = [c for c in st.get_chat_list()
+               if c.get("message_count") and int(c.get("account_index") or 0) == acct]
+        return st, own
+
+    acct0_store, acct0_chats = chat_candidates(0)
+    _, acct1_chats = chat_candidates(1)
+    acct0_names = {c["chat_name"] for c in acct0_chats}
+
+    for acct, cand in ((0, acct0_chats), (1, acct1_chats)):
+        # 两个号聊到同名 HR 时前端缓存按名字索引会撞车（已知问题），
+        # 这里只挑另一个号没有的会话，测的是"读到本账号的文件"
+        uniq = [c for c in cand if c["chat_name"] not in acct0_names] if acct else cand
+        if not uniq:
+            continue
+        store = MessageStore(account_index=acct)
+        target = max(uniq, key=lambda c: c["message_count"])
         name = target["chat_name"]
+        tag = f"聊天(账号{acct + 1})"
         js(page, f'selectBossChat({json.dumps(name)})')
         time.sleep(2)
         ui = js(page, '''(function(){var b=document.getElementById("bossChatMessages");
@@ -171,18 +187,18 @@ def main():
           return JSON.stringify(o);})()''')
         be = [m for m in store.get_messages(name)
               if (m.get("text") or m.get("content") or "").strip()]
-        check("聊天", "前端气泡数 = 后端消息数", len(ui) == len(be),
-              f"前端{len(ui)} 后端{len(be)}")
+        check(tag, "前端气泡数 = 后端消息数", len(ui) == len(be),
+              f"{name} 前端{len(ui)} 后端{len(be)}")
         bad = 0
         for a, b in zip(ui, be):
             ta = (a["text"] or "")[:14]
             tb = ((b.get("text") or b.get("content") or "").replace("\n", " ").strip())[:14]
             if ta and tb and ta not in tb and tb not in ta:
                 bad += 1
-        check("聊天", "逐条顺序与文本一致", bad == 0, f"{bad} 条错位")
+        check(tag, "逐条顺序与文本一致", bad == 0, f"{bad} 条错位")
         mine_ok = all(a["mine"] == bool(b.get("is_mine")) for a, b in zip(ui, be))
-        check("聊天", "我方/对方方向正确", mine_ok)
-        page.get_screenshot(path=os.path.join(SHOTS, "chat.png"))
+        check(tag, "我方/对方方向正确", mine_ok)
+        page.get_screenshot(path=os.path.join(SHOTS, f"chat_a{acct}.png"))
 
     # ── 5. AI 体检（真实网络请求） ──
     js(page, 'toggleAiProviders()')
@@ -194,9 +210,13 @@ def main():
     check("AI", "每个接口都有状态点", int(dots) >= provs["total"], f"{dots} vs {provs['total']}")
     check("AI", "体检结果已落盘并显示", provs["available"] >= 1, provs)
     js(page, 'runAiHealth([2])')
-    time.sleep(9)
-    st = js(page, '''(function(){var d=document.getElementById("aiDot-2");
-      return d?d.className:"none";})()''')
+    st = "probing"
+    for _ in range(16):          # 真实网络请求，慢接口要等，固定 sleep 会误报
+        time.sleep(2)
+        st = js(page, '''(function(){var d=document.getElementById("aiDot-2");
+          return d?d.className:"none";})()''') or "none"
+        if "available" in st:
+            break
     check("AI", "单个重测后状态更新", "available" in st or "unavailable" in st, st)
 
     # ── 6. 配置保存回路（改→存→读回→还原） ──
@@ -300,6 +320,131 @@ def main():
       if(!t && !b[i].getAttribute("title") && !b[i].getAttribute("aria-label"))n++;}
       return n;})()''')
     check("可达性", "无文字按钮都有 title/aria-label", int(no_title or 0) == 0, no_title)
+    # ── 5b. 多账号范围：切账号要带着记录、聊天、导出、按钮一起切 ──
+    def api_get(path):
+        raw = js(page, '''(function(){var x=new XMLHttpRequest();
+          x.open("GET", %s, false); x.send();
+          return x.status + "|" + x.responseText;})()''' % json.dumps(path))
+        status, _, body = str(raw).partition("|")
+        return int(status), json.loads(body) if body else {}
+
+    st_a1, d_a1 = api_get("/api/greet_records?account=1")
+    st_a0, d_a0 = api_get("/api/greet_records?account=0")
+    st_all, d_all = api_get("/api/greet_records")
+    check("多账号", "打招呼记录接口按账号分",
+          st_a1 == 200 and d_a1["total"] < d_all["total"] and d_a0["total"] < d_all["total"],
+          f"全部{d_all['total']} 主{d_a0['total']} 二号{d_a1['total']}")
+    check("多账号", "记录里的账号字段正确",
+          all(r.get("account_index") == 1 for r in d_a1["records"]) and
+          all(r.get("account_index") == 0 for r in d_a0["records"]),
+          set(r.get("account_index") for r in d_a1["records"]))
+    check("多账号", "不再有 cookie 文件名当账号名",
+          not any(str(r.get("account_name", "")).endswith(".json") for r in d_all["records"]),
+          [r.get("account_name") for r in d_all["records"][:3]])
+
+    js(page, 'document.querySelectorAll("#metricsScope .scope-chip")[2].click()')
+    time.sleep(2.5)
+    rows_a1 = int(js(page, 'document.querySelectorAll(".greet-table tbody tr").length') or 0)
+    check("多账号", "切到账号2 后打招呼记录只剩该账号",
+          rows_a1 == min(int(d_a1["total"]), 200),
+          f"页面{rows_a1} 接口{d_a1['total']}")
+    hint = js(page, 'document.getElementById("actionScopeLabel").textContent') or ""
+    check("多账号", "操作条标明当前范围", "账号2" in hint, hint)
+    labels = js(page, '''(function(){var r=[],b=["btnPauseGreet","btnPauseReply"];
+      for(var i=0;i<b.length;i++){var e=document.getElementById(b[i]);
+      r.push(e?e.textContent:"");} return JSON.stringify(r);})()''')
+    check("多账号", "暂停按钮写着只对当前账号生效",
+          all("账号2" in (x or "") for x in labels), labels)
+
+    chats_all, dc_all = api_get("/api/reply_records/grouped")
+    chats_a1, dc_a1 = api_get("/api/reply_records/grouped?account=1")
+    check("多账号", "回复分组接口按账号分",
+          dc_a1["total_groups"] < dc_all["total_groups"] or dc_a1["total_groups"] > 0,
+          f"全部{dc_all['total_groups']} 二号{dc_a1['total_groups']}")
+    check("多账号", "回复分组带账号字段",
+          all(g.get("account_index") == 1 for g in dc_a1["groups"]),
+          [g.get("account_index") for g in dc_a1["groups"][:5]])
+    time.sleep(1.5)
+    ui_chats = int(js(page, 'document.querySelectorAll(".boss-chat-item").length') or 0)
+    check("多账号", "聊天列表跟着账号切",
+          ui_chats == int(dc_a1["total_groups"]), f"页面{ui_chats} 接口{dc_a1['total_groups']}")
+
+    # 只记录不真发：拦住 fetch / window.open / confirm，看前端准备往哪儿打
+    js(page, '''(function(){
+      window.__fired=[]; window.__opened=[]; window.__confirm=[];
+      window.__of=window.fetch; window.__ow=window.open; window.__oc=window.confirm;
+      window.fetch=function(u,o){window.__fired.push((o&&o.method||"GET")+" "+u);
+        return Promise.resolve(new Response(JSON.stringify({status:"ok"}),
+          {status:200,headers:{"Content-Type":"application/json"}}));};
+      window.open=function(u){window.__opened.push(u);return null;};
+      window.confirm=function(m){window.__confirm.push(m);return false;};
+    })()''')
+    js(page, 'pauseGreet(); resumeGreet(); pauseReply(); resumeReply();'
+             ' downloadGreetRecords(); downloadReplyRecords();'
+             ' loginPendingIdx=1; confirmLogin();')
+    time.sleep(1.2)
+    fired = js(page, 'JSON.stringify(window.__fired)') or []
+    opened = js(page, 'JSON.stringify(window.__opened)') or []
+    check("多账号", "暂停/恢复走单账号路由",
+          any("POST /api/accounts/1/pause_greet" == x for x in fired) and
+          any("POST /api/accounts/1/resume_reply" == x for x in fired), fired)
+    check("多账号", "导出链接带账号参数",
+          any("/api/export/greet_records" in u and "account=1" in u for u in opened), opened)
+    check("多账号", "登录确认只发给要登录的号",
+          "POST /api/accounts/1/confirm_login" in fired, fired)
+
+    js(page, 'setDataScope("all")')
+    time.sleep(1.5)
+    js(page, 'window.__fired = [];')
+    js(page, 'pauseGreet(); confirmLoginAs(null);')
+    time.sleep(1.0)
+    fired_all = js(page, 'JSON.stringify(window.__fired)') or []
+    check("多账号", "全部账号范围才用全局路由",
+          "POST /api/pause_greet" in fired_all
+          and "POST /api/confirm_login" in fired_all, fired_all)
+
+    js(page, 'setDataScope(1)')
+    time.sleep(1.2)
+    js(page, 'clearGreetTable(); clearReplyRecords();')
+    time.sleep(0.8)
+    confirms = js(page, 'JSON.stringify(window.__confirm)') or []
+    check("多账号", "清空前说清会不会波及其他账号",
+          len(confirms) >= 2 and all("账号2" in c for c in confirms)
+          and any("不受影响" in c for c in confirms), confirms[:2])
+    js(page, '''(function(){window.fetch=window.__of;window.open=window.__ow;
+      window.confirm=window.__oc;})()''')
+    # 上面拦过 fetch，表被空响应清掉了，恢复真 fetch 后重新拉一次
+    js(page, 'applyScopeToView()')
+    time.sleep(2.5)
+
+    scoped = js(page, 'JSON.stringify([inScope({account_index:0}),'
+                      ' inScope({account_index:1})])')
+    check("多账号", "范围外的实时行被挡掉", scoped == [False, True], scoped)
+    rows_1 = int(js(page, 'document.querySelectorAll(".greet-table tbody tr").length') or 0)
+    check("多账号", "恢复真接口后账号2 记录数对得上",
+          rows_1 == int(d_a1["total"]), f"页面{rows_1} 接口{d_a1['total']}")
+
+    dots = js(page, '''(function(){var d=document.querySelectorAll(".account-tab .cookie-status-dot"),r=[];
+      for(var i=0;i<d.length;i++)r.push(d[i].className.replace("cookie-status-dot","").trim()+"|"+d[i].title);
+      return JSON.stringify(r);})()''')
+    check("多账号", "Cookie 点已自动刷新（不靠手点）",
+          len(dots) >= 2 and not any(x.startswith("invalid") for x in dots), dots)
+    acc_dots = js(page, '''(function(){var d=document.querySelectorAll(".account-tab .acc-status-dot"),r=[];
+      for(var i=0;i<d.length;i++)r.push(d[i].className.replace("acc-status-dot","").trim()+"|"+d[i].title);
+      return JSON.stringify(r);})()''')
+    check("多账号", "账号状态点能说明阶段",
+          all(("未启动" in x or "运行中" in x or "等你登录" in x or "初始化" in x)
+              for x in acc_dots), acc_dots)
+
+    js(page, 'setDataScope("all")')
+    time.sleep(2.5)
+    check("多账号", "切回全部账号后实时行不再过滤",
+          js(page, 'JSON.stringify(inScope({account_index:0}))') == "true")
+    rows_all_after = int(js(page, 'document.querySelectorAll(".greet-table tbody tr").length') or 0)
+    check("多账号", "切回全部账号能看到所有记录",
+          rows_all_after == int(d_all["total"]),
+          f"页面{rows_all_after} 接口{d_all['total']}")
+
     errs = js(page, 'JSON.stringify(window.__jsErrors||[])')
     check("稳定性", "操作过程中无 JS 报错", not errs, errs)
 

@@ -60,6 +60,9 @@ GREET_ROUND_INTERVAL = 30
 # 等待人工登录时的登录态轮询间隔（秒）
 LOGIN_POLL_INTERVAL = 5
 
+# 按天归档的进程内互斥：记录文件所有账号共用，一天只能归一次
+_ARCHIVE_LOCK = threading.Lock()
+
 
 def _should_show_frontend(level: str, msg: str) -> bool:
     """判断日志是否应该推送到前端。
@@ -111,6 +114,8 @@ class UnifiedBotLoop:
         self._running = False
         self._logged_in = False
         self._needs_login = False
+        # 需要登录的原因，供前端状态点说明"为什么是黄的"
+        self._login_reason = ""
         self._greet_paused = False
         # 只有"因为到达每日上限而暂停"才允许跨零点自动恢复；人工暂停不动
         self._greet_paused_by_cap = False
@@ -253,7 +258,20 @@ class UnifiedBotLoop:
                 "intent": intent or "",
                 "status": status,
                 "is_skipped": status in ("skipped", "skip", "error"),
+                "account_index": self.account_index,
+                "account_name": self.account_name,
             })
+        except Exception:
+            pass
+
+    def _emit_wind(self, message: str, wtype: str):
+        """风控事件上报 — 带上账号，免得两个号的风控事件分不清是谁的。"""
+        if not self._wind_control_cb:
+            return
+        try:
+            self._wind_control_cb(message, wtype,
+                                  account_index=self.account_index,
+                                  account_name=self.account_name)
         except Exception:
             pass
 
@@ -336,6 +354,21 @@ class UnifiedBotLoop:
             self._state_store.resume()
         self._log("INFO", "回复已恢复")
 
+    @property
+    def phase(self) -> str:
+        """账号当前阶段：stopped / starting / waiting_login / running。
+
+        _running 在 start() 第一时间就置真，浏览器还没起来时前端已经显示"运行中"，
+        绿点骗人；这里把初始化中、等登录、真在跑分开。
+        """
+        if not self._running:
+            return "stopped"
+        if self._needs_login:
+            return "waiting_login"
+        if not self._logged_in or self._current_mode == "idle":
+            return "starting"
+        return "running"
+
     def get_status(self) -> dict:
         """获取当前运行状态。"""
         return {
@@ -344,6 +377,10 @@ class UnifiedBotLoop:
             "running": self._running,
             "logged_in": self._logged_in,
             "needs_login": self._needs_login,
+            # login_reason: cookie_expired / no_cookie / cookie_error /
+            #               login_timeout / session_lost / "" — 红黄点要能说明原因
+            "login_reason": self._login_reason,
+            "phase": self.phase,
             "greet_paused": self._greet_paused,
             "reply_paused": self._reply_paused,
             "current_mode": self._current_mode,
@@ -364,6 +401,7 @@ class UnifiedBotLoop:
 
         self._needs_login = False
         self._logged_in = True
+        self._login_reason = ""
 
     # ─────────────────────────────────────────────
     # 数据按天归档
@@ -379,24 +417,48 @@ class UnifiedBotLoop:
            b. 清空当前数据文件（开始新一天的数据）
            c. 删除超过 10 天的归档数据
            d. 更新 _last_archived_date
-        """
-        try:
-            today_str = date.today().isoformat()  # YYYY-MM-DD
-            if self._last_archived_date == today_str:
-                return  # 同一天，不重复归档
 
-            # 首次启动：只记录日期，不归档（避免把今天已有的数据归档掉）
-            if self._last_archived_date is None:
+        记录文件是所有账号共用的，归档必须全天只做一次：两个账号的循环各自
+        归档时，后跑的那个会拷走已被清空的空文件，等于丢掉一整天数据。
+        用 data/archive/.last_archived 标记文件 + 进程内锁来保证只跑一次
+        （标记落盘，CLI 和 Web 同时开着也不会各归一次）。
+        """
+        today_str = date.today().isoformat()  # YYYY-MM-DD
+        if self._last_archived_date == today_str:
+            return
+        with _ARCHIVE_LOCK:
+            marker = self._archive_dir / ".last_archived"
+            try:
+                prev = marker.read_text(encoding="utf-8").strip() if marker.exists() else ""
+            except Exception:
+                prev = ""
+            if prev == today_str:
+                # 别的账号循环（或另一个进程）今天已经归过档了
                 self._last_archived_date = today_str
+                return
+            self._do_archive(today_str, prev, marker)
+
+    def _do_archive(self, today_str: str, prev: str, marker: Path):
+        """真正执行归档，调用方须持有 _ARCHIVE_LOCK。"""
+        try:
+            # 首次启动：只记录日期，不归档（避免把今天已有的数据归档掉）
+            if prev == "" and self._last_archived_date is None:
+                self._last_archived_date = today_str
+                try:
+                    self._archive_dir.mkdir(parents=True, exist_ok=True)
+                    marker.write_text(today_str, encoding="utf-8")
+                except Exception as e:
+                    self._log("WARN", f"写入归档标记失败: {e}")
                 # 启动时清理过期归档
                 self._clean_old_archives()
                 return
 
-            # 新的一天：归档昨天的数据
-            self._log("INFO", f"检测到新的一天（{today_str}），开始归档数据...")
+            # 新的一天：归档昨天的数据（标记里是上次归档日，缺省退回内存值）
+            archive_for = prev or self._last_archived_date or today_str
+            self._log("INFO", f"检测到新的一天（{today_str}），开始归档 {archive_for} 的数据...")
 
             # 归档目录：data/archive/YYYY-MM-DD/
-            archive_subdir = self._archive_dir / self._last_archived_date
+            archive_subdir = self._archive_dir / archive_for
             archive_subdir.mkdir(parents=True, exist_ok=True)
 
             # 复制 greet_records.json 和 reply_records.json 到归档目录
@@ -411,17 +473,16 @@ class UnifiedBotLoop:
                     except Exception as e:
                         self._log("WARN", f"归档 {filename} 失败: {e}")
 
+            # 归档成功后先落标记：中途崩溃也不会把清空后的空文件再归一次
+            try:
+                marker.write_text(today_str, encoding="utf-8")
+            except Exception as e:
+                self._log("WARN", f"写入归档标记失败: {e}")
+
             # 清空当前数据文件（开始新一天的数据）
-            for filename in ("greet_records.json", "reply_records.json"):
-                src = data_dir / filename
-                try:
-                    with open(src, "w", encoding="utf-8") as f:
-                        json.dump({"records": [], "total": 0,
-                                   "last_saved": datetime.now().isoformat()}, f,
-                                  ensure_ascii=False, indent=2)
-                    self._log("DEBUG", f"已清空 {filename}")
-                except Exception as e:
-                    self._log("WARN", f"清空 {filename} 失败: {e}")
+            # 必须走 store 单例：引擎内存里还留着整份记录，只改磁盘文件的话
+            # 下一次 add() 会把旧记录整团写回去，"按天归档"根本清不干净
+            self._reset_record_stores()
 
             # 更新归档日期
             self._last_archived_date = today_str
@@ -432,6 +493,17 @@ class UnifiedBotLoop:
             self._log("INFO", f"数据归档完成，新一天数据已清空")
         except Exception as e:
             self._log("WARN", f"数据归档检查异常: {e}")
+
+    def _reset_record_stores(self):
+        """把回复/打招呼记录存储清空（内存 + 磁盘），供归档后开新一天用。"""
+        from boss_bot.reply_record import _get_reply_store, _get_greet_store
+        for label, getter in (("reply_records.json", _get_reply_store),
+                              ("greet_records.json", _get_greet_store)):
+            try:
+                getter().clear()
+                self._log("DEBUG", f"已清空 {label}")
+            except Exception as e:
+                self._log("WARN", f"清空 {label} 失败: {e}")
 
     def _clean_old_archives(self):
         """清理超过保留天数的归档数据。"""
@@ -637,15 +709,21 @@ class UnifiedBotLoop:
                     self._log("DEBUG", f"验证页面URL: {current_url}")
                     if "login" not in current_url and "user" not in current_url and "passport" not in current_url:
                         self._logged_in = True
+                        self._login_reason = ""
                         self._log("SUCCESS", "Cookie 有效，已自动登录")
                         return True
                     else:
+                        self._login_reason = "cookie_expired"
                         self._log("WARN", "Cookie 已过期，需要重新登录")
                         self._discard_stale_cookies("启动时 Cookie 验证失败")
                 else:
+                    self._login_reason = "no_cookie"
                     self._log("INFO", "无 Cookie 文件或加载失败")
             except Exception as e:
+                self._login_reason = "cookie_error"
                 self._log("WARN", f"Cookie 加载异常: {e}")
+        else:
+            self._login_reason = "no_cookie"
 
         # 需要手动登录
         self._needs_login = True
@@ -659,6 +737,7 @@ class UnifiedBotLoop:
         self._log("INFO", "请在浏览器中登录 BOSS 直聘（扫码或手机号+验证码），登录成功后会自动继续")
 
         if not self._wait_for_login(instance, cookie_file):
+            self._login_reason = "login_timeout"
             self._log("ERROR", "登录超时，主循环退出")
             return False
 
@@ -671,6 +750,7 @@ class UnifiedBotLoop:
 
         self._logged_in = True
         self._needs_login = False
+        self._login_reason = ""
         return True
 
     def _dry_run(self, what: str, detail: str = "") -> bool:
@@ -851,13 +931,13 @@ class UnifiedBotLoop:
                 health = self._check_health()
                 if health == "captcha":
                     self._log("ERROR", "⚠️ 检测到验证码/风控拦截！打招呼已暂停，请手动解除风控后恢复")
-                    if self._wind_control_cb:
-                        self._wind_control_cb("检测到验证码/风控拦截，请手动解除", "captcha")
+                    self._emit_wind("检测到验证码/风控拦截，请手动解除", "captcha")
                     self._greet_paused = True
                     continue
                 elif health == "need_login":
                     self._log("WARN", "登录态失效，等待重新登录...")
                     self._needs_login = True
+                    self._login_reason = "session_lost"
                     self._discard_stale_cookies("运行中检测到登录态失效")
                     self._stop_event.wait(timeout=30)
                     continue
@@ -880,8 +960,7 @@ class UnifiedBotLoop:
                     consecutive_empty_rounds += 1
                     if consecutive_empty_rounds >= 3:
                         self._log("ERROR", "⚠️ 连续3轮搜索结果为0，可能触发风控或岗位已投完。打招呼已暂停，请检查BOSS直聘页面")
-                        if self._wind_control_cb:
-                            self._wind_control_cb("连续3轮搜索结果为0，请检查BOSS直聘页面", "limit")
+                        self._emit_wind("连续3轮搜索结果为0，请检查BOSS直聘页面", "limit")
                         self._greet_paused = True
                         consecutive_empty_rounds = 0
                 else:
@@ -1116,13 +1195,13 @@ class UnifiedBotLoop:
                 health = self._check_health()
                 if health == "captcha":
                     self._log("ERROR", "⚠️ 回复侧检测到验证码/风控拦截！自动回复已暂停，请手动解除后恢复")
-                    if self._wind_control_cb:
-                        self._wind_control_cb("回复侧检测到验证码/风控拦截，请手动解除", "captcha")
+                    self._emit_wind("回复侧检测到验证码/风控拦截，请手动解除", "captcha")
                     self._reply_paused = True
                     continue
                 if health == "need_login":
                     self._log("WARN", "回复侧检测到登录态失效，等待重新登录...")
                     self._needs_login = True
+                    self._login_reason = "session_lost"
                     self._discard_stale_cookies("回复侧登录态失效")
                     self._stop_event.wait(timeout=30)
                     continue

@@ -444,6 +444,7 @@ class ReplyRecordStore:
         date: Optional[str] = None,
         account_name: Optional[str] = None,
         chat_name: Optional[str] = None,
+        account_index: Optional[int] = None,
     ) -> List[ReplyRecord]:
         """按条件筛选回复记录。
 
@@ -451,6 +452,7 @@ class ReplyRecordStore:
             date: 日期字符串，如 "2026-09-18"，匹配 timestamp 的日期部分
             account_name: 账号名称
             chat_name: 聊天对象名称
+            account_index: 账号索引；account_name 早期记录里可能为空，索引才可靠
 
         Returns:
             符合条件的记录列表
@@ -461,6 +463,8 @@ class ReplyRecordStore:
                 if date and not r.timestamp.startswith(date):
                     continue
                 if account_name and r.account_name != account_name:
+                    continue
+                if account_index is not None and int(r.account_index or 0) != int(account_index):
                     continue
                 if chat_name and r.chat_name != chat_name:
                     continue
@@ -481,6 +485,23 @@ class ReplyRecordStore:
     def clear_all(self):
         """清空所有记录（clear 的语义别名，供 API 层调用）。"""
         self.clear()
+
+    def delete_account(self, account_index: int) -> int:
+        """只删除某个账号的记录，返回删除条数。
+
+        两个号共用一份记录文件，「清空」必须能按账号收口，否则在看账号2
+        时点清空会把主账号的历史一起删掉。
+        """
+        with self._lock:
+            before = len(self._records)
+            self._records = [
+                r for r in self._records
+                if int(r.account_index or 0) != int(account_index)
+            ]
+            deleted = before - len(self._records)
+            if deleted:
+                self._save()
+            return deleted
 
 
 # ─────────────────────────────────────────────
@@ -544,12 +565,14 @@ class GreetRecordStore:
         self,
         date: Optional[str] = None,
         account_name: Optional[str] = None,
+        account_index: Optional[int] = None,
     ) -> List[GreetRecord]:
         """按条件筛选打招呼记录。
 
         Args:
             date: 日期字符串，如 "2026-09-18"
             account_name: 账号名称
+            account_index: 账号索引
 
         Returns:
             符合条件的记录列表
@@ -560,6 +583,8 @@ class GreetRecordStore:
                 if date and not r.timestamp.startswith(date):
                     continue
                 if account_name and r.account_name != account_name:
+                    continue
+                if account_index is not None and int(r.account_index or 0) != int(account_index):
                     continue
                 results.append(r)
             return results
@@ -579,6 +604,19 @@ class GreetRecordStore:
         """清空所有记录（clear 的语义别名，供 API 层调用）。"""
         self.clear()
 
+    def delete_account(self, account_index: int) -> int:
+        """只删除某个账号的记录，返回删除条数。"""
+        with self._lock:
+            before = len(self._records)
+            self._records = [
+                r for r in self._records
+                if int(r.account_index or 0) != int(account_index)
+            ]
+            deleted = before - len(self._records)
+            if deleted:
+                self._save()
+            return deleted
+
 
 # ─────────────────────────────────────────────
 # 导出功能
@@ -590,6 +628,7 @@ def export_reply_records(
     date: Optional[str] = None,
     account_name: Optional[str] = None,
     chat_name: Optional[str] = None,
+    account_index: Optional[int] = None,
     store: Optional[ReplyRecordStore] = None,
 ) -> str:
     """导出回复记录。
@@ -600,20 +639,23 @@ def export_reply_records(
         date: 按日期筛选
         account_name: 按账号筛选
         chat_name: 按聊天对象筛选
+        account_index: 按账号索引筛选（多账号各导各的）
         store: 自定义存储实例，默认使用全局实例
 
     Returns:
         导出文件路径
     """
     s = store or _get_reply_store()
-    records = s.filter(date=date, account_name=account_name, chat_name=chat_name)
+    records = s.filter(date=date, account_name=account_name,
+                       chat_name=chat_name, account_index=account_index)
 
     if format == "json":
         if output_path is None:
             output_path = str(DATA_DIR / "reply_records_export.json")
         data = {
             "exported_at": datetime.now().isoformat(),
-            "filters": {"date": date, "account_name": account_name, "chat_name": chat_name},
+            "filters": {"date": date, "account_name": account_name,
+                        "chat_name": chat_name, "account_index": account_index},
             "total": len(records),
             "records": [r.to_dict() for r in records],
         }
@@ -633,6 +675,7 @@ def export_greet_records(
     output_path: Optional[str] = None,
     date: Optional[str] = None,
     account_name: Optional[str] = None,
+    account_index: Optional[int] = None,
     store: Optional[GreetRecordStore] = None,
 ) -> str:
     """导出打招呼记录。
@@ -642,20 +685,23 @@ def export_greet_records(
         output_path: 输出文件路径，默认自动生成
         date: 按日期筛选
         account_name: 按账号筛选
+        account_index: 按账号索引筛选
         store: 自定义存储实例，默认使用全局实例
 
     Returns:
         导出文件路径
     """
     s = store or _get_greet_store()
-    records = s.filter(date=date, account_name=account_name)
+    records = s.filter(date=date, account_name=account_name,
+                       account_index=account_index)
 
     if format == "json":
         if output_path is None:
             output_path = str(DATA_DIR / "greet_records_export.json")
         data = {
             "exported_at": datetime.now().isoformat(),
-            "filters": {"date": date, "account_name": account_name},
+            "filters": {"date": date, "account_name": account_name,
+                        "account_index": account_index},
             "total": len(records),
             "records": [r.to_dict() for r in records],
         }
@@ -738,7 +784,7 @@ def _export_greet_records_excel(
         "岗位描述", "任职要求", "AI评分", "是否匹配",
         "AI理由", "优势", "劣势", "AI建议打招呼",
         "AI模型", "AI原始返回", "实际打招呼", "是否已打招呼",
-        "是否跳过", "跳过原因", "账号名称",
+        "是否跳过", "跳过原因", "账号名称", "账号索引",
         "状态", "打招呼语",
     ]
     ws.append(headers)
@@ -758,7 +804,7 @@ def _export_greet_records_excel(
             "是" if r.is_greeted else "否",
             "是" if r.is_skipped else "否",
             r.skip_reason or "",
-            r.account_name,
+            r.account_name, r.account_index,
             r.status or "",
             r.greeting_message or "",
         ])

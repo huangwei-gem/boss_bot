@@ -8,6 +8,7 @@
 
 import json
 import logging
+import threading
 import time
 from datetime import datetime
 from pathlib import Path
@@ -181,6 +182,57 @@ def merge_results(existing: dict, results: list, providers: list) -> dict:
 
 def provider_key(entry: dict) -> str:
     return f"{entry.get('api_base', '')}|{entry.get('model', '')}|{entry.get('name', '')}"
+
+
+# ---------- 从真实调用里学 ----------
+#
+# 体检用的是 4 个字的极短提示词，有些接口 ping 得通、真岗位提示词却 30s 不回话。
+# 这种接口体检永远标"可用"，容灾链每个岗位都要白等它 30~60s 然后"默认通过"，
+# 等于悄悄不筛岗。所以把真实调用的超时也记进体检表，让 skip_unhealthy 能甩开它。
+
+RUNTIME_STRIKES_TO_MARK = 2
+_runtime_strikes: dict = {}
+_runtime_lock = threading.Lock()
+
+
+def report_runtime_result(provider, ok: bool, error: str = "", path=None):
+    """把一次真实岗位分析的成败回写体检表。
+
+    Args:
+        provider: 有 name/model/api_base 属性的接口配置
+        ok: 这次真调用是否拿到判断
+        error: 失败原因文本
+    """
+    entry = {"name": getattr(provider, "name", "") or getattr(provider, "api_base", ""),
+             "model": getattr(provider, "model", ""),
+             "api_base": getattr(provider, "api_base", "")}
+    key = provider_key(entry)
+    timed_out = "超时" in (error or "") or "timeout" in (error or "").lower()
+    with _runtime_lock:
+        data = load_health(path)
+        store = dict(data.get("results") or {})
+        cur = dict(store.get(key) or {})
+        changed = False
+        if ok:
+            _runtime_strikes.pop(key, None)
+            if cur.get("source") == "runtime":
+                # 真调用成功了，撤掉运行时判的死刑，交回给下一次体检定夺
+                store.pop(key, None)
+                changed = True
+        elif timed_out:
+            strikes = _runtime_strikes.get(key, 0) + 1
+            _runtime_strikes[key] = strikes
+            if strikes >= RUNTIME_STRIKES_TO_MARK and cur.get("source") != "runtime":
+                store[key] = dict(cur, **entry, status=STATUS_UNAVAILABLE,
+                                  reason=f"真实岗位分析连续 {strikes} 次超时（短探活通过不算数）",
+                                  error=(error or "")[:200],
+                                  latency_ms=0, reply="",
+                                  source="runtime",
+                                  checked_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                changed = True
+        if changed:
+            save_health({"updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                         "results": store, "summary": summarize(store)}, path=path)
 
 
 def summarize(results: dict) -> dict:

@@ -262,6 +262,16 @@ class AIAnalyzerChain:
         self._cooldown_until[provider.name] = time.time() + seconds
         self._log("WARN", f"接口 [{provider.name}] 冷却 {seconds // 60} 分钟")
 
+    def _report_health(self, provider, ok: bool, error: str = ""):
+        """把真实调用的成败回写体检表（ping 得通、真提示词超时的接口靠这个揪出来）。"""
+        try:
+            from boss_bot.ai_health import report_runtime_result
+            report_runtime_result(provider, ok, error)
+            if not ok:
+                self._unhealthy_cache = None   # 下一个岗位就按新结果跳过，不用等 5 分钟
+        except Exception as e:
+            self._log("DEBUG", f"回写 AI 体检结果失败: {e}")
+
     def _log(self, level: str, msg: str):
         if self.log_cb:
             self.log_cb(f"[AI] [{level}] {msg}")
@@ -327,6 +337,7 @@ class AIAnalyzerChain:
                 self._log("INFO", f"通过 [{provider.name}] ({provider.model}) 分析...")
                 result = self._call_provider_api(provider, prompt)
                 self._cooldown_until.pop(provider.name, None)
+                self._report_health(provider, ok=True)
                 self.last_model_name = provider.model
                 self.analyzed_count += 1
                 if result.get("is_match", False):
@@ -349,6 +360,7 @@ class AIAnalyzerChain:
             except Exception as e:
                 last_error = e
                 self._cool_down(provider, e)
+                self._report_health(provider, ok=False, error=str(e))
                 self._log("WARN", f"[{provider.name}] 失败: {e}，尝试下一个...")
                 continue
 
@@ -503,6 +515,11 @@ class GreetEngine:
         engine.start(tasks=[{"query": "数据分析", "city": "上海"}])
     """
 
+    # 多账号共用 data/chatted_jobs.json，写盘要跨实例串行 + 合并
+    _chatted_lock = threading.Lock()
+    # 去重快照的重读间隔（秒）：另一账号打过的岗位本账号要能在下一轮看到
+    CHATTED_REFRESH_SECONDS = 60
+
     def __init__(
         self,
         browser_manager: BrowserManager,
@@ -532,6 +549,7 @@ class GreetEngine:
         self._login_event = threading.Event()
         # 已沟通岗位集合的进程内缓存（首次使用时读盘）
         self._chatted_cache = None
+        self._chatted_loaded_at = 0.0
 
         # 统计
         self.applied_count = 0
@@ -674,6 +692,11 @@ class GreetEngine:
             return None
         return accounts[self.account_index] if self.account_index < len(accounts) else accounts[0]
 
+    def _account_label(self) -> str:
+        """记录里显示的账号名 — 用配置里的名字，不再写 cookie 文件名。"""
+        name = getattr(self._account(), "name", "") or ""
+        return name or f"账号{self.account_index}"
+
     def _log(self, level: str, msg: str):
         """统一日志输出 — 回调 + 文件日志。"""
         if self.log_cb:
@@ -717,6 +740,10 @@ class GreetEngine:
                 "url": job.get("url", ""),
                 "skip_reason": skip_reason or job.get("_last_skip_reason", ""),
                 "is_skipped": status in ("skip", "ai_skip", "already", "error"),
+                # 前端按账号切记录，实时推送的行也要带账号，否则切到账号2
+                # 时新推送的行情会串进主账号的表格
+                "account_index": self.account_index,
+                "account_name": self._account_label(),
             }
             self._greet_event_cb(emit_data)
         except Exception:
@@ -784,7 +811,8 @@ class GreetEngine:
                 is_greeted=is_greeted,
                 is_skipped=is_skipped,
                 skip_reason=skip_reason,
-                account_name=self._cookie_file or "",
+                account_name=self._account_label(),
+                account_index=self.account_index,
                 status=status,
                 greeting_message=greeting_message,
                 timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -2126,8 +2154,13 @@ class GreetEngine:
     # ── 去重管理 ──
 
     def _load_chatted(self) -> set:
-        """读取已沟通岗位集合，进程内缓存一次，避免每个岗位都重读整个文件。"""
-        if self._chatted_cache is None:
+        """读取已沟通岗位集合，进程内缓存，超过 CHATTED_REFRESH_SECONDS 重读一次。
+
+        缓存不能永久有效：另一个账号刚打过的岗位，本账号如果在跑一整晚，
+        永远读到自己那份旧快照就会重复招呼同一个 HR。
+        """
+        now = time.time()
+        if self._chatted_cache is None or (now - self._chatted_loaded_at) > self.CHATTED_REFRESH_SECONDS:
             urls = set()
             try:
                 if CHATTED_DB_FILE.exists():
@@ -2135,7 +2168,11 @@ class GreetEngine:
                         urls = set(json.load(f))
             except Exception as e:
                 self._log("WARN", f"读取去重库失败，按未沟通过处理: {e}")
+                urls = set()
+            # 本地已标记但还没落盘成功的，不能因为重读又丢了
+            urls |= (self._chatted_cache or set())
             self._chatted_cache = urls
+            self._chatted_loaded_at = now
         return self._chatted_cache
 
     def _is_already_chatted(self, job: dict) -> bool:
@@ -2146,19 +2183,30 @@ class GreetEngine:
         return url in self._load_chatted()
 
     def _mark_chatted(self, job: dict):
-        """标记岗位为已沟通。"""
+        """标记岗位为已沟通。
+
+        去重库两个账号共用一份文件（同一个岗位让两个号都打一遍，HR 会收到
+        两条一模一样的招呼）。但每个引擎各持一份内存副本，整文件重写会把
+        对方刚加的 URL 抹掉 → 下次重复招呼。所以写入前先读盘并集合并。
+        """
         url = job.get("url", "")
         if not url:
             return
-        chatted = self._load_chatted()
-        if url in chatted:
+        if url in self._load_chatted():
             return
-        try:
-            chatted.add(url)
-            write_json_atomic(CHATTED_DB_FILE, sorted(chatted))
-        except Exception as e:
-            # 写失败必须报出来：静默丢一条就等于下次重复打招呼
-            self._log("WARN", f"写入去重库失败，可能重复打招呼: {e}")
+        with GreetEngine._chatted_lock:
+            try:
+                merged = set()
+                if CHATTED_DB_FILE.exists():
+                    with open(CHATTED_DB_FILE, "r", encoding="utf-8") as f:
+                        merged = set(json.load(f))
+                merged |= (self._chatted_cache or set())
+                merged.add(url)
+                write_json_atomic(CHATTED_DB_FILE, sorted(merged))
+                self._chatted_cache = merged
+            except Exception as e:
+                # 写失败必须报出来：静默丢一条就等于下次重复打招呼
+                self._log("WARN", f"写入去重库失败，可能重复打招呼: {e}")
 
     # ── 聊天日志 ──
 

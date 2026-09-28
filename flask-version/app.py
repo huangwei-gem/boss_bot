@@ -261,12 +261,17 @@ def _save_notifications():
         pass
 
 
-def _add_notification(ntype: str, message: str):
+def _add_notification(ntype: str, message: str,
+                     account_index: Optional[int] = None,
+                     account_name: str = ""):
     """添加一条通知并持久化。
 
     Args:
         ntype: 通知类型，如 "wind_control"、"error"、"info"
         message: 通知内容
+        account_index: 触发通知的账号索引；风控/封号是账号级事件，
+            不带账号看不出是哪个号中招
+        account_name: 账号显示名
     """
     global _notifications
     notif = {
@@ -276,6 +281,10 @@ def _add_notification(ntype: str, message: str):
         "message": message,
         "read": False,
     }
+    if account_index is not None:
+        notif["account_index"] = account_index
+    if account_name:
+        notif["account_name"] = account_name
     with _notifications_lock:
         _notifications.insert(0, notif)  # 最新的在前
         if len(_notifications) > _MAX_NOTIFICATIONS:
@@ -315,19 +324,31 @@ def _ensure_manager() -> MultiAccountManager:
             except Exception:
                 pass
 
-        def wind_control_callback(message: str, wtype: str):
-            """风控事件回调 — 推送风控警告到前端，并持久化通知。"""
+        def wind_control_callback(message: str, wtype: str,
+                                  account_index: Optional[int] = None,
+                                  account_name: str = ""):
+            """风控事件回调 — 推送风控警告到前端，并持久化通知。
+
+            两个号各自跑各自的循环，风控必须标上账号，否则"账号被封了"
+            这种事件在界面上根本分不清是谁的事。
+            """
             try:
-                socketio.emit("wind_control", {
+                payload = {
                     "time": datetime.now().strftime("%H:%M:%S"),
                     "message": message,
                     "type": wtype,
-                })
+                }
+                if account_index is not None:
+                    payload["account_index"] = account_index
+                if account_name:
+                    payload["account_name"] = account_name
+                    payload["message"] = f"[{account_name}] {message}"
+                socketio.emit("wind_control", payload)
             except Exception:
                 pass
             # 持久化通知到列表和文件
             try:
-                _add_notification(wtype, message)
+                _add_notification(wtype, message, account_index, account_name)
             except Exception:
                 pass
 
@@ -379,7 +400,7 @@ def _status_pusher():
         try:
             manager = _multi_manager
             if manager is not None:
-                status = manager.get_status()
+                status = _enrich_status(manager.get_status())
                 socketio.emit("status_update", status)
 
                 # 遍历每个账号，检测登录状态变化 → 推送 login_required
@@ -438,7 +459,7 @@ def serve_dashboard(filename):
 
 @app.route("/api/status")
 def api_status():
-    """获取机器人运行状态（多账号汇总）。"""
+    """获取机器人运行状态（多账号汇总，含各账号 Cookie 状态）。"""
     manager = _multi_manager
     if manager is None:
         return jsonify({
@@ -446,15 +467,38 @@ def api_status():
             "accounts": [],
             "stats": {},
         })
-    return jsonify(manager.get_status())
+    return jsonify(_enrich_status(manager.get_status()))
+
+
+def _enrich_status(data: dict) -> dict:
+    """给每个账号补 cookie 字段，前端状态点因此能随轮询自己更新。"""
+    try:
+        accounts = _ensure_config().greet.accounts
+        for acc in data.get("accounts", []):
+            idx = acc.get("index", 0)
+            if 0 <= idx < len(accounts):
+                acc["cookie"] = _account_cookie_state(idx, account=accounts[idx])
+    except Exception:
+        pass
+    return data
 
 
 # ===================== 启动/停止 API =====================
 
+def _ensure_status_pusher():
+    """状态推送线程只由 /api/start 拉起过；单独启动某个账号时也要有，
+    否则界面只能靠自己轮询，账号点的状态半天不动。"""
+    global _status_thread
+    if _status_thread is not None and _status_thread.is_alive():
+        return
+    _status_stop.clear()
+    _status_thread = threading.Thread(target=_status_pusher, daemon=True)
+    _status_thread.start()
+
+
 @app.route("/api/start", methods=["POST"])
 def api_start():
     """启动所有启用的账号。"""
-    global _status_thread
     manager = _ensure_manager()
     status = manager.get_status()
     if status.get("running"):
@@ -462,9 +506,7 @@ def api_start():
     manager.start()
 
     # 启动状态推送线程
-    _status_stop.clear()
-    _status_thread = threading.Thread(target=_status_pusher, daemon=True)
-    _status_thread.start()
+    _ensure_status_pusher()
 
     return jsonify({"status": "ok", "message": "机器人已启动"})
 
@@ -548,7 +590,7 @@ def api_confirm_login():
     """确认所有账号的登录完成。"""
     manager = _ensure_manager()
     manager.confirm_login()
-    socketio.emit("status_update", manager.get_status())
+    socketio.emit("status_update", _enrich_status(manager.get_status()))
     return jsonify({"status": "ok", "message": "登录已确认"})
 
 
@@ -572,6 +614,7 @@ def api_account_start(idx: int):
     if error:
         return error
     manager.start_account(idx)
+    _ensure_status_pusher()
     return jsonify({"status": "ok", "message": f"账号 {idx} 已启动"})
 
 
@@ -643,7 +686,7 @@ def api_account_confirm_login(idx: int):
         return error
     manager.confirm_login(idx)
     acc_status = manager.get_account_status(idx)
-    socketio.emit("status_update", manager.get_status())
+    socketio.emit("status_update", _enrich_status(manager.get_status()))
     return jsonify({"status": "ok", "message": f"账号 {idx} 登录已确认"})
 
 
@@ -762,6 +805,61 @@ def api_account_check_cookie_simple(idx: int):
 
 
 # ===================== 配置 API =====================
+
+_cookie_state_cache: dict = {}   # account_index -> (时间戳, payload)
+_COOKIE_STATE_TTL = 5            # 秒
+
+
+def _account_cookie_state(idx: int, account=None, force: bool = False) -> dict:
+    """按账号读 Cookie 文件判有效性（只查文件，不启动浏览器）。
+
+    带 5 秒缓存，所以可以跟着状态轮询跑：以前红点只在手动点一下后更新，
+    账号2 登录成功之后点还是红的，看起来像"多账号没跑起来"。
+    """
+    now = time.time()
+    hit = _cookie_state_cache.get(idx)
+    if not force and hit and (now - hit[0]) < _COOKIE_STATE_TTL:
+        return hit[1]
+    try:
+        if account is None:
+            acc = _ensure_config().greet.accounts[idx]
+        else:
+            acc = account
+        cookie_file_name = acc.cookie_file or "zhipin_cookies.json"
+        from boss_bot.browser_launcher import check_cookie_valid_simple
+        result = check_cookie_valid_simple(str(PROJECT_ROOT / cookie_file_name))
+        payload = {
+            "valid": bool(result.get("valid")),
+            "logged_in": bool(result.get("logged_in")),
+            "reason": result.get("reason", ""),
+            "cookie_file": cookie_file_name,
+            "account_name": getattr(acc, "name", f"账号{idx}"),
+            "checked_at": int(now),
+        }
+    except Exception as e:
+        payload = {"valid": False, "logged_in": False, "reason": f"检测异常: {e}",
+                   "cookie_file": "", "account_name": f"账号{idx}",
+                   "checked_at": int(now)}
+    _cookie_state_cache[idx] = (now, payload)
+    return payload
+
+
+@app.route("/api/accounts/cookies")
+def api_accounts_cookies():
+    """一次拿全部账号的 Cookie 状态（前端账号点的自动刷新走这里）。"""
+    try:
+        cfg = _ensure_config()
+        out = []
+        force = request.args.get("force") == "1"
+        only = request.args.get("index", type=int)
+        for i, acc in enumerate(cfg.greet.accounts):
+            if only is not None and i != only:
+                continue
+            out.append(dict(_account_cookie_state(i, account=acc, force=force), index=i))
+        return jsonify({"status": "ok", "accounts": out})
+    except Exception as e:
+        logger.exception("批量检测账号 Cookie 失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route("/api/config", methods=["GET"])
 def api_get_config():
@@ -1637,9 +1735,11 @@ def api_excel_export():
 
         manager = _multi_manager
         stats = {}
+        per_account = []
         if manager is not None:
             status = manager.get_status()
             stats = status.get("stats", {})
+            per_account = status.get("accounts", [])
 
         wb = Workbook()
         ws = wb.active
@@ -1661,6 +1761,22 @@ def api_excel_export():
         ]
         for row in rows:
             ws.append(row)
+
+        # 分账号明细：只有汇总的话，两个号看不出谁在干活
+        if len(per_account) > 1:
+            ws.append([])
+            ws.append(["账号", "阶段", "已投递", "已跳过", "回复发送", "回复跳过", "简历"])
+            for acc in per_account:
+                s = acc.get("stats", {})
+                ws.append([
+                    acc.get("name") or f"账号{acc.get('index', 0)}",
+                    acc.get("phase", ""),
+                    s.get("greet_applied", 0),
+                    s.get("greet_skipped", 0),
+                    s.get("reply_sent", 0),
+                    s.get("reply_skipped", 0),
+                    s.get("resume_sent", 0),
+                ])
 
         # 导出时间
         ws.append([])
@@ -1698,6 +1814,27 @@ def _ensure_greet_store() -> GreetRecordStore:
     return _get_greet_store()
 
 
+def _account_arg() -> Optional[int]:
+    """记录/聊天类接口统一的账号过滤参数：?account=1。
+
+    缺省或 account=all 返回 None（不过滤，看全部）；前端切到某个账号时带上索引，
+    记录、聊天、导出、清空就都只作用于该账号。
+    """
+    raw = request.args.get("account")
+    if raw is None or raw == "" or str(raw).lower() == "all":
+        return None
+    try:
+        idx = int(raw)
+    except (TypeError, ValueError):
+        return None
+    return idx if idx >= 0 else None
+
+
+def _msg_store(account_index: int = 0) -> MessageStore:
+    """按账号取消息存储：记录里的会话可能属于账号2，读详情必须用对应前缀。"""
+    return MessageStore(account_index=account_index if account_index and account_index > 0 else 0)
+
+
 @app.route("/api/export/reply_records")
 def api_export_reply_records():
     """导出回复记录，支持 JSON/Excel 格式下载。
@@ -1710,6 +1847,7 @@ def api_export_reply_records():
     fmt = request.args.get("format", "json")
     date = request.args.get("date")
     chat_name = request.args.get("chat_name")
+    account = _account_arg()
 
     # Excel 格式但 openpyxl 未安装时，fallback 到 JSON
     if fmt == "excel":
@@ -1723,6 +1861,7 @@ def api_export_reply_records():
             format=fmt,
             date=date,
             chat_name=chat_name,
+            account_index=account,
         )
 
         if fmt == "excel":
@@ -1736,7 +1875,8 @@ def api_export_reply_records():
             return send_file(
                 file_path,
                 as_attachment=True,
-                download_name="reply_records_export.json",
+                download_name=(f"reply_records_a{account}_export.json"
+                               if account is not None else "reply_records_export.json"),
                 mimetype="application/json",
             )
     except Exception as e:
@@ -1754,6 +1894,7 @@ def api_export_greet_records():
     """
     fmt = request.args.get("format", "json")
     date = request.args.get("date")
+    account = _account_arg()
 
     # Excel 格式但 openpyxl 未安装时，fallback 到 JSON
     if fmt == "excel":
@@ -1766,6 +1907,7 @@ def api_export_greet_records():
         file_path = export_greet_records(
             format=fmt,
             date=date,
+            account_index=account,
         )
 
         if fmt == "excel":
@@ -1779,7 +1921,8 @@ def api_export_greet_records():
             return send_file(
                 file_path,
                 as_attachment=True,
-                download_name="greet_records_export.json",
+                download_name=(f"greet_records_a{account}_export.json"
+                               if account is not None else "greet_records_export.json"),
                 mimetype="application/json",
             )
     except Exception as e:
@@ -1793,10 +1936,12 @@ def api_reply_records():
 
     返回全部记录（按 timestamp 降序），确保前端能看到完整数据。
     之前限制 200 条会导致文件有 358 条但前端只显示 200 条的不一致问题。
+    ?account=N 只看某个账号的记录，不带则全部账号。
     """
     try:
         store = _ensure_reply_store()
-        records = store.get_all()
+        account = _account_arg()
+        records = store.filter(account_index=account) if account is not None else store.get_all()
         # 按 timestamp 降序排列（最新的在前）
         result = sorted(
             (r.to_dict() for r in records),
@@ -1806,6 +1951,7 @@ def api_reply_records():
         return jsonify({
             "status": "ok",
             "total": len(records),
+            "account": account,
             "records": result,
         })
     except Exception as e:
@@ -1853,14 +1999,17 @@ def api_reply_records_grouped():
     - messages: 该聊天对象的完整对话消息列表（来自 message_store，含HR消息和bot回复）
 
     返回的分组列表按 last_time 倒序排列（最新的在前）。
+    ?account=N 只看某个账号的会话（记录 + message_store 里的完整对话）。
     """
     try:
         store = _ensure_reply_store()
-        records = store.get_all()
+        account = _account_arg()
+        records = store.filter(account_index=account) if account is not None else store.get_all()
 
-        # 加载完整对话消息（来自 message_store）
+        # 加载完整对话消息（来自 message_store，全目录扫描，含各账号）
         msg_store = MessageStore()
-        full_chats = {c["chat_name"]: c for c in msg_store.get_all_chats_detail()}
+        full_chats = {c["chat_name"]: c for c in msg_store.get_all_chats_detail()
+                      if account is None or int(c.get("account_index") or 0) == account}
 
         # 按 chat_name 分组
         groups = {}
@@ -1869,6 +2018,8 @@ def api_reply_records_grouped():
             if chat_name not in groups:
                 groups[chat_name] = {
                     "chat_name": chat_name,
+                    "account_index": int(r.account_index or 0),
+                    "account_name": r.account_name or "",
                     "message_count": 0,
                     "last_time": "",
                     "last_message": "",
@@ -1905,6 +2056,8 @@ def api_reply_records_grouped():
                 # message_store 中有但 reply_records 中没有（例如只有 HR 消息未回复）
                 groups[chat_name] = {
                     "chat_name": chat_name,
+                    "account_index": int(full.get("account_index") or 0),
+                    "account_name": full.get("account_name", ""),
                     "message_count": 0,
                     "last_time": full.get("last_time", "") or full.get("updated_at", ""),
                     "last_message": full.get("last_message", ""),
@@ -1928,6 +2081,7 @@ def api_reply_records_grouped():
             "groups": result,
             "total_groups": len(result),
             "total_records": len(records),
+            "account": account,
         })
     except Exception as e:
         logger.exception("获取分组回复记录失败")
@@ -1937,6 +2091,8 @@ def api_reply_records_grouped():
 @app.route("/api/chats")
 def api_chats():
     """获取所有聊天会话列表（完整对话消息，用于前端聊天界面）。
+
+    ?account=N 只列该账号的会话；不带则全部账号（每条带 account_index 标注）。
 
     返回每个会话的：
     - chat_name: 聊天对象名称
@@ -1949,12 +2105,15 @@ def api_chats():
     - messages: 完整消息列表
     """
     try:
+        account = _account_arg()
         msg_store = MessageStore()
-        chats = msg_store.get_all_chats_detail()
+        chats = [c for c in msg_store.get_all_chats_detail()
+                 if account is None or int(c.get("account_index") or 0) == account]
         return jsonify({
             "status": "ok",
             "chats": chats,
             "total": len(chats),
+            "account": account,
         })
     except Exception as e:
         logger.exception("获取聊天列表失败")
@@ -1967,9 +2126,13 @@ def api_chat_detail(chat_name: str):
 
     Args:
         chat_name: 聊天对象名称（URL 路径参数）
+    Query:
+        account: 账号索引。BOSS 只显示"杨女士"这类称呼，两个账号聊到同名 HR
+            时落在不同文件（aN_前缀），不带账号就会读到另一个账号的会话。
     """
     try:
-        msg_store = MessageStore()
+        account = _account_arg()
+        msg_store = _msg_store(0 if account is None else account)
         detail = msg_store.get_chat_detail(chat_name)
         return jsonify({
             "status": "ok",
@@ -1982,9 +2145,10 @@ def api_chat_detail(chat_name: str):
 
 @app.route("/api/chats/<path:chat_name>/mark_read", methods=["POST"])
 def api_chat_mark_read(chat_name: str):
-    """标记指定聊天会话的所有 HR 消息为已读。"""
+    """标记指定聊天会话的所有 HR 消息为已读（?account=N 指定账号）。"""
     try:
-        msg_store = MessageStore()
+        account = _account_arg()
+        msg_store = _msg_store(0 if account is None else account)
         msg_store.mark_chat_read(chat_name)
         return jsonify({"status": "ok", "message": "已标记为已读"})
     except Exception as e:
@@ -1997,10 +2161,12 @@ def api_greet_records():
 
     返回全部记录（按 timestamp 降序），确保前端能看到完整数据。
     之前限制 200 条会导致文件有 225 条但前端只显示 200 条的不一致问题。
+    ?account=N 只看某个账号的记录，不带则全部账号。
     """
     try:
         store = _ensure_greet_store()
-        records = store.get_all()
+        account = _account_arg()
+        records = store.filter(account_index=account) if account is not None else store.get_all()
         # 按 timestamp 降序排列（最新的在前）
         result = sorted(
             (r.to_dict() for r in records),
@@ -2010,6 +2176,7 @@ def api_greet_records():
         return jsonify({
             "status": "ok",
             "total": len(records),
+            "account": account,
             "records": result,
         })
     except Exception as e:
@@ -2019,14 +2186,23 @@ def api_greet_records():
 
 @app.route("/api/greet_records/clear", methods=["POST", "DELETE"])
 def api_clear_greet_records():
-    """清空所有打招呼记录。
+    """清空打招呼记录。
 
     同时清空内存单例和磁盘文件，确保刷新页面后记录不再出现。
+    ?account=N 只清该账号的记录——两个号共用一份记录文件，不带账号
+    在看账号2 时点"清空"会把主账号的历史一起删掉。
     """
     try:
         store = _ensure_greet_store()
-        store.clear_all()
-        return jsonify({"status": "ok", "message": "打招呼记录已清空"})
+        account = _account_arg()
+        if account is None:
+            store.clear_all()
+            deleted = None
+        else:
+            deleted = store.delete_account(account)
+        return jsonify({"status": "ok", "deleted": deleted, "account": account,
+                        "message": f"账号{account} 的打招呼记录已清空" if account is not None
+                                   else "打招呼记录已清空"})
     except Exception as e:
         logger.exception("清空打招呼记录失败")
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -2034,14 +2210,22 @@ def api_clear_greet_records():
 
 @app.route("/api/reply_records/clear", methods=["POST", "DELETE"])
 def api_clear_reply_records():
-    """清空所有回复记录。
+    """清空回复记录。
 
     同时清空内存单例和磁盘文件，确保刷新页面后记录不再出现。
+    ?account=N 只清该账号的记录，理由同打招呼记录。
     """
     try:
         store = _ensure_reply_store()
-        store.clear_all()
-        return jsonify({"status": "ok", "message": "回复记录已清空"})
+        account = _account_arg()
+        if account is None:
+            store.clear_all()
+            deleted = None
+        else:
+            deleted = store.delete_account(account)
+        return jsonify({"status": "ok", "deleted": deleted, "account": account,
+                        "message": f"账号{account} 的回复记录已清空" if account is not None
+                                   else "回复记录已清空"})
     except Exception as e:
         logger.exception("清空回复记录失败")
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -3086,7 +3270,7 @@ def on_connect():
     emit("connected", {"data": "BOSS Bot 统一管理面板已连接"})
     manager = _multi_manager
     if manager is not None:
-        emit("status_update", manager.get_status())
+        emit("status_update", _enrich_status(manager.get_status()))
     # 推送最近的日志
     with log_buffer_lock:
         recent_logs = list(log_buffer[-50:])

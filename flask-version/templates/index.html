@@ -147,6 +147,13 @@ a{color:var(--accent);text-decoration:none}
 .account-tab .acc-status-dot.idle{background:var(--fg-4th)}
 .account-tab .acc-status-dot.running{background:var(--success);animation:pulse 1.5s ease-in-out infinite}
 .account-tab .acc-status-dot.needs_login{background:var(--warning)}
+/* 多账号状态点：初始化中 / 已暂停 要和"在跑""要登录"分得开 */
+.account-tab .acc-status-dot.starting{background:var(--accent);animation:pulse 1s ease-in-out infinite}
+.account-tab .acc-status-dot.paused{background:var(--info)}
+/* 账号条上的今日计数：两个号各跑各的，不看数字就以为只有一个在动 */
+.account-tab .acc-counts{font-size:9.5px;color:var(--fg-3rd);font-weight:500;margin-left:2px;letter-spacing:.02em}
+/* 操作条上的范围提示：让人在点"停止"之前就知道会不会把另一个号也停了 */
+.action-bar .scope-hint{font-size:10.5px;font-weight:600;color:var(--accent);background:var(--accent-light);padding:2px 8px;border-radius:10px}
 
 /* Forms */
 .side-form-group{display:flex;flex-direction:column;gap:4px}
@@ -929,6 +936,7 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
       <div class="metrics-scope" id="metricsScope"></div>
       <div class="action-bar">
         <span class="action-label">操作</span>
+        <span class="scope-hint" id="actionScopeLabel" title="上方按钮只作用于当前数据范围"></span>
         <button class="btn btn-success btn-sm" id="btnStartAll" onclick="startAll()">启动</button>
         <button class="btn btn-danger btn-sm" id="btnStopAll" onclick="stopAll()" style="display:none">停止</button>
         <button class="btn btn-ghost btn-sm" id="btnConfirmLogin" onclick="confirmLogin()" style="display:none">确认登录</button>
@@ -1062,11 +1070,54 @@ const socket = io({
 let config = { accounts: [] };
 let activeAccountIdx = 0;
 const defaultGreeting = "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。";
-let stats = { total: 0, applied: 0, skipped: 0, reply_sent: 0, reply_skipped: 0, resume_sent: 0, important_events: 0 };
 let availableImages = [];
-let greetPaused = false;
-let replyPaused = false;
 let accountStatuses = [];
+
+// ── 数据范围：一个开关同时管指标、打招呼记录、回复记录、聊天、导出和启停 ──
+// 'all' 或账号索引。以前只有指标卡认它，切账号下面所有面板都不动。
+let dataScope = 'all';
+
+function scopeQs(extra) {
+  var qs = extra || '';
+  if (dataScope !== 'all') qs += (qs ? '&' : '?') + 'account=' + dataScope;
+  return qs;
+}
+
+// 当前范围对应的账号索引数组（'all' = 全部）
+function scopeIndexes() {
+  if (dataScope !== 'all') return [Number(dataScope)];
+  return (config.accounts || []).map(function(a, i) { return i; });
+}
+
+// 按钮上的作用域提示：不写清楚，"暂停"看着像只停当前账号其实停了全部
+function scopeLabel() {
+  if (dataScope === 'all') return '（全部账号）';
+  var a = config.accounts[Number(dataScope)] || {};
+  return '（' + (a.name || ('账号' + dataScope)) + '）';
+}
+
+// 该范围里"打招呼是否处于暂停"
+function scopeGreetPaused() {
+  var idxs = scopeIndexes();
+  return idxs.length > 0 && idxs.every(function(i) {
+    var st = accountStatuses[i] || {};
+    return st.greet_paused;
+  });
+}
+
+function scopeReplyPaused() {
+  var idxs = scopeIndexes();
+  return idxs.length > 0 && idxs.every(function(i) {
+    var st = accountStatuses[i] || {};
+    return st.reply_paused;
+  });
+}
+
+// 控制类接口按范围走：选中单个账号就打该账号的 per-account 路由
+function controlUrl(base) {
+  return dataScope === 'all' ? '/api/' + base
+                             : '/api/accounts/' + dataScope + '/' + base;
+}
 
 // 硬编码城市列表
 const cityList = ['北京','上海','广州','深圳','杭州','成都','长沙','武汉','南京','重庆','西安','苏州','天津','郑州','青岛','宁波','厦门','福州','合肥','济南','大连','沈阳','哈尔滨','长春','南昌','贵阳','昆明','太原','石家庄','兰州','乌鲁木齐','南宁','海口','三亚','无锡','温州','东莞','佛山','珠海','中山','惠州','汕头','江门','湛江','株洲','湘潭','衡阳','岳阳','常德','益阳','郴州','永州','怀化','娄底','邵阳','张家界','湘西'];
@@ -2154,17 +2205,54 @@ function renderConfigPreview() {
 
 // ── 账号渲染 ──
 // Cookie 状态缓存：account_index -> {valid, reason, checking}
+// 由 /api/accounts/cookies 自动刷新（随状态轮询），不再只在手动点击时才有值
 let cookieStatusCache = {};
+
+var PHASE_LABEL = {stopped:'未启动', starting:'初始化中', waiting_login:'等你登录', running:'运行中'};
+var LOGIN_REASON_LABEL = {
+  cookie_expired: 'Cookie 已过期，需要重新登录',
+  no_cookie: '这个账号还没有登录过',
+  cookie_error: 'Cookie 读取失败',
+  login_timeout: '等待登录超时，循环已退出',
+  session_lost: '登录态失效（被踢下线或要验证码）'
+};
+
+function accDotClass(st) {
+  if (!st || !st.phase) return st && st.running ? 'running' : 'idle';
+  if (st.phase === 'waiting_login') return 'needs_login';
+  if (st.phase === 'starting') return 'starting';
+  if (st.phase === 'stopped') return 'idle';
+  // 两条流水线都停了才算暂停，只停打招呼时回复还在跑就是运行中
+  if (st.greet_paused && st.reply_paused) return 'paused';
+  return 'running';
+}
+
+function accTitle(st, name) {
+  var bits = [name + '：' + (PHASE_LABEL[st && st.phase] || '未启动')];
+  if (st && st.login_reason && LOGIN_REASON_LABEL[st.login_reason])
+    bits.push(LOGIN_REASON_LABEL[st.login_reason]);
+  if (st && st.phase === 'running') {
+    if (st.greet_paused) bits.push('打招呼已暂停');
+    if (st.reply_paused) bits.push('回复已暂停（人工接管）');
+  }
+  if (st && st.current_chat) bits.push('正在回复：' + st.current_chat);
+  return bits.join(' · ');
+}
+
 function renderAccounts() {
   const c = document.getElementById('accountTabs');
   const badge = document.getElementById('accBadge');
   c.innerHTML = config.accounts.map(function(a,i) {
-    var statusClass = 'idle';
-    if (accountStatuses[i]) {
-      if (accountStatuses[i].running) statusClass = 'running';
-      else if (accountStatuses[i].needs_login) statusClass = 'needs_login';
+    var st = accountStatuses[i] || {};
+    var name = a.name || '未命名';
+    // 今日计数挂在账号条上：不显示数字的话，两个号同时跑也看着像一个
+    var s = st.stats || {};
+    var counts = '';
+    if (st.running || s.greet_applied || s.reply_sent) {
+      counts = '<span class="acc-counts">投' + (s.greet_applied || 0) +
+               '·回' + (s.reply_sent || 0) + '</span>';
     }
-    // Cookie 状态红点
+    // Cookie 状态点
     var cookieCls = 'cookie-status-dot unknown';
     var cookieTitle = 'Cookie 状态未知，点击检测';
     if (cookieStatusCache[i]) {
@@ -2173,78 +2261,80 @@ function renderAccounts() {
         cookieTitle = '正在检测 Cookie...';
       } else if (cookieStatusCache[i].valid === true) {
         cookieCls = 'cookie-status-dot valid';
-        cookieTitle = 'Cookie 有效';
+        cookieTitle = 'Cookie 有效：' + (cookieStatusCache[i].reason || '');
       } else if (cookieStatusCache[i].valid === false) {
         cookieCls = 'cookie-status-dot invalid';
-        cookieTitle = 'Cookie 失效: ' + (cookieStatusCache[i].reason || '需要重新登录');
+        cookieTitle = 'Cookie 失效：' + (cookieStatusCache[i].reason || '需要重新登录');
       }
     }
     return '<div class="account-tab'+(i===activeAccountIdx?' active':'')+'" onclick="switchAccount('+i+')">'+
-      '<span class="acc-status-dot '+statusClass+'"></span>'+
-      escHtml(a.name||'未命名')+'<span class="badge">'+(a.jobs||[]).length+'</span>'+
+      '<span class="acc-status-dot '+accDotClass(st)+'" title="'+escAttr(accTitle(st, name))+'"></span>'+
+      escHtml(name)+'<span class="badge">'+(a.jobs||[]).length+'</span>'+counts+
       '<span class="'+cookieCls+'" title="'+escAttr(cookieTitle)+'" onclick="event.stopPropagation();checkAccountCookie('+i+')"></span></div>';
   }).join('');
   if (typeof lucide !== 'undefined') lucide.createIcons();
   if (badge) badge.textContent = config.accounts.length;
 }
 
-// 检测指定账号的 Cookie 有效性
-function checkAccountCookie(idx) {
-  if (cookieStatusCache[idx] && cookieStatusCache[idx].checking) return;
-  cookieStatusCache[idx] = {checking: true, valid: null, reason: ''};
+// 把 /api/accounts/cookies 的结果写进缓存
+function applyCookieStates(list) {
+  (list || []).forEach(function(item) {
+    cookieStatusCache[item.index] = {
+      checking: false,
+      valid: item.valid,
+      reason: item.reason || '',
+      logged_in: item.logged_in,
+      cookie_file: item.cookie_file || ''
+    };
+  });
   renderAccounts();
-  addLog('INFO', '正在检测账号 ' + idx + ' 的 Cookie 有效性...');
-  fetch('/api/accounts/'+idx+'/check_cookie', {method: 'POST'})
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data && data.status === 'ok') {
-        cookieStatusCache[idx] = {
-          checking: false,
-          valid: data.valid,
-          reason: data.reason || '',
-          logged_in: data.logged_in,
-          current_url: data.current_url || '',
-          checks: data.checks || {}
-        };
-        if (data.valid) {
-          addLog('SUCCESS', '账号 ' + idx + ' Cookie 有效，已登录');
-          toast('账号「' + ((config.accounts[idx] || {}).name || idx) + '」登录态有效', 'ok');
-        } else {
-          addLog('WARN', '账号 ' + idx + ' Cookie 失效: ' + (data.reason || '需要重新登录'));
-          toast('账号「' + ((config.accounts[idx] || {}).name || idx) + '」需要重新登录：'
-                + (data.reason || 'Cookie 已失效'), 'warn', 6000);
-        }
-      } else {
-        cookieStatusCache[idx] = {checking: false, valid: false, reason: (data && data.message) || '检测失败'};
-        addLog('ERROR', '检测 Cookie 失败: ' + (data && data.message || '未知错误'));
-      }
-      renderAccounts();
-    })
-    .catch(function(e) {
-      cookieStatusCache[idx] = {checking: false, valid: false, reason: e.message};
-      addLog('ERROR', '检测 Cookie 异常: ' + e.message);
-      renderAccounts();
-    });
 }
 
-// 批量检测所有账号的 Cookie 状态（简单检测，不启动浏览器）
-function checkAllAccountCookies() {
-  config.accounts.forEach(function(a, i) {
-    fetch('/api/accounts/'+i+'/check_cookie_simple', {method: 'POST'})
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data && data.status === 'ok') {
-          cookieStatusCache[i] = {
-            checking: false,
-            valid: data.valid,
-            reason: data.reason || '',
-            logged_in: data.logged_in || false
-          };
-          renderAccounts();
-        }
-      })
-      .catch(function(){});
-  });
+// 批量刷新所有账号的 Cookie 状态——只查文件，不起浏览器
+function refreshCookieStates(force) {
+  fetch('/api/accounts/cookies' + (force ? '?force=1' : ''))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data && data.status === 'ok') applyCookieStates(data.accounts || []);
+    })
+    .catch(function(){});
+}
+
+// 点击 Cookie 点：强制重查这个账号，并把结论说清楚
+function checkAccountCookie(idx) {
+  if (!cookieStatusCache[idx]) cookieStatusCache[idx] = {};
+  cookieStatusCache[idx].checking = true;
+  renderAccounts();
+  addLog('INFO', '正在检测账号「' + ((config.accounts[idx] || {}).name || idx) + '」的 Cookie...');
+  var qs = '?index=' + idx + '&force=1';
+  fetch('/api/accounts/cookies' + qs)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data || data.status !== 'ok') {
+        cookieStatusCache[idx] = {checking: false, valid: null,
+                                  reason: (data && data.message) || '检测失败'};
+        renderAccounts();
+        toast('检测失败：' + ((data && data.message) || '接口异常'), 'err');
+        return;
+      }
+      var one = (data.accounts || []).filter(function(x) { return x.index === idx; })[0];
+      applyCookieStates(data.accounts || []);
+      if (!one) return;
+      var name = (config.accounts[idx] || {}).name || ('账号' + idx);
+      if (one.valid) {
+        addLog('SUCCESS', '账号「' + name + '」Cookie 有效：' + (one.reason || ''));
+        toast('账号「' + name + '」登录态文件有效', 'ok');
+      } else {
+        addLog('WARN', '账号「' + name + '」Cookie 失效: ' + one.reason);
+        toast('账号「' + name + '」需要重新登录：' + one.reason, 'warn', 6000);
+      }
+    })
+    .catch(function(e) {
+      cookieStatusCache[idx] = {checking: false, valid: null, reason: e.message};
+      renderAccounts();
+      addLog('ERROR', '检测 Cookie 异常: ' + e.message);
+      toast('检测异常：' + e.message, 'err');
+    });
 }
 
 function setEl(id, cls) { var e = document.getElementById(id); if (e) e.className = cls; }
@@ -2432,8 +2522,6 @@ function updateSbarJobs() {
     if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 }
-
-function switchAccount(i) { activeAccountIdx = i; renderAccounts(); renderAccountConfig(); renderJobs(); updateSbarJobs(); renderAdvSettings(); }
 
 function onAccChange() {
   const a = config.accounts[activeAccountIdx];
@@ -2649,6 +2737,7 @@ function addAccount() {
       if (data.status === 'ok') {
         loadConfig();
         activeAccountIdx = config.accounts.length - 1;
+        refreshCookieStates(true);
         addLog('INFO', '已添加新账号: ' + name);
       } else { addLog('ERROR', '添加账号失败: ' + (data.message||'')); }
     })
@@ -2664,20 +2753,22 @@ function deleteAccount() {
       if (data.status === 'ok') {
         loadConfig();
         if (activeAccountIdx >= config.accounts.length) activeAccountIdx = Math.max(0, config.accounts.length - 1);
+        if (dataScope !== 'all' && Number(dataScope) >= config.accounts.length) dataScope = 'all';
+        refreshCookieStates(true);
+        applyScopeToView();
         addLog('INFO', '已删除账号');
       } else { addLog('ERROR', '删除账号失败: ' + (data.message||'')); }
     })
     .catch(function(e){addLog('ERROR', e.message)});
 }
 
-// ── 启动/停止 ──
+// ── 启动/停止（按数据范围：选中账号就只动那个号） ──
 function startAll() {
   const btn = document.getElementById('btnStartAll');
   if (btn) { btn.disabled = true; btn.innerHTML = '<i data-lucide="loader-2" style="font-size:12px"></i> 启动中...'; if (typeof lucide !== 'undefined') lucide.createIcons(); }
   saveConfig()
     .then(function() {
-      // 原来打的是 /api/accounts/0/start，按钮写着"启动"却只起了主账号
-      return fetch('/api/start', {method:'POST'});
+      return fetch(controlUrl('start'), {method:'POST'});
     })
     .then(function(r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -2685,7 +2776,7 @@ function startAll() {
     })
     .then(function(data) {
       addLog('SUCCESS', (data && data.message) || '任务已启动');
-      toast('已启动全部启用账号', 'ok');
+      toast('已启动' + scopeLabel(), 'ok');
       setControls(true);
       if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="chevron-right" style="font-size:12px"></i> 启动'; if (typeof lucide !== 'undefined') lucide.createIcons(); }
     })
@@ -2700,9 +2791,9 @@ function stopAll() {
   // 使用 AbortController 设置超时，避免 fetch 长时间挂起导致 "Failed to fetch"
   var stopController = new AbortController();
   var stopTimeout = setTimeout(function() { stopController.abort(); }, 8000);
-  fetch('/api/stop', {method:'POST', signal: stopController.signal})
+  fetch(controlUrl('stop'), {method:'POST', signal: stopController.signal})
     .then(function(r) { clearTimeout(stopTimeout); return r.json(); })
-    .then(function(data) { addLog('SYSTEM', '所有任务已停止'); toast('已全部停止', 'info'); })
+    .then(function(data) { addLog('SYSTEM', '已停止' + scopeLabel()); toast('已停止' + scopeLabel(), 'info'); })
     .catch(function(e) {
       clearTimeout(stopTimeout);
       // 即使 fetch 失败（如网络抖动），也认为停止指令已发出，不阻塞 UI
@@ -2712,15 +2803,30 @@ function stopAll() {
   setControls(false);
 }
 
-function confirmLogin() {
-  fetch('/api/confirm_login', { method:'POST' })
+// 需要登录的账号索引：登录框弹出时记下，确认就只对那个号生效。
+// 之前点一次"我已登录"会给所有账号发确认，把还在等扫码的另一个号也顶过去。
+let loginPendingIdx = null;
+
+function confirmLoginAs(idx) {
+  var url = (idx === null || idx === undefined)
+    ? controlUrl('confirm_login') : '/api/accounts/' + idx + '/confirm_login';
+  var who = (idx === null || idx === undefined)
+    ? scopeLabel() : '（' + ((config.accounts[idx] || {}).name || ('账号' + idx)) + '）';
+  fetch(url, { method:'POST' })
     .then(function(r){return r.json()})
     .then(function(data) {
-      addLog('SYSTEM', '已确认登录');
-      const btn = document.getElementById('btnConfirmLogin');
-      if (btn) btn.style.display = 'none';
+      addLog('SYSTEM', '已确认登录' + who);
+      toast('已确认登录' + who + '，等浏览器状态刷新', 'ok');
+      // 登录完立刻重测 Cookie，红点不用等下一轮轮询
+      setTimeout(function(){ refreshCookieStates(true); }, 800);
     })
     .catch(function(e){addLog('ERROR', '确认登录失败: ' + e.message)});
+}
+
+function confirmLogin() {
+  const btn = document.getElementById('btnConfirmLogin');
+  if (btn) btn.style.display = 'none';
+  confirmLoginAs(loginPendingIdx);
 }
 
 function doConfirmLogin() {
@@ -2729,36 +2835,30 @@ function doConfirmLogin() {
     modal.style.display = 'none';
     modal.classList.remove('active');
   }
-  fetch('/api/confirm_login', { method:'POST' })
-    .then(function(r){return r.json()})
-    .then(function(data) {
-      addLog('SYSTEM', '已确认登录，继续执行...');
-    })
-    .catch(function(e){addLog('ERROR', '确认登录失败: ' + e.message)});
+  confirmLoginAs(loginPendingIdx);
+  loginPendingIdx = null;
 }
 
 // ── 暂停/恢复打招呼 ──
 function pauseGreet() {
-  fetch('/api/pause_greet', { method:'POST' })
+  fetch(controlUrl('pause_greet'), { method:'POST' })
     .then(function(r){return r.json()})
     .then(function(data) {
       if (data.status === 'ok') {
-        greetPaused = true;
-        updatePauseButtons();
-        addLog('SYSTEM', '打招呼已暂停');
+        addLog('SYSTEM', '打招呼已暂停' + scopeLabel());
+        refreshAccountStatus();
       }
     })
     .catch(function(e){addLog('ERROR', '暂停打招呼失败: ' + e.message)});
 }
 
 function resumeGreet() {
-  fetch('/api/resume_greet', { method:'POST' })
+  fetch(controlUrl('resume_greet'), { method:'POST' })
     .then(function(r){return r.json()})
     .then(function(data) {
       if (data.status === 'ok') {
-        greetPaused = false;
-        updatePauseButtons();
-        addLog('SYSTEM', '打招呼已恢复');
+        addLog('SYSTEM', '打招呼已恢复' + scopeLabel());
+        refreshAccountStatus();
       }
     })
     .catch(function(e){addLog('ERROR', '恢复打招呼失败: ' + e.message)});
@@ -2766,29 +2866,34 @@ function resumeGreet() {
 
 // ── 暂停/恢复回复 ──
 function pauseReply() {
-  fetch('/api/pause_reply', { method:'POST' })
+  fetch(controlUrl('pause_reply'), { method:'POST' })
     .then(function(r){return r.json()})
     .then(function(data) {
       if (data.status === 'ok') {
-        replyPaused = true;
-        updatePauseButtons();
-        addLog('SYSTEM', '回复已暂停（人工接管模式）');
+        addLog('SYSTEM', '回复已暂停（人工接管模式）' + scopeLabel());
+        refreshAccountStatus();
       }
     })
     .catch(function(e){addLog('ERROR', '暂停回复失败: ' + e.message)});
 }
 
 function resumeReply() {
-  fetch('/api/resume_reply', { method:'POST' })
+  fetch(controlUrl('resume_reply'), { method:'POST' })
     .then(function(r){return r.json()})
     .then(function(data) {
       if (data.status === 'ok') {
-        replyPaused = false;
-        updatePauseButtons();
-        addLog('SYSTEM', '回复已恢复');
+        addLog('SYSTEM', '回复已恢复' + scopeLabel());
+        refreshAccountStatus();
       }
     })
     .catch(function(e){addLog('ERROR', '恢复回复失败: ' + e.message)});
+}
+
+// 状态是轮询回来的，按钮只负责跟着显示；不再用前端布尔当真相
+function refreshAccountStatus() {
+  fetch('/api/status').then(function(r){return r.json()}).then(function(data) {
+    applyStatusUpdate(data);
+  }).catch(function(){});
 }
 
 function updatePauseButtons() {
@@ -2796,21 +2901,28 @@ function updatePauseButtons() {
   const rg = document.getElementById('btnResumeGreet');
   const pr = document.getElementById('btnPauseReply');
   const rr = document.getElementById('btnResumeReply');
-  if (pg) pg.style.display = greetPaused ? 'none' : '';
-  if (rg) rg.style.display = greetPaused ? '' : 'none';
-  if (pr) pr.style.display = replyPaused ? 'none' : '';
-  if (rr) rr.style.display = replyPaused ? '' : 'none';
+  var gp = scopeGreetPaused(), rp = scopeReplyPaused();
+  if (pg) pg.style.display = gp ? 'none' : '';
+  if (rg) rg.style.display = gp ? '' : 'none';
+  if (pr) pr.style.display = rp ? 'none' : '';
+  if (rr) rr.style.display = rp ? '' : 'none';
+  [pg, rg, pr, rr].forEach(function(b) {
+    if (!b) return;
+    var base = b.getAttribute('data-base-label');
+    if (!base) { base = b.textContent.trim(); b.setAttribute('data-base-label', base); }
+    b.textContent = base + scopeLabel();
+  });
 }
 
 // ── 下载回复/打招呼记录 ──
 function downloadReplyRecords() {
-  window.open('/api/export/reply_records?format=json', '_blank');
-  addLog('INFO', '正在下载回复记录...');
+  window.open('/api/export/reply_records' + scopeQs('format=json'), '_blank');
+  addLog('INFO', '正在下载回复记录' + scopeLabel() + '...');
 }
 
 function downloadGreetRecords() {
-  window.open('/api/export/greet_records?format=json', '_blank');
-  addLog('INFO', '正在下载打招呼记录...');
+  window.open('/api/export/greet_records' + scopeQs('format=json'), '_blank');
+  addLog('INFO', '正在下载打招呼记录' + scopeLabel() + '...');
 }
 
 // ── 控制按钮状态 ──
@@ -2833,7 +2945,6 @@ function setControls(running) {
 }
 
 // ── 漏斗指标：累计投递 / 今日已投递(上限) / 接收简历 / 面试数(按会话去重) ──
-var metricsScope = 'all';
 var metricsCache = null;
 var _metricsLastLoad = 0;
 
@@ -2858,9 +2969,9 @@ function updateStats() {
   loadMetrics();
 }
 
-function loadMetrics() {
-  var url = '/api/metrics' + (metricsScope === 'all' ? '' : '?account=' + metricsScope);
-  fetch(url).then(function(r) { return r.json(); }).then(function(d) {
+function loadMetrics(force) {
+  if (force) _metricsLastLoad = Date.now();
+  fetch('/api/metrics' + scopeQs()).then(function(r) { return r.json(); }).then(function(d) {
     if (!d || d.status !== 'ok') return;
     metricsCache = d;
     renderMetrics();
@@ -2883,27 +2994,65 @@ function renderMetrics() {
   renderMetricsScope();
 }
 
+// 范围选择条：指标、记录、聊天、导出、启停按钮都跟着它走
 function renderMetricsScope() {
   var el = document.getElementById('metricsScope');
-  if (!el) return;
-  var accs = (metricsCache && metricsCache.accounts) || [];
-  if (accs.length <= 1) { el.innerHTML = ''; return; }
-  var html = '<span class="metrics-scope-label">统计范围</span>';
-  html += '<button class="scope-chip' + (metricsScope === 'all' ? ' active' : '') +
-          '" onclick="setMetricsScope(\'all\')">全部账号</button>';
+  if (!el) { updateScopeLabel(); return; }
+  var accs = (config.accounts || []).map(function(a, i) {
+    return { index: i, name: a.name || ('账号' + i), enabled: a.enabled !== false };
+  });
+  if (accs.length <= 1) { el.innerHTML = ''; updateScopeLabel(); return; }
+  var html = '<span class="metrics-scope-label">数据范围</span>';
+  html += '<button class="scope-chip' + (dataScope === 'all' ? ' active' : '') +
+          '" onclick="setDataScope(\'all\')">全部账号</button>';
   accs.forEach(function (a) {
-    html += '<button class="scope-chip' + (String(metricsScope) === String(a.index) ? ' active' : '') +
-            '" onclick="setMetricsScope(' + a.index + ')">' +
-            escHtml(a.name || ('账号' + a.index)) + (a.enabled ? '' : '（停用）') + '</button>';
+    var st = accountStatuses[a.index] || {};
+    var s = st.stats || {};
+    var dot = accDotClass(st);
+    var num = (st.running || s.greet_applied || s.reply_sent)
+      ? ' <span class="acc-counts">投' + (s.greet_applied || 0) + '·回' + (s.reply_sent || 0) + '</span>' : '';
+    html += '<button class="scope-chip' + (String(dataScope) === String(a.index) ? ' active' : '') +
+            '" onclick="setDataScope(' + a.index + ')"><span class="acc-status-dot ' + dot + '"></span>' +
+            escHtml(a.name) + (a.enabled ? '' : '（停用）') + num + '</button>';
   });
   el.innerHTML = html;
+  updateScopeLabel();
 }
 
-function setMetricsScope(v) {
-  metricsScope = v;
-  _metricsLastLoad = Date.now();
-  loadMetrics();
+function updateScopeLabel() {
+  var e = document.getElementById('actionScopeLabel');
+  if (e) e.textContent = dataScope === 'all' ? '全部账号' : (config.accounts[Number(dataScope)] || {}).name || ('账号' + dataScope);
 }
+
+function setDataScope(v) {
+  dataScope = v;
+  if (v !== 'all') activeAccountIdx = Number(v);
+  _metricsLastLoad = Date.now();
+  renderAccounts();
+  renderAccountConfig();
+  renderJobs();
+  updateSbarJobs();
+  renderAdvSettings();
+  applyScopeToView();
+}
+
+// 换范围后要重拉的所有面板
+function applyScopeToView() {
+  loadMetrics(true);
+  loadGreetRecords();
+  loadReplyChatList();
+  updatePauseButtons();
+  setControls(scopeRunning());
+}
+
+function scopeRunning() {
+  return scopeIndexes().some(function(i) {
+    var st = accountStatuses[i] || {};
+    return st.running || st.phase === 'starting';
+  });
+}
+
+function switchAccount(i) { setDataScope(i); }
 
 function escHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
 
@@ -3278,6 +3427,15 @@ function renderBossChatList(groups) {
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
+// 会话属于哪个账号就按哪个账号读：BOSS 只显示"杨女士"这类称呼，两个号聊到
+// 同名 HR 时不带 account 会读到（甚至标已读标到）另一个账号的对话
+function chatAccountParam(chatName) {
+  var g = replyChatCache[chatName];
+  var idx = g ? g.account_index : null;
+  if (idx === null || idx === undefined) idx = (dataScope === 'all' ? 0 : Number(dataScope));
+  return '?account=' + idx;
+}
+
 // 选中某个聊天，渲染右侧聊天内容
 function selectBossChat(chatName) {
   activeBossChat = chatName;
@@ -3293,7 +3451,7 @@ function selectBossChat(chatName) {
   // 渲染右侧聊天内容
   renderBossChatDetail(chatName);
   // 标记已读
-  fetch('/api/chats/'+encodeURIComponent(chatName)+'/mark_read', {method:'POST'}).then(function(){
+  fetch('/api/chats/'+encodeURIComponent(chatName)+'/mark_read'+chatAccountParam(chatName), {method:'POST'}).then(function(){
     // 更新未读数
     var g = replyChatCache[chatName];
     if (g) {
@@ -3495,20 +3653,21 @@ function renderBossMessageBubble(msg, chatName) {
 
 // �0刷新聊天详情
 function refreshBossChatDetail(chatName) {
-  fetch('/api/chats/'+encodeURIComponent(chatName)).then(function(r){return r.json();}).then(function(data){
+  fetch('/api/chats/'+encodeURIComponent(chatName)+chatAccountParam(chatName))
+    .then(function(r){return r.json();}).then(function(data){
     if (data && data.status === 'ok' && data.chat) {
       var chat = data.chat;
-      replyChatCache[chatName] = {
+      var prev = replyChatCache[chatName] || {};
+      replyChatCache[chatName] = Object.assign(prev, {
         chat_name: chatName,
         job_name: chat.job_name || '',
         updated_at: chat.updated_at || '',
         last_time: chat.updated_at || '',
         last_message: (chat.messages && chat.messages.length > 0) ? (chat.messages[chat.messages.length-1].content || chat.messages[chat.messages.length-1].text || '') : '',
         messages: chat.messages || [],
-        records: [],
         unread_count: 0,
         message_count: (chat.messages || []).length
-      };
+      });
       renderBossChatDetail(chatName);
     }
   }).catch(function(e){console.error('刷新聊天详情失败:', e);});
@@ -3536,8 +3695,8 @@ function renderReplyChatList(groups) {
   });
   // 渲染左侧聊天列表
   renderBossChatList(sortedGroups);
-  // 自动选中第一个聊天
-  if (!activeBossChat && sortedGroups.length > 0) {
+  // 自动选中第一个聊天；切账号后原选中的会话可能不在新范围里，同样回到第一个
+  if ((!activeBossChat || !replyChatCache[activeBossChat]) && sortedGroups.length > 0) {
     selectBossChat(sortedGroups[0].chat_name || '(未知)');
   } else if (activeBossChat && replyChatCache[activeBossChat]) {
     // 重新渲染当前选中的聊天详情
@@ -3550,9 +3709,10 @@ function renderReplyChatList(groups) {
 }
 
 function loadReplyChatList() {
-  fetch('/api/reply_records/grouped').then(function(r) { return r.json(); }).then(function(data) {
+  fetch('/api/reply_records/grouped' + scopeQs()).then(function(r) { return r.json(); }).then(function(data) {
     if (!data || data.status !== 'ok') return;
-    renderReplyChatList(data.groups || []);
+    allReplyGroups = data.groups || [];
+    renderReplyChatList(allReplyGroups);
   }).catch(function(e) { console.error('加载回复聊天列表失败:', e); });
 }
 
@@ -3605,6 +3765,10 @@ function addReplyRecord(data){
   } else {
     g = {
       chat_name: chatName,
+      // 新建的分组要记住归属，否则点进去读详情时会退回账号0 的文件
+      account_index: Number(data.account_index != null ? data.account_index
+                        : (dataScope === 'all' ? 0 : dataScope)),
+      account_name: data.account_name || '',
       message_count: 1,
       last_time: timestamp,
       last_message: receivedMsg,
@@ -3654,24 +3818,23 @@ function addReplyRecord(data){
 }
 
 
+// 清空范围文案：默认只清当前账号，选"全部账号"时才会清所有号
+function clearScopeWarn(kind) {
+  if (dataScope === 'all')
+    return '确定要清空【所有账号】的' + kind + '吗？两个号的记录存在同一个文件里，这一下会全没，且不可撤销。';
+  return '确定要清空账号「' + ((config.accounts[Number(dataScope)] || {}).name || dataScope) +
+         '」的' + kind + '吗？另一个号的记录不受影响。此操作不可撤销。';
+}
+
 function clearGreetTable(){
-  if (!confirm('确定要清空所有打招呼记录吗？此操作不可撤销。')) return;
-  fetch('/api/greet_records/clear', {method: 'POST'})
+  if (!confirm(clearScopeWarn('打招呼记录'))) return;
+  fetch('/api/greet_records/clear' + scopeQs(), {method: 'POST'})
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.status === 'ok') {
-        var gb = document.getElementById('greetTableBody');
-        if (gb) gb.innerHTML='';
-        var ge = document.getElementById('greetEmpty');
-        if (ge) ge.style.display='flex';
-        greetRecordCount = 0;
-        var el = document.getElementById('greetTabCount');
-        if (el) el.textContent = '0';
-        // 清空筛选缓存
-        allGreetRecords = [];
-        var fc = document.getElementById('greetFilterCount');
-        if (fc) fc.textContent = '';
-        addLog('SUCCESS', '打招呼记录已清空');
+        loadGreetRecords();   // 按当前范围重拉，跨账号清空时另一号的数据仍会在"全部"里显示
+        addLog('SUCCESS', data.message || '打招呼记录已清空');
+        toast(data.message || '打招呼记录已清空', 'info');
       } else {
         addLog('ERROR', '清空失败: ' + (data.message || '未知错误'));
       }
@@ -3691,20 +3854,17 @@ function clearCurrentRecordTab(){
   }
 }
 
-// 清空所有回复记录（调用后端 API，同步删除磁盘数据）
+// 清空回复记录（按当前数据范围，调用后端 API 同步删除磁盘数据）
 function clearReplyRecords(){
-  if (!confirm('确定要清空所有回复记录吗？此操作不可撤销。')) return;
-  fetch('/api/reply_records/clear', {method: 'POST'})
+  if (!confirm(clearScopeWarn('回复记录'))) return;
+  fetch('/api/reply_records/clear' + scopeQs(), {method: 'POST'})
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.status === 'ok') {
-        // 清空筛选缓存
-        allReplyGroups = [];
-        var rc = document.getElementById('replyFilterCount');
-        if (rc) rc.textContent = '';
-        // 重新加载回复聊天列表（应为空）
+        activeBossChat = null;
         loadReplyChatList();
-        addLog('SUCCESS', '回复记录已清空');
+        addLog('SUCCESS', data.message || '回复记录已清空');
+        toast(data.message || '回复记录已清空', 'info');
       } else {
         addLog('ERROR', '清空失败: ' + (data.message || '未知错误'));
       }
@@ -4091,15 +4251,22 @@ socket.on('bot_log',function(data){
     addLog(level, data.message);
   }
 });
+// 实时推送的行按范围过滤：不带账号的话，切到账号2 时主账号推进来的行会串进表里
+function inScope(data) {
+  if (dataScope === 'all') return true;
+  var idx = data ? data.account_index : undefined;
+  return Number(idx === undefined ? 0 : idx) === Number(dataScope);
+}
+
 socket.on('greet_record',function(data){
-  if(data) addGreetRecord(data);
+  if(data && inScope(data)) addGreetRecord(data);
 });
 socket.on('reply_record',function(data){
-  if(data) addReplyRecord(data);
+  if(data && inScope(data)) addReplyRecord(data);
 });
 socket.on('reply_event',function(data){
   // 兼容另一种事件名
-  if(data) addReplyRecord(data);
+  if(data && inScope(data)) addReplyRecord(data);
 });
 socket.on('wind_control',function(data){
   if(data && data.message){
@@ -4118,19 +4285,20 @@ socket.on('wind_control',function(data){
   }
 });
 socket.on('bot_progress',function(data){
-  if(data.total!==undefined) stats.total=data.total;
-  if(data.applied!==undefined) stats.applied=data.applied;
-  if(data.skipped!==undefined) stats.skipped=data.skipped;
-  if(data.reply_sent!==undefined) stats.reply_sent=data.reply_sent;
-  if(data.reply_skipped!==undefined) stats.reply_skipped=data.reply_skipped;
-  if(data.resume_sent!==undefined) stats.resume_sent=data.resume_sent;
-  if(data.important_events!==undefined) stats.important_events=data.important_events;
+  if (data.account_index === undefined) return;
+  // 每个号自己的数挂在 accountStatuses 上，全局 stats 只在"全部账号"范围里用
+  var st = accountStatuses[data.account_index] || (accountStatuses[data.account_index] = {});
+  st.stats = Object.assign(st.stats || {}, {
+    greet_applied: data.applied || 0,
+    greet_skipped: data.skipped || 0,
+    greet_total: data.total || 0,
+    reply_sent: data.reply_sent || 0,
+    reply_skipped: data.reply_skipped || 0,
+    resume_sent: data.resume_sent || 0,
+    important_events: data.important_events || 0
+  });
+  renderAccounts();
   updateStats();
-  if (data.account_index !== undefined) {
-    if (!accountStatuses[data.account_index]) accountStatuses[data.account_index] = {};
-    accountStatuses[data.account_index].running = true;
-    renderAccounts();
-  }
 });
 socket.on('ai_health_progress',function(data){
   if (data.index === undefined || data.index === null) return;
@@ -4153,36 +4321,72 @@ socket.on('ai_health_done',function(data){
   toast(msg, (data.available||0) > 0 ? 'ok' : 'err', 5000);
   loadAiHealth();
 });
-socket.on('status_update',function(data){
-  if (data.running !== undefined) {
-    setControls(data.running);
-  }
+function applyStatusUpdate(data) {
+  if (!data) return;
   if (data.accounts && Array.isArray(data.accounts)) {
     accountStatuses = data.accounts.map(function(acc) {
-      return {
-        running: acc.running || false,
-        needs_login: acc.needs_login || false,
-        name: acc.name || ''
-      };
+      // 完整透传：phase / login_reason / 暂停标记 / 当前会话 / 本账号统计
+      // 之前只留 running+needs_login，结果切不出"初始化中""已暂停"这些状态
+      var st = Object.assign({}, acc);
+      if (acc.cookie) {
+        cookieStatusCache[acc.index] = {
+          checking: false, valid: !!acc.cookie.valid,
+          reason: acc.cookie.reason || '', cookie_file: acc.cookie.cookie_file || ''
+        };
+      }
+      return st;
     });
     renderAccounts();
+    renderMetricsScope();
   }
-  if (!data.running) {
-    document.getElementById('currentTaskLabel').textContent='';
+  setControls(scopeRunning());
+  updatePauseButtons();
+  // 「确认登录」只在真有需要登录的账号时出现：常驻的话会让人误点，
+  // 而一次确认会发给范围内所有账号
+  var anyLogin = scopeIndexes().some(function(i) {
+    var st = accountStatuses[i] || {};
+    return st.needs_login || st.phase === 'waiting_login';
+  });
+  var cl = document.getElementById('btnConfirmLogin');
+  if (cl) cl.style.display = anyLogin ? '' : 'none';
+  if (!scopeRunning()) {
+    var lbl = document.getElementById('currentTaskLabel');
+    if (lbl) lbl.textContent = '';
+  } else {
+    updateCurrentTaskLabel();
   }
-});
+}
+
+// 当前在干什么：打招呼轮次 / 正在回复谁，按范围里第一个在跑的账号显示
+function updateCurrentTaskLabel() {
+  var lbl = document.getElementById('currentTaskLabel');
+  if (!lbl) return;
+  var hit = null;
+  scopeIndexes().some(function(i) {
+    var st = accountStatuses[i] || {};
+    if (st.running && (st.current_mode !== 'idle' || st.current_chat)) { hit = st; return true; }
+    return false;
+  });
+  if (!hit) { lbl.textContent = ''; return; }
+  var mode = hit.current_mode === 'reply' ? '回复中' : (hit.current_mode === 'greet' ? '打招呼中' : '运行中');
+  lbl.textContent = (hit.name || '') + ' ' + mode + (hit.current_chat ? ' · ' + hit.current_chat : '');
+}
+
+socket.on('status_update', applyStatusUpdate);
 socket.on('login_required',function(data){
   const modal = document.getElementById('loginModal');
   if (!modal) return;
   const desc = document.getElementById('loginModalDesc');
+  loginPendingIdx = (data && data.account_index !== undefined) ? data.account_index : null;
+  var who = (data && data.account_name) ? '「' + data.account_name + '」' : '';
   if (data && data.message) {
     desc.textContent = data.message;
   } else {
-    desc.textContent = '登录已过期或未登录，请在浏览器中完成登录，然后点击下方按钮继续。';
+    desc.textContent = '账号' + who + '登录已过期或未登录，请在浏览器中完成登录，然后点击下方按钮继续。';
   }
   modal.style.display = 'flex';
   modal.classList.add('active');
-  addLog('WARN', '需要登录：请在浏览器中登录后点击确认');
+  addLog('WARN', '需要登录' + who + '：请在浏览器中登录后点击确认');
   const cl = document.getElementById('btnConfirmLogin');
   if (cl) cl.style.display = '';
 });
@@ -4233,81 +4437,79 @@ setInterval(loadMetrics, 20000);
 // 启动通知红点轮询（每30秒刷新一次）
 startNotifPolling();
 
-// ── 页面加载时拉取历史记录 ──
-// 加载历史打招呼记录
-fetch('/api/greet_records').then(function(r){return r.json();}).then(function(data){
-  if(!data || !data.records || !data.records.length) return;
-  // 清空表格并缓存所有记录用于筛选
-  allGreetRecords = [];
-  data.records.forEach(function(rec){
-    // 根据后端 status 字段映射前端状态
-    // 后端 status: pending/applied/skipped/failed
-    // 前端 greetStatusMap: success/skip/ai_skip/already/error/pending
-    var feStatus = 'success';
-    if (rec.status === 'applied' || (!rec.is_skipped && rec.is_greeted)) {
-      feStatus = 'success';
-    } else if (rec.status === 'skipped' || rec.is_skipped) {
-      // 根据跳过原因细分
-      var reason = rec.skip_reason || '';
-      if (reason.indexOf('AI') >= 0 || reason.indexOf('不匹配') >= 0) {
-        feStatus = 'ai_skip';
-      } else if (reason.indexOf('已沟通') >= 0) {
-        feStatus = 'already';
-      } else {
-        feStatus = 'skip';
-      }
-    } else if (rec.status === 'failed') {
-      feStatus = 'error';
+// ── 历史记录加载 ──
+// 写成函数而不是一次性脚本：切账号（数据范围变化）要能重拉
+function greetRowFromRecord(rec) {
+  // 后端 status: pending/applied/skipped/failed → 前端: success/skip/ai_skip/already/error
+  var feStatus = 'success';
+  if (rec.status === 'applied' || (!rec.is_skipped && rec.is_greeted)) {
+    feStatus = 'success';
+  } else if (rec.status === 'skipped' || rec.is_skipped) {
+    var reason = rec.skip_reason || '';
+    if (reason.indexOf('AI') >= 0 || reason.indexOf('不匹配') >= 0) {
+      feStatus = 'ai_skip';
+    } else if (reason.indexOf('已沟通') >= 0) {
+      feStatus = 'already';
+    } else {
+      feStatus = 'skip';
     }
-    var row = {
-      status: feStatus,
-      job_name: rec.job_name || '',
-      company: rec.company || '',
-      salary: rec.salary || '',
-      url: rec.job_url || '',
-      time: rec.timestamp || '',
-      timestamp: rec.timestamp || '',
-      is_skipped: rec.is_skipped,
-      skip_reason: rec.skip_reason || '',
-      ai_score: rec.ai_score || '',
-      ai_reason: rec.ai_reason || '',  // 关键修复：透传 AI 判定原因到前端
-      actual_greeting_sent: rec.actual_greeting_sent || '',
-      _feStatus: feStatus
-    };
-    allGreetRecords.push(row);
-    addGreetRecord(row, false);  // false=追加到末尾，API已按时间降序返回
-  });
-  // 用历史记录数修正统计卡片（避免总任务显示0但实际有记录）
-  var histCount = data.records.length;
-  if (stats.total < histCount) stats.total = histCount;
-  var applied = data.records.filter(function(r){return !r.is_skipped;}).length;
-  var skipped = data.records.filter(function(r){return r.is_skipped;}).length;
-  if (stats.applied < applied) stats.applied = applied;
-  if (stats.skipped < skipped) stats.skipped = skipped;
-  updateStats();
-}).catch(function(e){console.error('加载打招呼记录失败:',e);});
+  } else if (rec.status === 'failed') {
+    feStatus = 'error';
+  }
+  return {
+    status: feStatus,
+    job_name: rec.job_name || '',
+    company: rec.company || '',
+    salary: rec.salary || '',
+    url: rec.job_url || '',
+    time: rec.timestamp || '',
+    timestamp: rec.timestamp || '',
+    is_skipped: rec.is_skipped,
+    skip_reason: rec.skip_reason || '',
+    ai_score: rec.ai_score || '',
+    ai_reason: rec.ai_reason || '',   // AI 给出的具体判定原因，比 skip_reason 干净
+    actual_greeting_sent: rec.actual_greeting_sent || '',
+    account_index: rec.account_index || 0,
+    account_name: rec.account_name || '',
+    _feStatus: feStatus
+  };
+}
+
+function loadGreetRecords() {
+  allGreetRecords = [];
+  greetRecordCount = 0;
+  var body = document.getElementById('greetTableBody');
+  if (body) body.innerHTML = '';
+  var el = document.getElementById('greetTabCount');
+  if (el) el.textContent = '0';
+  fetch('/api/greet_records' + scopeQs()).then(function(r){return r.json();}).then(function(data){
+    if (!data || !data.records || !data.records.length) {
+      var ge = document.getElementById('greetEmpty');
+      if (ge) ge.style.display = 'flex';
+      var fc = document.getElementById('greetFilterCount');
+      if (fc) fc.textContent = '';
+      return;
+    }
+    data.records.forEach(function(rec){
+      var row = greetRowFromRecord(rec);
+      allGreetRecords.push(row);
+      addGreetRecord(row, false);  // false=追加到末尾，API已按时间降序返回
+    });
+    applyGreetFilter();            // 重拉后要重新套用筛选
+  }).catch(function(e){console.error('加载打招呼记录失败:',e);});
+}
+
+loadGreetRecords();
 
 // 加载历史回复记录（聊天折叠列表）
-fetch('/api/reply_records/grouped').then(function(r){return r.json();}).then(function(data){
-  if(!data || data.status !== 'ok') return;
-  allReplyGroups = data.groups || [];
-  renderReplyChatList(allReplyGroups);
-  // 用历史记录数修正回复统计卡片
-  var allRecords = [];
-  allReplyGroups.forEach(function(g) {
-    (g.records || []).forEach(function(r) { allRecords.push(r); });
-  });
-  var replySent = allRecords.filter(function(r){return !r.is_skipped;}).length;
-  var replySkipped = allRecords.filter(function(r){return r.is_skipped;}).length;
-  if (stats.reply_sent < replySent) stats.reply_sent = replySent;
-  if (stats.reply_skipped < replySkipped) stats.reply_skipped = replySkipped;
-  updateStats();
-}).catch(function(e){console.error('加载回复记录失败:',e);});
+loadReplyChatList();
 
-// 页面加载后自动检测所有账号的 Cookie 状态（简单检测，不启动浏览器）
+// 页面加载后自动检测所有账号的 Cookie 状态（只查文件，不启动浏览器）
 setTimeout(function() {
-  try { checkAllAccountCookies(); } catch(e) {}
-}, 2000);
+  try { refreshCookieStates(true); } catch(e) {}
+}, 1500);
+// 登录后 Cookie 文件会被重写，红点要自己跟上，不能一直停在点一下才变
+setInterval(function() { try { refreshCookieStates(false); } catch(e) {} }, 30000);
 
 function closeLoginModal() {
   const modal = document.getElementById("loginModal");
@@ -4330,6 +4532,7 @@ function uploadCookieFile(event) {
         config.accounts[activeAccountIdx].cookie_file = data.filename || file.name;
         renderAccountConfig();
         saveConfig();
+        refreshCookieStates(true);
       } else {
         addLog('ERROR', 'Cookie 上传失败: ' + (data.message || ''));
       }
