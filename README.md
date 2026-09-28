@@ -138,7 +138,7 @@ python -m boss_bot --web                # 起管理界面
 
 ## AI 接口体检与容灾链
 
-界面「AI 接口列表 → 全部接口体检」会**给每个接口真发一条 4 个字的测试消息**（`只回复四个字：连接成功`），拿到正文才算可用；推理模型 `content` 为空但 `reasoning_content` 有内容也算可用。不可用的会标出具体原因（Key 失效 / 额度用尽 / 模型名不对 / 地址不对 / 超时）。
+界面「AI 接口列表 → 全部接口体检」会**给每个接口真发一条 4 个字的测试消息**（`只回复四个字：连接成功`），拿到正文才算可用；推理模型 `content` 为空但 `reasoning_content` 有内容也算可用。不可用的会标出具体原因（Key 失效 / 额度用尽 / 模型名不对 / 地址不对 / 超时）。超时先重试一次再判死（第二次才通的会在备注里写明"第 2 次才通"），单次网络抖动不算接口坏。
 
 - 结果落 `data/ai_health.json`；服务启动时若结果缺失或超过 24 小时会自动补测一轮
 - 支持全量体检与单接口重测，进度实时推送
@@ -310,7 +310,7 @@ BOSS 每个会话只给 2-3 条历史（`.chat-content` 的 `scrollHeight == cli
 两套都要跑：单元测试管逻辑，真机浏览器套件管"打开来真的能用"。
 
 ```bash
-pytest tests/ -q                      # 384 项，约 20 秒，全部离线（不碰真实数据、不联网）
+pytest tests/ -q                      # 438 项，约 45 秒，全部离线（不碰真实数据、不联网）
 ```
 
 真机套件全部使用项目内 `cloakbrowser/chrome.exe`，且**只做读/切/筛/存配置，绝不点发送、打招呼、发简历**：
@@ -321,25 +321,38 @@ python tools/e2e_live_boss.py         # 26 项：反爬自检、登录态、会�
 python tools/verify_dashboard_ui.py   # 14 项：指标卡口径 + AI 体检展示，产出 tools/verify_dashboard.png
 python tools/verify_three_way.py      # BOSS 页面 / 后端存储 / 前端显示 三端逐条比对
 python tools/measure_ai_quality.py    # 逐个接口真判分 + 生产解析判定（要联网，只发分析请求）
-python tools/diagnose_ai_providers.py --models   # 不可用接口归因：代理/直连各打一次 + 官方模型清单核对
+python tools/diagnose_ai_providers.py --models   # 不可用接口归因：代理/直连各打 3 次 + 官方模型清单核对
 ```
 
 ### 体检里"不可用"分别是什么原因
 
-`tools/diagnose_ai_providers.py` 会把同一个请求**走系统代理**和**不走代理**各打一次再归因。
-2026-09-28 实测 15 个不可用接口的结论：
+`tools/diagnose_ai_providers.py` 把同一个请求**走系统代理**和**不走代理**各打 `--repeat`（默认 3）次再归因。
+之所以要打多次：限流和抖动是按次发生的，2026-09-28 那版单次抽样得出的"代理/网络问题：直连能通，走代理失败"
+第二天复查就被推翻了——归因必须带"通 m/n"才可信。
 
-| 数量 | 现象 | 是不是代理的问题 | 能做什么 |
-|------|------|------------------|----------|
-| 6 | `403 FreeTierError：只能在 OpenCode 客户端内使用` | 不是 | 服务商策略，第三方程序一律拿不到，只能换付费模型或删掉这行 |
-| 4 | `404 page not found` | 不是 | 模型名写错了：官方清单里是 `z-ai/glm-5.3`、`moonshotai/kimi-k3`、`deepseek-ai/deepseek-v4.1-flash`。改成正确 slug 后请求能进模型，但该 Key 等 90s 不回话（代理和直连一样），实际仍不可用 |
-| 1 | `400 Model is unavailable` | 不是 | 免费模型已下线（同名付费版回 402 = 要付费） |
-| 3 | `配置不完整` | — | 界面上加了没填的空壳行，属残留，删掉即可 |
-| 1 | `请求超时` | 是（这一次） | 复查连打 5 次全 200、1.4~2.9s，是单次抖动；体检现在对超时先重试一次再判死 |
+2026-09-29 实测（19 个接口 = 8 可用 + 11 不可用；每条路由各 3 次）：
 
-关于代理：Windows 上 `requests` 不只认环境变量，**还会读注册表的代理设置**
-（`ProxyEnable=1` 时所有 AI 请求都从 `127.0.0.1:7897` 出去）。上面的对照里代理和直连结果一致，
-说明这批不可用不是家里代理造成的；判断这类问题用 `diagnose_ai_providers.py`，别靠猜。
+| 数量 | 现象 | 代理 vs 直连 | 是不是代理的问题 | 能做什么 |
+|------|------|--------------|------------------|----------|
+| 6 | `403 FreeTierError：只能在 OpenCode 客户端内使用` | 0/3 vs 0/3，报文逐字相同 | 不是 | 官方文档写明免费模型 "available on OpenCode"，客户端限定，改不了 |
+| 4 | `404 page not found`（约 1s） | 0/3 vs 0/3 | 不是 | 模型名缺命名空间：官方 id 是 `z-ai/glm-5.3`、`z-ai/glm-5.3-flash`、`moonshotai/kimi-k3`、`deepseek-ai/deepseek-v4.1-flash` |
+| 1 | `400 Model is unavailable` | 0/3 vs 0/3 | 不是 | `deepseek-v4-flash-free` 已下线，官方 81 个 id 里没有它 |
+
+**请求本身是对的**，这点已按官方口径核对：`GET https://integrate.api.nvidia.com/v1/models` 代理和直连**都是 200、81 个模型**，
+说明 base_url 和路径没错；404 是网关按模型名路由、认不出没带 `org/` 前缀的短名。把 id 换成官方值后 404 消失、
+请求能进到模型，但 45~60 秒不回话（两条路由一样）——那是 NVIDIA 免费额度排队，不是我们的报文问题。
+OpenCode 侧同理：官方文档确认 base_url 就是 `https://opencode.ai/zen/v1`，403 是策略不是写错；
+这个 Key 整条路都堵死——非 free 的 `big-pickle` 一样 403，付费 `deepseek-v4-flash` 回 `402 Insufficient account funds`，
+所以 7 行 OpenCode 要么充值要么删掉。
+
+关于代理，三条实测结论：
+
+1. Windows 上 `requests` **和** httpx（OpenAI SDK 用的）都不只认环境变量，**还读注册表代理**，
+   所以体检和判分实际都从 `127.0.0.1:7897` 出去（实测出口 IP `188.253.124.80`，环境变量一个都没设）。
+2. 上面 11 个不可用**没有一个**是代理造成的：两边返回码和报文完全一致。
+3. 家里代理是在**帮忙**而不是添乱：`AMD-DeepSeek-V4.1` 走代理 4/4 全 200（1.4~4.2s）、直连 4 次只通 1 次；
+   境外站直连还会被直接 RST（`api.ipify.org` 直连 `ConnectionResetError 10054`）。
+   **别为了排障去关代理**，判断这类问题用 `diagnose_ai_providers.py`，别靠猜。
 
 多账号范围这一层用"拦住 fetch / window.open / confirm，只记不真发"的方式验证控制路由与文案，所以不会真的改动运行状态。
 
@@ -400,7 +413,7 @@ boss_bot/
 │   ├── metrics.py               # 漏斗指标持久化（累计/当日/按账号 + 回填）
 │   ├── ai_health.py             # AI 接口体检（真实探测、错误分类、落盘合并、真实超时/截断回写）
 │   ├── reply_record.py          # 投递/回复记录存储与 Excel 导出（按账号筛选/删除、AI 判分质量）
-│   ├── message_store.py         # 聊天记录（按账号前缀、时间排序）
+│   ├── message_store.py         # 聊天记录（会话身份=姓名+公司、data-mid 排序与去重、按账号前缀分文件）
 │   ├── state_store.py / stats.py / notify.py / intent.py / rules.py
 │   ├── prompts.py               # 回复提示词（每次现读规则/模板/画像，改了立刻生效）
 │   └── self_evolve.py           # 回复效果记录与评估
@@ -411,10 +424,10 @@ boss_bot/
 │   ├── conftest.py              # 会话级隔离：测试不写生产数据
 │   ├── test_unified.py          # 单元/集成测试（配置、引擎、闸门、结构检查）
 │   ├── test_ai_failover.py      # AI 判分链路：不可用输出的容灾切换、截断、预算、硬否决、提示词热生效
-│   ├── test_multi_account.py    # 多账号范围与归属
-│   └── test_ai_health_runtime.py# 真实调用结果回写体检
-│   ├── test_multi_account.py    # 多账号隔离与数据范围
-│   └── test_ai_health_runtime.py # 真实超时回写体检 + 容灾链跳过
+│   ├── test_ai_health_runtime.py# 真实超时/截断回写体检 + 容灾链跳过
+│   ├── test_ai_proxy_attribution.py # 代理 vs 直连归因：单次抽样不能定代理的罪
+│   ├── test_message_sync.py     # 会话身份（姓名+公司）、data-mid 顺序与去重、卡片/动作分型
+│   └── test_multi_account.py    # 多账号隔离与数据范围
 ├── tools/                       # 真机实测与诊断脚本（见「测试」小节）
 ├── data/                        # 运行时数据（已忽略）
 ├── browser_data/                # 各浏览器 profile（已忽略）
