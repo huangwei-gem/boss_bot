@@ -45,10 +45,77 @@ LOG_DIR = BASE_DIR / "logs"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 # ─────────────────────────────────────────────
+# 找不到聊天输入框时的页面快照与归因
+# ─────────────────────────────────────────────
+# 历史 172 条跳过记录都是同一句"未找到输入框"，把 logs 里 116 次的现场逐条
+# 分类后其实是三件不同的事：61 次页面被换成手机+短信验证码登录框（登录态掉了）、
+# 45 次沟通抽屉压根没在页内渲染、8 次标签页连接已断。处置方式完全不同，
+# 所以失败原因必须按现场分档写出来。
+#
+# 快照必须连 contenteditable 一起查：BOSS 的聊天输入框是
+# #chat-input.chat-input 这个 contenteditable div，旧 dump 只抓 input/textarea，
+# 于是"页面上没输入框"这个结论本身可能是瞎的。
+CHAT_SNAPSHOT_JS = r'''
+return (function(){
+  function cls(el){
+    var c = el.className;
+    if (typeof c === 'string' && c.trim()) return c.trim();
+    return (el.getAttribute && el.getAttribute('type')) || '';
+  }
+  var inputs = [];
+  var nodes = document.querySelectorAll('input, textarea');
+  for (var i = 0; i < nodes.length && inputs.length < 30; i++) {
+    var v = cls(nodes[i]);
+    if (v) inputs.push(v);
+  }
+  var sels = ['#chat-input', '.chat-input', '[contenteditable="true"]', '.input-area',
+              '.chat-container', '.chat-popup', '.drawer', '.modal-content', '.send-message'];
+  var found = [];
+  for (var j = 0; j < sels.length; j++) {
+    if (document.querySelector(sels[j])) found.push(sels[j]);
+  }
+  return JSON.stringify({url: location.href, inputs: inputs, chat_elements: found});
+})();
+'''
+
+# 快照里"确实能打字发消息"的那几个元素，与只能证明抽屉存在的那些
+_INPUTISH = ("#chat-input", ".chat-input", '[contenteditable="true"]', ".input-area")
+_LOGIN_CLS = ("ipt-phone", "ipt-sms")
+
+
+def chat_failure_reason(snap):
+    """把失败瞬间的页面快照归成一句能照着修的原因。"""
+    snap = snap or {}
+    err = str(snap.get("error") or "")
+    low = err.lower()
+    if "断开" in err or "disconnect" in low or "connection" in low or "refused" in low:
+        return "聊天页与浏览器连接已断开（标签页被关或被别的线程抢走）"
+
+    inputs = [str(c).lower() for c in (snap.get("inputs") or [])]
+    url = str(snap.get("url") or "")
+    if any(any(k in c for k in _LOGIN_CLS) for c in inputs):
+        return "BOSS 要求重新登录（页面出现手机号+短信验证码框），登录态已失效"
+    if "/web/user" in url:
+        return "BOSS 要求重新登录（页面被送到登录页 %s），登录态已失效" % url[:50]
+
+    chat = list(snap.get("chat_elements") or [])
+    if chat and not any(c in _INPUTISH for c in chat):
+        return "聊天抽屉容器已出现但输入框没渲染（页面卡在半成品状态）"
+    if not chat:
+        if "job_detail" in url:
+            return "点了「立即沟通」但聊天抽屉没在这个标签页里出现（URL 仍停在岗位详情页）"
+        return "页面已跳走且没有聊天元素（当前 URL: %s）" % (url[:60] or "未知")
+    return "未找到聊天输入框，页面上有抽屉相关元素: %s" % ", ".join(chat[:4])
+
+
+# ─────────────────────────────────────────────
 # 文件日志
 # ─────────────────────────────────────────────
 _file_handler = logging.FileHandler(str(LOG_DIR / "greet_engine.log"), encoding="utf-8")
-_file_handler.setFormatter(logging.Formatter("%(asctime)s %(message)s", datefmt="%H:%M:%S"))
+# 时间必须带日期：只有 HH:MM:SS 时跨天的日志分不开，事后归因会把不同天的
+# 同一现象当成一次（这次查"未找到输入框"就被这个坑过一次）
+_file_handler.setFormatter(logging.Formatter("%(asctime)s %(message)s",
+                                             datefmt="%Y-%m-%d %H:%M:%S"))
 _file_logger = logging.getLogger("greet_engine_file")
 _file_logger.setLevel(logging.INFO)
 _file_logger.addHandler(_file_handler)
@@ -1959,67 +2026,20 @@ class GreetEngine:
                         self._log("DEBUG", f"标签页遍历失败: {e}")
 
             if not input_area:
-                self._log("WARN", "未找到输入框! 尝试打印页面上的input/textarea元素...")
+                snap = {"url": "", "inputs": [], "chat_elements": [], "error": ""}
                 try:
-                    inputs = instance.eles("tag:input", timeout=2) + instance.eles("tag:textarea", timeout=2)
-                    self._log("WARN", f"页面上有 {len(inputs)} 个input/textarea元素")
-                    for i, inp in enumerate(inputs[:10]):
-                        try:
-                            cls = inp.attr("class") or ""
-                            tag = inp.tag or ""
-                            t = inp.attr("type") or ""
-                            self._log("WARN", f"  元素{i}: tag={tag}, class={cls}, type={t}")
-                        except Exception:
-                            pass
-                    # 也打印当前URL帮助调试
-                    self._log("WARN", f"当前URL: {instance.url}")
+                    snap = json.loads(instance.run_js(CHAT_SNAPSHOT_JS) or "{}")
                 except Exception as e:
-                    self._log("WARN", f"调试打印失败: {e}")
-                    pass
-                # 关键修复：增加更详细DOM上下文日志，帮助诊断弹窗未弹出的原因
-                try:
-                    # 打印页面title
-                    self._log("WARN", f"页面title: {instance.title}")
-                except Exception:
-                    pass
-                # 检查是否有聊天弹窗容器
-                for _diag_sel in [".chat-container", ".chat-popup", ".chat-modal", ".drawer", ".modal-content"]:
-                    try:
-                        _diag_elem = instance.ele(_diag_sel, timeout=1)
-                        if _diag_elem:
-                            self._log("WARN", f"诊断: 发现弹窗容器 {_diag_sel}（可见）")
-                    except Exception:
-                        pass
-                # 检查"立即沟通"按钮是否还在
-                for _btn_sel in [".btn-greet", ".btn-startchat", ".btn btn-startchat"]:
-                    try:
-                        _btn_elem = instance.ele(_btn_sel, timeout=1)
-                        if _btn_elem:
-                            self._log("WARN", f"诊断: 沟通按钮仍在页面上: {_btn_sel}（文本: {_btn_elem.text}）")
-                    except Exception:
-                        pass
-                # 打印页面上所有button的文本（最多10个）
-                try:
-                    _all_btns = instance.eles("tag:button", timeout=2)
-                    self._log("WARN", f"页面共有 {len(_all_btns)} 个button元素")
-                    for _bi, _b in enumerate(_all_btns[:10]):
-                        try:
-                            _btxt = _b.text or ""
-                            self._log("WARN", f"  button{_bi}: {_btxt[:50]}")
-                        except Exception:
-                            pass
-                except Exception:
-                    pass
-                # 检查是否有错误提示/风控提示
-                for _risk_sel in [".error-tip", ".verify-modal", ".security-tip", ".risk-modal", ".captcha"]:
-                    try:
-                        _risk_elem = instance.ele(_risk_sel, timeout=1)
-                        if _risk_elem:
-                            _risk_txt = _risk_elem.text or ""
-                            self._log("WARN", f"诊断: 检测到风控/验证提示: {_risk_sel}（文本: {_risk_txt[:80]}）")
-                    except Exception:
-                        pass
-                return False, "未找到输入框"
+                    snap["error"] = str(e)
+                reason = chat_failure_reason(snap)
+                self._log("WARN", f"未找到输入框｜{reason}")
+                self._log("WARN", f"  现场 url={str(snap.get('url'))[:80]} "
+                                  f"抽屉元素={snap.get('chat_elements') or '无'} "
+                                  f"input样式={list(snap.get('inputs') or [])[:8]}")
+                if "登录" in reason:
+                    self._log("WARN", "登录态已失效，之后每个岗位都会卡在同一个地方，"
+                                      "请先在浏览器窗口里重新登录 BOSS")
+                return False, reason
             self._log("INFO", "找到输入框，输入消息...")
             input_area.input(greeting)
             self._log("INFO", "消息已输入")

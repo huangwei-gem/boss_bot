@@ -377,7 +377,21 @@ OpenCode 侧同理：官方文档确认 base_url 就是 `https://opencode.ai/zen
 
 **被跳转到 `.../web/geek/jobs?_security_check=...`** → BOSS 风控。在弹出的浏览器里手动过一次验证，或放慢节奏（调大 `rate_limit.max_per_hour` 的反面：把间隔调大、每天上限调小）。机器人此时会暂停等待。
 
-**「未找到输入框」** → 点「沟通」后聊天窗在**当前页**弹出、URL 不变，所以不能按 URL 判断；输入框查找会按 `retry.max_attempts` 重试并递增等待。日志会打印页面上的 input/textarea 元素与当前 URL 供定位。
+**「未找到输入框」** → 这句现在只是类别，记录里会带上现场原因（`chat_failure_reason()` 按页面快照分档）。2026-09-29 把 `logs/` 里 116 次失败的现场逐条分类，实际是三件事：
+
+| 现场 | 占比 | 真实含义 | 处理 |
+|------|------|----------|------|
+| 页面出现 `ipt-phone` + `ipt-sms` | 61/116 | **登录态掉了**，BOSS 把岗位页换成手机+短信验证码框 | 在浏览器窗口里重新登录；不重登则每个岗位都卡这里 |
+| 只剩 `ipt-search`/`city-code`，URL 仍在 `job_detail` | 45/116 | 点「立即沟通」后聊天抽屉压根没在这个标签页渲染 | 见下：抽屉是页面内弹出层，URL 不变，所以不能按 URL 判断；重试按 `retry.max_attempts` 递增等待 |
+| 抛"与页面的连接已断开" | 8/116 | 标签页被关/被另一个线程抢走 | 多账号别共用一个浏览器端口（今天主账号就是这样启动失败的） |
+
+旧版这里只会打一句"未找到输入框"，而且 dump 只抓 `tag:input`/`tag:textarea`——BOSS 聊天框是
+`#chat-input.chat-input` 这个 **contenteditable div**，旧 dump 根本看不见它，所以"页面上没有输入框"
+这个结论本身是瞎的。现在 `CHAT_SNAPSHOT_JS` 一次把 input 样式、contenteditable、抽屉容器、URL 全捞回来再归因。
+`logs/greet_engine.log` 的时间戳也补上了日期（原来只有 `HH:MM:SS`，跨天日志分不开）。
+
+顺带记录一个反证：招呼语确实发得出去——`messages/` 里 38 个会话有 20 个含我方发出的招呼语原文，
+所以成功路径上的 `.input-area` 是真聊天框，不是假成功。
 
 **改了配置没生效** → 先查 [配置生效范围](#配置生效范围重要)；仍不生效就是 bug。三端检测脚本能复现：`python tools/verify_three_way.py`。
 
