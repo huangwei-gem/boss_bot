@@ -74,9 +74,7 @@ echo   按 Ctrl+C 停止服务
 echo ============================================
 echo.
 
-REM 延迟3秒后自动打开浏览器（使用ping模拟延迟，兼容性更好）
-start "" cmd /c "ping -n 4 127.0.0.1 >nul & start http://localhost:5000"
-
+REM 浏览器由 app.py 启动后自行打开（webbrowser），不再额外开一个 cmd 窗口
 cd flask-version
 python app.py
 

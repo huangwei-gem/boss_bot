@@ -58,6 +58,7 @@ from boss_bot.self_evolve import SelfEvolveEngine
 from boss_bot.reply_record import (
     ReplyRecordStore, GreetRecordStore,
     export_reply_records, export_greet_records,
+    _get_reply_store, _get_greet_store,
 )
 from boss_bot.message_store import MessageStore
 
@@ -108,10 +109,21 @@ file_handler.setFormatter(logging.Formatter(
 # 根日志级别设为 DEBUG，让文件处理器能收到所有日志
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.DEBUG)
-root_logger.addHandler(web_handler)
-root_logger.addHandler(file_handler)
+# 关键修复：避免重复添加 handler 导致日志重复输出。
+# 检查是否已存在相同类型的 handler，存在则不重复添加。
+_has_web_handler = any(isinstance(h, WebLogHandler) for h in root_logger.handlers)
+if not _has_web_handler:
+    root_logger.addHandler(web_handler)
+_has_file_handler = any(
+    isinstance(h, TimedRotatingFileHandler) for h in root_logger.handlers
+)
+if not _has_file_handler:
+    root_logger.addHandler(file_handler)
 
 logger = logging.getLogger("boss-web")
+# 关键修复：设置 propagate=False，避免日志向 root logger 传播后被 root 的 handler
+# 重复处理（root logger 已有 web_handler 和 file_handler）。
+logger.propagate = False
 
 # ===================== Flask 应用 =====================
 
@@ -121,17 +133,36 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
 
 # 自动选择最佳 async_mode：gevent > threading（eventlet已弃用，不再使用）
-_socketio_kwargs = {"cors_allowed_origins": "*"}
+# WebSocket 稳定性参数：
+#   ping_timeout=60   : 客户端必须在 60s 内回复心跳，否则判定断连
+#   ping_interval=25  : 服务端每 25s 发送一次心跳包
+#   max_http_buffer_size=10MB : 单帧最大缓冲区，避免大消息触发 "Invalid transport"
+_socketio_kwargs = {
+    "cors_allowed_origins": "*",
+    "ping_timeout": 60,
+    "ping_interval": 25,
+    "max_http_buffer_size": 10 * 1024 * 1024,
+}
 try:
     import gevent  # noqa: F401
     from gevent import monkey
     monkey.patch_all()  # 协程化标准库，支持 WebSocket
     _socketio_kwargs["async_mode"] = "gevent"
+    # gevent 下显式声明允许 polling+websocket 双传输，
+    # 客户端可按网络环境自动降级，避免 "Invalid transport for session" 错误
+    _socketio_kwargs["transports"] = ["polling", "websocket"]
 except Exception:
     # gevent 不可用或 monkey.patch_all() 失败时，降级到 threading
     _socketio_kwargs["async_mode"] = "threading"
+    _socketio_kwargs["transports"] = ["polling", "websocket"]
 
 socketio = SocketIO(app, **_socketio_kwargs)
+
+# 抑制 engineio "Invalid transport for session" 错误日志（降级为 DEBUG）
+# 该错误通常由客户端在网络抖动后从 websocket 降级到 polling 引起，
+# 属于预期行为，不需要以 ERROR 级别刷屏。
+for _noisy_logger in ("engineio.server", "socketio.server"):
+    logging.getLogger(_noisy_logger).setLevel(logging.WARNING)
 
 # ===================== API 认证 =====================
 
@@ -270,6 +301,8 @@ def _ensure_manager() -> MultiAccountManager:
             """投递事件回调 — 推送结构化投递记录到前端表格。"""
             try:
                 event_data["time"] = datetime.now().strftime("%H:%M:%S")
+                # 确保 ai_reason 字段传到前端（防御性编程）
+                event_data["ai_reason"] = event_data.get("ai_reason", "")
                 socketio.emit("greet_record", event_data)
             except Exception:
                 pass
@@ -299,10 +332,18 @@ def _ensure_manager() -> MultiAccountManager:
                 pass
 
         def log_callback(msg: str):
-            """日志回调 — 同时写入缓冲区和推送 SocketIO。
+            """日志回调 — 推送 SocketIO 到前端。
 
-            DEBUG 级别日志只写入文件（由 logging 处理），不推送前端。
-            INFO/WARN/ERROR/CRITICAL 级别日志推送前端 + 写入文件。
+            关键修复：不再重复写入 log_buffer，因为 root logger 的 WebLogHandler
+            已经将日志写入 log_buffer。此处只负责推送 SocketIO 实时事件到前端。
+            DEBUG 级别日志不推送前端。
+
+            日志流向：
+              main_loop._log(msg)
+                → log_cb(msg) → log_callback → 推 socket（实时）
+                → logger.info(msg) → root → web_handler 写 log_buffer（HTTP 拉取）
+                                       → file_handler 写文件（持久化）
+            这样 log_buffer 只被 web_handler 写一次，避免重复。
             """
             # 解析日志级别
             level = msg.split("]")[0].strip("[") if "]" in msg else "INFO"
@@ -312,14 +353,7 @@ def _ensure_manager() -> MultiAccountManager:
             if level.upper() == "DEBUG":
                 return
 
-            with log_buffer_lock:
-                log_buffer.append({
-                    "time": datetime.now().strftime("%H:%M:%S"),
-                    "level": level,
-                    "message": clean_msg,
-                })
-                if len(log_buffer) > MAX_LOGS:
-                    log_buffer.pop(0)
+            # 只推送 SocketIO 实时事件，不写 log_buffer（由 WebLogHandler 统一维护）
             try:
                 socketio.emit("bot_log", {
                     "time": datetime.now().strftime("%H:%M:%S"),
@@ -437,14 +471,37 @@ def api_start():
 
 @app.route("/api/stop", methods=["POST"])
 def api_stop():
-    """停止所有账号。"""
+    """停止所有账号。
+
+    为避免前端 fetch 请求超时（"Failed to fetch"）：
+    1. 先设置运行停止标志（非阻塞）
+    2. 线程 join 使用较短的超时，避免长时间等待
+    3. 任何异常都吞掉并记录日志，始终返回 200 响应
+    """
     global _status_thread
     _status_stop.set()
-    manager = _multi_manager
-    if manager is not None:
-        manager.stop()
-    if _status_thread is not None and _status_thread.is_alive():
-        _status_thread.join(timeout=5)
+    stop_errors = []
+    try:
+        manager = _multi_manager
+        if manager is not None:
+            try:
+                manager.stop()
+            except Exception as e:
+                logger.warning("manager.stop() 异常: %s", e)
+                stop_errors.append(str(e))
+    except Exception as e:
+        logger.warning("停止流程异常: %s", e)
+        stop_errors.append(str(e))
+    # 等待状态线程结束（短超时，避免阻塞请求）
+    try:
+        if _status_thread is not None and _status_thread.is_alive():
+            _status_thread.join(timeout=2)
+    except Exception as e:
+        logger.warning("状态线程 join 异常: %s", e)
+        stop_errors.append(str(e))
+    # 即使停止过程出现异常，也返回 200，避免前端报 "Failed to fetch"
+    if stop_errors:
+        return jsonify({"status": "ok", "message": "机器人已停止（部分异常已忽略）", "errors": stop_errors})
     return jsonify({"status": "ok", "message": "机器人已停止"})
 
 
@@ -520,11 +577,21 @@ def api_account_start(idx: int):
 
 @app.route("/api/accounts/<int:idx>/stop", methods=["POST"])
 def api_account_stop(idx: int):
-    """停止指定账号。"""
+    """停止指定账号。
+
+    增加异常容错：即使停止失败也返回 200，避免前端 "Failed to fetch"。
+    """
     manager, error = _validate_account_index(idx)
     if error:
         return error
-    manager.stop_account(idx)
+    stop_error = None
+    try:
+        manager.stop_account(idx)
+    except Exception as e:
+        logger.warning("账号 %s 停止异常: %s", idx, e)
+        stop_error = str(e)
+    if stop_error:
+        return jsonify({"status": "ok", "message": f"账号 {idx} 已停止（异常已忽略）", "error": stop_error})
     return jsonify({"status": "ok", "message": f"账号 {idx} 已停止"})
 
 
@@ -1098,6 +1165,171 @@ def api_ai_test():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+# ===================== 漏斗指标 =====================
+
+@app.route("/api/metrics")
+def api_metrics():
+    """累计投递 / 今日已投递 / 接收简历 / 面试数（按会话去重）。
+
+    Query: account=全部时省略，或 account=0 指定单个账号。
+    """
+    try:
+        from boss_bot.metrics import MetricsStore
+        cfg = _ensure_config()
+        acc = request.args.get("account")
+        scope = None
+        if acc is not None and acc not in ("", "all"):
+            try:
+                scope = [int(acc)]
+            except ValueError:
+                return jsonify({"status": "error", "message": "account 参数非法"}), 400
+        # 每次重新读盘：写的人在机器人线程里，单例不会重读文件。
+        # backfill 只在第一次执行，把历史记录换算成累计值
+        snap = MetricsStore(backfill=True).snapshot(scope)
+        rl = cfg.greet.rate_limit
+        snap["daily_limit"] = rl.max_per_day if (rl and rl.enabled) else None
+        snap["scope"] = "all" if scope is None else scope[0]
+        snap["accounts"] = [
+            {"index": i, "name": a.name, "enabled": a.enabled}
+            for i, a in enumerate(cfg.greet.accounts)
+        ]
+        return jsonify({"status": "ok", **snap})
+    except Exception as e:
+        logger.exception("读取指标失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+# ===================== AI 接口体检 =====================
+
+_ai_health_lock = threading.Lock()
+_ai_health_running = False
+
+
+def _provider_dicts(cfg):
+    return [{"name": p.name, "api_key": p.api_key, "api_base": p.api_base,
+             "model": p.model, "timeout": getattr(p, "timeout", 30)}
+            for p in (cfg.ai.providers or [])]
+
+
+def _ai_health_payload(cfg):
+    """把体检结果和当前配置对齐，未测过的标 untested。"""
+    from boss_bot.ai_health import STATUS_UNTESTED, provider_key, load_health, summarize
+    providers = _provider_dicts(cfg)
+    health = load_health()
+    stored = health.get("results") or {}
+    rows = []
+    for i, p in enumerate(providers):
+        hit = stored.get(provider_key(p)) or {}
+        key = p.get("api_key") or ""
+        row = {
+            "index": i, "name": p["name"], "model": p["model"],
+            "api_base": p["api_base"], "api_key_masked": key[:6] + "..." if key else "",
+            "configured": bool(key),
+            "status": hit.get("status", STATUS_UNTESTED),
+            "latency_ms": hit.get("latency_ms"),
+            "reply": hit.get("reply", ""),
+            "reason": hit.get("reason", ""),
+            "checked_at": hit.get("checked_at", ""),
+        }
+        rows.append(row)
+    configured_keys = {provider_key(p) for p in providers}
+    stale = [r for k, r in stored.items()
+             if k not in configured_keys and r.get("status") == "available"]
+    return {
+        "status": "ok",
+        "running": _ai_health_running,
+        "updated_at": health.get("updated_at", ""),
+        "providers": rows,
+        # 按下标算，重复配置的两条都要计入，否则 22 个接口只显示 20 个
+        "summary": summarize({str(r["index"]): r for r in rows}),
+        "incomplete": sum(1 for r in rows if not r["configured"]),
+        "duplicated": len(providers) - len({
+            provider_key(p) for p in providers}),
+        "stale_available": len(stale),
+    }
+
+
+@app.route("/api/ai/health")
+def api_ai_health():
+    """读取 22 个接口的体检结果（不发起请求）。"""
+    try:
+        return jsonify(_ai_health_payload(_ensure_config()))
+    except Exception as e:
+        logger.exception("读取 AI 体检结果失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+def _start_ai_health(indexes=None):
+    """后台逐个真实发一条测试消息探测接口。返回 (是否启动, 说明)。"""
+    global _ai_health_running
+    from boss_bot.ai_health import (load_health, merge_results, probe_one,
+                                    save_health, summarize)
+    cfg = _ensure_config()
+    providers = _provider_dicts(cfg)
+    if not providers:
+        return False, "未配置任何 AI 接口"
+    idx = [i for i in (list(indexes) if indexes else range(len(providers)))
+           if 0 <= i < len(providers)]
+    with _ai_health_lock:
+        if _ai_health_running:
+            return False, "体检正在进行中，请等待本轮完成"
+        _ai_health_running = True
+
+    def _worker():
+        global _ai_health_running
+        results = []
+        try:
+            for pos, i in enumerate(idx):
+                res = probe_one(providers[i],
+                                timeout=providers[i].get("timeout") or 45)
+                res["index"] = i
+                results.append(res)
+                socketio.emit("ai_health_progress", {
+                    "index": i, "name": providers[i]["name"],
+                    "status": res["status"], "latency_ms": res["latency_ms"],
+                    "reason": res["reason"], "reply": res["reply"],
+                    "done": pos + 1, "total": len(idx),
+                })
+            merged = merge_results(load_health(), results, providers)
+            save_health(merged)
+            socketio.emit("ai_health_done", {
+                "summary": summarize(merged["results"]),
+                "updated_at": merged["updated_at"],
+                "available": sum(1 for r in results if r["status"] == "available"),
+                "checked": len(results),
+            })
+            logger.info(f"AI 体检完成：{summarize(merged['results'])}")
+        except Exception as e:
+            logger.exception("AI 体检异常")
+            socketio.emit("ai_health_done", {"error": str(e)})
+        finally:
+            with _ai_health_lock:
+                _ai_health_running = False
+
+    threading.Thread(target=_worker, daemon=True).start()
+    return True, f"开始检测 {len(idx)} 个接口"
+
+
+@app.route("/api/ai/health", methods=["POST"])
+def api_ai_health_run():
+    """Body: {"indexes":[0,3]} 只测指定接口；省略则全部。
+
+    探测在后台线程跑，每个接口测完通过 socketio 推 ai_health_progress，
+    全部结束推 ai_health_done —— 22 个接口最坏要几分钟，不能让请求挂着。
+    """
+    try:
+        body = request.get_json(silent=True) or {}
+        indexes = body.get("indexes")
+        indexes = [int(i) for i in indexes] if indexes else None
+        started, message = _start_ai_health(indexes)
+        code = 200 if started else 409
+        return jsonify({"status": "ok" if started else "error",
+                        "message": message}), code
+    except Exception as e:
+        logger.exception("启动 AI 体检失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 @app.route("/api/ai/analyze", methods=["POST"])
 def api_ai_analyze():
     """分析岗位描述，接收 {job_desc, provider_index} 参数，返回分析结果。"""
@@ -1457,19 +1689,13 @@ _greet_record_store: Optional[GreetRecordStore] = None
 
 
 def _ensure_reply_store() -> ReplyRecordStore:
-    """确保回复记录存储已初始化。"""
-    global _reply_record_store
-    if _reply_record_store is None:
-        _reply_record_store = ReplyRecordStore()
-    return _reply_record_store
+    """确保回复记录存储已初始化（使用全局单例，与引擎层共享同一实例）。"""
+    return _get_reply_store()
 
 
 def _ensure_greet_store() -> GreetRecordStore:
-    """确保打招呼记录存储已初始化。"""
-    global _greet_record_store
-    if _greet_record_store is None:
-        _greet_record_store = GreetRecordStore()
-    return _greet_record_store
+    """确保打招呼记录存储已初始化（使用全局单例，与引擎层共享同一实例）。"""
+    return _get_greet_store()
 
 
 @app.route("/api/export/reply_records")
@@ -1587,6 +1813,32 @@ def api_reply_records():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+def _normalize_ts(ts: str) -> str:
+    """将各种时间戳格式统一为 YYYY-MM-DD HH:MM:SS 格式，用于排序比较。
+
+    支持的输入格式：
+    - "2026-09-23 14:03:17"（标准格式，直接返回）
+    - "2026-09-23T14:03:17.189728"（ISO格式，转换为标准格式）
+    - "2026-09-23T14:03:17"（ISO格式无毫秒）
+    - "14:03"（仅时间，返回空串无法排序）
+    - "昨天 22:50"（人类可读，返回空串无法排序）
+    """
+    if not ts:
+        return ""
+    s = ts.strip()
+    # ISO格式: 2026-09-23T14:03:17.189728 → 2026-09-23 14:03:17
+    if "T" in s and len(s) >= 19:
+        try:
+            return s[:10] + " " + s[11:19]
+        except Exception:
+            return ""
+    # 标准格式: 2026-09-23 14:03:17
+    if len(s) >= 19 and s[4] == "-" and s[7] == "-":
+        return s[:19]
+    # 无法解析的格式（如"14:03"、"昨天 22:50"），返回空串
+    return ""
+
+
 @app.route("/api/reply_records/grouped")
 def api_reply_records_grouped():
     """获取按聊天对象分组的回复记录。
@@ -1664,8 +1916,13 @@ def api_reply_records_grouped():
                     "unread_count": full.get("unread_count", 0),
                 }
 
-        # 转为列表，按最后消息时间倒序排列
-        result = sorted(groups.values(), key=lambda x: x.get("last_time", ""), reverse=True)
+        # 转为列表，按最后消息时间倒序排列（统一时间戳格式后排序）
+        result = sorted(groups.values(), key=lambda x: _normalize_ts(x.get("last_time", "")), reverse=True)
+        # 统一 last_time 格式为 YYYY-MM-DD HH:MM:SS，方便前端排序和显示
+        for g in result:
+            normalized = _normalize_ts(g.get("last_time", ""))
+            if normalized:
+                g["last_time"] = normalized
         return jsonify({
             "status": "ok",
             "groups": result,
@@ -1757,6 +2014,36 @@ def api_greet_records():
         })
     except Exception as e:
         logger.exception("获取打招呼记录列表失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/greet_records/clear", methods=["POST", "DELETE"])
+def api_clear_greet_records():
+    """清空所有打招呼记录。
+
+    同时清空内存单例和磁盘文件，确保刷新页面后记录不再出现。
+    """
+    try:
+        store = _ensure_greet_store()
+        store.clear_all()
+        return jsonify({"status": "ok", "message": "打招呼记录已清空"})
+    except Exception as e:
+        logger.exception("清空打招呼记录失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/reply_records/clear", methods=["POST", "DELETE"])
+def api_clear_reply_records():
+    """清空所有回复记录。
+
+    同时清空内存单例和磁盘文件，确保刷新页面后记录不再出现。
+    """
+    try:
+        store = _ensure_reply_store()
+        store.clear_all()
+        return jsonify({"status": "ok", "message": "回复记录已清空"})
+    except Exception as e:
+        logger.exception("清空回复记录失败")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
@@ -2974,7 +3261,40 @@ def main():
     _run_kwargs = {"host": "0.0.0.0", "port": 5000, "debug": False, "use_reloader": False}
     if _socketio_kwargs.get("async_mode") == "threading":
         _run_kwargs["allow_unsafe_werkzeug"] = True
+
+    # 由服务自己打开默认浏览器，start.bat 就不必再额外开一个 cmd 窗口
+    threading.Timer(1.5, _open_dashboard).start()
+    # 体检结果缺失或超过 24 小时时后台补一轮，前端一进来看接口就知道哪些能用
+    threading.Timer(10.0, _auto_ai_health).start()
     socketio.run(app, **_run_kwargs)
+
+
+def _auto_ai_health():
+    """启动时自动做一轮 AI 接口体检（仅当结果过期时）。"""
+    from datetime import datetime, timedelta
+    try:
+        from boss_bot.ai_health import load_health
+        health = load_health()
+        updated = health.get("updated_at") or ""
+        try:
+            dt = datetime.strptime(updated, "%Y-%m-%d %H:%M:%S")
+            if datetime.now() - dt < timedelta(hours=24):
+                return
+        except ValueError:
+            pass
+        started, message = _start_ai_health()
+        logger.info(f"启动自动 AI 体检：{message}" if started else f"跳过自动体检：{message}")
+    except Exception as e:
+        logger.warning(f"自动 AI 体检失败（不影响使用）: {e}")
+
+
+def _open_dashboard():
+    """打开管理界面。失败不影响服务运行。"""
+    import webbrowser
+    try:
+        webbrowser.open("http://localhost:5000")
+    except Exception as e:
+        logger.warning(f"自动打开浏览器失败，请手动访问 http://localhost:5000（{e}）")
 
 
 if __name__ == "__main__":

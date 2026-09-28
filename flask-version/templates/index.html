@@ -7,6 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><defs><linearGradient id=%22g%22 x1=%220%%22 y1=%220%%22 x2=%22100%%22 y2=%22100%%22><stop offset=%220%%22 stop-color=%22%235b7cfa%22/><stop offset=%22100%%22 stop-color=%22%231e4bd2%22/></linearGradient></defs><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22url(%23g)%22/><text x=%2250%22 y=%2265%22 text-anchor=%22middle%22 font-size=%2250%22 font-weight=%22bold%22 fill=%22%23fff%22 font-family=%22Arial%22>B</text></svg>">
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
@@ -14,6 +15,9 @@
 /* taste-skill: DESIGN_VARIANCE=5, MOTION_INTENSITY=4, VISUAL_DENSITY=5
    Dual theme system — Light / Dark */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+/* Lucide icons global style */
+[data-lucide]{width:1em;height:1em;stroke-width:2;vertical-align:middle;display:inline-block}
 
 /* Light Theme - default when no data-theme set */
 [data-theme="light"], :root{
@@ -32,7 +36,19 @@
   --chip-bg:rgba(91,124,250,.14);--chip-text:#5b7cfa;--chip-del:rgba(91,124,250,.35);
   --modal-overlay:rgba(30,40,80,.25);--scrollbar-thumb:rgba(160,170,220,.5);
   --img-checked-bd:#5b7cfa;--img-checked-bg:rgba(91,124,250,.1);
-  --glass-blur:blur(20px) saturate(160%);
+  --glass-blur:blur(30px) saturate(185%);
+  /* 兼容早期内联样式里用的变量名，统一映射到主题 token */
+  --border-2nd:var(--bd-2);--bg-1st:rgba(255,255,255,.72);--fg-1st:var(--fg);--bg-2:var(--surface-soft);
+  /* 毛玻璃 v2：边缘高光 + 内投影 + 分层阴影，避免"灰蒙蒙一块" */
+  --ring:rgba(255,255,255,.72);--ring-2:rgba(160,170,220,.42);
+  --inset-hi:inset 0 1px 1px rgba(255,255,255,.85);
+  --elev-1:0 1px 2px rgba(30,40,80,.05),var(--inset-hi);
+  --elev-2:0 6px 20px rgba(30,40,80,.09),0 1px 2px rgba(30,40,80,.05),var(--inset-hi);
+  --elev-3:0 22px 60px rgba(30,40,80,.16),var(--inset-hi);
+  --r-xl:26px;--r-pill:999px;
+  --ease-spring:cubic-bezier(.32,.72,0,1);--dur-2:.36s;--dur-3:.7s;
+  --grain:rgba(120,130,170,.05);
+  --skel:linear-gradient(90deg,rgba(150,160,200,.10) 25%,rgba(150,160,200,.22) 37%,rgba(150,160,200,.10) 63%);
 }
 
 [data-theme="dark"]{
@@ -51,7 +67,17 @@
   --chip-bg:rgba(107,150,255,.18);--chip-text:#6b96ff;--chip-del:rgba(107,150,255,.35);
   --modal-overlay:rgba(0,0,0,.6);--scrollbar-thumb:rgba(255,255,255,.18);
   --img-checked-bd:#6b96ff;--img-checked-bg:rgba(107,150,255,.14);
-  --glass-blur:blur(20px) saturate(140%);
+  --glass-blur:blur(30px) saturate(175%);
+  --border-2nd:var(--bd-2);--bg-1st:rgba(30,34,54,.86);--fg-1st:var(--fg);--bg-2:var(--surface-soft);
+  --ring:rgba(255,255,255,.11);--ring-2:rgba(255,255,255,.18);
+  --inset-hi:inset 0 1px 1px rgba(255,255,255,.14);
+  --elev-1:0 1px 2px rgba(0,0,0,.28),var(--inset-hi);
+  --elev-2:0 6px 22px rgba(0,0,0,.42),0 1px 2px rgba(0,0,0,.3),var(--inset-hi);
+  --elev-3:0 24px 64px rgba(0,0,0,.55),var(--inset-hi);
+  --r-xl:26px;--r-pill:999px;
+  --ease-spring:cubic-bezier(.32,.72,0,1);--dur-2:.36s;--dur-3:.7s;
+  --grain:rgba(255,255,255,.028);
+  --skel:linear-gradient(90deg,rgba(255,255,255,.05) 25%,rgba(255,255,255,.13) 37%,rgba(255,255,255,.05) 63%);
 }
 
 /* Theme transitions */
@@ -203,18 +229,34 @@ a{color:var(--accent);text-decoration:none}
 
 /* Content */
 .content{flex:1;overflow:hidden;padding:10px 16px;display:flex;flex-direction:column;gap:8px;min-height:0}
-.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;flex-shrink:0}
-.stat-card{padding:10px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--bd);box-shadow:var(--sh-sm);transition:all var(--dur) var(--ease);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);display:flex;align-items:center;gap:10px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex-shrink:0}
+.stat-card{padding:10px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--bd);box-shadow:var(--sh-sm);transition:all var(--dur) var(--ease);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0}
 .stat-card:hover{box-shadow:var(--sh-md);border-color:var(--bd-2)}
 .stat-card.accent{border-left:3px solid var(--accent)}
 .stat-card.success{border-left:3px solid var(--success)}
 .stat-card.warning{border-left:3px solid var(--warning)}
 .stat-card.info{border-left:3px solid var(--info)}
+.metrics-scope{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:-4px 0 10px 2px}
+.metrics-scope-label{font-size:11px;color:var(--fg-3rd);margin-right:2px}
+.scope-chip{font-size:11px;padding:3px 10px;border-radius:999px;border:1px solid var(--bd-2);background:var(--surface-soft);color:var(--fg-3rd);cursor:pointer}
+.scope-chip:hover{border-color:var(--accent);color:var(--fg)}
+.scope-chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.ai-health-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 12px}
+.ai-health-summary{font-size:12px;color:var(--fg-3rd)}
+.ai-health-summary b{color:var(--fg)}
+.ai-status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:1px;background:var(--fg-4th)}
+.ai-status-dot.available{background:var(--success)}
+.ai-status-dot.unavailable{background:var(--danger)}
+.ai-status-dot.untested{background:var(--fg-4th);opacity:.5}
+.ai-status-dot.probing{background:var(--warning);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.ai-provider-reason{font-size:11px;color:var(--danger)}
+.ai-provider-latency{font-size:11px;color:var(--fg-3rd);font-variant-numeric:tabular-nums}
 .stat-card .stat-icon{font-size:20px;flex-shrink:0;opacity:.8}
 .stat-card .stat-body{flex:1;min-width:0}
-.stat-label{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fg-3rd)}
+.stat-label{white-space:nowrap;font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fg-3rd)}
 .stat-value{font-size:20px;font-weight:700;margin:1px 0;letter-spacing:-.03em;color:var(--fg);line-height:1.1}
-.stat-sub{font-size:10px;color:var(--fg-3rd)}
+.stat-sub{font-size:10px;color:var(--fg-3rd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 
 /* Action bar */
 .action-bar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:6px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--bd);flex-shrink:0;box-shadow:var(--sh-sm)}
@@ -373,6 +415,16 @@ a{color:var(--accent);text-decoration:none}
 [data-theme="dark"] .boss-msg-row.hr .boss-msg-bubble{background:rgba(255,255,255,.08);color:var(--fg)}
 .boss-msg-row.me .boss-msg-bubble{background:linear-gradient(135deg,#5b7cfa,#4365e8);color:#fff;border-top-right-radius:4px}
 .boss-msg-row.system .boss-msg-bubble{background:var(--warning-bg);color:var(--warning);font-size:11.5px;padding:6px 12px;border-radius:8px;max-width:90%;text-align:center}
+/* 送达 / 已读：BOSS 在我方气泡下方显示，之前完全没渲染 */
+.boss-msg-status{font-size:11px;color:var(--fg-3rd);margin-left:6px}
+.boss-msg-status.read{color:var(--success)}
+/* 非文字消息：图片缩略图、简历/职位卡片、系统条 */
+.boss-msg-img{max-width:180px;max-height:220px;border-radius:8px;display:block;border:1px solid var(--bd-2)}
+.boss-msg-card{border:1px solid var(--bd-2);border-radius:10px;padding:9px 12px;background:var(--bg-2);font-size:12.5px;line-height:1.45;max-width:280px}
+.boss-msg-card-title{font-weight:600;color:var(--fg);margin-bottom:3px;word-break:break-all}
+.boss-msg-card-sub{font-size:11.5px;color:var(--fg-3rd)}
+.boss-msg-divider{text-align:center;font-size:11px;color:var(--fg-3rd);margin:10px 0}
+.boss-msg-row.system{justify-content:center}
 .boss-msg-meta{display:flex;gap:6px;align-items:center;margin-top:4px;font-size:10px;color:var(--fg-4th)}
 .boss-msg-row.me .boss-msg-meta{justify-content:flex-end}
 .boss-msg-time{font-size:10px;color:var(--fg-4th)}
@@ -389,6 +441,9 @@ a{color:var(--accent);text-decoration:none}
 .boss-chat-empty-hint{font-size:11px;color:var(--fg-4th)}
 @keyframes msgFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .boss-chat-loading{padding:20px;text-align:center;color:var(--fg-3rd);font-size:12px}
+/* 底部监控视图提示（一比一复刻BOSS直聘聊天页面底部输入区，但只读） */
+.boss-chat-footer{flex-shrink:0;padding:10px 18px;border-top:1px solid var(--bd);background:var(--surface-soft);display:flex;align-items:center;justify-content:center}
+.boss-chat-footer-hint{font-size:11.5px;color:var(--fg-4th);font-style:italic}
 
 /* 兼容旧聊天折叠列表样式（保留以兼容旧代码） */
 .chat-list-container{overflow-y:auto;max-height:calc(100vh - 200px);min-height:100%}
@@ -442,7 +497,7 @@ a{color:var(--accent);text-decoration:none}
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
 /* Responsive */
-@media(max-width:1200px){.stats-grid{grid-template-columns:repeat(5,1fr)}.panel-half{flex:none;width:100%}.panel-row{flex-direction:column}}
+@media(max-width:1200px){.stats-grid{grid-template-columns:repeat(4,1fr)}.panel-half{flex:none;width:100%}.panel-row{flex-direction:column}}
 @media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}.side{width:280px}.panel-row{flex-direction:column}}
 @media(max-width:600px){.side{display:none}.stats-grid{grid-template-columns:1fr}.content{padding:12px}.topbar{padding:8px 12px}.topbar-title{font-size:14px}.stat-card{padding:10px}.stat-value{font-size:20px}.btn-sm{padding:4px 8px;font-size:11px}.modal{width:95%;max-width:400px}.modal-large{width:95%;max-width:600px}}
 
@@ -540,7 +595,7 @@ a{color:var(--accent);text-decoration:none}
 /* Login Modal */
 .login-modal-overlay{position:fixed;inset:0;background:var(--modal-overlay);z-index:9999;display:none;align-items:center;justify-content:center;animation:fadeIn .25s ease;-webkit-backdrop-filter:blur(8px) saturate(140%);backdrop-filter:blur(8px) saturate(140%)}
 .login-modal-overlay.active{display:flex}
-.login-modal{position:relative;background:var(--surface);border-radius:24px;padding:0;max-width:440px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,.28),0 0 0 1px var(--bd);border:1px solid var(--bd);animation:modalPop .28s cubic-bezier(.2,.9,.3,1.2);overflow:hidden;-webkit-backdrop-filter:var(--glass-blur);8);backdrop-filter:var(--glass-blur)}
+.login-modal{position:relative;background:var(--surface);border-radius:24px;padding:0;max-width:440px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,.28),0 0 0 1px var(--bd);border:1px solid var(--bd);animation:modalPop .28s cubic-bezier(.2,.9,.3,1.2);overflow:hidden;-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
 .login-modal-header{background:linear-gradient(135deg,var(--accent),#7c5bfa);padding:28px 32px 24px;text-align:center;position:relative}
 .login-modal-header::after{content:"";position:absolute;bottom:-12px;left:0;right:0;height:24px;background:var(--surface);border-radius:18px 18px 0 0}
 .login-modal-icon{font-size:42px;line-height:1;margin-bottom:10px;display:inline-block;animation:iconBob 2.2s ease-in-out infinite;filter:drop-shadow(0 2px 8px rgba(0,0,0,.2))}
@@ -556,10 +611,139 @@ a{color:var(--accent);text-decoration:none}
 .login-modal-btn-secondary:hover{background:var(--surface-hover);color:var(--fg);box-shadow:0 2px 6px rgba(0,0,0,.06)}
 @keyframes modalPop{0%{transform:scale(.92) translateY(8px);opacity:0}60%{transform:scale(1.02)}100%{transform:scale(1) translateY(0);opacity:1}}
 @keyframes iconBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+/* ══════════════════════════════════════════════════════════
+   设计层 v2 — 毛玻璃质感 + 交互反馈（放在最后，同权重下后者生效）
+   规则：只做叠加，不改动原有布局结构；所有动效走 transform/opacity
+   ══════════════════════════════════════════════════════════ */
+
+/* 细噪点层：挡住大面积渐变的"塑料感"，不参与交互 */
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;
+  background-image:radial-gradient(var(--grain) 1px,transparent 1px);
+  background-size:3px 3px;mix-blend-mode:overlay}
+
+/* 玻璃分层：顶栏/侧栏/面板/弹窗各自一档模糊与投影 */
+.topbar{background:var(--surface);border-bottom:1px solid var(--ring);
+  box-shadow:var(--elev-1);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+.side{background:var(--side-bg);border-right:1px solid var(--ring);
+  -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+.panel{border:1px solid var(--ring);border-radius:var(--r-lg);box-shadow:var(--elev-2);
+  -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+.modal{border:1px solid var(--ring);border-radius:var(--r-xl);box-shadow:var(--elev-3);
+  -webkit-backdrop-filter:blur(40px) saturate(190%);backdrop-filter:blur(40px) saturate(190%)}
+.stat-card{border:1px solid var(--ring);box-shadow:var(--elev-1);
+  transition:transform var(--dur-2) var(--ease-spring),box-shadow var(--dur-2) var(--ease-spring)}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--elev-2)}
+.stat-card:nth-child(2){border-radius:18px 22px 22px 18px}
+.stat-card:nth-child(3){border-radius:22px 18px 18px 22px}
+
+/* 数字一律用等宽数字，跳动时不会左右抖 */
+.stat-value,.ai-provider-latency,.log-time,.greet-ai-badge,.chat-time,.boss-msg-time,
+td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.stat-label{font-size:11px;letter-spacing:.12em;text-transform:none;color:var(--fg-3rd)}
+.stat-value{font-size:26px;font-weight:650;letter-spacing:-.035em}
+
+/* 交互反馈：悬停、按下、聚焦三态都要有 */
+.btn,.side-btn,.scope-chip,.chip,.adv-toggle,.account-tab,.tab,.file-btn{cursor:pointer;
+  transition:transform var(--dur) var(--ease-spring),background var(--dur) var(--ease),
+             border-color var(--dur) var(--ease),box-shadow var(--dur) var(--ease),color var(--dur) var(--ease)}
+.btn:hover,.side-btn:hover,.file-btn:hover{transform:translateY(-1px);box-shadow:var(--elev-1)}
+.btn:active,.side-btn:active,.scope-chip:active,.chip:active,.file-btn:active{transform:scale(.97)}
+.scope-chip{border:1px solid var(--ring-2);background:var(--surface-soft);
+  border-radius:var(--r-pill);color:var(--fg-3rd);transition:all var(--dur) var(--ease-spring)}
+.scope-chip.active{box-shadow:0 4px 14px rgba(91,124,250,.32)}
+.adv-toggle{border-radius:var(--r-md);padding:8px 10px;transition:background var(--dur) var(--ease)}
+.adv-toggle:hover{background:var(--surface-soft)}
+
+/* 键盘可达：只在键盘操作时显焦点环，不污染鼠标点击 */
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.side-form-input:focus-visible,.adv-field-row input:focus-visible{outline:2px solid var(--accent);
+  outline-offset:1px;box-shadow:0 0 0 4px var(--accent-light)}
+
+/* 表格行：悬停高亮 + 状态变化有过渡 */
+.greet-table tbody tr,.job-item,.excel-file-row{transition:background var(--dur) var(--ease)}
+.greet-table tbody tr:hover,.job-item:hover,.excel-file-row:hover{background:var(--surface-soft)}
+.greet-status{transition:transform var(--dur) var(--ease-spring)}
+.greet-table tbody tr:hover .greet-status{transform:translateX(2px)}
+
+/* 聊天气泡：玻璃化 + 入场动效 */
+.boss-msg-bubble{border:1px solid var(--ring);box-shadow:var(--elev-1)}
+.boss-msg-row{animation:bubbleIn var(--dur-2) var(--ease-spring) both}
+@keyframes bubbleIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.boss-chat-item{transition:background var(--dur) var(--ease),transform var(--dur) var(--ease-spring)}
+.boss-chat-item:hover{transform:translateX(2px)}
+
+/* 骨架屏：加载时不再只有一行字 */
+.skeleton{background:var(--skel);background-size:400% 100%;animation:skel 1.4s ease-in-out infinite;
+  border-radius:var(--r-sm);height:12px;margin:8px 0}
+.skeleton.tall{height:34px}
+@keyframes skel{0%{background-position:100% 0}100%{background-position:0 0}}
+
+/* 指标数字变化时闪一下，让人知道数据是活的 */
+.pulse-once{animation:pulseOnce .6s var(--ease-spring)}
+@keyframes pulseOnce{0%{transform:scale(1)}40%{transform:scale(1.06)}100%{transform:scale(1)}}
+
+/* 断线提示条：连接状态必须一眼看得到 */
+.conn-lost{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:400;
+  display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:var(--r-pill);
+  background:var(--danger-bg);border:1px solid var(--danger);color:var(--fg);
+  font-size:12px;font-weight:600;box-shadow:var(--elev-2);animation:bubbleIn var(--dur-2) var(--ease-spring)}
+
+/* 轻提示：以前所有反馈都写进"系统日志"，而日志在首屏之外，点了没反应 = 像坏了 */
+.toast-stack{position:fixed;right:18px;bottom:18px;z-index:500;display:flex;flex-direction:column;
+  gap:8px;align-items:flex-end;pointer-events:none}
+.toast{display:flex;align-items:center;gap:8px;max-width:340px;padding:9px 14px;
+  border-radius:var(--r-pill);font-size:12px;font-weight:550;color:var(--fg);
+  background:var(--surface);border:1px solid var(--ring);box-shadow:var(--elev-2);
+  -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+  animation:toastIn var(--dur-2) var(--ease-spring) both;pointer-events:auto}
+.toast.out{animation:toastOut .24s var(--ease) forwards}
+.toast i{width:14px;height:14px;flex-shrink:0}
+.toast.ok{border-left:3px solid var(--success)}
+.toast.ok i{color:var(--success)}
+.toast.err{border-left:3px solid var(--danger)}
+.toast.err i{color:var(--danger)}
+.toast.warn{border-left:3px solid var(--warning)}
+.toast.warn i{color:var(--warning)}
+.toast.info{border-left:3px solid var(--accent)}
+.toast.info i{color:var(--accent)}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateY(6px) scale(.97)}}
+.btn[disabled]{opacity:.55;pointer-events:none}
+.btn.busy{position:relative;color:transparent}
+.btn.busy::after{content:"";position:absolute;width:12px;height:12px;border-radius:50%;
+  border:2px solid currentColor;border-top-color:transparent;color:var(--fg);
+  animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* 空状态：图标 + 一句话 + 下一步动作 */
+.empty-state{gap:10px}
+.empty-state .empty-title{font-size:13.5px;font-weight:650;color:var(--fg-2nd)}
+.empty-state .empty-desc,.empty-state .empty-hint{font-size:11.5px;color:var(--fg-3rd);max-width:340px;
+  text-align:center;line-height:1.65}
+
+/* 滚动条 */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb);border:3px solid transparent;
+  background-clip:padding-box;border-radius:var(--r-pill)}
+::-webkit-scrollbar-thumb:hover{background:var(--fg-4th);background-clip:padding-box;border:3px solid transparent}
+
+/* 状态点统一语义：运行中/待登录/Cookie */
+.acc-status-dot,.cookie-status-dot{box-shadow:0 0 0 3px var(--surface-soft)}
+.toggle-switch{transition:background var(--dur-2) var(--ease-spring),box-shadow var(--dur) var(--ease)}
+.toggle-switch:hover{box-shadow:0 0 0 4px var(--accent-light)}
+
+/* 窄屏下 4 张卡回到 2 列，标签不再被挤断行 */
+@media(max-width:1080px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+@media(prefers-reduced-motion:reduce){
+  .stat-card:hover,.btn:hover,.side-btn:hover,.boss-chat-item:hover{transform:none}
+  .boss-msg-row,.pulse-once{animation:none}
+}
 </style>
 </head>
 <body>
-<button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="切换菜单">☰</button>
+<button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="切换菜单"><i data-lucide="menu"></i></button>
 <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 <div class="app">
   <div class="side">
@@ -573,7 +757,7 @@ a{color:var(--accent);text-decoration:none}
         <div class="side-section-title">账号 <span class="badge-count" id="accBadge">1</span></div>
         <div id="accountTabs" style="margin-bottom:6px"></div>
         <div class="side-btn-row">
-          <button class="side-btn side-btn-ghost side-btn-sm" onclick="addAccount()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 添加</button>
+          <button class="side-btn side-btn-ghost side-btn-sm" onclick="addAccount()"><i data-lucide="plus" style="font-size:12px;vertical-align:-2px;margin-right:2px"></i> 添加</button>
           <button class="side-btn side-btn-ghost side-btn-sm side-btn-danger" onclick="deleteAccount()" title="删除当前账号">删除</button>
         </div>
       </div>
@@ -596,7 +780,7 @@ a{color:var(--accent);text-decoration:none}
       </div>
       <div>
         <div class="side-section-title">AI 智能解析 <span class="badge-count" id="aiBadge">关</span> <span style="font-size:10px;color:var(--fg-4th);font-weight:400">(全局共享)</span></div>
-        <div style="font-size:10px;color:var(--warning);margin-bottom:4px">⚠ 此开关仅控制打招呼的AI岗位解析，自动回复AI始终开启</div>
+        <div style="font-size:10px;color:var(--warning);margin-bottom:4px;display:flex;align-items:center;gap:4px"><i data-lucide="alert-triangle" style="font-size:11px"></i> 此开关仅控制打招呼的AI岗位解析，自动回复AI始终开启</div>
         <div class="acc-field-row" style="padding:6px 8px;border-radius:8px;background:var(--side-input-bg);border:1px solid var(--bd-2)"><label style="font-size:12px;font-weight:600">启用 AI</label><span id="aiEnabled" class="toggle-switch ai-switch" onclick="toggleAiEnabled()" style="margin-left:auto"></span></div>
         <div class="acc-field-row"><label>匹配阈值</label><input class="side-form-input" id="aiThreshold" type="number" min="0" max="100" placeholder="70" onchange="onAiChange()"></div>
         <button class="adv-toggle" id="aiProvToggle" onclick="toggleAiProviders()">
@@ -604,7 +788,22 @@ a{color:var(--accent);text-decoration:none}
           <span id="aiProvSummary" style="margin-left:4px;font-size:10px;color:var(--fg-3rd);font-weight:400"></span>
         </button>
         <div class="adv-section" id="aiProvSection">
+          <div class="ai-health-bar">
+            <button class="side-btn side-btn-ghost side-btn-sm" id="btnAiHealthAll" onclick="runAiHealth()">全部接口体检</button>
+            <span class="ai-health-summary" id="aiHealthSummary">未检测</span>
+          </div>
+          <div style="font-size:10px;color:var(--fg-4th);line-height:1.5;margin:-4px 0 8px">体检会给每个接口真实发一条 4 个字的测试消息，只有返回了内容才算可用；推理模型正文为空但 reasoning 有内容的也算可用。不可用的接口会标出具体原因（Key 失效 / 额度用尽 / 模型名不对 / 地址不对）。</div>
           <div id="aiProviders" style="margin-top:8px"></div>
+        </div>
+        <div class="acc-field-row" style="flex-direction:column;align-items:stretch;gap:4px;margin-top:8px">
+          <label style="font-size:12px;font-weight:600">自定义筛选词</label>
+          <input class="side-form-input" id="customFilterKeywords" type="text" placeholder="输入筛选关键词，逗号分隔，如：Python,SQL,大数据" style="width:100%;box-sizing:border-box" onchange="onCustomAiChange()">
+          <div style="font-size:10px;color:var(--fg-4th);line-height:1.5">这些关键词会追加到AI打分提示词中，AI会额外关注这些条件</div>
+        </div>
+        <div class="acc-field-row" style="flex-direction:column;align-items:stretch;gap:4px;margin-top:6px">
+          <label style="font-size:12px;font-weight:600">自定义打分提示词</label>
+          <textarea id="customScoringPrompt" rows="3" placeholder="输入自定义打分要求，如：优先考虑有大数据经验的岗位，扣分项：加班严重、单休" style="width:100%;min-height:80px;box-sizing:border-box;padding:6px 8px;font-size:12px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg);color:var(--fg);resize:vertical;font-family:inherit" onchange="onCustomAiChange()"></textarea>
+          <div style="font-size:10px;color:var(--fg-4th);line-height:1.5">追加到AI系统提示词后，用于自定义打分标准。留空则使用系统默认打分逻辑</div>
         </div>
         <div class="side-btn-row" style="margin-top:6px;flex-wrap:wrap">
           <button class="side-btn side-btn-ghost side-btn-sm" onclick="addAiProvider()">添加 AI 接口</button>
@@ -663,8 +862,10 @@ a{color:var(--accent);text-decoration:none}
             <div class="adv-group-title">投递/回复限制</div>
             <div class="adv-field-row"><label>每小时最多打招呼</label><input class="side-form-input" id="advMaxGreet" type="number" value="30" min="1" max="200" step="1" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label>每小时最多回复</label><input class="side-form-input" id="advMaxReply" type="number" value="30" min="1" max="200" step="1" onchange="onAdvChange()"></div>
-            <div class="adv-group-title">测试模式</div>
-            <div class="adv-field-row"><label>测试模式</label><span id="advTestMode" class="toggle-switch" onclick="toggleAdvBool('test_mode')"></span></div>
+            <div class="adv-group-title">运行时开关（改完立即生效）</div>
+            <div class="adv-field-row"><label title="照常搜索岗位、照常让 AI 判分和生成回复，只在最后一步不点发送：不消耗每日上限，也不会打扰 HR">演练模式（只筛不发）</label><span id="advDryRun" class="toggle-switch" onclick="toggleAdvBool('dry_run')"></span></div>
+            <div class="adv-field-row"><label title="容灾链不再把 30s 预算浪费在体检明确不可用的接口上（相对顺序不变）；全部不可用时自动不生效">跳过体检不可用的AI接口</label><span id="advSkipUnhealthy" class="toggle-switch" onclick="toggleAdvBool('skip_unhealthy')"></span></div>
+            <div class="adv-field-row"><label title="记录并评估每条 AI 回复的效果，不会自动改动你写的话术和规则">自进化记录与评估</label><span id="advSelfEvolve" class="toggle-switch" onclick="toggleAdvBool('self_evolve')"></span></div>
           </div>
         </div>
 
@@ -708,30 +909,30 @@ a{color:var(--accent);text-decoration:none}
   </div>
   <div class="main">
     <div class="topbar">
-      <div class="topbar-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span class="highlight">AI</span> 自动投递</div>
+      <div class="topbar-title"><i data-lucide="clock" style="font-size:18px;vertical-align:-3px;margin-right:4px"></i><span class="highlight">AI</span> 自动投递</div>
       <div class="topbar-task" id="topbarTask"></div>
       <div class="topbar-right">
         <span class="topbar-badge">v2.0</span>
         <button class="theme-toggle" onclick="toggleTheme()" title="切换主题" aria-label="切换主题">
-          <span class="toggle-icon" id="themeIcon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></span>
+          <span class="toggle-icon" id="themeIcon"><i data-lucide="sun"></i></span>
           <span id="themeLabel">暗色</span>
         </button>
       </div>
     </div>
     <div class="content">
       <div class="stats-grid">
-        <div class="stat-card accent"><div class="stat-label">总任务</div><div class="stat-value" id="statTotal">0</div><div class="stat-sub" id="statTotalSub">每日上限 150</div></div>
-        <div class="stat-card success"><div class="stat-label">已投递</div><div class="stat-value" id="statApplied">0</div><div class="stat-sub">成功投递</div></div>
-        <div class="stat-card warning"><div class="stat-label">已跳过</div><div class="stat-value" id="statSkipped">0</div><div class="stat-sub">已过滤</div></div>
-        <div class="stat-card success"><div class="stat-label">已回复</div><div class="stat-value" id="statReplySent">0</div><div class="stat-sub">AI回复</div></div>
-        <div class="stat-card warning"><div class="stat-label">回复跳过</div><div class="stat-value" id="statReplySkipped">0</div><div class="stat-sub">无需回复</div></div>
+        <div class="stat-card accent"><div class="stat-label">累计投递</div><div class="stat-value" id="statTotal">0</div><div class="stat-sub" id="statTotalSub">历史打招呼成功数</div></div>
+        <div class="stat-card success"><div class="stat-label">已投递</div><div class="stat-value" id="statApplied">0</div><div class="stat-sub" id="statAppliedSub">每日上限 150</div></div>
+        <div class="stat-card warning"><div class="stat-label">接收简历</div><div class="stat-value" id="statResume">0</div><div class="stat-sub" id="statResumeSub">累计 0</div></div>
+        <div class="stat-card info"><div class="stat-label">面试数</div><div class="stat-value" id="statInterview">0</div><div class="stat-sub" id="statInterviewSub">累计 0 · 按会话去重</div></div>
       </div>
+      <div class="metrics-scope" id="metricsScope"></div>
       <div class="action-bar">
         <span class="action-label">操作</span>
         <button class="btn btn-success btn-sm" id="btnStartAll" onclick="startAll()">启动</button>
         <button class="btn btn-danger btn-sm" id="btnStopAll" onclick="stopAll()" style="display:none">停止</button>
         <button class="btn btn-ghost btn-sm" id="btnConfirmLogin" onclick="confirmLogin()" style="display:none">确认登录</button>
-        <button class="btn btn-ghost btn-sm" onclick="saveConfig()">保存配置</button>
+        <button class="btn btn-ghost btn-sm" id="btnSaveConfig" onclick="saveConfigShow()" title="把当前侧边栏里的配置写入 bot_config.json">保存配置</button>
         <button class="btn btn-ghost btn-sm" onclick="showExcelModal()">Excel 导出</button>
         <button class="btn btn-warn btn-sm" id="btnPauseGreet" onclick="pauseGreet()" style="display:none">暂停打招呼</button>
         <button class="btn btn-success btn-sm" id="btnResumeGreet" onclick="resumeGreet()" style="display:none">恢复打招呼</button>
@@ -743,22 +944,22 @@ a{color:var(--accent);text-decoration:none}
       </div>
       <div class="panel-row">
         <div class="panel panel-full">
-          <div class="panel-header"><span class="panel-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></span><span class="panel-title">投递记录</span><div class="panel-actions"><button class="btn btn-ghost btn-sm" onclick="clearGreetTable()">清空</button></div></div>
+          <div class="panel-header"><span class="panel-icon"><i data-lucide="file-text"></i></span><span class="panel-title">投递记录</span><div class="panel-actions"><button class="btn btn-ghost btn-sm" onclick="clearCurrentRecordTab()">清空</button></div></div>
           <div class="record-tabs" style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto">
             <button class="record-tab active" onclick="switchRecordTab('greet')">打招呼记录 <span class="tab-count" id="greetTabCount">0</span></button>
             <button class="record-tab" onclick="switchRecordTab('reply')">回复记录 <span class="tab-count" id="replyTabCount">0</span></button>
             <!-- 打招呼筛选栏（和tab同一行） -->
-            <div id="greetFilterBar" style="display:flex;align-items:center;gap:4px;flex:1;justify-content:flex-end;flex-wrap:nowrap;overflow-x:auto;font-size:11px">
-              <label style="color:var(--fg-3rd)">开始日期</label>
-              <input type="date" id="greetFilterDateStart" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
-              <label style="color:var(--fg-3rd)">结束日期</label>
-              <input type="date" id="greetFilterDateEnd" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
-              <label style="color:var(--fg-3rd)">最低薪资(K)</label>
-              <input type="number" id="greetFilterSalaryMin" placeholder="如5" style="width:60px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
-              <label style="color:var(--fg-3rd)">岗位关键词</label>
-              <input type="text" id="greetFilterJob" placeholder="如数据分析" style="width:100px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
-              <label style="color:var(--fg-3rd)">状态</label>
-              <select id="greetFilterStatus" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
+            <div id="greetFilterBar" style="display:flex;align-items:center;gap:2px;flex:1;justify-content:flex-end;flex-wrap:nowrap;overflow-x:auto;font-size:11px">
+              <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">开始</label>
+              <input type="date" id="greetFilterDateStart" style="width:130px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyGreetFilter()" oninput="applyGreetFilter()">
+              <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">结束</label>
+              <input type="date" id="greetFilterDateEnd" style="width:130px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyGreetFilter()" oninput="applyGreetFilter()">
+              <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">薪资≥</label>
+              <input type="number" id="greetFilterSalaryMin" placeholder="K" style="width:50px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyGreetFilter()" oninput="applyGreetFilter()">
+              <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">岗位</label>
+              <input type="text" id="greetFilterJob" placeholder="数据分析" style="width:80px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyGreetFilter()" oninput="applyGreetFilter()">
+              <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">状态</label>
+              <select id="greetFilterStatus" style="width:80px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyGreetFilter()" oninput="applyGreetFilter()">
                 <option value="">全部</option>
                 <option value="success">成功</option>
                 <option value="skip">跳过</option>
@@ -766,20 +967,20 @@ a{color:var(--accent);text-decoration:none}
                 <option value="already">已沟通</option>
                 <option value="error">失败</option>
               </select>
-              <button class="btn btn-ghost btn-sm" onclick="applyGreetFilter()">筛选</button>
-              <button class="btn btn-ghost btn-sm" onclick="resetGreetFilter()">重置</button>
-              <span id="greetFilterCount" style="color:var(--fg-3rd)"></span>
+              <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="applyGreetFilter()">筛选</button>
+              <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="resetGreetFilter()">重置</button>
+              <span id="greetFilterCount" style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0"></span>
             </div>
             <!-- 回复筛选栏（和tab同一行，默认隐藏） -->
-            <div id="replyFilterBar" style="display:none;align-items:center;gap:4px;flex:1;justify-content:flex-end;flex-wrap:nowrap;overflow-x:auto;font-size:11px">
-              <label style="color:var(--fg-3rd)">开始日期</label>
-              <input type="date" id="replyFilterDateStart" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
-              <label style="color:var(--fg-3rd)">结束日期</label>
-              <input type="date" id="replyFilterDateEnd" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
-              <label style="color:var(--fg-3rd)">岗位关键词</label>
-              <input type="text" id="replyFilterJob" placeholder="如数据分析" style="width:100px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
-              <label style="color:var(--fg-3rd)">来源</label>
-              <select id="replyFilterSource" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
+            <div id="replyFilterBar" style="display:none;align-items:center;gap:2px;flex:1;justify-content:flex-end;flex-wrap:nowrap;overflow-x:auto;font-size:11px">
+              <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">开始</label>
+              <input type="date" id="replyFilterDateStart" style="width:130px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyReplyFilter()" oninput="applyReplyFilter()">
+              <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">结束</label>
+              <input type="date" id="replyFilterDateEnd" style="width:130px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyReplyFilter()" oninput="applyReplyFilter()">
+              <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">岗位</label>
+              <input type="text" id="replyFilterJob" placeholder="数据分析" style="width:80px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyReplyFilter()" oninput="applyReplyFilter()">
+              <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">来源</label>
+              <select id="replyFilterSource" style="width:80px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyReplyFilter()" oninput="applyReplyFilter()">
                 <option value="">全部</option>
                 <option value="ai">机器自动</option>
                 <option value="rule">规则匹配</option>
@@ -788,16 +989,16 @@ a{color:var(--accent);text-decoration:none}
                 <option value="manual">人工发送</option>
                 <option value="skip">跳过</option>
               </select>
-              <label style="color:var(--fg-3rd)">状态</label>
-              <select id="replyFilterStatus" style="padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)">
+              <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">状态</label>
+              <select id="replyFilterStatus" style="width:80px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyReplyFilter()" oninput="applyReplyFilter()">
                 <option value="">全部</option>
                 <option value="replied">已回复</option>
                 <option value="skipped">跳过</option>
                 <option value="error">失败</option>
               </select>
-              <button class="btn btn-ghost btn-sm" onclick="applyReplyFilter()">筛选</button>
-              <button class="btn btn-ghost btn-sm" onclick="resetReplyFilter()">重置</button>
-              <span id="replyFilterCount" style="color:var(--fg-3rd)"></span>
+              <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="applyReplyFilter()">筛选</button>
+              <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="resetReplyFilter()">重置</button>
+              <span id="replyFilterCount" style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0"></span>
             </div>
           </div>
           <div class="record-tab-content active" id="greetTabContent" style="padding:0;flex:1;overflow-y:auto">
@@ -806,7 +1007,7 @@ a{color:var(--accent);text-decoration:none}
               <tbody id="greetTableBody"></tbody>
             </table>
             <div class="empty-state" id="greetEmpty" style="height:100%;min-height:200px">
-              <div class="empty-icon" style="font-size:36px;opacity:0.3">📋</div>
+              <div class="empty-icon" style="font-size:36px;opacity:0.3"><i data-lucide="clipboard-list"></i></div>
               <div class="empty-desc" style="font-size:13px;font-weight:600;margin-top:8px">暂无投递记录</div>
               <div class="empty-hint" style="font-size:11px;color:var(--fg-3rd);margin-top:4px">
                 点击上方 <span style="color:var(--accent);font-weight:600">启动</span> 按钮开始自动投递
@@ -825,14 +1026,14 @@ a{color:var(--accent);text-decoration:none}
               </div>
               <div class="boss-chat-main" id="bossChatMain">
                 <div class="boss-chat-empty">
-                  <div class="boss-chat-empty-icon">💬</div>
+                  <div class="boss-chat-empty-icon"><i data-lucide="message-circle"></i></div>
                   <div class="boss-chat-empty-text">暂无回复记录</div>
                   <div class="boss-chat-empty-hint">启动机器人后，收到消息将自动回复并记录在此</div>
                 </div>
               </div>
             </div>
             <div class="empty-state" id="replyEmpty" style="height:100%;min-height:200px;display:none">
-              <div class="empty-icon" style="font-size:36px;opacity:0.3">💬</div>
+              <div class="empty-icon" style="font-size:36px;opacity:0.3"><i data-lucide="message-circle"></i></div>
               <div class="empty-desc" style="font-size:13px;font-weight:600;margin-top:8px">暂无回复记录</div>
               <div class="empty-hint" style="font-size:11px;color:var(--fg-3rd);margin-top:4px">
                 启动机器人后，收到消息将自动回复并记录在此
@@ -843,7 +1044,7 @@ a{color:var(--accent);text-decoration:none}
       </div>
       <div class="panel-row" style="margin-top:8px;flex:0 0 auto">
         <div class="panel log-panel collapsed" id="logPanel">
-          <div class="panel-header" onclick="toggleLogPanel()" style="cursor:pointer;user-select:none"><span class="panel-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span><span class="panel-title">系统日志</span><span class="log-toggle-icon" style="margin-left:auto;transition:transform .2s ease;font-size:10px;color:var(--fg-3rd)">▼</span><div class="panel-actions" onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="copyLog()">复制</button><button class="btn btn-ghost btn-sm" onclick="clearLog()">清空</button></div></div>
+          <div class="panel-header" onclick="toggleLogPanel()" style="cursor:pointer;user-select:none"><span class="panel-icon"><i data-lucide="file-text"></i></span><span class="panel-title">系统日志</span><span class="log-toggle-icon" style="margin-left:auto;transition:transform .2s ease;font-size:10px;color:var(--fg-3rd)"><i data-lucide="chevron-down"></i></span><div class="panel-actions" onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="copyLog()">复制</button><button class="btn btn-ghost btn-sm" onclick="clearLog()">清空</button></div></div>
           <div class="panel-body log-area" id="logArea"><div class="log-empty"><div class="empty-icon">等待操作...</div></div></div>
         </div>
       </div>
@@ -851,7 +1052,13 @@ a{color:var(--accent);text-decoration:none}
   </div>
 </div>
 <script>
-const socket = io();
+const socket = io({
+  transports: ['polling', 'websocket'],
+  reconnection: true,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 5000,
+  reconnectionAttempts: 10
+});
 let config = { accounts: [] };
 let activeAccountIdx = 0;
 const defaultGreeting = "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。";
@@ -870,6 +1077,8 @@ function renderAiConfig() {
   config.ai = Object.assign({enabled:true,api_key:'',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,providers:[]}, config.ai);
   setEl('aiEnabled', 'toggle-switch ai-switch' + (config.ai.enabled ? ' on' : ''));
   setVal('aiThreshold', config.ai.match_threshold || 70);
+  setVal('customFilterKeywords', (config.ai.custom_filter_keywords || []).join(', '));
+  setVal('customScoringPrompt', config.ai.custom_scoring_prompt || '');
   const badge = document.getElementById('aiBadge');
   if (badge) badge.textContent = config.ai.enabled ? '开' : '关';
   var container = document.getElementById('aiProviders');
@@ -878,8 +1087,10 @@ function renderAiConfig() {
   var providers = config.ai.providers || [];
   for (var i = 0; i < providers.length; i++) {
     var p = providers[i];
+    var h = aiHealthByIndex[i] || {status: 'untested'};
     html += '<div style="border:1px solid var(--bd-2);border-radius:8px;padding:8px;margin-bottom:6px;position:relative">';
     html += '<div style="position:absolute;right:4px;top:4px"><button class="side-btn side-btn-ghost side-btn-sm" onclick="removeAiProvider('+i+')" style="padding:2px 6px;font-size:10px">删除</button></div>';
+    html += '<div id="aiProvHealth-'+i+'" style="margin:0 60px 6px 0;font-size:11px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+aiHealthInline(h, i)+'</div>';
     html += '<div class="acc-field-row"><label>名称</label><input class="side-form-input" value="'+escAttr(p.name||'')+'" onchange="updateAiProvider('+i+',\'name\',this.value)" placeholder="如: Agnes"></div>';
     html += '<div class="acc-field-row"><label>API Key</label><input class="side-form-input" type="password" value="'+escAttr(p.api_key||'')+'" onchange="updateAiProvider('+i+',\'api_key\',this.value)" placeholder="sk-..."></div>';
     html += '<div class="acc-field-row"><label>API 地址</label><input class="side-form-input" value="'+escAttr(p.api_base||'')+'" onchange="updateAiProvider('+i+',\'api_base\',this.value)" placeholder="https://..."></div>';
@@ -888,6 +1099,7 @@ function renderAiConfig() {
     html += '</div>';
   }
   container.innerHTML = html;
+  if (typeof lucide !== 'undefined') lucide.createIcons();
   var summary = document.getElementById('aiProvSummary');
   if (summary) {
     if (providers.length === 0) {
@@ -898,6 +1110,99 @@ function renderAiConfig() {
       summary.textContent = providers.length + ' 个接口';
     }
   }
+}
+
+// ── AI 接口体检 ──
+var aiHealthByIndex = {};
+var aiHealthRunning = false;
+
+function aiHealthInline(h, i) {
+  var status = (h && h.status) || 'untested';
+  var label = {available: '可用', unavailable: '不可用', untested: '未检测', probing: '检测中'}[status] || status;
+  var out = '<span class="ai-status-dot ' + status + '" id="aiDot-' + i + '"></span>';
+  out += '<span id="aiHealthText-' + i + '" style="color:' +
+         (status === 'available' ? 'var(--success)' : status === 'unavailable' ? 'var(--danger)' : 'var(--fg-3rd)') +
+         '">' + label + '</span>';
+  if (h && h.latency_ms != null) out += '<span class="ai-provider-latency">' + h.latency_ms + 'ms</span>';
+  if (h && h.reason) out += '<span class="ai-provider-reason" title="' + escAttr(h.reason) + '">' + escHtml(h.reason) + '</span>';
+  if (h && h.note) out += '<span class="ai-provider-latency" title="' + escAttr(h.note) + '">' + escHtml(h.note) + '</span>';
+  if (h && h.checked_at) out += '<span class="ai-provider-latency">' + escHtml(h.checked_at) + '</span>';
+  out += '<button class="side-btn side-btn-ghost side-btn-sm" style="padding:1px 6px;font-size:10px;margin-left:auto" onclick="runAiHealth([' + i + '])">重测</button>';
+  return out;
+}
+
+function loadAiHealth() {
+  fetch('/api/ai/health').then(function(r) { return r.json(); }).then(function(d) {
+    if (!d || d.status !== 'ok') return;
+    aiHealthByIndex = {};
+    (d.providers || []).forEach(function(p) {
+      if (p.index != null) aiHealthByIndex[p.index] = p;
+    });
+    aiHealthRunning = !!d.running;
+    renderAiHealthSummary(d);
+    if (typeof renderAiConfig === 'function') renderAiConfig();
+  }).catch(function(e) { console.error('AI 体检结果读取失败:', e); });
+}
+
+function renderAiHealthSummary(d) {
+  var el = document.getElementById('aiHealthSummary');
+  if (!el || !d) return;
+  var s = d.summary || {};
+  var text = (s.total || 0) + ' 个接口：';
+  text += '<b style="color:var(--success)">' + (s.available || 0) + ' 可用</b> / ';
+  text += '<b style="color:var(--danger)">' + (s.unavailable || 0) + ' 不可用</b>';
+  if (d.incomplete) text += ' · <b style="color:var(--warning)">' + d.incomplete + ' 个空配置</b>';
+  if (d.duplicated) text += ' · ' + d.duplicated + ' 个重复';
+  if (s.avg_latency_ms) text += ' · 平均 ' + s.avg_latency_ms + 'ms';
+  if (d.updated_at) text += ' · ' + d.updated_at;
+  if (aiHealthRunning) text += ' · 正在检测...';
+  el.innerHTML = text;
+  var btn = document.getElementById('btnAiHealthAll');
+  if (btn) btn.textContent = aiHealthRunning ? '检测中...' : '全部接口体检';
+  var prov = document.getElementById('aiProvSummary');
+  if (prov && (d.providers || []).length) {
+    prov.textContent = (d.providers.length) + ' 个接口 · ' +
+      ((d.summary && d.summary.available) || 0) + ' 可用';
+  }
+}
+
+function runAiHealth(indexes) {
+  if (aiHealthRunning) { addLog('INFO', 'AI 体检正在进行中，请等待本轮完成'); return; }
+  var total = indexes ? indexes.length : ((config.ai && config.ai.providers) || []).length;
+  if (!total) { addLog('ERROR', '没有可检测的 AI 接口'); return; }
+  // 先把要测的行标成"检测中"，让点击立刻有反馈（请求是后台线程跑的）
+  indexes = indexes || null;
+  var list = indexes || [];
+  for (var i = 0; i < total; i++) {
+    var idx = list.length ? list[i] : i;
+    if (!aiHealthByIndex[idx]) aiHealthByIndex[idx] = {};
+    aiHealthByIndex[idx].status = 'probing';
+    var row = document.getElementById('aiProvHealth-' + idx);
+    if (row) row.innerHTML = aiHealthInline(aiHealthByIndex[idx], idx);
+  }
+  aiHealthRunning = true;
+  var allBtn = document.getElementById('btnAiHealthAll');
+  if (allBtn && !indexes) { allBtn.textContent = '检测中...'; allBtn.setAttribute('disabled', 'disabled'); }
+  fetch('/api/ai/health', {method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(indexes ? {indexes: indexes} : {})})
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d || d.status !== 'ok') {
+        aiHealthRunning = false;
+        if (allBtn) { allBtn.textContent = '全部接口体检'; allBtn.removeAttribute('disabled'); }
+        addLog('ERROR', 'AI 体检启动失败: ' + ((d && d.message) || ''));
+        toast('AI 体检启动失败：' + ((d && d.message) || ''), 'err');
+        loadAiHealth();
+      } else {
+        addLog('INFO', d.message || ('开始检测 ' + total + ' 个接口'));
+      }
+    })
+    .catch(function(e) {
+      aiHealthRunning = false;
+      if (allBtn) { allBtn.textContent = '全部接口体检'; allBtn.removeAttribute('disabled'); }
+      addLog('ERROR', 'AI 体检请求失败: ' + e);
+      toast('AI 体检请求失败：' + e.message, 'err');
+    });
 }
 
 function addAiProvider() {
@@ -953,6 +1258,14 @@ function onAiChange() {
   saveConfig();
 }
 
+function onCustomAiChange() {
+  if (!config.ai) config.ai = {};
+  config.ai.custom_filter_keywords = document.getElementById('customFilterKeywords').value
+    .split(',').map(function(s){return s.trim();}).filter(function(s){return s.length > 0;});
+  config.ai.custom_scoring_prompt = document.getElementById('customScoringPrompt').value.trim();
+  saveConfig().catch(function(){});
+}
+
 function testAi() {
   const status = document.getElementById('aiStatus');
   if (!config.ai) { if (status) status.textContent = '请先配置 AI'; return; }
@@ -987,6 +1300,7 @@ function runAiTest() {
   if (!desc) { addLog('ERROR', '请先输入岗位描述'); return; }
   const resultsEl = document.getElementById('aiTestResults');
   resultsEl.innerHTML = '<div style="color:var(--fg-3rd)">分析中...</div>';
+  if (typeof lucide !== 'undefined') lucide.createIcons();
   const startTime = Date.now();
   fetch('/api/ai/analyze', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({job_desc: desc, provider_index: 0})})
   .then(function(r){return r.json()})
@@ -1002,6 +1316,7 @@ function runAiTest() {
   })
   .catch(function(e) {
     resultsEl.innerHTML = '<div style="color:var(--danger)">失败: ' + e.message + '</div>';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     addLog('ERROR', 'AI 测试失败: ' + e.message);
   });
 }
@@ -1019,6 +1334,7 @@ function renderAiTestResults() {
       '<div style="color:var(--fg-3rd);margin-top:2px;white-space:pre-wrap">'+escHtml(r.analysis || '')+'</div>'+
     '</div>';
   }).join('');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function clearAiTest() {
@@ -1057,6 +1373,7 @@ function showExcelModal() {
         '<div class="modal-actions"><button class="btn btn-cancel" onclick="closeExcelModal()">关闭</button></div>'+
       '</div>';
     document.body.appendChild(overlay);
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }).catch(function(e){addLog('ERROR', '加载文件列表失败: ' + e)});
 }
 
@@ -1094,6 +1411,7 @@ function showPromptModal() {
         '</div>'+
       '</div>';
     document.body.appendChild(overlay);
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }).catch(function(e){addLog('ERROR', '加载提示词失败: ' + e)});
 }
 
@@ -1162,7 +1480,7 @@ function showResumeModal() {
       '<div class="modal modal-large">'+
         '<h3>简历信息预览</h3>'+
         '<div style="background:var(--warning-bg);color:var(--warning);padding:10px 12px;border-radius:8px;font-size:11px;margin-bottom:14px;display:flex;gap:8px;align-items:flex-start">'+
-          '<span style="font-size:14px">💡</span>'+
+          '<span style="font-size:14px"><i data-lucide="lightbulb"></i></span>'+
           '<span>请在 <strong>BOSS 直聘网页/App</strong> 上编辑你的简历，这里只做简历信息预览，用于 AI 匹配分析。<br>修改简历请前往：<a href="https://www.zhipin.com/web/geek/resume" target="_blank" style="color:var(--accent);text-decoration:underline">https://www.zhipin.com/web/geek/resume</a></span>'+
         '</div>'+
         '<div style="max-height:50vh;overflow-y:auto">'+rowsHtml+'</div>'+
@@ -1171,6 +1489,7 @@ function showResumeModal() {
         '</div>'+
       '</div>';
     document.body.appendChild(overlay);
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }).catch(function(e){
     addLog('ERROR', '加载简历信息失败: ' + e.message);
     // 兜底：用 config 中的简历信息
@@ -1250,6 +1569,7 @@ function showRulesModal() {
         '</div>'+
       '</div>';
     document.body.appendChild(overlay);
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }).catch(function(e){addLog('ERROR', '加载规则失败: ' + e)});
 }
 
@@ -1268,6 +1588,7 @@ function removeRuleRow(btn) {
   var list = document.getElementById('rulesList');
   if (list && list.children.length === 0) {
     list.innerHTML = '<div class="empty-state"><div class="empty-icon">暂无回复规则</div><div class="empty-desc">添加规则以控制自动回复行为</div></div>';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 }
 
@@ -1371,6 +1692,7 @@ function showTemplatesModal() {
         '</div>'+
       '</div>';
     document.body.appendChild(overlay);
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }).catch(function(e){addLog('ERROR', '加载模板失败: ' + e)});
 }
 
@@ -1457,6 +1779,7 @@ function showEvolutionModal() {
         '</div>'+
       '</div>';
     document.body.appendChild(overlay);
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }).catch(function(e){addLog('ERROR', '加载自进化数据失败: ' + e)});
 }
 
@@ -1526,20 +1849,23 @@ function loadTheme() {
 function updateThemeUI(theme) {
   const isDark = theme === 'dark';
   document.getElementById('themeIcon').innerHTML = isDark
-    ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
-    : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+    ? '<i data-lucide="moon"></i>'
+    : '<i data-lucide="sun"></i>';
+  if (typeof lucide !== 'undefined') lucide.createIcons();
   document.getElementById('themeLabel').textContent = isDark ? '亮色' : '暗色';
 }
 
 // ── 日志操作 ──
 function clearLog() {
   document.getElementById('logArea').innerHTML = '<div class="log-empty"><div class="empty-icon">等待操作...</div></div>';
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 function toggleLogPanel() {
   var p = document.getElementById('logPanel');
   p.classList.toggle('collapsed');
   var icon = p.querySelector('.log-toggle-icon');
-  if (icon) icon.textContent = p.classList.contains('collapsed') ? '▼' : '▶';
+  if (icon) icon.innerHTML = p.classList.contains('collapsed') ? '<i data-lucide="chevron-right"></i>' : '<i data-lucide="chevron-down"></i>';
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function copyLog() {
@@ -1629,6 +1955,15 @@ function saveConfig() {
     .then(function(r){if(!r.ok)throw new Error('保存失败: '+r.status);return r.json()})
     .then(function(d){if(d.status!=='ok')throw new Error(d.message||'保存失败');addLog('SYSTEM','配置已保存')})
     .catch(function(e){addLog('ERROR', '保存配置失败: '+e.message);throw e});
+}
+
+// 手动点「保存配置」才弹提示；字段改动的自动保存仍然静默，否则每改一下都弹窗很吵
+function saveConfigShow(btn) {
+  busyBtn('btnSaveConfig', true);
+  return saveConfig()
+    .then(function () { toast('配置已保存', 'ok'); })
+    .catch(function (e) { toast('保存失败：' + e.message, 'err'); })
+    .then(function () { busyBtn('btnSaveConfig', false); });
 }
 
 // ── 配置预览渲染 ──
@@ -1814,6 +2149,7 @@ function renderConfigPreview() {
   html += '</div>';
 
   container.innerHTML = html;
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // ── 账号渲染 ──
@@ -1848,6 +2184,7 @@ function renderAccounts() {
       escHtml(a.name||'未命名')+'<span class="badge">'+(a.jobs||[]).length+'</span>'+
       '<span class="'+cookieCls+'" title="'+escAttr(cookieTitle)+'" onclick="event.stopPropagation();checkAccountCookie('+i+')"></span></div>';
   }).join('');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
   if (badge) badge.textContent = config.accounts.length;
 }
 
@@ -1871,8 +2208,11 @@ function checkAccountCookie(idx) {
         };
         if (data.valid) {
           addLog('SUCCESS', '账号 ' + idx + ' Cookie 有效，已登录');
+          toast('账号「' + ((config.accounts[idx] || {}).name || idx) + '」登录态有效', 'ok');
         } else {
           addLog('WARN', '账号 ' + idx + ' Cookie 失效: ' + (data.reason || '需要重新登录'));
+          toast('账号「' + ((config.accounts[idx] || {}).name || idx) + '」需要重新登录：'
+                + (data.reason || 'Cookie 已失效'), 'warn', 6000);
         }
       } else {
         cookieStatusCache[idx] = {checking: false, valid: false, reason: (data && data.message) || '检测失败'};
@@ -1950,8 +2290,10 @@ function renderAdvSettings() {
   var _rl = config.reply || {};
   setVal('advMaxReply', _rl.max_replies_per_hour != null ? _rl.max_replies_per_hour : 30);
 
-  // 测试模式
-  setEl('advTestMode', 'toggle-switch' + (config.test_mode ? ' on' : ''));
+  // 运行时开关：演练 / 跳过不可用AI接口 / 自进化记录
+  setEl('advDryRun', 'toggle-switch' + (config.dry_run ? ' on' : ''));
+  setEl('advSkipUnhealthy', 'toggle-switch' + (((config.ai || {}).skip_unhealthy) !== false ? ' on' : ''));
+  setEl('advSelfEvolve', 'toggle-switch' + (config.self_evolve_enabled !== false ? ' on' : ''));
 }
 
 function toggleAdvSection() {
@@ -1981,9 +2323,19 @@ function toggleAdvBool(key) {
     if (!config.login) config.login = {};
     config.login.clear_cookies_on_failure = !config.login.clear_cookies_on_failure;
     setEl('advClearCookies', 'toggle-switch' + (config.login.clear_cookies_on_failure !== false ? ' on' : ''));
-  } else if (key === "test_mode") {
-    config.test_mode = !config.test_mode;
-    setEl('advTestMode', 'toggle-switch' + (config.test_mode ? ' on' : ''));
+  } else if (key === "dry_run") {
+    config.dry_run = !config.dry_run;
+    setEl('advDryRun', 'toggle-switch' + (config.dry_run ? ' on' : ''));
+    toast(config.dry_run ? '演练模式已开启：不会真的发送消息' : '演练模式已关闭：恢复真实发送');
+  } else if (key === "skip_unhealthy") {
+    if (!config.ai) config.ai = {};
+    config.ai.skip_unhealthy = !(config.ai.skip_unhealthy !== false);
+    setEl('advSkipUnhealthy', 'toggle-switch' + (config.ai.skip_unhealthy ? ' on' : ''));
+    toast(config.ai.skip_unhealthy ? '将跳过体检不可用的 AI 接口' : '容灾链恢复按原顺序全试');
+  } else if (key === "self_evolve") {
+    config.self_evolve_enabled = !(config.self_evolve_enabled !== false);
+    setEl('advSelfEvolve', 'toggle-switch' + (config.self_evolve_enabled ? ' on' : ''));
+    toast(config.self_evolve_enabled ? '自进化记录已开启' : '自进化记录已停止');
   }
   saveConfig();
 }
@@ -2026,7 +2378,10 @@ function onAdvChange() {
   config.reply.max_replies_per_hour = parseInt(document.getElementById('advMaxReply').value) || 30;
 
   // 测试模式
-  config.test_mode = document.getElementById('advTestMode').classList.contains('on');
+  config.dry_run = document.getElementById('advDryRun').classList.contains('on');
+  if (!config.ai) config.ai = {};
+  config.ai.skip_unhealthy = document.getElementById('advSkipUnhealthy').classList.contains('on');
+  config.self_evolve_enabled = document.getElementById('advSelfEvolve').classList.contains('on');
 
   saveConfig();
 }
@@ -2070,9 +2425,11 @@ function updateSbarJobs() {
         '<span class="job-del" onclick="event.stopPropagation();deleteJob('+i+')" title="删除">x</span>' +
       '</div>';
     }).join('');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   } else {
     if (badge) badge.textContent = '0';
     el.innerHTML = '<span style="color:var(--fg-3rd);font-size:10px;padding:8px 0;display:block;text-align:center">暂无岗位，点击上方添加</span>';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 }
 
@@ -2141,6 +2498,7 @@ function showJobModal(job) {
       '</div>'+
     '</div>';
   document.body.appendChild(overlay);
+  if (typeof lucide !== 'undefined') lucide.createIcons();
   if (typeof renderJobImageChips === 'function') renderJobImageChips();
   loadCityList();
 }
@@ -2154,6 +2512,7 @@ function loadCityList() {
   var dl = document.getElementById('cityList');
   if (!dl) return;
   dl.innerHTML = cityList.map(function(c){return '<option value="'+escHtml(c)+'">'}).join('');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function handleJobImageUpload(event) {
@@ -2228,8 +2587,9 @@ function showImageLightbox(src) {
     img.style.display = 'none';
     var err = document.createElement('div');
     err.style.cssText = 'color:#fff;font-size:14px;text-align:center;padding:20px';
-    err.innerHTML = '⚠ 图片加载失败<br><span style="font-size:12px;opacity:.7">' + src + '</span>';
+    err.innerHTML = '<i data-lucide="alert-triangle" style="font-size:14px;vertical-align:-2px;margin-right:4px"></i>图片加载失败<br><span style="font-size:12px;opacity:.7">' + src + '</span>';
     overlay.appendChild(err);
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   };
   img.src = src;
   overlay.appendChild(img);
@@ -2313,28 +2673,42 @@ function deleteAccount() {
 // ── 启动/停止 ──
 function startAll() {
   const btn = document.getElementById('btnStartAll');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ 启动中...'; }
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i data-lucide="loader-2" style="font-size:12px"></i> 启动中...'; if (typeof lucide !== 'undefined') lucide.createIcons(); }
   saveConfig()
     .then(function() {
-      return fetch('/api/accounts/0/start', {method:'POST'});
+      // 原来打的是 /api/accounts/0/start，按钮写着"启动"却只起了主账号
+      return fetch('/api/start', {method:'POST'});
     })
-    .then(function(r) { return r.json(); })
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
     .then(function(data) {
-      addLog('SYSTEM', '正在启动所有任务...');
+      addLog('SUCCESS', (data && data.message) || '任务已启动');
+      toast('已启动全部启用账号', 'ok');
       setControls(true);
-      if (btn) { btn.disabled = false; btn.textContent = '▶ 启动'; }
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="chevron-right" style="font-size:12px"></i> 启动'; if (typeof lucide !== 'undefined') lucide.createIcons(); }
     })
     .catch(function(e) {
       addLog('ERROR', '启动失败: ' + e.message);
-      if (btn) { btn.disabled = false; btn.textContent = '▶ 启动'; btn.style.display = ''; }
+      toast('启动失败：' + e.message, 'err');
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="chevron-right" style="font-size:12px"></i> 启动'; btn.style.display = ''; if (typeof lucide !== 'undefined') lucide.createIcons(); }
     });
 }
 
 function stopAll() {
-  fetch('/api/stop', {method:'POST'})
-    .then(function(r) { return r.json(); })
-    .then(function(data) { addLog('SYSTEM', '所有任务已停止'); })
-    .catch(function(e) { addLog('ERROR', '停止失败: ' + e.message); });
+  // 使用 AbortController 设置超时，避免 fetch 长时间挂起导致 "Failed to fetch"
+  var stopController = new AbortController();
+  var stopTimeout = setTimeout(function() { stopController.abort(); }, 8000);
+  fetch('/api/stop', {method:'POST', signal: stopController.signal})
+    .then(function(r) { clearTimeout(stopTimeout); return r.json(); })
+    .then(function(data) { addLog('SYSTEM', '所有任务已停止'); toast('已全部停止', 'info'); })
+    .catch(function(e) {
+      clearTimeout(stopTimeout);
+      // 即使 fetch 失败（如网络抖动），也认为停止指令已发出，不阻塞 UI
+      addLog('WARN', '停止请求异常（已忽略）: ' + (e && e.message ? e.message : e));
+      toast('停止请求超时，稍后请确认状态', 'warn');
+    });
   setControls(false);
 }
 
@@ -2442,7 +2816,7 @@ function downloadGreetRecords() {
 // ── 控制按钮状态 ──
 function setControls(running) {
   const s=document.getElementById('btnStartAll'),p=document.getElementById('btnStopAll'),cl=document.getElementById('btnConfirmLogin'),dot=document.getElementById('sbarDot'),st=document.getElementById('sbarStatus');
-  if(s) { s.style.display=running?'none':''; s.disabled=false; s.textContent='启动'; }
+  if(s) { s.style.display=running?'none':''; s.disabled=false; s.innerHTML='<i data-lucide="chevron-right" style="font-size:12px"></i> 启动'; if (typeof lucide !== 'undefined') lucide.createIcons(); }
   if(p) { p.style.display=running?'':'none'; }
   if(cl) { cl.style.display=running?'':'none'; }
   if(dot) dot.className='status-dot'+(running?' running':' idle');
@@ -2458,33 +2832,127 @@ function setControls(running) {
   }
 }
 
-function updateStats() {
-  // 确保 total 至少为 applied + skipped，避免"总任务0但已投递4"的不一致
-  var sumAppliedSkipped = (stats.applied||0) + (stats.skipped||0);
-  if (!stats.total || stats.total < sumAppliedSkipped) {
-    stats.total = sumAppliedSkipped;
-  }
-  const t=document.getElementById('statTotal'),a=document.getElementById('statApplied'),s=document.getElementById('statSkipped');
-  const rs=document.getElementById('statReplySent'),rsk=document.getElementById('statReplySkipped');
-  if(t) t.textContent=stats.total;
-  if(a) a.textContent=stats.applied;
-  if(s) s.textContent=stats.skipped;
-  if(rs) rs.textContent=stats.reply_sent||0;
-  if(rsk) rsk.textContent=stats.reply_skipped||0;
-  // 动态更新每日上限显示（从配置读取 max_per_day）
-  var sub = document.getElementById('statTotalSub');
-  if (sub) {
-    var dailyLimit = 150;
-    try {
-      if (config && config.rate_limit && config.rate_limit.max_per_day) {
-        dailyLimit = config.rate_limit.max_per_day;
-      }
-    } catch(e) {}
-    sub.textContent = '每日上限 ' + dailyLimit;
+// ── 漏斗指标：累计投递 / 今日已投递(上限) / 接收简历 / 面试数(按会话去重) ──
+var metricsScope = 'all';
+var metricsCache = null;
+var _metricsLastLoad = 0;
+
+function setText(id, v) {
+  var e = document.getElementById(id);
+  if (!e) return;
+  var old = e.textContent;
+  e.textContent = v;
+  // 数字变了才闪一下，静止时不动画，避免一直晃眼
+  if (old !== String(v) && old !== '') {
+    e.classList.remove('pulse-once');
+    void e.offsetWidth;
+    e.classList.add('pulse-once');
   }
 }
 
+function updateStats() {
+  // socket 每 3 秒推一次进度，这里节流到 5 秒一次，避免反复读盘
+  var now = Date.now();
+  if (now - _metricsLastLoad < 5000) return;
+  _metricsLastLoad = now;
+  loadMetrics();
+}
+
+function loadMetrics() {
+  var url = '/api/metrics' + (metricsScope === 'all' ? '' : '?account=' + metricsScope);
+  fetch(url).then(function(r) { return r.json(); }).then(function(d) {
+    if (!d || d.status !== 'ok') return;
+    metricsCache = d;
+    renderMetrics();
+  }).catch(function(e) { console.error('指标读取失败:', e); });
+}
+
+function renderMetrics() {
+  var d = metricsCache;
+  if (!d) return;
+  var daily = d.daily || {}, total = d.total || {};
+  var limit = d.daily_limit;
+  setText('statTotal', total.greet_sent || 0);
+  setText('statApplied', daily.greet_sent || 0);
+  setText('statAppliedSub', (limit && (daily.greet_sent || 0) >= limit)
+    ? '今日已达上限 ' + limit : '每日上限 ' + (limit || '未设置'));
+  setText('statResume', daily.resume_sent || 0);
+  setText('statResumeSub', '累计 ' + (total.resume_sent || 0));
+  setText('statInterview', daily.interview || 0);
+  setText('statInterviewSub', '累计 ' + (total.interview || 0) + ' · 按会话去重');
+  renderMetricsScope();
+}
+
+function renderMetricsScope() {
+  var el = document.getElementById('metricsScope');
+  if (!el) return;
+  var accs = (metricsCache && metricsCache.accounts) || [];
+  if (accs.length <= 1) { el.innerHTML = ''; return; }
+  var html = '<span class="metrics-scope-label">统计范围</span>';
+  html += '<button class="scope-chip' + (metricsScope === 'all' ? ' active' : '') +
+          '" onclick="setMetricsScope(\'all\')">全部账号</button>';
+  accs.forEach(function (a) {
+    html += '<button class="scope-chip' + (String(metricsScope) === String(a.index) ? ' active' : '') +
+            '" onclick="setMetricsScope(' + a.index + ')">' +
+            escHtml(a.name || ('账号' + a.index)) + (a.enabled ? '' : '（停用）') + '</button>';
+  });
+  el.innerHTML = html;
+}
+
+function setMetricsScope(v) {
+  metricsScope = v;
+  _metricsLastLoad = Date.now();
+  loadMetrics();
+}
+
 function escHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+
+// ── 轻提示：右下角玻璃浮层，替代"只有日志里有"的反馈 ──
+var TOAST_ICONS = {ok:'check-circle', err:'x-circle', warn:'alert-triangle', info:'info'};
+function toast(msg, level, ms) {
+  level = level || 'info';
+  var stack = document.getElementById('toastStack');
+  if (!stack) {
+    stack = document.createElement('div');
+    stack.id = 'toastStack';
+    stack.className = 'toast-stack';
+    stack.setAttribute('role', 'status');
+    stack.setAttribute('aria-live', 'polite');
+    document.body.appendChild(stack);
+  }
+  var el = document.createElement('div');
+  el.className = 'toast ' + level;
+  el.innerHTML = '<i data-lucide="' + (TOAST_ICONS[level] || 'info') + '"></i><span></span>';
+  el.querySelector('span').textContent = msg;
+  stack.appendChild(el);
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+  // 同类提示堆太多时把最老的顶掉，不让它挡住内容
+  while (stack.children.length > 4) stack.removeChild(stack.firstChild);
+  var ttl = ms || (level === 'err' ? 6000 : 3200);
+  setTimeout(function () {
+    el.classList.add('out');
+    setTimeout(function () { el.remove(); }, 260);
+  }, ttl);
+  return el;
+}
+
+// 按钮忙碌态：请求期间禁用并转圈，避免连点重复提交
+function busyBtn(id, busy) {
+  var b = document.getElementById(id);
+  if (!b) return null;
+  if (busy) {
+    b.dataset.label = b.textContent;
+    b.classList.add('busy');
+    b.setAttribute('disabled', 'disabled');
+    b.setAttribute('aria-busy', 'true');
+  } else {
+    b.classList.remove('busy');
+    b.removeAttribute('disabled');
+    b.removeAttribute('aria-busy');
+    if (b.dataset.label) b.textContent = b.dataset.label;
+  }
+  return b;
+}
 function escAttr(t){return (t||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 function addLog(level,message){
@@ -2493,15 +2961,23 @@ function addLog(level,message){
   if(empty) empty.remove();
   const div=document.createElement('div');div.className='log-entry';
   const ts=new Date().toLocaleTimeString();
-  div.innerHTML='<span class="log-time">'+ts+'</span><span class="log-message log-'+level+'">'+escHtml(message)+'</span>';
+  // 根据日志级别添加对应的 Lucide 图标前缀
+  var levelIcon = '';
+  if (level === 'ERROR') levelIcon = '<i data-lucide="x-circle" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
+  else if (level === 'WARN') levelIcon = '<i data-lucide="alert-triangle" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
+  else if (level === 'SUCCESS') levelIcon = '<i data-lucide="check-circle" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
+  else if (level === 'SYSTEM') levelIcon = '<i data-lucide="settings" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
+  else if (level === 'INFO') levelIcon = '<i data-lucide="info" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
+  div.innerHTML='<span class="log-time">'+ts+'</span><span class="log-message log-'+level+'">'+levelIcon+escHtml(message)+'</span>';
   area.appendChild(div);
+  if (typeof lucide !== 'undefined') lucide.createIcons();
   area.scrollTop=area.scrollHeight;
   while(area.children.length>300) area.removeChild(area.firstChild);
 }
 
 // ── 投递记录表格 ──
 const greetStatusMap = {
-  success: {label:'✅ 已投递', cls:'greet-status-success'},
+  success: {label:'<i data-lucide="check-circle"></i> 已投递', cls:'greet-status-success'},
   skip: {label:'跳过', cls:'greet-status-skip'},
   ai_skip: {label:'AI不匹配', cls:'greet-status-ai_skip'},
   already: {label:'已沟通', cls:'greet-status-already'},
@@ -2564,11 +3040,21 @@ function buildGreetRowHtml(data, isPending) {
     statusHtml += ' <span class="greet-pending-bar"></span>';
   }
   // 跳过原因列：仅在 skipped/failed 状态显示 skip_reason，其他状态显示 —
+  // AI 原因完整显示，不截断（允许换行）
   var skipReasonHtml = '<span style="color:var(--fg-4th)">—</span>';
   if (!isPending && data.skip_reason) {
     var statusKey = data.status || '';
     if (statusKey === 'skip' || statusKey === 'ai_skip' || statusKey === 'already' || statusKey === 'error' || data.is_skipped) {
-      skipReasonHtml = '<span style="color:var(--fg-3rd);font-size:11px" title="'+escAttr(data.skip_reason)+'">'+escHtml(data.skip_reason)+'</span>';
+      // 关键修复：AI跳过时优先显示完整的 ai_reason（AI给出的具体判定原因）
+      // 当 ai_reason 存在时，它比 skip_reason（"AI判定不匹配: xxx"）更干净
+      var reasonText = data.skip_reason;
+      if (statusKey === 'ai_skip' || (data.is_skipped && data.skip_reason && data.skip_reason.indexOf('AI判定不匹配') >= 0)) {
+        var aiReason = data.ai_reason || '';
+        if (aiReason) {
+          reasonText = aiReason;
+        }
+      }
+      skipReasonHtml = '<span style="color:var(--fg-3rd);font-size:11px;white-space:normal;word-break:break-word;display:inline-block;line-height:1.4" title="'+escAttr(reasonText)+'">'+escHtml(reasonText)+'</span>';
     }
   }
   return '<td title="'+escAttr(timeFull)+'">'+escHtml(timeDisplay)+'</td>'
@@ -2576,7 +3062,7 @@ function buildGreetRowHtml(data, isPending) {
     +'<td title="'+escAttr(data.company||'')+'">'+escHtml(data.company||'—')+'</td>'
     +'<td>'+escHtml(data.salary||'—')+'</td>'
     +'<td>'+statusHtml+'</td>'
-    +'<td>'+skipReasonHtml+'</td>'
+    +'<td style="white-space:normal;word-break:break-word">'+skipReasonHtml+'</td>'
     +'<td>'+aiBadge+'</td>';
 }
 
@@ -2594,6 +3080,7 @@ function addGreetRecord(data, prepend){
     tr.setAttribute('data-job-url', jobUrl);
     tr.innerHTML = buildGreetRowHtml(data, true);
     body.insertBefore(tr, body.firstChild);
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     const panel=body.parentElement;
     if(panel) panel.scrollTop=0;
     bumpGreetTabCount();
@@ -2606,6 +3093,7 @@ function addGreetRecord(data, prepend){
     const existingRow = body.querySelector('tr[data-job-url="' + CSS.escape(jobUrl) + '"]');
     if (existingRow) {
       existingRow.innerHTML = buildGreetRowHtml(data, false);
+      if (typeof lucide !== 'undefined') lucide.createIcons();
       return;
     }
   }
@@ -2622,6 +3110,7 @@ function addGreetRecord(data, prepend){
     const panel=body.parentElement;
     if(panel) panel.scrollTop=0;
   }
+  if (typeof lucide !== 'undefined') lucide.createIcons();
   bumpGreetTabCount();
   while(body.children.length>200) body.removeChild(body.lastChild);
 }
@@ -2713,9 +3202,10 @@ function formatChatDate(ts) {
 
 function formatChatTimeShort(ts) {
   // 简短时间格式：今天显示 HH:MM，昨天显示"昨天"，更早显示 MM-DD
+  // 兼容 ISO 格式 "2026-09-18T14:23:45" 和 "2026-09-18 14:23:45"
   if (!ts) return '';
   var s = String(ts);
-  var parts = s.split('T');
+  var parts = s.split(/[T ]/);
   if (parts.length < 2) return s.slice(0, 16);
   var datePart = parts[0];
   var timePart = parts[1].slice(0, 5);
@@ -2757,6 +3247,7 @@ function renderBossChatList(groups) {
   if (!list) return;
   if (!groups || groups.length === 0) {
     list.innerHTML = '<div class="boss-chat-loading">暂无聊天记录</div>';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     if (countBadge) countBadge.textContent = '0';
     return;
   }
@@ -2784,6 +3275,7 @@ function renderBossChatList(groups) {
     html += '</div>';
   });
   list.innerHTML = html;
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // 选中某个聊天，渲染右侧聊天内容
@@ -2817,7 +3309,8 @@ function renderBossChatDetail(chatName) {
   if (!main) return;
   var g = replyChatCache[chatName];
   if (!g) {
-    main.innerHTML = '<div class="boss-chat-empty"><div class="boss-chat-empty-icon">💬</div><div class="boss-chat-empty-text">未找到聊天记录</div></div>';
+    main.innerHTML = '<div class="boss-chat-empty"><div class="boss-chat-empty-icon"><i data-lucide="message-circle"></i></div><div class="boss-chat-empty-text">未找到聊天记录</div></div>';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     return;
   }
   var chatNameDisplay = g.chat_name || chatName;
@@ -2841,55 +3334,90 @@ function renderBossChatDetail(chatName) {
   // 消息列表
   html += '<div class="boss-chat-messages" id="bossChatMessages">';
   if (messages.length > 0) {
-    // 使用完整消息列表（来自 message_store）
-    messages.forEach(function(msg) {
-      html += renderBossMessageBubble(msg, chatNameDisplay);
+    // 使用完整消息列表（来自 message_store），按时间正序（最旧在上，最新在下）
+    // 一比一复刻BOSS直聘聊天页面：https://www.zhipin.com/web/geek/chat
+    // 关键修复：过滤掉 sender==system 或 content 以 [跳过] 开头的消息，
+    // 只显示真实 HR 消息和 bot 回复，避免界面被系统消息污染。
+    var visibleMsgs = messages.filter(function(msg) {
+      var sender = (msg.sender || (msg.is_mine ? 'bot' : 'hr') || '').toString();
+      var content = (msg.content || msg.text || '').toString();
+      if (sender === 'system') return false;
+      if (content.indexOf('[跳过]') === 0) return false;
+      if (msg.is_skipped === true && sender !== 'bot' && sender !== 'hr') return false;
+      return true;
     });
+    // 顺序以后端数组为准，前端不再重排：BOSS 的时间是"昨天 10:30"这类相对文本，
+    // 按字符串 localeCompare 会把没有时间戳的岗位卡/简历卡顶到最上面，
+    // 和线上（卡片夹在对话中间）以及后端存储顺序都不一致。
+    var sortedMsgs = visibleMsgs;
+    if (sortedMsgs.length === 0) {
+      html += '<div class="boss-chat-messages-empty">暂无消息</div>';
+    } else {
+      sortedMsgs.forEach(function(msg) {
+        html += renderBossMessageBubble(msg, chatNameDisplay);
+      });
+    }
   } else if (records.length > 0) {
-    // 兼容模式：从 reply_records 构造（旧数据）
-    records.forEach(function(r) {
-      var tFull = formatFullTimestamp(r.timestamp || r.time || '');
-      var t = formatHumanTime(r.timestamp || r.time || '');
-      var received = r.received_message || '';
-      var reply = r.reply_content || '';
-      var source = r.reply_source || '';
+    // 兼容模式：从 reply_records 构造（旧数据），按时间正序
+    // 关键修复：过滤掉 is_skipped 且无回复内容的记录，避免显示 [跳过] 系统消息
+    var visibleRecords = records.filter(function(r) {
       var isSkipped = r.is_skipped || r.status === 'skipped';
-      // HR 消息
-      if (received) {
-        html += '<div class="boss-msg-row hr">';
-        html += '  <div class="boss-msg-avatar">'+escHtml(avatarText)+'</div>';
-        html += '  <div><div class="boss-msg-bubble">'+escHtml(received)+'</div>';
-        html += '  <div class="boss-msg-meta"><span class="boss-msg-time" title="'+escAttr(tFull)+'">'+escHtml(t)+'</span></div></div>';
-        html += '</div>';
-      }
-      // 我的回复
-      if (reply) {
-        html += '<div class="boss-msg-row me">';
-        html += '  <div><div class="boss-msg-bubble">'+escHtml(reply)+'</div>';
-        html += '  <div class="boss-msg-meta"><span class="boss-msg-time" title="'+escAttr(tFull)+'">'+escHtml(t)+'</span>';
-        if (source) {
-          html += '<span class="boss-msg-source '+getReplySourceClass(source)+'">'+escHtml(getReplySourceLabel(source))+'</span>';
-        }
-        html += '</div></div>';
-        html += '</div>';
-      }
-      // 跳过
-      if (isSkipped && !reply) {
-        var skipReason = r.skip_reason || '跳过';
-        html += '<div class="boss-msg-row system"><div class="boss-msg-bubble">[跳过] '+escHtml(skipReason)+'</div></div>';
-      }
+      var reply = r.reply_content || '';
+      // 跳过且无回复的记录不显示在聊天界面（仅在回复记录表格中查看）
+      if (isSkipped && !reply) return false;
+      return true;
     });
+    var sortedRecords = visibleRecords.slice().sort(function(a, b) {
+      var ta = (a.timestamp || a.time || '').toString();
+      var tb = (b.timestamp || b.time || '').toString();
+      return ta.localeCompare(tb); // 正序：旧的在上，新的在下
+    });
+    if (sortedRecords.length === 0) {
+      html += '<div class="boss-chat-messages-empty">暂无消息</div>';
+    } else {
+      sortedRecords.forEach(function(r) {
+        var tFull = formatFullTimestamp(r.timestamp || r.time || '');
+        var t = formatHumanTime(r.timestamp || r.time || '');
+        var received = r.received_message || '';
+        var reply = r.reply_content || '';
+        var source = r.reply_source || '';
+        // HR 消息
+        if (received) {
+          html += '<div class="boss-msg-row hr">';
+          html += '  <div class="boss-msg-avatar">'+escHtml(avatarText)+'</div>';
+          html += '  <div><div class="boss-msg-bubble">'+escHtml(received)+'</div>';
+          html += '  <div class="boss-msg-meta"><span class="boss-msg-time" title="'+escAttr(tFull)+'">'+escHtml(t)+'</span></div></div>';
+          html += '</div>';
+        }
+        // 我的回复
+        if (reply) {
+          html += '<div class="boss-msg-row me">';
+          html += '  <div><div class="boss-msg-bubble">'+escHtml(reply)+'</div>';
+          html += '  <div class="boss-msg-meta"><span class="boss-msg-time" title="'+escAttr(tFull)+'">'+escHtml(t)+'</span>';
+          if (source) {
+            html += '<span class="boss-msg-source '+getReplySourceClass(source)+'">'+escHtml(getReplySourceLabel(source))+'</span>';
+          }
+          html += '</div></div>';
+          html += '</div>';
+        }
+      });
+    }
   } else {
     html += '<div class="boss-chat-messages-empty">暂无消息</div>';
   }
   html += '</div>';
+  // 底部监控视图提示（一比一复刻BOSS直聘聊天页面底部输入区，但只读）
+  html += '<div class="boss-chat-footer">';
+  html += '  <div class="boss-chat-footer-hint">此为监控视图，实际回复由机器人自动发送</div>';
+  html += '</div>';
   main.innerHTML = html;
-  // 滚动到底部
+  // 滚动到底部（最新消息在最下方，一比一复刻BOSS直聘聊天页面）
   var msgs = document.getElementById('bossChatMessages');
   if (msgs) msgs.scrollTop = msgs.scrollHeight;
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-// 渲染单条消息气泡
+// 渲染单条消息气泡（对齐 BOSS 直聘线上：气泡方向 / 送达·已读 / 图片 / 简历·职位卡片 / 系统条）
 function renderBossMessageBubble(msg, chatName) {
   var avatarText = chatName ? chatName.charAt(0) : '?';
   var content = msg.content || msg.text || '';
@@ -2899,32 +3427,67 @@ function renderBossMessageBubble(msg, chatName) {
   var t = formatHumanTime(timestamp);
   var sender = msg.sender || (msg.is_mine ? 'bot' : 'hr');
   var isMine = msg.is_mine || sender === 'bot' || sender === 'me';
-  var isSystem = sender === 'system' || msg.is_skipped;
+  var type = msg.type || 'text';
+  // 机器人自己写的跳过说明不是线上消息，继续排除；
+  // 但线上真实存在的系统条（type=system）要照常渲染，否则和 BOSS 不一致
+  if (content.indexOf('[跳过]') === 0) {
+    return '';
+  }
+  if (sender === 'system' && type !== 'system') {
+    return '';
+  }
+
+  // 气泡正文：按消息类型给不同形态，非文字消息不再显示为空白
+  var body = '';
+  if (type === 'system') {
+    return '<div class="boss-msg-row system"><div class="boss-msg-bubble">'
+         + escHtml(content) + '</div></div>';
+  } else if (type === 'image') {
+    body = msg.media
+      ? '<img class="boss-msg-img" src="' + escAttr(msg.media) + '" alt="图片" loading="lazy">'
+        + (content ? '<div class="boss-msg-card-sub" style="margin-top:4px">' + escHtml(content) + '</div>' : '')
+      : '<div class="boss-msg-card"><div class="boss-msg-card-title">[图片]</div>'
+        + '<div class="boss-msg-card-sub">' + escHtml(content) + '</div></div>';
+  } else if (type === 'resume') {
+    body = '<div class="boss-msg-card"><div class="boss-msg-card-title">📎 附件简历</div>'
+         + '<div class="boss-msg-card-sub">' + escHtml(content) + '</div></div>';
+  } else if (type === 'job_card') {
+    body = '<div class="boss-msg-card"><div class="boss-msg-card-title">职位卡片</div>'
+         + '<div class="boss-msg-card-sub">' + escHtml(content) + '</div></div>';
+  } else if (type === 'voice') {
+    body = '<div class="boss-msg-card"><div class="boss-msg-card-title">🔊 语音消息</div>'
+         + '<div class="boss-msg-card-sub">' + escHtml(content) + '</div></div>';
+  } else {
+    body = '<div class="boss-msg-bubble">' + escHtml(content) + '</div>';
+  }
+
   var html = '';
-  if (isSystem) {
-    // 系统消息（跳过记录等）
-    var skipReason = msg.skip_reason || content;
-    html += '<div class="boss-msg-row system">';
-    html += '  <div class="boss-msg-bubble">[跳过] '+escHtml(skipReason)+'</div>';
-    html += '</div>';
-  } else if (isMine) {
-    // 我的回复（右侧气泡）
+  if (isMine) {
     var source = msg.reply_source || msg.source || '';
+    // 送达 / 已读：BOSS 显示在我方气泡下方
+    var statusHtml = '';
+    if (msg.status === 'read') {
+      statusHtml = '<span class="boss-msg-status read">已读</span>';
+    } else if (msg.status === 'delivery') {
+      statusHtml = '<span class="boss-msg-status">送达</span>';
+    } else if (msg.status === 'unread') {
+      statusHtml = '<span class="boss-msg-status">未读</span>';
+    }
     html += '<div class="boss-msg-row me">';
-    html += '  <div><div class="boss-msg-bubble">'+escHtml(content)+'</div>';
-    html += '  <div class="boss-msg-meta"><span class="boss-msg-time" title="'+escAttr(tFull)+'">'+escHtml(t)+'</span>';
+    html += '  <div>' + body;
+    html += '  <div class="boss-msg-meta"><span class="boss-msg-time" title="' + escAttr(tFull) + '">' + escHtml(t) + '</span>';
+    html += statusHtml;
     // 始终显示来源标签（包括 ai/rule/intent/default/manual/skip）
     if (source) {
-      html += '<span class="boss-msg-source '+getReplySourceClass(source)+'">'+escHtml(getReplySourceLabel(source))+'</span>';
+      html += '<span class="boss-msg-source ' + getReplySourceClass(source) + '">' + escHtml(getReplySourceLabel(source)) + '</span>';
     }
     html += '</div></div>';
     html += '</div>';
   } else {
-    // HR 消息（左侧气泡）
     html += '<div class="boss-msg-row hr">';
-    html += '  <div class="boss-msg-avatar">'+escHtml(avatarText)+'</div>';
-    html += '  <div><div class="boss-msg-bubble">'+escHtml(content)+'</div>';
-    html += '  <div class="boss-msg-meta"><span class="boss-msg-time" title="'+escAttr(tFull)+'">'+escHtml(t)+'</span></div></div>';
+    html += '  <div class="boss-msg-avatar">' + escHtml(avatarText) + '</div>';
+    html += '  <div>' + body;
+    html += '  <div class="boss-msg-meta"><span class="boss-msg-time" title="' + escAttr(tFull) + '">' + escHtml(t) + '</span></div></div>';
     html += '</div>';
   }
   return html;
@@ -2959,22 +3522,29 @@ function renderReplyChatList(groups) {
     return;
   }
   if (empty) empty.style.display = 'none';
+  // 关键修复：按 last_time 倒序排列（最新在最上面），与BOSS直聘聊天列表一致。
+  // 后端 API 已保证倒序，这里再排一次作为双重保险，避免缓存或事件更新打乱顺序。
+  var sortedGroups = groups.slice().sort(function(a, b) {
+    var ta = (a.last_time || a.updated_at || '').toString();
+    var tb = (b.last_time || b.updated_at || '').toString();
+    return tb.localeCompare(ta); // 倒序：新的在上
+  });
   // 更新内存缓存
   replyChatCache = {};
-  groups.forEach(function(g) {
+  sortedGroups.forEach(function(g) {
     replyChatCache[g.chat_name || '(未知)'] = g;
   });
   // 渲染左侧聊天列表
-  renderBossChatList(groups);
+  renderBossChatList(sortedGroups);
   // 自动选中第一个聊天
-  if (!activeBossChat && groups.length > 0) {
-    selectBossChat(groups[0].chat_name || '(未知)');
+  if (!activeBossChat && sortedGroups.length > 0) {
+    selectBossChat(sortedGroups[0].chat_name || '(未知)');
   } else if (activeBossChat && replyChatCache[activeBossChat]) {
     // 重新渲染当前选中的聊天详情
     renderBossChatDetail(activeBossChat);
   }
   // 更新tab计数为分组数
-  replyRecordCount = groups.length;
+  replyRecordCount = sortedGroups.length;
   var el = document.getElementById('replyTabCount');
   if (el) el.textContent = replyRecordCount;
 }
@@ -2997,10 +3567,11 @@ function addReplyRecord(data){
   // 字段映射：兼容新旧字段名
   //   旧: incoming_message / reply_message / boss_name
   //   新: received_message / reply_content  / chat_name
-  var chatName = data.chat_name || data.boss_name || '(未知)';
+  //   后端事件: message_received / reply_sent / contact_name
+  var chatName = data.chat_name || data.boss_name || data.contact_name || '(未知)';
   if (!chatName) chatName = '(未知)';
-  var receivedMsg = data.received_message || data.incoming_message || data.message || '';
-  var replyMsg = data.reply_content || data.reply_message || data.reply || '';
+  var receivedMsg = data.received_message || data.incoming_message || data.message_received || data.message || '';
+  var replyMsg = data.reply_content || data.reply_message || data.reply_sent || data.reply || '';
   var replySource = data.reply_source || data.source || '';
   var timestamp = data.timestamp || data.time || '';
   if (!timestamp) {
@@ -3084,17 +3655,63 @@ function addReplyRecord(data){
 
 
 function clearGreetTable(){
-  var gb = document.getElementById('greetTableBody');
-  if (gb) gb.innerHTML='';
-  var ge = document.getElementById('greetEmpty');
-  if (ge) ge.style.display='flex';
-  greetRecordCount = 0;
-  var el = document.getElementById('greetTabCount');
-  if (el) el.textContent = '0';
-  // 清空筛选缓存
-  allGreetRecords = [];
-  var fc = document.getElementById('greetFilterCount');
-  if (fc) fc.textContent = '';
+  if (!confirm('确定要清空所有打招呼记录吗？此操作不可撤销。')) return;
+  fetch('/api/greet_records/clear', {method: 'POST'})
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status === 'ok') {
+        var gb = document.getElementById('greetTableBody');
+        if (gb) gb.innerHTML='';
+        var ge = document.getElementById('greetEmpty');
+        if (ge) ge.style.display='flex';
+        greetRecordCount = 0;
+        var el = document.getElementById('greetTabCount');
+        if (el) el.textContent = '0';
+        // 清空筛选缓存
+        allGreetRecords = [];
+        var fc = document.getElementById('greetFilterCount');
+        if (fc) fc.textContent = '';
+        addLog('SUCCESS', '打招呼记录已清空');
+      } else {
+        addLog('ERROR', '清空失败: ' + (data.message || '未知错误'));
+      }
+    })
+    .catch(function(e) {
+      addLog('ERROR', '清空打招呼记录异常: ' + e.message);
+    });
+}
+
+// 根据当前激活的记录 tab 智能调度清空操作
+function clearCurrentRecordTab(){
+  var replyTab = document.querySelector('.record-tab[onclick*="reply"]');
+  if (replyTab && replyTab.classList.contains('active')) {
+    clearReplyRecords();
+  } else {
+    clearGreetTable();
+  }
+}
+
+// 清空所有回复记录（调用后端 API，同步删除磁盘数据）
+function clearReplyRecords(){
+  if (!confirm('确定要清空所有回复记录吗？此操作不可撤销。')) return;
+  fetch('/api/reply_records/clear', {method: 'POST'})
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status === 'ok') {
+        // 清空筛选缓存
+        allReplyGroups = [];
+        var rc = document.getElementById('replyFilterCount');
+        if (rc) rc.textContent = '';
+        // 重新加载回复聊天列表（应为空）
+        loadReplyChatList();
+        addLog('SUCCESS', '回复记录已清空');
+      } else {
+        addLog('ERROR', '清空失败: ' + (data.message || '未知错误'));
+      }
+    })
+    .catch(function(e) {
+      addLog('ERROR', '清空回复记录异常: ' + e.message);
+    });
 }
 
 // ── 记录筛选功能 ──
@@ -3165,6 +3782,7 @@ function applyGreetFilter() {
       tr.innerHTML = buildGreetRowHtml(rec, false);
       body.appendChild(tr);
     });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }
   var fc = document.getElementById('greetFilterCount');
   if (fc) fc.textContent = '共 ' + filtered.length + ' / ' + allGreetRecords.length + ' 条';
@@ -3295,6 +3913,7 @@ function loadNotifications() {
   if (!listEl) return;
   // 显示加载中
   listEl.innerHTML = '<div class="notif-empty">加载中...</div>';
+  if (typeof lucide !== 'undefined') lucide.createIcons();
   fetch('/api/notifications')
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -3311,6 +3930,7 @@ function loadNotifications() {
     })
     .catch(function(e) {
       listEl.innerHTML = '<div class="notif-empty">加载失败</div>';
+      if (typeof lucide !== 'undefined') lucide.createIcons();
       console.error('loadNotifications:', e);
     });
 }
@@ -3321,6 +3941,7 @@ function renderNotifList(notifs) {
   if (!listEl) return;
   if (!notifs || notifs.length === 0) {
     listEl.innerHTML = '<div class="notif-empty">暂无通知</div>';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     return;
   }
   // 顶部操作按钮
@@ -3336,11 +3957,11 @@ function renderNotifList(notifs) {
     var ntime = n.time || n.created_at || n.timestamp || '';
     var nread = !!n.read || !!n.is_read;
     // 类型图标
-    var typeIcon = 'ℹ️';
-    if (ntype === 'wind_control') typeIcon = '⚠️';
-    else if (ntype === 'error') typeIcon = '❌';
-    else if (ntype === 'success') typeIcon = '✅';
-    else if (ntype === 'warn' || ntype === 'warning') typeIcon = '⚡';
+    var typeIcon = '<i data-lucide="info"></i>';
+    if (ntype === 'wind_control') typeIcon = '<i data-lucide="alert-triangle"></i>';
+    else if (ntype === 'error') typeIcon = '<i data-lucide="x-circle"></i>';
+    else if (ntype === 'success') typeIcon = '<i data-lucide="check-circle"></i>';
+    else if (ntype === 'warn' || ntype === 'warning') typeIcon = '<i data-lucide="zap"></i>';
     html += '<div class="notif-item' + (nread ? '' : ' unread') + '" onclick="markNotifRead(\'' + escAttr(String(nid)) + '\')">' +
       '<span class="notif-time">' + escHtml(ntime) + '</span>' +
       '<span class="notif-type ' + escHtml(ntype) + '">' + typeIcon + ' ' + escHtml(ntype) + '</span>' +
@@ -3348,6 +3969,7 @@ function renderNotifList(notifs) {
     '</div>';
   });
   listEl.innerHTML = html;
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // 调用 GET /api/notifications/unread_count 更新红点数字
@@ -3436,12 +4058,32 @@ socket.on('connect',function(){
   addLog('SYSTEM','WebSocket 已连接');
   document.getElementById('connStatus').textContent='已连接';
   document.getElementById('connStatus').classList.remove('disconnected');
+  hideConnLost();
 });
 socket.on('disconnect',function(){
-  addLog('ERROR','WebSocket 断开');
-  document.getElementById('connStatus').textContent='已断开';
+  // 自动重连机制已启用，断开属预期行为，使用 WARN 而非 ERROR
+  addLog('WARN','WebSocket 断开，正在自动重连...');
+  document.getElementById('connStatus').textContent='重连中';
   document.getElementById('connStatus').classList.add('disconnected');
+  showConnLost('与后端的连接断了，正在自动重连…界面数据可能不是最新');
 });
+
+// 断线横幅：顶栏小圆点太隐蔽，数据不新鲜时必须显式提醒
+function showConnLost(msg){
+  var el = document.getElementById('connLost');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'connLost';
+    el.className = 'conn-lost';
+    document.body.appendChild(el);
+  }
+  el.innerHTML = '<i data-lucide="wifi-off"></i><span>' + escHtml(msg) + '</span>';
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+function hideConnLost(){
+  var el = document.getElementById('connLost');
+  if (el) el.remove();
+}
 socket.on('bot_log',function(data){
   if(data&&data.message){
     var level = data.level || 'INFO';
@@ -3461,12 +4103,13 @@ socket.on('reply_event',function(data){
 });
 socket.on('wind_control',function(data){
   if(data && data.message){
-    addLog('WARN', '⚠️ ' + data.message);
+    addLog('WARN', data.message);
     // 显示醒目警告
     var w = document.createElement('div');
-    w.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#fef3c7;color:#92400e;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.15);max-width:90vw';
-    w.textContent = '⚠️ ' + data.message;
+    w.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#fef3c7;color:#92400e;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.15);max-width:90vw;display:flex;align-items:center;gap:8px';
+    w.innerHTML = '<i data-lucide="alert-triangle" style="font-size:16px"></i> ' + escHtml(data.message);
     document.body.appendChild(w);
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     setTimeout(function(){ w.style.opacity='0'; w.style.transition='opacity .5s'; setTimeout(function(){w.remove();},500); }, 10000);
     // 风控事件触发后刷新通知红点
     updateNotifBadge();
@@ -3488,6 +4131,27 @@ socket.on('bot_progress',function(data){
     accountStatuses[data.account_index].running = true;
     renderAccounts();
   }
+});
+socket.on('ai_health_progress',function(data){
+  if (data.index === undefined || data.index === null) return;
+  aiHealthByIndex[data.index] = Object.assign({}, aiHealthByIndex[data.index]||{}, data);
+  var row = document.getElementById('aiProvHealth-'+data.index);
+  if (row) row.innerHTML = aiHealthInline(aiHealthByIndex[data.index], data.index);
+  var el = document.getElementById('aiHealthSummary');
+  if (el) el.textContent = '正在检测 '+data.done+'/'+data.total+'：'+(data.name||'');
+  if (data.status === 'unavailable' && data.reason) {
+    addLog('WARN','AI 接口「'+(data.name||data.index)+'」不可用：'+data.reason);
+  }
+});
+socket.on('ai_health_done',function(data){
+  aiHealthRunning = false;
+  var btn = document.getElementById('btnAiHealthAll');
+  if (btn) { btn.textContent = '全部接口体检'; btn.removeAttribute('disabled'); }
+  if (data && data.error) { addLog('ERROR','AI 体检异常：'+data.error); toast('AI 体检异常：'+data.error,'err'); return; }
+  var msg = 'AI 体检完成：' + (data.checked||0) + ' 个接口里 ' + (data.available||0) + ' 个可用';
+  addLog((data.available||0) > 0 ? 'SUCCESS' : 'ERROR', msg);
+  toast(msg, (data.available||0) > 0 ? 'ok' : 'err', 5000);
+  loadAiHealth();
 });
 socket.on('status_update',function(data){
   if (data.running !== undefined) {
@@ -3542,7 +4206,7 @@ socket.on('scheduler_status', function(data) {
   }
   if (!data.running) {
     var btn = document.getElementById('btnStartAll');
-    if (btn) { btn.disabled = false; btn.textContent = '▶ 启动'; btn.style.display = ''; }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="chevron-right" style="font-size:12px"></i> 启动'; btn.style.display = ''; if (typeof lucide !== 'undefined') lucide.createIcons(); }
     var stopBtn = document.getElementById('btnStopAll');
     if (stopBtn) stopBtn.style.display = 'none';
   }
@@ -3562,6 +4226,10 @@ socket.on('connected', function(data) {});
 
 loadTheme();
 loadConfig();
+// 指标卡走 /api/metrics 的持久计数器；AI 接口体检结果开机拉一次
+loadMetrics();
+loadAiHealth();
+setInterval(loadMetrics, 20000);
 // 启动通知红点轮询（每30秒刷新一次）
 startNotifPolling();
 
@@ -3602,6 +4270,7 @@ fetch('/api/greet_records').then(function(r){return r.json();}).then(function(da
       is_skipped: rec.is_skipped,
       skip_reason: rec.skip_reason || '',
       ai_score: rec.ai_score || '',
+      ai_reason: rec.ai_reason || '',  // 关键修复：透传 AI 判定原因到前端
       actual_greeting_sent: rec.actual_greeting_sent || '',
       _feStatus: feStatus
     };
@@ -3690,6 +4359,28 @@ function deleteCookieFile() {
 
 /* ===== anime.js entrance animations ===== */
 document.addEventListener('DOMContentLoaded', function() {
+  // Esc 关弹窗：优先点"取消"按钮，让原有的取消逻辑照常跑；找不到才移除遮罩
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    var overlays = document.querySelectorAll('.modal-overlay');
+    if (!overlays.length) return;
+    var top = overlays[overlays.length - 1];
+    var cancel = null;
+    var btns = top.querySelectorAll('button');
+    for (var i = 0; i < btns.length; i++) {
+      var t = (btns[i].textContent || '').trim();
+      if (t === '取消' || t === '关闭' || btns[i].className.indexOf('btn-cancel') >= 0) {
+        cancel = btns[i]; break;
+      }
+    }
+    if (cancel) cancel.click(); else top.remove();
+    if (typeof document.activeElement !== 'undefined' && document.activeElement.blur) {
+      document.activeElement.blur();
+    }
+  });
+
+  // 初始化 Lucide 图标
+  if (typeof lucide !== 'undefined') lucide.createIcons();
   if (typeof anime === 'undefined') return;
 
   anime({
@@ -3828,6 +4519,7 @@ function loadArchiveList() {
     if (!list) return;
     if (archives.length === 0) {
       list.innerHTML = '<div style="text-align:center;color:var(--fg-3rd);padding:20px">暂无归档数据</div>';
+      if (typeof lucide !== 'undefined') lucide.createIcons();
       return;
     }
     var html = '<table class="greet-table" style="width:100%"><thead><tr><th>日期</th><th>打招呼</th><th>回复</th><th>大小</th><th>操作</th></tr></thead><tbody>';
@@ -3842,6 +4534,7 @@ function loadArchiveList() {
     });
     html += '</tbody></table>';
     list.innerHTML = html;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }).catch(function(e){
     if (desc) desc.textContent = '加载失败: ' + e;
   });
