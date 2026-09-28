@@ -2498,8 +2498,9 @@ class SelfEvolveEngine:
                 "old_value": "无拒绝检测",
                 "new_value": "检测到HR拒绝时礼貌接受，不再发打招呼语",
                 "reason": f"发现 {len(issues[self.PATTERN_HR_REJECTED_BUT_GREET])} 例"
-                          f"HR拒绝后bot仍发打招呼语，已添加拒绝检测逻辑",
-                "auto_applied": True,
+                          f"HR 拒绝后仍在打招呼；引擎内置拒绝检测已覆盖（本次未改配置）",
+                "auto_applied": False,
+                "builtin_guard": True,
                 "timestamp": timestamp,
             })
 
@@ -2510,8 +2511,9 @@ class SelfEvolveEngine:
                 "old_value": "无自我介绍去重",
                 "new_value": "检测到已发过自我介绍时不再重复发送",
                 "reason": f"发现 {len(issues[self.PATTERN_DUPLICATE_SELF_INTRO])} 例"
-                          f"重复发送自我介绍，已添加去重逻辑",
-                "auto_applied": True,
+                          f"重复发送自我介绍；引擎内置自我介绍去重已覆盖（本次未改配置）",
+                "auto_applied": False,
+                "builtin_guard": True,
                 "timestamp": timestamp,
             })
 
@@ -2522,8 +2524,9 @@ class SelfEvolveEngine:
                 "old_value": "无拒绝后简历检测",
                 "new_value": "HR拒绝后不再发送简历相关内容",
                 "reason": f"发现 {len(issues[self.PATTERN_REJECTED_BUT_SEND_RESUME])} 例"
-                          f"HR拒绝后bot仍回复简历相关内容，已添加拒绝后不发简历逻辑",
-                "auto_applied": True,
+                          f"HR 拒绝后仍回复简历相关内容；引擎内置拒绝后不发简历已覆盖（本次未改配置）",
+                "auto_applied": False,
+                "builtin_guard": True,
                 "timestamp": timestamp,
             })
 
@@ -2534,8 +2537,9 @@ class SelfEvolveEngine:
                 "old_value": "无重复消息检测",
                 "new_value": "检测到即将发送的消息与历史重复时跳过",
                 "reason": f"发现 {len(issues[self.PATTERN_DUPLICATE_MESSAGES])} 例"
-                          f"连续发送相同消息，已添加重复消息检测逻辑",
-                "auto_applied": True,
+                          f"连续发送相同消息；引擎内置重复消息跳过已覆盖（本次未改配置）",
+                "auto_applied": False,
+                "builtin_guard": True,
                 "timestamp": timestamp,
             })
 
@@ -2546,8 +2550,9 @@ class SelfEvolveEngine:
                 "old_value": "无切题检测",
                 "new_value": "回复前检查是否切题，避免答非所问",
                 "reason": f"发现 {len(issues[self.PATTERN_IRRELEVANT_REPLY])} 例"
-                          f"回复不切题，已在SYSTEM_PROMPT中添加切题要求",
-                "auto_applied": True,
+                          f"回复不切题；引擎提示词已含切题要求（本次未改配置）",
+                "auto_applied": False,
+                "builtin_guard": True,
                 "timestamp": timestamp,
             })
 

@@ -266,7 +266,7 @@ python -X utf8 tools/backfill_greet_record_account.py --apply   # 真正写盘�
 
 ### 自进化
 
-`self_evolve_enabled` 打开后，运行时会记录每条 AI 回复并在 HR 回消息后评估效果（正/负/无响应），数据写入 `data/evolution_data*.json`，界面 `/api/self_evolve/report` 读取。**它不会自动改写你写的话术和规则**——调整规则/模板需要你在接口上显式触发。
+`self_evolve_enabled` 打开后，运行时会记录每条 AI 回复并在 HR 回消息后评估效果（正/负/无响应），数据写入 `data/evolution_data*.json`，界面 `/api/self_evolve/report` 读取。**它不会自动改写你写的话术和规则**——报告里的"规则调整"是建议条目（`auto_applied: false`），命中模式时说的一律是"引擎内置防护已覆盖"（拒绝检测、自我介绍去重、拒绝后不发简历、重复消息跳过、切题要求），不是它替你改了配置。
 
 ## 配置生效范围（重要）
 
@@ -281,7 +281,7 @@ python -X utf8 tools/backfill_greet_record_account.py --apply   # 真正写盘�
 两套都要跑：单元测试管逻辑，真机浏览器套件管"打开来真的能用"。
 
 ```bash
-pytest tests/ -q                      # 381 项，约 15 秒，全部离线（不碰真实数据、不联网）
+pytest tests/ -q                      # 384 项，约 20 秒，全部离线（不碰真实数据、不联网）
 ```
 
 真机套件全部使用项目内 `cloakbrowser/chrome.exe`，且**只做读/切/筛/存配置，绝不点发送、打招呼、发简历**：

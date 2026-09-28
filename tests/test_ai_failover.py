@@ -668,6 +668,28 @@ class FlaskAiEndpointTest:
         assert "必须根据完整对话上下文回复" in d["defaults"]["system_rules"]
 
 
+class SelfEvolveReportHonestyTest:
+    """自进化报告里的"规则调整"不能谎称已经自动改过配置"""
+
+    def test_建议不标auto_applied(self):
+        import inspect
+        from boss_bot.self_evolve import SelfEvolveEngine
+        src = inspect.getsource(
+            SelfEvolveEngine.generate_rule_adjustments_from_patterns)
+        assert '"auto_applied": True' not in src, "报告声称自动应用了规则，实际没人改配置"
+        assert "builtin_guard" in src
+
+    def test_建议条目确实带builtin_guard(self):
+        from boss_bot.self_evolve import SelfEvolveEngine
+        e = SelfEvolveEngine.__new__(SelfEvolveEngine)
+        e.PATTERN_HR_REJECTED_BUT_GREET = "hr_rejected_but_greet"
+        analysis = {"issues": {e.PATTERN_HR_REJECTED_BUT_GREET: ["x", "y"]}}
+        out = e.generate_rule_adjustments_from_patterns(analysis)
+        assert out and out[0]["auto_applied"] is False
+        assert out[0]["builtin_guard"] is True
+        assert "已添加" not in out[0]["reason"]
+
+
 class RecordQualityFieldsTest:
     """兜底要留痕：记录里能看出这条是不是 AI 真判的、花了多久"""
 
