@@ -105,3 +105,12 @@ tools/full_test_report.md
 
 # 本地临时目录
 .scratch/
+
+# 页面抓取与探测产物（脚本本地生成）
+tools/*_result.json
+tools/*_structure.json
+tools/*_flow.json
+tools/*_probe.json
+tools/*_full.json
+tools/*_cards_detail.json
+tools/message_types.json
