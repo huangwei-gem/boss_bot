@@ -1147,11 +1147,14 @@ class GreetEngine:
             if success:
                 self.applied_count += 1
                 self._log("SUCCESS", f"✅ 已投递: {job_name}")
-                self._emit_greet_event(job_info, "success")
-                self._record_greet(
-                    job_info, is_greeted=True,
-                    actual_greeting_sent=job_info.get("_actual_greeting_sent", ""),
-                )
+                # _apply_job_inner 在点发送那一刻已经即时记过，这里再记一次
+                # 同一岗位就会出现两条记录
+                if not job_info.get("_recorded"):
+                    self._emit_greet_event(job_info, "success")
+                    self._record_greet(
+                        job_info, is_greeted=True,
+                        actual_greeting_sent=job_info.get("_actual_greeting_sent", ""),
+                    )
             else:
                 self.skipped_count += 1
                 self._log("WARN", f"⏭️ 跳过: {job_name}（原因: {fail_reason}）")
@@ -2092,6 +2095,11 @@ class GreetEngine:
                     pass
             self._random_delay(1, 2)
 
+            # 消息已经发出去了，先落库+推前端：下面还有图片上传、关弹窗、
+            # 关临时标签页，全跑完要 5~30 秒，那期间界面看不到投递结果
+            self._mark_chatted(job)
+            self._record_sent_now(job)
+
             # 发送后检测页面是否断开
             try:
                 _ = instance.url
@@ -2274,6 +2282,24 @@ class GreetEngine:
             pass
 
         return False
+
+    def _record_sent_now(self, job: dict):
+        """投递成功的瞬间就落库 + 推前端，不等收尾动作跑完。
+
+        原来记录要等图片上传、关弹窗、关临时标签页全部做完（5~30 秒）才写，
+        界面在这段时间里是"BOSS 上已经投了、记录里还没有"。
+        """
+        if job.get("_recorded"):
+            return
+        job["_recorded"] = True
+        try:
+            self._emit_greet_event(job, "success")
+            self._record_greet(job, is_greeted=True,
+                               actual_greeting_sent=job.get("_actual_greeting_sent", ""))
+        except Exception as e:
+            # 即时记录失败不影响投递本身，外层 send_greeting 还会补记一次
+            job["_recorded"] = False
+            self._log("WARN", f"即时记录投递结果失败，改由收尾路径补记: {e}")
 
     def _random_delay(self, min_sec: float, max_sec: float):
         """随机延迟（反爬策略）。"""

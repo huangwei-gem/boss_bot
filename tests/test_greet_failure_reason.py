@@ -131,3 +131,48 @@ class CaptchaInGreetFlowTest(unittest.TestCase):
         src = inspect.getsource(GreetEngine._apply_job_inner)
         self.assertNotIn("time.sleep(", src,
                          "投递主路径上的等待必须可被停止打断")
+
+
+class RecordOnSendTest(unittest.TestCase):
+    """投递成功的瞬间就要落库+推前端，不能等收尾动作跑完。"""
+
+    def _engine(self):
+        from unittest.mock import MagicMock
+        from boss_bot.greet_engine import GreetEngine
+        e = GreetEngine(MagicMock(), MagicMock(), account_index=0)
+        e._log = lambda *a: None
+        e.emitted = []
+        e._emit_greet_event = lambda job, status, **kw: self.emitted.append(status)
+        e._record_greet = lambda job, **kw: job.update(_rec=True)
+        return e
+
+    def setUp(self):
+        self.emitted = []
+        self.e = self._engine()
+
+    def test_写一条就推一次(self):
+        job = {"url": "u", "_actual_greeting_sent": "您好"}
+        self.e._record_sent_now(job)
+        self.assertEqual(self.emitted, ["success"])
+        self.assertTrue(job.get("_recorded"))
+
+    def test_重复调用不写两条(self):
+        """收尾路径还会再记一次，不去重就是同一岗位两条记录"""
+        job = {"url": "u"}
+        self.e._record_sent_now(job)
+        self.e._record_sent_now(job)
+        self.assertEqual(self.emitted, ["success"])
+
+    def test_即时记录发生在图片上传之前(self):
+        """图片上传+关弹窗+关标签页要 5~30 秒，界面这段时间看不到投递结果"""
+        import inspect
+        from boss_bot.greet_engine import GreetEngine
+        src = inspect.getsource(GreetEngine._apply_job_inner)
+        self.assertLess(src.index("_record_sent_now("),
+                        src.index("_send_images_after_message("))
+
+    def test_外层不重复记录(self):
+        import inspect
+        from boss_bot.greet_engine import GreetEngine
+        src = inspect.getsource(GreetEngine.send_greeting)
+        self.assertIn("_recorded", src, "成功分支要先看过是否已即时记录，避免双写")

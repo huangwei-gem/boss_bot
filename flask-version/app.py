@@ -348,7 +348,11 @@ def _ensure_manager() -> MultiAccountManager:
         def greet_event_callback(event_data: dict):
             """投递事件回调 — 推送结构化投递记录到前端表格。"""
             try:
-                event_data["time"] = datetime.now().strftime("%H:%M:%S")
+                now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                event_data["time"] = now[11:]
+                # 前端按日期筛选/人性化时间都读 timestamp，只给 HH:MM:SS 的
+                # 行会被日期条件直接滤空，看起来就像"推送到了但没显示"
+                event_data.setdefault("timestamp", now)
                 # 确保 ai_reason 字段传到前端（防御性编程）
                 event_data["ai_reason"] = event_data.get("ai_reason", "")
                 socketio.emit("greet_record", event_data)
@@ -3387,12 +3391,14 @@ def on_start_all():
     
     def _start_thread():
         try:
-            cfg = _ensure_config()
+            # 必须走 _ensure_manager()：它才会把 greet/reply/wind 三个回调接上。
+            # 以前这里自己 new 了一个不带回调的 MultiAccountManager，
+            # 投递事件根本不会 emit，界面只能靠刷新看记录；而且它调的
+            # start_all() 这个方法压根不存在，一进线程就抛"启动失败"。
+            manager = _ensure_manager()
             global _multi_manager
-            from boss_bot.main_loop import MultiAccountManager
-            if _multi_manager is None:
-                _multi_manager = MultiAccountManager(cfg)
-            _multi_manager.start_all()
+            _multi_manager = manager
+            manager.start()
             socketio.emit("bot_log", {"time": _now(), "message": "所有账号已启动", "level": "SUCCESS"})
             socketio.emit("scheduler_status", {"running": True, "current": None})
         except Exception as e:
