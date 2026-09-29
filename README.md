@@ -234,6 +234,13 @@ Cookie 点由 `GET /api/accounts/cookies` 供数（只查文件，不启动浏�
 
 - 两个引擎各持一份内存副本、写入时整档覆盖 → 后写的把先写的抹掉，会重复招呼。现在写入前读盘取并集，并用类级锁串行。
 - 快照只在首次读盘、永不更新 → 账号 1 整晚看不到账号 2 打过的岗位。现在每 60 秒重读一次并保留本地新增。
+- **端口上的浏览器未必是本账号的**：DrissionPage 的 `set_local_port` 是"端口上已经有浏览器就直接连"。
+  2026-09-29 主号整天 0 投递就是这么来的——一个一次性取证脚本（`ChromiumOptions` 既不设端口也不设
+  profile）留下孤儿浏览器占住 9222，profile 是 `Temp\DrissionPage\userData\9222`，没任何登录态，
+  主号连上它一进 BOSS 就是手机号+短信验证墙。现在 `assert_port_is_free_for` 会在启动前用
+  `Get-CimInstance Win32_Process` 读出端口上那个浏览器的 `--user-data-dir`：是本账号的照旧复用，
+  不是就直接拒绝并报出 PID、两边的 profile 和 `taskkill /PID x /T /F`。判断不了（老 CLI 不带
+  profile）时不拦——宁可放行也不能把人堵死。
 
 **按天归档**（`data/archive/日期/`）现在一天只执行一次：记录文件是共用的，两个账号各自归档时，后跑的那个会把已被清空的空文件归档掉，等于丢一整天数据。清空改走存储单例（内存 + 磁盘一起清），否则引擎下一次写记录会把旧记录整团写回。
 
@@ -313,7 +320,7 @@ BOSS 每个会话只给 2-3 条历史（`.chat-content` 的 `scrollHeight == cli
 两套都要跑：单元测试管逻辑，真机浏览器套件管"打开来真的能用"。
 
 ```bash
-pytest tests/ -q                      # 563 项，约 55 秒，全部离线（不碰真实数据、不联网）
+pytest tests/ -q                      # 585 项，约 57 秒，全部离线（不碰真实数据、不联网）
 ```
 
 真机套件全部使用项目内 `cloakbrowser/chrome.exe`，且**只做读/切/筛/存配置，绝不点发送、打招呼、发简历**：
@@ -322,7 +329,7 @@ pytest tests/ -q                      # 563 项，约 55 秒，全部离线（�
 python tests/e2e_greet_records_ui.py  # 15 项：打招呼记录表实时推送/去重/日期筛选/数据范围切换（独立浏览器，只开本地面板）
 python tests/e2e_account_ui.py        # 8 项：左侧账号行只管登录、右侧数据范围唯一切换入口、招呼语输入框真的写回配置
 python tests/e2e_per_account_config.py # 9 项：每账号一套配置。临时目录副本 + 第二个 Flask(5055)，点完不碰真实 bot_config.json
-python tools/e2e_dashboard.py         # 62 项：界面渲染、指标卡、记录筛选、开关往返、弹窗、主题、断线横幅、无 JS 报错；含 18 项多账号范围 + 7 项 AI 预算/判分质量/提示词默认值断言
+python tools/e2e_dashboard.py         # 70 项：界面渲染、指标卡、记录筛选、开关往返、弹窗、主题、断线横幅、无 JS 报错；含 20 项多账号范围 + 7 项 AI 预算/判分质量/提示词默认值断言 + 1 项配置异常响应不覆盖界面
 python tools/e2e_live_boss.py         # 26 项：反爬自检、登录态、会话读取、岗位解析、AI 真实判分、多账号归属（含另开账号2 浏览器比对会话）
 python tools/verify_dashboard_ui.py   # 14 项：指标卡口径 + AI 体检展示，产出 tools/verify_dashboard.png
 python tools/verify_three_way.py      # BOSS 页面 / 后端存储 / 前端显示 三端逐条比对
@@ -456,6 +463,12 @@ pre-click 命中逐条比对导航前后的 URL，其实是三件事：
 
 顺带记录一个反证：招呼语确实发得出去——`messages/` 里 38 个会话有 20 个含我方发出的招呼语原文，
 所以成功路径上的 `.input-area` 是真聊天框，不是假成功。
+
+**刚推送的行闪一下又没了** → 引擎是"点发送即落库+推送"，所以实时行一开始只在前端模型里。
+`loadGreetRecords` 拿到服务端列表后整份赋值，而页面加载/20 秒轮询的那次 `fetch` 往往在落库**之前**
+就发出了，落地时正好把刚推上来的那行替换掉，最长要等下一轮轮询才回来。现在推送行进
+`greetPendingRows`：服务端快照里没有它时留在表头，确认回来的那次自动并入（`_key` 相同不会变两行），
+只在当前数据范围内留（切号不能把别的号的推送挂过来），超过 3 分钟还没被确认就放手，手动清空时直接清。
 
 **改了配置没生效** → 先查 [配置生效范围](#配置生效范围重要)；仍不生效就是 bug。三端检测脚本能复现：`python tools/verify_three_way.py`。
 
