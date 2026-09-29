@@ -398,7 +398,24 @@ OpenCode 侧同理：官方文档确认 base_url 就是 `https://opencode.ai/zen
 
 **打招呼像卡死 / 岗位没被 AI 筛** → 先看 AI 卡片里的「判分质量」：兜底率就是"没被 AI 真正判过的岗位占比"。日志里找 `AI 分析异常`（后面会带上具体原因：正文被截断 / 没有 JSON / 未返回正文 / 无法判分），再跑 `python tools/measure_ai_quality.py --failover` 逐个接口看生产解析吃不吃得下，最后点界面「全部接口体检」。确认 `ai.skip_unhealthy` 为 `true`；带思考的接口把 `ai.analyze_max_tokens` 调大（界面「判分预算 tokens」）。
 
-**被跳转到 `.../web/geek/jobs?_security_check=...`** → BOSS 风控。在弹出的浏览器里手动过一次验证，或放慢节奏（调大 `rate_limit.max_per_hour` 的反面：把间隔调大、每天上限调小）。机器人此时会暂停等待。
+**被跳转到 `.../web/geek/jobs?_security_check=...`** → BOSS 风控。现在的行为是：检测到验证 → 推前端横幅「请在浏览器窗口手动完成，60 秒内没操作会自动跳过当前任务」→ `_captcha_gate()` 每 2 秒复查，人工过了就继续；超时只跳过当前任务，**连续 3 次**都没人应答才真暂停（点恢复即可）。阈值是 `main_loop.py` 的 `CAPTCHA_WAIT_SECONDS / CAPTCHA_POLL_SECONDS / CAPTCHA_STRIKES_TO_PAUSE`。
+
+以前"程序卡在那张验证图不动"是四个 bug 叠出来的，逐个记在这里免得复发：
+
+| 根因 | 位置 | 说明 |
+|------|------|------|
+| 验证码探针**从来没执行成功过** | `browser_launcher.BrowserInstance.run_js` | 它是 `run_js(self, script, *args)`，不收 `as_expr` 关键字；`check_health` 用 `run_js(js, as_expr=True)` 调用 → 直接 TypeError → 被 except 兜成 `unknown` |
+| 未知结果被当成健康 | `page_handler.check_health` | `return result if result in ("ok","captcha") else "ok"`，纯图形验证页（正文没有"验证码"三字）判成 ok 继续自动操作 |
+| 没有聊天处理器时永远报健康 | `main_loop._check_health` | `_chat_handler is None` 直接 `return "ok"`，回复引擎还没建就完全检测不到风控 |
+| 认出来了也解不开 | `main_loop` 两侧循环 | 一遇验证码就 `_greet_paused = True`，而自动恢复只认"每日上限"标记；回复侧的 `_reply_paused` 分支在 `_hot_reload_config()` 之前就 `continue`，自动恢复函数根本走不到 |
+
+另外投递路径上的重试等待原来是裸 `time.sleep`（不看 `running`），单岗位的光标重试循环能空转 3~10 分钟，
+点"停止"也醒不过来；现在换成 `_interruptible_sleep()`，并在循环里先查 `_on_captcha_page()`，
+是验证页就直接返回"需要人工验证"而不是继续找输入框。
+`_login_event` 以前只 set 不 clear，人工登录过一次之后 `_wait_for_login` 永远立刻返回，真掉登录时变成 300 秒空转。
+
+验证方式（真机只读）：`browser_data/e2e` 那个未登录 profile 打开岗位详情页会被 BOSS 送去 `_security_check`，
+`classify_health()` 两条路径都判为 `captcha`（探针判 captcha + URL 兜底）。
 
 **「未找到输入框」** → 这句现在只是类别，记录里会带上现场原因（`chat_failure_reason()` 按页面快照分档）。2026-09-29 把 `logs/` 里 116 次失败的现场逐条分类，实际是三件事：
 

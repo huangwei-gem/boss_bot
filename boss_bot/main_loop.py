@@ -60,6 +60,12 @@ GREET_ROUND_INTERVAL = 30
 # 等待人工登录时的登录态轮询间隔（秒）
 LOGIN_POLL_INTERVAL = 5
 
+# 碰到人机验证：提示人工处理，最多等这么多秒，超时跳过当前任务
+CAPTCHA_WAIT_SECONDS = 60
+CAPTCHA_POLL_SECONDS = 2
+# 连续这么多次都没人应答才真暂停，避免对着验证页无限空转
+CAPTCHA_STRIKES_TO_PAUSE = 3
+
 # 按天归档的进程内互斥：记录文件所有账号共用，一天只能归一次
 _ARCHIVE_LOCK = threading.Lock()
 
@@ -121,6 +127,8 @@ class UnifiedBotLoop:
         self._greet_paused_by_cap = False
         self._greet_cap_paused_on = ""
         self._reply_paused = False
+        # 连续多少次"等了 60 秒没人过验证"之后才真暂停
+        self._captcha_strikes = 0
         # 自进化引擎在 _init_engines 里构造（先置空，热重载/状态查询要能安全引用）
         self._self_evolve = None
         self._current_mode = "idle"
@@ -938,9 +946,9 @@ class UnifiedBotLoop:
                 # ── 健康检查：检测验证码/风控/登录态 ──
                 health = self._check_health()
                 if health == "captcha":
-                    self._log("ERROR", "⚠️ 检测到验证码/风控拦截！打招呼已暂停，请手动解除风控后恢复")
-                    self._emit_wind("检测到验证码/风控拦截，请手动解除", "captcha")
-                    self._greet_paused = True
+                    self._log("ERROR", "⚠️ 检测到验证码/风控拦截，等人工处理（最多 60 秒）")
+                    # 人工解掉就继续本轮；超时则跳过这一轮，不再永久暂停
+                    self._captcha_gate()
                     continue
                 elif health == "need_login":
                     self._log("WARN", "登录态失效，等待重新登录...")
@@ -1189,6 +1197,9 @@ class UnifiedBotLoop:
                     continue
 
                 if self._reply_paused:
+                    # 自动恢复的判断在 _hot_reload_config() 里面，而这条分支以前
+                    # 直接 continue，永远走不到 → 验证码造成的暂停解不开
+                    self._maybe_auto_resume_reply()
                     self._stop_event.wait(timeout=10)
                     continue
 
@@ -1202,9 +1213,8 @@ class UnifiedBotLoop:
                 self._sync_chat_tab()
                 health = self._check_health()
                 if health == "captcha":
-                    self._log("ERROR", "⚠️ 回复侧检测到验证码/风控拦截！自动回复已暂停，请手动解除后恢复")
-                    self._emit_wind("回复侧检测到验证码/风控拦截，请手动解除", "captcha")
-                    self._reply_paused = True
+                    self._log("ERROR", "⚠️ 回复侧检测到验证码/风控拦截，等人工处理（最多 60 秒）")
+                    self._captcha_gate(pause_field="reply")
                     continue
                 if health == "need_login":
                     self._log("WARN", "回复侧检测到登录态失效，等待重新登录...")
@@ -1814,7 +1824,51 @@ class UnifiedBotLoop:
                 self._log("DEBUG", f"健康检查异常: {e}")
                 return "unknown"
 
-        return "ok"
+        # 回复引擎还没建时也要能认出验证码页：以前这里直接回 "ok"，
+        # 于是风控页被当成健康，接着掉进打招呼侧几分钟不可中断的重试循环
+        try:
+            from boss_bot.page_handler import CAPTCHA_PROBE_JS, classify_health
+            return classify_health(instance.url, instance.run_js(CAPTCHA_PROBE_JS))
+        except Exception as e:
+            self._log("DEBUG", f"健康检查（无聊天处理器）失败: {e}")
+            return "unknown"
+
+    def _captcha_gate(self, pause_field: str = "greet") -> bool:
+        """碰到人机验证：提示人工处理，最多等 CAPTCHA_WAIT_SECONDS 秒。
+
+        True = 页面已恢复可以继续；False = 超时，调用方跳过当前任务继续跑。
+        旧逻辑是一遇验证码就 `_greet_paused = True` 永久暂停，而自动恢复只认
+        "每日上限"那个标记，验证码造成的暂停永远解不开——用户看到的就是
+        "程序卡在那张验证图不动"。连续 CAPTCHA_STRIKES_TO_PAUSE 次没人应答
+        才真暂停，止损还是要有的，但不能第一次就停。
+        pause_field 决定耗尽重试后停哪一侧（打招呼 / 回复）。
+        """
+        self._emit_wind(
+            f"BOSS 触发人机验证，请在浏览器窗口里手动完成；"
+            f"{CAPTCHA_WAIT_SECONDS} 秒内没操作会自动跳过当前任务", "captcha")
+        deadline = time.time() + CAPTCHA_WAIT_SECONDS
+        while time.time() < deadline:
+            if self._stop_event.is_set() or not self._running:
+                return False
+            if self._check_health() != "captcha":
+                self._captcha_strikes = 0
+                self._log("INFO", "人工已完成验证，继续")
+                return True
+            self._stop_event.wait(timeout=min(CAPTCHA_POLL_SECONDS,
+                                              max(0.1, deadline - time.time())))
+        self._captcha_strikes += 1
+        self._log("WARN", f"验证码等待 {CAPTCHA_WAIT_SECONDS} 秒无人应答，"
+                          f"跳过当前任务（连续 {self._captcha_strikes}/"
+                          f"{CAPTCHA_STRIKES_TO_PAUSE} 次）")
+        if self._captcha_strikes >= CAPTCHA_STRIKES_TO_PAUSE:
+            if pause_field == "reply":
+                self._reply_paused = True
+            else:
+                self._greet_paused = True
+            self._emit_wind("连续多次验证码都没人处理，"
+                            f"{'自动回复' if pause_field == 'reply' else '打招呼'}已暂停；"
+                            "手动过完验证后点恢复", "captcha")
+        return False
 
     def _try_reconnect_browser(self):
         """尝试重新连接浏览器（指数退避策略）。

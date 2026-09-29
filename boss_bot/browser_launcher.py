@@ -524,9 +524,14 @@ class BrowserInstance:
         """滚动控制对象"""
         return self._get_active().scroll
 
-    def run_js(self, script, *args):
-        """执行 JavaScript"""
-        return self._get_active().run_js(script, *args)
+    def run_js(self, script, *args, as_expr: bool = False):
+        """执行 JavaScript。
+
+        as_expr 必须转发给底层：DrissionPage 的 run_js 把它定义成关键字参数，
+        这里不收的话 `run_js(js, as_expr=True)` 会直接 TypeError，
+        调用方的 try/except 把异常吞掉，于是验证码探针从来没真正跑过。
+        """
+        return self._get_active().run_js(script, *args, as_expr=as_expr)
 
     @property
     def set(self):

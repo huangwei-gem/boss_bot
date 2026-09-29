@@ -14,6 +14,7 @@ contenteditable div（#chat-input.chat-input），"页面上没有输入框"这�
 """
 import os
 import sys
+import time
 import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -103,3 +104,30 @@ class SnapshotWiredTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class CaptchaInGreetFlowTest(unittest.TestCase):
+    """投递路径碰到验证码页：要认出来、要能被停止打断，不能空转几分钟。"""
+
+    def test_快照里有验证元素时原因要说人工验证(self):
+        from boss_bot.greet_engine import chat_failure_reason
+        snap = {"url": "https://www.zhipin.com/web/geek/jobs?_security_check=1_179",
+                "inputs": [], "chat_elements": [], "captcha": True, "error": ""}
+        self.assertIn("验证", chat_failure_reason(snap))
+
+    def test_停止后等待要立刻结束(self):
+        """裸 time.sleep 让"停止/暂停"在投递循环里完全不生效"""
+        from boss_bot.greet_engine import GreetEngine
+        e = GreetEngine.__new__(GreetEngine)
+        e.running = False
+        e._log = lambda *a: None
+        start = time.time()
+        e._interruptible_sleep(30)
+        self.assertLess(time.time() - start, 1)
+
+    def test_投递重试不再用裸sleep(self):
+        import inspect
+        from boss_bot.greet_engine import GreetEngine
+        src = inspect.getsource(GreetEngine._apply_job_inner)
+        self.assertNotIn("time.sleep(", src,
+                         "投递主路径上的等待必须可被停止打断")

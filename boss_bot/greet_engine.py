@@ -74,7 +74,11 @@ return (function(){
   for (var j = 0; j < sels.length; j++) {
     if (document.querySelector(sels[j])) found.push(sels[j]);
   }
-  return JSON.stringify({url: location.href, inputs: inputs, chat_elements: found});
+  var txt = document.body ? (document.body.innerText || "") : "";
+  var captcha = !!document.querySelector(".nc-container, .verify-wrap, .geetest_panel, .verify-box, .captcha-box")
+                || txt.indexOf("安全验证") >= 0 || txt.indexOf("拖动滑块") >= 0;
+  return JSON.stringify({url: location.href, inputs: inputs,
+                         chat_elements: found, captcha: captcha});
 })();
 '''
 
@@ -93,6 +97,8 @@ def chat_failure_reason(snap):
 
     inputs = [str(c).lower() for c in (snap.get("inputs") or [])]
     url = str(snap.get("url") or "")
+    if snap.get("captcha") or "_security_check" in url:
+        return "BOSS 弹出人机验证，需要人工在浏览器窗口完成（超时会自动跳过）"
     if any(any(k in c for k in _LOGIN_CLS) for c in inputs):
         return "BOSS 要求重新登录（页面出现手机号+短信验证码框），登录态已失效"
     if "/web/user" in url:
@@ -1200,6 +1206,9 @@ class GreetEngine:
 
     def _wait_for_login(self) -> bool:
         """等待用户手动登录。"""
+        # 必须先 clear：这个 event 只在 confirm_login 里 set 过、从不复位，
+        # 人工登录过一次之后这里就会永远立刻返回，真掉登录时变成 300 秒空转
+        self._login_event.clear()
         if not self._login_event.wait(timeout=self._login_wait_timeout):
             return False
         self._random_delay(2, 5)
@@ -1891,10 +1900,16 @@ class GreetEngine:
             for _input_retry in range(_input_attempts):
                 if input_area:
                     break
+                if not self.running:
+                    return False, "运行已停止"
+                # 验证页一直等不到输入框，重试循环会空转几分钟；认出来就直接交给人工
+                if self._on_captcha_page(instance):
+                    return False, ("BOSS 弹出人机验证，需要人工在浏览器窗口完成"
+                                   "（超过 60 秒未处理会自动跳过）")
                 if _input_retry > 0:
                     _retry_wait = 3 + _input_retry * 2  # 第2次等5秒，第3次等7秒
                     self._log("INFO", f"输入框查找重试 {_input_retry+1}/{_input_attempts}，等待 {_retry_wait} 秒...")
-                    time.sleep(_retry_wait)
+                    self._interruptible_sleep(_retry_wait)
 
                 # ① 优先在当前页面查找输入框（BOSS点击沟通后通常在当前页面弹出聊天窗口）
                 # 关键修复2：参考原项目auto_boss，点击沟通后聊天窗口在当前页面弹出（不新开标签页），
@@ -2265,6 +2280,25 @@ class GreetEngine:
         if not self.running:
             return
         time.sleep(random.uniform(min_sec, max_sec))
+
+    def _interruptible_sleep(self, seconds: float):
+        """可被停止打断的等待。
+
+        投递路径上原来用裸 time.sleep，一次就是 5~7 秒且不看 running，
+        点"停止/暂停"要等整个重试循环跑完才生效——最长能拖几分钟。
+        """
+        deadline = time.time() + max(0.0, seconds)
+        while self.running and time.time() < deadline:
+            time.sleep(min(0.2, max(0.05, deadline - time.time())))
+
+    def _on_captcha_page(self, instance) -> bool:
+        """当前页面是不是 BOSS 的人机验证页。"""
+        try:
+            from boss_bot.page_handler import CAPTCHA_PROBE_JS, classify_health
+            probe = instance.run_js(CAPTCHA_PROBE_JS, as_expr=True)
+            return classify_health(instance.url or "", probe) == "captcha"
+        except Exception:
+            return False
 
 
     # ── Cookie 管理 ──

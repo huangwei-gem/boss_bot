@@ -30,6 +30,37 @@ logger = logging.getLogger(__name__)
 BASE_DIR = Path(__file__).parent
 
 
+CAPTCHA_PROBE_JS = '''(
+    function() {
+        var body = document.body ? document.body.innerText : "";
+        if (body.indexOf("安全验证") >= 0 || body.indexOf("验证码") >= 0) return "captcha";
+        var sel = ".nc-container, .verify-wrap, .geetest_panel, .verify-box, " +
+                  ".captcha-box, .security-check, .verify-panel";
+        if (document.querySelector(sel)) return "captcha";
+        return "ok";
+    }
+)()'''
+
+
+def classify_health(url: str, probe) -> str:
+    """把"页面地址 + 探针结果"归成 ok / need_login / captcha / unknown。
+
+    探针结果不是 ok/captcha 时一律算 unknown：旧代码在这里兜底成 ok，
+    于是纯图形验证页（正文没有"验证码"三个字）被判成健康继续自动操作。
+    `_security_check` 是 BOSS 风控跳转页的固定标记，页面本身可能一个字都没有。
+    """
+    u = url or ""
+    if "_security_check" in u:
+        return "captcha"
+    if "login" in u or "/web/user" in u or "passport" in u:
+        return "need_login"
+    if probe == "captcha":
+        return "captcha"
+    if probe == "ok":
+        return "ok"
+    return "unknown"
+
+
 class BossChatHandler:
     """BOSS 聊天页面操作处理器
 
@@ -1339,19 +1370,10 @@ class BossChatHandler:
             return "ok"
         try:
             url = self.page.url or ""
-            if "login" in url or "/web/user" in url or "passport" in url:
-                return "need_login"
-            result = self.page.run_js('''(
-                function() {
-                    var body = document.body ? document.body.innerText : "";
-                    if (body.indexOf("安全验证") >= 0 || body.indexOf("验证码") >= 0) return "captcha";
-                    if (document.querySelector(".nc-container, .verify-wrap, .geetest_panel")) return "captcha";
-                    return "ok";
-                }
-            )()''', as_expr=True)
-            return result if result in ("ok", "captcha") else "ok"
+            probe = self.page.run_js(CAPTCHA_PROBE_JS, as_expr=True)
         except Exception:
             return "unknown"
+        return classify_health(url, probe)
 
     def close(self):
         """关闭浏览器
