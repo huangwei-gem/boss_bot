@@ -31,6 +31,11 @@ OUTPUT_JSON = os.path.join(PROJECT_ROOT, "tools", "chat_page_structure.json")
 OUTPUT_PNG = os.path.join(PROJECT_ROOT, "logs", "chat_page_structure.png")
 CHAT_URL = "https://www.zhipin.com/web/geek/chat"
 HOME_URL = "https://www.zhipin.com"
+# 一次性取证脚本必须自带端口和 profile：两者都不写时 DrissionPage 会落在默认
+# 9222 + 临时目录上，进程被中途杀掉就留下一个占着主号端口的空壳浏览器，
+# 机器人再启动时直接连它（没登录）→ 一整天撞登录墙。
+PORT = 9411
+PROFILE = os.path.join(PROJECT_ROOT, "browser_data", "probe_chat_structure")
 
 
 def log(msg: str) -> None:
@@ -43,6 +48,9 @@ def start_browser():
     log("启动破解浏览器...")
     co = ChromiumOptions()
     co.set_browser_path(CLOAK_BROWSER)
+    os.makedirs(PROFILE, exist_ok=True)
+    co.set_user_data_path(PROFILE)
+    co.set_local_port(PORT)
     co.set_argument('--no-sandbox')
     co.set_argument('--disable-gpu')
     co.set_argument('--no-first-run')

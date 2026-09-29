@@ -49,6 +49,9 @@ def build_browser():
 
     co = ChromiumOptions()
     co.set_browser_path(CLOAK_BROWSER)
+    # 自带 profile：auto_port 只解决端口，不写 user-data-dir 时 DrissionPage 用
+    # 临时目录，脚本被中途杀掉就会留下一个和机器人无关的空壳浏览器进程
+    co.set_user_data_path(os.path.join(PROJECT_ROOT, "browser_data", "probe_full_fields"))
     co.auto_port()
     co.set_argument('--no-sandbox')
     co.set_argument('--disable-gpu')

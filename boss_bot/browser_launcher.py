@@ -17,6 +17,7 @@ DrissionPage 在 macOS arm64 上的 bug 说明：
 """
 
 import os
+import re
 import sys
 import time
 import json
@@ -886,6 +887,111 @@ def _launch_macos(
     return BrowserInstance(chromium=chromium, tab=tab, process=proc)
 
 
+# ─────────────────────────────────────────────
+# 端口占用守卫
+# ─────────────────────────────────────────────
+# DrissionPage 的 set_local_port 语义是"这个端口上已经有浏览器就直接连它"，
+# 所以一次性脚本留下的孤儿浏览器会让账号连着它的空壳跑。2026-09-29 主号整天
+# 0 条投递就是这个：9222 上挂着一个 profile 为 Temp\DrissionPage\userData\9222
+# 的孤儿（没登录），主号一连上去就撞手机号+短信验证的登录墙。
+DEFAULT_DEBUG_PORT = 9222
+
+
+def parse_browser_cmdline(cmdline: str, pid: int = 0) -> dict:
+    """从浏览器命令行里读出调试端口和 user-data-dir。
+
+    没写端口的按 DrissionPage 默认的 9222 算——事故源头正是既不设端口也不设
+    profile 的一次性脚本。
+    """
+    cmdline = cmdline or ""
+    m = re.search(r"--remote-debugging-port=(\d+)", cmdline)
+    d = re.search(r'--user-data-dir="?([^"\s]+)', cmdline)
+    if cmdline.startswith('"'):
+        exe = cmdline.split('"')[1]
+    else:
+        parts = cmdline.split()
+        exe = parts[0] if parts else ""
+    return {
+        "pid": pid,
+        "port": int(m.group(1)) if m else DEFAULT_DEBUG_PORT,
+        "user_data_dir": d.group(1).strip('"') if d else "",
+        "exe": exe,
+    }
+
+
+def same_profile(a: str, b: str) -> bool:
+    """比较两个 --user-data-dir：Windows 路径大小写不敏感、分隔符混用、尾斜杠随意"""
+    if not a or not b:
+        return False
+    return (os.path.normcase(os.path.normpath(str(a).strip().strip('"')))
+            == os.path.normcase(os.path.normpath(str(b).strip().strip('"'))))
+
+
+def _browser_owners() -> list:
+    """机器上所有带调试端口的浏览器进程：[{pid, port, user_data_dir, exe}]。
+
+    只在 Windows 上查（事故环境就是 Windows）。查不到就返回空表：守卫退化成
+    "不拦"，绝不能因为拿不到诊断信息反而把正常启动堵死。
+    """
+    if not sys.platform.startswith("win"):
+        return []
+    ps = ("Get-CimInstance Win32_Process -Filter \"Name='chrome.exe' or Name='msedge.exe'\""
+          " | ForEach-Object { if ($_.CommandLine -match 'remote-debugging-port')"
+          " { [string]$_.ProcessId + '|' + $_.CommandLine } }")
+    try:
+        r = subprocess.run(["powershell", "-NoProfile", "-Command", ps],
+                           capture_output=True, timeout=10)
+        raw = r.stdout or b""
+    except Exception:
+        return []
+    # 不能开 text=True：控制台按 cp936 输出时 utf-8 解码会在读取线程里抛，
+    # 结果是"查不到任何浏览器"→ 守卫静默失效（真机踩过一次，主号就是这么
+    # 连着空壳浏览器跑了一整天）。先按 utf-8 严解，不行再退到 GBK/cp936。
+    for enc in ("utf-8", "gbk", "cp936"):
+        try:
+            out = raw.decode(enc)
+            break
+        except UnicodeDecodeError:
+            continue
+    else:
+        out = raw.decode("utf-8", "replace")
+    records = []
+    for line in out.splitlines():
+        pid_text, _, cmdline = line.partition("|")
+        if not cmdline.strip():
+            continue
+        try:
+            rec = parse_browser_cmdline(cmdline, pid=int(pid_text.strip()))
+        except (TypeError, ValueError):
+            continue
+        records.append(rec)
+    return records
+
+
+def assert_port_is_free_for(port: int, user_data_dir: str, owners=None) -> None:
+    """端口上挂着别的 profile 的浏览器时直接拒绝，绝不静默连上去。
+
+    不带 profile（老 CLI）时无从判定，保持原行为。
+    """
+    if not user_data_dir:
+        return
+    if owners is None:
+        owners = _browser_owners()
+    for owner in owners:
+        if int(owner.get("port") or 0) != int(port):
+            continue
+        if same_profile(owner.get("user_data_dir", ""), user_data_dir):
+            return          # 自己账号留下的浏览器，复用正是想要的
+        found = owner.get("user_data_dir") or "（没写 --user-data-dir，DrissionPage 临时目录）"
+        raise RuntimeError(
+            f"端口 {port} 上挂着一个不是本账号的浏览器："
+            f"PID={owner.get('pid')} profile={found}，而本账号要用 {user_data_dir}。"
+            f" DrissionPage 会直接连端口上已有的浏览器，继续下去等于拿一个没登录的"
+            f"空壳跑，BOSS 立刻弹登录墙。\n"
+            f"确认那个浏览器没人在用之后执行：taskkill /PID {owner.get('pid')} /T /F"
+        )
+
+
 def _launch_windows(
     chrome_path: str,
     headless: bool,
@@ -910,6 +1016,10 @@ def _launch_windows(
     co.set_argument('--disable-features=DnsOverHttps')
     co.set_argument('--disable-blink-features=AutomationControlled')
     co.set_argument(f'--window-size={viewport_width},{viewport_height}')
+
+    # 先确认端口上没有别人的浏览器，再动本账号的 profile 目录
+    if port > 0 and _is_port_open("127.0.0.1", port):
+        assert_port_is_free_for(port, user_data_dir)
 
     # 设置用户数据目录（多账号隔离）
     if user_data_dir:
