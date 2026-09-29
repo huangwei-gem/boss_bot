@@ -733,6 +733,21 @@ def api_account_confirm_login(idx: int):
     return jsonify({"status": "ok", "message": f"账号 {idx} 登录已确认"})
 
 
+@app.route("/api/accounts/<int:idx>/login", methods=["POST"])
+def api_account_login(idx: int):
+    """只把该账号的浏览器停在 BOSS 登录页等人工登录，不启动投递/回复。
+
+    左侧账号列表的"登录"按钮走这里。以前想登录只能点启动，一下去整条
+    流水线就跑起来了，新增的账号没法先登录再投。
+    """
+    manager, error = _validate_account_index(idx)
+    if error:
+        return error
+    result = manager._loops[idx].open_login_page()
+    socketio.emit("status_update", _enrich_status(manager.get_status()))
+    return jsonify(result)
+
+
 @app.route("/api/accounts/<int:idx>/status", methods=["GET"])
 def api_account_status(idx: int):
     """获取指定账号的运行状态。"""
@@ -2582,7 +2597,18 @@ def api_add_account():
         cfg.greet.accounts.append(new_account)
         cfg.save()
 
-        return jsonify({"status": "ok", "message": f"账号「{name}」已添加，Cookie文件: {cookie_file}"})
+        # 循环是按账号建的：不重建管理器，新账号就没有 loop，
+        # 于是"登录/启动"都会报"账号未启用或不存在"
+        note = ""
+        global _multi_manager
+        if _multi_manager is not None:
+            if _multi_manager.get_status().get("running"):
+                note = "（有账号正在运行，新账号要等下次全部启动后才有独立循环）"
+            else:
+                _multi_manager = None
+
+        return jsonify({"status": "ok",
+                        "message": f"账号「{name}」已添加，Cookie文件: {cookie_file}" + note})
     except Exception as e:
         logger.exception("添加账号失败")
         return jsonify({"status": "error", "message": str(e)}), 500

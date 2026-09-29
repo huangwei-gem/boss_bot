@@ -140,6 +140,9 @@ a{color:var(--accent);text-decoration:none}
 /* Account tabs */
 .account-tab{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;font-size:11.5px;font-weight:500;border-radius:20px;background:var(--side-input-bg);color:var(--fg-2nd);border:1px solid var(--side-input-bd);transition:all var(--dur) var(--ease);cursor:pointer;margin-right:4px;margin-bottom:4px}
 .account-tab:hover{background:var(--surface-hover);color:var(--fg);box-shadow:var(--sh-sm)}
+/* 登录按钮是这一行的主要动作，行本身不再响应点击（切数据在右上角） */
+.acc-login-btn{border:1px solid var(--side-input-bd);background:var(--surface);color:var(--fg-2nd);font-size:10px;font-weight:600;padding:1px 8px;border-radius:10px;cursor:pointer;margin-left:2px}
+.acc-login-btn:hover{background:rgba(91,124,250,.16);color:#5b7cfa;border-color:rgba(91,124,250,.35)}
 .account-tab.active{background:rgba(91,124,250,.15);color:#5b7cfa;border-color:rgba(91,124,250,.32);box-shadow:0 2px 8px rgba(91,124,250,.15)}
 .account-tab .badge{display:inline-block;font-size:9px;padding:1px 5px;border-radius:8px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.5);font-weight:600;margin-left:4px}
 .account-tab.active .badge{background:rgba(91,124,250,.25);color:#5b7cfa}
@@ -2314,10 +2317,13 @@ function renderAccounts() {
         cookieTitle = 'Cookie 失效：' + (cookieStatusCache[i].reason || '需要重新登录');
       }
     }
-    return '<div class="account-tab'+(i===activeAccountIdx?' active':'')+'" onclick="switchAccount('+i+')">'+
+    return '<div class="account-tab'+(i===activeAccountIdx?' active':'')+'"'+
+      ' title="点右侧【数据范围】才会切到该账号的数据；这里只负责登录">'+
       '<span class="acc-status-dot '+accDotClass(st)+'" title="'+escAttr(accTitle(st, name))+'"></span>'+
       escHtml(name)+'<span class="badge">'+(a.jobs||[]).length+'</span>'+counts+
-      '<span class="'+cookieCls+'" title="'+escAttr(cookieTitle)+'" onclick="event.stopPropagation();checkAccountCookie('+i+')"></span></div>';
+      '<span class="'+cookieCls+'" title="'+escAttr(cookieTitle)+'" onclick="event.stopPropagation();checkAccountCookie('+i+')"></span>'+
+      '<button class="acc-login-btn" onclick="event.stopPropagation();loginAccount('+i+')"'+
+      ' title="在该账号自己的浏览器里打开 BOSS 登录页，不影响正在跑的账号">登录</button></div>';
   }).join('');
   if (typeof lucide !== 'undefined') lucide.createIcons();
   if (badge) badge.textContent = config.accounts.length;
@@ -2854,6 +2860,31 @@ function stopAll() {
 // 之前点一次"我已登录"会给所有账号发确认，把还在等扫码的另一个号也顶过去。
 let loginPendingIdx = null;
 
+function loginAccount(idx) {
+  addLog('SYSTEM', '正在唤起' + ((config.accounts[idx] || {}).name || ('账号' + idx)) + '的登录页…');
+  fetch('/api/accounts/' + idx + '/login', { method: 'POST' })
+    .then(function(r){
+      // 后端出错时返回的是 HTML 错误页，直接 .json() 会抛"Unexpected token '<'"，
+      // 用户看到的就是一串解析报错而不是真正的原因
+      if (!r.ok) return r.text().then(function(t){
+        throw new Error('接口 ' + r.status + '：' + (t || '').replace(/<[^>]*>/g, '').trim().slice(0, 80));
+      });
+      return r.json();
+    })
+    .then(function(data) {
+      var st = (data && data.status) || 'error';
+      var msg = (data && data.message) || '登录请求没有回音';
+      addLog(st === 'ok' ? 'SUCCESS' : (st === 'running' ? 'WARN' : 'ERROR'), msg);
+      toast(msg, st === 'ok' ? 'ok' : 'warn');
+      if (st === 'ok') {
+        // 后台线程会自己检测到登录完成，弹窗上的"我已登录"只作兜底
+        showLoginModal(idx, msg);
+        setTimeout(function(){ refreshCookieStates(true); }, 3000);
+      }
+    })
+    .catch(function(e){ addLog('ERROR', '唤起登录页失败: ' + e.message); });
+}
+
 function confirmLoginAs(idx) {
   var url = (idx === null || idx === undefined)
     ? controlUrl('confirm_login') : '/api/accounts/' + idx + '/confirm_login';
@@ -3100,7 +3131,6 @@ function scopeRunning() {
   });
 }
 
-function switchAccount(i) { setDataScope(i); }
 
 function escHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML;}
 
@@ -4491,22 +4521,25 @@ function updateCurrentTaskLabel() {
 
 socket.on('status_update', applyStatusUpdate);
 socket.on('login_required',function(data){
+  showLoginModal((data && data.account_index !== undefined) ? data.account_index : null,
+                 (data && data.message) || '');
+});
+
+// 登录弹窗：既给运行循环撞见"需要登录"时用，也给左侧"登录"按钮用
+function showLoginModal(idx, msg) {
   const modal = document.getElementById('loginModal');
   if (!modal) return;
   const desc = document.getElementById('loginModalDesc');
-  loginPendingIdx = (data && data.account_index !== undefined) ? data.account_index : null;
-  var who = (data && data.account_name) ? '「' + data.account_name + '」' : '';
-  if (data && data.message) {
-    desc.textContent = data.message;
-  } else {
-    desc.textContent = '账号' + who + '登录已过期或未登录，请在浏览器中完成登录，然后点击下方按钮继续。';
-  }
+  loginPendingIdx = (idx === undefined) ? null : idx;
+  var who = loginPendingIdx !== null && loginPendingIdx !== undefined
+    ? '「' + ((config.accounts[loginPendingIdx] || {}).name || ('账号' + loginPendingIdx)) + '」' : '';
+  desc.textContent = msg || ('账号' + who + '登录已过期或未登录，请在浏览器中完成登录，然后点击下方按钮继续。');
   modal.style.display = 'flex';
   modal.classList.add('active');
   addLog('WARN', '需要登录' + who + '：请在浏览器中登录后点击确认');
   const cl = document.getElementById('btnConfirmLogin');
   if (cl) cl.style.display = '';
-});
+}
 
 // ── Socket.IO 额外事件监听（非重复，补充上面没有的事件）──
 socket.on('bot_status', function(data) {

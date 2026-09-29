@@ -60,6 +60,9 @@ GREET_ROUND_INTERVAL = 30
 # 等待人工登录时的登录态轮询间隔（秒）
 LOGIN_POLL_INTERVAL = 5
 
+# BOSS 的登录页：界面"登录"按钮和运行循环缺会话时都停在这里
+BOSS_LOGIN_URL = "https://www.zhipin.com/web/user/?ka=header-login"
+
 # 碰到人机验证：提示人工处理，最多等这么多秒，超时跳过当前任务
 CAPTCHA_WAIT_SECONDS = 60
 CAPTCHA_POLL_SECONDS = 2
@@ -141,6 +144,9 @@ class UnifiedBotLoop:
         self._reply_thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
         self._login_event = threading.Event()
+        # 界面"登录"按钮拉起的后台等待线程，以及它是否在等
+        self._login_thread: Optional[threading.Thread] = None
+        self._login_wait_active = False
 
         # 统计数据
         self._stats_dict = {
@@ -743,7 +749,7 @@ class UnifiedBotLoop:
         self._log("WARN", "需要手动登录，已跳转到登录页面")
 
         try:
-            instance.get("https://www.zhipin.com/web/user/?ka=header-login")
+            instance.get(BOSS_LOGIN_URL)
         except Exception:
             pass
 
@@ -765,6 +771,68 @@ class UnifiedBotLoop:
         self._needs_login = False
         self._login_reason = ""
         return True
+
+    def open_login_page(self) -> dict:
+        """界面左侧"登录"按钮：只把该账号的浏览器停在 BOSS 登录页等人工登录。
+
+        新增的账号在跑投递流水线之前必须先能单独登录，所以这条路径不启动任何
+        打招呼/回复线程；登录结果由后台线程检测并保存本账号自己的 Cookie。
+        """
+        if self._running:
+            return {"status": "running",
+                    "message": "该账号正在运行，跳登录页会打断投递；要重新登录请先停止"}
+
+        instance = self.browser_manager.get_instance()
+        if instance is None:
+            if not self._init_browser():
+                return {"status": "error",
+                        "message": "浏览器没起来（端口或用户目录被别的 Chrome 占了），详见日志"}
+            instance = self.browser_manager.get_instance()
+            if instance is None:
+                return {"status": "error", "message": "浏览器起来了但拿不到实例，详见日志"}
+
+        self._login_event.clear()
+        self._needs_login = True
+        self._logged_in = False
+        self._login_reason = "manual_login"
+        try:
+            instance.get(BOSS_LOGIN_URL)
+        except Exception as e:
+            self._needs_login = False
+            self._login_reason = ""
+            return {"status": "error", "message": f"打开登录页失败: {e}"}
+
+        self._log("INFO", f"账号 {self.account_index}：已打开 BOSS 登录页，"
+                          f"请在该账号的浏览器窗口完成登录")
+        self._login_thread = threading.Thread(
+            target=self._finish_manual_login, args=(instance,),
+            name=f"boss-login-{self.account_index}", daemon=True)
+        self._login_thread.start()
+        return {"status": "ok",
+                "message": "已打开 BOSS 登录页，登录成功后会自动保存该账号的 Cookie"}
+
+    def _finish_manual_login(self, instance):
+        """后台等人工登录完成：成功就按本账号存 Cookie，等不到就如实标超时。"""
+        cookie_file = self._cookie_file()
+        self._login_wait_active = True
+        try:
+            ok = self._wait_for_login(instance, cookie_file)
+        finally:
+            self._login_wait_active = False
+        if ok:
+            try:
+                self.browser_manager.save_cookies(cookie_file)
+                self._logged_in = True
+                self._needs_login = False
+                self._login_reason = ""
+                self._log("SUCCESS", f"账号 {self.account_index} 登录完成，Cookie 已保存到 "
+                                     f"{Path(cookie_file).name}")
+            except Exception as e:
+                self._login_reason = "cookie_save_failed"
+                self._log("ERROR", f"登录成功但 Cookie 保存失败: {e}")
+        else:
+            self._login_reason = "login_timeout"
+            self._log("WARN", f"账号 {self.account_index} 等待登录超时，未保存 Cookie")
 
     def _dry_run(self, what: str, detail: str = "") -> bool:
         """演练模式：搜索、AI 判分、决策照常做，最后一下点击不发。
@@ -815,9 +883,14 @@ class UnifiedBotLoop:
 
         两级判定避免误判：先看浏览器里是否出现未过期的登录 Cookie，
         再实际访问聊天页确认没被踢回登录页。
+
+        轮次结束的条件是"没人再等这个登录"：运行循环被停掉（``_running`` 变假）
+        或收到停止信号就立刻退出；界面"登录"按钮那条独立路径靠
+        ``_login_wait_active`` 顶位，它本来就不在跑流水线。
         """
         deadline = time.time() + self.config.login.wait_timeout
-        while time.time() < deadline and self._running and not self._stop_event.is_set():
+        while (time.time() < deadline and not self._stop_event.is_set()
+               and (self._running or self._login_wait_active)):
             if self._login_event.wait(timeout=LOGIN_POLL_INTERVAL):
                 self._log("INFO", "收到手动确认，按已登录继续")
                 return True

@@ -9,6 +9,7 @@
 """
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -18,12 +19,12 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from boss_bot.browser_launcher import (  # noqa: E402
-    _find_best_browser_path, _get_ws_url, _wait_for_port)
+from boss_bot.browser_launcher import _find_best_browser_path, _wait_for_port  # noqa: E402
 
-DEBUG_PORT = 9333
+DEBUG_PORT = int(os.environ.get("BOSS_PROBE_PORT", "9333"))
 FLASK_URL = "http://localhost:5000"
 UI_TAG = "UI实测"
+_probe_port = DEBUG_PORT
 
 # 与 greet_engine._emit_greet_event + app.greet_event_callback 的推送结构一致
 PUSH_OK = {
@@ -55,7 +56,24 @@ def check(name, ok, detail=""):
           + (f" — {detail}" if detail else ""), flush=True)
 
 
+def close_browser(proc):
+    """Chrome 会派生子进程，只杀启动那一个会留下占着调试端口的孤儿浏览器。"""
+    if proc is None:
+        return
+    try:
+        subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"],
+                       capture_output=True)
+    except Exception:
+        proc.kill()
+
+
 def open_browser():
+    from boss_bot.browser_launcher import _is_port_open
+    if _is_port_open("127.0.0.1", DEBUG_PORT):
+        raise RuntimeError(
+            f"端口 {DEBUG_PORT} 已被占用：可能是上次实测留下的孤儿浏览器，"
+            f"也可能有别的程序在跑。绝不连到来路不明的浏览器上，"
+            f"清掉占用进程或改 BOSS_PROBE_PORT 再试。")
     exe, browser_type = _find_best_browser_path("chrome")
     inside_project = Path(exe).is_file() and PROJECT_ROOT in Path(exe).resolve().parents
     if not inside_project:
@@ -64,23 +82,51 @@ def open_browser():
     profile = tempfile.mkdtemp(prefix="boss_ui_probe_")
     proc = subprocess.Popen(
         [exe, f"--remote-debugging-port={DEBUG_PORT}", f"--user-data-dir={profile}",
-         "--no-first-run", "--no-default-browser-check", "about:blank"],
+         "--no-first-run", "--no-default-browser-check",
+         # 窗口太窄会切到移动端布局：侧栏直接隐藏，元素取不到矩形，点不了
+         "--window-size=1680,1050", "about:blank"],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
     if not _wait_for_port("127.0.0.1", DEBUG_PORT, timeout=25):
         proc.kill()
         raise RuntimeError("cloakbrowser 调试端口没起来")
     from DrissionPage import ChromiumOptions, ChromiumPage
-    ws = _get_ws_url("127.0.0.1", DEBUG_PORT)
-    co = ChromiumOptions()
-    co.ws_address = ws
-    return ChromiumPage(co), proc
+    try:
+        co = ChromiumOptions()
+        # 按端口连，让 DrissionPage 自己去找调试地址：
+        # 抢在 /json/version 就绪之前拿 ws 会拿到空地址，attach 直接失败
+        co.set_local_port(DEBUG_PORT)
+        page = ChromiumPage(co)
+    except Exception:
+        close_browser(proc)   # 连不上就把刚拉起来的浏览器收掉，别留孤儿占端口
+        raise
+    return page, proc
 
 
 def scope_chips(page):
     """DrissionPage 的 css 选择器在这个页面上取不全元素，用 XPath 拿可点的真元素"""
     return page.eles("xpath://button[contains(concat(' ', normalize-space(@class), ' '),"
                      " ' scope-chip ')]")
+
+
+def click_until_alive(page, locate, idx=0, tries=6):
+    """面板上的元素会被周期性重渲染（Cookie 状态、指标轮询），句柄说没就没：
+    每次重新取、滚进视野、立刻点。窗口太窄时元素拿不到矩形，同样重试。"""
+    from DrissionPage.errors import ElementLostError, NoRectError
+    for _ in range(tries):
+        els = locate(page)
+        if not els or len(els) <= abs(idx):
+            time.sleep(0.4)
+            continue
+        try:
+            target = els[idx]
+            target.scroll.to_see()
+            time.sleep(0.1)
+            target.click()
+            return True
+        except (NoRectError, ElementLostError):
+            time.sleep(0.4)
+    return False
 
 
 def click_chip(page, idx):
@@ -254,10 +300,7 @@ def main():
         page.get_screenshot(str(PROJECT_ROOT / "tests/screenshots/greet_records_ui.png"))
         print(f"  截图: tests/screenshots/greet_records_ui.png", flush=True)
     finally:
-        try:
-            proc.kill()
-        except Exception:
-            pass
+        close_browser(proc)
 
     failed = [r for r in results if not r[1]]
     print("\n" + "=" * 60)

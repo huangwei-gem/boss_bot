@@ -401,8 +401,14 @@ class FrontendAccountScopeTest:
                        "fetch('/api/resume_greet'"):
             assert legacy not in html, f"仍有写死的全局控制调用: {legacy}"
 
-    def test_切账号即切范围(self):
-        assert "function switchAccount(i) { setDataScope(i); }" in self._html()
+    def test_切账号只有数据范围一个入口(self):
+        """左侧列表只管新增+登录；切数据/切编辑对象统一走右侧数据范围，
+        两个入口各切一半就会出现"点了没反应"。"""
+        html = self._html()
+        assert "switchAccount" not in html
+        body = html[html.index("function setDataScope(v)"):]
+        body = body[:body.index("\nfunction ")]
+        assert "activeAccountIdx = Number(v)" in body, "切范围没同步编辑目标"
 
     def test_全局控制路由是绝对路径(self):
         """controlUrl 的 all 分支少了 /api/ 前缀，会变成相对路径 404"""

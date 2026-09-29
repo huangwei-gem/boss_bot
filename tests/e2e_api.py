@@ -227,7 +227,7 @@ def test_frontend_html():
             ("excel", "Excel导出"),
             ("chip", "Chip标签"),
             ("account-tab", "账号标签页"),
-            ("switchAccount", "切换账号函数"),
+            ("loginAccount", "账号登录入口"),
             ("activeAccountIdx", "当前账号索引"),
             ("accounts/", "账号级别API路径"),
             ("account_name", "账号名称"),
