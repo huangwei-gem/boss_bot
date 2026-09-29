@@ -143,11 +143,25 @@ def main():
         check("点登录拿到后端回应", honest and bool(resp),
               ("面板进程没重启，/login 还是 404" if stale else resp[:150]))
 
-        # 登录态检测：点状态点要真的去检测
-        clear_log(page)
+        # 登录态检测：点了必须真的发一次 force=1 的检测请求。
+        # 不翻日志——上面那条已经证明日志刷得比读取快，测不稳；而且"日志里没
+        # 那行"分不清是没点中还是被挤掉了，看请求才是确定性证据。
+        js("""window.__cookieReq = '';
+              var prev = window.fetch;
+              window.fetch = function (u, opt) {
+                  var s = String(u);
+                  if (s.indexOf('/api/accounts/cookies') >= 0) window.__cookieReq = s;
+                  return prev.apply(window, arguments);
+              };""")
         assert click_until_alive(page, cookie_dots, 0), "登录态点不动"
-        time.sleep(1.5)
-        check("登录态点一下就能检测", "检测" in log_tail(page), log_tail(page)[:110])
+        req = ""
+        for _ in range(15):
+            time.sleep(0.3)
+            req = js("return window.__cookieReq || ''") or ""
+            if req:
+                break
+        check("登录态点一下就能检测", "force=1" in req,
+              req[:120] if req else "点了状态点，但一个检测请求都没发出去")
 
         # 招呼语输入框要真的写进本账号的配置对象。
         # 这里把 saveConfig 短路掉：测的是"输入框↔数据模型"的绑定，

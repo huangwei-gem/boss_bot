@@ -209,9 +209,20 @@ def main():
                 document.querySelectorAll('#greetTableBody tr'),
                 function(tr){ return tr.innerText.replace(/\\s+/g, ' '); });""")
 
-        body_txt = page.ele("#greetTableBody").text or ""
-        check("推送的行真的渲染进表格", PUSH_OK["job_name"] in body_txt)
-        check("推送的行显示为已投递", js("return allGreetRecords[0].status") == "success")
+        # 用 JS 数 DOM：这个页面上 DrissionPage 的 CSS 选择器取不到节点（同一批
+        # 坑里已经踩过一次），而且整表重建是异步的，推完立刻读会误判成"没渲染"。
+        pushed = []
+        for _ in range(10):
+            time.sleep(0.3)
+            pushed = [t for t in row_texts() if PUSH_OK["job_name"] in t]
+            if pushed:
+                break
+        check("推送的行真的渲染进表格", len(pushed) == 1,
+              f"匹配到 {len(pushed)} 行: {(pushed or [''])[0][:90]}")
+        # 断言用户看得到的徽标文案，而不是模型内部的状态串：
+        # 词表归一后模型里是 applied，界面才是"已投递"
+        check("推送的行显示为已投递", bool(pushed) and "已投递" in pushed[0],
+              pushed[0][:120] if pushed else "没有那一行")
 
         n2 = int(js(f"addGreetRecord({push_ok_js}); return allGreetRecords.length;"))
         check("重复推送不产生两行", n2 == n1, f"{n1} → {n2}")

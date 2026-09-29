@@ -444,8 +444,8 @@ def main():
     time.sleep(2.5)
     rows_a1 = int(js(page, 'document.querySelectorAll(".greet-table tbody tr").length') or 0)
     check("多账号", "切到账号2 后打招呼记录只剩该账号",
-          rows_a1 == min(int(d_a1["total"]), 200),
-          f"页面{rows_a1} 接口{d_a1['total']}")
+          rows_a1 == int(d_a1["total"]),
+          f"页面{rows_a1} 接口{d_a1['total']}")   # 行模型统一后不再截到 200 行
     hint = js(page, 'document.getElementById("actionScopeLabel").textContent') or ""
     check("多账号", "操作条标明当前范围", "账号2" in hint, hint)
     labels = js(page, '''(function(){var r=[],b=["btnPauseGreet","btnPauseReply"];
@@ -491,6 +491,16 @@ def main():
     check("多账号", "登录确认只发给要登录的号",
           "POST /api/accounts/1/confirm_login" in fired, fired)
 
+    # fetch 还拦着：此时 /api/config 回来的是 {status:"ok"}，没有 accounts。
+    # 界面必须保持原配置——整份赋值会把账号列表、招呼语、AI 配置一起抹掉
+    js(page, '(function(){window.__accBefore=(config.accounts||[]).length;'
+             ' loadConfig(); return 1;})()')
+    time.sleep(1.0)
+    acc_after = js(page, '(config.accounts||[]).length')
+    check("配置异常响应", "接口返回没有 accounts 时不覆盖界面配置",
+          acc_after == js(page, 'window.__accBefore') and acc_after >= 2,
+          f"前 {js(page, 'window.__accBefore')} → 后 {acc_after}")
+
     js(page, 'setDataScope("all")')
     time.sleep(1.5)
     js(page, 'window.__fired = [];')
@@ -503,6 +513,11 @@ def main():
 
     js(page, 'setDataScope(1)')
     time.sleep(1.2)
+    # 这一步要看的是"清空确认里写的是哪个号"，而拦住的 fetch 会让
+    # 切范围时的重拉拿到异常响应。先把真 fetch 放回来（confirm 钩子留着）。
+    js(page, 'window.fetch = window.__of;')
+    js(page, 'setDataScope(1)')
+    time.sleep(1.5)
     js(page, 'clearGreetTable(); clearReplyRecords();')
     time.sleep(0.8)
     confirms = js(page, 'JSON.stringify(window.__confirm)') or []
