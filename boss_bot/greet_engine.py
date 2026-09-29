@@ -74,15 +74,42 @@ return (function(){
   for (var j = 0; j < sels.length; j++) {
     if (document.querySelector(sels[j])) found.push(sels[j]);
   }
+  var btns = [];
+  var bs = document.querySelectorAll('button, a.btn, div.btn, [role="button"]');
+  for (var k = 0; k < bs.length && btns.length < 8; k++) {
+    var b = bs[k], bt = (b.innerText || "").trim().slice(0, 16);
+    if (bt) btns.push(bt + "|" + cls(b).slice(0, 30));
+  }
+  var notice = "";
+  var ns = document.querySelectorAll('.job-expired, .notice-text, .empty-job, '
+                                      + '.job-disabled, .tips, .common-error, .resume-tip');
+  for (var n = 0; n < ns.length; n++) {
+    var t = (ns[n].innerText || "").trim();
+    if (t) { notice = t.slice(0, 60); break; }
+  }
   var txt = document.body ? (document.body.innerText || "") : "";
   var captcha = !!document.querySelector(".nc-container, .verify-wrap, .geetest_panel, .verify-box, .captcha-box")
                 || txt.indexOf("安全验证") >= 0 || txt.indexOf("拖动滑块") >= 0;
-  return JSON.stringify({url: location.href, inputs: inputs,
-                         chat_elements: found, captcha: captcha});
+  return JSON.stringify({url: location.href, inputs: inputs, chat_elements: found,
+                         buttons: btns, notice: notice, captcha: captcha});
 })();
 '''
 
 # 快照里"确实能打字发消息"的那几个元素，与只能证明抽屉存在的那些
+# ─────────────────────────────────────────────
+# 找不到「沟通按钮」时的归因
+# ─────────────────────────────────────────────
+# logs/greet_engine.log 里 20 次 pre-click 命中的"导航到 / 导航后URL"逐条比对，
+# 同一句"未找到沟通按钮"其实是三件不同的事：9 次落地在 /web/geek/chat（岗位此前
+# 已沟通，BOSS 把详情页直接跳成会话页）、9 次停在同一岗位页但按钮没渲染、
+# 2 次被重定向到另一个职位（原岗位已下线）。处置方式不同，原因必须分开写。
+CHAT_REDIRECT_REASON = "该岗位此前已沟通：BOSS 把详情页直接跳成了会话页"
+OFFLINE_JOB_REASON = "岗位已下线：BOSS 把详情页重定向到了另一个职位"
+LOGIN_WALL_REASON = "BOSS 要求重新登录（页面出现手机号+短信验证码框），登录态已失效"
+CAPTCHA_REASON = "BOSS 弹出人机验证，需要人工在浏览器窗口完成（超时会自动跳过）"
+DISCONNECTED_REASON = "聊天页与浏览器连接已断开（标签页被关或被别的线程抢走）"
+
+
 _INPUTISH = ("#chat-input", ".chat-input", '[contenteditable="true"]', ".input-area")
 _LOGIN_CLS = ("ipt-phone", "ipt-sms")
 
@@ -93,14 +120,14 @@ def chat_failure_reason(snap):
     err = str(snap.get("error") or "")
     low = err.lower()
     if "断开" in err or "disconnect" in low or "connection" in low or "refused" in low:
-        return "聊天页与浏览器连接已断开（标签页被关或被别的线程抢走）"
+        return DISCONNECTED_REASON
 
     inputs = [str(c).lower() for c in (snap.get("inputs") or [])]
     url = str(snap.get("url") or "")
     if snap.get("captcha") or "_security_check" in url:
-        return "BOSS 弹出人机验证，需要人工在浏览器窗口完成（超时会自动跳过）"
+        return CAPTCHA_REASON
     if any(any(k in c for k in _LOGIN_CLS) for c in inputs):
-        return "BOSS 要求重新登录（页面出现手机号+短信验证码框），登录态已失效"
+        return LOGIN_WALL_REASON
     if "/web/user" in url:
         return "BOSS 要求重新登录（页面被送到登录页 %s），登录态已失效" % url[:50]
 
@@ -149,6 +176,56 @@ def parse_auto_greet_dialog(raw) -> dict:
     except (ValueError, TypeError):
         return {}
     return data if isinstance(data, dict) and data.get("text") else {}
+
+
+
+
+def job_id_of(url: str) -> str:
+    m = re.search(r"job_detail/([0-9a-zA-Z]+)", url or "")
+    return m.group(1) if m else ""
+
+
+def same_job_page(requested: str, landed: str) -> bool:
+    """落地页是不是就是请求的那个岗位：BOSS 会在 URL 后面加 ?lid= 等参数。"""
+    rid = job_id_of(requested)
+    return bool(rid) and rid == job_id_of(landed)
+
+
+def chat_button_failure_reason(requested_url: str, landed_url: str, snap: dict):
+    """按落地页与现场判"没有沟通按钮"到底是哪种情况。
+
+    返回 (原因, 是否该标为已沟通)。跳会话页那类必须标已沟通，否则下一轮
+    搜索还会同一个岗位再撞一次。
+    """
+    snap = snap or {}
+    err = str(snap.get("error") or "")
+    low = err.lower()
+    if "断开" in err or "disconnect" in low or "connection" in low or "refused" in low:
+        return DISCONNECTED_REASON, False
+
+    landed = landed_url or str(snap.get("url") or "")
+    if "/geek/chat" in landed or "/web/geek/chat" in landed:
+        return CHAT_REDIRECT_REASON, True
+    if any(k in landed for k in ("login", "passport", "/web/user")):
+        return LOGIN_WALL_REASON, False
+    if "_security_check" in landed or snap.get("captcha"):
+        return CAPTCHA_REASON, False
+    if "job_detail" in landed and not same_job_page(requested_url, landed):
+        return OFFLINE_JOB_REASON, False
+
+    inputs = [str(c).lower() for c in (snap.get("inputs") or [])]
+    if any(any(k in c for k in _LOGIN_CLS) for c in inputs):
+        return LOGIN_WALL_REASON, False
+
+    detail = []
+    notice = str(snap.get("notice") or "")
+    if notice:
+        detail.append("页面提示: " + notice)
+    buttons = snap.get("buttons") or []
+    if buttons:
+        detail.append("页面上的按钮: " + ", ".join(str(b) for b in buttons[:4]))
+    tail = ("；" + "；".join(detail)) if detail else "；页面上一个可见按钮都没抓到"
+    return f"岗位页没有可点的沟通按钮（详情页已打开但按钮没渲染）{tail}", False
 
 
 def pick_greeting(job_text: str, account_text: str, default_text: str):
@@ -1758,8 +1835,18 @@ class GreetEngine:
             # ── 2. 查找沟通按钮 ──
             chat_btn = self._find_chat_button(timeout=8)
             if chat_btn is None:
-                self._log("WARN", "未找到沟通按钮")
-                return False, "未找到沟通按钮"
+                snap = self._chat_snapshot(instance)
+                landed = str(snap.get("url") or "") or (instance.url or "")
+                reason, already = chat_button_failure_reason(url, landed, snap)
+                self._log("WARN", f"没有沟通按钮｜{reason}")
+                self._log("WARN", f"  现场 请求={url[:60]} 落地={landed[:60]} "
+                                  f"按钮={snap.get('buttons') or '无'} "
+                                  f"提示={snap.get('notice') or '无'}")
+                if already:
+                    # BOSS 把已沟通的岗位直接跳成会话页：标了已沟通，
+                    # 下一轮搜索才不会又撞同一个岗位
+                    self._mark_chatted(job)
+                return False, reason
 
             btn_text = chat_btn.text
             if "继续沟通" in btn_text:
@@ -2092,11 +2179,7 @@ class GreetEngine:
                     self._log("WARN", f"  弹窗文本: {str(dialog.get('text', ''))[:120]}")
                     self._mark_chatted(job)
                     return False, AUTO_GREET_REASON
-                snap = {"url": "", "inputs": [], "chat_elements": [], "error": ""}
-                try:
-                    snap = json.loads(instance.run_js(CHAT_SNAPSHOT_JS) or "{}")
-                except Exception as e:
-                    snap["error"] = str(e)
+                snap = self._chat_snapshot(instance)
                 reason = chat_failure_reason(snap)
                 self._log("WARN", f"未找到输入框｜{reason}")
                 self._log("WARN", f"  现场 url={str(snap.get('url'))[:80]} "
@@ -2245,7 +2328,9 @@ class GreetEngine:
                     self._log("WARN", f"重新打开聊天窗口失败: {e}")
                     return
             else:
-                self._log("WARN", "未找到沟通按钮，无法上传图片")
+                # 这句话以前和"投递时找不到按钮"共用一套词，看记录的人以为岗位
+                # 没投出去；实际招呼语已经发了，只是图片没补上
+                self._log("WARN", "招呼语已发出，但回不到会话窗口，图片未上传")
                 return
 
         # 上传图片 - 去重后依次上传
@@ -2364,6 +2449,18 @@ class GreetEngine:
         deadline = time.time() + max(0.0, seconds)
         while self.running and time.time() < deadline:
             time.sleep(min(0.2, max(0.05, deadline - time.time())))
+
+    def _chat_snapshot(self, instance) -> dict:
+        """抓一次页面现场（输入框/抽屉/按钮/提示/验证码），取不到就把异常带进去。"""
+        snap = {"url": "", "inputs": [], "chat_elements": [], "buttons": [],
+                "notice": "", "captcha": False, "error": ""}
+        try:
+            got = json.loads(instance.run_js(CHAT_SNAPSHOT_JS) or "{}")
+            if isinstance(got, dict):
+                snap.update(got)
+        except Exception as e:
+            snap["error"] = str(e)
+        return snap
 
     def _greeting_for(self, job: dict):
         """本条岗位要发的招呼语：岗位改过 > 本账号自定义 > 默认模板。"""
