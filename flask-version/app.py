@@ -213,6 +213,8 @@ def _check_api_auth():
 
 _multi_manager: Optional[MultiAccountManager] = None
 _config: Optional[UnifiedConfig] = None
+# 已加载那份配置对应的文件指纹，用来发现"文件被别处改了"
+_config_stamp_cached: Optional[tuple] = None
 _status_thread: Optional[threading.Thread] = None
 _status_stop = threading.Event()
 _self_evolve: Optional[SelfEvolveEngine] = None
@@ -292,11 +294,48 @@ def _add_notification(ntype: str, message: str,
         _save_notifications()
 
 
+def _config_stamp():
+    """bot_config.json 的 (修改时间, 大小)，读不到返回 None。"""
+    import boss_bot.unified_config as uc
+    try:
+        st = os.stat(uc.BOT_CONFIG_FILE)
+        return (st.st_mtime_ns, st.st_size)
+    except OSError:
+        return None
+
+
+def _config_file_parses() -> bool:
+    """文件现在能不能解析。UnifiedConfig.load() 读不动时会静默退回默认值，
+    直接拿它覆盖内存里那份好配置，界面就会突然变成出厂设置。"""
+    import boss_bot.unified_config as uc
+    try:
+        with open(uc.BOT_CONFIG_FILE, "r", encoding="utf-8") as f:
+            json.load(f)
+        return True
+    except Exception:
+        return False
+
+
 def _ensure_config() -> UnifiedConfig:
-    """确保 _config 已初始化。"""
-    global _config
+    """返回配置；文件被外部改过时重新读盘。
+
+    界面保存配置写的都是内存里这一份。外部改动（脚本清理接口列表、手改文件、
+    引擎热重载）如果不重读，下一次点保存就把旧内容整份写回磁盘，
+    表现为"删掉的 AI 接口又复活了"。
+    """
+    global _config, _config_stamp_cached
+    stamp = _config_stamp()
     if _config is None:
         _config = UnifiedConfig.load()
+        _config_stamp_cached = stamp
+    elif stamp is not None and stamp != _config_stamp_cached:
+        if _config_file_parses():
+            _config = UnifiedConfig.load()
+            logger.info("检测到 bot_config.json 被外部改动，已重新加载")
+        else:
+            logger.warning("bot_config.json 被改动但当前内容解析不了，"
+                           "暂继续用内存里那份配置")
+        _config_stamp_cached = stamp
     return _config
 
 

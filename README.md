@@ -218,7 +218,7 @@ Cookie 点由 `GET /api/accounts/cookies` 供数（只查文件，不启动浏�
 | 登录 Cookie | 账号配置里的 `cookie_file`，回落到全局 |
 | 会话状态（防重复回复/发简历）、人工接管 | `bot_state.json` / `bot_state_account_N.json` |
 | 统计 | `bot_stats.json` / `bot_stats_account_N.json` |
-| 聊天记录 | `messages/姓名#公司.json` / `messages/aN_姓名#公司.json`（旧数据在 `messages/legacy/`） |
+| 聊天记录 | `messages/姓名#公司.json` / `messages/aN_姓名#公司.json` |
 | 打招呼记录、回复记录 | **共用** `data/greet_records.json`、`data/reply_records.json`，每条带 `account_index`，接口按 `?account=` 过滤，导出与清空同样按账号收口 |
 | 打招呼话术、简历图片、消息间隔、岗位任务 | 各自 `accounts[N]` |
 | 每日上限计数 | 按 `account_index` 过滤 |
@@ -266,8 +266,8 @@ python -X utf8 tools/compare_boss_chat.py --n 5       # 只看差异，不写数
 
 `resync` 的验收口径是「本地尾部 N 条 == 线上这一屏」，逐条比正文、方向和时间标签。
 BOSS 每个会话只给 2-3 条历史（`.chat-content` 的 `scrollHeight == clientHeight`，滚动和滚轮都加载不出更多），
-所以更早的历史只能靠机器人运行时逐轮攒下来，没法事后补。旧文件不做拆分——同名的两段对话
-在同一个文件里已经分不干净了——整体挪到 `messages/legacy/` 保留。
+所以更早的历史只能靠机器人运行时逐轮攒下来，没法事后补。旧格式文件（没有 `chat_id`、按昵称合并的那批）
+不做拆分——同名的两段对话在同一个文件里已经分不干净了——2026-09-29 重同步完成后已按用户要求删除。
 
 ## 配置说明
 
@@ -342,6 +342,9 @@ Chrome 于是退回默认用户目录，两号共用一份 profile（表现就�
 
 2026-09-29 实测（19 个接口 = 8 可用 + 11 不可用；每条路由各 3 次）：
 
+**那 11 行已经按用户决定从 `bot_config.json` 里删掉了**（备份在 `data/archive/2026-09-29/bot_config.before_ai_trim.json`），
+配置里现在只剩 8 行可用的。下面这张表留着，是为了下次再看到同类返回码时不用重新查一遍。
+
 | 数量 | 现象 | 代理 vs 直连 | 是不是代理的问题 | 能做什么 |
 |------|------|--------------|------------------|----------|
 | 6 | `403 FreeTierError：只能在 OpenCode 客户端内使用` | 0/3 vs 0/3，报文逐字相同 | 不是 | 官方文档写明免费模型 "available on OpenCode"，客户端限定，改不了 |
@@ -381,7 +384,17 @@ OpenCode 侧同理：官方文档确认 base_url 就是 `https://opencode.ai/zen
 
 ## 故障排查
 
-**「AI 已拒绝过」大量误跳过** → 已修复为只看当前会话；历史误判记录已清理，备份在 `data/reply_records.bak_before_purge_*.json`。
+**「AI 已拒绝过」大量误跳过** → 已修复为只看当前会话；历史误判记录已清理（当时的备份已随残留清理一并删除）。
+
+**两个账号串成同一个号** → 跑 `python tools/check_account_isolation.py`。2026-09-29 修掉两处真实泄漏：
+`page_handler` 确认登录时写的是**全局** `config.COOKIE_FILE`（账号2 登录会把主账号那份覆盖成自己的会话），
+`greet_engine._save_cookies` 存完自己的还要 `shutil.copy2` 一份到公共 `zhipin_cookies.json` 当"兜底"。
+现在两处都只写本账号那一份，且路径一律 `resolve_path()` 锚到项目根（界面从 `flask-version/` 启动，
+返回相对名会按 CWD 落到别处）。
+
+**界面上删掉的 AI 接口又回来了** → 以前 `app._ensure_config()` 只在第一次读盘，之后一直用内存那份，
+外部改动（脚本清理、手改文件）看不见，且界面上任意一次保存会把旧内容整份写回磁盘。
+现在按 `(mtime, size)` 指纹发现外部改动就重读；文件被写坏时保留内存里那份好配置。
 
 **打招呼像卡死 / 岗位没被 AI 筛** → 先看 AI 卡片里的「判分质量」：兜底率就是"没被 AI 真正判过的岗位占比"。日志里找 `AI 分析异常`（后面会带上具体原因：正文被截断 / 没有 JSON / 未返回正文 / 无法判分），再跑 `python tools/measure_ai_quality.py --failover` 逐个接口看生产解析吃不吃得下，最后点界面「全部接口体检」。确认 `ai.skip_unhealthy` 为 `true`；带思考的接口把 `ai.analyze_max_tokens` 调大（界面「判分预算 tokens」）。
 

@@ -521,3 +521,77 @@ class AccountIdentityFingerprintTest:
     def test_没有登录字段时返回空(self):
         tool = self._load_tool()
         assert tool.identity_fingerprint([{"name": "HMACCOUNT", "value": "z"}]) == ""
+
+
+class CookieSaveIsolationTest:
+    """保存 Cookie 必须只写自己那一份。
+
+    2026-09-29 实测：在账号2 的窗口登录了另一个 BOSS 账号之后，
+    主账号的 zhipin_cookies.json 也被换成了同一个新 wt2 —— 两个号的登录态互相覆盖。
+    来源两处：page_handler 确认登录时写的是全局 config.COOKIE_FILE；
+    greet_engine 存完自己的还要再 copy2 一份到 zhipin_cookies.json 当"兜底"。
+    """
+
+    def test_聊天处理器要写自己账号的cookie文件(self):
+        from unittest.mock import patch
+        from boss_bot.page_handler import BossChatHandler
+        import boss_bot.config as CFG
+        with patch("boss_bot.page_handler.launch_browser"):
+            h = BossChatHandler(cookie_file="zhipin_cookies_1.json")
+        got = str(h._get_cookie_file())
+        assert "zhipin_cookies_1.json" in got, f"写的是全局文件: {got}"
+        assert got != str(CFG.COOKIE_FILE)
+
+    def test_没指定账号文件时才退回全局(self):
+        from unittest.mock import patch
+        from boss_bot.page_handler import BossChatHandler
+        import boss_bot.config as CFG
+        with patch("boss_bot.page_handler.launch_browser"):
+            h = BossChatHandler()
+        assert str(h._get_cookie_file()) == str(CFG.COOKIE_FILE)
+
+    def test_打招呼不再把cookie复制到公共文件(self):
+        """兜底复制等于把 A 号的登录态盖到 B 号头上，必须彻底去掉"""
+        import inspect
+        from boss_bot.greet_engine import GreetEngine
+        body = inspect.getsource(GreetEngine._save_cookies)
+        assert "copy2" not in body, "存在跨账号复制 cookie 的兜底逻辑"
+
+
+class AccountStatusTruthfulTest:
+    """账号状态不能自相矛盾。
+
+    2026-09-29 两次现网现象：主账号线程早已因浏览器启动失败退出，界面还显示
+    running/starting；账号2 槽位在等登录（login_reason=no_cookie）却同时报
+    logged_in=True。红点/绿点说的和用户看到的窗口不一致，就没法判断该不该登录。
+    """
+
+    def _loop(self):
+        from boss_bot.main_loop import UnifiedBotLoop
+        from unittest.mock import patch
+        with patch('boss_bot.main_loop.BrowserManager'):
+            return UnifiedBotLoop()
+
+    def test_等登录时不能同时报已登录(self):
+        loop = self._loop()
+        loop._running = True
+        loop._needs_login = True
+        loop._logged_in = True          # 上一轮留下的 True
+        st = loop.get_status()
+        assert st['phase'] == 'waiting_login'
+        assert st['logged_in'] is False, "等登录却报已登录，界面两个字段互相打脸"
+
+    def test_浏览器启动失败要给出原因(self):
+        from unittest.mock import MagicMock
+        loop = self._loop()
+        loop.browser_manager = MagicMock()
+        loop.browser_manager.launch.side_effect = Exception("浏览器连接失败 127.0.0.1:9222")
+        assert loop._init_browser() is False
+        assert loop._login_reason == "browser_failed", \
+            "启动失败必须留下原因，否则界面只能显示一个含糊的 stopped"
+
+    def test_cookie路径要锚定到项目根(self):
+        """界面从 flask-version/ 启动，返回相对名会按 CWD 落到别处，两号就串了"""
+        import os
+        loop = self._loop()
+        assert os.path.isabs(loop._cookie_file()), loop._cookie_file()

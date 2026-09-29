@@ -28,7 +28,7 @@ from typing import Optional, Callable
 from urllib.request import Request, urlopen
 from urllib.error import URLError
 
-from boss_bot.unified_config import UnifiedConfig, BASE_DIR, write_json_atomic
+from boss_bot.unified_config import UnifiedConfig, BASE_DIR, resolve_path, write_json_atomic
 from boss_bot.browser_launcher import BrowserManager
 from boss_bot.reply_record import GreetRecord, _get_greet_store
 
@@ -2308,16 +2308,14 @@ class GreetEngine:
         if instance is None:
             return
         try:
-            cookie_name = self._cookie_file if self._cookie_file else "zhipin_cookies.json"
-            dst = str(DATA_DIR / cookie_name) if not os.path.isabs(cookie_name) else cookie_name
+            cookie_name = self._cookie_file or "zhipin_cookies.json"
+            dst = str(resolve_path(cookie_name))
             cookies = instance.cookies()
             with open(dst, "w", encoding="utf-8") as f:
                 json.dump(cookies, f, ensure_ascii=False, indent=2)
             self._log("INFO", f"已保存 Cookie: {dst}")
-            fallback = str(DATA_DIR / "zhipin_cookies.json")
-            if dst != fallback:
-                import shutil
-                shutil.copy2(dst, fallback)
+            # 这里以前还会把本账号的 Cookie 再 copy 一份到公共的 zhipin_cookies.json，
+            # 等于把 B 号的登录态盖到 A 号头上，多账号下必须各写各的
         except Exception as e:
             self._log("WARN", f"Cookie 保存失败: {e}")
 

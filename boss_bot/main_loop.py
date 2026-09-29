@@ -375,7 +375,9 @@ class UnifiedBotLoop:
             "index": self.account_index,
             "name": self.account_name,
             "running": self._running,
-            "logged_in": self._logged_in,
+            # 等登录时不能报已登录：_logged_in 可能是上一轮会话留下的真值，
+            # 直接吐出去会让界面的红点和"正在等待登录"自相矛盾
+            "logged_in": bool(self._logged_in and not self._needs_login),
             "needs_login": self._needs_login,
             # login_reason: cookie_expired / no_cookie / cookie_error /
             #               login_timeout / session_lost / "" — 红黄点要能说明原因
@@ -674,6 +676,9 @@ class UnifiedBotLoop:
         except Exception as e:
             self._log("ERROR", f"浏览器启动失败: {e}")
             self._log("DEBUG", f"浏览器启动异常详情: {e!r}")
+            # 原因要留在状态里：不然界面只剩一个 stopped，
+            # 用户分不清是"没启动"还是"端口/用户目录被占"
+            self._login_reason = "browser_failed"
             return False
 
     def _handle_login(self) -> bool:
@@ -769,11 +774,13 @@ class UnifiedBotLoop:
         """本账号实际使用的 Cookie 文件：账号配置优先，全局配置兜底。
 
         多账号下每个浏览器实例必须读自己那份，否则重连后会串号。
+        返回绝对路径：配置里存的是 "zhipin_cookies_1.json" 这种相对名，
+        而界面从 flask-version/ 目录启动，不锚定就会按 CWD 写到别处去。
         """
         accounts = self.config.greet.accounts
         acc_cookie = (accounts[self.account_index].cookie_file
                       if self.account_index < len(accounts) else "")
-        return acc_cookie or self.config.login.cookie_file
+        return str(resolve_path(acc_cookie or self.config.login.cookie_file))
 
     def _discard_stale_cookies(self, reason: str):
         """会话确认失效时删掉本地 Cookie，避免下一轮又拿死会话去撞风控。
@@ -849,6 +856,7 @@ class UnifiedBotLoop:
         self._chat_handler = BossChatHandler(
             browser_manager=self.browser_manager,
             browser_instance=chat_page,
+            cookie_file=self._cookie_file(),
         )
 
         self._msg_store = MessageStore(account_index=self.account_index)

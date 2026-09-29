@@ -40,15 +40,18 @@ class BossChatHandler:
 
     def __init__(self, account_id: str = None, headless: bool = None,
                  browser_manager: BrowserManager = None,
-                 browser_instance: BrowserInstance = None):
+                 browser_instance: BrowserInstance = None,
+                 cookie_file: str = None):
         """
         Args:
             account_id: 账号 ID（保留参数，用于未来多账号扩展）
             headless: 是否无头模式（仅在使用 launch_browser 时生效）
             browser_manager: BrowserManager 实例（优先使用，共享浏览器）
             browser_instance: 指定的 BrowserInstance（如聊天标签页），优先级最高
+            cookie_file: 本账号专属的 Cookie 文件；不传则退回全局那一份
         """
         self._account_id = account_id
+        self._cookie_file_override = cookie_file or ""
         self._headless = headless if headless is not None else HEADLESS
         self._browser_manager = browser_manager
 
@@ -163,11 +166,14 @@ class BossChatHandler:
             return True
 
     def _get_cookie_file(self) -> str:
-        """获取当前账号的 cookie 文件路径
+        """本账号的 Cookie 文件路径。
 
-        统一项目中不再使用 AccountManager，直接返回 config.COOKIE_FILE。
-        保留 account_id 参数用于未来多账号扩展。
+        以前这里无条件返回全局 config.COOKIE_FILE，于是账号2 确认登录时会把
+        自己的会话写进主账号那份文件里，两个号的登录态互相覆盖。
         """
+        if self._cookie_file_override:
+            from boss_bot.unified_config import resolve_path
+            return str(resolve_path(self._cookie_file_override))
         return COOKIE_FILE
 
     def _save_cookies(self):
