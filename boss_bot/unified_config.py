@@ -91,6 +91,13 @@ def resolve_path(path) -> Path:
     return p if p.is_absolute() else (BASE_DIR / p)
 
 
+# 可以按账号覆盖的配置段。
+# 只有这两段是"换个号就该换套标准"的：主号投数据分析、二号投运营，判分阈值和
+# 打分提示词不该共用。resume / user_profile / templates 故意排除在外——一个人
+# 一份简历一套话术，按号覆盖只会让两个号对同一个 HR 说出互相矛盾的介绍。
+ACCOUNT_OVERLAY_SECTIONS = ("ai", "reply")
+
+
 # 默认打招呼话术
 DEFAULT_GREETING = (
     "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，"
@@ -129,6 +136,27 @@ def render_template(text: str, profile: dict) -> str:
                 val = "、".join(str(x) for x in val)
             text = text.replace(ph, str(val))
     return text
+
+
+def diff_against(submitted: dict, base: dict) -> dict:
+    """只留下 submitted 中与 base 不同的键，返回稀疏覆盖（全一样就是空字典）。
+
+    只比 base 里已有的键：前端会把它顺带认识的字段一起回传，那些不是"这个账号
+    改过的设置"，写进覆盖就成了基准改名后永远清不掉的僵尸值。
+    嵌套段递归下去，子层没差异就整段不留。
+    """
+    out = {}
+    for key, value in (submitted or {}).items():
+        if key not in (base or {}):
+            continue
+        base_val = base[key]
+        if isinstance(value, dict) and isinstance(base_val, dict):
+            nested = diff_against(value, base_val)
+            if nested:
+                out[key] = nested
+        elif value != base_val:
+            out[key] = value
+    return out
 
 
 def _parse_ai_providers(env_prefix: str = "AI_PROVIDERS") -> list:
@@ -271,6 +299,9 @@ class AccountConfig:
     message_interval_max: int = 8
     # 本账号自己的招呼语：填了就用它，不再用那段每个岗位都塞着的默认文案
     greeting_message: str = ""
+    # 本账号相对全局基准的差异覆盖，形如 {"ai": {"match_threshold": 88}}。
+    # 只存差异不存整份：全局改了阈值，没动过这一项的账号要跟着变。
+    settings: dict = field(default_factory=dict)
     jobs: list = field(default_factory=lambda: [JobConfig()])
 
 
@@ -510,6 +541,28 @@ class UnifiedConfig:
 
         return config
 
+    def apply_account(self, index: int) -> "UnifiedConfig":
+        """返回这个账号的生效配置：基准的深拷贝 + 该账号的差异覆盖。
+
+        必须是新对象：运行循环原先和 MultiAccountManager 共用同一份 config，
+        账号 0 的阈值一盖就把账号 1 也改了。
+        覆盖只认 ACCOUNT_OVERLAY_SECTIONS 里段、且段里已有的字段——写错字段名
+        或塞进 accounts/resume 这类段，宁可静默忽略也不能改坏配置结构。
+        """
+        cfg = copy.deepcopy(self)
+        if not (0 <= index < len(cfg.greet.accounts)):
+            return cfg
+        overlay = cfg.greet.accounts[index].settings or {}
+        for section in ACCOUNT_OVERLAY_SECTIONS:
+            values = overlay.get(section)
+            target = getattr(cfg, section, None)
+            if target is None or not isinstance(values, dict):
+                continue
+            for field_name, value in values.items():
+                if hasattr(target, field_name):
+                    setattr(target, field_name, value)
+        return cfg
+
     def _apply_bot_config(self, data: dict):
         """将 bot_config.json 的数据应用到各配置域。"""
         if not isinstance(data, dict):
@@ -670,6 +723,8 @@ class UnifiedConfig:
                     message_interval_min=acc.get("message_interval_min", 3),
                     message_interval_max=acc.get("message_interval_max", 8),
                     greeting_message=acc.get("greeting_message", ""),
+                    settings=acc.get("settings")
+                    if isinstance(acc.get("settings"), dict) else {},
                     jobs=jobs,
                 ))
             if parsed_accounts:
@@ -1062,6 +1117,7 @@ class UnifiedConfig:
                     "message_interval_min": acc.message_interval_min,
                     "message_interval_max": acc.message_interval_max,
                     "greeting_message": acc.greeting_message,
+                    "settings": dict(acc.settings or {}),
                     "jobs": [
                         {
                             "enabled": job.enabled,
@@ -1234,6 +1290,7 @@ def load_config() -> dict:
         acc.setdefault("message_interval_min", 3)
         acc.setdefault("message_interval_max", 8)
         acc.setdefault("greeting_message", "")
+        acc.setdefault("settings", {})
         for job in acc.get("jobs", []):
             job.setdefault("greeting_message", DEFAULT_GREETING)
             job.setdefault("scroll_pages", 5)

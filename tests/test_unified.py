@@ -1750,13 +1750,18 @@ class HotReloadEffectivenessTest:
         assert loop._reply_engine._ai_rate_limit_wait == 45
 
     def test_greet_engine_receives_new_config(self):
-        """热重载要把新 config 交给引擎，账号级话术才能跟着变"""
+        """热重载要把新 config 交给引擎，账号级话术才能跟着变
+
+        以前断言的是 `engine.config is cfg`；现在循环各持一份"基准+本账号覆盖"
+        的副本（不共用对象正是多账号隔离要的），所以要比值而不是比身份。
+        """
         from boss_bot.unified_config import UnifiedConfig
         loop = self._make_loop()
         cfg = UnifiedConfig()
         cfg.greet.accounts[0].jobs[0].greeting_message = "改过的招呼语"
         self._reload(loop, cfg)
-        assert loop._greet_engine.config is cfg
+        assert loop._greet_engine.config.greet.accounts[0].jobs[0].greeting_message \
+            == "改过的招呼语", "引擎还拿着旧 config，账号级话术改不动"
         job = {"greeting_message": cfg.greet.accounts[0].jobs[0].greeting_message}
         assert loop._greet_engine._greeting_for(job)[0] == "改过的招呼语"
 

@@ -106,7 +106,9 @@ class UnifiedBotLoop:
                  greet_event_cb: Optional[Callable] = None,
                  reply_event_cb: Optional[Callable] = None,
                  wind_control_cb: Optional[Callable] = None):
-        self.config = config or UnifiedConfig.load()
+        # 每个循环各持一份"基准 + 本账号覆盖"：直接存传进来的对象的话，
+        # 账号 0 的判分阈值会盖到账号 1 身上（两个循环共用同一个 config）
+        self.config = (config or UnifiedConfig.load()).apply_account(account_index)
         self.log_cb = log_callback
         self.account_index = account_index
         self._greet_event_cb = greet_event_cb
@@ -1754,7 +1756,9 @@ class UnifiedBotLoop:
         整个过程只做日志与赋值，任何异常都不允许打断调用线程。
         """
         try:
-            self.config = UnifiedConfig.load()
+            # 读盘之后必须再套本账号的覆盖：这里以前直接 self.config = load()，
+            # 于是运行 10 秒后账号级阈值就被全局基准冲掉，表现为"独立配置改了没生效"
+            self.config = UnifiedConfig.load().apply_account(self.account_index)
 
             # 0. 引擎与主循环共用同一份新 config，并按新 config 重读
             #    频率限制/话术/简历图片/账号参数（否则前端改了要重启才生效）

@@ -221,11 +221,14 @@ Cookie 点由 `GET /api/accounts/cookies` 供数（只查文件，不启动浏�
 | 聊天记录 | `messages/姓名#公司.json` / `messages/aN_姓名#公司.json` |
 | 打招呼记录、回复记录 | **共用** `data/greet_records.json`、`data/reply_records.json`，每条带 `account_index`，接口按 `?account=` 过滤，导出与清空同样按账号收口 |
 | 打招呼话术、简历图片、消息间隔、岗位任务 | 各自 `accounts[N]` |
+| AI 判分标准与回复参数 | `accounts[N].settings`，**只存与全局基准不同的字段**（见下） |
 | 每日上限计数 | 按 `account_index` 过滤 |
 | 自进化数据 | `data/evolution_data.json` / `..._account_N.json`（质量数据同样分文件） |
 | 风控/封号通知 | 事件带 `account_index` 与账号名，前端横幅会写「[账号2] …」 |
 
-**全局共享（有意为之）**：AI 配置与接口列表、回复规则/模板、个人画像、关键词，以及**已投递 URL 去重表 `data/chatted_jobs.json`**——同一个岗位不让两个号各打一次招呼，否则 HR 会收到两条一模一样的消息。
+**每账号一套配置**：两个号投的是不同工种（一个数据分析、一个运营），判分阈值和打分提示词不该共用一套。`accounts[N].settings` 存的是**稀疏覆盖**（形如 `{"ai": {"match_threshold": 88}}`），运行时 `UnifiedConfig.apply_account(N)` 把基准深拷贝后盖上这几项，所以：基准改了没动过的账号跟着变，账号改回和基准一样就变成空覆盖（等于取消独立）。可覆盖的段只有 `ai` 和 `reply` —— 简历/个人画像/话术模板按号覆盖只会让两个号对同一个 HR 说出互相矛盾的介绍。界面上「数据范围」选中某号时，AI 面板标题会写明「仅账号「X」独立生效」，保存时请求带 `account`，后端 `_fold_into_account_overlay` 把生效值折回该号覆盖、全局段退回基准值 —— 少了这一步，改账号 2 的阈值会顺手改掉所有账号。
+
+**仍然全局共享（有意为之）**：AI 接口列表与 Key、回复规则/模板、个人画像、关键词，以及**已投递 URL 去重表 `data/chatted_jobs.json`**——同一个岗位不让两个号各打一次招呼，否则 HR 会收到两条一模一样的消息。
 
 共享带来的两个坑都已修：
 
@@ -310,12 +313,15 @@ BOSS 每个会话只给 2-3 条历史（`.chat-content` 的 `scrollHeight == cli
 两套都要跑：单元测试管逻辑，真机浏览器套件管"打开来真的能用"。
 
 ```bash
-pytest tests/ -q                      # 438 项，约 45 秒，全部离线（不碰真实数据、不联网）
+pytest tests/ -q                      # 563 项，约 55 秒，全部离线（不碰真实数据、不联网）
 ```
 
 真机套件全部使用项目内 `cloakbrowser/chrome.exe`，且**只做读/切/筛/存配置，绝不点发送、打招呼、发简历**：
 
 ```bash
+python tests/e2e_greet_records_ui.py  # 15 项：打招呼记录表实时推送/去重/日期筛选/数据范围切换（独立浏览器，只开本地面板）
+python tests/e2e_account_ui.py        # 8 项：左侧账号行只管登录、右侧数据范围唯一切换入口、招呼语输入框真的写回配置
+python tests/e2e_per_account_config.py # 9 项：每账号一套配置。临时目录副本 + 第二个 Flask(5055)，点完不碰真实 bot_config.json
 python tools/e2e_dashboard.py         # 62 项：界面渲染、指标卡、记录筛选、开关往返、弹窗、主题、断线横幅、无 JS 报错；含 18 项多账号范围 + 7 项 AI 预算/判分质量/提示词默认值断言
 python tools/e2e_live_boss.py         # 26 项：反爬自检、登录态、会话读取、岗位解析、AI 真实判分、多账号归属（含另开账号2 浏览器比对会话）
 python tools/verify_dashboard_ui.py   # 14 项：指标卡口径 + AI 体检展示，产出 tools/verify_dashboard.png

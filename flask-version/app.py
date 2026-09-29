@@ -52,6 +52,7 @@ from boss_bot.unified_config import (
     UnifiedConfig, BASE_DIR, BOT_CONFIG_FILE, USER_PROFILE_FILE,
     OVERRIDES_FILE,
     load_config, save_config, save_overrides, validate_config, DEFAULT_GREETING,
+    diff_against, ACCOUNT_OVERLAY_SECTIONS,
 )
 from boss_bot.main_loop import UnifiedBotLoop, MultiAccountManager
 from boss_bot.self_evolve import SelfEvolveEngine
@@ -921,8 +922,16 @@ def api_accounts_cookies():
 
 @app.route("/api/config", methods=["GET"])
 def api_get_config():
-    """获取当前配置。"""
+    """获取当前配置。
+
+    ?account=N 返回该账号的生效值（全局基准 + accounts[N].settings 覆盖）。
+    界面选中某个账号时展示/编辑的就是这份，否则"给账号2 改了阈值"要用户自己
+    心算哪个值最终生效。不带 account 就是全局基准。
+    """
     cfg = _ensure_config()
+    account = request.args.get("account", type=int)
+    if account is not None:
+        cfg = cfg.apply_account(account)
     config_dict = cfg.to_dict()
     # 添加 user_profile 信息
     config_dict["user_profile"] = cfg._profile_dict()
@@ -952,6 +961,28 @@ def api_get_config():
     return jsonify({"status": "ok", "config": config_dict})
 
 
+def _fold_into_account_overlay(new_cfg: dict, idx: int) -> None:
+    """把提交里的账号差异折进 accounts[idx].settings，全局段退回基准值。
+
+    界面选中某个账号时读写的是"基准 + 覆盖"的生效值，整份回写会把生效值写成
+    全局基准（改一个号 = 改所有号）。基准取 to_dict() 而不是 dataclass 直接
+    序列化：那正是 GET 发给前端的那份形状，两边字段对得上才比得出差异。
+    改回和基准一样就得到空覆盖，等于取消这个账号的独立设置。
+    """
+    base_cfg = _ensure_config().to_dict()
+    overlay = {}
+    for section in ACCOUNT_OVERLAY_SECTIONS:
+        submitted = new_cfg.get(section)
+        base = base_cfg.get(section)
+        if isinstance(submitted, dict) and isinstance(base, dict):
+            diff = diff_against(submitted, base)
+            if diff:
+                overlay[section] = diff
+        if isinstance(base, dict):
+            new_cfg[section] = base
+    new_cfg["accounts"][idx]["settings"] = overlay
+
+
 @app.route("/api/config", methods=["POST", "PUT"])
 def api_save_config():
     """保存配置。
@@ -960,6 +991,8 @@ def api_save_config():
       - reply_rules、templates、importance_keywords、user_profile 同时写入
         bot_config.json 和 config_overrides.json，确保两个文件一致。
       - AI 配置等其他字段只写入 bot_config.json。
+      - 请求带 account 时，AI/回复段按账号写进 accounts[N].settings 覆盖，
+        全局基准保持磁盘上的原值。
       - 保存后重新加载配置，确保后端读到正确的值。
     """
     global _config, _multi_manager
@@ -976,6 +1009,13 @@ def api_save_config():
         errors = validate_config(new_cfg)
         if errors:
             return jsonify({"status": "error", "message": "；".join(errors)}), 400
+
+        # 界面选中某个账号时，GET 给的是"基准+覆盖"的生效值，整份回传就会把
+        # 生效值当成全局基准写进磁盘——改账号2 的阈值顺手改了所有号。
+        # 带 account 时先把它折回 accounts[N].settings，全局段再用基准原样补回。
+        account = data.get("account") if isinstance(data.get("config"), dict) else None
+        if isinstance(account, int) and 0 <= account < len(new_cfg.get("accounts") or []):
+            _fold_into_account_overlay(new_cfg, account)
 
         # 保存到 bot_config.json（主配置源）
         save_config(new_cfg)
