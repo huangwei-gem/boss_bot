@@ -4067,6 +4067,8 @@ function clearReplyRecords(){
 let allGreetRecords = [];
 // 只从实时推送来的行：服务端快照可能比它们早，落库记录回来前先挂在前面
 let greetPendingRows = [];
+// 第几次拉取：响应落地时不是最新一次就丢掉
+let greetLoadSeq = 0;
 // 缓存所有回复记录分组（用于前端筛选）
 let allReplyGroups = [];
 
@@ -4640,7 +4642,12 @@ startNotifPolling();
 let greetFeedSig = '';
 
 function loadGreetRecords(force) {
+  // 同一时刻可能有两个请求在飞（页面加载的那次还没回来用户就切了范围、或切范围
+  // 又触发重拉）。谁后落地谁说了算的话，旧范围的 393 行会盖掉刚切的 282 行，
+  // 表现成"切了账号列表不动"。只认最后一次请求的响应。
+  var seq = ++greetLoadSeq;
   fetch('/api/greet_records' + scopeQs()).then(function(r){return r.json();}).then(function(data){
+    if (seq !== greetLoadSeq) return;
     var records = (data && data.records) || [];
     // 轮询时内容没变就不动 DOM：每 20 秒把整张表重建一次会让滚动位置和悬停失效。
     // 范围要算进指纹，否则切账号时两个范围记录恰好相同会跳过重渲染

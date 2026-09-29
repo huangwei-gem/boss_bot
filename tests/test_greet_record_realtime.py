@@ -80,6 +80,7 @@ def run_js(html_source, payload):
         "const PUSH = " + json.dumps(payload, ensure_ascii=False) + ";\n"
         "let allGreetRecords = [];\n"
         "let greetPendingRows = [];\n"
+        "let greetLoadSeq = 0;\n"
         "function applyGreetFilter(){/* 只验数据模型，DOM 渲染另有真机测试 */}\n"
         + fns + "\n" + JS_CASES
     )
@@ -156,6 +157,7 @@ const SERVER_ROWS = %s;
 const CONFIRMED = %s;
 let allGreetRecords = [];
 let greetPendingRows = [];
+let greetLoadSeq = 0;
 let greetFeedSig = '';
 let dataScope = 'all';
 var window = {};
@@ -272,6 +274,92 @@ class GreetPushContractTest(unittest.TestCase):
         html = INDEX_HTML.read_text(encoding="utf-8")
         self.assertNotIn("greet-status-pending", html)
         self.assertNotIn("data-job-url", html)
+
+
+class OutOfOrderRefreshTest(unittest.TestCase):
+    """切范围后，上一个范围的响应不能后到再把表盖回去。
+
+    2026-09-29 看板实测复现：点「账号2」后页面仍是 393 行（全部账号的条数）。
+    切范围会连着发两次拉取（配置 + 记录），而页面加载/轮询的那次请求还在飞，
+    它落地时比新范围那次晚，allGreetRecords 就被旧数据盖回去了——表现成
+    "切了账号列表不动"。
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.out = run_out_of_order_js(
+            INDEX_HTML.read_text(encoding="utf-8"),
+            old_scope_rows=[{"job_name": "旧范围的岗%d" % i, "company": "C%d" % i,
+                             "status": "applied", "is_greeted": True,
+                             "timestamp": "2026-09-29 08:00:00",
+                             "url": "https://www.zhipin.com/job_detail/old%d.html" % i,
+                             "account_index": 0} for i in range(3)],
+            new_scope_rows=[{"job_name": "账号2 的岗", "company": "N", "status": "applied",
+                             "is_greeted": True, "timestamp": "2026-09-29 09:00:00",
+                             "url": "https://www.zhipin.com/job_detail/new.html",
+                             "account_index": 1}])
+
+    def test_旧响应后到也不覆盖新范围(self):
+        self.assertEqual(self.out["final_len"], 1,
+                         "旧范围的响应后落地，把表盖回了 %s 行" % self.out["final_len"])
+
+    def test_留下的是新范围的行(self):
+        self.assertEqual(self.out["first_job"], "账号2 的岗")
+
+
+def run_out_of_order_js(html_source, old_scope_rows, new_scope_rows):
+    """两次拉取，故意让先发的后落地"""
+    if shutil.which("node") is None:
+        raise unittest.SkipTest("需要 node 才能真跑前端函数")
+    names = ("toGreetRow", "greetRowKey", "addGreetRecord", "extractDate",
+             "loadGreetRecords")
+    fns = "\n".join(extract_fn(html_source, n) for n in names)
+    js = """
+const OLD_ROWS = %s;
+const NEW_ROWS = %s;
+let allGreetRecords = [];
+let greetPendingRows = [];
+let greetLoadSeq = 0;
+let greetFeedSig = '';
+let dataScope = 'all';
+function applyGreetFilter(){}
+function scopeQs(){ return '?account=' + dataScope; }
+var __calls = 0;
+var fetch = function(){
+  __calls++;
+  // 第 1 次（旧范围）慢，第 2 次（新范围）快 —— 落地顺序和发起顺序相反
+  var rows = __calls === 1 ? OLD_ROWS : NEW_ROWS;
+  var wait = __calls === 1 ? 30 : 5;
+  return new Promise(function(res){
+    setTimeout(function(){
+      res({json: function(){ return Promise.resolve({records: rows}); }});
+    }, wait);
+  });
+};
+%s
+(async function(){
+  const out = {};
+  loadGreetRecords(true);          // 旧范围的请求已经在飞
+  dataScope = '1';
+  loadGreetRecords(true);          // 切到账号2
+  await new Promise(r => setTimeout(r, 120));
+  out.final_len = allGreetRecords.length;
+  out.first_job = (allGreetRecords[0] || {}).job_name;
+  console.log(JSON.stringify(out));
+})();
+""" % (json.dumps(old_scope_rows, ensure_ascii=False),
+       json.dumps(new_scope_rows, ensure_ascii=False), fns)
+    with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False,
+                                     encoding="utf-8") as f:
+        f.write(js)
+        path = f.name
+    try:
+        proc = subprocess.run(["node", path], capture_output=True, text=True,
+                              timeout=30, encoding="utf-8")
+    finally:
+        Path(path).unlink(missing_ok=True)
+    assert proc.returncode == 0, f"node 执行失败:\n{proc.stderr}"
+    return json.loads(proc.stdout.strip())
 
 
 if __name__ == "__main__":
