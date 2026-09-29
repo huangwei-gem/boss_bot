@@ -7,6 +7,7 @@
 
 import json
 import unittest
+from unittest.mock import MagicMock
 
 from boss_bot.unified_config import DEFAULT_GREETING, UnifiedConfig
 from boss_bot.greet_engine import pick_greeting
@@ -97,6 +98,179 @@ class AutoGreetDialogTest(unittest.TestCase):
         self.assertIn("_mark_chatted(job)", src[:src.index("chat_failure_reason(snap)")])
 
 
+class FakeEle:
+    def __init__(self, name=""):
+        self.name = name
+        self.clicked = 0
+        self.typed = []
+
+    def click(self):
+        self.clicked += 1
+
+    def input(self, text):
+        self.typed.append(text)
+
+
+class FakePage:
+    """够用的假 DOM：探针按脚本原文回话，元素按选择器回话。"""
+
+    def __init__(self, bubble=None, elements=None, browser=None):
+        self.bubble = bubble
+        self.elements = elements or {}
+        self._browser = browser
+        self.probes = []
+
+    def run_js(self, script, *args, as_expr=False):
+        from boss_bot.greet_engine import LAST_MINE_BUBBLE_JS
+        self.probes.append(script)
+        if script == LAST_MINE_BUBBLE_JS:
+            return json.dumps(self.bubble) if self.bubble is not None else ""
+        return "{}"
+
+    def ele(self, selector, timeout=None):
+        return self.elements.get(selector)
+
+    def _get_browser(self):
+        return self._browser
+
+
+class FakeBrowser:
+    def __init__(self, pages):
+        self._pages = pages          # tab_id -> FakePage
+        self.tab_ids = list(pages)
+
+    def get_tab(self, tab_id):
+        return self._pages[tab_id]
+
+
+def _engine():
+    from boss_bot.greet_engine import GreetEngine
+    eng = GreetEngine(MagicMock(), UnifiedConfig(), account_index=0)
+    eng.running = True
+    eng._log = lambda *a, **k: None
+    eng._random_delay = lambda *a, **k: None
+    eng._interruptible_sleep = lambda *a, **k: None
+    return eng
+
+
+class AutoGreetMatchTest(unittest.TestCase):
+    """BOSS 替我们发出去的那条，是不是本号想发的招呼语。"""
+
+    def test_内容一致算已经发过(self):
+        from boss_bot.greet_engine import auto_greet_matches
+        ours = "你好，我对这个岗位很感兴趣"
+        self.assertTrue(auto_greet_matches(ours, ours))
+
+    def test_只差空白换行也算一致(self):
+        """BOSS 气泡里会多出不可见空白，逐字符比会误判成不一致而重发一遍"""
+        from boss_bot.greet_engine import auto_greet_matches
+        self.assertTrue(auto_greet_matches(" 你好，\n 我 对这个岗位很感兴趣 ",
+                                           "你好， 我 对这个岗位很感兴趣"))
+
+    def test_内容不一致要补发(self):
+        from boss_bot.greet_engine import auto_greet_matches
+        self.assertFalse(auto_greet_matches("您好，方便发个简历吗", "你好，我对这个岗位很感兴趣"))
+
+    def test_没读到气泡不能当作已发过(self):
+        from boss_bot.greet_engine import auto_greet_matches
+        self.assertFalse(auto_greet_matches("", "你好"))
+
+    def test_我方文案为空不许认账(self):
+        """空串相等会把平台默认文案冒充成本号自定义招呼语"""
+        from boss_bot.greet_engine import auto_greet_matches
+        self.assertFalse(auto_greet_matches("", ""))
+
+    def test_探针读我方最后一条气泡(self):
+        from boss_bot.greet_engine import LAST_MINE_BUBBLE_JS
+        self.assertTrue(LAST_MINE_BUBBLE_JS.lstrip().startswith("return"))
+        self.assertIn("item-myself", LAST_MINE_BUBBLE_JS)
+        self.assertIn("text-content", LAST_MINE_BUBBLE_JS)
+
+
+class AutoGreetContinueTest(unittest.TestCase):
+    def test_认得出继续沟通(self):
+        from boss_bot.greet_engine import pick_continue_btn
+        dialog = {"buttons": ["继续沟通|btn-continue", "留在此页|btn-cancel"]}
+        self.assertEqual(pick_continue_btn(dialog), "继续沟通")
+
+    def test_只有留在此页时不点(self):
+        from boss_bot.greet_engine import pick_continue_btn
+        self.assertEqual(pick_continue_btn({"buttons": ["留在此页|btn-cancel"]}), "")
+
+    def test_按钮文本带空白也认(self):
+        from boss_bot.greet_engine import pick_continue_btn
+        self.assertEqual(pick_continue_btn({"buttons": [" 继续沟通 |btn"]}), "继续沟通")
+
+
+class AutoGreetFollowupTest(unittest.TestCase):
+    """认出弹窗之后：进会话，是我们那段就不重发，不是才发本号那段。"""
+
+    def _dialog(self):
+        return {"text": "已向BOSS发送消息 留在此页 继续沟通",
+                "buttons": ["继续沟通|btn-continue", "留在此页|btn-cancel"]}
+
+    def test_内容一致时一个字都不发(self):
+        from boss_bot.greet_engine import LAST_MINE_BUBBLE_JS
+        ours = "你好，我对这个岗位很感兴趣"
+        btn = FakeEle("继续沟通")
+        page = FakePage(bubble={"chat_page": True, "total": 2, "mine": 1, "text": ours},
+                       elements={"text=继续沟通": btn, "#chat-input": FakeEle("input")})
+        got = _engine()._auto_greet_followup(page, ours, self._dialog())
+        self.assertEqual(got, "matched")
+        self.assertEqual(btn.clicked, 1, "要先点「继续沟通」进会话")
+        self.assertEqual(page.elements["#chat-input"].typed, [])
+
+    def test_内容不一致时补发本号招呼语(self):
+        ours = "你好，我对这个岗位很感兴趣"
+        btn = FakeEle("继续沟通")
+        inp = FakeEle("input")
+        send = FakeEle("send")
+        page = FakePage(bubble={"chat_page": True, "total": 2, "mine": 1,
+                                "text": "您好，方便发份简历吗"},
+                        elements={"text=继续沟通": btn, "#chat-input": inp,
+                                  ".btn-send": send})
+        got = _engine()._auto_greet_followup(page, ours, self._dialog())
+        self.assertEqual(got, "sent")
+        self.assertEqual(inp.typed, [ours])
+        self.assertEqual(send.clicked, 1)
+
+    def test_会话里没有我方气泡时也要发出去(self):
+        """BOSS 弹窗说发了，可读到的我方气泡是 0 条——这段必须补上"""
+        ours = "你好，我对这个岗位很感兴趣"
+        inp = FakeEle("input")
+        page = FakePage(bubble={"chat_page": True, "total": 3, "mine": 0, "text": ""},
+                        elements={"text=继续沟通": FakeEle("继续沟通"),
+                                  "#chat-input": inp, ".btn-send": FakeEle("send")})
+        got = _engine()._auto_greet_followup(page, ours, self._dialog())
+        self.assertEqual(got, "sent")
+        self.assertEqual(inp.typed, [ours])
+
+    def test_进不去会话就老实说发不了(self):
+        """读不到消息列表时不能盲发，否则可能对着搜索页打字"""
+        ours = "你好，我对这个岗位很感兴趣"
+        inp = FakeEle("input")
+        page = FakePage(bubble={"chat_page": False, "total": 0, "mine": 0, "text": ""},
+                        elements={"text=继续沟通": FakeEle("继续沟通"),
+                                  "#chat-input": inp})
+        got = _engine()._auto_greet_followup(page, ours, self._dialog())
+        self.assertEqual(got, "none")
+        self.assertEqual(inp.typed, [])
+
+    def test_当前页没会话时去别的标签页找(self):
+        """BOSS 点「继续沟通」常常是把会话开到新标签页"""
+        from boss_bot.greet_engine import LAST_MINE_BUBBLE_JS
+        ours = "你好，我对这个岗位很感兴趣"
+        detail_btn = FakeEle("继续沟通")
+        detail = FakePage(bubble={"chat_page": False, "total": 0, "mine": 0, "text": ""},
+                          elements={"text=继续沟通": detail_btn})
+        chat = FakePage(bubble={"chat_page": True, "total": 1, "mine": 1, "text": ours})
+        browser = FakeBrowser({"a": detail, "b": chat})
+        detail._browser = browser
+        got = _engine()._auto_greet_followup(detail, ours, self._dialog())
+        self.assertEqual(got, "matched")
+        self.assertIn(LAST_MINE_BUBBLE_JS, chat.probes)
+
+
 class GreetingSourceTraceTest(unittest.TestCase):
     """发送时要能看出这段文字是哪来的，否则改了半天配置不知道生效没有"""
 
@@ -117,6 +291,29 @@ class GreetingSourceTraceTest(unittest.TestCase):
         body = html[html.index("function onAccChange"):]
         body = body[:body.index("\nfunction ")]
         self.assertIn("greeting_message", body, "招呼语输入框改了也不写回配置")
+
+
+class AutoGreetWiringTest(unittest.TestCase):
+    def test_弹窗分支先走补发再落库(self):
+        import inspect
+
+        from boss_bot.greet_engine import GreetEngine
+        src = inspect.getsource(GreetEngine._apply_job_inner)
+        pos = src.index("self._auto_greet_followup(")
+        self.assertLess(pos, src.index("AUTO_GREET_REASON"))
+        seg = src[pos:pos + 900]
+        self.assertIn("_record_sent_now(job)", seg, "补发成功当场就该落库")
+        self.assertIn("_mark_chatted(job)", seg)
+        self.assertIn("return True", seg, "招呼语已发出就该算投递成功，不能再算跳过")
+
+    def test_补发用本号招呼语而不是岗位默认(self):
+        import inspect
+
+        from boss_bot.greet_engine import GreetEngine
+        src = inspect.getsource(GreetEngine._apply_job_inner)
+        pos = src.index("self._auto_greet_followup(")
+        seg = src[max(0, pos - 400):pos + 100]
+        self.assertIn("greeting", seg, "补发那段文案必须来自 _greeting_for 的结果")
 
 
 if __name__ == "__main__":

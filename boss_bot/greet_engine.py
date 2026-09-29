@@ -178,6 +178,60 @@ def parse_auto_greet_dialog(raw) -> dict:
     return data if isinstance(data, dict) and data.get("text") else {}
 
 
+# 会话里我方最后一条已发出的气泡。自动发送那条到底发了什么，只能这样读出来，
+# 猜"BOSS 应该发的就是我这句"会把重复发送和漏发都藏起来。
+# 我方气泡的 class 是从 tools/chat_page_structure.json 的真实 dump 里核出来的
+# （message-item item-myself + .text-content，对侧是 item-friend）。
+LAST_MINE_BUBBLE_JS = r'''
+return (function(){
+  var all = document.querySelectorAll('.message-item');
+  var mine = document.querySelectorAll('.message-item.item-myself');
+  var text = '';
+  if (mine.length) {
+    var last = mine[mine.length - 1];
+    var t = last.querySelector('.text-content') || last;
+    text = (t.innerText || t.textContent || '').trim();
+  }
+  return JSON.stringify({chat_page: all.length > 0, total: all.length,
+                         mine: mine.length, text: text.slice(0, 400)});
+})()'''
+
+
+def norm_greeting(text) -> str:
+    return " ".join(str(text or "").split())
+
+
+def auto_greet_matches(boss_sent, ours) -> bool:
+    """BOSS 替我们发出去的那条，是不是就是本号要发的招呼语。
+
+    只按空白折叠后比：气泡里会多出渲染用的空格换行，逐字符比会把"已经是我们
+    这句"误判成不一致，于是对同一个 HR 发两遍。我方文案为空时必须返回 False，
+    不然平台的预设文案会被当成本号自定义的那段而不再补发。
+    """
+    ours_n = norm_greeting(ours)
+    return bool(ours_n) and norm_greeting(boss_sent) == ours_n
+
+
+def pick_continue_btn(dialog) -> str:
+    """弹窗里该点的是「继续沟通」；「留在此页」是什么都不做，不能点。"""
+    for item in (dialog or {}).get("buttons") or []:
+        text = str(item).split("|")[0].strip()
+        if SELECTOR_START_CHAT_CONTINUE in text:
+            return SELECTOR_START_CHAT_CONTINUE
+    return ""
+
+
+# 补发时找输入框/发送按钮的选择器，与正常路径同源（会话输入框是 contenteditable）
+AUTO_GREET_INPUT_SELECTORS = (
+    "#chat-input", ".chat-input", ".input-area",
+    'textarea[placeholder*="回复"]', 'textarea[placeholder*="输入"]',
+    "[contenteditable=true]", 'div[contenteditable="true"]',
+)
+AUTO_GREET_SEND_SELECTORS = (
+    ".btn-send", ".btn-v2.btn-sure-v2.btn-send", ".send-message", ".chat-send",
+)
+
+
 
 
 def job_id_of(url: str) -> str:
@@ -2177,6 +2231,14 @@ class GreetEngine:
                     self._log("WARN", f"BOSS 自动发出招呼语（第二种机制）| 弹窗class="
                                       f"{dialog.get('cls', '')} | 按钮={dialog.get('buttons', [])}")
                     self._log("WARN", f"  弹窗文本: {str(dialog.get('text', ''))[:120]}")
+                    outcome = self._auto_greet_followup(instance, greeting, dialog)
+                    if outcome in ("matched", "sent"):
+                        job["_auto_greet_note"] = (
+                            "BOSS 自动发出的即本号招呼语，未重复发送" if outcome == "matched"
+                            else "BOSS 自动发的是平台预设文案，已补发本号招呼语")
+                        self._mark_chatted(job)
+                        self._record_sent_now(job)
+                        return True, ""
                     self._mark_chatted(job)
                     return False, AUTO_GREET_REASON
                 snap = self._chat_snapshot(instance)
@@ -2476,6 +2538,117 @@ class GreetEngine:
         except Exception as e:
             self._log("DEBUG", f"自动发送弹窗探测失败: {e}")
             return {}
+
+    def _read_last_outgoing(self, tab) -> dict:
+        """读会话里我方最后一条已发出的气泡；读不到返回空 dict。"""
+        try:
+            raw = tab.run_js(LAST_MINE_BUBBLE_JS)
+            data = json.loads(raw) if isinstance(raw, str) else raw
+            return data if isinstance(data, dict) else {}
+        except Exception as e:
+            self._log("DEBUG", f"读取我方最后一条气泡失败: {e}")
+            return {}
+
+    def _greet_tab_candidates(self, instance) -> list:
+        """弹窗点完「继续沟通」后会话可能开在当前页抽屉里，也可能新开一个标签页。
+
+        遍历规则跟输入框兜底那段一致：排除回复引擎专用标签页，不碰 instance 本身。
+        """
+        cands = [instance]
+        seen = {id(instance)}
+        browser = instance._get_browser() if hasattr(instance, "_get_browser") else None
+        if browser is None:
+            return cands
+        reply_tab_id = None
+        if self.browser_manager is not None:
+            try:
+                reply_tab_id = self.browser_manager.get_reply_tab_id()
+            except Exception:
+                reply_tab_id = None
+        try:
+            tab_ids = list(browser.tab_ids)
+        except Exception:
+            return cands
+        for tab_id in tab_ids:
+            if reply_tab_id and tab_id == reply_tab_id:
+                continue
+            try:
+                tab = browser.get_tab(tab_id)
+            except Exception:
+                continue
+            if tab is None or id(tab) in seen:
+                continue
+            seen.add(id(tab))
+            cands.append(tab)
+        return cands
+
+    def _auto_greet_followup(self, instance, greeting: str, dialog: dict) -> str:
+        """第二种打招呼机制：BOSS 自己发了一条，我们判断要不要补发本号那句。
+
+        matched=BOSS 发的就是本号招呼语（不重复发）；sent=内容不是我们的，已补发；
+        none=进不去会话，什么都没发。盲发会对着搜索页打字，所以读不到列表就收手。
+        """
+        btn_text = pick_continue_btn(dialog)
+        if not btn_text:
+            self._log("WARN", "自动发送弹窗里没有「继续沟通」，无法进入会话核对")
+            return "none"
+
+        try:
+            btn = instance.ele(f"text={btn_text}", timeout=3)
+            if not btn:
+                self._log("WARN", f"弹窗里的「{btn_text}」按钮没找到")
+                return "none"
+            btn.click()
+        except Exception as e:
+            self._log("WARN", f"点击「{btn_text}」失败: {e}")
+            return "none"
+        self._random_delay(2, 3)
+
+        for tab in self._greet_tab_candidates(instance):
+            read = self._read_last_outgoing(tab)
+            if not read or not read.get("chat_page"):
+                continue
+            sent_text = read.get("text", "")
+            if auto_greet_matches(sent_text, greeting):
+                self._log("INFO", "BOSS 自动发出的就是本号招呼语，不重复发送")
+                return "matched"
+            if not norm_greeting(greeting):
+                self._log("WARN", "本号招呼语为空，不补发")
+                return "none"
+
+            input_area = None
+            for sel in AUTO_GREET_INPUT_SELECTORS:
+                try:
+                    input_area = tab.ele(sel, timeout=3)
+                    if input_area:
+                        break
+                except Exception:
+                    continue
+            if not input_area:
+                self._log("WARN", f"进了会话但没找到输入框（我方气泡 {read.get('mine')} 条，"
+                                  f"最后一条: {str(sent_text)[:40]}）")
+                continue
+
+            input_area.input(greeting)
+            self._random_delay(1, 2)
+            send_btn = None
+            for sel in AUTO_GREET_SEND_SELECTORS:
+                try:
+                    send_btn = tab.ele(sel, timeout=3)
+                    if send_btn:
+                        break
+                except Exception:
+                    continue
+            if send_btn:
+                send_btn.click()
+            else:
+                input_area.input("\n")
+            self._log("INFO", f"BOSS 自动发的是平台预设文案"
+                              f"（{str(sent_text)[:30] or '无我方气泡'}），已补发本号招呼语: "
+                              f"{greeting[:40]}")
+            return "sent"
+
+        return "none"
 
     def _on_captcha_page(self, instance) -> bool:
         """当前页面是不是 BOSS 的人机验证页。"""
