@@ -11,6 +11,7 @@
 Cookie 文件；回复侧连判 3 次就停下来等人工，不再空刷。
 """
 
+import io
 import json
 import os
 import sys
@@ -254,28 +255,64 @@ class ToolProbeUrlTest(unittest.TestCase):
         self.assertFalse(self._fn()(""))
 
 
-class ToolProbeUrlTest(unittest.TestCase):
-    """体检脚本自己也不能把登录页报成已登录（今天就是这么漏的）。"""
+class CookieBackupTest(unittest.TestCase):
+    """最后一道保险：Cookie 文件不管被覆盖还是被"删除"，旧内容都得还在。"""
 
-    def _fn(self):
-        sys.path.insert(0, os.path.join(ROOT, "tools"))
-        import two_account_login_check as t
-        return t.logged_in_from_url
+    def test_备份是复制且不动原文件(self):
+        import tempfile
+        from boss_bot.browser_launcher import backup_cookie_file
+        with tempfile.TemporaryDirectory() as td:
+            target = os.path.join(td, "zhipin_cookies.json")
+            with io.open(target, "w", encoding="utf-8") as f:
+                json.dump([_auth_cookie(value="旧会话")], f)
+            got = backup_cookie_file(target, os.path.join(td, "bk"))
+            self.assertTrue(got and os.path.exists(got))
+            self.assertEqual(json.load(io.open(got, encoding="utf-8"))[0]["value"], "旧会话")
+            self.assertTrue(os.path.exists(target), "备份不能把原文件搬走")
 
-    def test_登录页不算已登录(self):
-        f = self._fn()
-        for url in ("https://www.zhipin.com/web/user/?ka=header-login",
-                    "https://login.zhipin.com/",
-                    "https://passport.zhipin.com/login"):
-            self.assertFalse(f(url), url)
+    def test_只保留最近几份(self):
+        import tempfile
+        from boss_bot.browser_launcher import backup_cookie_file, COOKIE_BACKUP_KEEP
+        with tempfile.TemporaryDirectory() as td:
+            bk = os.path.join(td, "bk")
+            for i in range(COOKIE_BACKUP_KEEP + 3):
+                target = os.path.join(td, "c.json")
+                with io.open(target, "w", encoding="utf-8") as f:
+                    json.dump([_auth_cookie(value=str(i))], f)
+                backup_cookie_file(target, bk)
+            names = sorted(os.listdir(bk))
+            self.assertEqual(len(names), COOKIE_BACKUP_KEEP)
+            last = json.load(io.open(os.path.join(bk, names[-1]), encoding="utf-8"))
+            self.assertEqual(last[0]["value"], str(COOKIE_BACKUP_KEEP + 2))
 
-    def test_会话页算已登录(self):
-        f = self._fn()
-        self.assertTrue(f("https://www.zhipin.com/web/geek/chat"))
-        self.assertTrue(f("https://www.zhipin.com/web/geek/chat?_security_check=0"))
+    def test_save_cookies落盘前先备份(self):
+        """覆盖写是今天真正丢会话的那一步，必须留底"""
+        import tempfile
+        from unittest.mock import patch as _p
+        from boss_bot.browser_launcher import BrowserInstance
+        with tempfile.TemporaryDirectory() as td:
+            target = os.path.join(td, "zhipin_cookies.json")
+            with io.open(target, "w", encoding="utf-8") as f:
+                json.dump([_auth_cookie(value="上一轮的会话")], f)
+            inst = BrowserInstance()
+            with _p.object(BrowserInstance, "_get_all_cookies",
+                           return_value=[_auth_cookie(value="这一轮读到的")]), \
+                 _p("boss_bot.browser_launcher._cookie_backup_dir",
+                    lambda: os.path.join(td, "bk")):
+                inst.save_cookies(target)
+            now = json.load(io.open(target, encoding="utf-8"))
+            self.assertEqual(now[0]["value"], "这一轮读到的")
+            kept = os.listdir(os.path.join(td, "bk"))
+            self.assertEqual(len(kept), 1)
+            self.assertEqual(json.load(io.open(os.path.join(td, "bk", kept[0]),
+                                               encoding="utf-8"))[0]["value"], "上一轮的会话")
 
-    def test_空url不算(self):
-        self.assertFalse(self._fn()(""))
+    def test_界面删除按钮也只归档不删除(self):
+        src = io.open('flask-version/app.py', encoding='utf-8').read()
+        i = src.index('def api_cookies_delete')
+        seg = src[i:i + 1400]
+        self.assertNotIn("cookie_path.unlink()", seg)
+        self.assertIn("archive_cookie_file", seg)
 
 
 if __name__ == "__main__":

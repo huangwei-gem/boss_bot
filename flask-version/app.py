@@ -1198,8 +1198,15 @@ def api_cookies_delete():
             safe_name += ".json"
         cookie_path = COOKIE_DIR / safe_name
         if cookie_path.exists():
-            cookie_path.unlink()
-            return jsonify({"status": "ok", "message": f"已删除 {safe_name}"})
+            # 界面点"删除"也不许真删：Cookie 是用户唯一的登录会话凭据，
+            # 删错了连"当时里面是什么"都查不回来（2026-09-29 就是这么丢的）
+            from boss_bot.main_loop import archive_cookie_file
+            dest = archive_cookie_file(str(cookie_path),
+                                       str(resolve_path(Path("data") / "stale_cookies")),
+                                       "界面删除_" + Path(safe_name).stem)
+            return jsonify({"status": "ok",
+                            "message": f"{safe_name} 已归档到 "
+                                       f"{Path(dest).name}（没有真删，需要时可拿回来）"})
         else:
             return jsonify({"status": "error", "message": f"文件不存在: {safe_name}"}), 404
     except Exception as e:

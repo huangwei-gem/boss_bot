@@ -43,6 +43,43 @@ _IS_WINDOWS = platform.system().lower() == "windows"
 # 实测承载 BOSS 直聘登录态的 Cookie 名（缺这些或过期即需要重新登录）
 BOSS_AUTH_COOKIES = ("wt2", "zp_at", "bst", "wbg")
 
+# Cookie 文件是用户唯一的登录会话凭据。覆盖写之前先留一份，只保留最近这么多份：
+# 全留着会把几百 KB 的会话堆成垃圾山，但一份都没有就是 2026-09-29 那样——
+# 判定误报"过期"直接把文件删了，人工连"当时里面到底是什么"都查不了。
+COOKIE_BACKUP_KEEP = 5
+
+
+def _cookie_backup_dir() -> str:
+    return str(resolve_path(Path("data") / "cookie_backups"))
+
+
+def backup_cookie_file(path: str, backup_dir: str = None,
+                       keep: int = COOKIE_BACKUP_KEEP) -> str:
+    """把现有 Cookie 文件复制进备份目录，返回备份路径；原文件不动。"""
+    src = Path(str(path))
+    if not src.is_file():
+        return ""
+    dst_dir = Path(backup_dir or _cookie_backup_dir())
+    dst_dir.mkdir(parents=True, exist_ok=True)
+    stamp = time.strftime("%Y%m%d_%H%M%S")
+    # 序号补零并且"绝不复用已删除的号"：靠 while dest.exists() 找空位的话，
+    # 一份备份被轮换删掉后，下一次会顶回那个最靠前的名字，按名字排序轮换时就
+    # 把最新那份当最旧的删了（第一版就是这么错的）。
+    seqs = []
+    prefix = src.stem + "_"
+    for p in dst_dir.glob(f"{src.stem}_*{src.suffix}"):
+        tail = p.stem[len(prefix):].rsplit("_", 1)[-1]
+        if tail.isdigit():
+            seqs.append(int(tail))
+    dest = dst_dir / f"{prefix}{stamp}_{(max(seqs) + 1) if seqs else 0:04d}{src.suffix}"
+    shutil.copy2(str(src), str(dest))
+    for old in sorted(dst_dir.glob(f"{src.stem}_*{src.suffix}"))[:-keep]:
+        try:
+            old.unlink()
+        except OSError:
+            pass
+    return str(dest)
+
 
 # ──────────────────────────────────────────────────────────────
 # 便携版浏览器检测
@@ -639,6 +676,13 @@ class BrowserInstance:
             filepath = str(resolve_path(filepath))
             if filepath in ("", "."):
                 raise ValueError("未指定 Cookie 保存路径")
+            try:
+                kept = backup_cookie_file(filepath)
+                if kept:
+                    logger.info(f"覆盖前已备份旧 Cookie 到 {Path(kept).name}")
+            except OSError as e:
+                # 备份失败不拦登录写入，但必须说清楚：这份文件是唯一凭据
+                logger.warning(f"Cookie 备份失败，本次将直接覆盖且没有底: {e}")
             with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(cookies, f, ensure_ascii=False, indent=2)
             logger.info(f"已保存 {len(cookies)} 个 Cookie 到 {filepath}")

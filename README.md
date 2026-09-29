@@ -320,7 +320,7 @@ BOSS 每个会话只给 2-3 条历史（`.chat-content` 的 `scrollHeight == cli
 两套都要跑：单元测试管逻辑，真机浏览器套件管"打开来真的能用"。
 
 ```bash
-pytest tests/ -q                      # 631 项，约 52 秒，全部离线（不碰真实数据、不联网）
+pytest tests/ -q                      # 635 项，约 53 秒，全部离线（不碰真实数据、不联网）
 ```
 
 真机套件全部使用项目内 `cloakbrowser/chrome.exe`，且**只做读/切/筛/存配置，绝不点发送、打招呼、发简历**：
@@ -503,9 +503,14 @@ pre-click 命中逐条比对导航前后的 URL，其实是三件事：
 | 判"过期"就删用户的会话文件（不可逆，且丢了排查依据） | 改归档：`archive_cookie_file()` 把文件挪到 `data/stale_cookies/主账号_<时间戳>.json`（原路径为空，下一轮照样走完整登录，内容还在）；`uncertain` 时一个字节都不动 | 同上，开关仍是 `login.clear_cookies_on_failure` |
 | 假登录后无条件 `save_cookies`，用登录页那份顶掉好会话 | `_save_cookies_if_logged_in()`：浏览器里没有未过期的 `wt2/zp_at/bst/wbg` 就不落盘，并打日志说明 | 同上 |
 
-另外回复侧不再无限空转：连续 3 次判登录失效就停这个号的回复轮并置 `needs_login`（只在第一次动 Cookie
+另外回复侧不再无限空转：连续 3 次判登录失效就停这个号并置 `needs_login`（只在第一次动 Cookie
 文件），中间恢复过一次计数清零。等登录时先看 Cookie 再决定要不要访问页面——还没扫完就把页面刷走，
 等于把人家的二维码弄没。
+
+Cookie 文件从此**不可能静默消失**，四层各留一手：`uncertain` 一个字节都不动；确认失效只挪进
+`data/stale_cookies/`；`save_cookies` 覆盖写之前先把旧文件复制进 `data/cookie_backups/`（保留最近
+`COOKIE_BACKUP_KEEP=5` 份，`browser_launcher.backup_cookie_file`）；界面「删除 Cookie」按钮也只归档。
+两个目录都在 `.gitignore` 的 `data/` 里，不会跟着提交走。
 
 `tools/two_account_login_check.py` 同批修正：它原先只排除 `login`/`passport`，把 `/web/user/`（BOSS 的登录页）
 报成"已登录"，正好盖住了这次最要紧的坏消息；现在 `logged_in_from_url()` 明确排除 `/web/user`，并加
