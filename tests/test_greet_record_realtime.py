@@ -79,6 +79,7 @@ def run_js(html_source, payload):
     js = (
         "const PUSH = " + json.dumps(payload, ensure_ascii=False) + ";\n"
         "let allGreetRecords = [];\n"
+        "let greetPendingRows = [];\n"
         "function applyGreetFilter(){/* 只验数据模型，DOM 渲染另有真机测试 */}\n"
         + fns + "\n" + JS_CASES
     )
@@ -87,6 +88,126 @@ def run_js(html_source, payload):
         path = f.name
     try:
         proc = subprocess.run(["node", path], capture_output=True, text=True, timeout=30)
+    finally:
+        Path(path).unlink(missing_ok=True)
+    assert proc.returncode == 0, f"node 执行失败:\n{proc.stderr}"
+    return json.loads(proc.stdout.strip())
+
+
+class PushSurvivesServerRefreshTest(unittest.TestCase):
+    """推送行不能被一份"比它早发出的服务端快照"冲掉。
+
+    2026-09-29 真机抓到的：`loadGreetRecords` 直接 `allGreetRecords = 服务端列表`，
+    而页面加载/轮询的那次 fetch 请求早于引擎落库；它落地时刚好把刚推上来的
+    那一行整条替换掉——用户看到"闪一下又没了"，最长要等 20 秒轮询才回来。
+    """
+
+    SERVER_ROWS = [{"job_name": "数据分析师", "company": "老记录公司", "salary": "9-12K",
+                    "status": "applied", "is_greeted": True,
+                    "timestamp": "2026-09-29 09:00:00",
+                    "url": "https://www.zhipin.com/job_detail/old.html",
+                    "account_index": 1}]
+
+    @classmethod
+    def setUpClass(cls):
+        cls.out = run_merge_js(INDEX_HTML.read_text(encoding="utf-8"), PUSH,
+                               cls.SERVER_ROWS)
+
+    def test_推送行进模型(self):
+        self.assertEqual(self.out["after_push"], 1)
+
+    def test_过期快照不能冲掉推送行(self):
+        self.assertEqual(self.out["after_stale_refresh"], 2,
+                         "服务端快照里没有的那一行被整份替换冲掉了")
+        self.assertEqual(self.out["push_still_first"], PUSH["job_name"])
+
+    def test_快照带上它之后不重复(self):
+        self.assertEqual(self.out["after_confirmed_refresh"], 2,
+                         "落库记录回来后推送行该并入，不能变成两行")
+
+    def test_推送行不跨数据范围(self):
+        self.assertEqual(self.out["other_scope_len"], 1,
+                         "切到别的账号还把上一个号的推送行挂着")
+
+    def test_久等不来就放弃(self):
+        """服务端一直没有它（极端情况）时不能永远挂在页面上"""
+        self.assertEqual(self.out["expired_len"], 1)
+
+
+def run_merge_js(html_source, payload, server_rows):
+    """在 node 里跑真实的 loadGreetRecords：fetch 换成受控的假实现"""
+    if shutil.which("node") is None:
+        raise unittest.SkipTest("需要 node 才能真跑前端函数")
+    names = ("toGreetRow", "greetRowKey", "addGreetRecord", "extractDate",
+             "loadGreetRecords")
+    fns = "\n".join(extract_fn(html_source, n) for n in names)
+    confirmed = server_rows + [{
+        # 落库词表里的同一条：推送侧 status=skip / 落库侧 status=skipped+is_skipped，
+        # 两边的 _key 必须一致，否则确认回来的那次刷新会变成两行
+        "job_name": payload["job_name"], "company": payload["company"],
+        "salary": payload["salary"], "status": "skipped", "is_skipped": True,
+        "skip_reason": payload["skip_reason"],
+        "timestamp": payload["timestamp"], "url": payload["url"],
+        "account_index": payload["account_index"],
+    }]
+    js = """
+const PUSH = %s;
+const SERVER_ROWS = %s;
+const CONFIRMED = %s;
+let allGreetRecords = [];
+let greetPendingRows = [];
+let greetFeedSig = '';
+let dataScope = 'all';
+var window = {};
+function applyGreetFilter(){}
+function scopeQs(){ return ''; }
+var fetch = function(){ return Promise.resolve({json: function(){
+    return Promise.resolve({records: window.__rows || []}); }}); };
+%s
+(async function(){
+  const out = {};
+  const realNow = Date.now;
+  const tick = () => new Promise(r => setTimeout(r, 5));
+
+  addGreetRecord(PUSH);
+  out.after_push = allGreetRecords.length;
+
+  window.__rows = SERVER_ROWS;              // 快照里没有推送行
+  loadGreetRecords(true); await tick();
+  out.after_stale_refresh = allGreetRecords.length;
+  out.push_still_first = (allGreetRecords[0] || {}).job_name;
+
+  window.__rows = CONFIRMED;                // 下一次快照带上它了
+  loadGreetRecords(true); await tick();
+  out.after_confirmed_refresh = allGreetRecords.length;
+
+  window.__rows = [{job_name: '别人的号', company: 'X', status: 'applied',
+                    is_greeted: true, timestamp: '2026-09-29 09:30:00',
+                    url: 'https://www.zhipin.com/job_detail/other.html',
+                    account_index: 0}];
+  dataScope = '0';                          // 切到主账号
+  loadGreetRecords(true); await tick();
+  out.other_scope_len = allGreetRecords.length;
+
+  dataScope = 'all';
+  Date.now = () => realNow() + 400000;      // 久等不来就该放手
+  window.__rows = SERVER_ROWS;
+  loadGreetRecords(true); await tick();
+  out.expired_len = allGreetRecords.length;
+  Date.now = realNow;
+
+  console.log(JSON.stringify(out));
+})();
+""" % (json.dumps(payload, ensure_ascii=False),
+       json.dumps(server_rows, ensure_ascii=False),
+       json.dumps(confirmed, ensure_ascii=False), fns)
+    with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False,
+                                     encoding="utf-8") as f:
+        f.write(js)
+        path = f.name
+    try:
+        proc = subprocess.run(["node", path], capture_output=True, text=True,
+                              timeout=30, encoding="utf-8")
     finally:
         Path(path).unlink(missing_ok=True)
     assert proc.returncode == 0, f"node 执行失败:\n{proc.stderr}"

@@ -2026,7 +2026,15 @@ function fallbackCopy(text) {
 function loadConfig() {
   // 按当前数据范围取"生效值"：选中账号2 时面板要显示 基准+账号2覆盖 之后的结果
   fetch('/api/config' + scopeQs()).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(cfg) {
-    config = cfg.config || cfg;
+    var incoming = (cfg && cfg.config) || cfg;
+    // 后端正常返回时一定带 accounts。缺它就说明这次响应是异常的（接口 500 兜了个
+    // {status:ok}、或被别的脚本拦住），整份赋给 config 会把账号列表、招呼语、
+    // AI 配置全抹掉——界面还开着，数据范围却全变默认。
+    if (!incoming || !Array.isArray(incoming.accounts)) {
+      addLog('ERROR', '配置接口返回异常（没有 accounts 列表），界面保持原配置');
+      return;
+    }
+    config = incoming;
     // 填充所有默认值
     if (!config.browser) config.browser = {};
     if (!config.login) config.login = {};
@@ -3366,7 +3374,9 @@ function addGreetRecord(data){
   const dup = allGreetRecords.findIndex(function(r){ return r._key === key; });
   if (dup >= 0) allGreetRecords.splice(dup, 1);
   row._key = key;
+  row._pushedAt = Date.now();
   allGreetRecords.unshift(row);
+  if (greetPendingRows.indexOf(row) < 0) greetPendingRows.push(row);
   applyGreetFilter();
 }
 
@@ -3997,7 +4007,8 @@ function addReplyRecord(data){
 function clearScopeWarn(kind) {
   if (dataScope === 'all')
     return '确定要清空【所有账号】的' + kind + '吗？两个号的记录存在同一个文件里，这一下会全没，且不可撤销。';
-  return '确定要清空账号「' + ((config.accounts[Number(dataScope)] || {}).name || dataScope) +
+  return '确定要清空账号「' + ((config.accounts[Number(dataScope)] || {}).name
+         || ('账号' + (Number(dataScope) + 1))) +
          '」的' + kind + '吗？另一个号的记录不受影响。此操作不可撤销。';
 }
 
@@ -4007,6 +4018,8 @@ function clearGreetTable(){
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.status === 'ok') {
+        // 刚推送还没落进快照的行也要跟着清掉，否则清空后它还挂着 3 分钟
+        greetPendingRows = [];
         loadGreetRecords();   // 按当前范围重拉，跨账号清空时另一号的数据仍会在"全部"里显示
         addLog('SUCCESS', data.message || '打招呼记录已清空');
         toast(data.message || '打招呼记录已清空', 'info');
@@ -4052,6 +4065,8 @@ function clearReplyRecords(){
 // ── 记录筛选功能 ──
 // 缓存所有打招呼记录（用于前端筛选）
 let allGreetRecords = [];
+// 只从实时推送来的行：服务端快照可能比它们早，落库记录回来前先挂在前面
+let greetPendingRows = [];
 // 缓存所有回复记录分组（用于前端筛选）
 let allReplyGroups = [];
 
@@ -4632,11 +4647,26 @@ function loadGreetRecords(force) {
     var sig = dataScope + '|' + records.length + '|' + (records[0] ? (records[0].timestamp + records[0].status) : '');
     if (!force && sig === greetFeedSig) return;
     greetFeedSig = sig;
-    allGreetRecords = records.map(function(rec){
+    var mapped = records.map(function(rec){
       var row = toGreetRow(rec);
       row._key = greetRowKey(row);
       return row;
     });
+    // 这份快照可能是"发送即落库"之前发出的请求，落地时推送行已经在模型里了。
+    // 整份替换会把刚打的那条冲掉——用户看到"闪一下又没了"，最长要等一轮轮询
+    // 才回来。所以把服务端还没有、又确实是刚推上来的行留在前面。
+    // 两条限制：只在当前数据范围内留（换账号不能把别的号的推送挂过来），
+    // 只留 3 分钟（轮询 20 秒一次，正常一两个周期就带回来了，一直没有说明
+    // 这条不该永远挂在页面上）。
+    var inServer = {};
+    mapped.forEach(function(r){ inServer[r._key] = 1; });
+    var now = Date.now();
+    greetPendingRows = greetPendingRows.filter(function(r){
+      if (inServer[r._key]) return false;
+      if (now - (r._pushedAt || 0) > 180000) return false;
+      return dataScope === 'all' || String(r.account_index) === String(dataScope);
+    });
+    allGreetRecords = greetPendingRows.concat(mapped);
     applyGreetFilter();            // 重拉后要重新套用筛选
   }).catch(function(e){console.error('加载打招呼记录失败:',e);});
 }
