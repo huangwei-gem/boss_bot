@@ -320,7 +320,7 @@ BOSS 每个会话只给 2-3 条历史（`.chat-content` 的 `scrollHeight == cli
 两套都要跑：单元测试管逻辑，真机浏览器套件管"打开来真的能用"。
 
 ```bash
-pytest tests/ -q                      # 587 项，约 57 秒，全部离线（不碰真实数据、不联网）
+pytest tests/ -q                      # 603 项，约 58 秒，全部离线（不碰真实数据、不联网）
 ```
 
 真机套件全部使用项目内 `cloakbrowser/chrome.exe`，且**只做读/切/筛/存配置，绝不点发送、打招呼、发简历**：
@@ -336,6 +336,7 @@ python tools/verify_three_way.py      # BOSS 页面 / 后端存储 / 前端显�
 python tools/measure_ai_quality.py    # 逐个接口真判分 + 生产解析判定（要联网，只发分析请求）
 python tools/diagnose_ai_providers.py --models   # 不可用接口归因：代理/直连各打 3 次 + 官方模型清单核对
 python tools/check_account_isolation.py         # 多账号隔离自检：端口/profile/cookie 文件/账号身份 四层比对
+python tools/two_account_login_check.py         # 逐账号实连登录态：连自己的端口+profile，新标签页验会话页（全程只读）
 ```
 
 **多账号一定要用 `check_account_isolation.py` 验，别只看"有两个槽位两份文件"**：2026-09-29 查
@@ -463,6 +464,25 @@ pre-click 命中逐条比对导航前后的 URL，其实是三件事：
 
 顺带记录一个反证：招呼语确实发得出去——`messages/` 里 38 个会话有 20 个含我方发出的招呼语原文，
 所以成功路径上的 `.input-area` 是真聊天框，不是假成功。
+
+**BOSS 的第二种打招呼机制** → 点「立即沟通」后平台自己把招呼语发出去了，弹一个
+「已向BOSS发送消息 / 留在此页 / 继续沟通」的对话框，页面里没有可输入的抽屉。以前认出弹窗就直接
+记一句"BOSS 平台自己发出了招呼语"跳过，等于把打招呼语交回平台预设，账号自定义那段的文案永远发不出去。
+现在 `_auto_greet_followup()` 会点「继续沟通」进会话，用 `LAST_MINE_BUBBLE_JS` 读我方最后一条已发出的
+气泡（`.message-item.item-myself .text-content`，class 从 `tools/chat_page_structure.json` 的真实 dump 核出来）：
+
+| 读到的 | 处置 | 记录 |
+|--------|------|------|
+| 折空白后等于本号招呼语 | 一个字都不再发 | 已投递，日志写"BOSS 自动发出的就是本号招呼语" |
+| 不等 / 我方气泡为 0 条 | 在会话里输入本号招呼语并发送 | 已投递，日志写"已补发本号招呼语" |
+| 进不去会话（读不到 `.message-item`） | 不盲发，避免对着搜索页打字 | 保持原来的"平台已自动发送"归因 |
+
+判定只按空白折叠后比对：气泡里会带渲染用的空格换行，逐字符比会把"已经是我们这句"误判成不一致，
+于是对同一个 HR 发两遍。真机（只读）验过探针在 BOSS 会话页的表现——没点开会话时
+`chat_page:false`（所以不会盲发），点开后 `total:4, mine:1`，读到的是
+"您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"。
+另外新版岗位列表页把「立即沟通」收进了右侧详情栏（`A.btn.btn-startchat`，卡片里一个都没有），
+引擎本来就是进详情页再找按钮，这条路径没受影响。
 
 **刚推送的行闪一下又没了** → 引擎是"点发送即落库+推送"，所以实时行一开始只在前端模型里。
 `loadGreetRecords` 拿到服务端列表后整份赋值，而页面加载/20 秒轮询的那次 `fetch` 往往在落库**之前**
