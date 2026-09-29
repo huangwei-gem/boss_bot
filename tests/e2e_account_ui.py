@@ -8,6 +8,7 @@ BOSS 登录页，不点发送、不打招呼、不发简历。
 运行：python tests/e2e_account_ui.py
 """
 
+import json
 import sys
 import time
 from pathlib import Path
@@ -108,24 +109,63 @@ def main():
             check("点数据范围 chip 只切数据", False,
                   f"chip {len(chips)} 个 / 账号 {want} 个（对不上说明面板进程没重启）")
 
-        # 登录按钮：点了必须看到"回应"那一行，而不是只有"我正在点"
-        clear_log(page)
+        # 登录按钮：点了必须拿到后端的回应。
+        # 不去翻日志——引擎日志刷得比读取快，我们的那行会被挤出窗口，测不稳。
+        js("""window.__probeResp = null;
+              var orig = window.fetch;
+              window.fetch = function (u, o) {
+                  var p = orig.apply(window, arguments);
+                  if (String(u).indexOf('/login') >= 0) {
+                      p.then(function (r) { return r.clone().text(); })
+                       .then(function (t) { window.__probeResp = t; })
+                       .catch(function (e) { window.__probeResp = 'ERR:' + e.message; });
+                  }
+                  return p;
+              };""")
         assert click_until_alive(page, login_buttons, -1 if want >= 2 else 0), "登录按钮点不动"
-        for _ in range(10):
-            time.sleep(0.5)
-            if "正在唤起" in log_tail(page, 40):
+        resp = ""
+        for _ in range(20):
+            time.sleep(0.4)
+            resp = js("return window.__probeResp || ''") or ""
+            if resp:
                 break
-        tail = log_tail(page, 40)
-        # 引擎日志一直在刷，"有内容"不算数；要看到这句请求自己的回应
-        answered = any(k in tail for k in ("已打开", "接口 ", "正在运行", "失败"))
-        honest = not any(k in tail for k in ("Unexpected token", "JSON", "SyntaxError"))
-        check("点登录给了后端回应", answered and honest, tail[-140:])
+        parsed = None
+        try:
+            parsed = json.loads(resp)
+        except ValueError:
+            pass
+        ok_json = bool(parsed) and "status" in parsed
+        # 面板进程没重启时新端点不存在，回的是 Flask 的 HTML 404 页——
+        # 这不算失败，但必须能从回应里看出来
+        stale = "404" in resp and "not found" in resp.lower()
+        honest = ("Unexpected token" not in resp and "ERR:" not in resp
+                  and (ok_json or stale))
+        check("点登录拿到后端回应", honest and bool(resp),
+              ("面板进程没重启，/login 还是 404" if stale else resp[:150]))
 
         # 登录态检测：点状态点要真的去检测
         clear_log(page)
         assert click_until_alive(page, cookie_dots, 0), "登录态点不动"
         time.sleep(1.5)
         check("登录态点一下就能检测", "检测" in log_tail(page), log_tail(page)[:110])
+
+        # 招呼语输入框要真的写进本账号的配置对象。
+        # 这里把 saveConfig 短路掉：测的是"输入框↔数据模型"的绑定，
+        # 往盘上写再改回来会动到用户正在用的 bot_config.json，不值当。
+        typed = "实测招呼语-" + str(int(time.time()))
+        got = js("""var idx = activeAccountIdx, box = document.getElementById('accGreeting');
+            var real = saveConfig; saveConfig = function(){ window.__saved = (window.__saved||0)+1; };
+            box.value = %s;
+            box.dispatchEvent(new Event('change'));
+            var val = (config.accounts[idx]||{}).greeting_message;
+            saveConfig = real;
+            return JSON.stringify({idx: idx, val: val, saved: window.__saved||0});"""
+                 % json.dumps(typed, ensure_ascii=False))
+        info = json.loads(got)
+        check("招呼语输入框写回本账号配置", info["val"] == typed and info["saved"] >= 1,
+              f"账号 {info['idx']} 读到 {info['val']!r}，触发保存 {info['saved']} 次")
+        check("招呼语跟着数据范围切换换账号",
+              info["idx"] == int(js("return activeAccountIdx")))
 
         page.get_screenshot(str(PROJECT_ROOT / "tests/screenshots/account_ui.png"))
         print("  截图: tests/screenshots/account_ui.png", flush=True)

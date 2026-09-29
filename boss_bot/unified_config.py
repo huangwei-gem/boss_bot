@@ -269,6 +269,8 @@ class AccountConfig:
     image_files: list = field(default_factory=list)
     message_interval_min: int = 3
     message_interval_max: int = 8
+    # 本账号自己的招呼语：填了就用它，不再用那段每个岗位都塞着的默认文案
+    greeting_message: str = ""
     jobs: list = field(default_factory=lambda: [JobConfig()])
 
 
@@ -667,6 +669,7 @@ class UnifiedConfig:
                     image_files=acc.get("image_files", []),
                     message_interval_min=acc.get("message_interval_min", 3),
                     message_interval_max=acc.get("message_interval_max", 8),
+                    greeting_message=acc.get("greeting_message", ""),
                     jobs=jobs,
                 ))
             if parsed_accounts:
@@ -1058,6 +1061,7 @@ class UnifiedConfig:
                     "image_files": acc.image_files,
                     "message_interval_min": acc.message_interval_min,
                     "message_interval_max": acc.message_interval_max,
+                    "greeting_message": acc.greeting_message,
                     "jobs": [
                         {
                             "enabled": job.enabled,
@@ -1229,6 +1233,7 @@ def load_config() -> dict:
         acc.setdefault("image_files", [])
         acc.setdefault("message_interval_min", 3)
         acc.setdefault("message_interval_max", 8)
+        acc.setdefault("greeting_message", "")
         for job in acc.get("jobs", []):
             job.setdefault("greeting_message", DEFAULT_GREETING)
             job.setdefault("scroll_pages", 5)

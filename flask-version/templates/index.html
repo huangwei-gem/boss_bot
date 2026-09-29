@@ -796,8 +796,15 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
           </div>
         </div>
         <div class="acc-field-row" style="gap:6px"><label>启用</label><span id="accEnabled" class="toggle-switch on" onclick="toggleAccEnabled()"></span></div>
+        <div class="acc-field-row" style="align-items:flex-start"><label style="margin-top:5px">招呼语</label>
+          <textarea class="side-form-input" id="accGreeting" rows="3" style="resize:vertical;min-height:52px;line-height:1.45"
+                    placeholder="本账号专用的打招呼语，留空则用岗位里的文案" onchange="onAccChange()"></textarea>
+        </div>
+        <div style="font-size:10px;color:var(--fg-4th);margin-top:2px;line-height:1.5">
+          招呼语优先用岗位里改过的，其次用上面这段账号自定义，最后才用系统默认
+        </div>
         <div style="font-size:10px;color:var(--fg-4th);margin-top:4px;line-height:1.5">
-          <b>独立配置：</b>Cookie、浏览器、岗位任务、投递/回复记录、运行状态<br>
+          <b>独立配置：</b>Cookie、浏览器、招呼语、岗位任务、投递/回复记录、运行状态<br>
           <b>全局共享：</b>AI配置、回复规则、回复模板、个人画像、关键词
         </div>
       </div>
@@ -2536,6 +2543,8 @@ function renderAccountConfig() {
   document.getElementById('accName').value = a.name||'主账号';
   document.getElementById('accEnabled').className = 'toggle-switch'+(a.enabled!==false?' on':'');
   document.getElementById('accCookie').value = a.cookie_file||'zhipin_cookies.json';
+  var g = document.getElementById('accGreeting');
+  if (g) g.value = a.greeting_message||'';
 }
 
 // ── 岗位列表渲染 ──
@@ -2581,6 +2590,8 @@ function onAccChange() {
   if (!a) return;
   a.name = document.getElementById('accName').value;
   a.cookie_file = document.getElementById('accCookie').value;
+  var g = document.getElementById('accGreeting');
+  if (g) a.greeting_message = g.value.trim();
   saveConfig();
 }
 

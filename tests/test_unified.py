@@ -1757,7 +1757,8 @@ class HotReloadEffectivenessTest:
         cfg.greet.accounts[0].jobs[0].greeting_message = "改过的招呼语"
         self._reload(loop, cfg)
         assert loop._greet_engine.config is cfg
-        assert loop._greet_engine._greeting_message == "改过的招呼语"
+        job = {"greeting_message": cfg.greet.accounts[0].jobs[0].greeting_message}
+        assert loop._greet_engine._greeting_for(job)[0] == "改过的招呼语"
 
     def test_enable_switches_propagate_without_restart(self):
         """打招呼/回复总开关热重载后立即可见"""
@@ -2761,15 +2762,21 @@ class ConfigSavePreservesKeysTest:
 
 
 class PerAccountGreetSettingsTest:
-    """打招呼话术/简历图片必须按账号取，且热重载能刷到新值"""
+    """打招呼话术/简历图片必须按账号取，且热重载能刷到新值。
 
-    def _cfg(self, msg0="主号话术", msg1="二号话术", imgs1=None):
-        from boss_bot.unified_config import UnifiedConfig, AccountConfig, JobConfig
+    话术在发送时按 岗位改过 > 本账号自定义 > 默认模板 取（GreetEngine._greeting_for），
+    岗位里那份是历史遗留的默认串，不算"这个岗位定制过"。
+    """
+
+    def _cfg(self, acc0="主号话术", acc1="二号话术", imgs1=None):
+        from boss_bot.unified_config import (DEFAULT_GREETING, AccountConfig,
+                                             JobConfig, UnifiedConfig)
         cfg = UnifiedConfig()
         cfg.greet.accounts = [
-            AccountConfig(name="主账号", jobs=[JobConfig(greeting_message=msg0)]),
-            AccountConfig(name="账号2", image_files=imgs1 or [],
-                          jobs=[JobConfig(greeting_message=msg1)]),
+            AccountConfig(name="主账号", greeting_message=acc0,
+                          jobs=[JobConfig(greeting_message=DEFAULT_GREETING)]),
+            AccountConfig(name="账号2", greeting_message=acc1, image_files=imgs1 or [],
+                          jobs=[JobConfig(greeting_message=DEFAULT_GREETING)]),
         ]
         return cfg
 
@@ -2777,25 +2784,45 @@ class PerAccountGreetSettingsTest:
         from boss_bot.greet_engine import GreetEngine
         return GreetEngine(MagicMock(), cfg, account_index=idx)
 
-    def test_账号2用自己的话术(self):
-        ge = self._engine(self._cfg(), 1)
-        assert ge._greeting_message == "二号话术"
+    def _job(self, cfg, idx):
+        """任务队列里那份 job 字典就是发送时读到的字段"""
+        job = cfg.greet.accounts[idx].jobs[0]
+        return {"greeting_message": job.greeting_message}
 
-    def test_主账号用自己的话术(self):
-        ge = self._engine(self._cfg(), 0)
-        assert ge._greeting_message == "主号话术"
+    def test_账号2用自己账号的话术(self):
+        cfg = self._cfg()
+        ge = self._engine(cfg, 1)
+        assert ge._greeting_for(self._job(cfg, 1)) == ("二号话术", "账号自定义")
+
+    def test_主账号用自己账号的话术(self):
+        cfg = self._cfg()
+        ge = self._engine(cfg, 0)
+        assert ge._greeting_for(self._job(cfg, 0))[0] == "主号话术"
+
+    def test_岗位定制过就不再用账号话术(self):
+        cfg = self._cfg()
+        cfg.greet.accounts[1].jobs[0].greeting_message = "这个岗位专用话术"
+        ge = self._engine(cfg, 1)
+        assert ge._greeting_for(self._job(cfg, 1)) == ("这个岗位专用话术", "岗位配置")
 
     def test_索引越界回落首个账号(self):
-        ge = self._engine(self._cfg(), 7)
-        assert ge._greeting_message == "主号话术"
+        cfg = self._cfg()
+        ge = self._engine(cfg, 7)
+        assert ge._greeting_for(self._job(cfg, 0))[0] == "主号话术"
+
+    def test_账号没填话术就用默认模板(self):
+        from boss_bot.unified_config import DEFAULT_GREETING
+        cfg = self._cfg(acc1="")
+        ge = self._engine(cfg, 1)
+        assert ge._greeting_for(self._job(cfg, 1)) == (DEFAULT_GREETING, "默认模板")
 
     def test_改话术后热重载即生效(self):
         cfg = self._cfg()
         ge = self._engine(cfg, 1)
-        assert ge._greeting_message == "二号话术"
-        cfg.greet.accounts[1].jobs[0].greeting_message = "改过的二号话术"
+        assert ge._greeting_for(self._job(cfg, 1))[0] == "二号话术"
+        cfg.greet.accounts[1].greeting_message = "改过的二号话术"
         ge.reload_runtime_settings()
-        assert ge._greeting_message == "改过的二号话术"
+        assert ge._greeting_for(self._job(cfg, 1))[0] == "改过的二号话术"
 
     def test_简历图片按账号取(self):
         cfg = self._cfg()

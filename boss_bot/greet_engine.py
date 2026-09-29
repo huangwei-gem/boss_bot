@@ -28,7 +28,7 @@ from typing import Optional, Callable
 from urllib.request import Request, urlopen
 from urllib.error import URLError
 
-from boss_bot.unified_config import UnifiedConfig, BASE_DIR, resolve_path, write_json_atomic
+from boss_bot.unified_config import DEFAULT_GREETING, UnifiedConfig, BASE_DIR, resolve_path, write_json_atomic
 from boss_bot.browser_launcher import BrowserManager
 from boss_bot.reply_record import GreetRecord, _get_greet_store
 
@@ -112,6 +112,56 @@ def chat_failure_reason(snap):
             return "点了「立即沟通」但聊天抽屉没在这个标签页里出现（URL 仍停在岗位详情页）"
         return "页面已跳走且没有聊天元素（当前 URL: %s）" % (url[:60] or "未知")
     return "未找到聊天输入框，页面上有抽屉相关元素: %s" % ", ".join(chat[:4])
+
+
+# BOSS 的第二种打招呼机制：点「立即沟通」后平台自己把招呼语发出去了，
+# 弹一个「已向BOSS发送消息 / 留在此页 / 继续沟通」的对话框，没有可输入的抽屉。
+AUTO_GREET_PROBE_JS = r'''
+return (function(){
+  var nodes = document.querySelectorAll("div,section");
+  var best = null;
+  for (var i = 0; i < nodes.length; i++) {
+    var e = nodes[i], tx = e.innerText || "";
+    if (tx.indexOf("已向BOSS发送") >= 0 && tx.indexOf("留在此页") >= 0) {
+      if (!best || e.outerHTML.length < best.outerHTML.length) best = e;
+    }
+  }
+  if (!best) return "";
+  var btns = [];
+  var bs = best.querySelectorAll("button, a, .btn, [role=button]");
+  for (var j = 0; j < bs.length; j++) {
+    btns.push(((bs[j].innerText || "").trim().slice(0, 20)) + "|" + (bs[j].className || ""));
+  }
+  return JSON.stringify({text: (best.innerText || "").slice(0, 200),
+                         buttons: btns.slice(0, 8), cls: (best.className || "").slice(0, 120)});
+})()'''
+
+AUTO_GREET_REASON = ("BOSS 平台自己发出了招呼语（第二种打招呼机制：「已向BOSS发送消息/"
+                     "留在此页/继续沟通」），页面里没有可输入的抽屉")
+
+
+def parse_auto_greet_dialog(raw) -> dict:
+    """探针返回的字符串 → 弹窗现场；不是弹窗就返回空 dict。"""
+    if not raw or not isinstance(raw, str):
+        return {}
+    try:
+        data = json.loads(raw)
+    except (ValueError, TypeError):
+        return {}
+    return data if isinstance(data, dict) and data.get("text") else {}
+
+
+def pick_greeting(job_text: str, account_text: str, default_text: str):
+    """这条招呼语用哪一段：岗位定制 > 账号自定义 > 默认模板。
+
+    岗位文案只有在被改过（不等于默认串）时才算定制——历史配置里每个岗位的
+    greeting 都被填过同一份默认文案，一律优先会让账号级自定义永远不生效。
+    """
+    if job_text and job_text != default_text:
+        return job_text, "岗位配置"
+    if account_text:
+        return account_text, "账号自定义"
+    return default_text, "默认模板"
 
 
 # ─────────────────────────────────────────────
@@ -755,7 +805,6 @@ class GreetEngine:
         self._query = ""
         self._city = "上海"
         self._scroll_pages = 5
-        self._greeting_message = ""
         self._greeting_source = "默认"
         self._image_files = []
         self._min_interval = 3
@@ -899,7 +948,6 @@ class GreetEngine:
                 self._query = job.query
                 self._city = job.city
                 self._scroll_pages = job.scroll_pages
-                self._greeting_message = job.greeting_message
                 self._greeting_source = "岗位配置"
                 self._image_files = job.image_files or self._image_files
 
@@ -1002,11 +1050,11 @@ class GreetEngine:
                         status = "skipped"
                 else:
                     status = "pending"
-            # 打招呼语：优先实际发送的，其次 AI 建议的，最后当前配置的
+            # 打招呼语：优先实际发送的，其次 AI 建议的，最后按优先级算出来的
             greeting_message = (
                 actual_greeting_sent
                 or ai_result.get("suggested_greeting", "")
-                or self._greeting_message
+                or self._greeting_for(job)[0]
             )
             record = GreetRecord(
                 job_name=job.get("job_name", ""),
@@ -1841,16 +1889,8 @@ class GreetEngine:
                     self._log("DEBUG", f"注册聊天标签页失败: {e}")
 
             # ── 5. 输入消息 ──
-            # 优先级：AI定制 > 岗位配置 > 默认模板
-            greeting = self._greeting_message
-            if not greeting:
-                acc = self._account()
-                if acc and acc.jobs:
-                    greeting = acc.jobs[0].greeting_message
-            if not greeting:
-                from boss_bot.unified_config import DEFAULT_GREETING
-                greeting = DEFAULT_GREETING
-                self._greeting_source = "默认模板"
+            # 优先级：岗位定制 > 账号自定义 > 默认模板（见 _greeting_for）
+            greeting, self._greeting_source = self._greeting_for(job)
             # 保存实际发送的打招呼语供 GreetRecord 记录使用
             job["_actual_greeting_sent"] = greeting
             self._log("INFO", f"打招呼语来源: {self._greeting_source}, 内容: {greeting[:50]}...")
@@ -2044,6 +2084,14 @@ class GreetEngine:
                         self._log("DEBUG", f"标签页遍历失败: {e}")
 
             if not input_area:
+                dialog = self._auto_greet_dialog(instance)
+                if dialog:
+                    # 平台自己发出去了，再报"未找到输入框"就掩盖了真正发生的事
+                    self._log("WARN", f"BOSS 自动发出招呼语（第二种机制）| 弹窗class="
+                                      f"{dialog.get('cls', '')} | 按钮={dialog.get('buttons', [])}")
+                    self._log("WARN", f"  弹窗文本: {str(dialog.get('text', ''))[:120]}")
+                    self._mark_chatted(job)
+                    return False, AUTO_GREET_REASON
                 snap = {"url": "", "inputs": [], "chat_elements": [], "error": ""}
                 try:
                     snap = json.loads(instance.run_js(CHAT_SNAPSHOT_JS) or "{}")
@@ -2316,6 +2364,21 @@ class GreetEngine:
         deadline = time.time() + max(0.0, seconds)
         while self.running and time.time() < deadline:
             time.sleep(min(0.2, max(0.05, deadline - time.time())))
+
+    def _greeting_for(self, job: dict):
+        """本条岗位要发的招呼语：岗位改过 > 本账号自定义 > 默认模板。"""
+        acc = self._account()
+        return pick_greeting(job.get("greeting_message", ""),
+                             getattr(acc, "greeting_message", "") if acc else "",
+                             DEFAULT_GREETING)
+
+    def _auto_greet_dialog(self, instance) -> dict:
+        """页面上有没有 BOSS"已自动发送"的弹窗；有就带回它的现场文本和按钮。"""
+        try:
+            return parse_auto_greet_dialog(instance.run_js(AUTO_GREET_PROBE_JS))
+        except Exception as e:
+            self._log("DEBUG", f"自动发送弹窗探测失败: {e}")
+            return {}
 
     def _on_captcha_page(self, instance) -> bool:
         """当前页面是不是 BOSS 的人机验证页。"""
