@@ -440,3 +440,84 @@ class FrontendAccountScopeTest:
         """点击红点去启动一个浏览器会和正在跑的会话抢用户数据目录"""
         html = self._html()
         assert "/check_cookie'" not in html
+
+
+class ProfileDirIsolationTest:
+    """两个账号必须各用各的 Chrome 用户目录。
+
+    browser_launcher._launch_windows 里是 `if user_data_dir:` —— 空值时干脆不传
+    --user-data-dir，Chrome 就退回默认用户目录。两个账号共用一份 profile 的后果：
+    cookie 互相顶掉、第二个浏览器开出来是空的、还会和第一个抢调试端口
+    （2026-09-29 主账号就是 "浏览器连接失败 127.0.0.1:9222" 直接退出）。
+    """
+
+    def _mgr(self, idx):
+        from boss_bot.browser_launcher import BrowserManager
+        return BrowserManager(config=None, account_index=idx)
+
+    def test_没传profile也要按账号落到独立目录(self):
+        m0, m1 = self._mgr(0), self._mgr(1)
+        assert m0._user_data_dir, "空 profile 会让 Chrome 用默认用户目录，两号共用"
+        assert m1._user_data_dir
+        assert "account_0" in m0._user_data_dir.replace("\\", "/")
+        assert "account_1" in m1._user_data_dir.replace("\\", "/")
+        assert m0._user_data_dir != m1._user_data_dir
+
+    def test_端口按账号分开(self):
+        assert self._mgr(0)._debug_port != self._mgr(1)._debug_port
+
+    def test_全局profile也不能被两个账号共用(self):
+        """browser.user_data_dir 一旦填了，两号会指向同一目录——必须按账号再分一层"""
+        from boss_bot.browser_launcher import BrowserManager
+
+        class _Cfg:
+            user_data_dir = "browser_data/shared"
+            headless = False
+
+        dirs = {BrowserManager(config=_Cfg(), account_index=i)._user_data_dir
+                for i in (0, 1)}
+        assert len(dirs) == 2, f"两号共用同一 profile: {dirs}"
+
+
+class AccountIdentityFingerprintTest:
+    """隔离自检脚本的身份指纹：端口/profile/文件路径都分开，也可能其实是同一个号。
+
+    2026-09-29 实测就是这样：两个槽位的 wt2 一模一样，界面上看着"两个账号"，
+    实际是同一个 BOSS 账号登录了两次。所以必须拿登录字段算指纹来比。
+    """
+
+    def _fp(self, tool, wt2):
+        return tool.identity_fingerprint([
+            {"name": "wt2", "value": wt2},
+            {"name": "wbg", "value": "wbg-1"},
+            {"name": "zp_at", "value": "at-1"},
+        ])
+
+    def _load_tool(self):
+        import importlib.util, os
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "tools", "check_account_isolation.py")
+        spec = importlib.util.spec_from_file_location("iso_mod", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_同一个wt2算出同一个指纹(self):
+        tool = self._load_tool()
+        assert self._fp(tool, "WT2-SAME") == self._fp(tool, "WT2-SAME")
+
+    def test_换账号必须指纹不同(self):
+        tool = self._load_tool()
+        assert self._fp(tool, "WT2-A") != self._fp(tool, "WT2-B")
+
+    def test_风控令牌不同不能冒充换过账号(self):
+        """bst/__zp_stoken__ 每次都变，把它们算进指纹会让同一个号看起来像两个号"""
+        tool = self._load_tool()
+        base = [{"name": "wt2", "value": "SAME"}, {"name": "wbg", "value": "w"}]
+        a = tool.identity_fingerprint(base + [{"name": "__zp_stoken__", "value": "X"}])
+        b = tool.identity_fingerprint(base + [{"name": "__zp_stoken__", "value": "Y"}])
+        assert a == b
+
+    def test_没有登录字段时返回空(self):
+        tool = self._load_tool()
+        assert tool.identity_fingerprint([{"name": "HMACCOUNT", "value": "z"}]) == ""

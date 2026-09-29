@@ -322,7 +322,17 @@ python tools/verify_dashboard_ui.py   # 14 项：指标卡口径 + AI 体检展�
 python tools/verify_three_way.py      # BOSS 页面 / 后端存储 / 前端显示 三端逐条比对
 python tools/measure_ai_quality.py    # 逐个接口真判分 + 生产解析判定（要联网，只发分析请求）
 python tools/diagnose_ai_providers.py --models   # 不可用接口归因：代理/直连各打 3 次 + 官方模型清单核对
+python tools/check_account_isolation.py         # 多账号隔离自检：端口/profile/cookie 文件/账号身份 四层比对
 ```
+
+**多账号一定要用 `check_account_isolation.py` 验，别只看"有两个槽位两份文件"**：2026-09-29 查
+"第二个浏览器打开是空的"时发现，`zhipin_cookies.json` 和 `zhipin_cookies_1.json` 里的 `wt2`
+（BOSS 登录态令牌）**完全相同**——两个槽位登录的是同一个账号，多账号从来没成立过。
+端口、profile 目录、文件路径全部分开也查不出这件事，必须拿登录字段（`wt2`/`wbg`/`zp_at`）算指纹比对；
+`bst`、`__zp_stoken__` 这类风控字段每次都变，算进去会把同一个号看成两个。
+配套修掉的是 `BrowserManager`：以前 `user_data_dir` 为空时干脆不传 `--user-data-dir`，
+Chrome 于是退回默认用户目录，两号共用一份 profile（表现就是主账号 `浏览器连接失败 127.0.0.1:9222` 直接退出）。
+现在任意来源的 profile 都会按账号再分一层，落到 `browser_data/account_{i}`。
 
 ### 体检里"不可用"分别是什么原因
 

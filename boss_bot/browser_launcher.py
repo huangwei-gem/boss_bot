@@ -1000,13 +1000,32 @@ class BrowserManager:
         self._chrome_path = getattr(config, 'chrome_path', "") if config else ""
         self._browser_type = getattr(config, 'browser_type', "chrome") if config else "chrome"
         self._cookie_file = getattr(config, 'cookie_file', "") if config else ""
-        # 优先使用传入的 user_data_dir，其次从 config 获取
+        # 优先使用传入的 user_data_dir，其次从 config 获取；
+        # 两种来源都必须再按账号分一层，见 _profile_dir_for 的说明
         if user_data_dir:
-            self._user_data_dir = user_data_dir
+            base_dir = user_data_dir
         elif config:
-            self._user_data_dir = getattr(config, 'user_data_dir', "")
+            base_dir = getattr(config, 'user_data_dir', "")
         else:
-            self._user_data_dir = ""
+            base_dir = ""
+        self._user_data_dir = self._profile_dir_for(base_dir)
+
+    def _profile_dir_for(self, base: str) -> str:
+        """把任意来源的用户目录算成"这个账号专属"的那一份。
+
+        留空会让 Chrome 退回默认用户目录，两个账号于是共用同一份 profile：
+        cookie 互相顶掉、第二个浏览器开出来是空白的、还会和第一个抢调试端口
+        （2026-09-29 主账号就是 "浏览器连接失败 127.0.0.1:9222" 直接退出）。
+        已经按账号命名好的（browser_data/account_1）原样保留，不再套一层。
+        """
+        from boss_bot.unified_config import BASE_DIR
+
+        root = Path(base) if base else Path(str(BASE_DIR)) / "browser_data"
+        if root.name.startswith("account_"):
+            root = root.parent / f"account_{self._account_index}"
+        else:
+            root = root / f"account_{self._account_index}"
+        return str(root)
 
     def launch(self) -> BrowserInstance:
         """启动浏览器并返回浏览器实例
