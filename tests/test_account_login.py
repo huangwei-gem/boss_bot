@@ -84,10 +84,23 @@ class OpenLoginPageTest:
         lp._cookie_file = lambda: "/abs/zhipin_cookies_1.json"
         lp._login_event.set()
         inst = MagicMock()
+        inst._get_all_cookies.return_value = [
+            {"name": "wt2", "value": "x", "expires": time.time() + 86400}]
         lp._finish_manual_login(inst)
         lp.browser_manager.save_cookies.assert_called_once_with("/abs/zhipin_cookies_1.json")
         assert lp._logged_in is True
         assert lp._needs_login is False
+
+    def test_停在登录页时不许顶掉本账号Cookie(self):
+        """今天真实踩到的：假判登录成功后把登录页那份 cookie 存成文件，好会话没了"""
+        lp = make_loop(account_index=1)
+        lp._cookie_file = lambda: "/abs/zhipin_cookies_1.json"
+        lp._login_event.set()
+        inst = MagicMock()
+        inst._get_all_cookies.return_value = [
+            {"name": "abtest", "value": "1", "expires": -1}]
+        lp._finish_manual_login(inst)
+        lp.browser_manager.save_cookies.assert_not_called()
 
     def test_等不到登录就标超时不清Cookie(self):
         lp = make_loop()

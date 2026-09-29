@@ -2033,10 +2033,21 @@ class AutoLoginDetectionTest:
         assert loop._has_live_auth_cookie(instance) is False
 
     def test_redirect_to_login_page_is_not_logged_in(self):
+        """被踢回 /web/user 且浏览器里没有登录 Cookie，判登录墙"""
         loop = self._loop()
         instance = MagicMock()
         instance.url = "https://www.zhipin.com/web/user/?ka=header-login"
-        assert loop._chat_page_reachable(instance) is False
+        instance._get_all_cookies.return_value = []
+        assert loop._login_state_now(instance) == "login_wall"
+
+    def test_停在登录页但cookie齐全时不下死结论(self):
+        """SPA 跳转有先后，两路证据矛盾只能算看不准，不能顺手删会话文件"""
+        loop = self._loop()
+        instance = MagicMock()
+        instance.url = "https://www.zhipin.com/web/user/?ka=header-login"
+        instance._get_all_cookies.return_value = [
+            {"name": "wt2", "value": "x", "expires": time.time() + 86400}]
+        assert loop._login_state_now(instance) == "uncertain"
 
     def test_manual_button_still_works(self):
         import boss_bot.main_loop as ml
@@ -2688,22 +2699,28 @@ class CookieIsolationTest:
         loop.config.greet.accounts[1].cookie_file = ""
         assert loop._cookie_file().endswith("global.json")
 
-    def test_登录态失效时删除失效cookie(self, tmp_path):
+    def test_登录态失效时归档失效cookie(self, tmp_path, monkeypatch):
         loop = self._make_loop(tmp_path, account_index=0)
+        # 归档目录默认锚在仓库 data/ 下，测试必须挪走，否则每跑一次全量就 litter 一份
+        monkeypatch.setattr(loop, "_stale_cookie_dir", lambda: str(tmp_path / "stale"))
         stale = tmp_path / "a0.json"
         stale.write_text("[]", encoding="utf-8")
         loop._discard_stale_cookies("测试")
         assert not stale.exists()
+        assert (tmp_path / "stale").is_dir()
 
-    def test_关闭开关时保留cookie供排查(self, tmp_path):
+    def test_关闭开关时保留cookie供排查(self, tmp_path, monkeypatch):
         loop = self._make_loop(tmp_path, account_index=0, clear_on_failure=False)
+        monkeypatch.setattr(loop, "_stale_cookie_dir", lambda: str(tmp_path / "stale"))
         keep = tmp_path / "a0.json"
         keep.write_text("[]", encoding="utf-8")
         loop._discard_stale_cookies("测试")
         assert keep.exists()
+        assert not (tmp_path / "stale").exists()
 
-    def test_文件本就不存在时不报错(self, tmp_path):
+    def test_文件本就不存在时不报错(self, tmp_path, monkeypatch):
         loop = self._make_loop(tmp_path, account_index=0)
+        monkeypatch.setattr(loop, "_stale_cookie_dir", lambda: str(tmp_path / "stale"))
         loop._discard_stale_cookies("测试")
 
 

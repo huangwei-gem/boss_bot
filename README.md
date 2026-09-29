@@ -320,7 +320,7 @@ BOSS 每个会话只给 2-3 条历史（`.chat-content` 的 `scrollHeight == cli
 两套都要跑：单元测试管逻辑，真机浏览器套件管"打开来真的能用"。
 
 ```bash
-pytest tests/ -q                      # 603 项，约 58 秒，全部离线（不碰真实数据、不联网）
+pytest tests/ -q                      # 631 项，约 52 秒，全部离线（不碰真实数据、不联网）
 ```
 
 真机套件全部使用项目内 `cloakbrowser/chrome.exe`，且**只做读/切/筛/存配置，绝不点发送、打招呼、发简历**：
@@ -491,6 +491,25 @@ pre-click 命中逐条比对导航前后的 URL，其实是三件事：
 只在当前数据范围内留（切号不能把别的号的推送挂过来），超过 3 分钟还没被确认就放手，手动清空时直接清。
 同一次修复还堵了姊妹问题：`loadGreetRecords` 现在带请求序号，切范围时**上一个范围的慢响应后落地不再把表
 盖回去**（看板实测复现过：点「账号2」后仍是全部账号的 393 行，看着就是"切换没反应"）。
+
+**登录态被误判后 Cookie 文件没了** → 2026-09-29 用演练模式（`dry_run`，四个发送点全拦）真并发跑两个号，
+把这条链跑出来了：主账号启动时被判"Cookie 已过期"→ 旧代码当场 `unlink()` 掉 `zhipin_cookies.json` →
+`_wait_for_login` 只等 2 秒看 URL 又误报"检测到登录成功" → 于是把**登录页那份 cookie 存成文件**顶掉原会话 →
+回复侧从 9 秒后开始每 30 秒打一次"登录态失效"并再删一次，一路刷到我手动停。三个洞各自的修法：
+
+| 洞 | 修法 | 位置 |
+|----|------|------|
+| 拿一眼 URL 当结论（BOSS 是 SPA，`/web/geek/chat` 未登录时先渲染再跳 `/web/user`） | `_settle_url()` 连读两次一致才定罪；`login_state_of(url, has_auth_cookie)` 要页面与浏览器内登录项**两路一致**才给 `logged_in`/`login_wall`，矛盾一律 `uncertain` | `boss_bot/main_loop.py` |
+| 判"过期"就删用户的会话文件（不可逆，且丢了排查依据） | 改归档：`archive_cookie_file()` 把文件挪到 `data/stale_cookies/主账号_<时间戳>.json`（原路径为空，下一轮照样走完整登录，内容还在）；`uncertain` 时一个字节都不动 | 同上，开关仍是 `login.clear_cookies_on_failure` |
+| 假登录后无条件 `save_cookies`，用登录页那份顶掉好会话 | `_save_cookies_if_logged_in()`：浏览器里没有未过期的 `wt2/zp_at/bst/wbg` 就不落盘，并打日志说明 | 同上 |
+
+另外回复侧不再无限空转：连续 3 次判登录失效就停这个号的回复轮并置 `needs_login`（只在第一次动 Cookie
+文件），中间恢复过一次计数清零。等登录时先看 Cookie 再决定要不要访问页面——还没扫完就把页面刷走，
+等于把人家的二维码弄没。
+
+`tools/two_account_login_check.py` 同批修正：它原先只排除 `login`/`passport`，把 `/web/user/`（BOSS 的登录页）
+报成"已登录"，正好盖住了这次最要紧的坏消息；现在 `logged_in_from_url()` 明确排除 `/web/user`，并加
+`--salvage`——Cookie 文件丢了但浏览器里还有登录项时回存一份（只补"文件不存在"，不覆盖已有文件）。
 
 **改了配置没生效** → 先查 [配置生效范围](#配置生效范围重要)；仍不生效就是 bug。三端检测脚本能复现：`python tools/verify_three_way.py`。
 

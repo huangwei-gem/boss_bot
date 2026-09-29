@@ -72,6 +72,74 @@ CAPTCHA_STRIKES_TO_PAUSE = 3
 # 按天归档的进程内互斥：记录文件所有账号共用，一天只能归一次
 _ARCHIVE_LOCK = threading.Lock()
 
+# 登录态的两路证据：页面落在哪 + 浏览器里有没有未过期的登录 Cookie。
+# 单看 URL 会误判——/web/geek/chat 是 SPA，未登录时它先渲染一下才跳 /web/user，
+# 抓早了就是"看着像登录了"或者"看着像过期了"，两种都出过事。
+LOGIN_WALL_MARKS = ("/web/user", "/login", "passport.")
+CHAT_PAGE_MARKS = ("/web/geek/chat",)
+
+# 回复侧连续判这么多次登录失效就停这个号，等人工——不再每 30 秒空刷
+REPLY_LOGIN_FAIL_LIMIT = 3
+# 等页面跳转稳定：最多这么多秒，连续两次 URL 一样就算定了
+URL_SETTLE_SECONDS = 8
+
+
+def login_state_of(url: str, has_auth_cookie: bool) -> str:
+    """logged_in / login_wall / uncertain —— 两路证据一致才给结论。
+
+    uncertain 不等于失效：它只表示"这一眼看不准"，调用方要么重看要么留痕，
+    绝不能拿它当"Cookie 过期"去动用户的会话文件。
+    """
+    u = (url or "").lower()
+    wall = any(k in u for k in LOGIN_WALL_MARKS)
+    chat = any(k in u for k in CHAT_PAGE_MARKS)
+    if wall and not has_auth_cookie:
+        return "login_wall"
+    if chat and has_auth_cookie:
+        return "logged_in"
+    return "uncertain"
+
+
+def has_live_auth_cookie(cookies) -> bool:
+    """浏览器里有没有还没过期的 BOSS 登录项。"""
+    for c in cookies or []:
+        if not isinstance(c, dict) or c.get("name") not in BOSS_AUTH_COOKIES:
+            continue
+        if not c.get("value"):
+            continue
+        try:
+            expires = float(c.get("expires") or -1)
+        except (TypeError, ValueError):
+            expires = -1
+        if expires < 0 or expires > time.time():
+            return True
+    return False
+
+
+def archive_cookie_file(path: str, archive_dir: str, label: str = "") -> str:
+    """把一份 Cookie 挪进归档目录，返回归档后的路径（原文件不存在则返回空串）。
+
+    以前这里是 unlink() 直接删：判错一次登录态就永久丢掉用户唯一的会话文件，
+    人工也没法拿它排查为什么"突然要重新登录"。归档后原路径为空，下一轮照样
+    走完整登录，但内容还在。
+    """
+    src = Path(path)
+    if not src.is_file():
+        return ""
+    dest_dir = Path(archive_dir)
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    safe = "".join(ch for ch in str(label) if ch.isalnum() or ch in "-_") or src.stem
+    dest = dest_dir / f"{safe}_{stamp}{src.suffix}"
+    if dest.exists():                      # 同一秒归档两次（多账号并行）不能互相覆盖
+        n = 1
+        while dest_dir / f"{safe}_{stamp}_{n}{src.suffix}" in (dest,) or \
+                (dest_dir / f"{safe}_{stamp}_{n}{src.suffix}").exists():
+            n += 1
+        dest = dest_dir / f"{safe}_{stamp}_{n}{src.suffix}"
+    shutil.move(str(src), str(dest))
+    return str(dest)
+
 
 def _should_show_frontend(level: str, msg: str) -> bool:
     """判断日志是否应该推送到前端。
@@ -134,6 +202,8 @@ class UnifiedBotLoop:
         self._reply_paused = False
         # 连续多少次"等了 60 秒没人过验证"之后才真暂停
         self._captcha_strikes = 0
+        # 回复侧连续判了几次登录失效：到 REPLY_LOGIN_FAIL_LIMIT 就停下等人工
+        self._login_fail_streak = 0
         # 自进化引擎在 _init_engines 里构造（先置空，热重载/状态查询要能安全引用）
         self._self_evolve = None
         self._current_mode = "idle"
@@ -721,22 +791,23 @@ class UnifiedBotLoop:
         if cookie_file:
             try:
                 if self.browser_manager.load_cookies(cookie_file):
-                    self._log("INFO", "已加载 Cookie，验证登录状态...")
                     self._log("DEBUG", "正在访问聊天页面验证登录态...")
-                    instance.get("https://www.zhipin.com/web/geek/chat")
-                    time.sleep(3)
-
-                    current_url = instance.url or ""
-                    self._log("DEBUG", f"验证页面URL: {current_url}")
-                    if "login" not in current_url and "user" not in current_url and "passport" not in current_url:
+                    state = self._login_state_now(instance)
+                    if state == "logged_in":
                         self._logged_in = True
                         self._login_reason = ""
                         self._log("SUCCESS", "Cookie 有效，已自动登录")
                         return True
-                    else:
+                    if state == "login_wall":
                         self._login_reason = "cookie_expired"
-                        self._log("WARN", "Cookie 已过期，需要重新登录")
-                        self._discard_stale_cookies("启动时 Cookie 验证失败")
+                        self._log("WARN", "确认是登录墙（页面被踢回登录页且浏览器里没有"
+                                          "登录 Cookie），需要重新登录")
+                        self._discard_stale_cookies("启动时确认登录墙")
+                    else:
+                        # 看不准 ≠ 失效：以前就是在这里误判，顺手删了用户唯一的会话文件
+                        self._login_reason = "login_uncertain"
+                        self._log("WARN", "登录态看不准（页面与 Cookie 两路证据矛盾），"
+                                          "按需要人工登录处理，Cookie 文件原样保留")
                 else:
                     self._login_reason = "no_cookie"
                     self._log("INFO", "无 Cookie 文件或加载失败")
@@ -762,12 +833,8 @@ class UnifiedBotLoop:
             self._log("ERROR", "登录超时，主循环退出")
             return False
 
-        # 登录确认后保存 Cookie
-        try:
-            self.browser_manager.save_cookies(cookie_file)
-            self._log("SUCCESS", "Cookie 已保存")
-        except Exception as e:
-            self._log("WARN", f"Cookie 保存失败: {e}")
+        # 登录确认后保存 Cookie（没确认就不许顶掉原文件）
+        self._save_cookies_if_logged_in(instance)
 
         self._logged_in = True
         self._needs_login = False
@@ -822,16 +889,14 @@ class UnifiedBotLoop:
         finally:
             self._login_wait_active = False
         if ok:
-            try:
-                self.browser_manager.save_cookies(cookie_file)
+            if self._save_cookies_if_logged_in(instance):
                 self._logged_in = True
                 self._needs_login = False
                 self._login_reason = ""
-                self._log("SUCCESS", f"账号 {self.account_index} 登录完成，Cookie 已保存到 "
-                                     f"{Path(cookie_file).name}")
-            except Exception as e:
+                self._log("SUCCESS", f"账号 {self.account_index} 登录完成")
+            else:
                 self._login_reason = "cookie_save_failed"
-                self._log("ERROR", f"登录成功但 Cookie 保存失败: {e}")
+                self._log("ERROR", "登录判定通过但 Cookie 没存下来，界面上的登录态以这里为准")
         else:
             self._login_reason = "login_timeout"
             self._log("WARN", f"账号 {self.account_index} 等待登录超时，未保存 Cookie")
@@ -860,11 +925,17 @@ class UnifiedBotLoop:
                       if self.account_index < len(accounts) else "")
         return str(resolve_path(acc_cookie or self.config.login.cookie_file))
 
-    def _discard_stale_cookies(self, reason: str):
-        """会话确认失效时删掉本地 Cookie，避免下一轮又拿死会话去撞风控。
+    def _stale_cookie_dir(self) -> str:
+        """失效 Cookie 的归档目录（可整份搬走排查，绝不留在原地当有效会话）。"""
+        return str(resolve_path(Path("data") / "stale_cookies"))
 
-        由 login.clear_cookies_on_failure 控制（前端高级设置里的开关），
-        关掉时只记日志，保留 Cookie 供人工排查。
+    def _discard_stale_cookies(self, reason: str):
+        """确认会话失效时把本地 Cookie 归档，避免下一轮又拿死会话去撞风控。
+
+        由 login.clear_cookies_on_failure 控制（前端高级设置里的开关），关掉时只记日志。
+        开的时候也不再 unlink：今天误判一次就把用户唯一的 zhipin_cookies.json 删没了，
+        而那份文件正是人工排查"为什么突然要重新登录"的依据。归档后原路径为空，
+        下一轮照样走完整登录，内容还留着。
         """
         if not self.config.login.clear_cookies_on_failure:
             self._log("DEBUG", f"{reason}：按配置保留 Cookie 文件")
@@ -873,18 +944,23 @@ class UnifiedBotLoop:
         if not path:
             return
         try:
-            target = resolve_path(path)
-            if target.exists():
-                target.unlink()
-                self._log("INFO", f"{reason}：已删除失效 Cookie 文件 {target.name}，下次将走完整登录")
+            dest = archive_cookie_file(str(resolve_path(path)), self._stale_cookie_dir(),
+                                       self.account_name or f"账号{self.account_index}")
+            if dest:
+                self._log("INFO", f"{reason}：失效 Cookie 已归档到 "
+                                  f"{Path(dest).name}（原文件不再充当有效会话）")
         except OSError as e:
-            self._log("WARN", f"{reason}：删除 Cookie 文件失败: {e}")
+            self._log("WARN", f"{reason}：归档 Cookie 文件失败: {e}")
 
     def _wait_for_login(self, instance, cookie_file: str) -> bool:
         """等待登录完成 — 自动检测为主，前端「我已登录」按钮只作兜底。
 
-        两级判定避免误判：先看浏览器里是否出现未过期的登录 Cookie，
-        再实际访问聊天页确认没被踢回登录页。
+        判"登录成功"必须两路证据一致（浏览器里有未过期登录 Cookie + 会话页没被踢回
+        登录页）。今天就是只等 2 秒看 URL，把停在登录页的现场报成了登录成功，随后
+        那份登录页 Cookie 被存成文件，顶掉了原来的好会话。
+
+        轮询时先只看 Cookie：还没出现登录项就说明人压根没扫完，此时不去动页面，
+        免得把二维码刷没。出现登录项后才真访问会话页确认一次。
 
         轮次结束的条件是"没人再等这个登录"：运行循环被停掉（``_running`` 变假）
         或收到停止信号就立刻退出；界面"登录"按钮那条独立路径靠
@@ -896,38 +972,99 @@ class UnifiedBotLoop:
             if self._login_event.wait(timeout=LOGIN_POLL_INTERVAL):
                 self._log("INFO", "收到手动确认，按已登录继续")
                 return True
-            if self._has_live_auth_cookie(instance) and self._chat_page_reachable(instance):
+            if not self._has_live_auth_cookie(instance):
+                continue
+            if self._login_state_now(instance) == "logged_in":
                 self._log("SUCCESS", "检测到登录成功，自动继续（无需手动点击）")
                 return True
         return False
 
+    def _settle_url(self, instance, timeout: float = URL_SETTLE_SECONDS) -> str:
+        """等 SPA 把跳转走完再读 URL。
+
+        /web/geek/chat 未登录时会先渲染再跳 /web/user，抓早了两种误判都会发生：
+        看成"还停在会话页"（假已登录）或看成"中间态"（假过期）。连续两次读到同一个
+        URL 才算稳定。
+        """
+        deadline = time.time() + timeout
+        last = ""
+        same = 0
+        while time.time() < deadline:
+            try:
+                cur = instance.url or ""
+            except Exception:
+                cur = ""
+            if cur and cur == last:
+                same += 1
+                if same >= 1:
+                    return cur
+            else:
+                same = 0
+            last = cur
+            time.sleep(0.5)
+        return last
+
+    def _login_state_now(self, instance) -> str:
+        """访问会话页并等跳转稳定，返回 logged_in / login_wall / uncertain。"""
+        try:
+            instance.get("https://www.zhipin.com/web/geek/chat")
+        except Exception as e:
+            self._log("DEBUG", f"访问会话页异常: {e}")
+        return login_state_of(self._settle_url(instance), self._has_live_auth_cookie(instance))
+
+    def _save_cookies_if_logged_in(self, instance=None) -> bool:
+        """只在浏览器里确实有未过期登录项时才落盘。
+
+        无条件 save_cookies 等于允许"登录页那一份"覆盖用户原有的会话文件，
+        而那份文件是人工排查登录态的唯一依据。
+        """
+        path = self._cookie_file()
+        if not path:
+            return False
+        if instance is None:
+            try:
+                instance = self.browser_manager.get_instance()
+            except Exception:
+                instance = None
+        cookies = []
+        try:
+            cookies = instance._get_all_cookies() or []
+        except Exception as e:
+            self._log("WARN", f"读浏览器 Cookie 失败，本次不保存: {e}")
+            return False
+        if not has_live_auth_cookie(cookies):
+            self._log("WARN", f"浏览器里没有未过期的登录 Cookie，不覆盖 "
+                              f"{Path(path).name}（避免顶掉原有会话）")
+            return False
+        try:
+            self.browser_manager.save_cookies(path)
+            self._log("SUCCESS", f"Cookie 已保存到 {Path(path).name}")
+            return True
+        except Exception as e:
+            self._log("WARN", f"Cookie 保存失败: {e}")
+            return False
+
     def _has_live_auth_cookie(self, instance) -> bool:
         """浏览器中是否存在未过期的 BOSS 登录 Cookie。"""
         try:
-            now = time.time()
-            for c in instance._get_all_cookies() or []:
-                if not isinstance(c, dict) or c.get("name") not in BOSS_AUTH_COOKIES:
-                    continue
-                try:
-                    expires = float(c.get("expires") or -1)
-                except (TypeError, ValueError):
-                    expires = -1
-                if expires < 0 or expires > now:
-                    return True
-        except Exception:
-            pass
-        return False
-
-    def _chat_page_reachable(self, instance) -> bool:
-        """访问聊天页确认登录态（未登录会被重定向到登录页）。"""
-        try:
-            instance.get("https://www.zhipin.com/web/geek/chat")
-            self._stop_event.wait(timeout=2)   # 等 SPA 完成重定向
-            url = instance.url or ""
-            return "chat" in url and not any(
-                k in url for k in ("login", "/web/user", "passport"))
+            return has_live_auth_cookie(instance._get_all_cookies())
         except Exception:
             return False
+
+    def _reply_login_lost_once(self) -> bool:
+        """回复侧判了一次登录失效。返回 True 表示该停下等人工了。"""
+        self._login_fail_streak += 1
+        if self._login_fail_streak >= REPLY_LOGIN_FAIL_LIMIT:
+            self._needs_login = True
+            self._login_reason = "session_lost"
+            self._log("ERROR", f"回复侧连续 {self._login_fail_streak} 次判登录态失效，"
+                               f"这个号的回复轮不再空转，等人工登录")
+            return True
+        return False
+
+    def _reply_login_ok(self):
+        """登录态恢复正常，计数清零。"""
+        self._login_fail_streak = 0
 
     def _init_engines(self):
         """初始化打招呼引擎和回复相关组件。"""
@@ -1292,10 +1429,17 @@ class UnifiedBotLoop:
                     self._captcha_gate(pause_field="reply")
                     continue
                 if health == "need_login":
+                    # 今天实测：这里每 30 秒判一次失效、每 30 秒归档一次 Cookie，
+                    # 一路刷到我手动停。现在第 N 次就停下等人工，界面能看到原因。
+                    if self._reply_login_lost_once():
+                        self._log("ERROR", "回复侧已停止本轮，请在左侧该账号上完成登录后再启动")
+                        return
                     self._log("WARN", "回复侧检测到登录态失效，等待重新登录...")
                     self._needs_login = True
                     self._login_reason = "session_lost"
-                    self._discard_stale_cookies("回复侧登录态失效")
+                    if self._login_fail_streak == 1:
+                        # 只在第一次判定动 Cookie 文件，后面几次不再反复归档
+                        self._discard_stale_cookies("回复侧登录态失效")
                     self._stop_event.wait(timeout=30)
                     continue
                 if health == "browser_disconnected":
@@ -1303,7 +1447,7 @@ class UnifiedBotLoop:
                     self._stop_event.wait(timeout=10)
                     continue
 
-                # 检查是否是新的一天，如果是则归档数据
+                self._reply_login_ok()                # 检查是否是新的一天，如果是则归档数据
                 self._check_and_archive_daily_data()
 
                 self._current_mode = "reply"
