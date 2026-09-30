@@ -1,0 +1,10 @@
+{
+  "cities": ["长沙"],
+  "keywords": ["数据分析"],
+  "match_threshold": 70,
+  "probe_band": 15,
+  "greeting": "您好，我是应届本科，应聘数据分析岗位，掌握 Excel、SQL 与 Python，学习能力强，希望有机会沟通。",
+  "interval_seconds": [6, 14],
+  "round_cap": 20,
+  "screens_per_keyword": 3
+}
