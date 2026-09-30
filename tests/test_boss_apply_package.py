@@ -58,3 +58,58 @@ def test_失败码文档与state的枚举完全一致():
         cells = [c.strip() for c in rows[0].strip().strip("|").split("|")]
         assert len(cells) == 3 and all(len(c) > 3 for c in cells), \
             f"{code} 那一行三格没写满：{cells}"
+
+
+def _frontmatter(text):
+    m = re.match(r"^---\n(.*?)\n---\n", text, flags=re.S)
+    assert m, "SKILL.md 没有 frontmatter"
+    return m.group(1)
+
+
+def test_frontmatter只用白名单键():
+    """多余键会被 skill-creator 的 quick_validate.py 判失败，别踩。"""
+    keys = set(re.findall(r"^([a-zA-Z_-]+):", _frontmatter(
+        (PKG / "SKILL.md").read_text(encoding="utf-8")), flags=re.M))
+    allowed = {"name", "description", "license", "allowed-tools", "metadata", "compatibility"}
+    assert keys <= allowed, f"frontmatter 出现非白名单键：{keys - allowed}"
+
+
+def test_name与目录同名且是kebab_case():
+    fm = _frontmatter((PKG / "SKILL.md").read_text(encoding="utf-8"))
+    name = re.search(r"^name:\s*(.+)$", fm, flags=re.M).group(1).strip()
+    assert name == PKG.name, f"frontmatter name={name}，目录名={PKG.name}"
+
+
+def test_正文不超过500行():
+    """细节属于 references，主文件只留决策与流程。"""
+    body = (PKG / "SKILL.md").read_text(encoding="utf-8").splitlines()
+    assert len(body) <= 500, f"SKILL.md 已经 {len(body)} 行，把细节挪进 references"
+
+
+def test_四条红线都在文里():
+    text = (PKG / "SKILL.md").read_text(encoding="utf-8")
+    for must in ("已登录", "request-help", "硬上限 50", "风险由使用者自己承担"):
+        assert must in text, must
+
+
+def test_bsk会话生命周期写在流程里():
+    text = (PKG / "SKILL.md").read_text(encoding="utf-8")
+    assert "bsk session start" in text and "bsk session stop" in text
+    assert "--session" in text, "漏了 --session 的命令会打到另一个会话上"
+
+
+def test_不许出现自己实现浏览器的字样():
+    """约束①：浏览器能力全部来自 browser-skill，出现下面任何字样都是设计漂移。"""
+    text = (PKG / "SKILL.md").read_text(encoding="utf-8")
+    for banned in ("DrissionPage", "selenium", "playwright", "pyppeteer",
+                   "remote-debugging-port", "requests.get"):
+        assert banned not in text, banned
+
+
+def test_skill目录里没有用户数据():
+    """更新 skill 会整目录覆盖，用户数据混进去就没了。"""
+    junk = [p.name for p in PKG.rglob("*")
+            if p.is_file() and (p.name.startswith("chatted")
+                                or p.name == "rules.json"
+                                or p.suffix == ".log")]
+    assert not junk, f"这些文件不该在 skill 目录里：{junk}"
