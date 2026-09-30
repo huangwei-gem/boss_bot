@@ -84,3 +84,67 @@ def _dump(path: Path, data) -> None:
 
 def seen(url: str, account: str = "") -> bool:
     return _key(url, account) in _load_json(chatted_file(), {})
+
+
+HARD_CAP = 50        # skill 内置天花板：BOSS 自己给单账号 150/天，不该把人往那个数推
+DEFAULT_CAP = 20     # 每轮默认上限，可在 rules.json 调，但不能超过 HARD_CAP
+
+
+def _rows_of(round_id: str):
+    out = []
+    for path in sorted(state_dir().glob("rounds-*.json")):
+        for row in _load_json(path, []):
+            if row.get("round") == round_id:
+                out.append(row)
+    return out
+
+
+def count_sent(round_id: str) -> int:
+    return sum(1 for r in _rows_of(round_id) if r.get("failure_code") == SENT_CODE)
+
+
+def summary(round_id: str) -> dict:
+    rows = _rows_of(round_id)
+    by_code = {}
+    for r in rows:
+        code = str(r.get("failure_code") or "unknown")
+        by_code[code] = by_code.get(code, 0) + 1
+    return {"round": round_id, "total": len(rows), "by_code": by_code,
+            "sent": by_code.get(SENT_CODE, 0)}
+
+
+def remaining(round_id: str, cap: int, already=None) -> int:
+    """还能投几个。cap 越界时夹到 HARD_CAP，而不是报错——报错会被忽略，夹住不会。"""
+    try:
+        cap_n = int(cap)
+    except (TypeError, ValueError):
+        cap_n = DEFAULT_CAP
+    cap_n = max(0, min(HARD_CAP, cap_n))
+    used = count_sent(round_id) if already is None else int(already)
+    return max(0, cap_n - used)
+
+
+def main(argv=None) -> int:
+    import argparse
+    p = argparse.ArgumentParser(prog="state.py")
+    sub = p.add_subparsers(dest="cmd", required=True)
+    s = sub.add_parser("seen"); s.add_argument("--url", required=True)
+    s.add_argument("--account", default="")
+    r = sub.add_parser("record"); r.add_argument("--json", required=True)
+    c = sub.add_parser("count"); c.add_argument("--round", required=True)
+    m = sub.add_parser("summary"); m.add_argument("--round", required=True)
+    a = p.parse_args(argv)
+    if a.cmd == "seen":
+        return 0 if seen(a.url, a.account) else 1
+    if a.cmd == "record":
+        row = record(**json.loads(a.json))
+        print(json.dumps(row, ensure_ascii=False))
+        return 0
+    if a.cmd == "count":
+        print(count_sent(a.round)); return 0
+    print(json.dumps(summary(a.round), ensure_ascii=False))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

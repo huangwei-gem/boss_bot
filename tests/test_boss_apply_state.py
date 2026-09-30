@@ -73,3 +73,39 @@ def test_记录落在rounds文件里按月份分文件(tmp_path, monkeypatch):
                failure_code="sent", job_name="n", company="c")
     files = sorted(p.name for p in (tmp_path / "h" / "state").iterdir())
     assert "rounds-2026-09.json" in files, files
+
+
+def _fill(mod, n_sent, n_other=2, round_id="20260930-120000"):
+    for i in range(n_sent):
+        mod.record(round_id=round_id, url=f"u{i}", account="a", stage="greet",
+                   failure_code="sent", job_name=f"j{i}", company="c")
+    for i in range(n_other):
+        mod.record(round_id=round_id, url=f"s{i}", account="a", stage="score",
+                   failure_code="skipped_low_score", job_name="s", company="c")
+
+
+def test_本轮已投条数只数发送成功(tmp_path, monkeypatch):
+    mod = load_state(monkeypatch, tmp_path / "h")
+    _fill(mod, 3, 5)
+    assert mod.count_sent("20260930-120000") == 3
+
+
+def test_汇总按failure_code分组(tmp_path, monkeypatch):
+    mod = load_state(monkeypatch, tmp_path / "h")
+    _fill(mod, 2, 3)
+    s = mod.summary("20260930-120000")
+    assert s["by_code"]["sent"] == 2
+    assert s["by_code"]["skipped_low_score"] == 3
+    assert s["total"] == 5, "total 含被跳过的，否则看不出「投得少是因为筛得严」"
+
+
+def test_上限判定读的是文件而不是记忆(tmp_path, monkeypatch):
+    """agent 上下文被压缩后会低估自己投了几个；count_sent 是唯一真相。"""
+    mod = load_state(monkeypatch, tmp_path / "h")
+    _fill(mod, 20)
+    assert mod.remaining("20260930-120000", cap=25) == 5
+
+
+def test_硬上限压过配置值(tmp_path, monkeypatch):
+    mod = load_state(monkeypatch, tmp_path / "h")
+    assert mod.remaining("R", cap=999, already=0) == 50, "HARD_CAP=50 是地板上的天花板"
