@@ -40,3 +40,21 @@ def test_dom文档里每个选择器都能在生产实现里找到出处():
     assert len(listed) >= 12, f"文档没按约定列选择器，只找到 {len(listed)} 条"
     for sel in listed:
         assert sel in src, f"boss-dom.md 写了 {sel}，生产代码里已经没有它了"
+
+
+def test_失败码文档与state的枚举完全一致():
+    """文档里有代码没的码 → agent 记进去没人认得；代码有文档没的码 → 使用者查不到处置。"""
+    doc = (PKG / "references" / "failure-codes.md").read_text(encoding="utf-8")
+    doc_codes = set(re.findall(r"^\|\s*`([a-z_]+)`", doc, flags=re.M))
+    src = (PKG / "scripts" / "state.py").read_text(encoding="utf-8")
+    m = re.search(r"FAILURE_CODES = \(([^)]*)\)", src, flags=re.M)
+    assert m, "state.py 里没声明 FAILURE_CODES 枚举"
+    codes = {x.value for x in ast.parse(f"X=({m.group(1)})").body[0].value.elts}
+    assert codes, "FAILURE_CODES 是空的"
+    assert doc_codes == codes, f"文档多集 {doc_codes - codes} / 代码多集 {codes - doc_codes}"
+    for code in sorted(codes):
+        rows = [l for l in doc.splitlines() if l.strip().startswith(f"| `{code}`")]
+        assert len(rows) == 1, f"{code} 在表里出现 {len(rows)} 次"
+        cells = [c.strip() for c in rows[0].strip().strip("|").split("|")]
+        assert len(cells) == 3 and all(len(c) > 3 for c in cells), \
+            f"{code} 那一行三格没写满：{cells}"
