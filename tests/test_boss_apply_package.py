@@ -113,3 +113,19 @@ def test_skill目录里没有用户数据():
                                 or p.name == "rules.json"
                                 or p.suffix == ".log")]
     assert not junk, f"这些文件不该在 skill 目录里：{junk}"
+
+
+def test_打包产物只含该含的东西(tmp_path):
+    """导入方拿到的应该就是 skill 目录本身，不能混进仓库的 boss_bot/、docs/、用户配置。"""
+    import subprocess
+    out = tmp_path / "boss-apply.skill"
+    r = subprocess.run([sys.executable, str(ROOT / "tools" / "build_boss_apply_skill.py"),
+                        "--out", str(out)], capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr or r.stdout
+    import zipfile
+    names = set(zipfile.ZipFile(out).namelist())
+    assert {"boss-apply/SKILL.md", "boss-apply/scripts/state.py",
+            "boss-apply/scripts/check_env.py", "boss-apply/assets/rules.example.json",
+            "boss-apply/references/boss-dom.md"} <= names, sorted(names)[:20]
+    assert not [n for n in names if "rules.json" in n and "example" not in n]
+    assert not [n for n in names if "/state/" in n or n.endswith(".log")]
