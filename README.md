@@ -16,6 +16,7 @@
 - [防骚扰与发送闸门](#防骚扰与发送闸门)
 - [AI 接口体检与容灾链](#ai-接口体检与容灾链)
 - [判分复盘（AI 说"不符合"之后追问为什么）](#判分复盘ai-说不符合之后追问为什么)
+- [boss-apply：可分发的 skill 版本（子项目①）](#boss-apply可分发的-skill-版本子项目)
 - [多账号](#多账号)
 - [聊天记录与 BOSS 对齐](#聊天记录与-boss-对齐)
 - [配置说明](#配置说明)
@@ -226,6 +227,25 @@ python tools/ai_health_check.py                # 命令行跑一轮全量体检
 打招呼记录表里被追问过的那行，原因下面有「🔎 追问原因」可展开。
 
 口径与设计依据见 `docs/superpowers/specs/2026-09-29-reject-reason-followup-design.md`。
+
+## boss-apply：可分发的 skill 版本（子项目①）
+
+同一个 BOSS 直聘，另一种形态：**纯 skill、零安装依赖**，跑在别人自己的浏览器上。
+它在 `~/.agents/skills/browser-skill` 之上做编排，**不实现任何浏览器驱动**。
+
+- 源码：仓库根 `boss-apply/`（`SKILL.md` + `references/` + `scripts/`）
+- 打包：`python tools/build_boss_apply_skill.py` → `dist/boss-apply.skill`
+- 使用者前置：装 `bsk` CLI + browser-skill 扩展，浏览器里保持 BOSS 直聘已登录，
+  然后 `python boss-apply/scripts/check_env.py` 自检通过
+- 与主程序的关系：本仓库的 `boss_bot/` 仍是开发者自用（cloakbrowser + Flask 面板）；
+  skill 面向别人，走使用者自己的真实浏览器与指纹
+
+四条内置红线：只用使用者自己已登录的浏览器（永不代填手机号/验证码）、
+每轮默认 20 条硬上限 50、风险由使用者自己认、拿不到可信信息就不发。
+
+设计与边界见 `docs/superpowers/specs/2026-09-30-boss-skill-apply-design.md`。
+**本仓库不做真机验证**：那条路要求 cloakbrowser，而 skill 必须跑在使用者的真实浏览器里。
+DOM 事实由 `tests/test_boss_apply_package.py` 逐条比对生产代码锁住。
 
 ## 多账号
 
