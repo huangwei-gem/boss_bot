@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from boss_bot.ai_health import (load_health, merge_results, probe_all,
+from boss_bot.ai_health import (PROBE_TIMEOUT, load_health, merge_results, probe_all,
                                 save_health, summarize)
 from boss_bot.unified_config import UnifiedConfig
 
@@ -27,7 +27,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--index", action="append", type=int, default=[],
                     help="只测这些下标，可重复；默认全测")
-    ap.add_argument("--timeout", type=int, default=20)
+    # 默认值必须跟体检模块一致：推理模型正常回话也要 20+ 秒（实测 Agnes-2.5-Flash
+    # 这一轮 21.7 秒），命令行写死 20 秒就会把好接口测成「请求超时」
+    ap.add_argument("--timeout", type=int, default=PROBE_TIMEOUT)
     args = ap.parse_args()
 
     cfg = UnifiedConfig.load()

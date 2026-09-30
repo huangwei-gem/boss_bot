@@ -81,6 +81,7 @@ MAX_AI_REASON_LEN = 500
 MAX_AI_SUGGESTED_GREETING_LEN = 200
 MAX_ACTUAL_GREETING_LEN = 200
 MAX_SKIP_REASON_LEN = 200
+MAX_AI_PROBE_LEN = 200
 MAX_STRENGTHS_LEN = 300
 MAX_WEAKNESSES_LEN = 300
 
@@ -96,6 +97,30 @@ def _truncate(text: Optional[str], max_len: int) -> Optional[str]:
     if len(text) <= max_len:
         return text
     return text[:max_len] + "...[截断]"
+
+
+def _truncate_probe(probe: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """判分复盘的追问四段各自限长（含截断标记）。
+
+    标记也占长度：不扣掉的话"限长 200"的字段实际写进 207 字，
+    5000 条记录就是这么把 greet_records.json 顶到 2MB 的。
+    """
+    if not isinstance(probe, dict):
+        return None
+    marker = "...[截断]"
+
+    def cap(value):
+        text = str(value or "")
+        if len(text) <= MAX_AI_PROBE_LEN:
+            return text
+        return text[:MAX_AI_PROBE_LEN - len(marker)] + marker
+
+    return {
+        "blocking_requirement": cap(probe.get("blocking_requirement")),
+        "evidence_missing": cap(probe.get("evidence_missing")),
+        "fixable_by_resume": bool(probe.get("fixable_by_resume")),
+        "score_if_fixed": int(probe.get("score_if_fixed") or 0),
+    }
 
 
 # ─────────────────────────────────────────────
@@ -271,6 +296,8 @@ class GreetRecord:
         greeting_message: str = "",
         ai_error: bool = False,
         ai_duration_ms: int = 0,
+        ai_probe: Optional[Dict[str, Any]] = None,
+        auto_greet_note: str = "",
         timestamp: Optional[str] = None,
     ):
         self.timestamp = _normalize_timestamp(timestamp)
@@ -307,6 +334,11 @@ class GreetRecord:
         # AI 这次到底有没有给出判断：True = 接口全挂/输出不可用，落到"默认通过"
         self.ai_error = bool(ai_error)
         self.ai_duration_ms = int(ai_duration_ms or 0)
+        # 判分复盘：AI 判"不符合"后追问到的四段原因（没问到就是 None）
+        self.ai_probe = _truncate_probe(ai_probe)
+        # 第二种打招呼机制的留痕：平台自动发了、我们没能进会话核对文案时那一句。
+        # 以前只写在日志里，界面看不到，于是出现「BOSS 上已投递、记录里对不上」
+        self.auto_greet_note = str(auto_greet_note or "")[:MAX_AI_PROBE_LEN]
         # 状态：pending/applied/skipped/failed
         # 若调用方未提供，则根据 is_greeted/is_skipped 自动推导
         if status:
@@ -357,6 +389,8 @@ class GreetRecord:
             "greeting_message": self.greeting_message,
             "ai_error": self.ai_error,
             "ai_duration_ms": self.ai_duration_ms,
+            "ai_probe": self.ai_probe,
+            "auto_greet_note": self.auto_greet_note or None,
         }
 
     @classmethod
@@ -389,6 +423,8 @@ class GreetRecord:
             greeting_message=data.get("greeting_message", ""),
             ai_error=data.get("ai_error", False),
             ai_duration_ms=data.get("ai_duration_ms", 0),
+            ai_probe=data.get("ai_probe"),
+            auto_greet_note=data.get("auto_greet_note") or "",
         )
 
 

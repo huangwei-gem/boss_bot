@@ -95,9 +95,17 @@ class WiringTest(unittest.TestCase):
         from boss_bot.greet_engine import GreetEngine
         cls.src = inspect.getsource(GreetEngine._apply_job_inner)
         cls.img = inspect.getsource(GreetEngine._send_images_after_message)
+        # 归因搬进了 _explain_missing_chat_button（要接验证码闸门，嵌在几十行的
+        # 投递流程里没法测），所以两处都得看：分支确实调它、它确实做归因
+        cls.explain = inspect.getsource(GreetEngine._explain_missing_chat_button)
 
     def test_按钮缺失分支走归因(self):
-        self.assertIn("chat_button_failure_reason(", self.src)
+        self.assertIn("_explain_missing_chat_button(", self.src)
+        self.assertIn("chat_button_failure_reason(", self.explain)
+
+    def test_归因认出验证页要叫闸门(self):
+        """这条锁的是"卡在验证图"别再回来：认出验证页必须等人工，不能只 return 原因"""
+        self.assertIn("_captcha_handoff()", self.explain)
 
     def test_已沟通类现场要标已沟通(self):
         self.assertIn("_mark_chatted(job)", self.src)

@@ -16,6 +16,7 @@ BOSS 自动回复机器人 - AI 自进化引擎
 
 import json
 import re
+import shutil
 import time
 import logging
 import threading
@@ -70,7 +71,29 @@ _NEGATIVE_PATTERNS = [
     re.compile(r"(已招满|已关闭|已结束|暂停招聘)", re.IGNORECASE),
     re.compile(r"(太远|薪资太低|经验不足|学历不够)", re.IGNORECASE),
     re.compile(r"(再看看|再考虑|有消息通知|有合适再联系)", re.IGNORECASE),
+    # 「不太合适」不含连续子串「不合适」，却会命中积极词表的「合适」——
+    # 2026-09-30 真实记录 #1/#4 就是这么被记成 positive 的。以下均为实测拒绝话术。
+    re.compile(r"不太(合适|匹配|符合)"),
+    re.compile(r"(匹配度|匹配程度|匹配).{0,6}(稍低|较低|偏低|不足|不高)"),
+    re.compile(r"更匹配的工作"),
+    re.compile(r"暂不(推进|招聘|考虑|招|需要)"),
+    re.compile(r"目前不(招|考虑|需要|合适)"),
+    re.compile(r"(人才库|人才储备)"),
+    re.compile(r"(移交给了?别的同事|岗位.{0,4}已移交)"),
+    re.compile(r"有.{0,6}机会.{0,4}再联系"),
+    re.compile(r"祝(您|你)?.{0,6}(顺利|好运)"),
 ]
+
+# 泄漏的模型思考过程特征（出现在回复开头即视为泄漏，不能当成已发送的正文统计）
+_LEAKED_REPLY_MARKERS = (
+    "我们只需要", "我们正在模拟", "用户是求职者", "我是求职者助手",
+    "Let me analyze", "<think>", "思考过程",
+)
+
+
+def _is_leaked_reply(text: str) -> bool:
+    head = (text or "")[:120]
+    return any(marker in head for marker in _LEAKED_REPLY_MARKERS)
 
 # AI 回复特征关键词（匹配已配置的回复模板风格）
 _AI_REPLY_MARKERS = [
@@ -143,6 +166,8 @@ class SelfEvolveEngine:
         self._template_effectiveness: Dict[str, Dict[str, int]] = {}
         self._strategy_adjustments: List[Dict[str, Any]] = []
         self._reply_count_since_optimize = 0
+        # 发送闸门（输出校验）拦下的草稿条数：留痕可见，不进效果统计
+        self._gate_block_count = 0
 
         # ── 自进化质量评分数据结构 ──
         # 回复评分历史：[{id, received_message, reply_content, reply_source,
@@ -583,6 +608,128 @@ class SelfEvolveEngine:
         # 默认中性
         return EFFECT_NEUTRAL
 
+    def _sweep_ignored_locked(self) -> int:
+        """超时未答扫描（调用方已持锁）：超过 24 小时 HR 仍无任何消息的记录判 ignored。"""
+        changed = 0
+        now = datetime.now()
+        for r in self._reply_records:
+            if r.get("evaluated"):
+                continue
+            try:
+                ts = datetime.fromisoformat(r["timestamp"])
+            except (KeyError, TypeError, ValueError):
+                r["evaluated"] = True
+                continue
+            if (now - ts).total_seconds() / 3600 < self.IGNORED_THRESHOLD_HOURS:
+                continue
+            r["effect"] = EFFECT_IGNORED
+            r["evaluated"] = True
+            changed += 1
+            if EFFECT_IGNORED in self._reply_stats:
+                self._reply_stats[EFFECT_IGNORED] += 1
+            te = self._template_effectiveness.setdefault(
+                r.get("source") or "unknown",
+                {"used": 0, "positive": 0, "neutral": 0, "negative": 0, "ignored": 0})
+            te[EFFECT_IGNORED] = te.get(EFFECT_IGNORED, 0) + 1
+        return changed
+
+    def sweep_ignored_replies(self) -> int:
+        """已读不回扫描：HR 超过 24 小时没回的未评估记录判 ignored。
+
+        之前只在 HR 回消息时评估（evaluate_previous_replies），HR 从不回的
+        记录永远停在未评估，IGNORED_THRESHOLD_HOURS 分支成了死代码。
+        """
+        if not self.enabled:
+            return 0
+        with self._lock:
+            changed = self._sweep_ignored_locked()
+            if changed:
+                self._save_internal()
+        if changed:
+            self._log("INFO", f"已读不回扫描：{changed} 条超过 "
+                              f"{self.IGNORED_THRESHOLD_HOURS} 小时无响应，判为 ignored")
+        return changed
+
+    def _stats_move(self, source_key: str, old: Optional[str], new: Optional[str]):
+        """统计随重判迁移：old 桶 -1，new 桶 +1（记录数不变）。"""
+        if old and old in self._reply_stats and self._reply_stats[old] > 0:
+            self._reply_stats[old] -= 1
+        if new and new in self._reply_stats:
+            self._reply_stats[new] += 1
+        te = self._template_effectiveness.get(source_key)
+        if te:
+            if old and te.get(old, 0) > 0:
+                te[old] -= 1
+            if new:
+                te[new] = te.get(new, 0) + 1
+
+    def _stats_exclude(self, source_key: str, effect: Optional[str]):
+        """泄漏记录剔除出统计：总数、来源用量、效果桶同步 -1。"""
+        if self._reply_stats.get("total_replies", 0) > 0:
+            self._reply_stats["total_replies"] -= 1
+        if effect and effect in self._reply_stats and self._reply_stats[effect] > 0:
+            self._reply_stats[effect] -= 1
+        te = self._template_effectiveness.get(source_key)
+        if te:
+            if te.get("used", 0) > 0:
+                te["used"] -= 1
+            if effect and te.get(effect, 0) > 0:
+                te[effect] -= 1
+
+    def _archive_before_purify(self):
+        """纠正前把原文件留底（只归档一次，不删除任何数据）。"""
+        archive = self._data_file.with_name(
+            self._data_file.stem + ".archive-before-purify.json")
+        if self._data_file.exists() and not archive.exists():
+            shutil.copy2(self._data_file, archive)
+            self._log("INFO", f"纠正前已留底: {archive.name}")
+
+    def purify_records(self) -> Dict[str, int]:
+        """一次性数据纠正（幂等，可重复调用）：
+
+        1. 泄漏思考过程的记录剔除出统计（标记 excluded，不删除）；
+        2. 已评估记录用现行判据重判，拒绝话术一律归 negative；
+        3. 顺带跑一遍超时未答扫描（ignored）。
+        改写前先归档原文件。
+        """
+        changed = {"reclassified": 0, "excluded": 0, "ignored": 0}
+        if not self.enabled:
+            return changed
+        with self._lock:
+            pending = [r for r in self._reply_records if not r.get("purified")]
+            if not pending:
+                return changed
+            self._archive_before_purify()
+            for r in pending:
+                r["purified"] = True
+                reply_text = r.get("reply_text") or ""
+                source_key = r.get("source") or "unknown"
+                effect = r.get("effect")
+                if _is_leaked_reply(reply_text):
+                    r["excluded"] = True
+                    changed["excluded"] += 1
+                    self._stats_exclude(source_key, effect)
+                    self._log("INFO", f"回复 #{r.get('id')} 是泄漏的思考过程，"
+                                      f"已剔除出统计（记录保留）")
+                    continue
+                if (r.get("evaluated") and r.get("hr_response")
+                        and effect in (EFFECT_POSITIVE, EFFECT_NEUTRAL, EFFECT_NEGATIVE)):
+                    new_effect = self.evaluate_reply_effectiveness(
+                        reply_text, r["hr_response"])
+                    if new_effect != effect:
+                        r["effect"] = new_effect
+                        changed["reclassified"] += 1
+                        self._stats_move(source_key, effect, new_effect)
+                        self._log("INFO", f"回复 #{r.get('id')} 效果重判: "
+                                          f"{effect} → {new_effect}")
+            changed["ignored"] = self._sweep_ignored_locked()
+            if any(changed.values()):
+                self._save_internal()
+        if any(changed.values()):
+            self._log("INFO", f"自净化完成: 重判 {changed['reclassified']}、"
+                              f"剔除泄漏 {changed['excluded']}、补判 ignored {changed['ignored']}")
+        return changed
+
     # ─────────────────────────────────────────────
     # AI 回复记录与效果追踪
     # ─────────────────────────────────────────────
@@ -625,6 +772,37 @@ class SelfEvolveEngine:
             self._save_internal()
 
         self._log("DEBUG", f"记录 AI 回复 #{record['id']} (source={source_key})")
+
+    def record_gate_block(self, reason: str, draft: str = "",
+                          context: Optional[dict] = None):
+        """发送闸门（输出校验）拦下 AI 草稿：留痕可见，不进效果统计。
+
+        之前闸门只写日志，面板上看不到"接口吐了思考过程被换掉"这类事件。
+        """
+        if not self.enabled:
+            return
+        ctx = context or {}
+        with self._lock:
+            record = {
+                "id": len(self._reply_records) + 1,
+                "reply_text": (draft or "")[:200],
+                "chat_name": ctx.get("chat_name", ""),
+                "job_name": ctx.get("job_name", ""),
+                "source": ctx.get("source", "ai"),
+                "intent": "",
+                "timestamp": datetime.now().isoformat(),
+                "effect": None,
+                "hr_response": None,
+                # 不参与效果评估，也不会被超时扫描判成 ignored
+                "evaluated": True,
+                "kind": "gate_block",
+                "note": (reason or "")[:200],
+                "purified": True,
+            }
+            self._reply_records.append(record)
+            self._gate_block_count += 1
+            self._save_internal()
+        self._log("INFO", f"发送闸门拦下一条草稿（{(reason or '')[:60]}），已留痕")
 
     def evaluate_previous_replies(self, new_messages: List[dict], chat_name: str = ""):
         """收到新消息时，评估之前 AI 回复的效果。
@@ -833,6 +1011,8 @@ class SelfEvolveEngine:
             - strategy_adjustments: 策略调整历史
             - recent_records: 最近的回复记录
         """
+        # 报告是面板轮询入口，先做超时未答扫描，保证 ignored 能持续产生
+        self.sweep_ignored_replies()
         with self._lock:
             total = self._reply_stats["total_replies"]
             stats = dict(self._reply_stats)
@@ -884,6 +1064,8 @@ class SelfEvolveEngine:
                     "evaluated": r["evaluated"],
                     "timestamp": r["timestamp"],
                     "hr_response": (r["hr_response"] or "")[:80],
+                    "kind": r.get("kind", ""),
+                    "note": (r.get("note") or "")[:80],
                 })
 
             return {
@@ -893,6 +1075,7 @@ class SelfEvolveEngine:
                 "worst_templates": worst_templates,
                 "strategy_adjustments": list(self._strategy_adjustments[-20:]),
                 "recent_records": recent_records,
+                "gate_blocks": self._gate_block_count,
                 "enabled": self.enabled,
             }
 
@@ -911,6 +1094,7 @@ class SelfEvolveEngine:
                 },
                 "strategy_adjustments": list(self._strategy_adjustments),
                 "reply_records": self._reply_records[-200:],  # 保留最近200条
+                "gate_blocks": self._gate_block_count,
                 "last_saved": datetime.now().isoformat(),
             }
             with open(self._data_file, "w", encoding="utf-8") as f:
@@ -935,6 +1119,7 @@ class SelfEvolveEngine:
                 self._template_effectiveness = data.get("template_effectiveness", {})
                 self._strategy_adjustments = data.get("strategy_adjustments", [])
                 self._reply_records = data.get("reply_records", [])
+                self._gate_block_count = data.get("gate_blocks", 0)
 
                 self._log("INFO",
                           f"进化数据已加载: {self._reply_stats['total_replies']} 条回复记录, "

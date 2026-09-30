@@ -18,6 +18,7 @@ BOSS 自动回复机器人 - 回复引擎
 """
 
 import random
+import re
 import time
 import logging
 from datetime import datetime
@@ -73,6 +74,40 @@ REJECTION_REPLIES = [
     "好的，感谢您抽出时间查看，祝工作顺利~",
     "理解，感谢您的反馈，祝您招聘顺利~",
 ]
+
+# ── 发出去的回复必须像一句人话，不像草稿 ────────────────────────────
+# 判据是现算的：data/reply_records.json 里 31 条 reply_source="ai" 的回复，
+# 24 条正常的最长 120 字（p75=68），7 条把模型思考过程发出去的最短 307 字，
+# 所以 160 字这条线两边都碰不到。异常那 7 条还都带提示词脚手架字样或列表结构。
+_REPLY_MAX_CHARS = 160
+_PROMPT_TELLTALES = (
+    "招聘方称呼", "招聘岗位", "最近对话记录", "对方最新消息", "对话历史",
+    "分析：", "我需要分析", "首先，分析", "根据要求", "用户是求职者", "规则说",
+    "Let me analyze", "I previously",
+)
+_NUMBERED = re.compile(r"^\d+[\.、)]\s*\S")
+
+
+def reply_rejection(text: str) -> str:
+    """这条 AI 输出能不能发给 HR；能发返回空串，不能发返回原因。
+
+    不能发的一律抛错走容灾链换下一个接口，绝不"降级发出去"——发出去的话收不回来，
+    而换一个接口再试一次的代价只是几秒钟。
+    """
+    t = (text or "").strip()
+    if not t:
+        return "空回复"
+    if len(t) > _REPLY_MAX_CHARS:
+        return f"长度 {len(t)} 字，超过聊天回复上限 {_REPLY_MAX_CHARS}"
+    hit = next((k for k in _PROMPT_TELLTALES if k in t), None)
+    if hit:
+        return f"含提示词脚手架/思考痕迹「{hit}」"
+    for line in t.splitlines():
+        s = line.strip()
+        if s.startswith(("-", "*", "#")) or _NUMBERED.match(s) or "**" in s or "```" in s:
+            return "是 markdown/列表结构，不是聊天正文"
+    return ""
+
 
 # 自我介绍特征关键词（用于检测重复发送）
 _SELF_INTRO_MARKERS = [
@@ -837,18 +872,38 @@ class ReplyEngine:
             ],
         )
         raw_content = response.choices[0].message.content
-        # 推理型接口可能把话全写在 reasoning_content 里，正文返回 None
-        reasoning = getattr(response.choices[0].message, "reasoning_content", None) or ""
-        text = (raw_content or "").strip() or reasoning.strip()
+        # 推理型接口的 reasoning_content 是它自己的分析草稿，不是要发给 HR 的话。
+        # 旧代码在这里写 `content or reasoning`，结果 2026-09-29~30 真发出去 7 条思考过程
+        # （最长 507 字，含"首先，分析对话上下文："和整段英文），对方看到的就是草稿纸。
+        reasoning = (getattr(response.choices[0].message, "reasoning_content", None) or "").strip()
+        text = (raw_content or "").strip()
         if not text:
             # 空回复不能当成"这轮不回复"，要报错让容灾链换下一个接口
-            raise RuntimeError("接口没有回复正文（content 与 reasoning_content 均为空）")
+            reason = (f"接口没有回复正文（content 为空，思考过程写了 {len(reasoning)} 字，"
+                      "不能当回复发出去）")
+            self._record_gate_block(reason, reasoning)
+            raise RuntimeError(reason + "，换下一个接口")
+        why = reply_rejection(text)
+        if why:
+            reason = f"回复内容不像一句回复（{why}）"
+            self._record_gate_block(reason, text, boss_name=boss_name, job_name=job_name)
+            raise RuntimeError(reason + "，换下一个接口")
         # 保存 AI 元信息供回复记录使用
         self._last_ai_system_prompt = system_prompt
         self._last_ai_user_prompt = user_prompt
         self._last_ai_model = model
-        self._last_ai_raw_response = raw_content if raw_content else reasoning
+        self._last_ai_raw_response = raw_content
         return text
+
+    def _record_gate_block(self, reason: str, draft: str,
+                           boss_name: str = "", job_name: str = ""):
+        """闸门拦下的草稿留痕进自进化（失败不影响容灾链换接口）。"""
+        try:
+            if self._self_evolve:
+                self._self_evolve.record_gate_block(
+                    reason, draft, {"chat_name": boss_name, "job_name": job_name})
+        except Exception as e:
+            logger.debug(f"闸门留痕失败: {e}")
 
     # ---------- 频控与延迟 ----------
 

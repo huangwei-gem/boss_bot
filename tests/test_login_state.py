@@ -231,6 +231,141 @@ class ReplyLoginStreakTest(unittest.TestCase):
                         f"没有一条说清要人工登录: {msgs}")
 
 
+class UncertainHandlingTest(unittest.TestCase):
+    """23:01 并发实测：主号明明登录着，却白等 80 秒并跳了一次登录页；
+    回复侧第一眼判"失效"就把刚存的 Cookie 归档走了。两路矛盾时不能这么处置。"""
+
+    def _loop(self):
+        with patch("boss_bot.main_loop.BrowserManager"):
+            loop = UnifiedBotLoop(config=UC.UnifiedConfig())
+        loop._log = lambda *a, **k: None
+        loop._interruptible_sleep = lambda *a, **k: None
+        loop._cookie_file = lambda: "zhipin_cookies.json"
+        loop.browser_manager = MagicMock()
+        loop.browser_manager.load_cookies.return_value = True
+        loop._discard_stale_cookies = MagicMock()
+        loop._save_cookies_if_logged_in = MagicMock(return_value=True)
+        loop._wait_for_login = MagicMock(return_value=False)
+        return loop
+
+    def _urls_touched(self, inst):
+        return [c.args[0] for c in inst.get.call_args_list]
+
+    def test_矛盾时先复核而不是立刻推人去登录页(self):
+        loop = self._loop()
+        inst = MagicMock()
+        loop.browser_manager.get_instance.return_value = inst
+        seen = ["uncertain", "logged_in"]
+        loop._login_state_now = lambda i: seen.pop(0)
+        assert loop._handle_login() is True
+        assert not any("/web/user" in u for u in self._urls_touched(inst)), \
+            "复核到第二次就登录了，还把人家的页面导航到登录页做什么"
+        loop._discard_stale_cookies.assert_not_called()
+
+    def test_复核后仍看不准也不跳登录页(self):
+        """跳登录页会把会话页弄脏，回复侧随后就读到登录墙——今天就是这么自绊的"""
+        loop = self._loop()
+        inst = MagicMock()
+        loop.browser_manager.get_instance.return_value = inst
+        loop._login_state_now = lambda i: "uncertain"
+        assert loop._handle_login() is False
+        assert not any("/web/user" in u for u in self._urls_touched(inst))
+        loop._discard_stale_cookies.assert_not_called()
+        assert loop._login_reason == "login_uncertain"
+
+    def test_确认登录墙才跳登录页并归档(self):
+        loop = self._loop()
+        inst = MagicMock()
+        loop.browser_manager.get_instance.return_value = inst
+        loop._login_state_now = lambda i: "login_wall"
+        assert loop._handle_login() is False
+        assert any("/web/user" in u for u in self._urls_touched(inst))
+        loop._discard_stale_cookies.assert_called_once()
+
+
+class ReplyLoginGuardTest(unittest.TestCase):
+    """回复侧判失效之前，先自己复核一次两路证据。"""
+
+    def _loop(self):
+        with patch("boss_bot.main_loop.BrowserManager"):
+            loop = UnifiedBotLoop(config=UC.UnifiedConfig())
+        loop._log = lambda lvl="", m="": None
+        loop._stop_event = MagicMock()
+        loop._discard_stale_cookies = MagicMock()
+        loop._login_fail_streak = 0
+        loop._needs_login = False
+        return loop
+
+    def test_复核仍矛盾就不动Cookie也不计数(self):
+        loop = self._loop()
+        loop._login_state_read = lambda i: "uncertain"
+        got = loop._reply_login_guard(MagicMock())
+        self.assertEqual(got, "waiting")
+        loop._discard_stale_cookies.assert_not_called()
+        self.assertEqual(loop._login_fail_streak, 0)
+
+    def test_复核确认登录墙才归档并计数(self):
+        loop = self._loop()
+        loop._login_state_read = lambda i: "login_wall"
+        got = loop._reply_login_guard(MagicMock())
+        self.assertEqual(got, "waiting")
+        loop._discard_stale_cookies.assert_called_once()
+        self.assertEqual(loop._login_fail_streak, 1)
+
+    def test_连续三次确认才停这个号(self):
+        loop = self._loop()
+        loop._login_state_read = lambda i: "login_wall"
+        self.assertEqual(loop._reply_login_guard(MagicMock()), "waiting")
+        self.assertEqual(loop._reply_login_guard(MagicMock()), "waiting")
+        self.assertEqual(loop._reply_login_guard(MagicMock()), "stop")
+        self.assertTrue(loop._needs_login)
+        loop._discard_stale_cookies.assert_called_once()   # 只在第一次动文件
+
+
+class GreetLoginGuardTest(unittest.TestCase):
+    """打招呼侧的健康检查同样会一眼误判（它读的是打招呼线程正在跳转的页面）。
+
+    23:01 之后主号的 Cookie 就是被"运行中检测到登录态失效"这一眼归档走的。
+    """
+
+    def _loop(self):
+        with patch("boss_bot.main_loop.BrowserManager"):
+            loop = UnifiedBotLoop(config=UC.UnifiedConfig())
+        loop._log = lambda lvl="", m="": None
+        loop._discard_stale_cookies = MagicMock()
+        loop._login_fail_streak = 0
+        loop._needs_login = False
+        return loop
+
+    def test_复核不是登录墙就不许归档(self):
+        loop = self._loop()
+        loop._login_state_read = lambda i: "uncertain"
+        self.assertFalse(loop._recheck_before_archive(MagicMock(), "打招呼侧"))
+        loop._discard_stale_cookies.assert_not_called()
+
+    def test_复核确认登录墙才放行(self):
+        loop = self._loop()
+        loop._login_state_read = lambda i: "login_wall"
+        self.assertTrue(loop._recheck_before_archive(MagicMock(), "打招呼侧"))
+
+    def test_回复侧守卫走同一个复核(self):
+        loop = self._loop()
+        loop._login_state_read = lambda i: "logged_in"
+        self.assertEqual(loop._reply_login_guard(MagicMock()), "waiting")
+        loop._discard_stale_cookies.assert_not_called()
+
+    def test_打招呼循环要先复核再动Cookie(self):
+        import inspect
+        from boss_bot import main_loop as ml
+        src = inspect.getsource(ml.UnifiedBotLoop._greet_loop)
+        i = src.index('health == "need_login"')
+        seg = src[i:i + 600]
+        self.assertIn("_recheck_before_archive", seg)
+        self.assertLess(seg.index("_recheck_before_archive"),
+                        seg.index("_discard_stale_cookies"),
+                        "复核必须在归档之前，否则又是看一眼就搬文件")
+
+
 class ToolProbeUrlTest(unittest.TestCase):
     """体检脚本自己也不能把登录页报成已登录（今天就是这么漏的）。"""
 

@@ -25,7 +25,7 @@ from DrissionPage import ChromiumOptions, ChromiumPage
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CLOAK = os.path.join(BASE, "cloakbrowser", "chrome.exe")
 PORT = 9402
-DASH = "http://127.0.0.1:5000"
+DASH = os.environ.get("BOSS_PANEL_URL", "http://127.0.0.1:5000")
 SHOTS = os.path.join(BASE, "tools", "e2e")
 os.makedirs(SHOTS, exist_ok=True)
 
@@ -197,13 +197,28 @@ def main():
                         "time": (m.get("time") or "").strip()})
         return out
 
+    def select_chat(page, chat_id, acct):
+        """按「身份 + 账号」选中会话。
+
+        「全部账号」范围下两个号可能聊到同一家公司的同一个人（实测：李女士 @ 深圳市极客星球电…
+        账号1 存 9 条、账号2 存 7 条），前端缓存键因此带 @a账号 后缀。
+        只传裸 chat_id 会随机命中其中一路，比对就没有意义——这里让页面自己按账号找出键。
+        """
+        return js(page, '(function(id, acct){var keys=Object.keys(replyChatCache);'
+                        'for(var i=0;i<keys.length;i++){var g=replyChatCache[keys[i]]||{};'
+                        'var bare=keys[i].split("@a")[0];'
+                        'if((bare===id||g.chat_id===id)&&Number(g.account_index)===acct){'
+                        'selectBossChat(keys[i]);return keys[i];}}return "";})('
+                        + json.dumps(chat_id, ensure_ascii=False) + ',' + str(int(acct)) + ')')
+
     for acct, cand in ((0, acct0_chats), (1, acct1_chats)):
         if not cand:
             continue
         store = MessageStore(account_index=acct)
         target = max(cand, key=lambda c: c["message_count"])
         # 选择会话必须用身份（姓名+公司），昵称本身在两个号上都会撞车
-        js(page, f'selectBossChat({json.dumps(target["chat_id"], ensure_ascii=False)})')
+        used = select_chat(page, target["chat_id"], target.get("account_index", acct))
+        assert used, f"界面上找不到 {target['chat_id']} 属于账号{acct} 的那一路"
         time.sleep(2)
         ui = ui_rows(page)
         be = expected_rows(store, target)
@@ -233,7 +248,8 @@ def main():
         name, two = next(iter(dups.items()))
         per_identity = []
         for chat in two:
-            js(page, 'selectBossChat(%s)' % json.dumps(chat["chat_id"], ensure_ascii=False))
+            assert select_chat(page, chat["chat_id"], chat.get("account_index", 0)), \
+                f"界面上找不到 {chat['chat_id']}"
             time.sleep(1.6)
             rows = ui_rows(page)
             be = expected_rows(MessageStore(account_index=0), chat)
@@ -337,7 +353,7 @@ def main():
     time.sleep(2)
 
     # ── 6b. 演练模式开关走真实 UI 路径 + 整体回写不得抹掉未建模字段 ──
-    cfg_file = os.path.join(BASE, "bot_config.json")
+    cfg_file = os.environ.get("BOSS_CONFIG_FILE") or os.path.join(BASE, "bot_config.json")
     theme_before = ""
     try:
         with open(cfg_file, encoding="utf-8") as f:
@@ -479,7 +495,7 @@ def main():
     })()''')
     js(page, 'pauseGreet(); resumeGreet(); pauseReply(); resumeReply();'
              ' downloadGreetRecords(); downloadReplyRecords();'
-             ' loginPendingIdx=1; confirmLogin();')
+             ' loginPendingIdx=1; doConfirmLogin();')
     time.sleep(1.2)
     fired = js(page, 'JSON.stringify(window.__fired)') or []
     opened = js(page, 'JSON.stringify(window.__opened)') or []

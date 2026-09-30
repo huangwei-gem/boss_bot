@@ -51,9 +51,10 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from boss_bot.unified_config import (
     UnifiedConfig, BASE_DIR, BOT_CONFIG_FILE, USER_PROFILE_FILE,
     OVERRIDES_FILE,
-    load_config, save_config, save_overrides, validate_config, DEFAULT_GREETING,
-    diff_against, ACCOUNT_OVERLAY_SECTIONS,
+    load_config, save_config, save_overrides, validate_config,
+    ACCOUNT_OVERLAY_LOCKED, ACCOUNT_OVERLAY_SECTIONS, diff_against,
 )
+from boss_bot.judgement_review import apply_suggestion, build_review
 from boss_bot.main_loop import UnifiedBotLoop, MultiAccountManager
 from boss_bot.self_evolve import SelfEvolveEngine
 from boss_bot.reply_record import (
@@ -869,8 +870,27 @@ _cookie_state_cache: dict = {}   # account_index -> (时间戳, payload)
 _COOKIE_STATE_TTL = 5            # 秒
 
 
+def _live_login_state(idx: int):
+    """这个账号的浏览器正在跑时，从它身上实测登录态；没在跑返回 None。
+
+    只问已经在跑的循环，绝不另起浏览器：老那条 check_cookie 会起一个不带端口与
+    profile 的实例，跟正在跑的会话抢同一个用户目录还 quit() 它 —— 检测一次等于
+    把登录态踢一次，这是本项目不能碰的红线。
+    """
+    if _multi_manager is None:
+        return None
+    for lp in getattr(_multi_manager, "_loops", []) or []:
+        if getattr(lp, "account_index", None) == idx:
+            try:
+                return lp.live_login_state()
+            except Exception as e:
+                logger.debug(f"实测登录态失败(账号{idx}): {e}")
+                return None
+    return None
+
+
 def _account_cookie_state(idx: int, account=None, force: bool = False) -> dict:
-    """按账号读 Cookie 文件判有效性（只查文件，不启动浏览器）。
+    """按账号读登录态：优先用正在跑的那个浏览器实测，没在跑才读 Cookie 文件。
 
     带 5 秒缓存，所以可以跟着状态轮询跑：以前红点只在手动点一下后更新，
     账号2 登录成功之后点还是红的，看起来像"多账号没跑起来"。
@@ -899,6 +919,23 @@ def _account_cookie_state(idx: int, account=None, force: bool = False) -> dict:
         payload = {"valid": False, "logged_in": False, "reason": f"检测异常: {e}",
                    "cookie_file": "", "account_name": f"账号{idx}",
                    "checked_at": int(now)}
+
+    # 文件结论只说明"那几条登录项没过期"，界面不能把它说成"登录着"
+    payload["source"] = "file"
+    payload["reason"] = f"本地 Cookie 文件（未联网核对）：{payload.get('reason') or ''}".strip()
+
+    live = _live_login_state(idx)
+    if live == "logged_in":
+        payload.update(valid=True, logged_in=True, source="live",
+                       reason="浏览器实测：页面在 BOSS 内页且登录项未过期")
+    elif live == "need_login":
+        payload.update(valid=False, logged_in=False, source="live",
+                       reason="浏览器实测：这个浏览器现在停在登录页，登录态已失效")
+    elif live == "uncertain":
+        # 两路证据对不上时给灰点（valid=None）：蒙红或蒙绿都会把人带偏
+        payload.update(valid=None, source="uncertain",
+                       reason="浏览器实测：地址与登录项两路证据对不上，看不准，"
+                              "请在浏览器窗口里看一眼")
     _cookie_state_cache[idx] = (now, payload)
     return payload
 
@@ -976,6 +1013,10 @@ def _fold_into_account_overlay(new_cfg: dict, idx: int) -> None:
         base = base_cfg.get(section)
         if isinstance(submitted, dict) and isinstance(base, dict):
             diff = diff_against(submitted, base)
+            # 锁住的键不写进覆盖：浏览器端口与用户目录是账号索引算出来的
+            # （9222+idx、account_{idx}），界面改了它等于让两个号抢同一个浏览器
+            locked = ACCOUNT_OVERLAY_LOCKED.get(section, set())
+            diff = {k: v for k, v in diff.items() if k not in locked}
             if diff:
                 overlay[section] = diff
         if isinstance(base, dict):
@@ -2128,8 +2169,11 @@ def api_reply_records_grouped():
         all_chats = [c for c in msg_store.get_all_chats_detail()
                      if account is None or int(c.get("account_index") or 0) == account]
         # 分组键必须是会话身份而不是昵称：实测侧栏 34 行里 4 组重名昵称
-        # （两个陈女士分属小智时代科技/艾秒广告），按昵称分组会把两段对话并成一组
-        full_chats = {c["chat_id"]: c for c in all_chats}
+        # （两个陈女士分属小智时代科技/艾秒广告），按昵称分组会把两段对话并成一组。
+        # 身份还要再带账号：两个号聊到同一家公司的同一个人时 chat_id 完全相同
+        # （实测 李女士 @ 深圳市极客星球电…，账号1 存 9 条、账号2 存 7 条），
+        # 只按 chat_id 建字典会让后读的盖掉先读的——界面上少一整段对话
+        full_chats = {(c["chat_id"], int(c.get("account_index") or 0)): c for c in all_chats}
         chat_index = {}
         for c in all_chats:
             chat_index.setdefault(
@@ -2139,9 +2183,10 @@ def api_reply_records_grouped():
         groups = {}
         for r in records:
             cid = _chat_id_for_record(chat_index, msg_store, r)
-            if cid not in groups:
-                full = full_chats.get(cid) or {}
-                groups[cid] = {
+            gkey = (cid, int(r.account_index or 0))
+            if gkey not in groups:
+                full = full_chats.get(gkey) or {}
+                groups[gkey] = {
                     "chat_name": r.chat_name or "(未知)",
                     "chat_id": cid,
                     "company": full.get("company", ""),
@@ -2158,20 +2203,20 @@ def api_reply_records_grouped():
                     "unread_count": full.get("unread_count", 0),
                 }
             d = r.to_dict()
-            groups[cid]["records"].append(d)
-            groups[cid]["message_count"] += 1
+            groups[gkey]["records"].append(d)
+            groups[gkey]["message_count"] += 1
             # 更新最新消息（按 timestamp 字符串比较）
             timestamp = d.get("timestamp", "") or ""
-            if timestamp > groups[cid]["last_time"]:
-                groups[cid]["last_time"] = timestamp
-                groups[cid]["last_message"] = d.get("received_message", "") or ""
-                groups[cid]["last_reply"] = d.get("reply_content", "") or ""
+            if timestamp > groups[gkey]["last_time"]:
+                groups[gkey]["last_time"] = timestamp
+                groups[gkey]["last_message"] = d.get("received_message", "") or ""
+                groups[gkey]["last_reply"] = d.get("reply_content", "") or ""
 
         # 补上只有 HR 消息、还没回复过的会话（reply_records 里没有，message_store 里有）
-        for cid, full in full_chats.items():
-            g = groups.get(cid)
+        for (cid, _acct), full in full_chats.items():
+            g = groups.get((cid, _acct))
             if g is None:
-                groups[cid] = {
+                groups[(cid, _acct)] = {
                     "chat_name": full.get("chat_name", ""),
                     "chat_id": cid,
                     "company": full.get("company", ""),
@@ -2308,6 +2353,66 @@ def api_ai_quality():
         return jsonify({"status": "ok", **stats})
     except Exception as e:
         logger.exception("读取 AI 判分质量失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/ai/judgement_review")
+def api_judgement_review():
+    """判分复盘：AI 判"不符合"后追问到的原因，聚合成排行与建议。
+
+    建议一律 auto_applied:false —— 只有点「采纳」才写配置，见
+    docs/superpowers/specs/2026-09-29-reject-reason-followup-design.md。
+    """
+    try:
+        account = _account_arg()
+        try:
+            days = int(request.args.get("days") or 7)
+        except (TypeError, ValueError):
+            days = 7
+        rows = _get_greet_store().get_all()
+        data = build_review(rows, account_index=account, days=max(1, min(90, days)))
+        return jsonify({"status": "ok", **data})
+    except Exception as e:
+        logger.exception("读取判分复盘失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/ai/judgement_review/adopt", methods=["POST"])
+def api_judgement_review_adopt():
+    """采纳一条复盘建议：只把它写进对应的那一个配置字段。
+
+    带 account 时 AI 段折进该号覆盖，改账号 2 的建议不会顺手改掉所有号的基准。
+    简历段（add_resume_evidence）不在账号可覆盖清单里，永远写全局——两个号对同一个
+    HR 说出互相矛盾的自我介绍更糟。
+    """
+    global _config
+    try:
+        body = request.get_json() or {}
+        suggestion = body.get("suggestion") or {}
+        account = body.get("account")
+        cfg = UnifiedConfig.load()
+        # 在这个号"基准 + 已有覆盖"的生效值上追加，再折回覆盖。
+        # 直接在全局段上追加的话，下一次采纳读不到上一次写进覆盖的内容，
+        # 折出来的差异是空的，settings 被整个替换 —— 连点两条建议只剩最后一条
+        if isinstance(account, int) and 0 <= account < len(cfg.greet.accounts):
+            cfg = cfg.apply_account(account)
+        ok, msg = apply_suggestion(cfg, suggestion)
+        if not ok:
+            return jsonify({"status": "error", "message": msg}), 400
+
+        new_cfg = cfg.to_dict()
+        if isinstance(account, int) and 0 <= account < len(new_cfg.get("accounts") or []):
+            _fold_into_account_overlay(new_cfg, account)
+        save_config(new_cfg)
+        save_overrides(new_cfg)
+        _config = UnifiedConfig.load()
+        scope = f"账号「{(new_cfg.get('accounts') or [{}])[account].get('name', account)}」" \
+            if isinstance(account, int) and 0 <= account < len(new_cfg.get("accounts") or []) \
+            else "全局"
+        return jsonify({"status": "ok", "message": f"{msg}（已写入 {scope}）",
+                        "scope": scope})
+    except Exception as e:
+        logger.exception("采纳复盘建议失败")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
@@ -2759,7 +2864,7 @@ def api_add_job():
             query=data.get("query", "数据分析"),
             city=data.get("city", "上海"),
             scroll_pages=data.get("scroll_pages", 5),
-            greeting_message=data.get("greeting_message", DEFAULT_GREETING),
+            greeting_message=data.get("greeting_message", ""),
             enabled=data.get("enabled", True),
             image_files=data.get("images", []),
         )

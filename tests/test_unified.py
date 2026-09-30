@@ -20,6 +20,16 @@ from unittest.mock import patch, MagicMock, mock_open
 from datetime import datetime
 
 
+@pytest.fixture(autouse=True)
+def _fresh_ai_cooldown_table():
+    """AI 冷却表是进程共享的（两个号要互相让路，见 greet_engine），
+    用例之间必须各起各的，否则上一个用例烧掉的接口会让下一个用例莫名其妙跳过。"""
+    from boss_bot.greet_engine import reset_shared_cooldown
+    reset_shared_cooldown()
+    yield
+    reset_shared_cooldown()
+
+
 # ===================== 配置系统测试 =====================
 
 class UnifiedConfigTest:
@@ -2545,6 +2555,43 @@ class AccountIsolationTest:
         names = sorted(p.name for p in tmp_path.glob("*.json"))
         assert names == ["a1_杨女士_岗位乙.json", "杨女士_岗位甲.json"]
 
+    def test_未读只认BOSS报的数_没观察到就是不知道(self, tmp_path):
+        """面板红点以前是"本地数 HR 消息且没标已读"，实测账号1 显示 53、账号2 显示 118，
+        而 BOSS 自己说 13 / 1 —— 我们只存了点开的 2~3 条，从没点开的会话永远算未读。
+        现在没从线上看到过数就不显示数。"""
+        from boss_bot.message_store import MessageStore
+        st = MessageStore(base_dir=tmp_path, account_index=0)
+        st.save_messages("李女士", [{"text": "在吗", "is_mine": False, "sender": "hr"},
+                                    {"text": "您好", "is_mine": True}], "数据分析", "某公司")
+        got = [c for c in st.get_all_chats_detail() if c["chat_name"] == "李女士"][0]
+        assert got["unread_count"] is None, f"没观察到线上未读，却报出 {got['unread_count']}"
+
+    def test_记上线上未读后按线上那个数显示(self, tmp_path):
+        from boss_bot.message_store import MessageStore
+        st = MessageStore(base_dir=tmp_path, account_index=0)
+        st.save_messages("李女士", [{"text": "在吗", "is_mine": False, "sender": "hr"}],
+                         "数据分析", "某公司")
+        st.set_boss_unread("李女士", 5, "数据分析", "某公司")
+        got = [c for c in st.get_all_chats_detail() if c["chat_name"] == "李女士"][0]
+        assert got["unread_count"] == 5
+        st.set_boss_unread("李女士", 0, "数据分析", "某公司")
+        got = [c for c in st.get_all_chats_detail() if c["chat_name"] == "李女士"][0]
+        assert got["unread_count"] == 0, "点进去读完之后要归零，不能一直挂着 5"
+
+    def test_没存过的会话不会被凭空写入未读(self, tmp_path):
+        from boss_bot.message_store import MessageStore
+        st = MessageStore(base_dir=tmp_path, account_index=0)
+        st.set_boss_unread("从没聊过的人", 3, "岗位", "公司")
+        assert list(tmp_path.glob("*.json")) == [], "set_boss_unread 不该凭空造文件"
+
+    def test_回复轮次要把扫到的未读记下来并归零(self):
+        """归属：只有回复轮次真的看了侧栏红点，才有资格更新这个数"""
+        import inspect
+        from boss_bot.main_loop import UnifiedBotLoop
+        src = inspect.getsource(UnifiedBotLoop._run_reply_round)
+        assert "set_boss_unread(" in src
+        assert src.count("set_boss_unread(") >= 2, "扫到要记 N，读完要归零"
+
     def test_default_account_still_sees_all_chats(self, tmp_path):
         """Web 端用账号0 的实例列会话，账号2 的也要能看到"""
         from boss_bot.message_store import MessageStore
@@ -2620,7 +2667,7 @@ class AiHealthTest:
     def test_error_classified_in_chinese(self):
         from boss_bot.ai_health import probe_one, classify_error
         assert classify_error("Error code: 401 - Unauthorized") == "API Key 无效或已过期"
-        assert classify_error("insufficient quota") == "额度用尽或被限流"
+        assert classify_error("insufficient quota") == "额度用尽（需要充值或换 Key）"
         assert classify_error("Connection error.") == "网络不通/域名解析失败"
         with patch("openai.OpenAI", side_effect=RuntimeError("bad key")):
             res = probe_one(self._provider())
@@ -2832,11 +2879,11 @@ class PerAccountGreetSettingsTest:
         ge = self._engine(cfg, 7)
         assert ge._greeting_for(self._job(cfg, 0))[0] == "主号话术"
 
-    def test_账号没填话术就用默认模板(self):
-        from boss_bot.unified_config import DEFAULT_GREETING
+    def test_账号没填话术就不发而不是发默认模板(self):
+        """2026-09-30 口径：招呼语按账号自己定，两级都空就返回空串（调用方拦住不发）"""
         cfg = self._cfg(acc1="")
         ge = self._engine(cfg, 1)
-        assert ge._greeting_for(self._job(cfg, 1)) == (DEFAULT_GREETING, "默认模板")
+        assert ge._greeting_for(self._job(cfg, 1)) == ("", "未配置")
 
     def test_改话术后热重载即生效(self):
         cfg = self._cfg()

@@ -87,11 +87,8 @@ return (function(){
     var t = (ns[n].innerText || "").trim();
     if (t) { notice = t.slice(0, 60); break; }
   }
-  var txt = document.body ? (document.body.innerText || "") : "";
-  var captcha = !!document.querySelector(".nc-container, .verify-wrap, .geetest_panel, .verify-box, .captcha-box")
-                || txt.indexOf("安全验证") >= 0 || txt.indexOf("拖动滑块") >= 0;
   return JSON.stringify({url: location.href, inputs: inputs, chat_elements: found,
-                         buttons: btns, notice: notice, captcha: captcha});
+                         buttons: btns, notice: notice});
 })();
 '''
 
@@ -105,6 +102,8 @@ return (function(){
 # 2 次被重定向到另一个职位（原岗位已下线）。处置方式不同，原因必须分开写。
 CHAT_REDIRECT_REASON = "该岗位此前已沟通：BOSS 把详情页直接跳成了会话页"
 OFFLINE_JOB_REASON = "岗位已下线：BOSS 把详情页重定向到了另一个职位"
+GREETING_MISSING_REASON = ("本账号未配置招呼语：留空即不发送，不会改用任何默认话术"
+                           "（在左侧账号的「招呼语」或岗位里填一句再跑）")
 LOGIN_WALL_REASON = "BOSS 要求重新登录（页面出现手机号+短信验证码框），登录态已失效"
 CAPTCHA_REASON = "BOSS 弹出人机验证，需要人工在浏览器窗口完成（超时会自动跳过）"
 DISCONNECTED_REASON = "聊天页与浏览器连接已断开（标签页被关或被别的线程抢走）"
@@ -124,7 +123,11 @@ def chat_failure_reason(snap):
 
     inputs = [str(c).lower() for c in (snap.get("inputs") or [])]
     url = str(snap.get("url") or "")
-    if snap.get("captcha") or "_security_check" in url:
+    # 只认页面证据：BOSS 那个静默风控参数会挂在地址上，而带着它落地的那一页
+    # 照样读到 JD、点中"立即沟通"、把招呼语发出去（判据的取证见 page_handler
+    # 的 CAPTCHA_BOX_SELECTORS 上方注释）。拿地址定罪就会出现
+    # "后端说验证码、页面上没影"，而且那参数不会自己消失，闸门永远等不到恢复。
+    if snap.get("captcha"):
         return CAPTCHA_REASON
     if any(any(k in c for k in _LOGIN_CLS) for c in inputs):
         return LOGIN_WALL_REASON
@@ -162,10 +165,6 @@ return (function(){
   return JSON.stringify({text: (best.innerText || "").slice(0, 200),
                          buttons: btns.slice(0, 8), cls: (best.className || "").slice(0, 120)});
 })()'''
-
-AUTO_GREET_REASON = ("BOSS 平台自己发出了招呼语（第二种打招呼机制：「已向BOSS发送消息/"
-                     "留在此页/继续沟通」），页面里没有可输入的抽屉")
-
 
 def parse_auto_greet_dialog(raw) -> dict:
     """探针返回的字符串 → 弹窗现场；不是弹窗就返回空 dict。"""
@@ -262,7 +261,7 @@ def chat_button_failure_reason(requested_url: str, landed_url: str, snap: dict):
         return CHAT_REDIRECT_REASON, True
     if any(k in landed for k in ("login", "passport", "/web/user")):
         return LOGIN_WALL_REASON, False
-    if "_security_check" in landed or snap.get("captcha"):
+    if snap.get("captcha"):
         return CAPTCHA_REASON, False
     if "job_detail" in landed and not same_job_page(requested_url, landed):
         return OFFLINE_JOB_REASON, False
@@ -283,16 +282,20 @@ def chat_button_failure_reason(requested_url: str, landed_url: str, snap: dict):
 
 
 def pick_greeting(job_text: str, account_text: str, default_text: str):
-    """这条招呼语用哪一段：岗位定制 > 账号自定义 > 默认模板。
+    """这条招呼语用哪一段：岗位定制 > 账号自定义 > 没配置（返回空串）。
 
     岗位文案只有在被改过（不等于默认串）时才算定制——历史配置里每个岗位的
     greeting 都被填过同一份默认文案，一律优先会让账号级自定义永远不生效。
+
+    不再回落默认模板：招呼语是发给 HR 的话，用谁的话得账号自己定，程序替使用者
+    编一句等于替他社交（用户口径 2026-09-30）。空串就是"没配"，调用方必须拦住
+    不发，而不是拿任何文案顶上。
     """
     if job_text and job_text != default_text:
         return job_text, "岗位配置"
     if account_text:
         return account_text, "账号自定义"
-    return default_text, "默认模板"
+    return "", "未配置"
 
 
 # ─────────────────────────────────────────────
@@ -321,21 +324,6 @@ SELECTOR_BOSS_ACTIVE = ".boss-active-time"
 SELECTOR_SCALE = ".icon-scale"
 SELECTOR_REC_JOB_LIST = ".rec-job-list"
 SELECTOR_JOB_NAME = ".job-name"
-
-# ─────────────────────────────────────────────
-# 风控检测关键词
-# ─────────────────────────────────────────────
-# 验证码/安全验证关键词（出现即视为风控触发）
-WIND_CONTROL_CAPTCHA_KEYWORDS = (
-    "安全验证", "滑动验证", "验证码", "请完成验证", "拖动滑块",
-    "人机验证", "图形验证", "verifyCode", "captcha",
-)
-# 限制/频控关键词（出现即视为风控触发）
-WIND_CONTROL_LIMIT_KEYWORDS = (
-    "操作频繁", "稍后再试", "访问太频繁", "请求过于频繁",
-    "已被限制", "暂时限制", "限制访问", "请稍候再试",
-    "frequent", "too many",
-)
 
 # ─────────────────────────────────────────────
 # 默认 User-Agent 列表
@@ -400,6 +388,78 @@ class AIResponseUnusable(Exception):
     """
 
 
+# 整个进程共享的接口冷却表：provider.name -> 恢复时间戳。
+# 两个号各自一份的时候（2026-09-29），主号已经把某家服务商打到 429，账号2 毫不知情
+# 接着再撞，一次限流被踩成两次，还把容灾链里能用的接口一起烧进冷却。
+_SHARED_COOLDOWN: dict = {}
+_COOLDOWN_LOCK = threading.Lock()
+
+
+def reset_shared_cooldown() -> None:
+    """清空冷却表（给测试用，也给"改了 AI 配置后立即重测"用）。"""
+    with _COOLDOWN_LOCK:
+        _SHARED_COOLDOWN.clear()
+
+
+# ── 判分复盘：AI 说"不符合"之后追问它到底卡在哪一条 ──
+# 口径见 docs/superpowers/specs/2026-09-29-reject-reason-followup-design.md：
+# 只问 AI 不问 HR、只追边界带、每号每轮限量、原因只出建议。
+PROBE_BAND_DEFAULT = 15      # 阈值下方多宽算"差一点就过"
+PROBE_LIMIT_DEFAULT = 5      # 每号每轮最多追问几条（一次追问≈一次判分，中位 5.4s）
+PROBE_FIELD_MAX_LEN = 200    # 四段各自限长，别把 2MB 的记录文件继续撑大
+
+_TRUE_WORDS = ("true", "yes", "y", "1", "是", "对", "可以", "能")
+_FALSE_WORDS = ("false", "no", "n", "0", "否", "不", "没")
+
+
+def in_probe_band(score, threshold: int, band: int = PROBE_BAND_DEFAULT) -> bool:
+    """分数是否落在"差一点就过"的边界带：[阈值-band, 阈值)。
+
+    上界是开区间——等于阈值本来就该打招呼，追问它是把预算花在必过的岗位上。
+    """
+    try:
+        s = int(score)
+        t = int(threshold)
+    except (TypeError, ValueError):
+        return False
+    return t - band <= s < t
+
+
+def select_probe_targets(items, threshold: int, band: int = PROBE_BAND_DEFAULT,
+                         limit: int = PROBE_LIMIT_DEFAULT) -> list:
+    """挑本轮真正要追问的几条：只取带内，并按分数从高到低截断。
+
+    一轮里带内常有 20-30 条而配额只有 5：68 分是"补一句证据就能翻盘"，
+    55 分附近多是外包/城市/学历明显不符，问出来的原因没有可操作性。
+    """
+    in_band = [it for it in items
+               if in_probe_band(it.get("score"), threshold, band)]
+    in_band.sort(key=lambda it: int(it.get("score") or 0), reverse=True)
+    return in_band[:max(0, int(limit))]
+
+
+def _as_bool(value) -> bool:
+    """模型给的是 true/"是"/1 都说得通，认不出来就当 False。"""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value != 0
+    text = str(value or "").strip().lower()
+    if any(text.startswith(w) for w in _TRUE_WORDS):
+        return True
+    if any(text.startswith(w) for w in _FALSE_WORDS):
+        return False
+    return False
+
+
+def _clamp_int(value, lo: int = 0, hi: int = 100) -> int:
+    try:
+        n = int(round(float(value)))
+    except (TypeError, ValueError):
+        return 0
+    return max(lo, min(hi, n))
+
+
 class AIAnalyzerChain:
     """多 AI 容灾链：按顺序尝试多个 AI 接口，自动切换。
 
@@ -419,6 +479,9 @@ class AIAnalyzerChain:
     # 接口失败后的冷却时间（秒）：鉴权/额度类错误冷却更久
     COOLDOWN_AUTH_SECONDS = 1800
     COOLDOWN_OTHER_SECONDS = 300
+    # 429 是"你打得太快"，不是接口坏了：按 5 分钟冷却会把本来一分钟就能用的
+    # 接口整天剔掉（2026-09-29 两个号并发 5 分钟打出 33 次 429 就是这么烧的）
+    COOLDOWN_RATE_SECONDS = 60
 
     def __init__(
         self,
@@ -474,9 +537,12 @@ class AIAnalyzerChain:
         self.last_system_prompt = None
         self.last_user_prompt = None
         self.last_model_name = ""
+        # 判出上一条结果的接口——追问要回到同一个接口问，换接口问出来的是
+        # "另一个人怎么判"，不是"你刚才为什么这么判"
+        self.last_provider = None
         self.last_raw_response = None
         # 失败接口冷却表：provider.name -> 恢复时间戳
-        self._cooldown_until: dict = {}
+        self._cooldown_until: dict = _SHARED_COOLDOWN   # 跨账号共享，见模块注释
         # 是否按体检结果跳过已知不可用的接口
         self._skip_unhealthy = skip_unhealthy
         self._unhealthy_cache = None
@@ -526,9 +592,15 @@ class AIAnalyzerChain:
         permanent = any(k in text for k in
                         ("401", "403", "404", "free", "quota", "insufficient",
                          "unauthorized", "invalid_api_key", "not found"))
-        seconds = (self.COOLDOWN_AUTH_SECONDS if permanent
-                   else self.COOLDOWN_OTHER_SECONDS)
-        self._cooldown_until[provider.name] = time.time() + seconds
+        throttled = any(k in text for k in ("429", "too many requests", "rate limit"))
+        if permanent:
+            seconds = self.COOLDOWN_AUTH_SECONDS
+        elif throttled:
+            seconds = self.COOLDOWN_RATE_SECONDS
+        else:
+            seconds = self.COOLDOWN_OTHER_SECONDS
+        with _COOLDOWN_LOCK:
+            self._cooldown_until[provider.name] = time.time() + seconds
         self._log("WARN", f"接口 [{provider.name}] 冷却 {seconds // 60} 分钟")
 
     def _report_health(self, provider, ok: bool, error: str = ""):
@@ -615,6 +687,9 @@ class AIAnalyzerChain:
                 self._cooldown_until.pop(provider.name, None)
                 self._report_health(provider, ok=True)
                 self.last_model_name = provider.model
+                # 记下是哪个接口判的：追问要回到同一个接口，换接口问出来的
+                # 是"另一个人怎么判"，不是"你刚才为什么这么判"
+                self.last_provider = provider
                 self.analyzed_count += 1
                 if result.get("is_match", False):
                     self.match_count += 1
@@ -651,6 +726,69 @@ class AIAnalyzerChain:
         self.fallback_count += 1
         return {"score": 50, "is_match": True, "ai_error": True,
                 "reason": f"AI 分析异常: {last_error}，默认通过", "suggested_greeting": ""}
+
+    def _build_probe_prompt(self, job: dict, verdict: dict) -> list:
+        """追问提示词：只问"卡在哪一条"，不让它改判。"""
+        resume = self._resume or {}
+        system_msg = (
+            "你刚才判定这个岗位与求职者的简历不匹配。现在只回答一件事：到底卡在哪一条。"
+            "不要重新评分、不要改判、不要安慰性套话。说不出来就把 blocking_requirement 留空。"
+        )
+        user_msg = (
+            "【你刚才的判定】\n"
+            f"score：{verdict.get('score', '')}\n"
+            f"reason：{verdict.get('reason', '')}\n\n"
+            "【求职者简历】\n"
+            f"教育背景：{resume.get('school', '')} {resume.get('major', '')} "
+            f"{resume.get('degree', '')}\n"
+            f"技能：{', '.join(resume.get('skills', []))}\n"
+            f"工作经验：{resume.get('experience', '')}\n\n"
+            "【岗位】\n"
+            f"岗位名称：{job.get('job_name', '')}\n"
+            f"任职要求：{job.get('requirements', '')}\n"
+            f"岗位描述：{job.get('description', '')}\n\n"
+            "请按以下 JSON 格式返回（不要包含其他内容）：\n"
+            '{\n'
+            '  "blocking_requirement": "没过的那一条硬性要求，尽量用任职要求里的原文",\n'
+            '  "evidence_missing": "简历里缺什么证据（会做但没写清楚，写清楚在哪）",\n'
+            '  "fixable_by_resume": true/false,\n'
+            '  "score_if_fixed": 0-100\n'
+            '}\n'
+            "fixable_by_resume 为 true 表示求职者其实具备这条能力、只是简历没体现；"
+            "为 false 表示确实不具备。score_if_fixed 是补齐这条证据之后你愿意给的分。"
+        )
+        return [{"role": "system", "content": system_msg},
+                {"role": "user", "content": user_msg}]
+
+    def probe_rejection(self, job: dict, verdict: dict):
+        """AI 判"不符合"之后，回到判它的那个接口追问到底卡在哪一条。
+
+        只问 AI，不给 HR 发任何消息（防骚扰红线：主动问 HR "哪里不合适" 是骚扰）。
+        拿不到可信回答一律返回 None —— 追问是附加信息，不能变成打招呼轮的新炸点。
+        """
+        provider = self.last_provider or next(
+            (p for p in self.providers if p.is_valid()), None)
+        if provider is None:
+            return None
+        try:
+            raw = self._call_provider_api(provider,
+                                          self._build_probe_prompt(job, verdict or {}),
+                                          normalize=False)
+        except Exception as e:
+            self._log("DEBUG", f"追问不匹配原因没问出来（{provider.name}）: {e}")
+            return None
+        if not isinstance(raw, dict):
+            return None
+        blocker = str(raw.get("blocking_requirement") or "").strip()
+        if not blocker:
+            # 说不出哪条硬性要求没过，就等于没问到：留着只会让复盘产出空话建议
+            return None
+        return {
+            "blocking_requirement": blocker[:PROBE_FIELD_MAX_LEN],
+            "evidence_missing": str(raw.get("evidence_missing") or "").strip()[:PROBE_FIELD_MAX_LEN],
+            "fixable_by_resume": _as_bool(raw.get("fixable_by_resume")),
+            "score_if_fixed": _clamp_int(raw.get("score_if_fixed")),
+        }
 
     def _extract_json(self, text: str) -> dict:
         """从模型正文里抠出那个 JSON 对象。
@@ -728,8 +866,13 @@ class AIAnalyzerChain:
             result["reason"] = f"命中硬性筛选条件「{veto}」，不予通过。{result.get('reason', '')}"
         return result
 
-    def _call_provider_api(self, provider: AIProviderConfig, messages: list) -> dict:
-        """调用指定 AI 接口，返回一份可信判分；拿不到就抛 AIResponseUnusable。"""
+    def _call_provider_api(self, provider: AIProviderConfig, messages: list,
+                           normalize: bool = True) -> dict:
+        """调用指定 AI 接口，返回一份可信判分；拿不到就抛 AIResponseUnusable。
+
+        normalize=False 是给"判分复盘"的追问用的：那回答里没有 score/is_match，
+        套判分校验会被当成无效输出丢掉。
+        """
         url = f"{provider.api_base}/chat/completions"
         payload = json.dumps({
             "model": provider.model,
@@ -757,9 +900,9 @@ class AIAnalyzerChain:
             raise AIResponseUnusable(
                 f"响应缺少字段 choices（{str(data.get('msg') or data)[:120]}）")
 
-        return self._parse_completion(choice)
+        return self._parse_completion(choice, normalize=normalize)
 
-    def _parse_completion(self, choice: dict) -> dict:
+    def _parse_completion(self, choice: dict, normalize: bool = True) -> dict:
         """把一次 chat completion 的 choice 收敛成判分，不可用就抛。
 
         单独拆出来是为了让诊断脚本（tools/measure_ai_quality.py）用的是
@@ -782,7 +925,10 @@ class AIAnalyzerChain:
         if not body:
             raise AIResponseUnusable("模型未返回正文（content 与 reasoning_content 均为空）")
 
-        return self._normalize_result(self._extract_json(body))
+        parsed = self._extract_json(body)
+        if not normalize:
+            return parsed
+        return self._normalize_result(parsed)
 
     def _build_prompt(self, job: dict) -> list:
         """构建 AI 分析提示词。"""
@@ -901,6 +1047,7 @@ class GreetEngine:
         progress_callback: Optional[Callable] = None,
         greet_event_cb: Optional[Callable] = None,
         wind_control_cb: Optional[Callable] = None,
+        captcha_gate_cb: Optional[Callable[[], bool]] = None,
         account_index: int = 0,
     ):
         self.browser_manager = browser_manager
@@ -915,6 +1062,10 @@ class GreetEngine:
         # 回调签名: wind_control_cb(message: str, wtype: str) -> None
         # wtype: "captcha"（验证码） | "limit"（限制提示）
         self._wind_control_cb = wind_control_cb
+        # 人机验证闸门 — 签名: () -> bool，True 表示人工已经过完验证。
+        # 与 wind_control_cb 的分工：那个只通知前端"出风控了"，这个是**等结果**，
+        # 不打招呼侧以前只 return 原因、从不等，于是验证页就在那儿干挂着。
+        self._captcha_gate_cb = captcha_gate_cb
 
         # 运行状态
         self.running = False
@@ -1137,6 +1288,9 @@ class GreetEngine:
                 "url": job.get("url", ""),
                 "skip_reason": skip_reason or job.get("_last_skip_reason", ""),
                 "is_skipped": status in ("skip", "ai_skip", "already", "error"),
+                # 追问结果也要实时推：否则前端当场看不到，非得刷新读历史才有
+                "ai_probe": job.get("_ai_probe"),
+                "auto_greet_note": job.get("_auto_greet_note"),
                 # 前端按账号切记录，实时推送的行也要带账号，否则切到账号2
                 # 时新推送的行情会串进主账号的表格
                 "account_index": self.account_index,
@@ -1192,6 +1346,10 @@ class GreetEngine:
                 job_url=job.get("url", ""),
                 ai_error=bool(ai_result.get("ai_error")),
                 ai_duration_ms=self._last_ai_duration_ms,
+                # 判分复盘的追问结果挂在 job 上：谁追问谁知道，不占用 _last_ai_* 那批
+                # "最后一次调用"的状态（发简历、回复都会覆写它们）
+                ai_probe=job.get("_ai_probe"),
+                auto_greet_note=job.get("_auto_greet_note"),
                 company=job.get("company", job.get("company_location", "")),
                 salary=job.get("salary", ""),
                 job_description=job.get("jd_description", job.get("description", "")),
@@ -1351,28 +1509,6 @@ class GreetEngine:
 
     # ── 内部运行逻辑 ──
 
-
-    def _init_browser(self) -> bool:
-        """初始化浏览器（通过 BrowserManager）。"""
-        try:
-            instance = self.browser_manager.get_instance()
-            if instance is not None:
-                # 检查连接是否还活着
-                try:
-                    _ = instance.url
-                    return True
-                except Exception:
-                    self._log("WARN", "浏览器连接已断开，重新启动...")
-                    self.browser_manager.close()
-
-            self.browser_manager.launch()
-            self._log("INFO", "浏览器已启动")
-            return True
-        except Exception as e:
-            self._log("ERROR", f"浏览器启动失败: {e}")
-            return False
-
-
     def _load_city_dict(self):
         """从文件加载之前捕获的城市数据。"""
         try:
@@ -1386,15 +1522,64 @@ class GreetEngine:
             pass
 
 
-    def _wait_for_login(self) -> bool:
-        """等待用户手动登录。"""
-        # 必须先 clear：这个 event 只在 confirm_login 里 set 过、从不复位，
-        # 人工登录过一次之后这里就会永远立刻返回，真掉登录时变成 300 秒空转
-        self._login_event.clear()
-        if not self._login_event.wait(timeout=self._login_wait_timeout):
+    def _captcha_handoff(self) -> bool:
+        """把人机验证交给人工，等闸门给结论。
+
+        True  = 人工在时限内过完了，调用方可以继续这个岗位；
+        False = 到点没人处理（或根本没接闸门、闸门自己炸了），调用方按原因跳过
+                当前任务。连续几次都没人处理由 `_captcha_gate` 自己升格成停轮，
+                这里不重复计数——两处各数一套就会出现"到底第几次"的歧义。
+        """
+        if self._captcha_gate_cb is None:
             return False
-        self._random_delay(2, 5)
-        return self.check_login()
+        try:
+            return bool(self._captcha_gate_cb())
+        except Exception as e:
+            self._log("WARN", f"验证码闸门异常，按未恢复处理: {str(e)[:60]}")
+            return False
+
+    def _explain_missing_chat_button(self, instance, requested_url: str, job: dict):
+        """点完沟通却没有按钮：先归因，是验证页就交人工，人工过完再重试一次按钮。
+
+        返回 (原因, 按钮)。原因是空串表示可以继续；按钮为 None 表示调用方跳过这个岗位。
+        只重试一次：人工过完验证按钮还在就接着投这个岗位，不在就老实跳过 ——
+        为一个岗位反复等能把整轮吊死，而剩下的岗位本来也不该陪绑。
+        """
+        snap = self._chat_snapshot(instance)
+        landed = str(snap.get("url") or "") or (getattr(instance, "url", "") or "")
+        reason, already = chat_button_failure_reason(requested_url, landed, snap)
+        self._log("WARN", f"没有沟通按钮｜{reason}")
+        self._log("WARN", f"  现场 请求={requested_url[:60]} 落地={landed[:60]} "
+                          f"按钮={snap.get('buttons') or '无'} "
+                          f"提示={snap.get('notice') or '无'}")
+        if reason == CAPTCHA_REASON and self._captcha_handoff():
+            btn = self._find_chat_button(timeout=8)
+            if btn is not None:
+                self._log("INFO", "人工已完成验证，沟通按钮已出现，继续这个岗位")
+                return "", btn
+        if already:
+            # BOSS 把已沟通的岗位直接跳成会话页：标了已沟通，
+            # 下一轮搜索才不会又撞同一个岗位
+            self._mark_chatted(job)
+        return reason, None
+
+    def _wait_for_login(self) -> bool:
+        """等待用户手动登录 —— 停止信号必须听得见。
+
+        必须先 clear：这个 event 只在 confirm_login 里 set 过、从不复位，
+        人工登录过一次之后这里就会永远立刻返回，真掉登录时变成 300 秒空转。
+        也不能整段等 timeout：那样点"停止"要等满 login_wait_timeout 才生效，
+        所以切成 1 秒一片，每片都回头看 running。
+        """
+        self._login_event.clear()
+        deadline = time.time() + max(0, self._login_wait_timeout)
+        while time.time() < deadline:
+            if not self.running:
+                return False
+            if self._login_event.wait(timeout=min(1.0, max(0.1, deadline - time.time()))):
+                self._random_delay(2, 5)
+                return self.check_login()
+        return False
 
     def _build_search_url(self, query: str, city: str) -> str:
         """构建搜索 URL。"""
@@ -1740,60 +1925,41 @@ class GreetEngine:
 
 
     def _handle_disconnect(self) -> bool:
-        """处理页面断开连接，尝试恢复。"""
+        """页面断开时的恢复：只把本账号的岗位页导航回来，不动整个浏览器。
+
+        为什么不 close()+launch()：浏览器是打招呼线程和回复线程共享的，回复侧正握着
+        _chat_tab，从打招呼侧关掉它等于把别人的标签页一起带走；重建浏览器归
+        UnifiedBotLoop._try_reconnect_browser 管，那里才有 _reconnect_lock 串行化。
+        为什么不再导航到 about:blank：旧实现导航到空白页之后就 return True 说"恢复成功"，
+        窗口于是停在一片白 —— 用户报的"第二个浏览器打开后无内容"就是这个现场。
+        起不来就如实返回 False，让上层走带锁的重连，不要拿着死对象继续跑。
+        """
         instance = self.browser_manager.get_instance()
-        try:
-            self._log("WARN", "开始处理页面断开，尝试恢复浏览器...")
-
-            # 1. 轻量级恢复：导航到 about:blank
-            if instance:
-                try:
-                    instance.get('about:blank')
-                    self._random_delay(1, 2)
-                    _ = instance.url
-                    self._log("INFO", "轻量级恢复（about:blank）成功")
-                    return True
-                except Exception:
-                    self._log("WARN", "轻量级恢复失败，尝试重初始化浏览器...")
-
-            # 2. 重新初始化浏览器
-            self.browser_manager.close()
-            self._random_delay(3, 6)
-            if not self._init_browser():
-                self._log("ERROR", "重新初始化浏览器失败")
-                return False
-            self._log("INFO", "浏览器重新初始化成功")
-
-            # 3. 重新加载 cookie 并检查登录
-            self._load_cookies()
-            self._random_delay(2, 4)
-
-            instance = self.browser_manager.get_instance()
-            for _ in range(3):
-                try:
-                    instance.get("https://www.zhipin.com")
-                    self._random_delay(2, 3)
-                    _ = instance.url
-                    break
-                except Exception:
-                    self._random_delay(2, 3)
-
-            if self.check_login():
-                self._log("INFO", "页面断开后重新登录成功")
-                return True
-
-            try:
-                instance.get("https://www.zhipin.com")
-                self._random_delay(2, 3)
-                self._log("INFO", "页面断开后恢复成功，继续执行")
-            except Exception as e:
-                self._log("WARN", f"恢复后导航到首页失败: {e}")
-            return True
-        except Exception as e:
-            self._log("ERROR", f"处理页面断开异常: {e}")
-            import traceback
-            self._log("ERROR", traceback.format_exc())
+        if instance is None:
+            self._log("ERROR", "页面断开时浏览器实例已不存在")
             return False
+
+        targets = []
+        try:
+            targets.append(self._build_search_url(self._query, self._city))
+        except Exception:
+            pass
+        targets.append("https://www.zhipin.com")
+
+        for url in targets:
+            try:
+                instance.get(url)
+                self._random_delay(1, 2)
+                landed = instance.url or ""
+                if landed:
+                    self._log("INFO", f"页面断开已恢复到: {landed[:70]}")
+                    return True
+                self._log("WARN", f"导航后读不到 URL，换下一个落点: {url[:36]}")
+            except Exception as e:
+                self._log("WARN", f"断开恢复导航失败({url[:36]}): {str(e)[:60]}")
+
+        self._log("ERROR", "页面断开后两个落点都没起来，交给重连流程处理")
+        return False
 
     def _apply_job(self, job: dict, _disconnect_retry: int = 0):
         """投递一个岗位。
@@ -1819,6 +1985,13 @@ class GreetEngine:
         url = job.get("url", "")
         if not url:
             return False, "岗位URL为空"
+
+        # 招呼语空缺必须在这里拦住，不能等到输入框那步：BOSS 点「沟通」本身就等于
+        # 发起招呼（第二种机制还会立刻自动发平台预设文案），先点再发现没配就晚了
+        greeting, greeting_source = self._greeting_for(job)
+        if not (greeting or "").strip():
+            self._log("WARN", f"未配置招呼语，跳过这个岗位: {job.get('job_name', '')}")
+            return False, GREETING_MISSING_REASON
 
         instance = self.browser_manager.get_instance()
         if instance is None:
@@ -1889,18 +2062,9 @@ class GreetEngine:
             # ── 2. 查找沟通按钮 ──
             chat_btn = self._find_chat_button(timeout=8)
             if chat_btn is None:
-                snap = self._chat_snapshot(instance)
-                landed = str(snap.get("url") or "") or (instance.url or "")
-                reason, already = chat_button_failure_reason(url, landed, snap)
-                self._log("WARN", f"没有沟通按钮｜{reason}")
-                self._log("WARN", f"  现场 请求={url[:60]} 落地={landed[:60]} "
-                                  f"按钮={snap.get('buttons') or '无'} "
-                                  f"提示={snap.get('notice') or '无'}")
-                if already:
-                    # BOSS 把已沟通的岗位直接跳成会话页：标了已沟通，
-                    # 下一轮搜索才不会又撞同一个岗位
-                    self._mark_chatted(job)
-                return False, reason
+                reason, chat_btn = self._explain_missing_chat_button(instance, url, job)
+                if chat_btn is None:
+                    return False, reason
 
             btn_text = chat_btn.text
             if "继续沟通" in btn_text:
@@ -2030,8 +2194,8 @@ class GreetEngine:
                     self._log("DEBUG", f"注册聊天标签页失败: {e}")
 
             # ── 5. 输入消息 ──
-            # 优先级：岗位定制 > 账号自定义 > 默认模板（见 _greeting_for）
-            greeting, self._greeting_source = self._greeting_for(job)
+            # 来源在点沟通之前就已经定下来了（空缺根本走不到这里）
+            self._greeting_source = greeting_source
             # 保存实际发送的打招呼语供 GreetRecord 记录使用
             job["_actual_greeting_sent"] = greeting
             self._log("INFO", f"打招呼语来源: {self._greeting_source}, 内容: {greeting[:50]}...")
@@ -2240,13 +2404,23 @@ class GreetEngine:
                         self._record_sent_now(job)
                         return True, ""
                     self._mark_chatted(job)
-                    return False, AUTO_GREET_REASON
+                    # 走到这里 = 弹窗确实在（平台已经把招呼发出去了），只是没能进会话核对文案。
+                    # 记成功并留痕，不记失败：记失败就是用户报的「BOSS 上明明投了，记录里
+                    # 却没有 / 是红的」那一类对不上
+                    job["_auto_greet_note"] = "平台已自动发出招呼语，未能进会话核对文案（建议抽查）"
+                    self._record_sent_now(job)
+                    return True, ""
                 snap = self._chat_snapshot(instance)
                 reason = chat_failure_reason(snap)
                 self._log("WARN", f"未找到输入框｜{reason}")
                 self._log("WARN", f"  现场 url={str(snap.get('url'))[:80]} "
                                   f"抽屉元素={snap.get('chat_elements') or '无'} "
                                   f"input样式={list(snap.get('inputs') or [])[:8]}")
+                if reason == CAPTCHA_REASON:
+                    # 认出来了就得等人工：60 秒时限、到点算一次、连续三次停轮都在闸门里。
+                    # 过完验证也不在这里补点「沟通」——抽屉是平台弹的，重演一次点击
+                    # 可能让同一个 HR 收到两条招呼，这个岗位留给下一轮。
+                    self._captcha_handoff()
                 if "登录" in reason:
                     self._log("WARN", "登录态已失效，之后每个岗位都会卡在同一个地方，"
                                       "请先在浏览器窗口里重新登录 BOSS")
@@ -2497,10 +2671,12 @@ class GreetEngine:
             self._log("WARN", f"即时记录投递结果失败，改由收尾路径补记: {e}")
 
     def _random_delay(self, min_sec: float, max_sec: float):
-        """随机延迟（反爬策略）。"""
-        if not self.running:
-            return
-        time.sleep(random.uniform(min_sec, max_sec))
+        """随机延迟（反爬策略）—— 走可打断的等待。
+
+        原来是裸 time.sleep：投递路径每两个动作之间都调它（8~12 秒那种），
+        点"停止"要等整串延迟跑完才生效，卡在验证页时最能拖时间。
+        """
+        self._interruptible_sleep(random.uniform(min_sec, max_sec))
 
     def _interruptible_sleep(self, seconds: float):
         """可被停止打断的等待。
@@ -2515,13 +2691,22 @@ class GreetEngine:
     def _chat_snapshot(self, instance) -> dict:
         """抓一次页面现场（输入框/抽屉/按钮/提示/验证码），取不到就把异常带进去。"""
         snap = {"url": "", "inputs": [], "chat_elements": [], "buttons": [],
-                "notice": "", "captcha": False, "error": ""}
+                "notice": "", "captcha": False, "captcha_why": "", "error": ""}
         try:
             got = json.loads(instance.run_js(CHAT_SNAPSHOT_JS) or "{}")
             if isinstance(got, dict):
                 snap.update(got)
         except Exception as e:
             snap["error"] = str(e)
+        # 验证码判据全项目一份（page_handler），不在这里另起一套：
+        # 以前快照自己用"页面上有没有 .verify-box 这种壳"来判，隐藏空壳也算命中，
+        # 于是后端说在验证、页面上什么都没有。
+        try:
+            from boss_bot.page_handler import CAPTCHA_PROBE_JS, captcha_evidence
+            snap["captcha"], snap["captcha_why"] = captcha_evidence(
+                instance.run_js(CAPTCHA_PROBE_JS, as_expr=True))
+        except Exception as e:
+            self._log("DEBUG", f"验证码探针读取失败: {e}")
         return snap
 
     def _greeting_for(self, job: dict):

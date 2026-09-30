@@ -15,6 +15,7 @@
 - [功能与指标口径](#功能与指标口径)
 - [防骚扰与发送闸门](#防骚扰与发送闸门)
 - [AI 接口体检与容灾链](#ai-接口体检与容灾链)
+- [判分复盘（AI 说"不符合"之后追问为什么）](#判分复盘ai-说不符合之后追问为什么)
 - [多账号](#多账号)
 - [聊天记录与 BOSS 对齐](#聊天记录与-boss-对齐)
 - [配置说明](#配置说明)
@@ -126,6 +127,17 @@ python -m boss_bot --web                # 起管理界面
 
 自动回复的 AI **不受**「AI 智能解析」开关控制，那个开关只管打招呼侧的岗位解析——保证句句有回应。
 
+**AI 输出必须像一句人话才允许发**（`reply_engine.reply_rejection`，2026-09-30 加）：
+盘上查出 7 条把模型**思考过程**当回复发给 HR 的记录（最长 507 字，含"首先，分析对话上下文："、
+整段英文 "Let me analyze the conversation context:"、以及"用户是求职者…根据要求：- 简洁"这种
+提示词回显）。两条来路都堵：① `_call_chat` 里旧的 `content or reasoning_content` —— 推理型接口
+正文为空时直接把 reasoning 发出去，现在正文为空一律抛错换接口，思考过程永远不进发送队列；
+② 模型把"先分析再回复"这条规则写进了正文本身。判据现算自 `data/reply_records.json`：
+31 条 AI 回复里 24 条正常的最长 120 字，7 条异常的最短 307 字，所以 160 字这条线两边都碰不到；
+再加提示词脚手架字样（招聘方称呼/最近对话记录/对方最新消息/分析：/根据要求…）与 markdown 列表结构。
+不合格就抛错走容灾链换下一个接口，全部不合格才轮到 `fail_action` —— 宁可不发，不发草稿。
+回归：`tests/test_reply_output_guard.py`（含"拿真实记录全量过一遍，不许误杀能发的回复"）。
+
 ## 防骚扰与发送闸门
 
 **唯一跳过依据**：当前这段对话自己以 HR 的拒绝收尾、且我已经回复过，才会显示「跳过（避免骚扰）」。
@@ -184,6 +196,37 @@ python tools/ai_health_check.py                # 命令行跑一轮全量体检
 
 实测（19 个有 Key 的接口，`max_tokens=1600`）：6 个能给出可信判分，其余是 429/404/403 且都在 1 秒内失败；容灾链整体 7.9 秒拿到真实评分与理由，没有兜底。
 
+## 判分复盘（AI 说"不符合"之后追问为什么）
+
+规则：AI 判某个岗位不匹配时，如果分数只是**差一点**（`阈值-15 ≤ score < 阈值`），就把这条判定顶回给
+**同一个接口**追问一句"到底卡在哪一条硬性要求"，四个字段回来存进这条记录：
+
+| 字段 | 含义 |
+|------|------|
+| `blocking_requirement` | 没过的那条硬性要求（尽量用 JD 原文） |
+| `evidence_missing` | 简历里缺什么证据 |
+| `fixable_by_resume` | `true`=会做但简历没写；`false`=确实不具备 |
+| `score_if_fixed` | 补齐后模型愿意给的分 |
+
+三条边界都是有意为之：
+
+- **只问 AI，绝不问 HR**。"方便说一下哪里不合适吗"是主动触达，撞[防骚扰红线](#防骚扰与发送闸门)，还会在 BOSS 那边留下大批不回话的会话。
+- **只追边界带**。当天 95 条 AI 不匹配里有 52 条落在 `55-69`（54.7%），而 10 分以下的多是明显不合适，追问不出可操作的东西；配额因此优先给分数最高的那几条。
+- **每号每轮限量**（`ai.probe_max_per_round`，默认 5，界面可改，读入时夹在 0~20）。一次追问≈一次判分：当天 371 条判分的**中位 5.4 秒、p90 20 秒**，所以 5 次大约是每号每轮多 27 秒、网络差时接近 100 秒。填 0 就是关掉。
+
+原因怎么用：**只出建议，不自动改配置**。`GET /api/ai/judgement_review?account=N&days=7` 按
+`blocking_requirement` 归并出排行，再折成三类建议（`add_resume_evidence` → `resume.skills`、
+`add_scoring_rule` → `ai.custom_scoring_prompt`、`add_veto_keyword` → `ai.custom_filter_keywords`），
+每条都带 `auto_applied:false`，界面上点「采纳」才由 `POST /api/ai/judgement_review/adopt`
+写进去——只写那一个字段，AI 段走账号覆盖（改账号2 不会顺手改掉基准），简历段永远写全局
+（两个号对同一个 HR 说出互相矛盾的自我介绍更糟）。同一条原因要出现 **2 次以上**才出建议，
+一次就动配置等于让单次误判长期挡掉一类岗位。
+
+界面两处：AI 面板卡片一行「判分复盘：今日追问 N 条 · 近 7 天 M 条 · 主因 X」，点开看排行与建议；
+打招呼记录表里被追问过的那行，原因下面有「🔎 追问原因」可展开。
+
+口径与设计依据见 `docs/superpowers/specs/2026-09-29-reject-reason-followup-design.md`。
+
 ## 多账号
 
 ### 一个「数据范围」开关管全部
@@ -218,7 +261,7 @@ Cookie 点由 `GET /api/accounts/cookies` 供数（只查文件，不启动浏�
 | 登录 Cookie | 账号配置里的 `cookie_file`，回落到全局 |
 | 会话状态（防重复回复/发简历）、人工接管 | `bot_state.json` / `bot_state_account_N.json` |
 | 统计 | `bot_stats.json` / `bot_stats_account_N.json` |
-| 聊天记录 | `messages/姓名#公司.json` / `messages/aN_姓名#公司.json` |
+| 聊天记录 | `messages/姓名#公司.json` / `messages/aN_姓名#公司.json`；**合并视图里会话身份是「姓名+公司+账号」**——两个号聊到同一家公司的同一个人是真实存在的（实测 李女士 @ 深圳市极客星球电…，账号1 存 9 条、账号2 存 7 条），只按 chat_id 分组会让其中一段对话在界面上彻底消失，标已读还会标到另一个号。**红点数字只认 BOSS 自己报的**（回复轮次扫侧栏时把 `.notice-badge` 存成 `unread_on_boss`，读完归零）；以前是"本地数 HR 消息且没标已读"，实测账号1 显示 53、账号2 显示 118，而 BOSS 说 13 / 1 —— 我们只存了点开的 2~3 条，从没点开的会话永远挂着未读。没观察到过就不画数 |
 | 打招呼记录、回复记录 | **共用** `data/greet_records.json`、`data/reply_records.json`，每条带 `account_index`，接口按 `?account=` 过滤，导出与清空同样按账号收口 |
 | 打招呼话术、简历图片、消息间隔、岗位任务 | 各自 `accounts[N]` |
 | AI 判分标准与回复参数 | `accounts[N].settings`，**只存与全局基准不同的字段**（见下） |
@@ -226,9 +269,9 @@ Cookie 点由 `GET /api/accounts/cookies` 供数（只查文件，不启动浏�
 | 自进化数据 | `data/evolution_data.json` / `..._account_N.json`（质量数据同样分文件） |
 | 风控/封号通知 | 事件带 `account_index` 与账号名，前端横幅会写「[账号2] …」 |
 
-**每账号一套配置**：两个号投的是不同工种（一个数据分析、一个运营），判分阈值和打分提示词不该共用一套。`accounts[N].settings` 存的是**稀疏覆盖**（形如 `{"ai": {"match_threshold": 88}}`），运行时 `UnifiedConfig.apply_account(N)` 把基准深拷贝后盖上这几项，所以：基准改了没动过的账号跟着变，账号改回和基准一样就变成空覆盖（等于取消独立）。可覆盖的段只有 `ai` 和 `reply` —— 简历/个人画像/话术模板按号覆盖只会让两个号对同一个 HR 说出互相矛盾的介绍。界面上「数据范围」选中某号时，AI 面板标题会写明「仅账号「X」独立生效」，保存时请求带 `account`，后端 `_fold_into_account_overlay` 把生效值折回该号覆盖、全局段退回基准值 —— 少了这一步，改账号 2 的阈值会顺手改掉所有账号。
+**每账号一套配置**：两个号投的是不同工种（一个数据分析、一个运营），判分阈值、打分提示词、回复模板、投递频率都不该共用一套。`accounts[N].settings` 存的是**稀疏覆盖**（形如 `{"ai": {"match_threshold": 88}}`），运行时 `UnifiedConfig.apply_account(N)` 把基准深拷贝后盖上这几项，所以：基准改了没动过的账号跟着变，账号改回和基准一样就变成空覆盖（等于取消独立）。可覆盖的段由 `ACCOUNT_OVERLAY_CONTAINERS` 决定：`ai`、`reply`、`templates`、`rate_limit`、`retry`、`login`、`notify`、`browser`（`browser` 里 `debug_port` 与 `user_data_dir` 锁死——那两个是账号索引算出来的 9222+idx / `account_{idx}`，界面改了等于两个号抢同一个浏览器）。界面上「数据范围」选中某号时，AI 面板标题会写明「仅账号「X」独立生效」，保存时请求带 `account`，后端 `_fold_into_account_overlay` 把生效值折回该号覆盖、全局段退回基准值 —— 少了这一步，改账号 2 的阈值会顺手改掉所有账号。判分复盘的「采纳」也必须先在 `apply_account(N)` 之后的生效值上追加再折回，否则第二次采纳会把第一次的覆盖整段替换成空（真机实测点出来的，`tests/test_judgement_review.py::test_第二次采纳不会抹掉第一次的覆盖` 锁住）。
 
-**仍然全局共享（有意为之）**：AI 接口列表与 Key、回复规则/模板、个人画像、关键词，以及**已投递 URL 去重表 `data/chatted_jobs.json`**——同一个岗位不让两个号各打一次招呼，否则 HR 会收到两条一模一样的消息。
+**仍然全局共享（有意为之）**：简历信息 `resume`、AI 接口列表与 Key、回复规则、个人画像、关键词，以及**已投递 URL 去重表 `data/chatted_jobs.json`**——同一个岗位不让两个号各打一次招呼，否则 HR 会收到两条一模一样的消息；简历按号覆盖更糟，两个号会对同一个人说出两套学历。
 
 共享带来的两个坑都已修：
 
@@ -250,6 +293,31 @@ Cookie 点由 `GET /api/accounts/cookies` 供数（只查文件，不启动浏�
 python -X utf8 tools/backfill_greet_record_account.py           # 预演，打印会改多少条
 python -X utf8 tools/backfill_greet_record_account.py --apply   # 真正写盘，自动留 .bak
 ```
+
+### 并发真机实测口径
+
+两个号同时跑起来才会暴露的问题（页面互抢、Cookie 误判、AI 限流互踩），单测覆盖不到，
+每次改登录态/并发相关代码后按这个口径复跑一遍：
+
+```bash
+# 面板开着，bot_config.json 里 dry_run=true（四个发送点全拦），两个号 enabled=true
+curl -X POST http://localhost:5000/api/start
+curl http://localhost:5000/api/status   # 每 10 秒看一次 phase / login_reason / 各自 stats
+curl -X POST http://localhost:5000/api/stop
+```
+
+要同时核对的三件事（2026-09-29 23:29 那轮的实测值）：
+
+| 核对项 | 通过标准 | 该轮结果 |
+|--------|----------|----------|
+| 两个号都在跑 | 两边 `phase` 都进 `running`，且 `greet_rounds`/`reply_rounds` 都在涨 | 36 秒内双号 `running`；主号 1 轮招呼 + 39 轮回复，账号2 2 轮招呼 + 2 轮回复 |
+| 没发出去东西 | `logs/boss_bot.log` 里只有 `🧪 演练模式 \| 本应…（未真实操作）` | 73 条"本应打招呼"，0 条真实发送 |
+| Cookie 文件没动 | 跑前跑后 sha256 一致，`data/stale_cookies/` 不增文件 | 两个文件 sha256 前后完全一致，归档目录仍是 1 个（23:01 那轮的） |
+
+守卫本身也单独在现场验过（只读，`_discard_stale_cookies`/`save_cookies` 打桩成打印）：会话页判
+`logged_in`；把标签页开去 `/web/user` 但浏览器里登录项还在时判 `uncertain`，
+`_recheck_before_archive()` 返回 `False`（= 不许动 Cookie）；回会话页又判 `logged_in`。
+这条就是 23:01 那轮把主号会话归档掉的那个现场，现在它只打一行 WARN 就跳过本轮。
 
 ## 聊天记录与 BOSS 对齐
 
@@ -291,7 +359,7 @@ BOSS 每个会话只给 2-3 条历史（`.chat-content` 的 `scrollHeight == cli
 | `retry` | `max_attempts` 真正被使用：岗位详情导航重试、聊天输入框查找重试 |
 | `accounts` | 多账号列表（城市、关键词、翻页数、招呼语、简历图片、间隔、独立 Cookie） |
 | `greet.enabled` / `reply.enabled` | 两个总开关 |
-| `ai` | `enabled`、`providers`、`match_threshold`、`max_tokens`（回复输出预算）、`analyze_max_tokens`（岗位判分输出预算，带思考的接口要给够）、`fail_action`、`rate_limit_wait`、`custom_filter_keywords`（硬否决条件）、`custom_scoring_prompt`、`skip_unhealthy` |
+| `ai` | `enabled`、`providers`、`match_threshold`、`max_tokens`（回复输出预算）、`analyze_max_tokens`（岗位判分输出预算，带思考的接口要给够）、`fail_action`、`rate_limit_wait`、`custom_filter_keywords`（硬否决条件）、`custom_scoring_prompt`、`skip_unhealthy`、`probe_max_per_round`（判分复盘：每号每轮最多追问几条不匹配原因，0=关掉，读入时夹在 0~20） |
 | `reply` | `check_interval`、`context_message_count`、`max_replies_per_hour`、`min_delay`/`max_delay`、`pause_on_important`、`resume_send_once`、`chat_url` |
 | `resume` | 简历信息（学校/专业/学位/技能/经验/目标岗位/自我介绍） |
 | `templates` / `reply_rules` / `importance_keywords` | 话术模板、关键词规则、重要事件词 |
@@ -309,7 +377,7 @@ BOSS 每个会话只给 2-3 条历史（`.chat-content` 的 `scrollHeight == cli
 
 ## 配置生效范围（重要）
 
-主循环每轮热重载配置，以下改动**不用重启**：AI 接口列表与阈值、判分预算 `analyze_max_tokens`、自定义筛选词与打分提示词、跳过不可用接口、打招呼频率限制与重试次数、回复延迟/每小时上限/`max_tokens`/`fail_action`/限流等待、两个总开关、演练模式、自进化开关、话术与规则、个人画像、AI 提示词（`system_rules` / `user_prompt_template`，每次生成回复现读）。
+主循环每轮热重载配置，以下改动**不用重启**：AI 接口列表与阈值、判分预算 `analyze_max_tokens`、自定义筛选词与打分提示词、跳过不可用接口、复盘追问上限 `probe_max_per_round`、打招呼频率限制与重试次数、回复延迟/每小时上限/`max_tokens`/`fail_action`/限流等待、两个总开关、演练模式、自进化开关、话术与规则、个人画像、AI 提示词（`system_rules` / `user_prompt_template`，每次生成回复现读）。
 
 以下改动**需要重启**（构造时读取）：浏览器路径与 profile、端口、Cookie 文件路径、账号列表增删、简历图片文件、日志目录、通知 Webhook。
 
@@ -320,7 +388,7 @@ BOSS 每个会话只给 2-3 条历史（`.chat-content` 的 `scrollHeight == cli
 两套都要跑：单元测试管逻辑，真机浏览器套件管"打开来真的能用"。
 
 ```bash
-pytest tests/ -q                      # 635 项，约 53 秒，全部离线（不碰真实数据、不联网）
+pytest tests/ -q                      # 726 项，约 56 秒，全部离线（不碰真实数据、不联网）
 ```
 
 真机套件全部使用项目内 `cloakbrowser/chrome.exe`，且**只做读/切/筛/存配置，绝不点发送、打招呼、发简历**：
@@ -329,6 +397,10 @@ pytest tests/ -q                      # 635 项，约 53 秒，全部离线（�
 python tests/e2e_greet_records_ui.py  # 15 项：打招呼记录表实时推送/去重/日期筛选/数据范围切换（独立浏览器，只开本地面板）
 python tests/e2e_account_ui.py        # 8 项：左侧账号行只管登录、右侧数据范围唯一切换入口、招呼语输入框真的写回配置
 python tests/e2e_per_account_config.py # 9 项：每账号一套配置。临时目录副本 + 第二个 Flask(5055)，点完不碰真实 bot_config.json
+python tests/e2e_judgement_review_ui.py # 19 项：判分复盘一行/明细展开/追问上限往返/采纳按钮真写配置/记录里 🔎 追问原因可展开/切账号跟着变（要先跑过一轮攒出追问数据）
+python tests/e2e_account_scope_ui.py    # 19 项：开机零点击就有数据范围条、点 chip 立刻高亮且记录跟着切、右侧无登录入口、左侧登录+状态点、招呼语写进本号不污染别号、新增账号跟到手（临时副本 + Flask(5056)）
+python tests/e2e_review_ui.py           # 14 项：复盘行取真接口数、明细排行、上限落盘、连点两条采纳各归各位（AI 段进账号覆盖、简历段进全局）（临时副本 + Flask(5057)）
+python tests/run_dashboard_on_temp_panel.py # 用当前代码起一个临时副本面板(5059)，在它上面跑 tools/e2e_dashboard.py 的 70 项——改了 app.py/模板但不想动正在用的 5000 面板时用这个（面板进程不热重载 Python 代码，只热重载模板）
 python tools/e2e_dashboard.py         # 70 项：界面渲染、指标卡、记录筛选、开关往返、弹窗、主题、断线横幅、无 JS 报错；含 20 项多账号范围 + 7 项 AI 预算/判分质量/提示词默认值断言 + 1 项配置异常响应不覆盖界面
 python tools/e2e_live_boss.py         # 26 项：反爬自检、登录态、会话读取、岗位解析、AI 真实判分、多账号归属（含另开账号2 浏览器比对会话）
 python tools/verify_dashboard_ui.py   # 14 项：指标卡口径 + AI 体检展示，产出 tools/verify_dashboard.png
@@ -412,9 +484,15 @@ OpenCode 侧同理：官方文档确认 base_url 就是 `https://opencode.ai/zen
 
 **打招呼像卡死 / 岗位没被 AI 筛** → 先看 AI 卡片里的「判分质量」：兜底率就是"没被 AI 真正判过的岗位占比"。日志里找 `AI 分析异常`（后面会带上具体原因：正文被截断 / 没有 JSON / 未返回正文 / 无法判分），再跑 `python tools/measure_ai_quality.py --failover` 逐个接口看生产解析吃不吃得下，最后点界面「全部接口体检」。确认 `ai.skip_unhealthy` 为 `true`；带思考的接口把 `ai.analyze_max_tokens` 调大（界面「判分预算 tokens」）。
 
-**被跳转到 `.../web/geek/jobs?_security_check=...`** → BOSS 风控。现在的行为是：检测到验证 → 推前端横幅「请在浏览器窗口手动完成，60 秒内没操作会自动跳过当前任务」→ `_captcha_gate()` 每 2 秒复查，人工过了就继续；超时只跳过当前任务，**连续 3 次**都没人应答才真暂停（点恢复即可）。阈值是 `main_loop.py` 的 `CAPTCHA_WAIT_SECONDS / CAPTCHA_POLL_SECONDS / CAPTCHA_STRIKES_TO_PAUSE`。
+**页面地址里出现 `?_security_check=…`** → 这**不是**验证码。2026-09-30 12:08:24 带着这个参数落地的岗位页，12:08:25 照常读到 JD、12:08:27 点中"立即沟通"、12:08:31 招呼语已经发出——它是 BOSS 的静默风控参数，而且不会自己消失。以前"URL 命中就算验证码"，两个号的打招呼在 12:20~12:23 各被停了 3 次，而浏览器窗口里根本没有验证图（取证：`python tools/captcha_false_positive_check.py`）。
 
-以前"程序卡在那张验证图不动"是四个 bug 叠出来的，逐个记在这里免得复发：
+现在只认页面证据：可见的挑战容器（`.nc-container`、`#tcaptcha` 等，实测宽高 >4 且没被 `display:none` 藏着）或强文案（安全验证 / 请完成验证 / 拖动滑块 / 滑动验证 / 人机验证 / 图形验证）。裸"验证码"三个字不再算判据——岗位 JD、HR 消息、登录框的"获取验证码"按钮里都有这三个字。
+
+判据全项目**只有一份**：`page_handler.CAPTCHA_BOX_SELECTORS` / `CAPTCHA_STRONG_WORDS` / `captcha_evidence()`，打招呼侧、会话侧、投递失败归因三处共用（以前各写一套，才出现"后端说验证码、页面上没影"）。每次判定都把判据连同 URL 写进日志：`页面判据=captcha（可见挑战容器 .nc-container）URL=…`，前端横幅也带这句，误判当场能看出来。
+
+行为不变：确诊 → 推横幅 → `_captcha_gate()` 每 2 秒复查，人工过了就继续；超时只跳过当前任务，**连续 3 次**都没人应答才真暂停（点恢复即可）。阈值是 `main_loop.py` 的 `CAPTCHA_WAIT_SECONDS / CAPTCHA_POLL_SECONDS / CAPTCHA_STRIKES_TO_PAUSE`。
+
+以前"程序卡在那张验证图不动"是几个 bug 叠出来的，逐个记在这里免得复发：
 
 | 根因 | 位置 | 说明 |
 |------|------|------|
@@ -422,14 +500,20 @@ OpenCode 侧同理：官方文档确认 base_url 就是 `https://opencode.ai/zen
 | 未知结果被当成健康 | `page_handler.check_health` | `return result if result in ("ok","captcha") else "ok"`，纯图形验证页（正文没有"验证码"三字）判成 ok 继续自动操作 |
 | 没有聊天处理器时永远报健康 | `main_loop._check_health` | `_chat_handler is None` 直接 `return "ok"`，回复引擎还没建就完全检测不到风控 |
 | 认出来了也解不开 | `main_loop` 两侧循环 | 一遇验证码就 `_greet_paused = True`，而自动恢复只认"每日上限"标记；回复侧的 `_reply_paused` 分支在 `_hot_reload_config()` 之前就 `continue`，自动恢复函数根本走不到 |
+| URL 标记单独定罪 | `page_handler.classify_health` | `"_security_check" in url` 就直接返回 captcha：页面可用也定罪，而那个参数不会自己消失 → 60 秒永远等不到"已恢复"，三次就把打招呼停了 |
+| 打招呼侧探针读不到值 | `main_loop._check_health` | IIFE 脚本调用时没带 `as_expr=True` → DrissionPage 把它包成函数体、里面没有 return → 恒为 `undefined`，页面证据一条都拿不到，只剩上面那个不可靠的地址 |
+
+探针脚本的形态与调用方式必须配对：`(function(){…})()` 这类**表达式**要带 `as_expr=True`；以 `return` 开头的**函数体**反而不能带（会变成顶层 return）。这条有回归锁 `tests/test_page_probes.py`，活体复核脚本 `tools/probe_as_expr_check.py`。
 
 另外投递路径上的重试等待原来是裸 `time.sleep`（不看 `running`），单岗位的光标重试循环能空转 3~10 分钟，
 点"停止"也醒不过来；现在换成 `_interruptible_sleep()`，并在循环里先查 `_on_captcha_page()`，
 是验证页就直接返回"需要人工验证"而不是继续找输入框。
 `_login_event` 以前只 set 不 clear，人工登录过一次之后 `_wait_for_login` 永远立刻返回，真掉登录时变成 300 秒空转。
 
-验证方式（真机只读）：`browser_data/e2e` 那个未登录 profile 打开岗位详情页会被 BOSS 送去 `_security_check`，
-`classify_health()` 两条路径都判为 `captcha`（探针判 captcha + URL 兜底）。
+验证方式：判据的回归在 `tests/test_captcha_gate.py`，里面直接复现这次的误判——
+地址带风控参数、页面无挑战证据 → 判 `ok`；同一地址加上可见容器 → 判 `captcha`。
+真机只读复核跑 `python tools/captcha_false_positive_check.py`，它逐标签页打印地址、
+命中的文字/DOM 判据，以及同一份探针带/不带 `as_expr` 各自的返回值。
 
 **「未找到输入框」** → 这句现在只是类别，记录里会带上现场原因（`chat_failure_reason()` 按页面快照分档）。2026-09-29 把 `logs/` 里 116 次失败的现场逐条分类，实际是三件事：
 
@@ -464,6 +548,15 @@ pre-click 命中逐条比对导航前后的 URL，其实是三件事：
 
 顺带记录一个反证：招呼语确实发得出去——`messages/` 里 38 个会话有 20 个含我方发出的招呼语原文，
 所以成功路径上的 `.input-area` 是真聊天框，不是假成功。
+
+**招呼语只有两级，且没有兜底** → 岗位专属 → 账号自定义，两级都空就**不发**这个岗位
+（`GREETING_MISSING_REASON`，在点「立即沟通」之前就拦，日志写"未配置招呼语，跳过这个岗位"）。
+以前这里挂着 `DEFAULT_GREETING`：界面预填、岗位兜底、账号空缺回落三处都用它，结果是
+两个号都可能把"应聘数据分析岗位"那段系统模板发给 HR——发出去的话不是用户自己的话。
+现在 `DEFAULT_GREETING` 只剩一个用途：`pick_greeting` 拿它当**标记**，识别历史配置里那些
+"从没被改过、当初被默认串填进去"的岗位文案（否则每个岗位都算"岗位定制"，账号级自定义永远不生效），
+它不再作为任何回落文案出现。
+副作用要说清楚：**两个号的 `greeting_message` 现在都是空的，不写就不投**。
 
 **BOSS 的第二种打招呼机制** → 点「立即沟通」后平台自己把招呼语发出去了，弹一个
 「已向BOSS发送消息 / 留在此页 / 继续沟通」的对话框，页面里没有可输入的抽屉。以前认出弹窗就直接
@@ -503,9 +596,16 @@ pre-click 命中逐条比对导航前后的 URL，其实是三件事：
 | 判"过期"就删用户的会话文件（不可逆，且丢了排查依据） | 改归档：`archive_cookie_file()` 把文件挪到 `data/stale_cookies/主账号_<时间戳>.json`（原路径为空，下一轮照样走完整登录，内容还在）；`uncertain` 时一个字节都不动 | 同上，开关仍是 `login.clear_cookies_on_failure` |
 | 假登录后无条件 `save_cookies`，用登录页那份顶掉好会话 | `_save_cookies_if_logged_in()`：浏览器里没有未过期的 `wt2/zp_at/bst/wbg` 就不落盘，并打日志说明 | 同上 |
 
-另外回复侧不再无限空转：连续 3 次判登录失效就停这个号并置 `needs_login`（只在第一次动 Cookie
-文件），中间恢复过一次计数清零。等登录时先看 Cookie 再决定要不要访问页面——还没扫完就把页面刷走，
-等于把人家的二维码弄没。
+两侧健康检查报"要登录"时都不再凭第一眼定罪：`_recheck_before_archive()` 用同一套两路证据**只读复核**
+当前标签页（不导航——把另一个线程正在用的页面拽走比误判更糟），复核不是 `login_wall` 就不动 Cookie 文件、
+不计失败，本轮跳过。只有连续复核到登录墙才归档，且只在第一次归档（后面几次不再反复搬文件）；
+连续 3 次确认才停这个号的回复轮并置 `needs_login`，中间恢复过一次计数清零。
+等登录时先看 Cookie 再决定要不要访问页面——还没扫完就把页面刷走，等于把人家的二维码弄没。
+`_handle_login` 同理：两路矛盾先等 4 秒复核一次，仍然矛盾才按"需要人工登录"处理，
+并且**只有确认 `cookie_expired` 才导航到登录页**——本来就登录着时跳过去会把会话页弄脏，
+回复侧随后读到"登录墙"，自己把自己绊停（23:01 实测主号白等 80 秒就是这么来的）。
+`_login_reason` 也不会被笼统的 `login_timeout` 盖掉：界面那一列靠 `cookie_expired` / `login_uncertain`
+定位问题。
 
 Cookie 文件从此**不可能静默消失**，四层各留一手：`uncertain` 一个字节都不动；确认失效只挪进
 `data/stale_cookies/`；`save_cookies` 覆盖写之前先把旧文件复制进 `data/cookie_backups/`（保留最近
@@ -517,6 +617,10 @@ Cookie 文件从此**不可能静默消失**，四层各留一手：`uncertain` 
 `--salvage`——Cookie 文件丢了但浏览器里还有登录项时回存一份（只补"文件不存在"，不覆盖已有文件）。
 
 **改了配置没生效** → 先查 [配置生效范围](#配置生效范围重要)；仍不生效就是 bug。三端检测脚本能复现：`python tools/verify_three_way.py`。
+
+**用 `BOSS_BOT_DRY_RUN=1` 起过面板之后** → 环境变量是最高优先级，但它会跟着 `to_dict()` 被算进"当前配置"：
+在这种面板上点任何一次保存，`dry_run: true` 就被写进 `bot_config.json`，之后即使不带环境变量也会一直演练。
+实测踩过（2026-09-30 跑判分复盘真机测试时）：验完记得 `python -c` 看一眼 `dry_run` 是不是你要的值。
 
 **两个号串数据** → 检查各自 `cookie_file` 是否独立、`browser_data/account_N` 是否分开；`data/chatted_jobs.json` 是有意共享的。
 

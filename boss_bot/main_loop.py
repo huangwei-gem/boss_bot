@@ -36,7 +36,7 @@ from typing import Optional, Callable
 
 from boss_bot.unified_config import UnifiedConfig, BASE_DIR, resolve_path, account_file
 from boss_bot.browser_launcher import BrowserManager, BOSS_AUTH_COOKIES
-from boss_bot.greet_engine import GreetEngine
+from boss_bot.greet_engine import GreetEngine, in_probe_band
 from boss_bot.reply_engine import ReplyEngine, conversation_rejected
 from boss_bot.page_handler import BossChatHandler
 from boss_bot.state_store import StateStore
@@ -202,8 +202,14 @@ class UnifiedBotLoop:
         self._reply_paused = False
         # 连续多少次"等了 60 秒没人过验证"之后才真暂停
         self._captcha_strikes = 0
+        # 最近一次健康检查的页面判据：提示里要说清"凭什么说这是验证码"
+        self._health_why = ""
         # 回复侧连续判了几次登录失效：到 REPLY_LOGIN_FAIL_LIMIT 就停下等人工
         self._login_fail_streak = 0
+        # 判分复盘：本轮已经用掉几次"追问不匹配原因"的配额（每号各算，每轮清零）
+        self._probe_used_this_round = 0
+        # 采集口径：启动后全量同步一次侧栏，之后回复轮只看未读
+        self._full_sync_done = False
         # 自进化引擎在 _init_engines 里构造（先置空，热重载/状态查询要能安全引用）
         self._self_evolve = None
         self._current_mode = "idle"
@@ -793,6 +799,12 @@ class UnifiedBotLoop:
                 if self.browser_manager.load_cookies(cookie_file):
                     self._log("DEBUG", "正在访问聊天页面验证登录态...")
                     state = self._login_state_now(instance)
+                    if state == "uncertain":
+                        # 两路矛盾多半是 SPA 还在跳转。先复核一次再决定，别急着把
+                        # 一个本来就登录着的号推去登录页（23:01 实测白等 80 秒）
+                        self._log("DEBUG", "页面与 Cookie 两路证据矛盾，等页面稳定后复核一次...")
+                        self._interruptible_sleep(4)
+                        state = self._login_state_now(instance)
                     if state == "logged_in":
                         self._logged_in = True
                         self._login_reason = ""
@@ -804,9 +816,10 @@ class UnifiedBotLoop:
                                           "登录 Cookie），需要重新登录")
                         self._discard_stale_cookies("启动时确认登录墙")
                     else:
-                        # 看不准 ≠ 失效：以前就是在这里误判，顺手删了用户唯一的会话文件
+                        # 看不准 ≠ 失效：它只表示"这一眼不够"，绝不能拿它当
+                        # "Cookie 过期"去动用户的会话文件
                         self._login_reason = "login_uncertain"
-                        self._log("WARN", "登录态看不准（页面与 Cookie 两路证据矛盾），"
+                        self._log("WARN", "复核后仍看不准（页面与 Cookie 两路证据矛盾），"
                                           "按需要人工登录处理，Cookie 文件原样保留")
                 else:
                     self._login_reason = "no_cookie"
@@ -817,19 +830,25 @@ class UnifiedBotLoop:
         else:
             self._login_reason = "no_cookie"
 
-        # 需要手动登录
+        # 只有确认是登录墙才把页面导航到登录页：本来就登录着的时候跳过去，
+        # 会把会话页弄脏，回复侧随后就读到"登录墙"，自己把自己绊停
         self._needs_login = True
-        self._log("WARN", "需要手动登录，已跳转到登录页面")
-
-        try:
-            instance.get(BOSS_LOGIN_URL)
-        except Exception:
-            pass
+        if self._login_reason == "cookie_expired":
+            self._log("WARN", "需要手动登录，已跳转到登录页面")
+            try:
+                instance.get(BOSS_LOGIN_URL)
+            except Exception:
+                pass
+        else:
+            self._log("WARN", f"登录态判不准（{self._login_reason}），"
+                              f"不去动当前页面，等浏览器里出现登录 Cookie")
 
         self._log("INFO", "请在浏览器中登录 BOSS 直聘（扫码或手机号+验证码），登录成功后会自动继续")
 
         if not self._wait_for_login(instance, cookie_file):
-            self._login_reason = "login_timeout"
+            # 界面这一列靠它定位问题：前面已经判出 cookie_expired / login_uncertain
+            # 时不许用笼统的 login_timeout 盖掉
+            self._login_reason = self._login_reason or "login_timeout"
             self._log("ERROR", "登录超时，主循环退出")
             return False
 
@@ -1004,13 +1023,20 @@ class UnifiedBotLoop:
             time.sleep(0.5)
         return last
 
+    def _login_state_read(self, instance) -> str:
+        """只读当前标签页：等 URL 稳定 + 看浏览器里的登录项，不主动导航。
+
+        两个线程各占一个标签页，复核时把对方的页面拽走比误判本身更糟。
+        """
+        return login_state_of(self._settle_url(instance), self._has_live_auth_cookie(instance))
+
     def _login_state_now(self, instance) -> str:
         """访问会话页并等跳转稳定，返回 logged_in / login_wall / uncertain。"""
         try:
             instance.get("https://www.zhipin.com/web/geek/chat")
         except Exception as e:
             self._log("DEBUG", f"访问会话页异常: {e}")
-        return login_state_of(self._settle_url(instance), self._has_live_auth_cookie(instance))
+        return self._login_state_read(instance)
 
     def _save_cookies_if_logged_in(self, instance=None) -> bool:
         """只在浏览器里确实有未过期登录项时才落盘。
@@ -1051,6 +1077,38 @@ class UnifiedBotLoop:
         except Exception:
             return False
 
+    def _recheck_before_archive(self, instance, side: str) -> bool:
+        """报"要登录"时先自己复核两路证据，确认是登录墙才允许动 Cookie 文件。
+
+        两个线程共用一个浏览器：打招呼侧正在搜索/岗位页跳转时，回复侧读到的是
+        半截页面；反过来也一样。23:01 实测两边都凭第一眼判过"失效"。
+        """
+        state = self._login_state_read(instance)
+        if state == "login_wall":
+            return True
+        self._log("WARN", f"{side}报登录失效，但复核是 {state}（另一个线程正在动这个"
+                          f"浏览器）——不动 Cookie 文件、不计失败，本轮先跳过")
+        return False
+
+    def _reply_login_guard(self, chat_instance) -> str:
+        """回复侧健康检查报"要登录"时先自己复核，确认了才动 Cookie 和计数。
+
+        并发时打招呼侧正在同一个浏览器里跑搜索/岗位页，会话页可能只是在跳转中；
+        23:01 实测第一眼误判就把 7 秒前刚存好的 Cookie 归档走了，随后连判三次把
+        这个号的回复轮停掉。复核用同一套两路证据（页面 + 浏览器内登录项）。
+        """
+        if not self._recheck_before_archive(chat_instance, "回复侧"):
+            return "waiting"
+        self._needs_login = True
+        self._login_reason = "session_lost"
+        if self._login_fail_streak == 0:
+            # 只在第一次确认时归档，后面几次不再反复搬文件
+            self._discard_stale_cookies("回复侧确认登录失效")
+        if self._reply_login_lost_once():
+            return "stop"
+        self._log("WARN", "回复侧确认登录态失效，等待重新登录...")
+        return "waiting"
+
     def _reply_login_lost_once(self) -> bool:
         """回复侧判了一次登录失效。返回 True 表示该停下等人工了。"""
         self._login_fail_streak += 1
@@ -1090,6 +1148,13 @@ class UnifiedBotLoop:
             data_file=str(account_file(BASE_DIR / "data" / "evolution_data.json",
                                        self.account_index)),
         )
+        # 启动即做一次性纠正（幂等）：拒绝重判 negative、泄漏思考过程剔除、超时未答补 ignored
+        try:
+            purify = self._self_evolve.purify_records()
+            if any(purify.values()):
+                self._log("INFO", f"自进化数据已纠正: {purify}")
+        except Exception as e:
+            self._log("WARN", f"自进化数据纠正失败（不影响运行）: {e}")
         self._reply_engine = ReplyEngine(
             self_evolve=self._self_evolve,
             account_name=self.account_name,
@@ -1119,6 +1184,9 @@ class UnifiedBotLoop:
             progress_callback=self._on_greet_progress,
             greet_event_cb=self._greet_event_cb,
             account_index=self.account_index,
+            # 验证页要交人工等结果：闸门负责 60 秒时限、到点跳过当前任务、
+            # 连续三次没人处理停轮 —— 以前打招呼侧只 return 原因，从不叫它
+            captcha_gate_cb=lambda: self._captcha_gate("greet"),
         )
         # 关键：设置 running=True，否则 send_greeting 会直接返回 False
         self._greet_engine.running = True
@@ -1156,17 +1224,21 @@ class UnifiedBotLoop:
                     continue
 
                 # ── 健康检查：检测验证码/风控/登录态 ──
-                health = self._check_health()
+                health = self._check_health(side="greet")
                 if health == "captcha":
                     self._log("ERROR", "⚠️ 检测到验证码/风控拦截，等人工处理（最多 60 秒）")
                     # 人工解掉就继续本轮；超时则跳过这一轮，不再永久暂停
                     self._captcha_gate()
                     continue
                 elif health == "need_login":
+                    if not self._recheck_before_archive(
+                            self.browser_manager.get_instance(), "打招呼侧"):
+                        self._stop_event.wait(timeout=30)
+                        continue
                     self._log("WARN", "登录态失效，等待重新登录...")
                     self._needs_login = True
                     self._login_reason = "session_lost"
-                    self._discard_stale_cookies("运行中检测到登录态失效")
+                    self._discard_stale_cookies("运行中确认登录态失效")
                     self._stop_event.wait(timeout=30)
                     continue
                 elif health == "browser_disconnected":
@@ -1209,10 +1281,38 @@ class UnifiedBotLoop:
 
         self._log("INFO", "打招呼线程结束")
 
+    def _maybe_probe_rejection(self, job: dict, ai_result: dict) -> bool:
+        """AI 判"不符合"之后追问它到底卡在哪一条，结果挂回 job 上给记录和推送用。
+
+        只问 AI，不给 HR 发任何消息——主动问 HR"哪里不合适"是骚扰，撞红线。
+        返回 True 表示这一轮又用掉一次配额（问没问到都算，问砸了同样烧了一次接口）。
+        """
+        chain = getattr(self._greet_engine, "_ai_analyzer", None) if self._greet_engine else None
+        if chain is None:
+            return False
+        try:
+            limit = int(self.config.ai.probe_max_per_round)
+        except (TypeError, ValueError):
+            limit = 0
+        if limit <= 0 or self._probe_used_this_round >= limit:
+            return False
+        if not in_probe_band((ai_result or {}).get("score"),
+                             self.config.ai.match_threshold):
+            return False
+        self._probe_used_this_round += 1
+        probe = chain.probe_rejection(job, ai_result or {})
+        if probe:
+            job["_ai_probe"] = probe
+            self._log("INFO", f"🔎 追问不匹配原因: "
+                              f"{str(probe.get('blocking_requirement', ''))[:60]}")
+        return True
+
     def _run_greet_round(self) -> bool:
         """执行一轮打招呼任务。返回 True 如果有岗位被处理，False 如果所有搜索都为空。"""
         self._log("INFO", "━━━ 开始打招呼轮次 ━━━")
         self._stats_dict["greet_rounds"] += 1
+        # 追问配额按"每号每轮"算，不按天：不重置的话一天只问得到 5 条
+        self._probe_used_this_round = 0
         any_jobs_found = False
 
         # 配置每轮读一次即可：原来放在岗位循环里，每个岗位都要重读
@@ -1321,6 +1421,9 @@ class UnifiedBotLoop:
                                 f"AI判定不匹配: {ai_reason}" if ai_reason else "AI判定不匹配"
                             )
                             self._log("WARN", f"🤖 AI 判定不匹配，跳过: {job.get('job_name', '')}（{ai_reason[:80] if ai_reason else ''}）")
+                            # 边界带上再追问一句"到底卡在哪条硬性要求"，结果写进这条
+                            # 记录（ai_probe），复盘界面据此出建议——只问 AI，不问 HR
+                            self._maybe_probe_rejection(job, last_ai)
                             self._stats_dict["greet_skipped"] += 1
                             # 写入 greet_records，记录具体跳过原因
                             self._greet_engine._emit_greet_event(job, "ai_skip", skip_reason=ai_skip_reason)
@@ -1423,23 +1526,19 @@ class UnifiedBotLoop:
                 # 先对齐聊天标签页：否则健康检查读到的是打招呼侧正在跳转的页面，
                 # 搜索页上偶尔出现的风控提示会被误判成"回复侧被验证码拦截"
                 self._sync_chat_tab()
-                health = self._check_health()
+                health = self._check_health(side="reply")
                 if health == "captcha":
                     self._log("ERROR", "⚠️ 回复侧检测到验证码/风控拦截，等人工处理（最多 60 秒）")
                     self._captcha_gate(pause_field="reply")
                     continue
                 if health == "need_login":
                     # 今天实测：这里每 30 秒判一次失效、每 30 秒归档一次 Cookie，
-                    # 一路刷到我手动停。现在第 N 次就停下等人工，界面能看到原因。
-                    if self._reply_login_lost_once():
+                    # 一路刷到我手动停。现在先复核，确认了才动文件并计数。
+                    verdict = self._reply_login_guard(
+                        self.browser_manager.get_chat_page())
+                    if verdict == "stop":
                         self._log("ERROR", "回复侧已停止本轮，请在左侧该账号上完成登录后再启动")
                         return
-                    self._log("WARN", "回复侧检测到登录态失效，等待重新登录...")
-                    self._needs_login = True
-                    self._login_reason = "session_lost"
-                    if self._login_fail_streak == 1:
-                        # 只在第一次判定动 Cookie 文件，后面几次不再反复归档
-                        self._discard_stale_cookies("回复侧登录态失效")
                     self._stop_event.wait(timeout=30)
                     continue
                 if health == "browser_disconnected":
@@ -1449,6 +1548,17 @@ class UnifiedBotLoop:
 
                 self._reply_login_ok()                # 检查是否是新的一天，如果是则归档数据
                 self._check_and_archive_daily_data()
+
+                # 采集口径：启动后先全量同步一次最新消息（只存档不回复），
+                # 之后回复轮只看未读，不再每轮全量点开
+                if not self._full_sync_done:
+                    self._full_sync_done = True
+                    try:
+                        self._sync_chat_tab()
+                        self._chat_handler.go_to_chat()
+                        self._full_sync_chats()
+                    except Exception as e:
+                        self._log("WARN", f"启动全量同步失败（不影响后续未读轮次）: {e}")
 
                 self._current_mode = "reply"
                 self._run_reply_round()
@@ -1510,6 +1620,14 @@ class UnifiedBotLoop:
                 self._log("DEBUG", "无未读消息")
             else:
                 self._log("INFO", f"发现 {len(unread_chats)} 个未读会话")
+                # 把 BOSS 自己报的未读数记下来：界面的红点只认这个数，
+                # 不再用"本地存了几条 HR 消息"去猜（猜出来的 53/118 和线上 13/1 对不上）
+                for chat_info in unread_chats:
+                    self._msg_store.set_boss_unread(
+                        chat_info.get("name", "未知"),
+                        chat_info.get("unread_count") or 1,
+                        chat_info.get("job_name", ""),
+                        chat_info.get("company", ""))
 
                 for chat_info in unread_chats:
                     if not self._running or self._reply_paused:
@@ -1523,6 +1641,11 @@ class UnifiedBotLoop:
                         break
 
                     self._process_single_chat(chat_info)
+                    # 点进去看过 = BOSS 那边这一行的红点没了，本地记的数要跟着归零，
+                    # 否则面板会一直挂着"上次扫到时有 5 条未读"
+                    self._msg_store.set_boss_unread(
+                        chat_info.get("name", "未知"), 0,
+                        chat_info.get("job_name", ""), chat_info.get("company", ""))
                     self._reply_engine.wait_human_delay()
 
             self._current_chat = None
@@ -1537,6 +1660,36 @@ class UnifiedBotLoop:
                 self._try_reconnect_browser()
 
         self._log("INFO", "━━━ 回复轮次结束 ━━━")
+
+    def _full_sync_chats(self):
+        """启动后全量同步：侧栏每个会话点开读一遍最新消息，只存档不回复。"""
+        chats = self._chat_handler.get_all_chats()
+        self._log("INFO", f"启动全量同步：侧栏共 {len(chats)} 个会话，逐个点开读最新消息（不回复）")
+        synced = 0
+        for chat_info in chats:
+            if not self._running:
+                break
+            if self._on_captcha_page():
+                self._log("WARN", "全量同步途中出现验证页，中止本次同步")
+                break
+            name = chat_info.get("name", "未知")
+            try:
+                if not self._chat_handler.enter_chat(chat_info):
+                    self._log("DEBUG", f"[{name}] 切换校验失败，同步跳过")
+                    continue
+                messages = self._chat_handler.read_all_messages()
+                if not messages:
+                    continue
+                sel = self._chat_handler.read_selected_row() or {}
+                company = (sel.get("company") or chat_info.get("company") or "").strip()
+                self._msg_store.merge_messages(
+                    chat_name=name, new_messages=messages,
+                    job_name=self._chat_handler.get_job_name(), company=company)
+                synced += 1
+                self._reply_engine.wait_human_delay()
+            except Exception as e:
+                self._log("WARN", f"[{name}] 全量同步失败（继续下一个）: {e}")
+        self._log("INFO", f"启动全量同步完成：{synced}/{len(chats)} 个会话已同步，之后只采未读")
 
     def _process_single_chat(self, chat_info: dict):
         """处理单个未读聊天会话。"""
@@ -2026,9 +2179,34 @@ class UnifiedBotLoop:
         keywords = ["断开", "disconnected", "connection", "target closed", "session deleted"]
         return any(k in err_str for k in keywords)
 
-    def _check_health(self) -> str:
-        """健康检查：检测登录态和验证码拦截。"""
-        instance = self.browser_manager.get_instance()
+    def live_login_state(self):
+        """在**已经开着**的那个浏览器里实测登录态；没在跑就返回 None。
+
+        为什么单独给界面用：界面原本只能读 Cookie 文件，"检测登录状态"其实是
+        "文件里那几条没过期"。也不让界面去调 /api/accounts/<idx>/check_cookie ——
+        那条会另起一个不带端口与 profile 的浏览器，跟正在跑的会话抢用户目录并
+        quit() 掉它，检测一次等于把登录态踢一次（本项目红线）。
+        这里只读：等 URL 稳定 + 看浏览器里的登录项，绝不导航。
+        """
+        instance = (self.browser_manager.get_instance()
+                    if self.browser_manager is not None else None)
+        if instance is None:
+            return None
+        try:
+            return self._login_state_read(instance)
+        except Exception as e:
+            self._log("DEBUG", f"实测登录态读不到: {e}")
+            return None
+
+    def _check_health(self, side: str = "reply") -> str:
+        """健康检查：检测登录态和验证码拦截。side 决定读哪张标签页。
+
+        打招呼侧必须读搜索/详情那一页 —— 人机验证就弹在那儿。以前只要聊天处理器
+        建好了就永远读会话页，验证页在另一张标签上等着，闸门等到超时也等不到
+        "已恢复"，用户看到的还是"卡在那张验证图不动"。
+        """
+        instance = (self.browser_manager.get_search_page() if side == "greet"
+                    else self.browser_manager.get_instance())
         if instance is None:
             return "browser_disconnected"
 
@@ -2037,9 +2215,10 @@ class UnifiedBotLoop:
         except Exception:
             return "browser_disconnected"
 
-        if self._chat_handler is not None:
+        if side != "greet" and self._chat_handler is not None:
             try:
                 health = self._chat_handler.check_health()
+                self._health_why = "会话页检查器判定"
                 return health if health in ("ok", "need_login", "captcha") else "unknown"
             except Exception as e:
                 self._log("DEBUG", f"健康检查异常: {e}")
@@ -2048,8 +2227,20 @@ class UnifiedBotLoop:
         # 回复引擎还没建时也要能认出验证码页：以前这里直接回 "ok"，
         # 于是风控页被当成健康，接着掉进打招呼侧几分钟不可中断的重试循环
         try:
-            from boss_bot.page_handler import CAPTCHA_PROBE_JS, classify_health
-            return classify_health(instance.url, instance.run_js(CAPTCHA_PROBE_JS))
+            from boss_bot.page_handler import (CAPTCHA_PROBE_JS, classify_health,
+                                               captcha_evidence)
+            url = instance.url or ""
+            # as_expr 必须带：这份 JS 是 IIFE 表达式，不带的话 DrissionPage 把它
+            # 当函数体包一层，没有 return → 恒为 undefined → 页面证据一条拿不到，
+            # 于是只能靠 URL 定罪（2026-09-30 就是这条把打招呼停了 3 次）
+            probe = instance.run_js(CAPTCHA_PROBE_JS, as_expr=True)
+            verdict = classify_health(url, probe)
+            _is_c, why = captcha_evidence(probe)
+            self._health_why = why or "无挑战证据"
+            # 判据写进日志：以后再说"页面没有验证码"，能当场看出是哪条判据响的
+            self._log("DEBUG" if verdict != "captcha" else "WARN",
+                      f"页面判据={verdict}（{self._health_why}）URL={url[:90]}")
+            return verdict
         except Exception as e:
             self._log("DEBUG", f"健康检查（无聊天处理器）失败: {e}")
             return "unknown"
@@ -2065,13 +2256,14 @@ class UnifiedBotLoop:
         pause_field 决定耗尽重试后停哪一侧（打招呼 / 回复）。
         """
         self._emit_wind(
-            f"BOSS 触发人机验证，请在浏览器窗口里手动完成；"
+            f"BOSS 触发人机验证（{self._health_why or '页面判据未取到'}），"
+            f"请在浏览器窗口里手动完成；"
             f"{CAPTCHA_WAIT_SECONDS} 秒内没操作会自动跳过当前任务", "captcha")
         deadline = time.time() + CAPTCHA_WAIT_SECONDS
         while time.time() < deadline:
             if self._stop_event.is_set() or not self._running:
                 return False
-            if self._check_health() != "captcha":
+            if self._check_health(side=pause_field) != "captcha":
                 self._captcha_strikes = 0
                 self._log("INFO", "人工已完成验证，继续")
                 return True
@@ -2134,6 +2326,16 @@ class UnifiedBotLoop:
                             self._log("WARN", "重连后 Cookie 加载未成功，可能需要重新登录")
                     except Exception as e:
                         self._log("WARN", f"重连后 Cookie 加载异常: {e}")
+
+                # 搜索标签页必须在 _init_engines() 之前建回来。启动路径里那句
+                # get_search_page()（见 _initialize_and_run）不会再来第二次，而 close()
+                # 已经把 _search_tab 置空；不重建的话打招呼侧就退回浏览器级别名，
+                # 别名此刻绑的是刚起来的空白初始页 —— 用户看到的"第二个浏览器打开
+                # 后无内容"就是这么来的（2026-09-30 真机取证 + 11:03 重连现场）。
+                # 顺序也有讲究：先搜索页再聊天页，new_tab 之后别名才不会被会话页占住。
+                search_page = self.browser_manager.get_search_page()
+                self._log("INFO", f"重连后已重建搜索标签页: "
+                                  f"{getattr(search_page, 'url', '') or '（读不到 URL）'}")
 
                 # 重新初始化所有引擎（回复 + 打招呼）
                 self._init_engines()

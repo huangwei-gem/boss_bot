@@ -30,35 +30,99 @@ logger = logging.getLogger(__name__)
 BASE_DIR = Path(__file__).parent
 
 
-CAPTCHA_PROBE_JS = '''(
-    function() {
-        var body = document.body ? document.body.innerText : "";
-        if (body.indexOf("安全验证") >= 0 || body.indexOf("验证码") >= 0) return "captcha";
-        var sel = ".nc-container, .verify-wrap, .geetest_panel, .verify-box, " +
-                  ".captcha-box, .security-check, .verify-panel";
-        if (document.querySelector(sel)) return "captcha";
-        return "ok";
+# ── 验证码判据（全项目只此一处，打招呼侧/回复侧/归因侧共用）──
+# 只认「页面上真有一张要人操作的东西」：可见的挑战容器，或强文案。
+# 以前还认两条现在已知的误判来源，2026-09-30 12:20 就是被它们停的打招呼：
+#   1) URL 里的 `?_security_check=1_…`——BOSS 的静默风控参数，页面照样渲染、
+#      照样点得到"立即沟通"（12:08:24 落地带这参数，12:08:31 招呼语已发出），
+#      而且它不会自己消失，60 秒闸门因此永远等不到"已恢复"。
+#   2) 正文里裸着"验证码"三个字——岗位 JD、HR 消息、登录框的"获取验证码"
+#      按钮里都有这三个字。
+CAPTCHA_BOX_SELECTORS = (".nc-container", ".verify-wrap", ".geetest_panel",
+                         ".verify-box", ".captcha-box", ".security-check",
+                         ".verify-panel", "#tcaptcha", ".vc-captcha")
+CAPTCHA_STRONG_WORDS = ("安全验证", "请完成验证", "拖动滑块", "滑动验证",
+                        "人机验证", "图形验证")
+
+# 探针只报证据（候选容器的实测尺寸 + 命中的文案），定罪留给 python：
+# 同一份判据既能被单测覆盖，也能被写进日志自证。
+CAPTCHA_PROBE_JS = '''(function () {
+    var sels = %s;
+    var strong = %s;
+    var boxes = [];
+    for (var i = 0; i < sels.length; i++) {
+        var els = document.querySelectorAll(sels[i]);
+        for (var j = 0; j < els.length; j++) {
+            var r = els[j].getBoundingClientRect();
+            var s = window.getComputedStyle(els[j]);
+            boxes.push({sel: sels[i], w: Math.round(r.width), h: Math.round(r.height),
+                        display: s.display, visibility: s.visibility});
+        }
     }
-)()'''
+    var body = document.body ? (document.body.innerText || "") : "";
+    var words = [];
+    for (var k = 0; k < strong.length; k++) {
+        if (body.indexOf(strong[k]) >= 0) words.push(strong[k]);
+    }
+    return JSON.stringify({boxes: boxes, words: words});
+})()''' % (json.dumps(list(CAPTCHA_BOX_SELECTORS)),
+           json.dumps(list(CAPTCHA_STRONG_WORDS), ensure_ascii=False))
+
+
+def _probe_data(probe):
+    """探针返回值 → dict；读不到/不是 JSON 一律 None（判不了健康）。"""
+    if isinstance(probe, dict):
+        return probe
+    if isinstance(probe, str):
+        try:
+            data = json.loads(probe)
+        except ValueError:
+            return None
+        return data if isinstance(data, dict) else None
+    return None
+
+
+def _box_challenges(box: dict) -> bool:
+    """占地方、看得见，才算一张真的要人操作的验证。"""
+    try:
+        w = float(box.get("w") or 0)
+        h = float(box.get("h") or 0)
+    except (TypeError, ValueError):
+        return False
+    return (w > 4 and h > 4
+            and box.get("display") not in (None, "", "none")
+            and box.get("visibility") != "hidden")
+
+
+def captcha_evidence(probe) -> tuple:
+    """探针结果 → (是否确实在验证, 给人看的判据)。"""
+    data = _probe_data(probe)
+    if data is None:
+        return False, ""
+    boxes = sorted({b.get("sel", "?") for b in (data.get("boxes") or [])
+                    if isinstance(b, dict) and _box_challenges(b)})
+    words = [w for w in (data.get("words") or []) if w]
+    if boxes:
+        return True, "可见挑战容器 " + "、".join(boxes)
+    if words:
+        return True, "页面文案 " + "、".join(words)
+    return False, ""
 
 
 def classify_health(url: str, probe) -> str:
-    """把"页面地址 + 探针结果"归成 ok / need_login / captcha / unknown。
+    """把"页面地址 + 探针证据"归成 ok / need_login / captcha / unknown。
 
-    探针结果不是 ok/captcha 时一律算 unknown：旧代码在这里兜底成 ok，
-    于是纯图形验证页（正文没有"验证码"三个字）被判成健康继续自动操作。
-    `_security_check` 是 BOSS 风控跳转页的固定标记，页面本身可能一个字都没有。
+    验证优先于登录：风控滑块常盖在登录框上，判成 need_login 会去动 Cookie 文件、
+    逼人重新扫码，而实情只差过一次验证。
+    探针拿不到证据时不兜底成 ok——旧代码就是这么漏掉纯图形验证页的。
     """
-    u = url or ""
-    if "_security_check" in u:
+    is_captcha, _why = captcha_evidence(probe)
+    if is_captcha:
         return "captcha"
+    u = url or ""
     if "login" in u or "/web/user" in u or "passport" in u:
         return "need_login"
-    if probe == "captcha":
-        return "captcha"
-    if probe == "ok":
-        return "ok"
-    return "unknown"
+    return "ok" if _probe_data(probe) is not None else "unknown"
 
 
 class BossChatHandler:
@@ -360,6 +424,61 @@ class BossChatHandler:
 
         logger.debug(f"发现 {len(unread_chats)} 个未读会话")
         return unread_chats
+
+    def get_all_chats(self) -> List[Dict]:
+        """获取侧栏全部会话（不看红点），用于启动后的一次性全量同步。
+
+        与 get_unread_chats 同一套 CSS 判据（.friend-content / .name-text /
+        .name-box / .last-msg-text），只是不做"有没有未读标记"的过滤。
+        """
+        self.go_to_chat()
+        time.sleep(1)
+
+        all_chats = []
+        try:
+            result = self.page.run_js('''(
+                function() {
+                    var friendEls = document.querySelectorAll(".friend-content");
+                    var rows = [];
+                    for (var i = 0; i < friendEls.length; i++) {
+                        var el = friendEls[i];
+                        var nameEl = el.querySelector(".name-text");
+                        var name = nameEl ? nameEl.textContent.trim() : "未知";
+                        var box = el.querySelector(".name-box");
+                        var company = "";
+                        if (box) {
+                            var spans = [];
+                            for (var k = 0; k < box.children.length; k++) {
+                                var c = box.children[k];
+                                if (c.tagName === "SPAN") {
+                                    var t = (c.textContent || "").trim();
+                                    if (t) spans.push(t);
+                                }
+                            }
+                            company = spans.length > 1 ? spans[1] : "";
+                        }
+                        var previewEl = el.querySelector(".last-msg-text");
+                        var preview = previewEl ? previewEl.textContent.trim() : "";
+                        rows.push({
+                            index: i,
+                            name: name,
+                            company: company,
+                            preview: preview,
+                            unread_count: 0
+                        });
+                    }
+                    return JSON.stringify(rows);
+                }
+            )()''', as_expr=True)
+
+            if result:
+                all_chats = json.loads(result)
+
+        except Exception as e:
+            logger.error(f"获取全部会话列表失败: {e}")
+
+        logger.debug(f"侧栏共 {len(all_chats)} 个会话")
+        return all_chats
 
     def read_selected_row(self) -> Dict:
         """读侧栏里当前真正带 selected 态的那一行（身份以它为准，不靠点击时的索引）
@@ -1373,7 +1492,11 @@ class BossChatHandler:
             probe = self.page.run_js(CAPTCHA_PROBE_JS, as_expr=True)
         except Exception:
             return "unknown"
-        return classify_health(url, probe)
+        verdict = classify_health(url, probe)
+        _is_c, why = captcha_evidence(probe)
+        # 判据随行：会话侧也报"验证码"时，日志要能自证是哪条命中的
+        logger.debug(f"会话页判据={verdict}（{why or '无挑战证据'}）URL={url[:90]}")
+        return verdict
 
     def close(self):
         """关闭浏览器

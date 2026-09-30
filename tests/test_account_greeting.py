@@ -23,14 +23,28 @@ class PickGreetingTest(unittest.TestCase):
         text, source = pick_greeting(DEFAULT_GREETING, "账号专用招呼语", DEFAULT_GREETING)
         self.assertEqual((text, source), ("账号专用招呼语", "账号自定义"))
 
-    def test_账号也没填就用默认模板(self):
-        text, source = pick_greeting("", "", DEFAULT_GREETING)
-        self.assertEqual((text, source), (DEFAULT_GREETING, "默认模板"))
+    def test_两级都没填就返回空串不发(self):
+        """2026-09-30 口径改了：招呼语不再回落全局默认模板。
 
-    def test_空岗位配空账号不留空串(self):
-        """招呼语为空会把空白消息发给 HR"""
-        text, _ = pick_greeting(None, None, DEFAULT_GREETING)
-        self.assertTrue(text.strip())
+        旧行为是"没填就发系统预设那句"，等于程序替使用者跟 HR 说话；现在返回空串，
+        由调用方拦住不发（拦截位置见 test_空缺必须在点沟通之前拦住）。
+        """
+        text, source = pick_greeting("", "", DEFAULT_GREETING)
+        self.assertEqual((text, source), ("", "未配置"))
+
+    def test_空缺必须在点沟通之前拦住(self):
+        """点「沟通」在 BOSS 上就等于发起招呼（第二种机制还会自动发预设文案），
+
+        所以空缺的返回必须排在找按钮/点按钮之前 —— 走到输入框才发现就晚了。
+        """
+        import inspect
+
+        from boss_bot.greet_engine import GreetEngine
+        src = inspect.getsource(GreetEngine._apply_job_inner)
+        guard = src.index("GREETING_MISSING_REASON")
+        click = src.index("_find_chat_button")
+        self.assertLess(guard, click, "空缺拦截掉到了点击之后，等于已经打过去了才发现没话")
+        self.assertIn("self._greeting_for(job)", src[:guard])
 
 
 class AccountGreetingConfigTest(unittest.TestCase):
@@ -87,7 +101,7 @@ class AutoGreetDialogTest(unittest.TestCase):
         pos_probe = src.index("self._auto_greet_dialog(instance)")
         pos_snap = src.index("chat_failure_reason(snap)")
         self.assertLess(pos_probe, pos_snap, "自动发送的现场被通用归因吃掉了")
-        self.assertIn("AUTO_GREET_REASON", src)
+        self.assertIn("_auto_greet_note", src, "认出自动发送后没留痕，界面就看不出少核对了一步")
 
     def test_自动发送要算已沟通(self):
         """平台已经发出去了，下一轮不该再撞同一个岗位"""
@@ -300,7 +314,8 @@ class AutoGreetWiringTest(unittest.TestCase):
         from boss_bot.greet_engine import GreetEngine
         src = inspect.getsource(GreetEngine._apply_job_inner)
         pos = src.index("self._auto_greet_followup(")
-        self.assertLess(pos, src.index("AUTO_GREET_REASON"))
+        self.assertLess(pos, src.index("chat_failure_reason(snap)"),
+                        "补发要排在通用归因之前，否则自动发送会被报成未找到输入框")
         seg = src[pos:pos + 900]
         self.assertIn("_record_sent_now(job)", seg, "补发成功当场就该落库")
         self.assertIn("_mark_chatted(job)", seg)
@@ -318,3 +333,24 @@ class AutoGreetWiringTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class GreetingUiLockTest(unittest.TestCase):
+    """界面不能再留着那句全局模板：留着就等于"说了不用、还会偷偷用" """
+
+    @classmethod
+    def setUpClass(cls):
+        from pathlib import Path
+        cls.html = (Path(__file__).resolve().parent.parent
+                    / "flask-version" / "templates" / "index.html").read_text(encoding="utf-8")
+
+    def test_界面没有硬编码招呼语(self):
+        self.assertNotIn("defaultGreeting", self.html)
+
+    def test_说明写的是两级都空就不发(self):
+        self.assertNotIn("最后才用系统默认", self.html)
+        self.assertIn("两级都留空", self.html)
+
+    def test_岗位弹窗不再预填模板(self):
+        self.assertNotIn("greeting_message:defaultGreeting", self.html)
+        self.assertNotIn("|| defaultGreeting", self.html)

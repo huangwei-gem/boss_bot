@@ -92,10 +92,37 @@ def resolve_path(path) -> Path:
 
 
 # 可以按账号覆盖的配置段。
-# 只有这两段是"换个号就该换套标准"的：主号投数据分析、二号投运营，判分阈值和
-# 打分提示词不该共用。resume / user_profile / templates 故意排除在外——一个人
-# 一份简历一套话术，按号覆盖只会让两个号对同一个 HR 说出互相矛盾的介绍。
-ACCOUNT_OVERLAY_SECTIONS = ("ai", "reply")
+# 2026-09-30 用户要求"每个账号独立一套配置"：以前只放开 ai/reply，界面却写着
+# "独立配置：…浏览器…"，那是假声明。现在凡是"换个号就该换套设置"的段都可以按号覆盖，
+# 但**仍然只存差异**（accounts[i].settings 里只放和基准不一样的键）——整份复制会在
+# 用户改过之后被一次全局更新覆盖掉，而且两个号从此各抄一份、再也对不上账。
+
+# 段名 → 容器在 UnifiedConfig 上的属性路径（rate_limit/retry 挂在 greet 下面）
+ACCOUNT_OVERLAY_CONTAINERS = {
+    "ai": ("ai",),
+    "reply": ("reply",),
+    "templates": ("templates",),
+    "rate_limit": ("greet", "rate_limit"),
+    "retry": ("greet", "retry"),
+    "login": ("login",),
+    "notify": ("notify",),
+    "browser": ("browser",),
+}
+
+# 对外仍然用这个名字：从容器表推出来，免得两处清单各写一份、改一边忘另一边
+ACCOUNT_OVERLAY_SECTIONS = tuple(ACCOUNT_OVERLAY_CONTAINERS)
+
+# 段内不许按号覆盖的键：这两个是账号索引算出来的（端口 9222+idx、目录 account_{idx}），
+# 让界面去改 debug_port 会把整段端口偏移量加两遍，两个号反而抢同一个浏览器
+ACCOUNT_OVERLAY_LOCKED = {"browser": {"debug_port", "user_data_dir"}}
+
+# 全局共享、不按号覆盖的部分：一份简历画像与一套回复规则。两个号同一个人投，
+# 学历/技能/自我介绍不可能一个是"统计学本科"另一个是"风景园林本科"，
+# 真出现按号不同的自我介绍就等于对两个 HR 说互相矛盾的话。
+# resume 在这里而不是可覆盖段里，还有一层：判分复盘的「补简历证据」建议只能写全局
+# （tests/test_judgement_review.py::test_补简历建议只能写全局），一旦 resume 可按号覆盖，
+# 采纳账号2 的建议就把简历劈成两半
+ACCOUNT_GLOBAL_ONLY = ("resume", "user_profile", "reply_rules", "importance_keywords")
 
 
 # 默认打招呼话术
@@ -284,7 +311,7 @@ class JobConfig:
     city: str = "上海"
     query: str = "数据分析"
     scroll_pages: int = 5
-    greeting_message: str = DEFAULT_GREETING
+    greeting_message: str = ""      # 留空 = 这个岗位不发招呼；不再回落默认串
     image_files: list = field(default_factory=list)
 
 
@@ -368,6 +395,9 @@ class AIConfig:
     # 22 个接口里 16 个不可用时，单岗位判分会烧光 60s 预算并落到"默认通过"，
     # 表现成"AI 筛岗没生效"。见 tools/e2e_live_boss.py 的耗时断言。
     skip_unhealthy: bool = True
+    # 判分复盘：AI 判"不符合"后追问它卡在哪一条，每号每轮最多几条。
+    # 一次追问≈一次判分（实测中位 5.4 秒），所以默认给 5；填 0 等于关掉。
+    probe_max_per_round: int = 5
 
 
 @dataclass
@@ -553,14 +583,24 @@ class UnifiedConfig:
         if not (0 <= index < len(cfg.greet.accounts)):
             return cfg
         overlay = cfg.greet.accounts[index].settings or {}
-        for section in ACCOUNT_OVERLAY_SECTIONS:
+        for section, path in ACCOUNT_OVERLAY_CONTAINERS.items():
             values = overlay.get(section)
-            target = getattr(cfg, section, None)
-            if target is None or not isinstance(values, dict):
+            if not isinstance(values, dict):
                 continue
+            target = cfg
+            for attr in path:
+                target = getattr(target, attr, None)
+                if target is None:
+                    break
+            if target is None:
+                continue
+            locked = ACCOUNT_OVERLAY_LOCKED.get(section, set())
             for field_name, value in values.items():
-                if hasattr(target, field_name):
-                    setattr(target, field_name, value)
+                # 锁住的键（浏览器端口、用户目录）即使在覆盖里也不生效：那两个是账号
+                # 索引算出来的，覆盖穿过去等于两个号抢同一个浏览器
+                if field_name in locked or not hasattr(target, field_name):
+                    continue
+                setattr(target, field_name, value)
         return cfg
 
     def _apply_bot_config(self, data: dict):
@@ -647,6 +687,10 @@ class UnifiedConfig:
                 self.ai.match_threshold = int(ai["match_threshold"])
             if "analyze_max_tokens" in ai:
                 self.ai.analyze_max_tokens = int(ai["analyze_max_tokens"])
+            if "probe_max_per_round" in ai:
+                # 夹住而不是照收：界面填 999 就是每号每轮 999 次额外 AI 调用
+                self.ai.probe_max_per_round = max(
+                    0, min(20, int(ai["probe_max_per_round"])))
             if "fail_action" in ai and ai["fail_action"]:
                 self.ai.fail_action = str(ai["fail_action"])
             if "providers" in ai and isinstance(ai["providers"], list):
@@ -712,7 +756,7 @@ class UnifiedConfig:
                         city=job.get("city", "上海"),
                         query=job.get("query", "数据分析"),
                         scroll_pages=job.get("scroll_pages", 5),
-                        greeting_message=job.get("greeting_message", DEFAULT_GREETING),
+                        greeting_message=job.get("greeting_message", ""),
                         image_files=job.get("image_files", []),
                     ))
                 parsed_accounts.append(AccountConfig(
@@ -1084,6 +1128,7 @@ class UnifiedConfig:
                 "model": self.ai.model,
                 "match_threshold": self.ai.match_threshold,
                 "analyze_max_tokens": self.ai.analyze_max_tokens,
+                "probe_max_per_round": self.ai.probe_max_per_round,
                 "fail_action": self.ai.fail_action,
                 "custom_filter_keywords": list(self.ai.custom_filter_keywords),
                 "custom_scoring_prompt": self.ai.custom_scoring_prompt,
@@ -1292,7 +1337,7 @@ def load_config() -> dict:
         acc.setdefault("greeting_message", "")
         acc.setdefault("settings", {})
         for job in acc.get("jobs", []):
-            job.setdefault("greeting_message", DEFAULT_GREETING)
+            job.setdefault("greeting_message", "")
             job.setdefault("scroll_pages", 5)
             job.setdefault("city", "上海")
             job.setdefault("enabled", True)
@@ -1496,7 +1541,7 @@ def _default_config_dict() -> dict:
                         "city": "上海",
                         "query": "数据分析",
                         "scroll_pages": 5,
-                        "greeting_message": DEFAULT_GREETING,
+                        "greeting_message": "",
                         "image_files": [],
                     },
                 ],

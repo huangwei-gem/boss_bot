@@ -263,6 +263,24 @@ a{color:var(--accent);text-decoration:none}
 .ai-quality-line.warn b{color:var(--warning)}
 .ai-quality-line.bad{border-color:rgba(255,95,95,.4)}
 .ai-quality-line.bad b{color:var(--danger)}
+/* 判分复盘：追问原因的可展开块 + 建议列表（建议必须手点采纳才写配置） */
+.greet-probe{margin-top:4px;font-size:11px;color:var(--fg-3rd)}
+.greet-probe summary{cursor:pointer;color:var(--accent);list-style:none}
+.greet-probe summary::-webkit-details-marker{display:none}
+.greet-probe-body{margin-top:4px;padding:6px 8px;border-radius:7px;background:var(--side-input-bg);
+  border:1px solid var(--bd-2);line-height:1.6;white-space:normal;word-break:break-word}
+.greet-probe-body b{display:inline-block;min-width:96px;color:var(--fg-4th);font-weight:400}
+.review-detail{font-size:11px;color:var(--fg-3rd);margin:-4px 0 8px;padding:6px 8px;border-radius:7px;
+  background:var(--side-input-bg);border:1px solid var(--bd-2);line-height:1.6}
+.review-detail h4{margin:6px 0 4px;font-size:11px;color:var(--fg);font-weight:600}
+.review-item{display:flex;gap:6px;align-items:flex-start;padding:4px 0;border-top:1px dashed var(--bd-2)}
+.review-item:first-of-type{border-top:none}
+.review-item .txt{flex:1;white-space:normal;word-break:break-word}
+.review-item .why{color:var(--fg-4th);font-size:10px}
+.review-adopt{flex:none;font-size:10px;padding:2px 8px;border-radius:6px;border:1px solid var(--accent);
+  background:transparent;color:var(--accent);cursor:pointer}
+.review-adopt:hover{background:var(--accent);color:#fff}
+.review-adopt:disabled{opacity:.45;cursor:default}
 .ai-status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:1px;background:var(--fg-4th)}
 .ai-status-dot.available{background:var(--success)}
 .ai-status-dot.unavailable{background:var(--danger)}
@@ -798,14 +816,16 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
         <div class="acc-field-row" style="gap:6px"><label>启用</label><span id="accEnabled" class="toggle-switch on" onclick="toggleAccEnabled()"></span></div>
         <div class="acc-field-row" style="align-items:flex-start"><label style="margin-top:5px">招呼语</label>
           <textarea class="side-form-input" id="accGreeting" rows="3" style="resize:vertical;min-height:52px;line-height:1.45"
-                    placeholder="本账号专用的打招呼语，留空则用岗位里的文案" onchange="onAccChange()"></textarea>
+                    placeholder="本账号的招呼语；岗位没单独写就用这段，两级都留空则不发送" onchange="onAccChange()"></textarea>
         </div>
         <div style="font-size:10px;color:var(--fg-4th);margin-top:2px;line-height:1.5">
-          招呼语优先用岗位里改过的，其次用上面这段账号自定义，最后才用系统默认
+          招呼语优先用岗位里改过的，其次用上面这段账号自定义；两级都留空 = 这个账号不发招呼，系统不再代填任何默认话术（发出去的话得是你自己的话）
         </div>
         <div style="font-size:10px;color:var(--fg-4th);margin-top:4px;line-height:1.5">
-          <b>独立配置：</b>Cookie、浏览器、招呼语、岗位任务、AI 判分与回复参数、投递/回复记录、运行状态<br>
-          <b>全局共享：</b>回复规则、回复模板、个人画像、简历、关键词
+          <b>按号独立：</b>Cookie、浏览器（除端口与用户目录）、招呼语、岗位任务、AI 判分、回复参数、
+          回复模板、投递频率与重试、登录、通知；投递/回复记录与运行状态本来就按号分<br>
+          <b>全局共享：</b>简历信息、个人画像、回复规则、重要关键词——两个号是同一个人，
+          学历和技能不可能一个号一套说法
         </div>
       </div>
       <div>
@@ -815,6 +835,8 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
         <div class="acc-field-row"><label>匹配阈值</label><input class="side-form-input" id="aiThreshold" type="number" min="0" max="100" placeholder="70" onchange="onAiChange()"></div>
         <div class="acc-field-row" title="一次岗位判分允许模型输出多少 token。带思考(reasoning)的接口会把预算花在思考上，不够就正文为空、这次判分作废换下一个接口">
           <label>判分预算 tokens</label><input class="side-form-input" id="aiAnalyzeMaxTokens" type="number" min="512" max="8192" step="128" placeholder="1600" onchange="onAiChange()"></div>
+        <div class="acc-field-row" title="AI 判「不符合」后，只追问分数离阈值最近的那批（阈值-15 到阈值）到底卡在哪一条硬性要求。一次追问≈一次判分的耗时；填 0 就是关掉">
+          <label>复盘追问/每号每轮</label><input class="side-form-input" id="aiProbeMaxPerRound" type="number" min="0" max="20" step="1" placeholder="5" onchange="onAiChange()"></div>
         <button class="adv-toggle" id="aiProvToggle" onclick="toggleAiProviders()">
           AI 接口列表 <span class="arrow">></span>
           <span id="aiProvSummary" style="margin-left:4px;font-size:10px;color:var(--fg-3rd);font-weight:400"></span>
@@ -825,6 +847,8 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
             <span class="ai-health-summary" id="aiHealthSummary">未检测</span>
           </div>
           <div class="ai-quality-line" id="aiQualityLine" title="兜底 = AI 没给出判断，这个岗位按默认话术直接打招呼了，等于没筛">判分质量：未统计</div>
+          <div class="ai-quality-line" id="aiReviewLine" title="AI 判「不符合」后追问出来的原因排行。建议要点「采纳」才会写进配置">判分复盘：未统计</div>
+          <div class="review-detail" id="aiReviewDetail" style="display:none"></div>
           <div style="font-size:10px;color:var(--fg-4th);line-height:1.5;margin:-4px 0 8px">体检会给每个接口真实发一条 4 个字的测试消息，只有返回了内容才算可用；推理模型正文为空但 reasoning 有内容的也算可用。不可用的接口会标出具体原因（Key 失效 / 额度用尽 / 模型名不对 / 地址不对）。</div>
           <div id="aiProviders" style="margin-top:8px"></div>
         </div>
@@ -965,7 +989,6 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
         <span class="scope-hint" id="actionScopeLabel" title="上方按钮只作用于当前数据范围"></span>
         <button class="btn btn-success btn-sm" id="btnStartAll" onclick="startAll()">启动</button>
         <button class="btn btn-danger btn-sm" id="btnStopAll" onclick="stopAll()" style="display:none">停止</button>
-        <button class="btn btn-ghost btn-sm" id="btnConfirmLogin" onclick="confirmLogin()" style="display:none">确认登录</button>
         <button class="btn btn-ghost btn-sm" id="btnSaveConfig" onclick="saveConfigShow()" title="把当前侧边栏里的配置写入 bot_config.json">保存配置</button>
         <button class="btn btn-ghost btn-sm" onclick="showExcelModal()">Excel 导出</button>
         <button class="btn btn-warn btn-sm" id="btnPauseGreet" onclick="pauseGreet()" style="display:none">暂停打招呼</button>
@@ -1095,7 +1118,6 @@ const socket = io({
 });
 let config = { accounts: [] };
 let activeAccountIdx = 0;
-const defaultGreeting = "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。";
 let availableImages = [];
 let accountStatuses = [];
 
@@ -1169,6 +1191,8 @@ function renderAiConfig() {
   setEl('aiEnabled', 'toggle-switch ai-switch' + (config.ai.enabled ? ' on' : ''));
   setVal('aiThreshold', config.ai.match_threshold || 70);
   setVal('aiAnalyzeMaxTokens', config.ai.analyze_max_tokens || 1600);
+  setVal('aiProbeMaxPerRound', typeof config.ai.probe_max_per_round === 'number'
+    ? config.ai.probe_max_per_round : 5);
   setVal('customFilterKeywords', (config.ai.custom_filter_keywords || []).join(', '));
   setVal('customScoringPrompt', config.ai.custom_scoring_prompt || '');
   const badge = document.getElementById('aiBadge');
@@ -1253,6 +1277,93 @@ function loadAiQuality() {
              + '范围：' + scopeLabel() + '，共 ' + d.total + ' 条记录'
              + (d.max_duration_ms ? '，最慢 ' + (d.max_duration_ms / 1000).toFixed(1) + 's' : '');
   }).catch(function() {});
+}
+
+// 判分复盘：AI 判"不符合"后追问到的原因排行与建议。
+// 建议一律要点「采纳」才写配置——后端每条都带 auto_applied:false，前端不许自动生效。
+var aiReviewData = null;
+
+function loadAiReview() {
+  var el = document.getElementById('aiReviewLine');
+  if (!el) return;
+  fetch('/api/ai/judgement_review' + scopeQs()).then(function(r){return r.json()}).then(function(d) {
+    if (!d || d.status !== 'ok') return;
+    aiReviewData = d;
+    var box = document.getElementById('aiReviewDetail');
+    if (box) { box.style.display = 'none'; box.innerHTML = ''; }
+    if (!d.probed) {
+      el.innerHTML = '判分复盘：近 ' + (d.days || 7) + ' 天还没有追问到原因'
+                   + '（只追问"差一点就过"的那批）';
+      el.className = 'ai-quality-line';
+      return;
+    }
+    var top = (d.top_blockers || [])[0] || {};
+    el.innerHTML = '判分复盘：今日追问 <b>' + (d.today_probed || 0) + '</b> 条 · 近 '
+                 + d.days + ' 天 <b>' + d.probed + '</b> 条 · 主因 '
+                 + escHtml(top.requirement || '—')
+                 + '（<a href="#" onclick="toggleAiReview();return false">'
+                 + (d.suggestions || []).length + ' 条建议</a>）';
+    el.className = 'ai-quality-line warn';
+    el.title = '其中 ' + (d.fixable_by_resume || 0) + ' 条是"会做但简历没写"，'
+             + (d.not_fixable || 0) + ' 条是确实不具备。范围：' + scopeLabel();
+    renderAiReviewDetail();
+  }).catch(function(e) { console.error('判分复盘读取失败:', e); });
+}
+
+function toggleAiReview() {
+  var box = document.getElementById('aiReviewDetail');
+  if (!box) return;
+  if (box.style.display === 'none') { renderAiReviewDetail(); box.style.display = 'block'; }
+  else { box.style.display = 'none'; }
+}
+
+function renderAiReviewDetail() {
+  var box = document.getElementById('aiReviewDetail');
+  var d = aiReviewData;
+  if (!box || !d) return;
+  var html = '<h4>卡得最多的硬性要求</h4>';
+  (d.top_blockers || []).forEach(function(b) {
+    html += '<div class="review-item"><span class="txt">' + escHtml(b.requirement)
+         +  '<div class="why">' + b.count + ' 次 · 最高 ' + b.score_max + ' 分 · 可补 '
+         + b.fixable + ' / 确实不具备 ' + b.not_fixable + '</div></span></div>';
+  });
+  var sugs = d.suggestions || [];
+  if (sugs.length) {
+    html += '<h4>建议（点「采纳」才会写进配置）</h4>';
+    sugs.forEach(function(s, i) {
+      html += '<div class="review-item"><span class="txt">' + escHtml(s.value)
+           +  '<div class="why">' + escHtml(s.because || '')
+           +  ' → 写入 ' + escHtml(s.target || '') + '</div></span>'
+           +  '<button class="review-adopt" onclick="adoptAiReview(' + i + ',this)">采纳</button></div>';
+    });
+  } else {
+    html += '<div class="why">还没攒够反复出现的原因（同一条要出现 2 次以上才值得动配置）。</div>';
+  }
+  box.innerHTML = html;
+}
+
+function adoptAiReview(i, btn) {
+  var s = ((aiReviewData || {}).suggestions || [])[i];
+  if (!s || !btn) return;
+  var body = { suggestion: s };
+  if (dataScope !== 'all') body.account = Number(dataScope);
+  btn.disabled = true;
+  fetch('/api/ai/judgement_review/adopt', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  }).then(function(r){return r.json()}).then(function(d) {
+    btn.disabled = false;
+    if (d && d.status === 'ok') {
+      logToPanel('✓ ' + (d.message || '已采纳'), 'success');
+      loadAiReview();
+      loadConfig();
+    } else {
+      logToPanel('采纳失败：' + ((d && d.message) || '未知原因'), 'error');
+    }
+  }).catch(function(e) {
+    btn.disabled = false;
+    logToPanel('采纳失败：' + e, 'error');
+  });
 }
 
 function renderAiHealthSummary(d) {
@@ -1360,6 +1471,9 @@ function onAiChange() {
   config.ai.enabled = document.getElementById('aiEnabled').classList.contains('on');
   config.ai.match_threshold = parseInt(document.getElementById('aiThreshold').value) || 70;
   config.ai.analyze_max_tokens = parseInt(document.getElementById('aiAnalyzeMaxTokens').value) || 1600;
+  // 0 是「关掉复盘」这个合法值，所以不能像上面那样用 || 兜底
+  var probeVal = parseInt(document.getElementById('aiProbeMaxPerRound').value);
+  config.ai.probe_max_per_round = isNaN(probeVal) ? 5 : Math.max(0, Math.min(20, probeVal));
   var providers = config.ai.providers || [];
   if (providers.length > 0) {
     config.ai.api_key = providers[0].api_key || '';
@@ -1862,6 +1976,7 @@ function showEvolutionModal() {
     const pending = statusData.status === 'ok' ? (statusData.pending_evaluations || 0) : 0;
     const totalReplies = statusData.status === 'ok' ? (statusData.total_replies || 0) : 0;
     const report = reportData.status === 'ok' ? (reportData.report || {}) : {};
+    const gateBlocks = report.gate_blocks || 0;
     const adjustments = report.strategy_adjustments || [];
     const recentRecords = report.recent_records || [];
     let reportHtml = '';
@@ -1874,7 +1989,8 @@ function showEvolutionModal() {
     if (recentRecords.length > 0) {
       reportHtml += '<div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin:8px 0 6px">最近回复记录</div>';
       reportHtml += recentRecords.slice(0, 5).map(function(r) {
-        return '<div style="padding:4px 0;border-bottom:1px solid var(--bd-2);font-size:10px;color:var(--fg-3rd)">'+escHtml(JSON.stringify(r))+'</div>';
+        var tag = r.kind === 'gate_block' ? '<span style="color:var(--danger,#e5484d)">[闸门拦截]</span> ' : '';
+        return '<div style="padding:4px 0;border-bottom:1px solid var(--bd-2);font-size:10px;color:var(--fg-3rd)">'+tag+escHtml(JSON.stringify(r))+'</div>';
       }).join('');
     }
     if (!reportHtml) {
@@ -1892,6 +2008,10 @@ function showEvolutionModal() {
           '<div style="flex:1;text-align:center;padding:8px;border:1px solid var(--bd-2);border-radius:8px">'+
             '<div style="font-size:20px;font-weight:700;color:var(--warning)">'+pending+'</div>'+
             '<div style="font-size:10px;color:var(--fg-3rd)">待评估数</div>'+
+          '</div>'+
+          '<div style="flex:1;text-align:center;padding:8px;border:1px solid var(--bd-2);border-radius:8px">'+
+            '<div style="font-size:20px;font-weight:700;color:var(--danger,#e5484d)">'+gateBlocks+'</div>'+
+            '<div style="font-size:10px;color:var(--fg-3rd)" title="接口吐了思考过程/空正文/坏格式，被输出校验拦下换接口的次数">闸门拦截</div>'+
           '</div>'+
         '</div>'+
         '<div style="max-height:30vh;overflow-y:auto;margin:12px 0">'+reportHtml+'</div>'+
@@ -2024,8 +2144,10 @@ function fallbackCopy(text) {
 
 // ── 配置加载/保存 ──
 function loadConfig() {
+  // 必须把 fetch 的 promise 一路 return 出去：addAccount 要在
+  // 新账号真的进列表之后才能把它选为当前项
   // 按当前数据范围取"生效值"：选中账号2 时面板要显示 基准+账号2覆盖 之后的结果
-  fetch('/api/config' + scopeQs()).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(cfg) {
+  return fetch('/api/config' + scopeQs()).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(cfg) {
     var incoming = (cfg && cfg.config) || cfg;
     // 后端正常返回时一定带 accounts。缺它就说明这次响应是异常的（接口 500 兜了个
     // {status:ok}、或被别的脚本拦住），整份赋给 config 会把账号列表、招呼语、
@@ -2045,11 +2167,11 @@ function loadConfig() {
     config.rate_limit = Object.assign({enabled:true,max_per_hour:30,max_per_day:150}, config.rate_limit);
     config.retry = Object.assign({max_attempts:3,base_delay:2,backoff_factor:2}, config.retry);
     if (!config.ai) config.ai = {};
-    config.ai = Object.assign({enabled:true,api_key:'',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,analyze_max_tokens:1600,providers:[]}, config.ai);
+    config.ai = Object.assign({enabled:true,api_key:'',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,analyze_max_tokens:1600,probe_max_per_round:5,providers:[]}, config.ai);
     if (!config.resume) config.resume = {};
     config.resume = Object.assign({school:'某某大学',major:'统计学',degree:'本科',skills:['Excel','SQL','Python','数据分析'],experience:'负责业务数据报表与洞察分析',target_position:'数据分析师',self_intro:'做事严谨细心，学习能力强'}, config.resume);
     if (!config.accounts || !config.accounts.length) {
-      config.accounts = [{name:'主账号',enabled:true,cookie_file:'zhipin_cookies.json',image_files:[],message_interval_min:3,message_interval_max:8,jobs:[{enabled:true,city:'长沙',query:'数据分析',scroll_pages:5,greeting_message:defaultGreeting}]}];
+      config.accounts = [{name:'主账号',enabled:true,cookie_file:'zhipin_cookies.json',image_files:[],message_interval_min:3,message_interval_max:8,jobs:[{enabled:true,city:'长沙',query:'数据分析',scroll_pages:5,greeting_message:''}]}];
     }
     // 填充每个账号和岗位的默认值
     config.accounts.forEach(function(acc) {
@@ -2063,7 +2185,7 @@ function loadConfig() {
         job.city = job.city || '长沙';
         job.query = job.query || '';
         job.scroll_pages = job.scroll_pages || 5;
-        job.greeting_message = job.greeting_message || defaultGreeting;
+        job.greeting_message = job.greeting_message || '';
       });
     });
     renderAccounts();
@@ -2073,6 +2195,9 @@ function loadConfig() {
     renderJobs();
     updateSbarJobs();
     renderConfigPreview();
+    // 数据范围条依赖 config.accounts，而开机时 loadMetrics 与 loadConfig 是并发的：
+    // metrics 先回来时账号列表还是空的，切换条就不出现，要等 20 秒轮询才补上
+    renderMetricsScope();
     addLog('SUCCESS', '配置已加载');
   }).catch(function(e){console.error('loadConfig:',e);addLog('ERROR','加载配置失败: '+e.message)});
 }
@@ -2401,6 +2526,7 @@ function checkAccountCookie(idx) {
         cookieStatusCache[idx] = {checking: false, valid: null,
                                   reason: (data && data.message) || '检测失败'};
         renderAccounts();
+        renderMetricsScope();
         toast('检测失败：' + ((data && data.message) || '接口异常'), 'err');
         return;
       }
@@ -2643,7 +2769,7 @@ let editingJobIdx = -1;
 
 function addJob() {
   editingJobIdx = -1;
-  showJobModal({enabled:true,city:'长沙',query:'数据分析',scroll_pages:5,greeting_message:defaultGreeting});
+  showJobModal({enabled:true,city:'长沙',query:'数据分析',scroll_pages:5,greeting_message:''});
 }
 
 function editJob(i) {
@@ -2663,7 +2789,7 @@ function showJobModal(job) {
       '<div class="modal-field"><label>城市</label><input id="modalCity" value="'+escHtml(job.city||'')+'" placeholder="例如: 长沙" list="cityList"><datalist id="cityList"></datalist></div>'+
       '<div class="modal-field"><label>搜索关键词</label><input id="modalQuery" value="'+escHtml(job.query||'')+'" placeholder="例如: 数据分析"></div>'+
       '<div class="modal-field"><label>翻页数</label><input id="modalPages" type="number" value="'+(job.scroll_pages||5)+'" min="1" max="20"></div>'+
-      '<div class="modal-field"><label>打招呼消息</label><textarea id="modalGreeting" placeholder="输入自定义打招呼消息" style="min-height:80px">'+escHtml(job.greeting_message||defaultGreeting)+'</textarea></div>'+
+      "<div class=\"modal-field\"><label>打招呼消息（岗位专属，留空则用账号级招呼语）</label>"+"<textarea id=\"modalGreeting\" placeholder=\"留空=用账号级招呼语；两级都空则该岗位不发送\" style=\"min-height:80px\">"+escHtml(job.greeting_message||'')+'</textarea></div>'+
       '<div class="modal-field"><label>作品图片</label>'+
         '<div class="side-btn-row" style="flex-wrap:wrap;margin-bottom:6px">'+
           '<button class="side-btn side-btn-ghost side-btn-sm" onclick="document.getElementById(\'jobImageInput\').click()">上传图片</button>'+
@@ -2784,7 +2910,7 @@ function saveJobModal() {
   const city = document.getElementById('modalCity').value.trim();
   const query = document.getElementById('modalQuery').value.trim();
   const pages = parseInt(document.getElementById('modalPages').value) || 5;
-  const greeting = document.getElementById('modalGreeting').value.trim() || defaultGreeting;
+  const greeting = document.getElementById('modalGreeting').value.trim();
   if (!city || !query) { addLog('ERROR','城市和关键词不能为空'); return; }
   const a = config.accounts[activeAccountIdx];
   if (!a) return;
@@ -2826,10 +2952,14 @@ function addAccount() {
     .then(function(r){return r.json()})
     .then(function(data) {
       if (data.status === 'ok') {
-        loadConfig();
-        activeAccountIdx = config.accounts.length - 1;
+        // 不能在 loadConfig 落地前算 accounts.length：那时还是旧长度，
+        // 新账号选不中、红点也要等下一轮轮询才亮
+        loadConfig().then(function() {
+          activeAccountIdx = config.accounts.length - 1;
+          setDataScope(String(activeAccountIdx));
+          addLog('INFO', '已添加新账号: ' + name + '，已切到它的数据范围，请在左侧点「登录」扫码');
+        });
         refreshCookieStates(true);
-        addLog('INFO', '已添加新账号: ' + name);
       } else { addLog('ERROR', '添加账号失败: ' + (data.message||'')); }
     })
     .catch(function(e){addLog('ERROR', '添加账号异常: ' + e.message)});
@@ -2937,12 +3067,6 @@ function confirmLoginAs(idx) {
       setTimeout(function(){ refreshCookieStates(true); }, 800);
     })
     .catch(function(e){addLog('ERROR', '确认登录失败: ' + e.message)});
-}
-
-function confirmLogin() {
-  const btn = document.getElementById('btnConfirmLogin');
-  if (btn) btn.style.display = 'none';
-  confirmLoginAs(loginPendingIdx);
 }
 
 function doConfirmLogin() {
@@ -3144,6 +3268,7 @@ function setDataScope(v) {
   dataScope = v;
   if (v !== 'all') activeAccountIdx = Number(v);
   _metricsLastLoad = Date.now();
+  renderMetricsScope();   // 点下去必须先自己高亮：别等 metrics 回来才动
   // 配置面板必须跟着换：账号级覆盖不同，AI 输入框停在上一个号的值，
   // 就是"看着改了、其实改到了别的号"
   loadConfig();
@@ -3161,6 +3286,7 @@ function applyScopeToView() {
   loadGreetRecords();
   loadReplyChatList();
   loadAiQuality();
+  loadAiReview();
   updatePauseButtons();
   setControls(scopeRunning());
 }
@@ -3308,7 +3434,26 @@ function buildGreetRowHtml(data) {
         }
       }
       skipReasonHtml = '<span style="color:var(--fg-3rd);font-size:11px;white-space:normal;word-break:break-word;display:inline-block;line-height:1.4" title="'+escAttr(reasonText)+'">'+escHtml(reasonText)+'</span>';
+      // 判分复盘：追问到的四段单独展开，不拼进上面的原因串——
+      // skip_reason 限长 200 字，四段挤进去会互相顶掉
+      var probe = data.ai_probe || null;
+      if (probe && probe.blocking_requirement) {
+        skipReasonHtml += '<details class="greet-probe"><summary>🔎 追问原因</summary>'
+          + '<div class="greet-probe-body">'
+          + '<div><b>卡在哪条硬性要求</b>' + escHtml(probe.blocking_requirement) + '</div>'
+          + '<div><b>简历缺的证据</b>' + escHtml(probe.evidence_missing || '—') + '</div>'
+          + '<div><b>改简历能补吗</b>' + (probe.fixable_by_resume ? '能（会做但没写清楚）' : '不能（确实不具备）') + '</div>'
+          + '<div><b>补齐后模型给</b>' + escHtml(String(probe.score_if_fixed || '—')) + ' 分</div>'
+          + '</div></details>';
+      }
     }
+  }
+  // 第二种打招呼机制：平台自己把招呼发出去了、我们没能进会话核对文案。
+  // 这一句必须出现在"成功"行上 —— 否则界面只有个绿勾，用户不知道少核对了一步
+  if (data.auto_greet_note) {
+    skipReasonHtml = '<span style="color:var(--fg-3rd);font-size:11px;white-space:normal;'
+      + 'word-break:break-word;display:inline-block;line-height:1.4" title="'
+      + escAttr(data.auto_greet_note) + '">' + escHtml(data.auto_greet_note) + '</span>';
   }
   return '<td title="'+escAttr(timeFull)+'">'+escHtml(timeDisplay)+'</td>'
     +'<td title="'+escAttr(data.job_name||'')+'">'+escHtml(data.job_name||'—')+'</td>'
@@ -3357,6 +3502,8 @@ function toGreetRow(data) {
     skip_reason: data.skip_reason || '',
     ai_score: data.ai_score || '',
     ai_reason: data.ai_reason || '',   // AI 给出的具体判定原因，比 skip_reason 干净
+    ai_probe: data.ai_probe || null,   // 判分复盘：追问到的"到底卡在哪一条"
+    auto_greet_note: data.auto_greet_note || '',   // 第二种打招呼机制的留痕
     actual_greeting_sent: data.actual_greeting_sent || data.greeting || '',
     account_index: Number(data.account_index || 0),
     account_name: data.account_name || ''
@@ -3527,7 +3674,10 @@ function renderBossChatList(groups) {
     var avatarText = chatName ? chatName.charAt(0) : '?';
     var preview = g.last_message || g.last_reply || '';
     if (preview.length > 30) preview = preview.substring(0, 30) + '...';
-    var unread = g.unread_count || 0;
+    // 未读只画 BOSS 自己报过的数（回复轮次扫侧栏时记下的）。没观察到过就留空：
+    // 画一个本地猜出来的数，只会让人以为"又是面板对不上"
+    var unread = (g.unread_count === null || g.unread_count === undefined)
+                 ? null : Number(g.unread_count);
     var lastTime = g.last_time || g.updated_at || '';
     var isActive = (activeBossChat === key) ? ' active' : '';
     var badgeCls = unread > 0 ? 'boss-chat-item-badge' : 'boss-chat-item-badge badge-zero';
@@ -3544,7 +3694,7 @@ function renderBossChatList(groups) {
     html += '  </div>';
     html += '  <div class="boss-chat-item-meta">';
     html += '    <div class="boss-chat-item-time">'+escHtml(formatChatTimeShort(lastTime))+'</div>';
-    html += '    <div class="'+badgeCls+'">'+unread+'</div>';
+    html += '    <div class="'+badgeCls+'">'+(unread === null ? '' : unread)+'</div>';
     html += '  </div>';
     html += '</div>';
   });
@@ -3557,9 +3707,16 @@ function renderBossChatList(groups) {
 // 对话并成一个，界面上的顺序和内容就都对不上线上了。
 function chatKey(g) {
   if (!g) return '';
-  if (g.chat_id) return g.chat_id;
   var tail = g.company || g.job_name || '';
-  return tail ? ((g.chat_name || '') + '#' + tail) : (g.chat_name || '');
+  var base = g.chat_id || ((g.chat_name || '') + (tail ? '#' + tail : ''));
+  // 「全部账号」下两个号可以聊到同一个 HR（实测：李女士 @ 深圳市极客星球电… 两个号各存一份，
+  // 9 条与 7 条）。只按 姓名+公司 当键，后写的那份会覆盖前一份——界面上少一整段对话，
+  // 标已读也会标到另一个号上。选中具体账号时不存在撞车，键保持原样，历史行为不变。
+  if (dataScope === 'all') {
+    var idx = (g.account_index === null || g.account_index === undefined) ? 0 : g.account_index;
+    return base + '@a' + idx;
+  }
+  return base;
 }
 
 function chatParams(key) {
@@ -3574,7 +3731,24 @@ function chatParams(key) {
 }
 
 // 选中某个聊天，渲染右侧聊天内容
+// 外面传进来的可能是"裸 chat_id"（记录表跳转、socket 事件、外部脚本），而「全部账号」下
+// 缓存键带着 @a账号 后缀。两种都认，否则点了列表项以外的入口就渲染成空会话。
+// 同一个裸 ID 在两个号上都有时，取最近更新的那一路——调用方想要确定哪一路就该传带账号的键。
+function resolveChatKey(key) {
+  if (!key || replyChatCache[key]) return key;
+  var best = '', bestTime = '';
+  Object.keys(replyChatCache).forEach(function(k) {
+    var at = k.lastIndexOf('@a');
+    if (at <= 0 || k.slice(0, at) !== key) return;
+    var g = replyChatCache[k] || {};
+    var t = String(g.last_time || g.updated_at || '');
+    if (t >= bestTime) { bestTime = t; best = k; }
+  });
+  return best || key;
+}
+
 function selectBossChat(key) {
+  key = resolveChatKey(key);
   activeBossChat = key;
   // 更新左侧选中状态
   var items = document.querySelectorAll('.boss-chat-item');
@@ -3612,6 +3786,7 @@ function toggleEngineMarks(on) {
 
 // 渲染右侧聊天内容（消息气泡）
 function renderBossChatDetail(key) {
+  key = resolveChatKey(key);
   var main = document.getElementById('bossChatMain');
   if (!main) return;
   var g = replyChatCache[key];
@@ -3884,17 +4059,27 @@ function toggleChatCard(card) {
 
 // 实时事件只有"陈女士 + 岗位"这点信息，而缓存按 chat_id 存；
 // 同昵称不同岗位是两条会话，按昵称直接索引会写进错的那条。
-function findChatKey(chatName, jobName, company) {
+function findChatKey(chatName, jobName, company, account) {
   var keys = Object.keys(replyChatCache);
+  var loose = '';
   for (var i = 0; i < keys.length; i++) {
     var g = replyChatCache[keys[i]];
     if (!g || g.chat_name !== chatName) continue;
     // 同名有几路时先认公司，再认岗位；都认不出才算新的一路，
     // 免得把 A 公司的回复并进 B 公司的会话里
-    if (company && g.company) { if (g.company === company) return keys[i]; continue; }
+    if (company && g.company) {
+      if (g.company !== company) continue;
+      // 两个号聊到同一家公司的同一个人时，账号对得上的才是这一路
+      if (account !== undefined && account !== null && g.account_index === account) return keys[i];
+      if (!loose) loose = keys[i];
+      continue;
+    }
     if (!jobName || !g.job_name || g.job_name === jobName) return keys[i];
   }
-  return chatName + '#' + (company || jobName || '');
+  if (loose) return loose;
+  var bare = chatName + '#' + (company || jobName || '');
+  if (dataScope === 'all') return bare + '@a' + (account || 0);
+  return bare;
 }
 
 // 实时新增/更新一条回复记录到聊天列表
@@ -3929,7 +4114,8 @@ function addReplyRecord(data){
 
   // 更新内存缓存（按会话身份，不按昵称）
   var jobName = data.job_name || '';
-  var key = findChatKey(chatName, jobName, data.company || '');
+  var key = findChatKey(chatName, jobName, data.company || '',
+                        data.account_index !== undefined ? data.account_index : data.account);
   var g = replyChatCache[key];
   if (g) {
     g.records.unshift(newRecord);
@@ -4633,6 +4819,10 @@ loadConfig();
 // 指标卡走 /api/metrics 的持久计数器；AI 接口体检结果开机拉一次
 loadMetrics();
 loadAiHealth();
+// 判分质量/判分复盘开机就要填：applyScopeToView 只在切数据范围或增删账号时跑，
+// 页面刚打开那阵两行永远停在"未统计"（实测复现）
+loadAiQuality();
+loadAiReview();
 setInterval(loadMetrics, 20000);
 // 启动通知红点轮询（每30秒刷新一次）
 startNotifPolling();

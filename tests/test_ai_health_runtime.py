@@ -9,6 +9,17 @@ import json
 
 from types import SimpleNamespace
 
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def _fresh_cooldown_table():
+    """AI 冷却表跨账号共享（用例之间也会共享），每个用例起一张干净的。"""
+    from boss_bot.greet_engine import reset_shared_cooldown
+    reset_shared_cooldown()
+    yield
+    reset_shared_cooldown()
+
 
 def _provider(name="慢接口"):
     return SimpleNamespace(name=name, model="m-slow", api_base="http://slow/v1")

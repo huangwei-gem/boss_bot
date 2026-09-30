@@ -618,10 +618,14 @@ class MessageStore:
                 account_index = data.get(
                     "account_index", int(m.group(1)) if m else 0)
                 # 计算未读数：sender=hr 且未读标记
-                unread_count = sum(1 for m in msgs
-                                    if m.get("sender") == "hr"
-                                    and not m.get("is_read", False)
-                                    and not m.get("is_mine", False))
+                # 未读只认 BOSS 自己报的那个数（回复轮次扫侧栏时记进 unread_on_boss）。
+                # 以前这里是"本地数 sender==hr 且没标已读的条数"，实测账号1 显示 53、
+                # 账号2 显示 118，而 BOSS 自己说 13 / 1 —— 我们只存了点开的那 2~3 条，
+                # 从没点开的会话里的 HR 消息永远算未读，越攒越离谱。宁可报"不知道"，
+                # 也不给一个和线上对不上的数：没观察到就是 None，界面不画红点。
+                unread_count = data.get("unread_on_boss")
+                if unread_count is not None:
+                    unread_count = int(unread_count)
                 # 最新消息
                 last_msg = msgs[-1] if msgs else None
                 last_time = ""
@@ -670,6 +674,29 @@ class MessageStore:
             write_json_atomic(path, data)
             count += 1
         return count
+
+    def set_boss_unread(self, chat_name: str, count, job_name: str = "",
+                        company: str = ""):
+        """记下"上一次在 BOSS 侧栏上看到这一路有几个未读"。
+
+        只在扫到线上真实标记时调用（回复轮次扫侧栏 = N，点进去读完 = 0）。
+        面板自己的 mark_read 不动它：那是我们本地的已读，BOSS 那边没变。
+        """
+        cid = self.chat_id(chat_name, company, job_name)
+        lock = self._get_lock(cid)
+        with lock:
+            path = self._read_path(chat_name, company, job_name)
+            if not path.exists():
+                return
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                data["unread_on_boss"] = int(count)
+                write_json_atomic(path, data)
+                self._cache_put(cid, data)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"记录线上未读数失败: {e}")
 
     def mark_chat_read(self, chat_name: str, job_name: str = "",
                        company: str = ""):

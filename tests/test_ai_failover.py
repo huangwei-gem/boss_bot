@@ -17,6 +17,15 @@ from unittest.mock import patch
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def _fresh_cooldown_table():
+    """冷却表现在是进程共享的（跨账号要让路），用例之间必须各起各的。"""
+    from boss_bot.greet_engine import reset_shared_cooldown
+    reset_shared_cooldown()
+    yield
+    reset_shared_cooldown()
+
+
 def payload(content="", finish="stop", reasoning=None, extra=None):
     msg = {"content": content}
     if reasoning is not None:
@@ -486,10 +495,19 @@ class ReplyEmptyBodyTest:
         )})()
         return e, client
 
-    def test_正文为空时用思考内容(self):
-        e, client = self._call(None, "  您好，薪资可以谈  ")
+    def test_正文为空时绝不拿思考内容当回复(self):
+        """2026-09-30 真发出去了 7 条思考过程（最长 507 字，含"首先，分析对话上下文："）。
+
+        旧断言是"正文为空就用 reasoning_content"——推理模型的 reasoning 里写的是
+        它自己怎么分析这轮对话，不是要发给 HR 的话。发出去等于把草稿纸递给对方。
+        现在必须抛错，让容灾链换下一个接口。
+        """
+        e, client = self._call(None, "用户是求职者，正在BOSS直聘上与招聘方\"肖瑾\"聊岗位。\n\n"
+                                    "分析：\n- HR表示有兴趣\n根据要求：\n- 简洁")
         with patch("boss_bot.reply_engine.build_user_prompt", return_value="up"):
-            assert e._call_chat(client, "m", "薪资多少", "王经理", "数据分析师", []) == "您好，薪资可以谈"
+            with pytest.raises(Exception) as ei:
+                e._call_chat(client, "m", "薪资多少", "王经理", "数据分析师", [])
+        assert "正文" in str(ei.value)
 
     def test_正文和思考都空要报错换接口(self):
         e, client = self._call("", None)
@@ -859,7 +877,8 @@ class HealthReasonOrderTest:
         from boss_bot.ai_health import classify_error
         msg = ("Error code: 429 - {'detail': {'error': {'message': "
                "'Too many requests for model', 'type': 'rate_limit_exceeded'}}}")
-        assert classify_error(msg) == "额度用尽或被限流"
+        assert classify_error(msg) == ("被限流（429，频率太高；稍后重测就会回来，"
+                                "不是 Key 的问题）")
 
     def test_404要说清模型名也可能导致404(self):
         """实测 NVIDIA 用 glm-5-3 回 '404 page not found'，

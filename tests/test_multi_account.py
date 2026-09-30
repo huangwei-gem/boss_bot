@@ -14,6 +14,7 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
+from tests.test_config_hot_reload import flask_app  # noqa: F401  跨文件复用夹具
 from boss_bot.unified_config import (
     UnifiedConfig, AccountConfig, JobConfig,
 )
@@ -601,3 +602,58 @@ class AccountStatusTruthfulTest:
         import os
         loop = self._loop()
         assert os.path.isabs(loop._cookie_file()), loop._cookie_file()
+
+
+class GroupedChatsAcrossAccountsTest:
+    """两个号聊到同一家公司的同一个人时，合并视图必须各列一路。
+
+    真机实测撞上的：messages/李女士_深圳市极客星球电___.json（账号1，9 条）与
+    messages/a1_同名（账号2，7 条）的 chat_id 完全一样，而
+    /api/reply_records/grouped 拿 chat_id 当字典键——后写的盖掉先写的，界面上
+    少一整段对话，点开读到的还是另一个号的话。
+    """
+
+    def _write(self, store, account, texts):
+        from pathlib import Path
+        d = Path(store.base_dir)
+        d.mkdir(parents=True, exist_ok=True)
+        cid = store.chat_id("李女士", "深圳市极客星球电子科技有限公司")
+        name = ("李女士_深圳市极客星球电___.json" if account == 0
+                else "a1_李女士_深圳市极客星球电___.json")
+        (d / name).write_text(json.dumps({
+            "chat_name": "李女士", "chat_id": cid, "account_index": account,
+            "company": "深圳市极客星球电...", "job_name": "数据分析师",
+            "updated_at": "2026-09-2%d 10:00:00" % account,
+            "messages": [{"kind": "bubble", "is_mine": bool(i % 2), "text": t,
+                          "time": "10:0%d" % i, "mid": 100 + i,
+                          "sender": "bot" if i % 2 else "hr",
+                          "timestamp": "2026-09-2%d 10:0%d:00" % (account, i)}
+                         for i, t in enumerate(texts)],
+        }, ensure_ascii=False), encoding="utf-8")
+        return cid
+
+    def test_同一个HR在两个号上各出一路(self, flask_app):
+        from boss_bot.message_store import MessageStore
+        app, _tmp = flask_app
+        store = MessageStore(account_index=0)
+        cid = self._write(store, 0, ["账号1的话-1", "账号1的话-2", "账号1的话-3"])
+        self._write(store, 1, ["账号2的话-1", "账号2的话-2"])
+        groups = app.app.test_client().get("/api/reply_records/grouped").get_json()["groups"]
+        hits = [g for g in groups if g.get("chat_id") == cid]
+        assert len(hits) == 2, f"两个号各一路，界面却只列出 {len(hits)} 路"
+        by_acct = {int(g.get("account_index") or 0): g for g in hits}
+        assert [m["text"] for m in by_acct[0]["messages"]] == \
+            ["账号1的话-1", "账号1的话-2", "账号1的话-3"], "账号1 读到了别人的对话"
+        assert [m["text"] for m in by_acct[1]["messages"]] == \
+            ["账号2的话-1", "账号2的话-2"], "账号2 读到了别人的对话"
+
+    def test_单账号范围下只列本号那一路(self, flask_app):
+        from boss_bot.message_store import MessageStore
+        app, _tmp = flask_app
+        store = MessageStore(account_index=0)
+        cid = self._write(store, 0, ["账号1的话-1"])
+        self._write(store, 1, ["账号2的话-1"])
+        groups = app.app.test_client().get(
+            "/api/reply_records/grouped?account=1").get_json()["groups"]
+        hits = [g for g in groups if g.get("chat_id") == cid]
+        assert len(hits) == 1 and int(hits[0]["account_index"]) == 1, hits

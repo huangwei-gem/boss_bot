@@ -26,6 +26,8 @@ PROBE_MAX_TOKENS = 200
 PROBE_TIMEOUT = 45
 # 逐个探测之间的间隔，避免同一 key 连续请求被限流
 PROBE_INTERVAL = 0.5
+# 判到限流后隔多久重打一次：429 是频率问题，等十几秒基本就回来了
+RETRY_AFTER_RATE_LIMIT = 12
 
 STATUS_AVAILABLE = "available"
 STATUS_UNAVAILABLE = "unavailable"
@@ -46,11 +48,15 @@ def classify_error(text: str) -> str:
         return "需要付费额度（402）：该模型不免费或账户余额不足"
     if any(k in t for k in ("403", "forbidden", "permission")):
         return "无权限访问该模型"
-    if any(k in t for k in ("429", "rate limit", "quota", "insufficient")):
+    if any(k in t for k in ("429", "rate limit", "too many requests")):
         # 这条必须在 404/模型名 之前：限流报文里常带 "model" 字样
         # （实测 AMD 回 429 'Too many requests for model'，先判 404 分支会说成"模型名不存在"，
         # 人就跑去改一个没坏的模型名）
-        return "额度用尽或被限流"
+        # 也不能和"额度用尽"并成一句：429 是频率问题，稍后重测就回来，写成都要换 Key
+        # 会让人去换一把本来好着的 Key（2026-09-30 体检 AMD 那条就是这么被误判的）
+        return "被限流（429，频率太高；稍后重测就会回来，不是 Key 的问题）"
+    if any(k in t for k in ("quota", "insufficient")):
+        return "额度用尽（需要充值或换 Key）"
     if any(k in t for k in ("404", "not found", "model", "does not exist")) \
             and "model" in t:
         return "模型名不存在"
@@ -58,8 +64,10 @@ def classify_error(text: str) -> str:
         # NVIDIA 实测：base_url 是对的、模型名写错（glm-5-3 → z-ai/glm-5.3）也回
         # '404 page not found'，所以两种可能都要点出来，并给核对办法
         return "404：模型名或接口地址(base_url)不对，用 GET {base_url}/models 核对官方模型名"
-    if any(k in t for k in ("429", "rate limit", "quota", "insufficient")):
-        return "额度用尽或被限流"
+    if any(k in t for k in ("429", "rate limit", "too many requests")):
+        return "被限流（429，频率太高；稍后重测就会回来，不是 Key 的问题）"
+    if any(k in t for k in ("quota", "insufficient")):
+        return "额度用尽（需要充值或换 Key）"
     if any(k in t for k in ("timeout", "timed out")):
         return "请求超时"
     if any(k in t for k in ("connection", "unreachable", "getaddrinfo",
@@ -137,8 +145,12 @@ def probe_one(provider: dict, timeout: int = PROBE_TIMEOUT) -> dict:
             out["error"] = str(e)[:300]
             out["reason"] = classify_error(str(e))
             logger.debug(f"AI 体检失败 [{name}] 第 {attempt} 次: {e}")
-            if out["reason"] != "请求超时" or attempt == 2:
+            # 超时和 429 都属于"等一会再打"的事：一次抽样就标成不可用，运行时的
+            # 容灾链会直接跳过一把其实好着的 Key，可用面越缩越小
+            retriable = out["reason"] == "请求超时" or out["reason"].startswith("被限流")
+            if not retriable or attempt == 2:
                 return out
+            time.sleep(RETRY_AFTER_RATE_LIMIT if out["reason"].startswith("被限流") else 1)
     return out
 
 
