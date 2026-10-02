@@ -1962,6 +1962,12 @@ function saveTemplatesModal() {
 }
 
 // ── 自进化弹窗 ──
+function fmtEvoTime(ts) {
+  if (!ts) return '';
+  var s = String(ts).replace('T', ' ');
+  var m = s.match(/^(\d{4})-(\d{2})-(\d{2})[ ](\d{2}):(\d{2})/);
+  return m ? m[2]+'-'+m[3]+' '+m[4]+':'+m[5] : s.slice(0, 16);
+}
 function showEvolutionModal() {
   Promise.all([
     fetch('/api/evolution/status').then(function(r){return r.json()}),
@@ -2008,14 +2014,39 @@ function showEvolutionModal() {
     if (adjustments.length > 0) {
       reportHtml += '<div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin-bottom:6px">策略调整历史</div>';
       reportHtml += adjustments.slice(0, 5).map(function(a) {
-        return '<div style="padding:4px 0;border-bottom:1px solid var(--bd-2);font-size:10px;color:var(--fg-3rd)">'+escHtml(JSON.stringify(a))+'</div>';
+        var head, body = '';
+        if (a.action) {
+          head = '<span style="color:var(--fg-4th)">'+escHtml(fmtEvoTime(a.time))+'</span> '+escHtml(a.action);
+          if (a.reason) body = escHtml(a.reason);
+        } else {
+          head = '<span style="color:var(--fg-4th)">'+escHtml(fmtEvoTime(a.timestamp))+'</span> 规则「'+escHtml(a.rule_key||'')+'」调整建议';
+          body = escHtml(a.old_value||'') + ' → ' + escHtml(a.new_value||'')
+               + (a.reason ? '（'+escHtml(a.reason)+'）' : '')
+               + (a.auto_applied ? '' : ' · <span style="color:var(--warning)">待人工采纳</span>');
+        }
+        return '<div style="padding:6px 0;border-bottom:1px solid var(--bd-2);font-size:11px;color:var(--fg-2nd);line-height:1.5">'
+             + '<div>'+head+'</div>'
+             + (body ? '<div style="color:var(--fg-3rd);margin-top:2px;font-size:10px">'+body+'</div>' : '')
+             + '</div>';
       }).join('');
     }
     if (recentRecords.length > 0) {
       reportHtml += '<div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin:8px 0 6px">最近回复记录</div>';
       reportHtml += recentRecords.slice(0, 5).map(function(r) {
-        var tag = r.kind === 'gate_block' ? '<span style="color:var(--danger,#e5484d)">[闸门拦截]</span> ' : '';
-        return '<div style="padding:4px 0;border-bottom:1px solid var(--bd-2);font-size:10px;color:var(--fg-3rd)">'+tag+escHtml(JSON.stringify(r))+'</div>';
+        var eff = { positive: ['有效', 'var(--success,#46a758)'], neutral: ['一般', 'var(--fg-3rd)'],
+                    negative: ['无效', 'var(--danger,#e5484d)'], ignored: ['已读不回', 'var(--warning)'] }[r.effect];
+        var effHtml = '<span style="color:'+(eff ? eff[1] : 'var(--fg-4th)')+'">'+(eff ? eff[0] : '待评估')+'</span>';
+        var kindHtml = r.kind === 'gate_block' ? ' <span style="color:var(--danger,#e5484d)">闸门拦截</span>' : '';
+        var html = '<div style="padding:6px 0;border-bottom:1px solid var(--bd-2);font-size:11px;line-height:1.5">'
+                 + '<div style="font-size:10px;color:var(--fg-4th)">'+escHtml(fmtEvoTime(r.timestamp))+' · '+effHtml+kindHtml+'</div>'
+                 + '<div style="color:var(--fg-2nd);margin-top:2px">“'+escHtml((r.reply_text||'').replace(/\s+/g,' ').trim())+'”</div>';
+        if (r.note) {
+          html += '<div style="color:var(--danger,#e5484d);margin-top:2px;font-size:10px">拦截原因：'+escHtml(r.note)+'</div>';
+        }
+        if (r.hr_response) {
+          html += '<div style="color:var(--fg-3rd);margin-top:2px;font-size:10px">HR 回复：'+escHtml(r.hr_response)+'</div>';
+        }
+        return html + '</div>';
       }).join('');
     }
     if (!reportHtml) {
