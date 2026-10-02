@@ -12,6 +12,7 @@
 """
 import json
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import pytest
 
@@ -177,7 +178,10 @@ class PurifyTest:
 
     def test_真实数据能过purify(self, tmp_path):
         """用生产文件的真实脏记录跑一遍，确认纠正方向正确。"""
-        src = json.load(open("data/evolution_data_account_1.json", encoding="utf-8"))
+        # 取快照而不是直接读生产文件：面板在跑就会持续重写它，断言会随机飘
+        snapshot = tmp_path / "prod_snapshot.json"
+        snapshot.write_bytes(Path("data/evolution_data_account_1.json").read_bytes())
+        src = json.load(open(snapshot, encoding="utf-8"))
         e = _engine(tmp_path, src["reply_records"], src["reply_stats"],
                     src["template_effectiveness"])
         e.purify_records()
@@ -191,7 +195,5 @@ class PurifyTest:
         assert by_id[9].get("excluded") is True
         assert by_id[21].get("excluded") is True
         assert by_id[50].get("excluded") is True
-        # 原文件不动，归档在新目录
-        original = json.load(
-            open("data/evolution_data_account_1.json", encoding="utf-8"))
-        assert original["reply_records"][0]["effect"] == "positive"
+        # purify 不动读进来的那份数据，归档写到引擎自己的目录
+        assert json.load(open(snapshot, encoding="utf-8")) == src

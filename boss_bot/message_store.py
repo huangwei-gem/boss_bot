@@ -31,6 +31,69 @@ _JOB_NOISE = re.compile(r"(查看职位|查看详情|职位详情|了解更多|�
 # data-mid 是雪花 id（实测 15 位，390857683964420），同一会话内自上而下单调递增
 _MID_RE = re.compile(r"^\d{6,}$")
 
+# 打招呼算发送成功的状态（reply_record 里 skipped/failed 不算发出去过）
+_GREET_SENT = ("applied", "completed")
+_sent_cache: dict = {}
+
+
+def _greet_records_path() -> Path:
+    from boss_bot.reply_record import GREET_RECORDS_FILE
+    return GREET_RECORDS_FILE
+
+
+def _reply_records_path() -> Path:
+    from boss_bot.reply_record import REPLY_RECORDS_FILE
+    return REPLY_RECORDS_FILE
+
+
+def _machine_sent_texts() -> dict:
+    """按账号取「引擎发出去过的文本」→ 来源标签。
+
+    招呼语只写 greet_records.json、回复只写 reply_records.json，都不写消息文件，
+    所以线上抓回来的我方气泡没有自记条目可配对，只能拿这两份历史记录比对，
+    才分得清哪条是机器发的、哪条是人自己敲的。
+    两份文件都是 MB 级，按 (路径, mtime, size) 缓存，一次同步不重复读盘。
+    """
+    paths = (_greet_records_path(), _reply_records_path())
+    stamp = []
+    for p in paths:
+        try:
+            st = p.stat()
+            stamp.append((str(p), st.st_mtime_ns, st.st_size))
+        except OSError:
+            stamp.append((str(p), 0, 0))
+    key = tuple(stamp)
+    cached = _sent_cache.get("v")
+    if cached and cached[0] == key:
+        return cached[1]
+
+    grouped: dict = {}
+
+    def put(acc, text, source):
+        text = (text or "").strip()
+        if text:
+            grouped.setdefault(int(acc or 0), {}).setdefault(text, source)
+
+    try:
+        with open(paths[0], "r", encoding="utf-8") as f:
+            data = json.load(f)
+        for rec in (data.get("records") or []):
+            if rec.get("status") in _GREET_SENT:
+                put(rec.get("account_index"), rec.get("actual_greeting_sent"), "greet")
+    except Exception:
+        pass
+    try:
+        with open(paths[1], "r", encoding="utf-8") as f:
+            data = json.load(f)
+        for rec in (data.get("records") or []):
+            if not rec.get("is_skipped"):
+                put(rec.get("account_index"), rec.get("reply_content"),
+                    rec.get("reply_source") or "ai")
+    except Exception:
+        pass
+    _sent_cache["v"] = (key, grouped)
+    return grouped
+
 
 class MessageStore:
     """消息存储（JSON 文件持久化 + 内存缓存，线程安全）
@@ -316,6 +379,61 @@ class MessageStore:
         t = (msg.get("time") or msg.get("timestamp") or "").strip()
         return f"{content}|{t}"
 
+    def _reconcile_outgoing(self, msgs: list) -> list:
+        """把「自记的 bot 那条」和「线上抓回来的同一条」并成一条，并保住归属。
+
+        bot 发出去时我们自记一条（没有 mid），下次同步从页面抓回来的是带 mid 的
+        item-myself，_norm_msg 只能把它标成 me。两条去重键不同（content|time 与
+        mid|…），所以既去不掉、还把 AI 发的算成人工发的。
+
+        判据是同一会话内正文完全相同：把线上 mid 回填到自记那条上（此后按 mid 去重，
+        重复同步不再长第二条），丢弃抓取那条。对不上任何自记记录的抓取气泡才是人工。
+        同文多条时按列表位置就近配对，避免"人工又敲了一遍同样的话"被错并。
+
+        剩下的对不上号的再比一次历史记录：招呼语和早期回复都只写 greet_records /
+        reply_records，不写消息文件，文本与其中"发出去过"的记录完全相同就判 bot
+        （来源沿用记录里的，界面才分得清是招呼还是规则回复；存量数据也靠这条收敛）。
+        """
+        slots: dict = {}
+        for i, m in enumerate(msgs):
+            if m.get("sender") == "bot" and not m.get("mid") and (m.get("content") or "").strip():
+                slots.setdefault(m["content"].strip(), []).append(i)
+        drop = set()
+        for i, m in enumerate(msgs):
+            if not m.get("is_mine") or m.get("sender") != "me" or not m.get("mid"):
+                continue
+            c = (m.get("content") or "").strip()
+            cand = slots.get(c)
+            if not cand:
+                continue
+            j = min(cand, key=lambda k: abs(k - i))
+            cand.remove(j)
+            msgs[j]["mid"] = m["mid"]
+            if not msgs[j].get("time") and m.get("time"):
+                msgs[j]["time"] = m["time"]
+            drop.add(i)
+        greetings = _machine_sent_texts().get(self.account_index) or {}
+        if greetings:
+            for m in msgs:
+                if m.get("is_mine") and m.get("sender") == "me" \
+                   and not m.get("reply_source"):
+                    source = greetings.get((m.get("content") or "").strip())
+                    if source:
+                        m["sender"] = "bot"
+                        m["reply_source"] = source
+        return [m for i, m in enumerate(msgs) if i not in drop]
+
+    @staticmethod
+    def _same_sequence(a: list, b: list) -> bool:
+        """两条消息列表按去重键 + 归属逐条比对是否完全一致。"""
+        if len(a) != len(b):
+            return False
+        for x, y in zip(a, b):
+            if (MessageStore._msg_key(x), x.get("sender"), x.get("content")) != \
+               (MessageStore._msg_key(y), y.get("sender"), y.get("content")):
+                return False
+        return True
+
     def merge_messages(self, chat_name: str, new_messages: list,
                        job_name: str = "", company: str = "") -> int:
         """把页面读到的消息并进「姓名+公司」这一路会话。
@@ -333,8 +451,8 @@ class MessageStore:
         Returns:
             合并后的消息总数
         """
-        if not new_messages:
-            return len(self.get_messages(chat_name, job_name, company))
+        if not new_messages and not self._read_path(chat_name, company, job_name).exists():
+            return 0
 
         cid = self.chat_id(chat_name, company, job_name)
         lock = self._get_lock(cid)
@@ -365,7 +483,14 @@ class MessageStore:
                 seen_keys.add(key)
                 merged.append(norm)
 
+            merged = self._reconcile_outgoing(merged)
+            before = self._order_by_mid(
+                [self._norm_msg(m) for m in existing_msgs])
             merged = self._order_by_mid(merged)
+
+            # 空同步且一条没变时不写盘：轮询每次都重写用户数据文件没必要
+            if not new_messages and self._same_sequence(before, merged):
+                return len(merged)
 
             data["chat_name"] = chat_name
             data["chat_id"] = cid

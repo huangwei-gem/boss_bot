@@ -105,6 +105,8 @@ tools/full_test_report.md
 
 # 本地临时目录
 .scratch/
+# 网页抓取/供应商体检产物（含从外部导出库复制的 API Key，绝不能进版本库）
+.firecrawl/
 
 # 页面抓取与探测产物（脚本本地生成）
 tools/*_result.json

@@ -3753,6 +3753,7 @@ function getReplySourceLabel(replySource) {
   if (replySource === 'intent') return '意图匹配';
   if (replySource === 'default') return '兜底回复';
   if (replySource === 'manual') return '人工发送';
+  if (replySource === 'greet') return '机器招呼';
   if (replySource === 'skip') return '跳过';
   if (replySource === 'rejection') return '拒绝接受';
   if (replySource) return replySource;
@@ -3766,6 +3767,7 @@ function getReplySourceClass(replySource) {
   if (replySource === 'manual') return 'manual';
   if (replySource === 'default') return 'default';
   if (replySource === 'skip') return 'skip';
+  if (replySource === 'greet') return 'ai';
   return '';
 }
 
@@ -4082,8 +4084,15 @@ function renderBossMessageBubble(msg, chatName) {
     html += '  <div class="boss-msg-meta"><span class="boss-msg-time" title="' + escAttr(tFull) + '">' + escHtml(t) + '</span>';
     html += statusHtml;
     // 始终显示来源标签（包括 ai/rule/intent/default/manual/skip）
-    if (source) {
-      html += '<span class="boss-msg-source ' + getReplySourceClass(source) + '">' + escHtml(getReplySourceLabel(source)) + '</span>';
+    // 线上抓回来的气泡没有 source，按归属兜一个：bot=AI 发的，me=人工敲的
+    var srcLabel = getReplySourceLabel(source);
+    var srcCls = getReplySourceClass(source);
+    if (!source) {
+      if (sender === 'bot') { srcLabel = '机器自动'; srcCls = 'ai'; }
+      else if (sender === 'me') { srcLabel = '人工发送'; srcCls = 'manual'; }
+    }
+    if (srcLabel) {
+      html += '<span class="boss-msg-source ' + srcCls + '">' + escHtml(srcLabel) + '</span>';
     }
     html += '</div></div>';
     html += '</div>';

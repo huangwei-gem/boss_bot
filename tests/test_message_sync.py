@@ -28,6 +28,16 @@ def store():
     return MessageStore(base_dir=tempfile.mkdtemp(), account_index=0)
 
 
+@pytest.fixture(autouse=True)
+def _greet_records_absent(tmp_path, monkeypatch):
+    """默认把打招呼记录指到不存在的文件：归属判据不许读生产数据"""
+    from boss_bot import message_store
+    monkeypatch.setattr(message_store, "_greet_records_path",
+                        lambda: tmp_path / "no_greet_records.json")
+    monkeypatch.setattr(message_store, "_reply_records_path",
+                        lambda: tmp_path / "no_reply_records.json")
+
+
 def msg(text, time="", mine=False, mid=""):
     m = {"text": text, "time": time, "is_mine": mine, "isFriend": not mine}
     if mid:
@@ -403,3 +413,205 @@ class MessageKindTest:
                                  action="text")
         got = store.get_messages("陈女士", job_name="数据分析师")
         assert got[-1]["kind"] == "bubble"
+
+
+class OutgoingAttributionTest:
+    """我方消息的归属：哪条是 bot 发的，哪条是人自己敲的。
+
+    起因是用户提醒"你要确定哪些是人工的哪些是AI回复的哦，可以用历史记录来对比"。
+    实测存量（messages/ 105 个会话，2026-10-03）：我方消息 47 条标 bot、80 条标 me，
+    而同一句 AI 回复往往两边各有一条 —— 自记那条没有 mid（键是 content|time），
+    抓回来那条带 mid（键是 mid），去重键不同所以并不掉，抓取那条还被当成人工发的。
+    """
+
+    def test_抓取到的同文气泡并进自记那条且保留bot(self, store):
+        text = "您好，张女士！我确实在看机会，对这个岗位挺感兴趣的"
+        store.append_bot_message("张女士", text, job_name="数据分析")
+        store.merge_messages("张女士", [msg(text, time="10:12", mine=True, mid="500")],
+                             job_name="数据分析")
+        got = store.get_messages("张女士", job_name="数据分析")
+        assert len(got) == 1, f"同一条回复不该存两份：{got}"
+        assert got[0]["sender"] == "bot"
+        assert got[0]["mid"] == "500"
+
+    def test_对不上自记记录的抓取气泡算人工(self, store):
+        store.merge_messages("陈女士", [msg("我自己敲的一句话", time="11:00",
+                                           mine=True, mid="600")],
+                             job_name="运营")
+        got = store.get_messages("陈女士", job_name="运营")
+        assert got[0]["sender"] == "me"
+
+    def test_重复发同一句要一条对一条(self, store):
+        text = "好的，感谢提供时间，祝您招聘顺利~"
+        store.append_bot_message("王先生", text, job_name="数据分析师", timestamp="2026-10-03 09:00:00")
+        store.append_bot_message("王先生", text, job_name="数据分析师", timestamp="2026-10-03 09:30:00")
+        store.merge_messages("王先生", [msg(text, time="09:00", mine=True, mid="700"),
+                                        msg(text, time="09:30", mine=True, mid="701")],
+                             job_name="数据分析师")
+        got = store.get_messages("王先生", job_name="数据分析师")
+        assert len(got) == 2, f"两条自记对两条抓取，不该并成一条：{len(got)}"
+        assert [m["mid"] for m in got] == ["700", "701"]
+        assert all(m["sender"] == "bot" for m in got)
+
+    def test_再同步一次不会又长出第二条(self, store):
+        text = "您好，方便约个时间详聊吗？"
+        store.append_bot_message("李女士", text, job_name="助理")
+        store.merge_messages("李女士", [msg(text, time="14:00", mine=True, mid="800")],
+                             job_name="助理")
+        store.merge_messages("李女士", [msg(text, time="14:00", mine=True, mid="800")],
+                             job_name="助理")
+        got = store.get_messages("李女士", job_name="助理")
+        assert len(got) == 1
+
+    def test_HR发同样文字不参与归属合并(self, store):
+        text = "好的"
+        store.append_bot_message("赵先生", text, job_name="销售")
+        store.merge_messages("赵先生", [msg(text, time="15:00", mine=False, mid="900")],
+                             job_name="销售")
+        got = store.get_messages("赵先生", job_name="销售")
+        assert len(got) == 2
+        assert {m["sender"] for m in got} == {"bot", "hr"}
+
+    def test_空同步且内容未变时不重写文件(self, store):
+        """没新消息也没东西要收敛时，不该把用户数据文件重写一遍"""
+        text = "收到，我这边准备一下，明天上午可以面试"
+        store.append_bot_message("吴女士", text, job_name="行政")
+        store.merge_messages("吴女士", [msg(text, time="17:00", mine=True, mid="960")],
+                             job_name="行政")
+        path = store._path("吴女士", "", "行政")
+        before = path.read_bytes()
+        assert store.merge_messages("吴女士", [], job_name="行政") == 1
+        assert path.read_bytes() == before
+
+    def test_存量重复的抓取条目下次同步自动收敛(self, store):
+        """库里已经存了两份（自记 + 早先抓的 me），再同步一次要并回一条"""
+        text = "理解，感谢您的考虑，祝您招聘顺利~"
+        store.append_bot_message("周女士", text, job_name="财务")
+        store.append_message("周女士", msg(text, time="16:00", mine=True, mid="950"),
+                             job_name="财务")
+        assert len(store.get_messages("周女士", job_name="财务")) == 2
+        store.merge_messages("周女士", [], job_name="财务")
+        got = store.get_messages("周女士", job_name="财务")
+        assert len(got) == 1
+        assert got[0]["sender"] == "bot"
+
+
+def _greet_records(tmp_path, monkeypatch, records):
+    """把打招呼记录指到临时文件：归属判定要拿它比对招呼语是谁发的。"""
+    from boss_bot import message_store
+    p = tmp_path / "greet_records.json"
+    p.write_text(json.dumps({"records": records}, ensure_ascii=False), encoding="utf-8")
+    monkeypatch.setattr(message_store, "_greet_records_path", lambda: p)
+    return p
+
+
+class GreetingAttributionTest:
+    """招呼语气泡的归属：引擎发的招呼不写自记消息，抓回来只剩一条 me。
+
+    实测（messages/ 105 个会话，2026-10-03）：我方气泡 80 条标 me，其中绝大多数
+    就是打招呼时发出去的那段招呼语 —— 打招呼只落 greet_records.json，不落消息文件，
+    所以自记合并这条判据对它们完全不生效，界面上一律显示"人工发送"。
+    判据改用历史记录：greet_records 里 status 为 applied/completed 的
+    actual_greeting_sent，同账号 + 文本完全相同才算机器发的。
+    """
+
+    GREET = "您好，我是双一流的本科，应聘数据分析岗位，希望能获得面试机会。"
+
+    def test_招呼语气泡按打招呼记录判成机器发送(self, store, tmp_path, monkeypatch):
+        _greet_records(tmp_path, monkeypatch, [
+            {"account_index": 0, "company": "某某科技", "job_name": "数据分析师",
+             "status": "applied", "actual_greeting_sent": self.GREET}])
+        store.merge_messages("陈女士", [msg(self.GREET, time="09:10", mine=True, mid="1001")],
+                             job_name="数据分析师", company="某某科技")
+        got = store.get_messages("陈女士", job_name="数据分析师", company="某某科技")
+        assert got[0]["sender"] == "bot", f"招呼语是引擎发的：{got[0]}"
+        assert got[0]["reply_source"] == "greet"
+        assert got[0]["mid"] == "1001"
+
+    def test_招呼语记录对不上的我方气泡仍是人工(self, store, tmp_path, monkeypatch):
+        _greet_records(tmp_path, monkeypatch, [
+            {"account_index": 0, "company": "某某科技", "job_name": "数据分析师",
+             "status": "applied", "actual_greeting_sent": self.GREET}])
+        store.merge_messages("陈女士", [msg("我自己敲的一句话", time="09:20",
+                                           mine=True, mid="1002")],
+                             job_name="数据分析师", company="某某科技")
+        got = store.get_messages("陈女士", job_name="数据分析师", company="某某科技")
+        assert got[0]["sender"] == "me"
+
+    def test_别的账号的招呼语不算本号发送(self, store, tmp_path, monkeypatch):
+        _greet_records(tmp_path, monkeypatch, [
+            {"account_index": 1, "company": "某某科技", "job_name": "数据分析师",
+             "status": "applied", "actual_greeting_sent": self.GREET}])
+        store.merge_messages("陈女士", [msg(self.GREET, time="09:30", mine=True, mid="1003")],
+                             job_name="数据分析师", company="某某科技")
+        got = store.get_messages("陈女士", job_name="数据分析师", company="某某科技")
+        assert got[0]["sender"] == "me", "账号2 发的招呼不该算到主账号头上"
+
+    def test_只认发送成功的打招呼记录(self, store, tmp_path, monkeypatch):
+        _greet_records(tmp_path, monkeypatch, [
+            {"account_index": 0, "company": "某某科技", "job_name": "数据分析师",
+             "status": "skipped", "actual_greeting_sent": self.GREET}])
+        store.merge_messages("陈女士", [msg(self.GREET, time="09:40", mine=True, mid="1004")],
+                             job_name="数据分析师", company="某某科技")
+        got = store.get_messages("陈女士", job_name="数据分析师", company="某某科技")
+        assert got[0]["sender"] == "me", "没发出去的招呼语文本不能作为机器发送的证据"
+
+    def test_招呼语气泡不会被重复同步刷成人工(self, store, tmp_path, monkeypatch):
+        """已经判成 bot 并回填了 mid 的，再同步一次要还是 bot"""
+        _greet_records(tmp_path, monkeypatch, [
+            {"account_index": 0, "company": "某某科技", "job_name": "数据分析师",
+             "status": "completed", "actual_greeting_sent": self.GREET}])
+        payload = [msg(self.GREET, time="09:50", mine=True, mid="1005")]
+        store.merge_messages("陈女士", payload, job_name="数据分析师", company="某某科技")
+        store.merge_messages("陈女士", payload, job_name="数据分析师", company="某某科技")
+        got = store.get_messages("陈女士", job_name="数据分析师", company="某某科技")
+        assert len(got) == 1
+        assert got[0]["sender"] == "bot"
+
+
+def _reply_records(tmp_path, monkeypatch, records):
+    from boss_bot import message_store
+    p = tmp_path / "reply_records.json"
+    p.write_text(json.dumps({"records": records}, ensure_ascii=False), encoding="utf-8")
+    monkeypatch.setattr(message_store, "_reply_records_path", lambda: p)
+    return p
+
+
+class ReplyRecordAttributionTest:
+    """回复气泡的第二道判据：reply_records 里真正发出去过的文本。
+
+    存量实测（messages/ 105 个会话，2026-10-03）：招呼语判据收敛后仍剩 15 条我方气泡
+    标 me，其中「感谢您的时间，理解您的考虑，祝您招聘顺利~」这类就是引擎发的回复 ——
+    回复同样只写 reply_records.json，早期版本没往消息文件自记，所以还得拿历史比对。
+    """
+
+    def test_回复记录里发过的文本判成机器发送(self, store, tmp_path, monkeypatch):
+        text = "感谢您的时间，理解您的考虑，祝您招聘顺利~"
+        _reply_records(tmp_path, monkeypatch, [
+            {"account_index": 0, "chat_name": "陈女士", "job_name": "数据分析",
+             "reply_content": text, "reply_source": "rule", "is_skipped": False}])
+        store.merge_messages("陈女士", [msg(text, time="10:00", mine=True, mid="1101")],
+                             job_name="数据分析")
+        got = store.get_messages("陈女士", job_name="数据分析")
+        assert got[0]["sender"] == "bot"
+        assert got[0]["reply_source"] == "rule", "来源要照记录里的，界面才分得清 AI/规则"
+
+    def test_跳过的回复记录不算发送证据(self, store, tmp_path, monkeypatch):
+        text = "这句引擎决定不发"
+        _reply_records(tmp_path, monkeypatch, [
+            {"account_index": 0, "chat_name": "陈女士", "job_name": "数据分析",
+             "reply_content": text, "reply_source": "ai", "is_skipped": True}])
+        store.merge_messages("陈女士", [msg(text, time="10:10", mine=True, mid="1102")],
+                             job_name="数据分析")
+        got = store.get_messages("陈女士", job_name="数据分析")
+        assert got[0]["sender"] == "me"
+
+    def test_别的账号发过的文本不算本号证据(self, store, tmp_path, monkeypatch):
+        text = "账号2 发过的话"
+        _reply_records(tmp_path, monkeypatch, [
+            {"account_index": 1, "chat_name": "陈女士", "job_name": "数据分析",
+             "reply_content": text, "reply_source": "ai", "is_skipped": False}])
+        store.merge_messages("陈女士", [msg(text, time="10:20", mine=True, mid="1103")],
+                             job_name="数据分析")
+        got = store.get_messages("陈女士", job_name="数据分析")
+        assert got[0]["sender"] == "me"
