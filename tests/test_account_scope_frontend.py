@@ -110,6 +110,21 @@ def test_账号条高亮跟着数据范围走():
     assert "dataScope" in _body("renderAccounts")
 
 
+def test_账号条轮询时只补变化不许整块重建():
+    """metrics 每几秒调一次 renderAccounts，以前是 innerHTML 整块重写：
+    用户手正压在某一行上，那一行在 mousedown 和 mouseup 之间被换成新节点，
+    点下去什么也没发生——这正是"点账号2他切换不了"的另一半。
+    行必须有 data-acc-idx 当身份，认得出老行就只改会动的几处。"""
+    body = _body("renderAccounts")
+    assert "data-acc-idx" in body, "账号行没有稳定身份，只能整块重建"
+    # 容器（变量名 c）的 innerHTML 一旦被整体赋值，正在被点的那一行就换人了；
+    # 新行借临时 holder 生成节点是允许的，所以只禁 c.innerHTML
+    assert re.search(r"\bc\.innerHTML\s*=", body) is None, \
+        "账号条还是整块 innerHTML 重写，轮询会吃掉用户那一下点击"
+    assert "appendChild(" in body or "insertAdjacentHTML(" in body, \
+        "新增的行要插进去，不能靠重建整条容器"
+
+
 def test_指标只认最后一次请求():
     """切账号时两个 /api/metrics 同时在飞，先发的后回来会把上个号的数盖上来"""
     assert "_metricsSeq" in _body("loadMetrics")
@@ -169,6 +184,26 @@ def test_招呼语没配时打招呼区顶上前提示():
 
 def test_切数据范围要跟着重算提示():
     assert "renderGreetAlert()" in _body("setDataScope")
+
+
+def test_数据范围条轮询时不许整块重建():
+    """右侧「全部账号 / 账号1 / 账号2」那条也是每轮 metrics 重画一次：
+    用户手压着 chip 点下去，chip 中途被换成新节点就等于没点。"""
+    body = _body("renderMetricsScope")
+    assert "data-scope" in body, "chip 没有稳定身份，只能整块重建"
+    assert re.search(r"\bel\." + "innerHTML\\s*=", body) is None, \
+        "数据范围条还是整块重写，会吃掉切账号那一下点击"
+
+
+def test_招呼语提示条轮询时不许整块重建():
+    """提示条每轮 metrics 重画一次，「去填写」按钮跟着被换成新节点：
+    用户手压着点下去，正好落在重建的那一瞬，等于没点。
+    骨架留在 HTML 里，函数只改名单文本和按钮指向的账号。"""
+    body = _body("renderGreetAlert")
+    assert re.search(r"\bbox\.innerHTML\s*=", body) is None, \
+        "提示条还是整块 innerHTML 重写，会吃掉「去填写」那一下点击"
+    assert 'id="greetAlertNames"' in HTML and 'id="greetAlertGo"' in HTML, \
+        "提示条的固定骨架没写在页面里"
 
 
 def test_去填写要选中那个号并聚焦输入框():

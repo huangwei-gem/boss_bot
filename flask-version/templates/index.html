@@ -1067,7 +1067,7 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
             </div>
           </div>
           <div class="record-tab-content active" id="greetTabContent" style="padding:0;flex:1;overflow-y:auto">
-            <div id="greetAlert" class="greet-alert" style="display:none"></div>
+            <div id="greetAlert" class="greet-alert" style="display:none"><i data-lucide="alert-triangle" style="width:14px;height:14px"></i><span><span class="greet-alert-names" id="greetAlertNames"></span> 没填自定义招呼语：这个账号一条都不会投出去，记录里的「跳过」全是这一条原因。</span><button class="btn btn-ghost btn-sm" id="greetAlertGo">去填写</button></div>
             <table class="greet-table" id="greetTable">
               <thead><tr><th>时间</th><th>岗位</th><th>公司</th><th>薪资</th><th>状态</th><th>跳过原因</th><th>AI</th></tr></thead>
               <tbody id="greetTableBody"></tbody>
@@ -2632,16 +2632,57 @@ function accTitle(st, name) {
 function renderAccounts() {
   const c = document.getElementById('accountTabs');
   const badge = document.getElementById('accBadge');
-  c.innerHTML = config.accounts.map(function(a,i) {
-    var st = accountStatuses[i] || {};
-    var name = a.name || '未命名';
-    // 今日计数挂在账号条上：不显示数字的话，两个号同时跑也看着像一个
-    var s = st.stats || {};
-    var counts = '';
-    if (st.running || s.greet_applied || s.reply_sent) {
-      counts = '<span class="acc-counts">投' + (s.greet_applied || 0) +
-               '·回' + (s.reply_sent || 0) + '</span>';
+  const accs = config.accounts || [];
+
+  // 一行的骨架：只有下标相关的部分是静态的，文字/颜色全是活的
+  function accountTabRowHtml(i) {
+    return '<div class="account-tab" data-acc-idx="' + i + '"' +
+      ' onclick="setDataScope(' + i + ')"' +
+      ' title="点这里切到该账号：右侧指标、打招呼/回复记录、岗位与配置都跟着换。【登录】只开它自己的浏览器">' +
+      '<span class="acc-status-dot"></span>' +
+      '<span class="acc-name"></span>' +
+      '<span class="badge"></span>' +
+      '<span class="acc-counts"></span>' +
+      '<span class="cookie-status-dot unknown" onclick="event.stopPropagation();checkAccountCookie(' + i + ')"></span>' +
+      '<button class="acc-login-btn" onclick="event.stopPropagation();loginAccount(' + i + ')"' +
+      ' title="在该账号自己的浏览器里打开 BOSS 登录页，不影响正在跑的账号">登录</button></div>';
+  }
+
+  // metrics 每几秒就调这里一次。以前是整条 innerHTML 重写：用户手正压在某一行上，
+  // 那一行在 mousedown 和 mouseup 之间被换成新节点，点下去什么都不会发生——
+  // "点账号2他切换不了"有一半是这么丢的。行用 data-acc-idx 认人，认到了只补会动的几处。
+  if (c.querySelectorAll('[data-acc-idx]').length !== accs.length) c.textContent = '';
+  accs.forEach(function(a, i) {
+    var row = c.querySelector('[data-acc-idx="' + i + '"]');
+    if (!row) {
+      var holder = document.createElement('div');
+      holder.innerHTML = accountTabRowHtml(i).trim();
+      row = holder.firstChild;
+      c.appendChild(row);
     }
+    var st = accountStatuses[i] || {};
+    var s = st.stats || {};
+    var name = a.name || '未命名';
+    var set = function(el, cls, attr, val) {
+      if (!el) return;
+      if (cls !== null && el.className !== cls) el.className = cls;
+      if (attr !== null && el.getAttribute(attr) !== val) el.setAttribute(attr, val);
+    };
+    var activeCls = 'account-tab' + (String(dataScope) === String(i) ? ' active' : '');
+    if (row.className !== activeCls) row.className = activeCls;
+    var nameEl = row.querySelector('.acc-name');
+    if (nameEl.textContent !== name) nameEl.textContent = name;
+    var badgeEl = row.querySelector('.badge');
+    var jobCount = String((a.jobs || []).length);
+    if (badgeEl.textContent !== jobCount) badgeEl.textContent = jobCount;
+    var dot = row.querySelector('.acc-status-dot');
+    set(dot, 'acc-status-dot ' + accDotClass(st), 'title', accTitle(st, name));
+    // 今日计数挂在账号条上：不显示数字的话，两个号同时跑也看着像一个
+    var counts = row.querySelector('.acc-counts');
+    var countsTxt = (st.running || s.greet_applied || s.reply_sent)
+      ? '投' + (s.greet_applied || 0) + '·回' + (s.reply_sent || 0) : '';
+    if (counts.textContent !== countsTxt) counts.textContent = countsTxt;
+    counts.style.display = countsTxt ? '' : 'none';
     // Cookie 状态点
     var cookieCls = 'cookie-status-dot unknown';
     var cookieTitle = 'Cookie 状态未知，点击检测';
@@ -2657,17 +2698,9 @@ function renderAccounts() {
         cookieTitle = 'Cookie 失效：' + (cookieStatusCache[i].reason || '需要重新登录');
       }
     }
-    return '<div class="account-tab'+(String(dataScope)===String(i)?' active':'')+'"'+
-      ' onclick="setDataScope('+i+')"'+
-      ' title="点这里切到该账号：右侧指标、打招呼/回复记录、岗位与配置都跟着换。【登录】只开它自己的浏览器">'+
-      '<span class="acc-status-dot '+accDotClass(st)+'" title="'+escAttr(accTitle(st, name))+'"></span>'+
-      escHtml(name)+'<span class="badge">'+(a.jobs||[]).length+'</span>'+counts+
-      '<span class="'+cookieCls+'" title="'+escAttr(cookieTitle)+'" onclick="event.stopPropagation();checkAccountCookie('+i+')"></span>'+
-      '<button class="acc-login-btn" onclick="event.stopPropagation();loginAccount('+i+')"'+
-      ' title="在该账号自己的浏览器里打开 BOSS 登录页，不影响正在跑的账号">登录</button></div>';
-  }).join('');
-  if (typeof lucide !== 'undefined') lucide.createIcons();
-  if (badge) badge.textContent = config.accounts.length;
+    set(row.querySelector('.cookie-status-dot'), cookieCls, 'title', cookieTitle);
+  });
+  if (badge) badge.textContent = accs.length;
 }
 
 // 把 /api/accounts/cookies 的结果写进缓存
@@ -3433,42 +3466,82 @@ function renderMetricsScope() {
   var accs = (config.accounts || []).map(function(a, i) {
     return { index: i, name: a.name || ('账号' + i), enabled: a.enabled !== false };
   });
-  if (accs.length <= 1) { el.innerHTML = ''; updateScopeLabel(); return; }
-  var html = '<span class="metrics-scope-label">数据范围</span>';
-  html += '<button class="scope-chip' + (dataScope === 'all' ? ' active' : '') +
-          '" onclick="setDataScope(\'all\')">全部账号</button>';
-  accs.forEach(function (a) {
+  if (accs.length <= 1) { el.textContent = ''; updateScopeLabel(); return; }
+  // chip 的个数只在增删账号时才变；其它时候一律按 data-scope 认人、只补会动的部分。
+  // 整条 innerHTML 重写会把用户正按着的那个 chip 换成新节点，点下去什么都不会发生。
+  if (el.querySelectorAll('[data-scope]').length !== accs.length + 1) {
+    el.textContent = '';
+    var label = document.createElement('span');
+    label.className = 'metrics-scope-label';
+    label.textContent = '数据范围';
+    el.appendChild(label);
+    ['all'].concat(accs.map(function(a) { return a.index; })).forEach(function(v) {
+      var b = document.createElement('button');
+      b.className = 'scope-chip';
+      b.setAttribute('data-scope', String(v));
+      if (v === 'all') b.setAttribute('onclick', "setDataScope('all')");
+      else b.setAttribute('onclick', 'setDataScope(' + v + ')');
+      if (v !== 'all') {
+        var d = document.createElement('span');
+        d.className = 'acc-status-dot idle';
+        b.appendChild(d);
+      }
+      var nm = document.createElement('span');
+      nm.className = 'chip-name';
+      b.appendChild(nm);
+      var num = document.createElement('span');
+      num.className = 'acc-counts';
+      b.appendChild(num);
+      el.appendChild(b);
+    });
+  }
+  Array.prototype.forEach.call(el.querySelectorAll('[data-scope]'), function(b) {
+    var v = b.getAttribute('data-scope');
+    var active = (v === 'all') ? dataScope === 'all' : String(dataScope) === v;
+    var cls = 'scope-chip' + (active ? ' active' : '');
+    if (b.className !== cls) b.className = cls;
+    var nameEl = b.querySelector('.chip-name');
+    var numEl = b.querySelector('.acc-counts');
+    if (v === 'all') {
+      if (nameEl.textContent !== '全部账号') nameEl.textContent = '全部账号';
+      if (numEl.textContent !== '') numEl.textContent = '';
+      return;
+    }
+    var a = accs[Number(v)] || {};
     var st = accountStatuses[a.index] || {};
     var s = st.stats || {};
-    var dot = accDotClass(st);
-    var num = (st.running || s.greet_applied || s.reply_sent)
-      ? ' <span class="acc-counts">投' + (s.greet_applied || 0) + '·回' + (s.reply_sent || 0) + '</span>' : '';
-    html += '<button class="scope-chip' + (String(dataScope) === String(a.index) ? ' active' : '') +
-            '" onclick="setDataScope(' + a.index + ')"><span class="acc-status-dot ' + dot + '"></span>' +
-            escHtml(a.name) + (a.enabled ? '' : '（停用）') + num + '</button>';
+    var txt = a.name + (a.enabled === false ? '（停用）' : '');
+    if (nameEl.textContent !== txt) nameEl.textContent = txt;
+    var dot = b.querySelector('.acc-status-dot');
+    var dotCls = 'acc-status-dot ' + accDotClass(st);
+    if (dot && dot.className !== dotCls) dot.className = dotCls;
+    var numTxt = (st.running || s.greet_applied || s.reply_sent)
+      ? '投' + (s.greet_applied || 0) + '·回' + (s.reply_sent || 0) : '';
+    if (numEl.textContent !== numTxt) numEl.textContent = numTxt;
+    numEl.style.display = numTxt ? '' : 'none';
   });
-  el.innerHTML = html;
   updateScopeLabel();
 }
 
 function renderGreetAlert() {
   var box = document.getElementById('greetAlert');
-  if (!box) return;
+  var namesEl = document.getElementById('greetAlertNames');
+  var goBtn = document.getElementById('greetAlertGo');
+  if (!box || !namesEl || !goBtn) return;
   var accs = (metricsCache && metricsCache.accounts) || [];
   var missing = accs.filter(function (a) {
     if (a.enabled === false || a.greeting_ready !== false) return false;
     return dataScope === 'all' || String(dataScope) === String(a.index);
   });
-  if (!missing.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  // 只藏不拆：这条每轮 metrics 都会重画，骨架要是跟着 innerHTML 一起没，
+  // 用户正点着的「去填写」就落空了——和账号条同一个毛病
+  if (!missing.length) { box.style.display = 'none'; return; }
   var names = missing.map(function (a) {
-    return escHtml(a.name || ('账号' + (Number(a.index) + 1)));
+    return a.name || ('账号' + (Number(a.index) + 1));
   }).join('、');
-  box.innerHTML = '<i data-lucide="alert-triangle" style="width:14px;height:14px"></i>' +
-    '<span><span class="greet-alert-names">' + names + '</span> 没填自定义招呼语：' +
-    '这个账号一条都不会投出去，记录里的「跳过」全是这一条原因。</span>' +
-    '<button class="btn btn-ghost btn-sm" onclick="gotoGreetEditor(' + missing[0].index + ')">去填写</button>';
+  if (namesEl.textContent !== names) namesEl.textContent = names;
+  goBtn.onclick = function () { gotoGreetEditor(missing[0].index); };
   box.style.display = 'flex';
-  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 // 跳到左栏「账号设置 → 招呼语」：先把它要编辑的那个号选上，否则填的是另一个号

@@ -148,6 +148,12 @@ def main():
               f"chip {len(scope_chips(page))} 个 / 期望 {n_accounts + 1} 个")
         check("默认高亮在「全部账号」", "全部" in active_chip(page), active_chip(page))
 
+        # ── 0b. 数据范围条重绘不许换掉 chip 节点（换了就等于吃掉用户那一下点击）──
+        page.run_js("var b=document.querySelector('#metricsScope .scope-chip');"
+                    "if(b)b.__keep=1; renderMetricsScope(); renderMetricsScope(); return 1")
+        check("数据范围条重绘后 chip 还是同一个节点",
+              bool(page.run_js("return !!((document.querySelector('#metricsScope .scope-chip')||{})).__keep")))
+
         # ── 1. 点右侧 chip：立刻高亮，且记录跟着切 ──
         target = n_accounts          # 最后一个 chip = 最后一个账号
         chip_text = (page.run_js(
@@ -247,11 +253,30 @@ def main():
         tabs = lambda p: p.eles(
             "xpath://div[contains(concat(' ', normalize-space(@class), ' '), ' account-tab ')]")
         assert click_until_alive(page, tabs, idx=0), "点不到左侧第一个账号行"
-        check("点账号行 = 切数据范围（右侧记录跟着换）",
-              wait_for(page, "return String(dataScope) === '0'", tries=12),
-              page.run_js("return 'dataScope=' + String(dataScope)"))
+
+        def click_tab(idx):
+            """点到 dataScope 真换人为止，返回用了几次。
+            一次点不上就是重绘把行换掉了——用户视角的「点了没反应」。"""
+            for attempt in range(1, 5):
+                click_until_alive(page, tabs, idx=idx)
+                if wait_for(page, f"return String(dataScope) === '{idx}'", tries=4):
+                    return attempt
+            return 0
+
+        used = click_tab(0)
+        check("点账号行一次就切数据范围（右侧记录跟着换）", used == 1,
+              f"dataScope={page.run_js('return String(dataScope)')}，点上用了 {used or '没点上'} 次")
         check("点中的账号行有高亮",
               bool(page.run_js("return !!document.querySelector('.account-tab.active')")))
+
+        # ── 7b. metrics 轮询每几秒重绘账号条：重绘不能把行换成新节点 ──
+        page.run_js("document.querySelector('.account-tab').__keep = 1; return 1")
+        page.run_js("renderAccounts(); renderAccounts(); return 1")
+        check("轮询重绘后账号行还是同一个节点",
+              bool(page.run_js("return !!document.querySelector('.account-tab').__keep")),
+              "整块 innerHTML 重建会让正在被点的那一行中途消失")
+        check("重绘之后马上点仍然一次生效", click_tab(1) == 1,
+              f"dataScope={page.run_js('return String(dataScope)')}")
 
         # ── 8. 招呼语没配这件事必须顶上前说清楚，不能只埋在日志里 ──
         alert_js = ("var b=document.getElementById('greetAlert');"
@@ -271,17 +296,30 @@ def main():
         disp, txt = alert_state()
         check("没填招呼语的号：打招呼区顶上前点名提示",
               disp != "none" and ("没填" in txt or "未填" in txt), f"display={disp} {txt[:90]}")
-        go = page.eles("xpath://div[@id='greetAlert']//button[contains(.,'去填写')]")
-        check("提示里有「去填写」入口", len(go) == 1, f"{len(go)} 个按钮")
-        if go:
-            go[0].click()
+        go = lambda p: p.eles("xpath://div[@id='greetAlert']//button[contains(.,'去填写')]")
+        check("提示里有「去填写」入口", len(go(page)) == 1, f"{len(go(page))} 个按钮")
+        page.run_js("var b=document.querySelector('#greetAlert button');"
+                    "if(b)b.__keep=1; renderGreetAlert(); renderGreetAlert(); return 1")
+        check("提示重绘后「去填写」还是同一个按钮",
+              bool(page.run_js("return !!((document.querySelector('#greetAlert button')||{})).__keep")))
+        # 数一下处理函数真被调到几次：焦点没落下来时能分清是"没点到"还是"点了没聚焦"
+        page.run_js("var o=gotoGreetEditor; window.__goHits=0;"
+                    "gotoGreetEditor=function(i){window.__goHits++; return o(i);}; return 1")
+        evidence = page.run_js(
+            "return 'greetTab=' + !!document.querySelector('#greetTabContent.active')"
+            " + ' alertDisp=' + getComputedStyle(document.getElementById('greetAlert')).display")
+        if go(page):
+            # 滚进视野再点：提示条在记录表上方，窗口矮时按钮在屏幕外，
+            # 裸 click 会点到空处（以前这里拿旧句柄直接点，成败看窗口高度）
+            click_until_alive(page, go)
             # 当前范围是"只看账号 1"，所以提示点到的就是它；切过去后要焦点落在招呼语框
             check("点「去填写」把编辑目标切到这个号并聚焦招呼语框",
                   wait_for(page, "return 0 === Number(activeAccountIdx) && "
                                  "document.activeElement === document.getElementById('accGreeting')",
                            tries=10),
                   page.run_js("return 'activeAccountIdx=' + activeAccountIdx + ' focus=' + "
-                              "(document.activeElement||{}).id"))
+                              "(document.activeElement||{}).id + ' hits=' + window.__goHits + ' '")
+                  + evidence)
 
     finally:
         if page is not None:

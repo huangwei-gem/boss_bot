@@ -88,12 +88,16 @@ def main():
         btns = len(login_buttons(page))
         check("每个账号行都有登录入口", btns == want, f"{btns} 个按钮")
 
-        # 左侧不该再兼职切数据：点行前后 dataScope 必须不变
+        # 口径改过：用户原话是"点击账号2他切换不了"，所以点行必须真切数据范围；
+        # 登录这件事仍然只归行尾那个「登录」按钮，两者不能混
         before = js("return String(dataScope)")
         assert click_until_alive(page, account_rows, 0), "账号行点不动"
         time.sleep(0.8)
         after = js("return String(dataScope)")
-        check("点账号行不再切换数据范围", before == after, f"点前 {before} 点后 {after}")
+        check("点账号行就切到该账号的数据范围", after == "0" and before != after,
+              f"点前 {before} 点后 {after}")
+        check("切过去的账号行有高亮",
+              bool(js("return !!document.querySelector('.account-tab.active')")))
 
         # 数据范围仍然是唯一的切换入口，而且真的只换数据
         chips = scope_chips(page)
