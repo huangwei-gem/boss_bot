@@ -36,7 +36,8 @@ from typing import Optional, Callable
 
 from boss_bot.unified_config import UnifiedConfig, BASE_DIR, resolve_path, account_file
 from boss_bot.browser_launcher import BrowserManager, BOSS_AUTH_COOKIES
-from boss_bot.greet_engine import GreetEngine, in_probe_band
+from boss_bot.greet_engine import (GreetEngine, GREETING_MISSING_REASON,
+                                   in_probe_band)
 from boss_bot.reply_engine import ReplyEngine, conversation_rejected
 from boss_bot.page_handler import BossChatHandler
 from boss_bot.state_store import StateStore
@@ -332,12 +333,20 @@ class UnifiedBotLoop:
         if not self._reply_event_cb:
             return
         try:
+            # 时间戳取自这一轮的动作（与 _add_record 落库那份同一个值）：
+            # 各取一次 now() 会差一秒，前端就认不出推送行和库行是同一条。
+            # 引擎还没建起来（没连上浏览器）时没有落库方，现取一个即可。
+            engine = getattr(self, "_reply_engine", None)
+            if engine is not None:
+                ts = engine.event_ts()
+            else:
+                ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             # 同时发送两套字段名，确保前端 addReplyRecord 能正确映射：
             # 前端期望 chat_name/boss_name, received_message, reply_content
             # 后端原有 contact_name, message_received, reply_sent
             self._reply_event_cb({
-                "time": datetime.now().strftime("%H:%M:%S"),
-                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "time": ts[11:19],
+                "timestamp": ts,
                 "contact_name": contact_name or "",
                 "chat_name": contact_name or "",
                 "boss_name": contact_name or "",
@@ -1307,6 +1316,19 @@ class UnifiedBotLoop:
                               f"{str(probe.get('blocking_requirement', ''))[:60]}")
         return True
 
+    def _record_greet_skip(self, job: dict, ui_status: str, reason: str):
+        """跳过结论落库并推送前端；今天本号在这个岗位上记过同类别就不再重复。
+
+        不去重的话一轮就是几百条：招呼语没配那条更是每轮每个岗位都记一遍，
+        真发出去的那几条被埋在中间，记录与 BOSS 端根本对不上。
+        失败类（可重试）不受这里影响，仍每轮记。
+        """
+        self._stats_dict["greet_skipped"] += 1
+        if self._greet_engine._already_recorded_today(job, reason):
+            return
+        self._greet_engine._emit_greet_event(job, ui_status, skip_reason=reason)
+        self._greet_engine._record_greet(job, is_skipped=True, skip_reason=reason)
+
     def _run_greet_round(self) -> bool:
         """执行一轮打招呼任务。返回 True 如果有岗位被处理，False 如果所有搜索都为空。"""
         self._log("INFO", "━━━ 开始打招呼轮次 ━━━")
@@ -1354,6 +1376,9 @@ class UnifiedBotLoop:
                     if not self._running or self._greet_paused:
                         break
 
+                    # 这一次岗位的落库与实时推送共用一个时间戳（见 GreetEngine.begin_event_ts）
+                    self._greet_engine.begin_event_ts()
+
                     # 频率限制检查 — 带时间窗口重置
                     if self._greet_engine._rate_limit_enabled:
                         # 检查是否需要重置计数器（每小时重置）
@@ -1397,10 +1422,7 @@ class UnifiedBotLoop:
                     # 去重检查：已沟通过的岗位跳过
                     if self._greet_engine._is_already_chatted(job):
                         self._log("INFO", f"⏭️ 已沟通过: {job.get('job_name', '')}")
-                        self._stats_dict["greet_skipped"] += 1
-                        # 写入 greet_records，记录具体跳过原因
-                        self._greet_engine._emit_greet_event(job, "already", skip_reason="已沟通过")
-                        self._greet_engine._record_greet(job, is_skipped=True, skip_reason="已沟通过")
+                        self._record_greet_skip(job, "already", "已沟通过")
                         continue
 
                     # 已沟通过的岗位由 _is_already_chatted（按岗位 URL 去重）拦下：
@@ -1408,15 +1430,23 @@ class UnifiedBotLoop:
                     # 的唯一可靠依据。此处不再按昵称/岗位名扫描其他会话的聊天记录——
                     # BOSS 只显示"杨女士""胡女士"，同名不同人，扫出来的拒绝属于别人。
 
+                    # 招呼语空缺先判，别排在 AI 之后：
+                    # 一是每条岗位每轮白付一次判分预算，
+                    # 二是 send_greeting 里那道闸门要到点「沟通」之后才响
+                    if not self._greet_engine._greeting_for(job)[0]:
+                        self._log("WARN", f"未配置招呼语，跳过: {job.get('job_name', '')}")
+                        self._record_greet_skip(job, "skip", GREETING_MISSING_REASON)
+                        continue
+
                     # AI 智能匹配分析 — 配置已在每轮开头热重载过
                     has_ai = self._greet_engine._ai_enabled and bool(self._greet_engine._ai_providers)
                     if has_ai:
                         ai_result, ai_duration = self._greet_engine._analyze_job_with_ai(job)
                         if ai_result is None and self._greet_engine._init_ai() is not None:
-                            # 关键修复：从 self._last_ai_result 提取 AI 不匹配的具体原因，
-                            # 传给 skip_reason 让前端完整显示（与 greet_engine.py 保持一致）
-                            last_ai = self._greet_engine._last_ai_result or {}
-                            ai_reason = last_ai.get("reason", "") if last_ai else ""
+                            # AI 判"不匹配"（或按 fail_action 跳过）：原因取自这条岗位自己的
+                            # 判分结果，传给 skip_reason 让前端完整显示
+                            last_ai = job.get("_ai_result") or {}
+                            ai_reason = last_ai.get("reason", "")
                             ai_skip_reason = (
                                 f"AI判定不匹配: {ai_reason}" if ai_reason else "AI判定不匹配"
                             )
@@ -1424,10 +1454,7 @@ class UnifiedBotLoop:
                             # 边界带上再追问一句"到底卡在哪条硬性要求"，结果写进这条
                             # 记录（ai_probe），复盘界面据此出建议——只问 AI，不问 HR
                             self._maybe_probe_rejection(job, last_ai)
-                            self._stats_dict["greet_skipped"] += 1
-                            # 写入 greet_records，记录具体跳过原因
-                            self._greet_engine._emit_greet_event(job, "ai_skip", skip_reason=ai_skip_reason)
-                            self._greet_engine._record_greet(job, is_skipped=True, skip_reason=ai_skip_reason)
+                            self._record_greet_skip(job, "ai_skip", ai_skip_reason)
                             continue
                         if ai_result and ai_result.get("suggested_greeting"):
                             job["_ai_suggested_greeting"] = ai_result["suggested_greeting"]
@@ -1694,6 +1721,8 @@ class UnifiedBotLoop:
     def _process_single_chat(self, chat_info: dict):
         """处理单个未读聊天会话。"""
         name = chat_info.get("name", "未知")
+        # 这一轮的回复记录与实时推送共用一个时间戳（见 ReplyEngine.begin_event_ts）
+        self._reply_engine.begin_event_ts()
         self._log("INFO", f"--- 正在处理与 [{name}] 的聊天 ---")
         self._log("DEBUG", f"聊天会话信息: {chat_info}")
 
@@ -1901,6 +1930,17 @@ class UnifiedBotLoop:
                 )
                 self._log("WARN", "已切换为人工接管模式，自动回复暂停")
 
+        return self._handle_reply_action(action, content, meta, name, job_name,
+                                         latest_other_msg, chat_company)
+
+    def _handle_reply_action(self, action, content, meta, name, job_name,
+                             latest_other_msg, chat_company="") -> bool:
+        """执行本次回复并落回复记录。
+
+        返回 False = 演练模式提前收工，这条消息没有真被回复，不能标成已处理。
+        发送成功与发送失败两条路都要落记录：以前只有 socket 实时推送，刷新一次
+        界面那条回复就没了，回复记录和 BOSS 端消息列表对不上。
+        """
         # 简历去重降级
         if action == "resume" and self.config.reply.resume_send_once and \
            self._state_store.resume_sent(name):
@@ -1912,7 +1952,7 @@ class UnifiedBotLoop:
         # 执行回复
         if action == "resume":
             if self._dry_run("本应发送简历", f"[{name}]（{job_name or '未知岗位'}）"):
-                return
+                return False
             self._reply_engine.wait_human_delay()
             if self._chat_handler.send_resume():
                 self._state_store.mark_resume_sent(name)
@@ -1945,13 +1985,21 @@ class UnifiedBotLoop:
                 from boss_bot.config import RESUME_UNAVAILABLE_REPLY
                 self._log("WARN", "简历发送失败，降级为文字告知")
                 if self._dry_run("本应降级为文字告知", f"[{name}]"):
-                    return
+                    return False
                 self._reply_engine.wait_human_delay()
                 self._chat_handler.send_text(RESUME_UNAVAILABLE_REPLY)
                 self._msg_store.append_bot_message(
                     name, RESUME_UNAVAILABLE_REPLY, job_name,
                     reply_source=meta.get("source", ""), action="text_fallback",
                     company=chat_company,
+                )
+                self._reply_engine._add_record(
+                    chat_name=name, job_name=job_name,
+                    received_message=latest_other_msg,
+                    reply_content=RESUME_UNAVAILABLE_REPLY,
+                    reply_source=meta.get("source", ""),
+                    reply_intent=meta.get("intent", ""),
+                    reply_reason="附件简历发送失败，已回复降级话术告知",
                 )
                 self._notifier.send_notification(
                     title="简历发送失败",
@@ -1969,7 +2017,7 @@ class UnifiedBotLoop:
 
         elif action == "text" and content:
             if self._dry_run("本应回复", f"[{name}] {content}"):
-                return
+                return False
             self._reply_engine.wait_human_delay()
             if self._chat_handler.send_text(content):
                 self._stats.record_reply(source=meta.get("source", "rule"), action="text")
@@ -1980,6 +2028,16 @@ class UnifiedBotLoop:
                     company=chat_company,
                 )
                 self._log("INFO", f"已回复: {content[:30]}...")
+                # 发出去的那句要落 reply_records：只有 socket 推送的话，
+                # 刷新一次界面这条回复就没了，和 BOSS 端消息列表对不上
+                self._reply_engine._add_record(
+                    chat_name=name, job_name=job_name,
+                    received_message=latest_other_msg, reply_content=content,
+                    reply_source=meta.get("source", ""),
+                    reply_intent=meta.get("intent", ""),
+                    reply_reason=f"按 {meta.get('source') or '默认'} 来源生成的回复已发送",
+                    ai_model=self._reply_engine._last_ai_model,
+                )
                 self._emit_reply_event(
                     contact_name=name, job_name=job_name,
                     message_received=latest_other_msg, reply_sent=content,
@@ -1991,6 +2049,13 @@ class UnifiedBotLoop:
                 self._stats.record_reply(source=meta.get("source", "rule"), action="skip")
                 self._log("WARN", "发送文字失败")
                 skip_reason = "发送文字失败"
+                self._reply_engine._add_record(
+                    chat_name=name, job_name=job_name,
+                    received_message=latest_other_msg, reply_content=None,
+                    reply_source="skip", reply_intent=meta.get("intent", ""),
+                    reply_reason=skip_reason,
+                    is_skipped=True, skip_reason=skip_reason,
+                )
                 self._emit_reply_event(
                     contact_name=name, job_name=job_name,
                     message_received=latest_other_msg, reply_sent=content or "",
@@ -2035,6 +2100,7 @@ class UnifiedBotLoop:
 
         self._state_store.mark_handled(name, latest_other_msg, action or "none")
         self._reply_engine.record_reply()
+        return True
 
     # ─────────────────────────────────────────────
     # 配置热重载

@@ -24,13 +24,15 @@ import threading
 import hashlib
 import logging
 from datetime import datetime
+from pathlib import Path
 from typing import Optional, Callable
 from urllib.request import Request, urlopen
 from urllib.error import URLError
 
 from boss_bot.unified_config import DEFAULT_GREETING, UnifiedConfig, BASE_DIR, resolve_path, write_json_atomic
 from boss_bot.browser_launcher import BrowserManager
-from boss_bot.reply_record import GreetRecord, _get_greet_store
+from boss_bot.reply_record import (GreetRecord, classify_greet_skip,
+                                   _get_greet_store)
 
 # ─────────────────────────────────────────────
 # 路径常量
@@ -298,6 +300,27 @@ def pick_greeting(job_text: str, account_text: str, default_text: str):
     return "", "未配置"
 
 
+def account_greeting_ready(acc) -> bool:
+    """这个账号跑一轮，能不能真发出去至少一条招呼语。
+
+    判定必须和 pick_greeting 同一口径（等于历史默认串算"没写"、停用岗位不参与），
+    否则面板提示"可以去跑"而实际一轮下来全是跳过。看板用它顶上前提示：
+    以前这个状态只体现在日志一片"未配置招呼语"里，用户看到的是"记录对不上"。
+    """
+    if acc is None:
+        return False
+    if (getattr(acc, "greeting_message", "") or "").strip():
+        return True
+    for job in getattr(acc, "jobs", None) or []:
+        if not getattr(job, "enabled", True):
+            continue
+        text, _ = pick_greeting(getattr(job, "greeting_message", "") or "",
+                                "", DEFAULT_GREETING)
+        if text:
+            return True
+    return False
+
+
 # ─────────────────────────────────────────────
 # 文件日志
 # ─────────────────────────────────────────────
@@ -494,6 +517,7 @@ class AIAnalyzerChain:
         custom_scoring_prompt: str = "",
         skip_unhealthy: bool = True,
         analyze_max_tokens: int = 0,
+        fail_action: str = "default",
     ):
         self.providers = []
         for p in providers:
@@ -524,6 +548,10 @@ class AIAnalyzerChain:
         self.custom_filter_keywords = custom_filter_keywords or []
         self.custom_scoring_prompt = custom_scoring_prompt or ""
         self.analyze_max_tokens = analyze_max_tokens or self.DEFAULT_ANALYZE_MAX_TOKENS
+        # AI 全军覆没时的处置：default = 按"默认通过"继续投（盲投），
+        # skip = 这一轮不投。以前判分链写死 default，配置里那个开关只对回复生效，
+        # 于是接口全 429 的一轮会 score 50 一路放行，用户看到的是"没筛过却投了几十个"
+        self.fail_action = fail_action if fail_action in ("skip", "default") else "default"
 
         self.analyzed_count = 0
         self.match_count = 0
@@ -550,23 +578,32 @@ class AIAnalyzerChain:
     HEALTH_STALE_SECONDS = 24 * 3600
 
     def _unhealthy_names(self) -> set:
-        """体检在 24h 内明确标记"不可用"的接口名（缓存 5 分钟，避免每岗位读盘）。
+        """体检在 24h 内明确标记"不可用"的接口名（按文件版本缓存，避免每岗位读盘）。
 
         容灾链的相对顺序不变，只是不再把 30s 预算浪费在已知打不通的接口上；
         全部接口都被标记不可用时不生效（宁可慢，也不能完全不筛岗位）。
+
+        缓存按体检文件的 mtime+大小失效，不按时间：两个号是两条独立的容灾链，
+        按 5 分钟时间缓存时账号1 刚体检完"25/27 可用"，账号2 仍拿着旧清单
+        报"跳过 10 个已知不可用"，日志和界面就对不上。
         """
-        now = time.time()
-        if self._unhealthy_cache and now - self._unhealthy_cache[0] < 300:
-            return self._unhealthy_cache[1]
         names: set = set()
         try:
             from boss_bot.ai_health import (HEALTH_FILE, STATUS_UNAVAILABLE,
                                             provider_key, load_health)
+            try:
+                stat = Path(HEALTH_FILE).stat()
+                version = (stat.st_mtime_ns, stat.st_size)
+            except OSError:
+                version = None
+            if version is not None and self._unhealthy_cache and \
+                    self._unhealthy_cache[0] == version:
+                return self._unhealthy_cache[1]
             data = load_health()
             updated = data.get("updated_at") or ""
             try:
                 from datetime import datetime as _dt
-                age = now - _dt.strptime(updated, "%Y-%m-%d %H:%M:%S").timestamp()
+                age = time.time() - _dt.strptime(updated, "%Y-%m-%d %H:%M:%S").timestamp()
             except ValueError:
                 age = self.HEALTH_STALE_SECONDS + 1  # 没有时间戳就当作过期
             results = data.get("results") or {}
@@ -577,10 +614,11 @@ class AIAnalyzerChain:
                         provider_key(dict(entry, api_base=entry["api_base"] + "/")))
                     if hit and hit.get("status") == STATUS_UNAVAILABLE:
                         names.add(p.name)
+            self._unhealthy_cache = (version, names)
         except Exception as e:
             self._log("DEBUG", f"读取 AI 体检结果失败，本次不跳过任何接口: {e}")
+            self._unhealthy_cache = (None, set())
             names = set()
-        self._unhealthy_cache = (now, names)
         return names
 
     def _cool_down(self, provider, error: Exception):
@@ -631,8 +669,7 @@ class AIAnalyzerChain:
         """
         if not self.providers:
             self.fallback_count += 1
-            return {"score": 50, "is_match": True, "ai_error": True,
-                    "reason": "未配置 AI 接口，按默认话术通过", "suggested_greeting": ""}
+            return self._fallback_result("未配置 AI 接口")
 
         # 检查缓存
         if self.cache_enabled and self._resume_hash:
@@ -717,15 +754,26 @@ class AIAnalyzerChain:
                 continue
 
         if skipped_cooling:
-            self._log("INFO", f"{skipped_cooling} 个 AI 接口在冷却中，已跳过")
+            # 说清楚冷却表是按服务商共享的：两个号用的是同一批 key，
+            # 另一个号撞到的 429 这条链也照样要避开，不是本号自己的接口坏了
+            self._log("INFO", f"{skipped_cooling} 个 AI 接口在冷却中，已跳过"
+                              f"（冷却按服务商全进程共享，两个号一起摊同一份限流）")
         if unhealthy:
             self._log("INFO", f"按体检结果跳过 {len(unhealthy)} 个已知不可用的 AI 接口")
 
         # 全部失败
         self._log("ERROR", f"所有 AI 接口均失败，最后错误: {last_error}")
         self.fallback_count += 1
-        return {"score": 50, "is_match": True, "ai_error": True,
-                "reason": f"AI 分析异常: {last_error}，默认通过", "suggested_greeting": ""}
+        return self._fallback_result(f"AI 分析异常: {last_error}")
+
+    def _fallback_result(self, reason: str) -> dict:
+        """AI 没给出判断时的结果：is_match 由 fail_action 决定，不再有\"默认通过\"写死。"""
+        passed = self.fail_action != "skip"
+        return {"score": 50 if passed else 0,
+                "is_match": passed,
+                "ai_error": True,
+                "reason": f"{reason}，{'默认通过' if passed else '按配置跳过'}",
+                "suggested_greeting": ""}
 
     def _build_probe_prompt(self, job: dict, verdict: dict) -> list:
         """追问提示词：只问"卡在哪一条"，不让它改判。"""
@@ -1156,7 +1204,7 @@ class GreetEngine:
         ai = self.config.ai
         sig = (ai.enabled, ai.match_threshold, ai.analyze_max_tokens,
                tuple(ai.custom_filter_keywords or []), ai.custom_scoring_prompt,
-               ai.skip_unhealthy,
+               ai.skip_unhealthy, ai.fail_action,
                tuple((p.name, p.model, p.api_base, bool(p.api_key)) for p in ai.providers))
         if getattr(self, "_ai_config_sig", None) == sig:
             return
@@ -1168,6 +1216,7 @@ class GreetEngine:
         self._ai_custom_filter_keywords = ai.custom_filter_keywords
         self._ai_custom_scoring_prompt = ai.custom_scoring_prompt
         self._ai_skip_unhealthy = ai.skip_unhealthy
+        self._ai_fail_action = ai.fail_action
         self._analyze_max_tokens = ai.analyze_max_tokens
 
         # AI providers 列表（从 UnifiedConfig 转换为 AIAnalyzerChain 所需格式）
@@ -1254,6 +1303,18 @@ class GreetEngine:
         except Exception:
             pass
 
+    def begin_event_ts(self, ts: str = "") -> str:
+        """开始一次岗位动作：落库与实时推送共用这一份时间戳。
+
+        前端按「岗位 + 时间戳 + 状态」把推送行和轮询回来的库行认成同一条。两边各取
+        一次 now() 就会差一秒，同一次投递在表里留两行，看起来就是"记录和日志对不上"。
+        """
+        self._event_ts = ts or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        return self._event_ts
+
+    def event_ts(self) -> str:
+        return getattr(self, "_event_ts", None) or self.begin_event_ts()
+
     def _emit_greet_event(self, job: dict, status: str, ai_result: dict = None,
                           skip_reason: str = ""):
         """推送投递事件到前端表格。
@@ -1267,16 +1328,15 @@ class GreetEngine:
         if not self._greet_event_cb:
             return
         try:
-            ai = ai_result or self._last_ai_result or {}
-            # 关键修复：确保 ai_reason 完整透传到前端
-            # 1. 优先使用 ai_result/skip_reason 中的 reason
-            # 2. 其次从 skip_reason 中提取（当 skip_reason 格式为 "AI判定不匹配: xxx"）
-            # 3. 最后回退到 self._last_ai_result
+            ai = ai_result or job.get("_ai_result") or {}
+            # 确保 ai_reason 完整透传到前端：job 上没有判分结果时，
+            # 从 "AI判定不匹配: 具体原因" 形式的 skip_reason 里取
             ai_reason = ai.get("reason", "")
             if not ai_reason and skip_reason and "AI判定不匹配" in skip_reason:
                 # skip_reason 格式: "AI判定不匹配: 具体原因..."，提取冒号后的部分
                 ai_reason = skip_reason
             emit_data = {
+                "timestamp": self.event_ts(),
                 "job_name": job.get("job_name", ""),
                 "company": job.get("company", "") or job.get("company_location", ""),
                 "salary": job.get("salary", ""),
@@ -1311,7 +1371,7 @@ class GreetEngine:
     ):
         """创建并保存一条打招呼/AI分析记录。
 
-        从 self._last_ai_* 属性中获取 AI 分析的完整信息。
+        AI 字段取自 job["_ai_result"] / job["_ai_meta"] —— 这条岗位自己那次判分。
 
         Args:
             job: 岗位信息字典
@@ -1322,7 +1382,8 @@ class GreetEngine:
             status: 状态 (pending/applied/skipped/failed)，留空则自动推导
         """
         try:
-            ai_result = self._last_ai_result or {}
+            ai_result = job.get("_ai_result") or {}
+            ai_meta = job.get("_ai_meta") or {}
             # 推导 status（若调用方未指定）
             if not status:
                 if is_greeted:
@@ -1335,19 +1396,17 @@ class GreetEngine:
                         status = "skipped"
                 else:
                     status = "pending"
-            # 打招呼语：优先实际发送的，其次 AI 建议的，最后按优先级算出来的
-            greeting_message = (
-                actual_greeting_sent
-                or ai_result.get("suggested_greeting", "")
-                or self._greeting_for(job)[0]
-            )
+            # 招呼语只写"真发出去的那一句"。
+            # 以前这里还兜 AI 建议文案与本号配置文案：410 条 skipped 记录都带着一句
+            # 从没发过的"招呼语"，和 BOSS 端逐条对的时候全对不上
+            greeting_message = actual_greeting_sent
             record = GreetRecord(
                 job_name=job.get("job_name", ""),
                 job_url=job.get("url", ""),
                 ai_error=bool(ai_result.get("ai_error")),
-                ai_duration_ms=self._last_ai_duration_ms,
-                # 判分复盘的追问结果挂在 job 上：谁追问谁知道，不占用 _last_ai_* 那批
-                # "最后一次调用"的状态（发简历、回复都会覆写它们）
+                ai_duration_ms=ai_meta.get("duration_ms", 0),
+                # 判分复盘的追问结果挂在 job 上：谁追问谁知道，不占用"最后一次调用"那批
+                # 状态（发简历、回复都会覆写它们）
                 ai_probe=job.get("_ai_probe"),
                 auto_greet_note=job.get("_auto_greet_note"),
                 company=job.get("company", job.get("company_location", "")),
@@ -1360,10 +1419,10 @@ class GreetEngine:
                 ai_strengths=ai_result.get("strengths", []),
                 ai_weaknesses=ai_result.get("weaknesses", []),
                 ai_suggested_greeting=ai_result.get("suggested_greeting", ""),
-                system_prompt=self._last_ai_system_prompt,
-                user_prompt=self._last_ai_user_prompt,
-                ai_model=self._last_ai_model,
-                ai_raw_response=self._last_ai_raw_response,
+                system_prompt=ai_meta.get("system_prompt"),
+                user_prompt=ai_meta.get("user_prompt"),
+                ai_model=ai_meta.get("model", ""),
+                ai_raw_response=ai_meta.get("raw_response"),
                 actual_greeting_sent=actual_greeting_sent,
                 is_greeted=is_greeted,
                 is_skipped=is_skipped,
@@ -1372,11 +1431,29 @@ class GreetEngine:
                 account_index=self.account_index,
                 status=status,
                 greeting_message=greeting_message,
-                timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                timestamp=self.event_ts(),
             )
             self._greet_store.add(record)
         except Exception as e:
             self._log("WARN", f"记录打招呼信息失败: {e}")
+
+    def _already_recorded_today(self, job: dict, reason: str) -> bool:
+        """这个岗位今天在本号下是否已经记过同一类别的结论。
+
+        一轮扫下来同一个岗位的结论不会变，不去重就是每轮几百条重复记录：
+        招呼语空缺那条更是每轮每个岗位都记一遍，把 BOSS 端真实发出去的
+        那几条淹掉，用户看到的就是"日志一堆跳过、记录一片重复"。
+        失败类（可重试）不在这里拦。
+        """
+        kind = classify_greet_skip(reason)
+        if not kind:
+            return False
+        try:
+            return self._greet_store.has_today(job.get("url", ""), kind,
+                                               self.account_index)
+        except Exception as e:
+            self._log("DEBUG", f"打招呼记录去重检查失败，照常记录: {e}")
+            return False
 
     def _report_progress(self):
         if self.progress_cb:
@@ -1870,6 +1947,7 @@ class GreetEngine:
                     custom_scoring_prompt=self._ai_custom_scoring_prompt,
                     skip_unhealthy=self._ai_skip_unhealthy,
                     analyze_max_tokens=self._analyze_max_tokens,
+                    fail_action=self._ai_fail_action,
                 )
             else:
                 self._log("WARN", "AI 已启用但未配置任何 provider")
@@ -1881,14 +1959,38 @@ class GreetEngine:
             self._log("WARN", f"AI 分析器初始化失败（降级为普通投递）: {e}")
             return None
 
+    def _bind_ai_result(self, job: dict, result: dict, analyzer=None,
+                        duration: float = 0):
+        """把这条岗位的判分结果与调用现场挂到 job 上，记录/推送/追问都从这里取。
+
+        同时更新 self._last_ai_*：那份是"最后一次调用"的调试视图（e2e 脚本在读），
+        但落库不再用它——否则下一条岗位会把上一条的分数和模型名带进记录。
+        """
+        meta = {
+            "model": getattr(analyzer, "last_model_name", "") or "",
+            "system_prompt": getattr(analyzer, "last_system_prompt", None),
+            "user_prompt": getattr(analyzer, "last_user_prompt", None),
+            "raw_response": getattr(analyzer, "last_raw_response", None),
+            "duration_ms": int((duration or 0) * 1000),
+        }
+        job["_ai_result"] = result or {}
+        job["_ai_meta"] = meta
+        self._last_ai_result = job["_ai_result"]
+        self._last_ai_model = meta["model"]
+        self._last_ai_system_prompt = meta["system_prompt"]
+        self._last_ai_user_prompt = meta["user_prompt"]
+        self._last_ai_raw_response = meta["raw_response"]
+        self._last_ai_duration_ms = meta["duration_ms"]
+
     def _analyze_job_with_ai(self, job: dict):
         """用 AI 分析岗位匹配度。返回 (匹配结果, 耗时秒数)，未启用时返回 (None, 0)。"""
         analyzer = self._init_ai()
         if not analyzer:
             # 分析器都建不起来同样属于「AI 不可用」，不能当成不匹配把岗位全丢掉
-            self._last_ai_duration_ms = 0
-            return {"score": 50, "is_match": True, "ai_error": True,
-                    "reason": "AI 分析器初始化失败，按默认通过", "suggested_greeting": ""}, 0
+            result = {"score": 50, "is_match": True, "ai_error": True,
+                      "reason": "AI 分析器初始化失败，按默认通过", "suggested_greeting": ""}
+            self._bind_ai_result(job, self._apply_fail_action(result))
+            return result, 0
         ai_job = {
             "job_name": job.get("job_name", ""),
             "salary": job.get("salary", ""),
@@ -1903,25 +2005,31 @@ class GreetEngine:
             duration = time.time() - _start
             score = result.get("score", 50)
             is_match = result.get("is_match", True)
-            # 保存 AI 分析的完整信息供 GreetRecord 记录使用
-            self._last_ai_result = result
-            self._last_ai_system_prompt = analyzer.last_system_prompt
-            self._last_ai_user_prompt = analyzer.last_user_prompt
-            self._last_ai_model = analyzer.last_model_name
-            self._last_ai_raw_response = analyzer.last_raw_response
-            self._last_ai_duration_ms = int(duration * 1000)
+            # 判分结果绑到这条岗位上（见 _bind_ai_result）
+            self._bind_ai_result(job, result, analyzer, duration)
             self._log("INFO", f"🤖 AI 匹配度: {score}/100 ({duration:.1f}s) —— {result.get('reason', '')[:80]}")
             if result.get("ai_error"):
-                # AI 没给出判断（接口全挂/无法解析）≠ AI 判定不匹配，按默认话术放行
+                # AI 没给出判断（接口全挂/无法解析）≠ AI 判定不匹配，按配置的
+                # fail_action 处置：default 放行，skip 不投
+                if not result.get("is_match", True):
+                    self._log("WARN", "⚠️ AI 未能给出判断，按配置跳过本岗位，不做盲投")
+                    return None, duration
                 self._log("WARN", "⚠️ AI 未能给出判断，本轮按默认通过继续打招呼")
                 return result, duration
             return (result, duration) if (is_match and score >= self._ai_threshold) else (None, duration)
         except Exception as e:
-            self._log("WARN", f"AI 分析异常，按通过处理: {e}")
-            self._last_ai_result = {"ai_error": True, "reason": f"AI 分析异常: {e}"}
-            self._last_ai_duration_ms = 0
-            return {"score": 50, "is_match": True, "ai_error": True,
-                    "reason": f"AI 分析异常: {e}", "suggested_greeting": ""}, 0
+            self._log("WARN", f"AI 分析异常，按配置处置: {e}")
+            result = {"score": 50, "is_match": True, "ai_error": True,
+                      "reason": f"AI 分析异常: {e}", "suggested_greeting": ""}
+            self._bind_ai_result(job, self._apply_fail_action(result))
+            return result, 0
+
+    def _apply_fail_action(self, result: dict) -> dict:
+        """AI 没给出判断时按配置决定放行还是跳过（默认放行，与历史行为一致）。"""
+        if self._ai_fail_action == "skip":
+            result["is_match"] = False
+            result["score"] = 0
+        return result
 
 
     def _handle_disconnect(self) -> bool:
@@ -1987,10 +2095,11 @@ class GreetEngine:
             return False, "岗位URL为空"
 
         # 招呼语空缺必须在这里拦住，不能等到输入框那步：BOSS 点「沟通」本身就等于
-        # 发起招呼（第二种机制还会立刻自动发平台预设文案），先点再发现没配就晚了
+        # 发起招呼（第二种机制还会立刻自动发平台预设文案），先点再发现没配就晚了。
+        # 这里不打日志：原因串会原样返回给 send_greeting，那边"⏭️ 跳过: 岗位（原因:…）"
+        # 已经带上同一句话，两边各打一行会让日志行数变成记录条数的两倍
         greeting, greeting_source = self._greeting_for(job)
         if not (greeting or "").strip():
-            self._log("WARN", f"未配置招呼语，跳过这个岗位: {job.get('job_name', '')}")
             return False, GREETING_MISSING_REASON
 
         instance = self.browser_manager.get_instance()

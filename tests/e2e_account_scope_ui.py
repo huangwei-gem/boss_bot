@@ -243,6 +243,46 @@ def main():
                              ".indexOf('账号') >= 0", tries=12),
               page.run_js("return String((document.getElementById('aiScopeNote')||{}).textContent||'')"))
 
+        # ── 7. 点左侧账号行本身就切数据范围（用户原话："点击账号2他切换不了"）──
+        tabs = lambda p: p.eles(
+            "xpath://div[contains(concat(' ', normalize-space(@class), ' '), ' account-tab ')]")
+        assert click_until_alive(page, tabs, idx=0), "点不到左侧第一个账号行"
+        check("点账号行 = 切数据范围（右侧记录跟着换）",
+              wait_for(page, "return String(dataScope) === '0'", tries=12),
+              page.run_js("return 'dataScope=' + String(dataScope)"))
+        check("点中的账号行有高亮",
+              bool(page.run_js("return !!document.querySelector('.account-tab.active')")))
+
+        # ── 8. 招呼语没配这件事必须顶上前说清楚，不能只埋在日志里 ──
+        alert_js = ("var b=document.getElementById('greetAlert');"
+                    "return (b?getComputedStyle(b).display:'none') + '@@' + (b?b.innerText:'').trim()")
+
+        def alert_state():
+            raw = str(page.run_js(alert_js) or "@@")
+            disp, _, txt = raw.partition("@@")
+            return disp, txt
+
+        page.run_js(f"setDataScope({n_accounts - 1});return 1")   # 这个号在步骤 4 已填过招呼语
+        time.sleep(1.5)
+        disp, txt = alert_state()
+        check("填过招呼语的号：不出现整号级提示", disp == "none", f"display={disp} {txt[:60]}")
+        page.run_js("setDataScope('0');return 1")                  # 主账号没填
+        time.sleep(1.5)
+        disp, txt = alert_state()
+        check("没填招呼语的号：打招呼区顶上前点名提示",
+              disp != "none" and ("没填" in txt or "未填" in txt), f"display={disp} {txt[:90]}")
+        go = page.eles("xpath://div[@id='greetAlert']//button[contains(.,'去填写')]")
+        check("提示里有「去填写」入口", len(go) == 1, f"{len(go)} 个按钮")
+        if go:
+            go[0].click()
+            # 当前范围是"只看账号 1"，所以提示点到的就是它；切过去后要焦点落在招呼语框
+            check("点「去填写」把编辑目标切到这个号并聚焦招呼语框",
+                  wait_for(page, "return 0 === Number(activeAccountIdx) && "
+                                 "document.activeElement === document.getElementById('accGreeting')",
+                           tries=10),
+                  page.run_js("return 'activeAccountIdx=' + activeAccountIdx + ' focus=' + "
+                              "(document.activeElement||{}).id"))
+
     finally:
         if page is not None:
             try:

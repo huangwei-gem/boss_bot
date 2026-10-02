@@ -132,6 +132,17 @@ DEFAULT_GREETING = (
     "愿意踏实积累。十分认可贵公司，希望能获得面试机会。"
 )
 
+def strip_default_greeting(text) -> str:
+    """岗位上的招呼语若就是那段历史默认文案，视作"没写"。
+
+    pick_greeting 把"等于默认串"当成未定制（否则账号级自定义永远被岗位那份旧的
+    覆盖掉），而界面输入框里却显示着有字——于是日志一片"未配置招呼语，跳过"，
+    用户看不出哪里没配。加载时就把它清成空，输入框和引擎判的才是同一件事。
+    """
+    raw = str(text or "")
+    return "" if raw.strip() == DEFAULT_GREETING.strip() else raw
+
+
 # 话术模板占位符 → 画像字段映射
 _TEMPLATE_MAP = {
     "{salary}": "salary_expectation",
@@ -756,7 +767,8 @@ class UnifiedConfig:
                         city=job.get("city", "上海"),
                         query=job.get("query", "数据分析"),
                         scroll_pages=job.get("scroll_pages", 5),
-                        greeting_message=job.get("greeting_message", ""),
+                        greeting_message=strip_default_greeting(
+                            job.get("greeting_message", "")),
                         image_files=job.get("image_files", []),
                     ))
                 parsed_accounts.append(AccountConfig(

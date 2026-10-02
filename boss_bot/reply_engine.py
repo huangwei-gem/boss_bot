@@ -703,6 +703,14 @@ class ReplyEngine:
         except Exception as e:
             logger.debug(f"[自进化] 记录回复异常: {e}")
 
+    def begin_event_ts(self, ts: str = "") -> str:
+        """开始一次会话动作：落库与实时推送共用这一份时间戳（见 GreetEngine 同名方法）。"""
+        self._event_ts = ts or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        return self._event_ts
+
+    def event_ts(self) -> str:
+        return getattr(self, "_event_ts", None) or self.begin_event_ts()
+
     def _add_record(self, **kwargs):
         """创建并保存一条 ReplyRecord（异常不影响主流程）。"""
         try:
@@ -710,7 +718,7 @@ class ReplyEngine:
             kwargs.setdefault("account_name", self._account_name)
             kwargs.setdefault("account_index", self._account_index)
             # 自动填充时间戳（如果调用方未指定）
-            kwargs.setdefault("timestamp", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            kwargs.setdefault("timestamp", self.event_ts())
             # 关键字段缺失警告（帮助定位调用方未传字段的问题）
             if not kwargs.get("chat_name"):
                 logger.debug(f"[回复记录] chat_name 为空，received_message={kwargs.get('received_message', '')[:50]}")

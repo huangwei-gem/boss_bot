@@ -268,7 +268,11 @@ class ProbeGateTest:
         src = inspect.getsource(UnifiedBotLoop._run_greet_round)
         i = src.index("_maybe_probe_rejection")
         seg = src[i:i + 700]
-        assert "_record_greet" in seg and "_emit_greet_event" in seg, \
+        assert "_record_greet_skip" in seg, \
+            "追问结果必须落到这条岗位的跳过记录里"
+        # 落库和实时推送收在同一个 helper 里，两条通道不能只走一条
+        body = inspect.getsource(UnifiedBotLoop._record_greet_skip)
+        assert "_emit_greet_event" in body and "_record_greet" in body, \
             "追问结果必须同时进记录和实时推送"
 
 

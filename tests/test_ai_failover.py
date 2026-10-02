@@ -293,6 +293,7 @@ class MaxTokensTest:
                            "model": "m"}]
         e._ai_threshold = 70
         e._ai_skip_unhealthy = False
+        e._ai_fail_action = "default"
         e._ai_custom_filter_keywords = []
         e._ai_custom_scoring_prompt = ""
         e._resume_cfg = {}
@@ -735,19 +736,18 @@ class RecordQualityFieldsTest:
         from boss_bot.reply_record import GreetRecordStore
         e = GreetEngine.__new__(GreetEngine)
         e._greet_store = GreetRecordStore(path=tempfile.mkdtemp() + "/r.json")
-        e._last_ai_result = {"score": 50, "is_match": True, "ai_error": True,
-                             "reason": "AI 分析异常: 正文被截断"}
-        e._last_ai_duration_ms = 61000
-        e._last_ai_model = ""
-        e._last_ai_raw_response = "思考了很多字"
-        e._last_ai_system_prompt = None
-        e._last_ai_user_prompt = None
         e._greeting_message = "你好"
         e.account_index = 1
         e.log_cb = None
         e._account = lambda: type("A", (), {"name": "账号2"})()
         e._log = lambda *a: None
-        e._record_greet({"job_name": "岗位A", "url": "u", "company": "c", "salary": "9K"})
+        # 判分结果挂在岗位上再落库（见 _bind_ai_result）：直接写 _last_ai_* 不进记录，
+        # 否则连续两条岗位会共享"最后一次调用"，第二条带上第一条的分数
+        job = {"job_name": "岗位A", "url": "u", "company": "c", "salary": "9K"}
+        e._bind_ai_result(job, {"score": 50, "is_match": True, "ai_error": True,
+                                "reason": "AI 分析异常: 正文被截断"},
+                          analyzer=None, duration=61.0)
+        e._record_greet(job)
         rec = e._greet_store.get_all()[-1]
         assert rec.ai_error is True
         assert rec.ai_duration_ms == 61000

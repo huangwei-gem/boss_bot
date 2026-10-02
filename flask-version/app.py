@@ -49,12 +49,14 @@ PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from boss_bot.unified_config import (
+    account_file,
     UnifiedConfig, BASE_DIR, BOT_CONFIG_FILE, USER_PROFILE_FILE,
     OVERRIDES_FILE,
     load_config, save_config, save_overrides, validate_config,
     ACCOUNT_OVERLAY_LOCKED, ACCOUNT_OVERLAY_SECTIONS, diff_against,
 )
 from boss_bot.judgement_review import apply_suggestion, build_review
+from boss_bot.greet_engine import account_greeting_ready
 from boss_bot.main_loop import UnifiedBotLoop, MultiAccountManager
 from boss_bot.self_evolve import SelfEvolveEngine
 from boss_bot.reply_record import (
@@ -220,6 +222,9 @@ _config_stamp_cached: Optional[tuple] = None
 _status_thread: Optional[threading.Thread] = None
 _status_stop = threading.Event()
 _self_evolve: Optional[SelfEvolveEngine] = None
+_UNSET = object()
+# 「全部账号」时弹窗按号展示：账号 -> 未运行状态下的面板引擎（跑着的账号直接用它的引擎）
+_panel_evolve_cache: dict = {}
 
 # 数据目录
 DATA_DIR = PROJECT_ROOT / "data"
@@ -1434,7 +1439,8 @@ def api_metrics():
         snap["daily_limit"] = rl.max_per_day if (rl and rl.enabled) else None
         snap["scope"] = "all" if scope is None else scope[0]
         snap["accounts"] = [
-            {"index": i, "name": a.name, "enabled": a.enabled}
+            {"index": i, "name": a.name, "enabled": a.enabled,
+             "greeting_ready": account_greeting_ready(a)}
             for i, a in enumerate(cfg.greet.accounts)
         ]
         return jsonify({"status": "ok", **snap})
@@ -3311,15 +3317,74 @@ def api_notifications_clear():
 
 # ===================== 自进化 API =====================
 
-def _ensure_self_evolve() -> SelfEvolveEngine:
-    """确保 _self_evolve 已初始化。"""
+def _resolve_evolve_account(account=_UNSET) -> int:
+    if account is _UNSET:
+        account = _account_arg()
+    return 0 if account is None else int(account)
+
+
+def _ensure_self_evolve(account=_UNSET) -> SelfEvolveEngine:
+    """拿到「当前数据范围那个账号」的自进化引擎。
+
+    自进化数据（回复效果、经验、快照）本来就按号分文件写：运行中的账号用自己
+    那份，面板必须读同一份。以前这里无条件 new 一个挂在旧全局文件上的引擎，
+    弹窗看到的统计跟两个号实际记录的是两套数，而且和右侧数据范围完全无关。
+
+    account 不传时按请求里的 ?account= 解析；「全部账号」看账号1（主号）——
+    经验与快照是按号存的，没有可合并的单一口径，所以响应里会带 account_name，
+    弹窗顶部标明现在看的是谁。
+    """
     global _self_evolve
-    if _self_evolve is None:
-        _self_evolve = SelfEvolveEngine(
+    idx = _resolve_evolve_account(account)
+
+    manager = globals().get("_multi_manager")
+    loop = None
+    if manager is not None:
+        loop = (getattr(manager, "_loops", {}) or {}).get(idx)
+    live = getattr(loop, "_self_evolve", None) if loop else None
+    if live is not None:
+        # 跑着就用它自己那份：引擎内存态比文件新，读文件会少最近几条
+        return live
+
+    cached = _panel_evolve_cache.get(idx)
+    if cached is None:
+        cached = SelfEvolveEngine(
             config={"enabled": True},
             log_callback=lambda msg: logger.info(msg),
+            data_file=str(account_file(BASE_DIR / "data" / "evolution_data.json", idx)),
         )
-    return _self_evolve
+        _panel_evolve_cache[idx] = cached
+    _self_evolve = cached
+    return cached
+
+
+def _all_evolve_engines() -> list:
+    """当前存在的自进化引擎：跑着的账号各一份 + 面板为没跑的号建的那几份。
+
+    开关是全局配置，改一次要同步到所有已建好的引擎，否则弹窗显示"已启用"
+    而正在跑的账号还在用旧引擎的关闭状态。
+    """
+    out = []
+    manager = globals().get("_multi_manager")
+    if manager is not None:
+        for loop in (getattr(manager, "_loops", {}) or {}).values():
+            eng = getattr(loop, "_self_evolve", None)
+            if eng is not None:
+                out.append(eng)
+    out.extend(_panel_evolve_cache.values())
+    return out
+
+
+def _evolve_account_name(idx: int) -> str:
+    """给弹窗标注当前看的是哪个账号（取不到配置就说索引，不编名字）"""
+    try:
+        cfg = load_config()
+        accs = cfg.greet.accounts or []
+        if 0 <= idx < len(accs):
+            return accs[idx].name or f"账号{idx + 1}"
+    except Exception:
+        pass
+    return f"账号{idx + 1}"
 
 
 @app.route("/api/evolution/report", methods=["GET"])
@@ -3328,7 +3393,9 @@ def api_evolution_report():
     try:
         engine = _ensure_self_evolve()
         report = engine.get_evolution_report()
-        return jsonify({"status": "ok", "report": report})
+        idx = _resolve_evolve_account()
+        return jsonify({"status": "ok", "report": report,
+                        "account": idx, "account_name": _evolve_account_name(idx)})
     except Exception as e:
         logger.exception("获取进化报告失败")
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -3379,13 +3446,27 @@ def api_evolution_status():
 
 @app.route("/api/evolution/toggle", methods=["POST"])
 def api_evolution_toggle():
-    """启用或禁用自进化功能。"""
+    """启用或禁用自进化：写进配置，再同步到运行中的引擎。
+
+    以前只 engine.set_enabled() 改内存：下一轮热重载就被 config 的值冲回去，
+    而右侧「运行时开关」里那个同名开关改的是配置——同一个功能两处两套数。
+    self_evolve_enabled 是全局字段（两个号是同一个人，经验口径不该分叉）。
+    """
+    global _config
     try:
         data = request.get_json() or {}
-        enabled = data.get("enabled", True)
-        engine = _ensure_self_evolve()
-        engine.set_enabled(bool(enabled))
-        return jsonify({"status": "ok", "message": f"自进化功能已{'启用' if enabled else '禁用'}"})
+        enabled = bool(data.get("enabled", True))
+        cfg = UnifiedConfig.load()
+        cfg.self_evolve_enabled = enabled
+        new_cfg = cfg.to_dict()
+        save_config(new_cfg)
+        save_overrides(new_cfg)
+        _config = UnifiedConfig.load()
+        for eng in _all_evolve_engines():
+            eng.set_enabled(enabled)
+        return jsonify({"status": "ok",
+                        "message": f"自进化功能已{'启用' if enabled else '禁用'}（全局，已写入配置）",
+                        "enabled": enabled})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 

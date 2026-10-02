@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Boss直聘 · 智能投递助手</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><defs><linearGradient id=%22g%22 x1=%220%%22 y1=%220%%22 x2=%22100%%22 y2=%22100%%22><stop offset=%220%%22 stop-color=%22%235b7cfa%22/><stop offset=%22100%%22 stop-color=%22%231e4bd2%22/></linearGradient></defs><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22url(%23g)%22/><text x=%2250%22 y=%2265%22 text-anchor=%22middle%22 font-size=%2250%22 font-weight=%22bold%22 fill=%22%23fff%22 font-family=%22Arial%22>B</text></svg>">
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="/static/vendor/socket.io.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -763,6 +763,14 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
 .empty-state .empty-desc,.empty-state .empty-hint{font-size:11.5px;color:var(--fg-3rd);max-width:340px;
   text-align:center;line-height:1.65}
 
+/* 打招呼区顶前的整号级提示（没填招呼语 = 一条都不会投） */
+.greet-alert{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 12px;
+  padding:9px 12px;border-radius:10px;background:var(--warning-bg);
+  border:1px solid var(--warning-bg);color:var(--warning);font-size:12px;line-height:1.6}
+.greet-alert i{flex-shrink:0}
+.greet-alert .greet-alert-names{font-weight:650}
+.greet-alert .btn{margin-left:auto;flex-shrink:0}
+
 /* 滚动条 */
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -803,7 +811,7 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
         </div>
       </div>
       <div>
-        <div class="side-section-title">账号设置 <span style="font-size:10px;color:var(--fg-4th);font-weight:400">(独立)</span></div>
+        <div class="side-section-title">账号设置 <span style="font-size:10px;color:var(--fg-4th);font-weight:400">(独立)</span> <span id="accConfigScope" style="font-size:10px;color:var(--fg-4th);font-weight:400"></span></div>
         <div class="acc-field-row"><label>名称</label><input class="side-form-input" id="accName" type="text" placeholder="主账号" onchange="onAccChange()"></div>
         <div class="acc-field-row"><label>Cookie</label>
           <div class="file-input-wrap">
@@ -926,7 +934,7 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
           </div>
         </div>
 
-        <div class="side-section-title">岗位列表 <span class="badge-count" id="sbarJobCount">0</span></div>
+        <div class="side-section-title">岗位列表 <span class="badge-count" id="sbarJobCount">0</span> <span id="sbarJobScope" style="font-size:10px;color:var(--fg-4th);font-weight:400"></span></div>
         <div id="sbarJobs" style="display:flex;flex-direction:column;min-height:40px"></div>
         <button class="side-btn side-btn-ghost side-btn-sm side-btn-block" onclick="addJob()" style="margin-top:6px;padding:8px 12px;font-size:11px;font-weight:500;border:1px dashed var(--bd-2);background:var(--side-input-bg);border-radius:6px;cursor:pointer" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--bd-2)';this.style.color='var(--fg-2nd)'">+ 添加岗位</button>
       </div>
@@ -1059,6 +1067,7 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
             </div>
           </div>
           <div class="record-tab-content active" id="greetTabContent" style="padding:0;flex:1;overflow-y:auto">
+            <div id="greetAlert" class="greet-alert" style="display:none"></div>
             <table class="greet-table" id="greetTable">
               <thead><tr><th>时间</th><th>岗位</th><th>公司</th><th>薪资</th><th>状态</th><th>跳过原因</th><th>AI</th></tr></thead>
               <tbody id="greetTableBody"></tbody>
@@ -1109,13 +1118,21 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
   </div>
 </div>
 <script>
-const socket = io({
+// socket.io 取不到时退化成空实现：页面本来就有 20 秒轮询，实时推送没了只是慢一点。
+// 这里绝不能让它抛——它以前是第一句，CDN 不通就死在最顶上，
+// 下面的 config / dataScope 全落在 TDZ 里，界面上所有按钮（包括点账号切范围）都不响应。
+var socket = (typeof io === 'function') ? io({
   transports: ['polling', 'websocket'],
   reconnection: true,
   reconnectionDelay: 1000,
   reconnectionDelayMax: 5000,
   reconnectionAttempts: 10
-});
+}) : { on: function () {}, emit: function () {}, io: { on: function () {} } };
+if (typeof io !== 'function') {
+  // 状态点不许骗人：没连上实时通道就说"轮询"，别留着"已连接"三个字
+  var _badge = document.getElementById('connStatus');
+  if (_badge) { _badge.textContent = '轮询模式'; _badge.classList.add('disconnected'); }
+}
 let config = { accounts: [] };
 let activeAccountIdx = 0;
 let availableImages = [];
@@ -1142,6 +1159,21 @@ function scopeLabel() {
   if (dataScope === 'all') return '（全部账号）';
   var a = config.accounts[Number(dataScope)] || {};
   return '（' + (a.name || ('账号' + dataScope)) + '）';
+}
+
+// 左栏正在编辑的是哪个账号。数据范围只管"看谁的记录"，岗位、招呼语、按号覆盖
+// 始终改在 activeAccountIdx 上；"全部账号"下不写出来，看着就像账号2 的岗位丢了
+function editingAccountLabel() {
+  var a = (config.accounts || [])[activeAccountIdx] || {};
+  return '（正在编辑：' + (a.name || ('账号' + (activeAccountIdx + 1))) + '）';
+}
+
+function renderEditingScope() {
+  var t = editingAccountLabel();
+  var j = document.getElementById('sbarJobScope');
+  if (j) j.textContent = t;
+  var c = document.getElementById('accConfigScope');
+  if (c) c.textContent = t;
 }
 
 // 该范围里"打招呼是否处于暂停"
@@ -1262,10 +1294,14 @@ function loadAiHealth() {
 }
 
 // AI 判分质量：真判分 / 兜底默认通过。兜底高的时候说明"筛岗"其实没在跑。
+var aiQualitySeq = 0;
+
 function loadAiQuality() {
   var el = document.getElementById('aiQualityLine');
   if (!el) return;
+  var seq = ++aiQualitySeq;
   fetch('/api/ai/quality' + scopeQs()).then(function(r){return r.json()}).then(function(d) {
+    if (seq !== aiQualitySeq) return;   // 切了范围，上个账号的数不许盖上来
     if (!d || d.status !== 'ok') return;
     if (!d.total) { el.textContent = '判分质量：暂无记录'; el.className = 'ai-quality-line'; return; }
     var pct = Math.round((d.fallback_rate || 0) * 100);
@@ -1282,11 +1318,14 @@ function loadAiQuality() {
 // 判分复盘：AI 判"不符合"后追问到的原因排行与建议。
 // 建议一律要点「采纳」才写配置——后端每条都带 auto_applied:false，前端不许自动生效。
 var aiReviewData = null;
+var aiReviewSeq = 0;
 
 function loadAiReview() {
   var el = document.getElementById('aiReviewLine');
   if (!el) return;
+  var seq = ++aiReviewSeq;
   fetch('/api/ai/judgement_review' + scopeQs()).then(function(r){return r.json()}).then(function(d) {
+    if (seq !== aiReviewSeq) return;   // 切了范围，上个账号的追问结果不许盖上来
     if (!d || d.status !== 'ok') return;
     aiReviewData = d;
     var box = document.getElementById('aiReviewDetail');
@@ -1969,9 +2008,16 @@ function fmtEvoTime(ts) {
   return m ? m[2]+'-'+m[3]+' '+m[4]+':'+m[5] : s.slice(0, 16);
 }
 function showEvolutionModal() {
+  // 经验、快照、回复效果都是按号分文件存的，没有"全部账号"这一份，
+  // 所以弹窗必须指明看的是谁，并能切号——以前它读的是旧全局文件，
+  // 和两个号实际记录的各是一套数
+  if (evolutionAccount === null) {
+    evolutionAccount = (dataScope === 'all') ? 0 : Number(dataScope);
+  }
+  var eqs = evolutionQs();
   Promise.all([
-    fetch('/api/evolution/status').then(function(r){return r.json()}),
-    fetch('/api/evolution/report').then(function(r){return r.json()}).catch(function(){return {status:'error'}})
+    fetch('/api/evolution/status' + eqs).then(function(r){return r.json()}),
+    fetch('/api/evolution/report' + eqs).then(function(r){return r.json()}).catch(function(){return {status:'error'}})
   ]).then(function(results) {
     var statusData = results[0];
     var reportData = results[1];
@@ -2052,9 +2098,17 @@ function showEvolutionModal() {
     if (!reportHtml) {
       reportHtml = '<div class="empty-state"><div class="empty-icon">暂无进化数据</div><div class="empty-desc">运行一段时间后会有数据</div></div>';
     }
+    var accChips = (config.accounts || []).map(function (a, i) {
+      return '<button class="scope-chip' + (i === evolutionAccount ? ' active' : '') +
+             '" onclick="setEvolutionAccount(' + i + ')">' +
+             escHtml(a.name || ('账号' + (i + 1))) + '</button>';
+    }).join('');
     overlay.innerHTML =
       '<div class="modal modal-large">'+
         '<h3>自进化功能</h3>'+
+        '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px">'+
+          '<span style="font-size:10px;color:var(--fg-3rd)">数据属于账号</span>' + accChips +
+        '</div>'+
         '<div class="modal-field"><label>启用自进化</label><span id="evolutionEnabled" class="toggle-switch'+(enabled?' on':'')+'" onclick="toggleEvolution()"></span></div>'+
         '<div style="display:flex;gap:16px;margin:12px 0">'+
           '<div style="flex:1;text-align:center;padding:8px;border:1px solid var(--bd-2);border-radius:8px">'+
@@ -2086,8 +2140,21 @@ function closeEvolutionModal() {
   if (m) m.remove();
 }
 
+// 弹窗看的是哪个账号（null = 还没打开过，按右侧数据范围初始化）
+var evolutionAccount = null;
+
+function evolutionQs() {
+  return '?account=' + (evolutionAccount === null ? 0 : evolutionAccount);
+}
+
+function setEvolutionAccount(i) {
+  evolutionAccount = i;
+  closeEvolutionModal();
+  showEvolutionModal();
+}
+
 function confirmLesson(id, effect) {
-  fetch('/api/evolution/lessons/' + id + '/confirm', {
+  fetch('/api/evolution/lessons/' + id + '/confirm' + evolutionQs(), {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ effect: effect })
@@ -2104,7 +2171,7 @@ function confirmLesson(id, effect) {
 }
 
 function retireLesson(id) {
-  fetch('/api/evolution/lessons/' + id + '/retire', {
+  fetch('/api/evolution/lessons/' + id + '/retire' + evolutionQs(), {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ reason: '面板人工退役' })
@@ -2120,7 +2187,7 @@ function retireLesson(id) {
 }
 
 function refineLessons() {
-  fetch('/api/evolution/lessons/refine', {method:'POST'})
+  fetch('/api/evolution/lessons/refine' + evolutionQs(), {method:'POST'})
   .then(function(r){return r.json()})
   .then(function(data) {
     if (data.status === 'ok') {
@@ -2133,7 +2200,7 @@ function refineLessons() {
 
 function rollbackEvolution() {
   if (!confirm('回滚会把进化数据恢复到最近一份快照（快照之后的调整会丢），确定吗？')) return;
-  fetch('/api/evolution/rollback', {method:'POST'})
+  fetch('/api/evolution/rollback' + evolutionQs(), {method:'POST'})
   .then(function(r){return r.json()})
   .then(function(data) {
     if (data.status === 'ok') {
@@ -2147,7 +2214,7 @@ function rollbackEvolution() {
 function toggleEvolution() {
   const el = document.getElementById('evolutionEnabled');
   const enabled = !el.classList.contains('on');
-  fetch('/api/evolution/toggle', {
+  fetch('/api/evolution/toggle' + evolutionQs(), {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ enabled: enabled })
@@ -2163,7 +2230,7 @@ function toggleEvolution() {
 }
 
 function optimizeEvolution() {
-  fetch('/api/evolution/optimize', { method:'POST' })
+  fetch('/api/evolution/optimize' + evolutionQs(), { method:'POST' })
     .then(function(r){return r.json()})
     .then(function(data) {
       if (data.status === 'ok') {
@@ -2590,8 +2657,9 @@ function renderAccounts() {
         cookieTitle = 'Cookie 失效：' + (cookieStatusCache[i].reason || '需要重新登录');
       }
     }
-    return '<div class="account-tab'+(i===activeAccountIdx?' active':'')+'"'+
-      ' title="点右侧【数据范围】才会切到该账号的数据；这里只负责登录">'+
+    return '<div class="account-tab'+(String(dataScope)===String(i)?' active':'')+'"'+
+      ' onclick="setDataScope('+i+')"'+
+      ' title="点这里切到该账号：右侧指标、打招呼/回复记录、岗位与配置都跟着换。【登录】只开它自己的浏览器">'+
       '<span class="acc-status-dot '+accDotClass(st)+'" title="'+escAttr(accTitle(st, name))+'"></span>'+
       escHtml(name)+'<span class="badge">'+(a.jobs||[]).length+'</span>'+counts+
       '<span class="'+cookieCls+'" title="'+escAttr(cookieTitle)+'" onclick="event.stopPropagation();checkAccountCookie('+i+')"></span>'+
@@ -2807,6 +2875,7 @@ function onAdvChange() {
 function renderAccountConfig() {
   const a = config.accounts[activeAccountIdx];
   if (!a) return;
+  renderEditingScope();
   document.getElementById('accName').value = a.name||'主账号';
   document.getElementById('accEnabled').className = 'toggle-switch'+(a.enabled!==false?' on':'');
   document.getElementById('accCookie').value = a.cookie_file||'zhipin_cookies.json';
@@ -2822,6 +2891,7 @@ function renderJobs() {
 
 function updateSbarJobs() {
   const a = config.accounts[activeAccountIdx];
+  renderEditingScope();
   const el = document.getElementById('sbarJobs');
   const badge = document.getElementById('sbarJobCount');
   if (a && a.jobs && a.jobs.length) {
@@ -2899,7 +2969,8 @@ function showJobModal(job) {
   overlay.id = 'jobModal';
   overlay.innerHTML =
     '<div class="modal">'+
-      '<h3>'+(editingJobIdx>=0?'编辑岗位':'添加岗位')+'</h3>'+
+      '<h3>'+(editingJobIdx>=0?'编辑岗位':'添加岗位')+
+        '<span style="font-size:11px;font-weight:400;color:var(--fg-3rd);margin-left:6px">'+escHtml(editingAccountLabel())+'</span></h3>'+
       '<div class="modal-field"><label>城市</label><input id="modalCity" value="'+escHtml(job.city||'')+'" placeholder="例如: 长沙" list="cityList"><datalist id="cityList"></datalist></div>'+
       '<div class="modal-field"><label>搜索关键词</label><input id="modalQuery" value="'+escHtml(job.query||'')+'" placeholder="例如: 数据分析"></div>'+
       '<div class="modal-field"><label>翻页数</label><input id="modalPages" type="number" value="'+(job.scroll_pages||5)+'" min="1" max="20"></div>'+
@@ -3301,6 +3372,7 @@ function setControls(running) {
 // ── 漏斗指标：累计投递 / 今日已投递(上限) / 接收简历 / 面试数(按会话去重) ──
 var metricsCache = null;
 var _metricsLastLoad = 0;
+var _metricsSeq = 0;
 
 function setText(id, v) {
   var e = document.getElementById(id);
@@ -3325,10 +3397,16 @@ function updateStats() {
 
 function loadMetrics(force) {
   if (force) _metricsLastLoad = Date.now();
+  // 切账号时两个请求可能同时在飞，先发的（上个账号的）后回来就会把数字盖回去。
+  // 按序号+范围双重认账：不是最新那一个、或者范围已经变了，结果一律丢掉。
+  var seq = ++_metricsSeq;
+  var scope = String(dataScope);
   fetch('/api/metrics' + scopeQs()).then(function(r) { return r.json(); }).then(function(d) {
+    if (seq !== _metricsSeq || scope !== String(dataScope)) return;
     if (!d || d.status !== 'ok') return;
     metricsCache = d;
     renderMetrics();
+    renderGreetAlert();
   }).catch(function(e) { console.error('指标读取失败:', e); });
 }
 
@@ -3373,6 +3451,38 @@ function renderMetricsScope() {
   updateScopeLabel();
 }
 
+function renderGreetAlert() {
+  var box = document.getElementById('greetAlert');
+  if (!box) return;
+  var accs = (metricsCache && metricsCache.accounts) || [];
+  var missing = accs.filter(function (a) {
+    if (a.enabled === false || a.greeting_ready !== false) return false;
+    return dataScope === 'all' || String(dataScope) === String(a.index);
+  });
+  if (!missing.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  var names = missing.map(function (a) {
+    return escHtml(a.name || ('账号' + (Number(a.index) + 1)));
+  }).join('、');
+  box.innerHTML = '<i data-lucide="alert-triangle" style="width:14px;height:14px"></i>' +
+    '<span><span class="greet-alert-names">' + names + '</span> 没填自定义招呼语：' +
+    '这个账号一条都不会投出去，记录里的「跳过」全是这一条原因。</span>' +
+    '<button class="btn btn-ghost btn-sm" onclick="gotoGreetEditor(' + missing[0].index + ')">去填写</button>';
+  box.style.display = 'flex';
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// 跳到左栏「账号设置 → 招呼语」：先把它要编辑的那个号选上，否则填的是另一个号
+function gotoGreetEditor(idx) {
+  activeAccountIdx = Number(idx);
+  renderAccountConfig();
+  var g = document.getElementById('accGreeting');
+  if (!g) return;
+  var side = document.querySelector('.side');
+  if (side && !side.classList.contains('open') && window.innerWidth <= 1080) toggleSidebar();
+  g.scrollIntoView({ block: 'center' });
+  g.focus();
+}
+
 function updateScopeLabel() {
   var e = document.getElementById('actionScopeLabel');
   if (e) e.textContent = dataScope === 'all' ? '全部账号' : (config.accounts[Number(dataScope)] || {}).name || ('账号' + dataScope);
@@ -3383,6 +3493,7 @@ function setDataScope(v) {
   if (v !== 'all') activeAccountIdx = Number(v);
   _metricsLastLoad = Date.now();
   renderMetricsScope();   // 点下去必须先自己高亮：别等 metrics 回来才动
+  renderGreetAlert();     // 提示跟着范围换：只看账号1 时不许报账号2 没填
   // 配置面板必须跟着换：账号级覆盖不同，AI 输入框停在上一个号的值，
   // 就是"看着改了、其实改到了别的号"
   loadConfig();
@@ -3490,6 +3601,7 @@ const greetStatusMap = {
   ai_skip: {label:'AI不匹配', cls:'greet-status-ai_skip'},
   already: {label:'已沟通', cls:'greet-status-already'},
   error: {label:'失败', cls:'greet-status-error'},
+  pending: {label:'待确认', cls:'greet-status-skip'},
 };
 let replyRecordCount = 0;
 
@@ -3600,7 +3712,9 @@ function toGreetRow(data) {
     else if (reason.indexOf('已沟通') >= 0) feStatus = 'already';
     else feStatus = 'skip';
   } else {
-    feStatus = 'success';
+    // 剩下的都是"没有依据说它发出去了"（status 缺失、待确认一类）。
+    // 以前这里兜成 success：一次投递显示成两行已投递，前端比 BOSS 端多出来的数就是这么来的
+    feStatus = 'pending';
   }
   var ts = data.timestamp || data.time || '';
   return {
@@ -4166,8 +4280,12 @@ function renderReplyChatList(groups) {
   if (el) el.textContent = replyRecordCount;
 }
 
+var replyListSeq = 0;
+
 function loadReplyChatList() {
+  var seq = ++replyListSeq;
   fetch('/api/reply_records/grouped' + scopeQs()).then(function(r) { return r.json(); }).then(function(data) {
+    if (seq !== replyListSeq) return;   // 切了范围，上个账号的会话列表不许盖上来
     if (!data || data.status !== 'ok') return;
     allReplyGroups = data.groups || [];
     renderReplyChatList(allReplyGroups);

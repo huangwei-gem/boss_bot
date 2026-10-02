@@ -37,6 +37,34 @@ def _now_str() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
+# 跳过结论的类别 —— 同一岗位同一天同一类别只判一次、只记一条。
+# 判据用文本片段而不是 greet_engine 里那几个常量：那个模块 import 了本模块，
+# 反向引用会成环。tests/test_multi_account_consistency.py 里有逐条常量的分类断言，
+# 改文案时那里会先红。
+_SKIP_KIND_MARKERS = (
+    ("no_greeting", ("未配置招呼语",)),
+    ("ai_reject", ("AI判定不匹配",)),
+    ("ai_unavailable", ("按配置跳过",)),
+    ("already", ("已沟通过", "此前已沟通")),
+    ("offline", ("岗位已下线",)),
+)
+
+
+def classify_greet_skip(reason: str) -> str:
+    """把跳过原因归成类别；归不出（失败类、可重试类）返回空串。
+
+    "投递失败/未找到输入框/连接断开/验证码/登录失效"这类都不该被去重：
+    它们下一轮可能就成了，算成"今天已经判过"等于把故障藏一整天。
+    """
+    text = (reason or "").strip()
+    if not text:
+        return ""
+    for kind, markers in _SKIP_KIND_MARKERS:
+        if any(m in text for m in markers):
+            return kind
+    return ""
+
+
 def _normalize_timestamp(ts: Optional[str]) -> str:
     """规范化时间戳:
     - None / 空字符串 → 当前时间
@@ -354,9 +382,10 @@ class GreetRecord:
                 self.status = "skipped"
         else:
             self.status = "pending"
-        # 打招呼语：优先使用实际发送的，其次 AI 建议的，最后传入的 greeting_message
+        # 打招呼语 = 真发出去的那一句（调用方传实际发送内容或空）。
+        # 不再拿 AI 建议文案顶上：那条从没发给过 HR，记录里显示它会和 BOSS 端对不上
         self.greeting_message = _truncate(
-            actual_greeting_sent or ai_suggested_greeting or greeting_message,
+            actual_greeting_sent or greeting_message,
             MAX_ACTUAL_GREETING_LEN,
         )
 
@@ -607,6 +636,27 @@ class GreetRecordStore:
         """获取所有打招呼记录。"""
         with self._lock:
             return list(self._records)
+
+    def has_today(self, job_url: str, kind: str, account_index: int = 0) -> bool:
+        """今天这个账号在这个岗位上是否已经记过同一类别的结论。
+
+        去重键里必须带账号：两个号搜同一个关键词会抓到同一个岗位 URL，
+        主号判过"AI 不匹配"不能替账号2 把这条结论也记成已有。
+        """
+        if not job_url or not kind:
+            return False
+        today = datetime.now().strftime("%Y-%m-%d")
+        with self._lock:
+            for r in self._records:
+                if r.job_url != job_url:
+                    continue
+                if int(r.account_index or 0) != int(account_index):
+                    continue
+                if not str(r.timestamp or "").startswith(today):
+                    continue
+                if classify_greet_skip(r.skip_reason) == kind:
+                    return True
+        return False
 
     def filter(
         self,

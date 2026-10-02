@@ -93,3 +93,105 @@ def test_脚本里没有裸中文注释行():
             if t and ("\u4e00" <= t[0] <= "\u9fff" or t[0] in "（、“"):
                 bad.append(f"  行{n}: {t[:70]}")
     assert not bad, "这些行没有 // 前缀，会被当成表达式：\n" + "\n".join(bad)
+
+
+# ── 多账号重做：点账号条切不过去、面板不标明改的是谁 ──
+
+def test_点账号条本身就切数据范围():
+    """用户点的就是左上那排账号条，右侧那条 chip 很少有人注意到：
+    以前账号条没有 onclick，点账号2 什么都不会变，被当成"多账号没做好" """
+    body = _body("renderAccounts")
+    assert 'onclick="setDataScope(' in body
+    # 登录按钮和 Cookie 点仍然只管自己，不能顺手切范围
+    assert body.count("event.stopPropagation()") >= 2
+
+
+def test_账号条高亮跟着数据范围走():
+    assert "dataScope" in _body("renderAccounts")
+
+
+def test_指标只认最后一次请求():
+    """切账号时两个 /api/metrics 同时在飞，先发的后回来会把上个号的数盖上来"""
+    assert "_metricsSeq" in _body("loadMetrics")
+
+
+def test_会话列表只认最后一次请求():
+    assert "replyListSeq" in _body("loadReplyChatList")
+
+
+def test_岗位列表标明正在编辑哪个账号():
+    """数据范围是「全部账号」时左栏仍在编辑 activeAccountIdx，
+    不写出来就像"账号2 的岗位没了" """
+    assert "renderEditingScope()" in _body("updateSbarJobs")
+    assert "renderEditingScope()" in _body("renderAccountConfig")
+
+
+def test_岗位弹窗标题带账号():
+    assert "editingAccountLabel()" in _body("showJobModal")
+
+
+def test_未知状态不许渲染成已投递():
+    """兜底分支以前一律 feStatus='success'：status 缺失/待确认的行
+    会被显示成"已投递"，前端计数就比 BOSS 端多 """
+    body = _body("toGreetRow")
+    assert "feStatus = 'pending'" in body
+    assert re.search(r"else\s*\{\s*feStatus = 'success'", body) is None
+    assert "pending:" in HTML
+
+
+def test_自进化弹窗按账号取数():
+    """经验/快照按号分文件存，弹窗以前读的是旧全局文件，和两个号实际记录两套数"""
+    assert "evolutionQs()" in _body("showEvolutionModal")
+    assert "setEvolutionAccount" in _body("showEvolutionModal")
+
+
+def test_并发序号变量都要先声明():
+    """这类 `var seq = ++xxxSeq` 的守卫，计数器漏了声明就是 ReferenceError：
+    函数第一件事就抛，整块面板（回复记录列表）一条都不显示，而且控制台外看不出原因。"""
+    used = set(re.findall(r"[*+/!-]{2,}\s*([A-Za-z_$][\w$]*Seq\b)", HTML))
+    used |= set(re.findall(r"\b([A-Za-z_$][\w$]*Seq)\s*[*+/!-]{2,}", HTML))
+    declared = set(re.findall(r"\b(?:var|let|const)\s+([A-Za-z_$][\w$]*Seq)\b", HTML))
+    assert used, "一个并发序号都没找到，说明守卫被撤了"
+    missing = sorted(used - declared)
+    assert not missing, f"未声明的序号计数器：{missing}"
+
+
+def test_招呼语没配时打招呼区顶上前提示():
+    """整号没填招呼语时一轮下来全是「未配置招呼语，跳过」：日志一片跳过、
+    记录区只显示状态列一个词，用户的第一反应是"日志和记录对不上"。
+    就绪状态必须由 metrics 报出来并顶上前说清楚。"""
+    assert 'id="greetAlert"' in HTML
+    assert "renderGreetAlert()" in _body("loadMetrics")
+    body = _body("renderGreetAlert")
+    assert "greeting_ready" in body
+    assert "gotoGreetEditor" in body
+
+
+def test_切数据范围要跟着重算提示():
+    assert "renderGreetAlert()" in _body("setDataScope")
+
+
+def test_去填写要选中那个号并聚焦输入框():
+    body = _body("gotoGreetEditor")
+    assert "activeAccountIdx = Number(idx)" in body
+    assert "renderAccountConfig()" in body
+    assert "getElementById('accGreeting')" in body
+
+
+def test_socket_客户端走本地文件不靠_public_CDN():
+    """实测：cdn.socket.io 不通时，页面第一句 `const socket = io({...})` 直接抛，
+    整个主脚本没跑完——config/dataScope 全在 TDZ 里，界面上包括"点账号2"在内的
+    任何按钮都不响应。第三方脚本必须本地化。"""
+    assert 'src="https://cdn.socket.io' not in HTML
+    assert '/static/vendor/socket.io.min.js' in HTML
+    vendored = ROOT / "flask-version" / "static" / "vendor" / "socket.io.min.js"
+    assert vendored.is_file() and vendored.stat().st_size > 10000, "本地 socket.io 客户端不在"
+
+
+def test_取不到_io_时页面照常能用():
+    """本地文件也可能被误删/被拦：拿不到 io 就退化成空实现，
+    实时推送没了照样有 20 秒轮询，不许再把整块脚本带死。"""
+    first = re.search(r"<script>\n(.*?)</script>", HTML, re.S).group(1)
+    head = first[:900]
+    assert "typeof io === 'function'" in head, "socket 初始化没有兜底"
+    assert re.search(r"const socket = io\(", head) is None
