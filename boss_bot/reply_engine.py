@@ -863,6 +863,11 @@ class ReplyEngine:
         user_prompt = build_user_prompt(boss_name, job_name, message, history)
         # 每次现取：前端改了 system_rules 或个人画像，下一条回复就该用新的
         system_prompt = build_system_prompt()
+        # 经验补充只做增量追加，不重写基础提示词（Continual Harness：小范围更新）
+        if self._self_evolve and self._self_evolve.enabled:
+            supplement = self._self_evolve.get_prompt_supplement()
+            if supplement:
+                system_prompt = system_prompt + "\n\n" + supplement
         response = client.chat.completions.create(
             model=model,
             max_tokens=self._ai_max_tokens,

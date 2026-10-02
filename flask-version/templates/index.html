@@ -1979,7 +1979,32 @@ function showEvolutionModal() {
     const gateBlocks = report.gate_blocks || 0;
     const adjustments = report.strategy_adjustments || [];
     const recentRecords = report.recent_records || [];
+    const lessons = (report.lessons || {});
+    const activeLessons = lessons.active || [];
+    const retiredLessons = lessons.retired_recent || [];
+    let lessonHtml = '<div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin-bottom:6px">沉淀经验（追加进提示词，证据≥2次才入库，连负2次自动退役）</div>';
+    if (activeLessons.length > 0) {
+      lessonHtml += activeLessons.map(function(l) {
+        return '<div style="padding:5px 0;border-bottom:1px solid var(--bd-2);font-size:10px;color:var(--fg-2nd)">'+
+          '<div>#'+l.id+' · '+escHtml(l.text)+'</div>'+
+          '<div style="color:var(--fg-3rd);margin-top:2px">证据 '+l.evidence_count+' 次 · 有效 '+l.effect_positive+' / 无效 '+l.effect_negative+
+          ' <a href="javascript:void(0)" onclick="confirmLesson('+l.id+',\'positive\')" style="color:var(--success,#46a758)">有效</a>'+
+          ' <a href="javascript:void(0)" onclick="confirmLesson('+l.id+',\'negative\')" style="color:var(--danger,#e5484d)">无效</a>'+
+          ' <a href="javascript:void(0)" onclick="retireLesson('+l.id+')" style="color:var(--fg-3rd)">退役</a></div>'+
+          '</div>';
+      }).join('');
+    } else {
+      lessonHtml += '<div style="font-size:10px;color:var(--fg-3rd);padding:4px 0">暂无在库经验。复盘后，反复出现的闸门拦截会自动沉淀进来。</div>';
+    }
+    if (retiredLessons.length > 0) {
+      lessonHtml += '<div style="font-size:10px;color:var(--fg-3rd);margin-top:6px">已退役：'+retiredLessons.map(function(l){return '#'+l.id;}).join('、')+'</div>';
+    }
+    lessonHtml += '<div style="display:flex;gap:8px;margin-top:8px">'+
+      '<button class="btn btn-cancel btn-sm" onclick="refineLessons()">复盘沉淀</button>'+
+      '<button class="btn btn-cancel btn-sm" onclick="rollbackEvolution()">回滚上一快照</button>'+
+      '</div>';
     let reportHtml = '';
+    reportHtml += '<div style="margin-bottom:10px">'+lessonHtml+'</div>';
     if (adjustments.length > 0) {
       reportHtml += '<div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin-bottom:6px">策略调整历史</div>';
       reportHtml += adjustments.slice(0, 5).map(function(a) {
@@ -2028,6 +2053,64 @@ function showEvolutionModal() {
 function closeEvolutionModal() {
   const m = document.getElementById('evolutionModal');
   if (m) m.remove();
+}
+
+function confirmLesson(id, effect) {
+  fetch('/api/evolution/lessons/' + id + '/confirm', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ effect: effect })
+  })
+  .then(function(r){return r.json()})
+  .then(function(data) {
+    if (data.status === 'ok') {
+      addLog('SUCCESS', '经验 #'+id+' 已确认'+(effect==='positive'?'有效':'无效'));
+      if (data.lesson && data.lesson.status === 'retired') addLog('INFO', '经验 #'+id+' 连负两次已自动退役');
+      closeEvolutionModal(); showEvolutionModal();
+    } else { addLog('ERROR', '确认失败: ' + (data.message||'')); }
+  })
+  .catch(function(e){addLog('ERROR', '确认经验失败: ' + e)});
+}
+
+function retireLesson(id) {
+  fetch('/api/evolution/lessons/' + id + '/retire', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ reason: '面板人工退役' })
+  })
+  .then(function(r){return r.json()})
+  .then(function(data) {
+    if (data.status === 'ok') {
+      addLog('SUCCESS', '经验 #'+id+' 已退役');
+      closeEvolutionModal(); showEvolutionModal();
+    } else { addLog('ERROR', '退役失败: ' + (data.message||'')); }
+  })
+  .catch(function(e){addLog('ERROR', '退役经验失败: ' + e)});
+}
+
+function refineLessons() {
+  fetch('/api/evolution/lessons/refine', {method:'POST'})
+  .then(function(r){return r.json()})
+  .then(function(data) {
+    if (data.status === 'ok') {
+      addLog('SUCCESS', '复盘完成：新沉淀 ' + data.result.created + ' 条经验（发现模式 ' + data.result.patterns_seen + ' 种）');
+      closeEvolutionModal(); showEvolutionModal();
+    } else { addLog('ERROR', '复盘失败: ' + (data.message||'')); }
+  })
+  .catch(function(e){addLog('ERROR', '复盘失败: ' + e)});
+}
+
+function rollbackEvolution() {
+  if (!confirm('回滚会把进化数据恢复到最近一份快照（快照之后的调整会丢），确定吗？')) return;
+  fetch('/api/evolution/rollback', {method:'POST'})
+  .then(function(r){return r.json()})
+  .then(function(data) {
+    if (data.status === 'ok') {
+      addLog('SUCCESS', data.message);
+      closeEvolutionModal(); showEvolutionModal();
+    } else { addLog('ERROR', '回滚失败: ' + (data.message||'')); }
+  })
+  .catch(function(e){addLog('ERROR', '回滚失败: ' + e)});
 }
 
 function toggleEvolution() {

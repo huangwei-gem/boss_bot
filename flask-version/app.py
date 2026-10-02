@@ -3401,6 +3401,73 @@ def api_evolution_reset():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+@app.route("/api/evolution/lessons", methods=["GET"])
+def api_evolution_lessons():
+    """在库经验列表（active + 最近退役）。"""
+    try:
+        engine = _ensure_self_evolve()
+        report = engine.get_evolution_report()
+        return jsonify({"status": "ok", "lessons": report["lessons"]})
+    except Exception as e:
+        logger.exception("获取经验列表失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/evolution/lessons/refine", methods=["POST"])
+def api_evolution_lessons_refine():
+    """复盘执行轨迹，把反复出现的闸门拦截沉淀成经验（沉淀前自动留快照）。"""
+    try:
+        engine = _ensure_self_evolve()
+        result = engine.refine_lessons()
+        return jsonify({"status": "ok", "result": result})
+    except Exception as e:
+        logger.exception("经验复盘失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/evolution/lessons/<int:lesson_id>/confirm", methods=["POST"])
+def api_evolution_lessons_confirm(lesson_id):
+    """确认一条经验的效果：positive/negative；连负两次自动退役。"""
+    try:
+        data = request.get_json() or {}
+        engine = _ensure_self_evolve()
+        lesson = engine.confirm_lesson(lesson_id, data.get("effect", ""))
+        return jsonify({"status": "ok", "lesson": lesson})
+    except ValueError as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+    except Exception as e:
+        logger.exception("确认经验效果失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/evolution/lessons/<int:lesson_id>/retire", methods=["POST"])
+def api_evolution_lessons_retire(lesson_id):
+    """人工退役一条经验。"""
+    try:
+        data = request.get_json() or {}
+        engine = _ensure_self_evolve()
+        lesson = engine.retire_lesson(lesson_id, data.get("reason", ""))
+        return jsonify({"status": "ok", "lesson": lesson})
+    except ValueError as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+    except Exception as e:
+        logger.exception("退役经验失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/evolution/rollback", methods=["POST"])
+def api_evolution_rollback():
+    """回滚进化数据到最近一份快照。"""
+    try:
+        engine = _ensure_self_evolve()
+        if engine.rollback_evolution_data():
+            return jsonify({"status": "ok", "message": "已回滚到最近一份快照"})
+        return jsonify({"status": "error", "message": "没有可用的快照"}), 400
+    except Exception as e:
+        logger.exception("回滚进化数据失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 # ===================== 自进化质量评分 API =====================
 
 @app.route("/api/self_evolve/report", methods=["GET"])

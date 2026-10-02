@@ -396,6 +396,7 @@ class ReplyBudgetTest:
         e._last_ai_user_prompt = None
         e._last_ai_model = ""
         e._last_ai_raw_response = None
+        e._self_evolve = None
         return e, RE
 
     def test_最多尝试AI_MAX_ATTEMPTS个接口(self):
@@ -482,6 +483,7 @@ class ReplyEmptyBodyTest:
         e._last_ai_user_prompt = None
         e._last_ai_model = ""
         e._last_ai_raw_response = None
+        e._self_evolve = None
 
         class Msg:
             def __init__(self):

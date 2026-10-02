@@ -103,6 +103,7 @@ class CallChatTest:
         e._last_ai_user_prompt = None
         e._last_ai_model = ""
         e._last_ai_raw_response = None
+        e._self_evolve = None
         return e
 
     def _client(self, content, reasoning=""):
@@ -155,6 +156,7 @@ class FailoverTest:
         e._last_ai_user_prompt = None
         e._last_ai_model = ""
         e._last_ai_raw_response = None
+        e._self_evolve = None
         return e
 
     def test_第一个接口回思考稿就换第二个(self):

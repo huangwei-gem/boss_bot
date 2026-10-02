@@ -54,6 +54,13 @@ AI_SCORING_BATCH_SIZE = 10
 # 模板使用次数阈值：低于此值不参与优化建议
 TEMPLATE_MIN_USAGE_FOR_OPT = 3
 
+# ── 经验沉淀（lessons）门槛 ──
+# 单次侥幸不能沉淀成规则（Prime Agent 在 Factorio 里把作弊沉淀成了技能，就是没这道门）
+LESSON_MIN_EVIDENCE = 2        # 证据不足 2 次不许入库
+LESSON_RETIRE_NEGATIVE = 2     # 连续 2 次负效果确认 → 自动退役
+LESSON_MAX_ACTIVE = 5          # 提示补充最多带 5 条，别把基础提示词挤没了
+SNAPSHOT_KEEP = 5              # 快照保留份数，错了能退回去
+
 # 积极反应关键词（HR 继续对话、询问详情、约面试等）
 _POSITIVE_PATTERNS = [
     re.compile(r"(面试|聊聊|沟通|电话|视频|线下|来公司)", re.IGNORECASE),
@@ -168,6 +175,8 @@ class SelfEvolveEngine:
         self._reply_count_since_optimize = 0
         # 发送闸门（输出校验）拦下的草稿条数：留痕可见，不进效果统计
         self._gate_block_count = 0
+        # 经验沉淀：从真实发送记录里复盘出来的做事方法，追加进提示词（不重写基础提示）
+        self._lessons: List[Dict[str, Any]] = []
 
         # ── 自进化质量评分数据结构 ──
         # 回复评分历史：[{id, received_message, reply_content, reply_source,
@@ -999,6 +1008,174 @@ class SelfEvolveEngine:
     # 进化报告
     # ─────────────────────────────────────────────
 
+    # ─────────────────────────────────────────────
+    # 经验沉淀（lessons）：复盘执行轨迹 → 沉淀成提示补充
+    #
+    # 借鉴 Continual Harness 的三条原则：小范围更新（永不重写基础提示词）、
+    # 质量门槛（证据 ≥2 次才入库，连负 2 次自动退役）、快照回滚。
+    # ─────────────────────────────────────────────
+
+    @property
+    def _snapshot_dir(self) -> Path:
+        return self._data_file.parent / "evolution_snapshots"
+
+    def snapshot_evolution_data(self, reason: str = "") -> str:
+        """当前进化数据留一份快照，沉淀/优化之前调用。返回快照路径，无数据返回空串。"""
+        try:
+            if not self._data_file.exists():
+                return ""
+            self._snapshot_dir.mkdir(parents=True, exist_ok=True)
+            stamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
+            dest = self._snapshot_dir / f"evolution-{stamp}.json"
+            shutil.copy2(self._data_file, dest)
+            snaps = sorted(self._snapshot_dir.glob("evolution-*.json"))
+            for old in snaps[:-SNAPSHOT_KEEP]:
+                old.unlink()
+            self._log("INFO", f"进化数据快照已留档（{reason or '未注明原因'}）：{dest.name}")
+            return str(dest)
+        except Exception as e:
+            self._log("ERROR", f"快照失败（不阻塞主流程）: {e}")
+            return ""
+
+    def rollback_evolution_data(self) -> bool:
+        """回滚到最近一份快照。没有快照返回 False，不假装成功。"""
+        snaps = sorted(self._snapshot_dir.glob("evolution-*.json")) \
+            if self._snapshot_dir.exists() else []
+        if not snaps:
+            return False
+        newest = snaps[-1]
+        shutil.copy2(newest, self._data_file)
+        with self._lock:
+            self.load_evolution_data()
+        self._log("INFO", f"进化数据已回滚到快照 {newest.name}")
+        return True
+
+    def add_lesson(self, text: str, trigger: str = "", evidence_count: int = 0,
+                   samples: Optional[List[str]] = None, source: str = "manual") -> Dict[str, Any]:
+        """沉淀一条经验。证据不足、空文本、在库已满都会拒绝而不是静默放过。"""
+        text = (text or "").strip()
+        if not text:
+            raise ValueError("经验文本为空")
+        if int(evidence_count or 0) < LESSON_MIN_EVIDENCE:
+            raise ValueError(
+                f"证据只有 {evidence_count} 次，不足 {LESSON_MIN_EVIDENCE} 次："
+                "单次侥幸不能沉淀成规则")
+        with self._lock:
+            existing = next((x for x in self._lessons
+                             if x["status"] == "active" and x["text"] == text), None)
+            if existing:
+                existing["evidence_count"] = max(existing["evidence_count"],
+                                                 int(evidence_count))
+                self._save_internal()
+                return {**existing, "created": False}
+            active_n = sum(1 for x in self._lessons if x["status"] == "active")
+            if active_n >= LESSON_MAX_ACTIVE:
+                raise ValueError(
+                    f"在库经验已有 {active_n} 条（上限 {LESSON_MAX_ACTIVE}），"
+                    "先退役旧的再沉淀新的")
+            lesson = {
+                "id": max((x["id"] for x in self._lessons), default=0) + 1,
+                "text": text[:200],
+                "trigger": (trigger or "")[:200],
+                "evidence_count": int(evidence_count),
+                "samples": [str(s)[:100] for s in (samples or [])[:3]],
+                "source": source,
+                "status": "active",
+                "effect_positive": 0,
+                "effect_negative": 0,
+                "retire_reason": "",
+                "created_at": datetime.now().isoformat(),
+                "last_confirmed_at": None,
+            }
+            self._lessons.append(lesson)
+            self._save_internal()
+        self._log("INFO", f"经验沉淀 #{lesson['id']}：{text[:60]}")
+        return {**lesson, "created": True}
+
+    def confirm_lesson(self, lesson_id: int, effect: str) -> Dict[str, Any]:
+        """对一条经验的效果做确认：positive 累计，negative 累计到阈值自动退役。"""
+        if effect not in ("positive", "negative"):
+            raise ValueError(f"未知效果 {effect}，只认 positive/negative")
+        with self._lock:
+            lesson = next((x for x in self._lessons if x["id"] == lesson_id
+                           and x["status"] == "active"), None)
+            if not lesson:
+                raise ValueError(f"经验 #{lesson_id} 不存在或已退役")
+            key = "effect_positive" if effect == "positive" else "effect_negative"
+            lesson[key] += 1
+            lesson["last_confirmed_at"] = datetime.now().isoformat()
+            if lesson["effect_negative"] >= LESSON_RETIRE_NEGATIVE:
+                lesson["status"] = "retired"
+                lesson["retire_reason"] = (
+                    f"连负 {lesson['effect_negative']} 次自动退役：这条经验跟着它的证据一起过时了")
+            self._save_internal()
+            return dict(lesson)
+
+    def retire_lesson(self, lesson_id: int, reason: str = "") -> Dict[str, Any]:
+        with self._lock:
+            lesson = next((x for x in self._lessons if x["id"] == lesson_id
+                           and x["status"] == "active"), None)
+            if not lesson:
+                raise ValueError(f"经验 #{lesson_id} 不存在或已退役")
+            lesson["status"] = "retired"
+            lesson["retire_reason"] = (reason or "人工退役").strip()[:200]
+            self._save_internal()
+        self._log("INFO", f"经验 #{lesson_id} 已退役：{lesson['retire_reason'][:60]}")
+        return dict(lesson)
+
+    def get_prompt_supplement(self) -> str:
+        """把在库经验渲染成提示补充块。追加用，绝不替换基础提示词；没有经验就空串。"""
+        if not self.enabled:
+            return ""
+        with self._lock:
+            active = [x for x in self._lessons if x["status"] == "active"]
+        if not active:
+            return ""
+        lines = ["【沉淀经验】回复时参考这些从真实发送记录里验证过的做法："]
+        for i, x in enumerate(active, 1):
+            lines.append(f"{i}. {x['text']}")
+        return "\n".join(lines)
+
+    def refine_lessons(self) -> Dict[str, int]:
+        """/refine：回顾执行轨迹，把反复出现的闸门拦截沉淀成经验。
+
+        只对证据 ≥ LESSON_MIN_EVIDENCE 的模式动手；有新沉淀前先留快照。
+        """
+        with self._lock:
+            groups: Dict[str, Dict[str, Any]] = {}
+            for r in self._reply_records:
+                if r.get("kind") != "gate_block":
+                    continue
+                reason = (r.get("note") or "").strip()
+                if not reason:
+                    continue
+                g = groups.setdefault(reason, {"count": 0, "samples": []})
+                g["count"] += 1
+                if len(g["samples"]) < 3:
+                    g["samples"].append((r.get("reply_text") or "")[:100])
+            active_texts = {x["text"] for x in self._lessons if x["status"] == "active"}
+        # 只读汇总在这里结束；add_lesson 自己会拿锁，在这里持锁调它会死锁
+        planned = []
+        for reason, g in groups.items():
+            if g["count"] < LESSON_MIN_EVIDENCE:
+                continue
+            text = (f"「{reason[:80]}」已发生 {g['count']} 次：再遇到同类草稿直接换接口"
+                    "重新生成，不要人工放行，也不要把同类内容发出去")
+            if text not in active_texts:
+                planned.append((text, reason, g))
+        created = 0
+        if planned:
+            self.snapshot_evolution_data("refine 沉淀前")
+        for text, reason, g in planned:
+            try:
+                self.add_lesson(text, trigger=f"闸门拦截复盘：{reason[:80]}",
+                                evidence_count=g["count"], samples=g["samples"],
+                                source="refine")
+                created += 1
+            except ValueError as e:
+                self._log("WARN", f"经验沉淀被拒：{e}")
+        return {"created": created, "patterns_seen": len(groups)}
+
     def get_evolution_report(self) -> Dict[str, Any]:
         """获取进化报告。
 
@@ -1076,6 +1253,19 @@ class SelfEvolveEngine:
                 "strategy_adjustments": list(self._strategy_adjustments[-20:]),
                 "recent_records": recent_records,
                 "gate_blocks": self._gate_block_count,
+                "lessons": {
+                    "active": [
+                        {"id": x["id"], "text": x["text"], "source": x["source"],
+                         "evidence_count": x["evidence_count"],
+                         "effect_positive": x["effect_positive"],
+                         "effect_negative": x["effect_negative"],
+                         "created_at": x["created_at"]}
+                        for x in self._lessons if x["status"] == "active"],
+                    "retired_recent": [
+                        {"id": x["id"], "text": x["text"],
+                         "retire_reason": x["retire_reason"]}
+                        for x in self._lessons if x["status"] == "retired"][-5:],
+                },
                 "enabled": self.enabled,
             }
 
@@ -1095,6 +1285,7 @@ class SelfEvolveEngine:
                 "strategy_adjustments": list(self._strategy_adjustments),
                 "reply_records": self._reply_records[-200:],  # 保留最近200条
                 "gate_blocks": self._gate_block_count,
+                "lessons": list(self._lessons),
                 "last_saved": datetime.now().isoformat(),
             }
             with open(self._data_file, "w", encoding="utf-8") as f:
@@ -1120,6 +1311,7 @@ class SelfEvolveEngine:
                 self._strategy_adjustments = data.get("strategy_adjustments", [])
                 self._reply_records = data.get("reply_records", [])
                 self._gate_block_count = data.get("gate_blocks", 0)
+                self._lessons = data.get("lessons", [])
 
                 self._log("INFO",
                           f"进化数据已加载: {self._reply_stats['total_replies']} 条回复记录, "
