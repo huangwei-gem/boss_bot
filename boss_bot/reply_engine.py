@@ -742,15 +742,24 @@ class ReplyEngine:
 
     @staticmethod
     def _split_messages(messages):
-        """拆出最新对方消息和历史列表，兼容直接传字符串"""
+        """拆出最新对方消息和历史列表，兼容直接传字符串
+
+        卡片（HR 的"我想要一份您的附件简历，您是否同意"就是张卡片）线上
+        .text-content 是空的，正文存在 card_text 里。以前只认 text，于是
+        "对方最新说了什么"变成空串：规则和意图一起失灵，AI 对着空气回了句
+        "稍后把简历发给您"，而 HR 等的是简历本身。
+        """
         if isinstance(messages, str):
             return messages, []
         if not messages:
             return "", []
         latest = ""
         for msg in reversed(messages):
-            if not msg.get("is_mine"):
-                latest = (msg.get("text") or "").strip()
+            if msg.get("is_mine"):
+                continue
+            body = (msg.get("text") or msg.get("card_text") or "").strip()
+            if body:
+                latest = body
                 break
         return latest, messages
 

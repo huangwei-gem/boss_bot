@@ -1803,9 +1803,11 @@ class UnifiedBotLoop:
         latest_other_msg = None
         latest_other_msg_time = ""
         for msg in reversed(messages):
-            # 卡片类条目正文为空（线上是张卡片），不能当"对方最新说了什么"
-            if not msg.get("is_mine") and (msg.get("text") or "").strip():
-                latest_other_msg = msg.get("text", "")
+            # 卡片的 .text-content 是空的，正文在 card_text（HR 点"求附件简历"就是张卡片）：
+            # 只认 text 会把这条当成"没说话"，规则和意图全部失灵
+            body = (msg.get("text") or msg.get("card_text") or "").strip()
+            if not msg.get("is_mine") and body:
+                latest_other_msg = body
                 latest_other_msg_time = msg.get("time", "")
                 break
 
