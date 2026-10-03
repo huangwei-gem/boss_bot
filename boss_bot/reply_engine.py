@@ -32,7 +32,7 @@ from boss_bot.config import (
     USER_PROFILE, render_template,
 )
 from boss_bot.rules import RuleEngine
-from boss_bot.intent import classify
+from boss_bot.intent import classify, is_resume_request
 from boss_bot.prompts import build_system_prompt, build_user_prompt
 from boss_bot.reply_record import ReplyRecord, ReplyRecordStore, _get_reply_store
 
@@ -449,6 +449,10 @@ class ReplyEngine:
 
         if latest:
             meta["intent"] = classify(latest)
+            # ask_resume 宽到连"简历已收到"都命中，而它下游是真实的发送动作：
+            # 不是真索要就把意图降回 other，交给 AI 按上下文回话
+            if meta["intent"] == "ask_resume" and not is_resume_request(latest):
+                meta["intent"] = "other"
 
         # 收到新消息时，评估之前 AI 回复的效果（自进化）
         if self._self_evolve and self._self_evolve.enabled and history:
@@ -526,6 +530,10 @@ class ReplyEngine:
         # ── 1. 关键词规则直通（最高优先级）──
         if latest:
             result = self.rule_engine.match(latest)
+            if result and result[0] == "resume" and not is_resume_request(latest):
+                # 规则表按子串匹配，键就是"简历"两个字，所以"简历已收到""看过你的简历"
+                # 都会命中直通动作。发简历是真实动作，判错收不回来，让给意图/AI 按上下文回
+                result = None
             if result:
                 action, content = result
                 # 重复发送检测：如果即将发送的内容与历史高度重复，跳过

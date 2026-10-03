@@ -93,3 +93,36 @@ def classify(message: str) -> str:
             if pattern.search(text):
                 return intent
     return "other"
+
+
+# ── "发简历"这个动作的专用判据 ─────────────────────────────────────
+# ask_resume 那组正则太宽（r"简历.{0,4}(发|看|收|给)" 连"简历已收到"都命中），
+# 而它下游挂的是一个真实动作：点开发简历按钮把附件塞过去。判错的代价不是
+# 说错一句话，是把简历发给一个刚刚拒绝过我们的人。
+#
+# 判据取自盘上 105 个会话里 26 条会命中 resume 的最新 HR 消息：真在要的 11 条
+# 全部是"发/送 + 简历"或那张"我想要一份您的附件简历"卡片；另外 15 条只是提到
+# 简历（已收到、看过了、不匹配、内推链接，以及我们自己发出去之后的系统确认卡）。
+_RESUME_ASK_PATTERNS = [
+    r"(发|送).{0,8}简历",                      # 发一份简历 / 发我一份简历 / 可以发份简历
+    r"简历.{0,4}(发|给).{0,3}(我|过来|您|你)",  # 简历发我 / 简历发过来
+    r"(想|要).{0,4}一份.{0,6}简历",            # HR 卡片：我想要一份您的附件简历
+    r"(看看|看下|提供|上传).{0,4}简历",
+]
+
+# 出现这些字样就说明"简历"是过去式或客套，不是索取
+_RESUME_NOT_ASK_MARKS = (
+    "已发送", "已收到", "收到", "看过", "看了", "印象", "初筛", "同步给",
+    "不符合", "不合适", "不匹配", "内推", "链接", "http",
+)
+
+
+def is_resume_request(message: str) -> bool:
+    """这句话是不是真的在向我要附件简历。"""
+    text = (message or "").strip()
+    if not text:
+        return False
+    if any(k in text for k in _RESUME_NOT_ASK_MARKS):
+        return False
+    return any(re.search(p, text) for p in _RESUME_ASK_PATTERNS)
+

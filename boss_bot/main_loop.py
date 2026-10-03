@@ -40,6 +40,7 @@ from boss_bot.greet_engine import (GreetEngine, GREETING_MISSING_REASON,
                                    in_probe_band)
 from boss_bot.reply_engine import ReplyEngine, conversation_rejected
 from boss_bot.page_handler import BossChatHandler
+from boss_bot.pending_resume import pending_resume_asks
 from boss_bot.state_store import StateStore
 from boss_bot.stats import Stats
 from boss_bot.notify import Notifier
@@ -1587,6 +1588,7 @@ class UnifiedBotLoop:
                         self._sync_chat_tab()
                         self._chat_handler.go_to_chat()
                         self._full_sync_chats()
+                        self._backfill_pending_resumes()
                     except Exception as e:
                         self._log("WARN", f"启动全量同步失败（不影响后续未读轮次）: {e}")
 
@@ -1720,6 +1722,31 @@ class UnifiedBotLoop:
             except Exception as e:
                 self._log("WARN", f"[{name}] 全量同步失败（继续下一个）: {e}")
         self._log("INFO", f"启动全量同步完成：{synced}/{len(chats)} 个会话已同步，之后只采未读")
+
+    def _backfill_pending_resumes(self):
+        """补发"HR 要过简历、但我们没发出去"的会话。
+
+        回复轮只点未读会话，而这些会话早就被点开回过一句文字，红点没了，
+        之后再也不会被读到——不主动补扫，那句"稍后把简历整理好发给您"就永远
+        欠着（2026-10-02 江女士 | 孤波 挂了 4 天）。
+        走的是正常会话处理链，拒绝检测、每小时上限、resume_send_once 一道不少。
+        """
+        convs = [c for c in self._msg_store.get_all_chats_detail()
+                 if c.get("account_index") == self.account_index]
+        pending = pending_resume_asks(convs)
+        if not pending:
+            self._log("INFO", "补扫欠简历的会话：没有")
+            return
+        self._log("INFO", f"补扫欠简历的会话：{len(pending)} 个 —— "
+                          + "、".join(p["chat_name"] for p in pending))
+        rows = self._chat_handler.get_all_chats()
+        for item in pending:
+            row = next((r for r in rows if r.get("name") == item["chat_name"]), None)
+            if row is None:
+                self._log("INFO", f"⏭️ 跳过 [{item['chat_name']}]：侧栏已找不到这个会话")
+                continue
+            self._process_single_chat(row)
+            self._reply_engine.wait_human_delay()
 
     def _process_single_chat(self, chat_info: dict):
         """处理单个未读聊天会话。"""
