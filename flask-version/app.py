@@ -56,7 +56,8 @@ from boss_bot.unified_config import (
     ACCOUNT_OVERLAY_LOCKED, ACCOUNT_OVERLAY_SECTIONS, diff_against,
 )
 from boss_bot.judgement_review import apply_suggestion, build_review
-from boss_bot.greet_engine import account_greeting_ready
+from boss_bot.greet_engine import account_greeting_ready, account_greeting_mode
+from boss_bot.greeting import compose_account_default, ensure_account_default
 from boss_bot.main_loop import UnifiedBotLoop, MultiAccountManager
 from boss_bot.self_evolve import SelfEvolveEngine
 from boss_bot.reply_record import (
@@ -343,7 +344,27 @@ def _ensure_config() -> UnifiedConfig:
             logger.warning("bot_config.json 被改动但当前内容解析不了，"
                            "暂继续用内存里那份配置")
         _config_stamp_cached = stamp
+    if _ensure_greeting_defaults(_config):
+        # 刚自己写过盘：不把这次改动当成"外部改动"，否则下一次进来又重载一遍
+        _config_stamp_cached = _config_stamp()
     return _config
+
+
+def _ensure_greeting_defaults(cfg: UnifiedConfig) -> bool:
+    """账号没写招呼语时，按这个账号自己的信息先落一条默认。
+
+    口径 2026-10-03：留空不再等于"这一轮一条都不发"（实测过 218 条全跳过、0 投递，
+    用户只觉得"日志和记录对不上"）。现在生成一条能发的账号默认写进配置，界面里
+    看到的就是将要发出去的那句话，改了立刻生效；发送时 AI 再按岗位+公司+JD 现编。
+    """
+    changed = False
+    for acc in cfg.greet.accounts:
+        if ensure_account_default(acc, cfg.resume, cfg.user_profile):
+            changed = True
+            logger.info(f"账号「{acc.name}」没写招呼语，已按本账号信息生成一条默认")
+    if changed:
+        cfg.save()
+    return changed
 
 
 def _ensure_manager() -> MultiAccountManager:
@@ -1440,7 +1461,9 @@ def api_metrics():
         snap["scope"] = "all" if scope is None else scope[0]
         snap["accounts"] = [
             {"index": i, "name": a.name, "enabled": a.enabled,
-             "greeting_ready": account_greeting_ready(a)}
+             "greeting_ready": account_greeting_ready(a, cfg.resume, cfg.user_profile),
+             # 这句话是谁的话：自己写的，还是系统按本账号信息生成的默认
+             "greeting_mode": account_greeting_mode(a, cfg.resume, cfg.user_profile)}
             for i, a in enumerate(cfg.greet.accounts)
         ]
         return jsonify({"status": "ok", **snap})
@@ -2723,6 +2746,38 @@ def api_get_accounts():
     return jsonify({"status": "ok", "accounts": accounts})
 
 
+@app.route("/api/accounts/greeting_suggest", methods=["POST"])
+def api_greeting_suggest():
+    """按这个账号自己的信息重生成默认招呼语，写回这个账号的配置。
+
+    已经自己写过的号必须 force=1 才覆盖：用户写的话不能被一次"重新生成"顺手抹掉
+    （改了必须生效，反过来也一样——他没说要改就不能改）。
+    """
+    try:
+        data = request.get_json() or {}
+        idx = int(data.get("index", 0))
+        cfg = _ensure_config()
+        if not 0 <= idx < len(cfg.greet.accounts):
+            return jsonify({"status": "error", "message": f"账号 {idx} 不存在"}), 400
+        acc = cfg.greet.accounts[idx]
+        generated = compose_account_default(acc, cfg.resume, cfg.user_profile)
+        if not generated.strip():
+            return jsonify({"status": "error",
+                            "message": "这个账号的城市/方向/简历画像都是空的，拼不出默认招呼语"}), 400
+        if account_greeting_mode(acc, cfg.resume, cfg.user_profile) == "账号自写" \
+                and not data.get("force"):
+            return jsonify({"status": "error", "need_confirm": True,
+                            "message": "这个账号已经写过招呼语，要用生成的默认覆盖吗？"}), 409
+        acc.greeting_message = generated
+        cfg.save()
+        logger.info(f"账号「{acc.name}」的默认招呼语已按本账号信息重新生成")
+        return jsonify({"status": "ok", "account_index": idx,
+                        "greeting_message": generated, "mode": "自动生成的默认"})
+    except Exception as e:
+        logger.exception("生成默认招呼语失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 @app.route("/api/accounts/add", methods=["POST"])
 def api_add_account():
     """添加新账号，接收 {name, cookie_file, enabled}。"""
@@ -2753,6 +2808,9 @@ def api_add_account():
             jobs=[JobConfig()],
         )
         cfg.greet.accounts.append(new_account)
+        # 新账号一进来就该带一条按它自己信息生成的默认招呼语，
+        # 不能等到下一次请求才补——否则用户刚加完号点"启动"就是一轮空跳
+        _ensure_greeting_defaults(cfg)
         cfg.save()
 
         # 循环是按账号建的：不重建管理器，新账号就没有 loop，

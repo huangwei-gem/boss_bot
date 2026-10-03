@@ -2879,11 +2879,18 @@ class PerAccountGreetSettingsTest:
         ge = self._engine(cfg, 7)
         assert ge._greeting_for(self._job(cfg, 0))[0] == "主号话术"
 
-    def test_账号没填话术就不发而不是发默认模板(self):
-        """2026-09-30 口径：招呼语按账号自己定，两级都空就返回空串（调用方拦住不发）"""
+    def test_账号没填话术时用按本账号信息生成的默认(self):
+        """2026-10-03 口径：留空不再等于"拦住不发"（那样一整轮 218 条全跳过，
+        用户只看到"日志一片跳过、记录对不上"）。现在按这个账号自己的城市/方向
+        生成一条能发的默认；但绝不拿那段全局默认串顶上——它按口径算"没写"。"""
+        from boss_bot.unified_config import DEFAULT_GREETING
         cfg = self._cfg(acc1="")
         ge = self._engine(cfg, 1)
-        assert ge._greeting_for(self._job(cfg, 1)) == ("", "未配置")
+        text, src = ge._greeting_for(self._job(cfg, 1))
+        assert src == "账号自定义"
+        assert text.strip()
+        assert text != DEFAULT_GREETING
+        assert "数据分析" in text          # 这条默认是按本账号的岗位方向拼的
 
     def test_改话术后热重载即生效(self):
         cfg = self._cfg()

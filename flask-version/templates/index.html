@@ -824,10 +824,14 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
         <div class="acc-field-row" style="gap:6px"><label>启用</label><span id="accEnabled" class="toggle-switch on" onclick="toggleAccEnabled()"></span></div>
         <div class="acc-field-row" style="align-items:flex-start"><label style="margin-top:5px">招呼语</label>
           <textarea class="side-form-input" id="accGreeting" rows="3" style="resize:vertical;min-height:52px;line-height:1.45"
-                    placeholder="本账号的招呼语；岗位没单独写就用这段，两级都留空则不发送" onchange="onAccChange()"></textarea>
+                    placeholder="本账号的招呼语；留空则按本账号的城市/方向/技能自动生成一条默认" onchange="onAccChange()"></textarea>
+          <button class="file-btn" style="margin-top:5px" onclick="regenGreeting()"
+                  title="按这个账号自己的城市/岗位方向/简历画像重生成一条默认招呼语">重新生成</button>
         </div>
+        <div id="accGreetingMode" style="font-size:10px;margin-top:2px;line-height:1.5;color:var(--fg-4th)"></div>
         <div style="font-size:10px;color:var(--fg-4th);margin-top:2px;line-height:1.5">
-          招呼语优先用岗位里改过的，其次用上面这段账号自定义；两级都留空 = 这个账号不发招呼，系统不再代填任何默认话术（发出去的话得是你自己的话）
+          发送时按这个顺序取：岗位里改过的 &gt; AI 按岗位+公司+JD 现编的 &gt; 上面这段账号招呼语。
+          这段空着时系统按本账号的城市/方向/简历画像生成一条默认（就是框里现在这句），改成你的话就以你的为准
         </div>
         <div style="font-size:10px;color:var(--fg-4th);margin-top:4px;line-height:1.5">
           <b>按号独立：</b>Cookie、浏览器（除端口与用户目录）、招呼语、岗位任务、AI 判分、回复参数、
@@ -1067,7 +1071,7 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
             </div>
           </div>
           <div class="record-tab-content active" id="greetTabContent" style="padding:0;flex:1;overflow-y:auto">
-            <div id="greetAlert" class="greet-alert" style="display:none"><i data-lucide="alert-triangle" style="width:14px;height:14px"></i><span><span class="greet-alert-names" id="greetAlertNames"></span> 没填自定义招呼语：这个账号一条都不会投出去，记录里的「跳过」全是这一条原因。</span><button class="btn btn-ghost btn-sm" id="greetAlertGo">去填写</button></div>
+            <div id="greetAlert" class="greet-alert" style="display:none"><i data-lucide="alert-triangle" style="width:14px;height:14px"></i><span><span class="greet-alert-names" id="greetAlertNames"></span> <span id="greetAlertWhy"></span></span><button class="btn btn-ghost btn-sm" id="greetAlertGo">去填写</button></div>
             <table class="greet-table" id="greetTable">
               <thead><tr><th>时间</th><th>岗位</th><th>公司</th><th>薪资</th><th>状态</th><th>跳过原因</th><th>AI</th></tr></thead>
               <tbody id="greetTableBody"></tbody>
@@ -2914,6 +2918,50 @@ function renderAccountConfig() {
   document.getElementById('accCookie').value = a.cookie_file||'zhipin_cookies.json';
   var g = document.getElementById('accGreeting');
   if (g) g.value = a.greeting_message||'';
+  updateGreetingModeHint();
+}
+
+// 这句话是谁的：用户自己写的，还是系统按本账号信息生成的默认
+function updateGreetingModeHint() {
+  var el = document.getElementById('accGreetingMode');
+  if (!el) return;
+  var accs = (typeof metricsCache !== 'undefined' && metricsCache && metricsCache.accounts) || [];
+  var row = accs[Number(activeAccountIdx)] || {};
+  var txt = ((document.getElementById('accGreeting') || {}).value || '').trim();
+  var auto = row.greeting_mode === '自动生成的默认';
+  var msg = !txt ? '空着也能发：发送前会按本账号的城市/方向/技能自动生成一条默认'
+    : (auto ? '● 这条是系统按本账号信息生成的默认，改成你自己的话就以你的为准'
+            : '● 这条是你自己写的，发送时优先用你写的');
+  if (el.textContent !== msg) el.textContent = msg;
+  el.style.color = auto ? 'var(--warning)' : 'var(--fg-4th)';
+}
+
+// 「重新生成」：账号改了城市/方向之后，默认话术要能跟着重算一次
+function regenGreeting(force) {
+  var idx = Number(activeAccountIdx);
+  fetch('/api/accounts/greeting_suggest', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ index: idx, force: force ? 1 : 0 })
+  }).then(function (r) { return r.json().then(function (d) { return { code: r.status, d: d }; }); })
+    .then(function (res) {
+      var d = res.d || {};
+      if (d.status === 'ok') {
+        return loadConfig().then(function () {
+          renderAccountConfig();
+          renderGreetAlert();
+          toast('已按本账号信息生成默认招呼语', 'ok');
+        });
+      }
+      if (d.need_confirm) {
+        if (window.confirm(d.message || '这个账号已经写过招呼语，要用生成的默认覆盖吗？')) {
+          return regenGreeting(true);
+        }
+        toast('已保留你自己写的那句', 'warn');
+        return;
+      }
+      toast('生成失败：' + (d.message || '未知原因'), 'warn');
+    })
+    .catch(function (e) { toast('生成失败：' + e.message, 'warn'); });
 }
 
 // ── 岗位列表渲染 ──
@@ -3440,6 +3488,7 @@ function loadMetrics(force) {
     metricsCache = d;
     renderMetrics();
     renderGreetAlert();
+    updateGreetingModeHint();   // 这句话是谁的，要等 metrics 报回 greeting_mode 才知道
   }).catch(function(e) { console.error('指标读取失败:', e); });
 }
 
@@ -3526,21 +3575,37 @@ function renderMetricsScope() {
 function renderGreetAlert() {
   var box = document.getElementById('greetAlert');
   var namesEl = document.getElementById('greetAlertNames');
+  var whyEl = document.getElementById('greetAlertWhy');
   var goBtn = document.getElementById('greetAlertGo');
   if (!box || !namesEl || !goBtn) return;
   var accs = (metricsCache && metricsCache.accounts) || [];
-  var missing = accs.filter(function (a) {
-    if (a.enabled === false || a.greeting_ready !== false) return false;
-    return dataScope === 'all' || String(dataScope) === String(a.index);
+  var inScope = accs.filter(function (a) {
+    return a.enabled !== false && (dataScope === 'all' || String(dataScope) === String(a.index));
   });
-  // 只藏不拆：这条每轮 metrics 都会重画，骨架要是跟着 innerHTML 一起没，
-  // 用户正点着的「去填写」就落空了——和账号条同一个毛病
-  if (!missing.length) { box.style.display = 'none'; return; }
-  var names = missing.map(function (a) {
+  // 两种"发不出去"要分开说：连岗位都没有 = 一条都不会发；有岗位但话术是系统
+  // 代生成的 = 能发，只是用的不是用户自己的话（2026-10-03 起账号空着会自动补默认）
+  var blocked = inScope.filter(function (a) { return a.greeting_ready === false; });
+  var auto = inScope.filter(function (a) {
+    return a.greeting_ready !== false && a.greeting_mode === '自动生成的默认';
+  });
+  var list = blocked.length ? blocked : auto;
+  // 只藏不拆：这条每轮 metrics 都会重画，骨架要是跟着一起没，
+  // 用户正点着的那个按钮就落空了——和账号条同一个毛病
+  if (!list.length) { box.style.display = 'none'; return; }
+  var names = list.map(function (a) {
     return a.name || ('账号' + (Number(a.index) + 1));
   }).join('、');
+  var why = blocked.length
+    ? ' 这个账号没有启用中的岗位，跑一轮什么都不会发：先在中间「岗位」里加一条并勾上。'
+    : ' 还没填自己的招呼语，现在发的是按本账号信息自动生成的默认（发送时 AI 会按岗位+公司+JD 现编一条更贴的）。想固定成自己的话：';
   if (namesEl.textContent !== names) namesEl.textContent = names;
-  goBtn.onclick = function () { gotoGreetEditor(missing[0].index); };
+  if (whyEl && whyEl.textContent !== why) whyEl.textContent = why;
+  var label = blocked.length ? '去加岗位' : '去填写';
+  if (goBtn.textContent !== label) goBtn.textContent = label;
+  var target = list[0].index;
+  goBtn.onclick = function () {
+    if (blocked.length) { gotoAddJob(target); } else { gotoGreetEditor(target); }
+  };
   box.style.display = 'flex';
 }
 
@@ -3554,6 +3619,12 @@ function gotoGreetEditor(idx) {
   if (side && !side.classList.contains('open') && window.innerWidth <= 1080) toggleSidebar();
   g.scrollIntoView({ block: 'center' });
   g.focus();
+}
+
+// 提示条上的「去加岗位」：连岗位都没有时，光改招呼语也发不出去
+function gotoAddJob(idx) {
+  if (String(dataScope) !== String(idx)) setDataScope(String(idx));
+  if (typeof addJob === 'function') addJob();
 }
 
 function updateScopeLabel() {

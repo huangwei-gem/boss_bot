@@ -1430,11 +1430,14 @@ class UnifiedBotLoop:
                     # 的唯一可靠依据。此处不再按昵称/岗位名扫描其他会话的聊天记录——
                     # BOSS 只显示"杨女士""胡女士"，同名不同人，扫出来的拒绝属于别人。
 
-                    # 招呼语空缺先判，别排在 AI 之后：
+                    # 招呼语取不到先判，别排在 AI 之后：
                     # 一是每条岗位每轮白付一次判分预算，
-                    # 二是 send_greeting 里那道闸门要到点「沟通」之后才响
+                    # 二是 send_greeting 里那道闸门要到点「沟通」之后才响。
+                    # 账号没写话术时 _greeting_for 会按本账号信息给一条默认（2026-10-03），
+                    # 所以走到这里只剩"账号配置都取不到"这一种真没救的情况
                     if not self._greet_engine._greeting_for(job)[0]:
-                        self._log("WARN", f"未配置招呼语，跳过: {job.get('job_name', '')}")
+                        self._log("WARN", f"⏭️ 跳过: {job.get('job_name', '')}"
+                                          f"（原因: {GREETING_MISSING_REASON}）")
                         self._record_greet_skip(job, "skip", GREETING_MISSING_REASON)
                         continue
 

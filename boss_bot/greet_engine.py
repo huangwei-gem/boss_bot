@@ -30,6 +30,9 @@ from urllib.request import Request, urlopen
 from urllib.error import URLError
 
 from boss_bot.unified_config import DEFAULT_GREETING, UnifiedConfig, BASE_DIR, resolve_path, write_json_atomic
+from boss_bot.greeting import (account_greeting_mode, effective_account_greeting,
+                               sanitize_ai_greeting)
+from boss_bot.unified_config import strip_default_greeting
 from boss_bot.browser_launcher import BrowserManager
 from boss_bot.reply_record import (GreetRecord, classify_greet_skip,
                                    _get_greet_store)
@@ -104,8 +107,8 @@ return (function(){
 # 2 次被重定向到另一个职位（原岗位已下线）。处置方式不同，原因必须分开写。
 CHAT_REDIRECT_REASON = "该岗位此前已沟通：BOSS 把详情页直接跳成了会话页"
 OFFLINE_JOB_REASON = "岗位已下线：BOSS 把详情页重定向到了另一个职位"
-GREETING_MISSING_REASON = ("本账号未配置招呼语：留空即不发送，不会改用任何默认话术"
-                           "（在左侧账号的「招呼语」或岗位里填一句再跑）")
+GREETING_MISSING_REASON = ("未配置招呼语：这个账号没写话术、岗位里也没有，"
+                           "而按本账号信息（城市/方向/简历画像）也拼不出默认话术")
 LOGIN_WALL_REASON = "BOSS 要求重新登录（页面出现手机号+短信验证码框），登录态已失效"
 CAPTCHA_REASON = "BOSS 弹出人机验证，需要人工在浏览器窗口完成（超时会自动跳过）"
 DISCONNECTED_REASON = "聊天页与浏览器连接已断开（标签页被关或被别的线程抢走）"
@@ -283,42 +286,46 @@ def chat_button_failure_reason(requested_url: str, landed_url: str, snap: dict):
     return f"岗位页没有可点的沟通按钮（详情页已打开但按钮没渲染）{tail}", False
 
 
-def pick_greeting(job_text: str, account_text: str, default_text: str):
-    """这条招呼语用哪一段：岗位定制 > 账号自定义 > 没配置（返回空串）。
+def pick_greeting(job_text: str, account_text: str, default_text: str, ai_text: str = ""):
+    """这条招呼语用哪一段：岗位手写 > AI 按岗位定制 > 账号（默认或自写）> 没配置。
 
     岗位文案只有在被改过（不等于默认串）时才算定制——历史配置里每个岗位的
     greeting 都被填过同一份默认文案，一律优先会让账号级自定义永远不生效。
 
-    不再回落默认模板：招呼语是发给 HR 的话，用谁的话得账号自己定，程序替使用者
-    编一句等于替他社交（用户口径 2026-09-30）。空串就是"没配"，调用方必须拦住
-    不发，而不是拿任何文案顶上。
+    AI 那一档是判分时按岗位名+公司+JD 现编的 suggested_greeting，调用前必须已经
+    过 sanitize_ai_greeting；没过校验就是空串，落到账号那档，绝不"将就发一条"。
+
+    account_text 由 greeting.effective_account_greeting 给出：账号自己没写时它是
+    按这个账号的城市/方向/技能生成的默认话术（2026-10-03 口径）。以前"留空即不发"
+    让两个号都没写那句话时一整轮 218 条全成「未配置招呼语，跳过」，
+    用户看到的是"日志一片跳过、记录对不上"。
     """
     if job_text and job_text != default_text:
         return job_text, "岗位配置"
-    if account_text:
-        return account_text, "账号自定义"
+    if (ai_text or "").strip():
+        return ai_text.strip(), "AI 按岗位定制"
+    if (account_text or "").strip():
+        return account_text.strip(), "账号自定义"
     return "", "未配置"
 
 
-def account_greeting_ready(acc) -> bool:
+def account_greeting_ready(acc, resume=None, profile=None) -> bool:
     """这个账号跑一轮，能不能真发出去至少一条招呼语。
 
-    判定必须和 pick_greeting 同一口径（等于历史默认串算"没写"、停用岗位不参与），
-    否则面板提示"可以去跑"而实际一轮下来全是跳过。看板用它顶上前提示：
-    以前这个状态只体现在日志一片"未配置招呼语"里，用户看到的是"记录对不上"。
+    2026-10-03 口径变了：账号没自己写招呼语时不再是"一条都不发"，而是按这个账号
+    自己的城市/方向/技能先生成一条默认（界面可见可改），发送时再由 AI 按岗位现编。
+    所以能不能发只剩一个前提——至少有一个启用中的岗位。
     """
     if acc is None:
         return False
-    if (getattr(acc, "greeting_message", "") or "").strip():
-        return True
-    for job in getattr(acc, "jobs", None) or []:
-        if not getattr(job, "enabled", True):
-            continue
-        text, _ = pick_greeting(getattr(job, "greeting_message", "") or "",
-                                "", DEFAULT_GREETING)
-        if text:
-            return True
-    return False
+    jobs = list(getattr(acc, "jobs", None) or [])
+    if not any(getattr(j, "enabled", True) for j in jobs):
+        return False
+    return bool(effective_account_greeting(acc, resume, profile).strip())
+
+
+# account_greeting_mode 直接从 boss_bot.greeting 导入（见文件头）：落进配置的默认
+# 文本要还能被认成"系统生成的"，判据只留一份，别在这里再抄一遍简化版
 
 
 # ─────────────────────────────────────────────
@@ -2819,11 +2826,15 @@ class GreetEngine:
         return snap
 
     def _greeting_for(self, job: dict):
-        """本条岗位要发的招呼语：岗位改过 > 本账号自定义 > 默认模板。"""
+        """本条岗位要发的招呼语：岗位手写 > AI 按岗位定制 > 账号（自写或自动默认）。"""
         acc = self._account()
+        resume = getattr(self.config, "resume", None)
+        profile = getattr(self.config, "user_profile", None)
+        account_text = effective_account_greeting(acc, resume, profile) if acc else ""
+        ai_text = sanitize_ai_greeting(job.get("_ai_suggested_greeting")
+                                       or (job.get("_ai_result") or {}).get("suggested_greeting"))
         return pick_greeting(job.get("greeting_message", ""),
-                             getattr(acc, "greeting_message", "") if acc else "",
-                             DEFAULT_GREETING)
+                             account_text, DEFAULT_GREETING, ai_text)
 
     def _auto_greet_dialog(self, instance) -> dict:
         """页面上有没有 BOSS"已自动发送"的弹窗；有就带回它的现场文本和按钮。"""

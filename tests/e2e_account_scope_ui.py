@@ -28,6 +28,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "tests"))
 
 import e2e_greet_records_ui as harness  # noqa: E402
+from boss_bot.unified_config import DEFAULT_GREETING  # noqa: E402
 from e2e_greet_records_ui import (  # noqa: E402
     check, click_chip, click_until_alive, close_browser, open_browser, scope_chips)
 
@@ -206,9 +207,11 @@ def main():
         # ── 4. 招呼语按号：写进这个号，不污染别的号，也不代填模板 ──
         page.run_js(f"setDataScope('{n_accounts - 1}');return 1")
         time.sleep(0.6)
-        filled = page.run_js("return document.getElementById('accGreeting').value")
-        check("选中新号后招呼语框是空的（不代填全局模板）",
-              not (filled or "").strip(), repr((filled or "")[:60]))
+        filled = str(page.run_js("return document.getElementById('accGreeting').value") or "")
+        own_city = str(((seeded["accounts"][n_accounts - 1].get("jobs") or [{}])[0]).get("city") or "")
+        check("选中新号后招呼语框里是按本账号信息生成的默认（不是全局模板）",
+              bool(filled.strip()) and filled.strip() != DEFAULT_GREETING.strip()
+              and (not own_city or own_city in filled), repr(filled[:60]))
         page.run_js(f"document.getElementById('accGreeting').value='{MARK}';"
                     "onAccChange();return 1")
         time.sleep(1.5)
@@ -218,10 +221,40 @@ def main():
               str(disk["accounts"][n_accounts - 1].get("greeting_message"))[:60])
         others = [a.get("greeting_message") for i, a in enumerate(disk["accounts"])
                   if i != n_accounts - 1]
-        check("其它账号的招呼语没被一起改掉", all(not o for o in others), str(others)[:80])
+        check("其它账号的招呼语没被一起改掉",
+              all(o and MARK not in o for o in others), str(others)[:80])
+        check("每个账号的默认各按各的信息生成，不是一句复制两份",
+              len({str(o) for o in others}) == len(others), str(others)[:120])
         check("配置里没有全局招呼语可供回落",
               not api("/api/config")["config"].get("greeting_message"),
               str(api("/api/config")["config"].get("greeting_message"))[:60])
+
+        # ── 4b. 把主账号那句清空：面板必须自己按本账号信息补一条默认回来 ──
+        page.run_js("setDataScope('0');return 1")
+        time.sleep(0.6)
+        generated = str(page.run_js("return document.getElementById('accGreeting').value") or "")
+        page.run_js("document.getElementById('accGreeting').value='';onAccChange();return 1")
+        time.sleep(1.2)
+        disk_after_clear = json.loads((tmp_dir / "bot_config.json").read_text(encoding="utf-8"))
+        check("清空后配置里真的是空的（说明确实是界面改的，不是没保存）",
+              not str(disk_after_clear["accounts"][0].get("greeting_message") or "").strip())
+        page.run_js("loadConfig();return 1")
+        time.sleep(1.2)
+        back = str(page.run_js("return document.getElementById('accGreeting').value") or "")
+        check("空着的账号会被补回一条按本账号信息生成的默认",
+              bool(back.strip()) and back.strip() != DEFAULT_GREETING.strip(), repr(back[:60]))
+        regen = page.eles("xpath://button[contains(.,'重新生成')]")
+        check("招呼语旁边有「重新生成」入口", len(regen) >= 1, f"{len(regen)} 个")
+        if regen:
+            click_until_alive(page, lambda p: p.eles("xpath://button[contains(.,'重新生成')]"))
+            time.sleep(1.5)
+            again = str(page.run_js("return document.getElementById('accGreeting').value") or "")
+            check("点「重新生成」后框里仍是这条默认（幂等，不会越点越乱）",
+                  again.strip() == back.strip() and bool(again.strip()), repr(again[:60]))
+            disk_regen = json.loads((tmp_dir / "bot_config.json").read_text(encoding="utf-8"))
+            check("重新生成真的落到这个账号的配置里",
+                  str(disk_regen["accounts"][0].get("greeting_message") or "").strip()
+                  == again.strip(), repr(disk_regen["accounts"][0].get("greeting_message"))[:60])
 
         # ── 5. 岗位弹窗不再预填模板 ──
         page.run_js("showJobModal({job_name:'实测岗位',company:'实测公司',"
@@ -241,9 +274,11 @@ def main():
               wait_for(page, f"return document.querySelectorAll('.account-tab').length === {n_accounts + 1}",
                        tries=20),
               f"{page.run_js('return document.querySelectorAll(\".account-tab\").length')} 行")
-        check("新号没有招呼语（等着用户自己写）",
-              MARK not in str(json.loads((tmp_dir / "bot_config.json").read_text(encoding="utf-8"))
-                              ["accounts"][-1].get("greeting_message") or ""))
+        new_g = str(json.loads((tmp_dir / "bot_config.json").read_text(encoding="utf-8"))
+                    ["accounts"][-1].get("greeting_message") or "")
+        check("新增的号也拿到一条按它自己信息生成的默认",
+              bool(new_g.strip()) and new_g.strip() != DEFAULT_GREETING.strip()
+              and MARK not in new_g, repr(new_g[:60]))
         check("新增后作用对象切到新号",
               wait_for(page, "return String((document.getElementById('aiScopeNote')||{}).textContent||'')"
                              ".indexOf('账号') >= 0", tries=12),

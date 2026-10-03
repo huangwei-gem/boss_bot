@@ -347,9 +347,13 @@ class GreetingUiLockTest(unittest.TestCase):
     def test_界面没有硬编码招呼语(self):
         self.assertNotIn("defaultGreeting", self.html)
 
-    def test_说明写的是两级都空就不发(self):
+    def test_说明写的是留空自动生成默认(self):
+        """2026-10-03 口径：不再"两级都空就不发"（那样一整轮全跳过），而是按本账号
+        信息生成一条默认、发送时再由 AI 按岗位现编。那段全局模板仍然不许当回落。"""
         self.assertNotIn("最后才用系统默认", self.html)
-        self.assertIn("两级都留空", self.html)
+        self.assertNotIn("两级都留空", self.html)
+        self.assertIn("自动生成一条默认", self.html)
+        self.assertIn("AI 按岗位+公司+JD", self.html)
 
     def test_岗位弹窗不再预填模板(self):
         self.assertNotIn("greeting_message:defaultGreeting", self.html)
