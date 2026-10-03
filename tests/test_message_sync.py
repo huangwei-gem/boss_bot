@@ -139,6 +139,10 @@ class ChatSwitchGateTest:
                     return "ready"
                 if "top-info-content" in s:
                     return header_name
+                if "HAS_ROW" in s:
+                    # 侧栏滚动探针：这组测试关心的是"点完以后的校验"，
+                    # 所以目标行一律当成已经渲染在屏幕上
+                    return "yes"
                 if "want.n" in s:
                     return "ok"
                 return "[]"

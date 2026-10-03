@@ -71,9 +71,16 @@ def list_pending(account_index=None) -> dict:
     return out
 
 
-def run_account(account_index: int) -> dict:
-    """把一个账号的欠账补发掉，返回 {补发前清单, 补发后清单, 是否真发}"""
+def run_account(account_index: int, preview: bool = False) -> dict:
+    """把一个账号的欠账补发掉，返回 {补发前清单, 补发后清单, 是否真发}
+
+    preview=True 时只在内存里打开 dry_run（不写 bot_config.json）：
+    进会话、读消息、规则判分全部照跑，最后那一下点击不发——
+    用来在没拿到"去发"这句话之前，先把链验到"本应发送简历"。
+    """
     cfg = UnifiedConfig.load()
+    if preview:
+        cfg.dry_run = True
     dry = bool(getattr(cfg, "dry_run", False))
     print(f"\n━━━ 账号{account_index + 1} · dry_run={dry} ━━━")
     before = list_pending(account_index)[account_index]
@@ -83,7 +90,7 @@ def run_account(account_index: int) -> dict:
         print("  没有欠着的会话，不动浏览器")
         return {"before": [], "after": [], "dry_run": dry}
 
-    loop = UnifiedBotLoop(account_index=account_index,
+    loop = UnifiedBotLoop(config=cfg, account_index=account_index,
                           log_callback=lambda m: print("   ", m))
     loop._greet_paused = True          # 双保险：这个脚本绝不打招呼
     loop._running = True
@@ -107,6 +114,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--account", type=int, default=None, help="只处理指定账号下标（0/1）")
     ap.add_argument("--list-only", action="store_true", help="只报清单，不开浏览器")
+    ap.add_argument("--preview", action="store_true",
+                    help="全链路照跑但最后不点发送（只在内存里开 dry_run，不改配置文件）")
     args = ap.parse_args()
 
     idxs = [args.account] if args.account is not None else [0, 1]
@@ -121,7 +130,7 @@ def main() -> int:
     results = {}
     for i in idxs:
         try:
-            results[i] = run_account(i)
+            results[i] = run_account(i, preview=args.preview)
         except Exception as e:
             print(f"[账号{i + 1}失败] {e}")
             results[i] = {"error": str(e)}

@@ -11,6 +11,7 @@ CSS 选择器基于 BOSS 直聘聊天页面实际结构（已通过浏览器实�
 """
 
 import os
+import re
 import sys
 import time
 import json
@@ -425,15 +426,125 @@ class BossChatHandler:
         logger.debug(f"发现 {len(unread_chats)} 个未读会话")
         return unread_chats
 
-    def get_all_chats(self) -> List[Dict]:
+    # 滚动探针回报"当前位置/总高"，读不出这个格式就说明这页没有可滚的列表
+    _SIDEBAR_POS_RE = re.compile(r"^\d+/\d+$")
+
+    # 侧栏是虚拟列表：一次只渲染可视区那几十行，不滚就够不着靠后的会话
+    _SIDEBAR_SCROLL_JS = '''(
+        function() {
+            var box = document.querySelector(".user-list-content");
+            if (!box) return "no-box";
+            box.scrollTop = box.scrollTop + 700;
+            box.dispatchEvent(new Event("scroll", {bubbles: true}));
+            return String(Math.round(box.scrollTop)) + "/" + String(box.scrollHeight);
+        }
+    )()'''
+
+    def get_all_chats(self, max_rounds: int = 30) -> List[Dict]:
         """获取侧栏全部会话（不看红点），用于启动后的一次性全量同步。
 
         与 get_unread_chats 同一套 CSS 判据（.friend-content / .name-text /
         .name-box / .last-msg-text），只是不做"有没有未读标记"的过滤。
+        边滚边收、按 姓名+公司 去重：实测账号2 本地存了 68 个会话，
+        不滚只读到 40 个，没渲染的那半截既进不了全量同步也进不了补发简历。
         """
         self.go_to_chat()
         time.sleep(1)
 
+        merged = {}
+        prev_pos = None
+        for _ in range(max_rounds):
+            for row in self._sidebar_rows():
+                merged.setdefault((row.get("name", ""), row.get("company", "")), row)
+            pos = str(self.page.run_js(self._SIDEBAR_SCROLL_JS, as_expr=True))
+            time.sleep(0.6)
+            if not self._SIDEBAR_POS_RE.match(pos):
+                break                      # 这页没容器可滚，读到多少算多少
+            if pos == prev_pos:
+                break                      # 已经到底
+            prev_pos = pos
+        all_chats = list(merged.values())
+        logger.debug(f"侧栏收集完成：{len(all_chats)} 个会话")
+        return all_chats
+
+    # 探针：目标那一行现在渲染出来没有。__WANT__ 由 json 填，
+    # HAS_ROW / var want = {...} 这两处字样是 tests/test_pending_resume.py 的假页面认的约定
+    _SIDEBAR_HAS_ROW_JS = '''(
+        function() {
+            /* HAS_ROW */
+            var want = __WANT__;
+            var items = document.querySelectorAll(".friend-content");
+            for (var i = 0; i < items.length; i++) {
+                var el = items[i];
+                var n = el.querySelector(".name-text");
+                var name = n ? n.textContent.trim() : "";
+                var box = el.querySelector(".name-box"), comp = "";
+                if (box) {
+                    var spans = [];
+                    for (var k = 0; k < box.children.length; k++) {
+                        var c = box.children[k];
+                        if (c.tagName === "SPAN") {
+                            var t = (c.textContent || "").trim();
+                            if (t) spans.push(t);
+                        }
+                    }
+                    comp = spans.length > 1 ? spans[1] : "";
+                }
+                if (name === want.n && (!want.c || comp === want.c)) return "yes";
+            }
+            return "no";
+        }
+    )()'''
+
+    # 回顶部：滚到底之后直接找靠前的会话是找不到的，必须先归零再往下找
+    _SIDEBAR_RESET_JS = '''(
+        function() {
+            var box = document.querySelector(".user-list-content");
+            /* RESET */
+            if (!box) return "0";
+            box.scrollTop = 0;
+            box.dispatchEvent(new Event("scroll", {bubbles: true}));
+            return "0";
+        }
+    )()'''
+
+    def _sidebar_has_row(self, name: str, company: str) -> bool:
+        js = self._SIDEBAR_HAS_ROW_JS.replace(
+            "__WANT__", json.dumps({"n": name, "c": company}, ensure_ascii=False))
+        try:
+            return self.page.run_js(js, as_expr=True) == "yes"
+        except Exception as e:
+            logger.debug(f"侧栏行探针失败: {e}")
+            return False
+
+    def _scroll_to_chat_row(self, name: str, company: str, max_steps: int = 30) -> bool:
+        """把侧栏滚到"姓名+公司"那一行，滚到底还没有就返回 False。
+
+        虚拟列表只渲染可视区那几十行，"当前 DOM 里没有"不等于"没这个会话"：
+        实测补扫时列表已被收集流程滚到底，8 个欠简历的目标全被判成
+        "会话切换校验失败"，一个都没点开。
+        """
+        try:
+            self.page.run_js(self._SIDEBAR_RESET_JS, as_expr=True)
+            time.sleep(0.4)
+            prev_pos = None
+            for _ in range(max_steps):
+                if self._sidebar_has_row(name, company):
+                    return True
+                pos = str(self.page.run_js(self._SIDEBAR_SCROLL_JS, as_expr=True))
+                time.sleep(0.5)
+                if not self._SIDEBAR_POS_RE.match(pos):
+                    # 这页没有可滚的容器（或探针被换掉了）：盲滚 30 轮只会白等
+                    return False
+                if pos == prev_pos:        # 位置不动了 = 已经到底
+                    return False
+                prev_pos = pos
+        except Exception as e:
+            logger.debug(f"侧栏滚动定位失败 [{name}]: {e}")
+        return False
+
+    def _sidebar_rows(self) -> List[Dict]:
+        """读一次当前渲染出来的侧栏行（不滚动）"""
         all_chats = []
         try:
             result = self.page.run_js('''(
@@ -476,8 +587,6 @@ class BossChatHandler:
 
         except Exception as e:
             logger.error(f"获取全部会话列表失败: {e}")
-
-        logger.debug(f"侧栏共 {len(all_chats)} 个会话")
         return all_chats
 
     def read_selected_row(self) -> Dict:
@@ -537,6 +646,16 @@ class BossChatHandler:
         expected_name = chat_info.get('name', '')
         expected_company = chat_info.get('company', '')
 
+        # 先确认目标行真的在渲染出来的那几十行里，不在就滚过去。
+        # 侧栏是虚拟列表：账号2 实测 171 行只渲染 ~20 行，采集时记下的 index
+        # 到点击时早就不是同一个人了（按旧 index 点"孙先生|沐数科技"，那位置
+        # 上已经是"马女士|掌门教育"，三次重试全点在错的人身上）。
+        if not self._sidebar_has_row(expected_name, expected_company):
+            if not self._scroll_to_chat_row(expected_name, expected_company):
+                logger.warning(
+                    f"侧栏滚到底也没有会话 [{expected_name}|{expected_company}]，跳过")
+                return False
+
         for attempt in range(1, retries + 2):
             # 按 姓名+公司 定位行：实测 34 行里 (姓名,公司) 唯一 34/34，
             # 只用姓名则有 4 组撞车。公司字段为空的行退到按索引点，再靠下面
@@ -576,7 +695,10 @@ class BossChatHandler:
                 }}
             )()''', as_expr=True)
             if click_result == "not_found":
-                logger.warning(f"侧栏找不到会话 [{expected_name}]，跳过")
+                if self._scroll_to_chat_row(expected_name, expected_company):
+                    logger.debug(f"侧栏目标行未渲染，滚到 [{expected_name}] 那一行后重试")
+                    continue
+                logger.warning(f"侧栏滚到底也找不到会话 [{expected_name}]，跳过")
                 return False
             time.sleep(3)
 

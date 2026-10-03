@@ -40,7 +40,7 @@ from boss_bot.greet_engine import (GreetEngine, GREETING_MISSING_REASON,
                                    in_probe_band)
 from boss_bot.reply_engine import ReplyEngine, conversation_rejected
 from boss_bot.page_handler import BossChatHandler
-from boss_bot.pending_resume import pending_resume_asks
+from boss_bot.pending_resume import pending_resume_asks, resume_already_sent
 from boss_bot.state_store import StateStore
 from boss_bot.stats import Stats
 from boss_bot.notify import Notifier
@@ -1726,10 +1726,12 @@ class UnifiedBotLoop:
     def _backfill_pending_resumes(self):
         """补发"HR 要过简历、但我们没发出去"的会话。
 
-        回复轮只点未读会话，而这些会话早就被点开回过一句文字，红点没了，
-        之后再也不会被读到——不主动补扫，那句"稍后把简历整理好发给您"就永远
-        欠着（2026-10-02 江女士 | 孤波 挂了 4 天）。
-        走的是正常会话处理链，拒绝检测、每小时上限、resume_send_once 一道不少。
+        回复轮只点未读会话，而这些会话早被点开过，红点没了；更要命的是那句
+        索要常常是张卡片，页面上读不出正文，"对方最新消息"于是退成卡片前面那句
+        我们已经文字回过的话，was_handled 按那句判"已处理过" —— 索要没被满足，
+        却永远不会再被处理（2026-10-02 江女士 | 孤波 就是这么挂着的）。
+        所以这里直接下发动作；但下发前先照页面上的实时消息再判两道：
+        已经发过的不再发，HR 后来拒绝了的也不再发。
         """
         convs = [c for c in self._msg_store.get_all_chats_detail()
                  if c.get("account_index") == self.account_index]
@@ -1741,11 +1743,25 @@ class UnifiedBotLoop:
                           + "、".join(p["chat_name"] for p in pending))
         rows = self._chat_handler.get_all_chats()
         for item in pending:
-            row = next((r for r in rows if r.get("name") == item["chat_name"]), None)
+            name = item["chat_name"]
+            row = next((r for r in rows if r.get("name") == name), None)
             if row is None:
-                self._log("INFO", f"⏭️ 跳过 [{item['chat_name']}]：侧栏已找不到这个会话")
+                self._log("INFO", f"⏭️ 跳过 [{name}]：侧栏已找不到这个会话")
                 continue
-            self._process_single_chat(row)
+            if not self._chat_handler.enter_chat(row):
+                self._log("WARN", f"⏭️ 跳过 [{name}]：会话切换校验失败")
+                continue
+            live = self._chat_handler.read_all_messages() or []
+            if resume_already_sent(live):
+                self._log("INFO", f"[{name}] 页面上已显示简历发送给对方，不再重复发")
+                continue
+            if conversation_rejected(live):
+                self._log("INFO", f"⏭️ 跳过 [{name}]：HR 后来已拒绝，再塞简历是骚扰")
+                continue
+            job_name = self._chat_handler.get_job_name() or item.get("job_name", "")
+            self._log("INFO", f"[{name}] 欠着的索要: {item['ask'][:40]}")
+            self._handle_reply_action("resume", None, {"source": "backfill"},
+                                      name, job_name, item["ask"])
             self._reply_engine.wait_human_delay()
 
     def _process_single_chat(self, chat_info: dict):
