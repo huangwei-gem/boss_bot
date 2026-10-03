@@ -56,21 +56,24 @@ def account_focus(account, resume=None, profile=None):
     return cities, direction
 
 
-def _skills_relevant(skills, direction, resume) -> bool:
-    """技能清单和这个账号在找的方向对不上时别硬写进去。
+def _skills_text(skills, direction, resume) -> str:
+    """技能清单要不要写、怎么写。
 
-    实测：账号2 改成找 AI 漫剧后，把 SQL/Excel 塞进招呼语就是答非所问——
-    第一句话都不对，HR 反而更不想回。
+    两条规矩：方向和技能对不上时整条不写（账号2 找 AI 漫剧，提 SQL 就是答非所问）；
+    对得上时也不把方向本身当技能再念一遍（"用 Excel、SQL、数据分析做数据分析"读不通）。
     """
     d = str(direction or "").strip()
-    if not d:
-        return True
-    for s in skills:
-        s = str(s or "").strip()
-        if s and (s in d or d in s):
-            return True
-    target = str(_g(resume, "target_position", "") or "").strip()
-    return bool(target and (target in d or d in target))
+    toks = [str(s).strip() for s in (skills or []) if str(s).strip()]
+    if not toks:
+        return ""
+    if d:
+        target = str(_g(resume, "target_position", "") or "").strip()
+        related = any(s != d and (s in d or d in s) for s in toks) or bool(
+            target and (target in d or d in target))
+        if not related:
+            return ""
+        toks = [s for s in toks if s != d]
+    return "、".join(toks)
 
 
 def compose_account_default(account, resume=None, profile=None) -> str:
@@ -79,8 +82,7 @@ def compose_account_default(account, resume=None, profile=None) -> str:
     skills = _g(resume, "skills", []) or _g(profile, "skills", []) or []
     if isinstance(skills, str):
         skills = [skills]
-    skills = _dedupe(skills)
-    skills_txt = "、".join(skills) if _skills_relevant(skills, direction, resume) else ""
+    skills_txt = _skills_text(_dedupe(skills), direction, resume)
     degree = str(_g(resume, "degree", "") or "").strip()
     major = "" if _is_placeholder(_g(resume, "major", "")) else str(_g(resume, "major", "")).strip()
     school = "" if _is_placeholder(_g(resume, "school", "")) else str(_g(resume, "school", "")).strip()

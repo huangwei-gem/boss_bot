@@ -22,7 +22,7 @@ RESUME = {
     "school": "某某大学",          # 占位值：绝不能出现在发给 HR 的话里
     "major": "统计学",
     "degree": "本科",
-    "skills": ["Excel", "SQL", "Python"],
+    "skills": ["Excel", "SQL", "Python", "数据分析"],
     "experience": "负责业务数据报表与洞察分析",
     "target_position": "数据分析师",
 }
@@ -76,6 +76,13 @@ class ComposeAccountDefaultTest:
         text = compose_account_default(acc(city="长沙", query="AI漫剧"), RESUME, PROFILE)
         assert "AI漫剧" in text
         assert "SQL" not in text
+
+    def test_方向本身不在技能清单里重复一遍(self):
+        """简历 skills 里带着"数据分析"，方向也是数据分析时不能写成
+        "用 Excel、SQL、数据分析做数据整理和分析"——发给 HR 的话要读得通。"""
+        text = compose_account_default(acc(city="长沙", query="数据分析"), RESUME, PROFILE)
+        assert "、数据分析做数据" not in text
+        assert "SQL" in text
 
 
 class GreetingModeTest:
