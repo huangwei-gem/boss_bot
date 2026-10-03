@@ -106,7 +106,8 @@ class BackfillWiringTest:
         lp.account_index = 1
         lp._msg_store = self._Store(convs)
         lp._chat_handler = self._Handler(rows)
-        lp._reply_engine = SimpleNamespace(wait_human_delay=lambda: None)
+        lp._reply_engine = SimpleNamespace(wait_human_delay=lambda: None,
+                                           begin_event_ts=lambda: None)
         lp.entered = []
         lp.actions = []
         lp._process_single_chat = lambda info: lp.entered.append(info)
@@ -185,6 +186,53 @@ class BackfillWiringTest:
         lp._backfill_pending_resumes()
         assert lp.actions == []
         assert any("侧栏" in m for m in lp.logs), "找不到要说一声，不能静默吞掉"
+
+    def test_重名的行必须按公司对上才点(self):
+        """BOSS 侧栏只显示"杨女士"，账号2 一个人就有三个杨女士。
+
+        按姓名取第一行会点到另一个人身上——发出去的简历可撤不回来。
+        """
+        wrong = {"index": 1, "name": "杨女士", "company": "维京悠旅", "preview": ""}
+        right = {"index": 2, "name": "杨女士", "company": "沐瞳科技", "preview": ""}
+        owed = self._owed()
+        owed["chat_name"] = owed["company"] = ""
+        owed["chat_name"], owed["company"] = "杨女士", "沐瞳科技"
+        lp = self._loop([owed], [wrong, right])
+        lp._chat_handler.entered_rows = []
+        lp._chat_handler.enter_chat = lambda r: lp._chat_handler.entered_rows.append(r) or True
+        lp._backfill_pending_resumes()
+        assert lp._chat_handler.entered_rows == [right], "点错了人"
+
+    def test_对不上公司就当没找到而不是猜一个(self):
+        owed = self._owed()
+        owed["chat_name"], owed["company"] = "杨女士", "沐瞳科技"
+        lp = self._loop([owed], [{"index": 1, "name": "杨女士", "company": "维京悠旅"}])
+        lp._backfill_pending_resumes()
+        assert lp.actions == []
+        assert any("公司" in m for m in lp.logs), f"要说清是按公司没对上: {lp.logs}"
+
+    def test_公司名被侧栏截断也算同一行(self):
+        """BOSS 自己把公司名截成"招商银行股份有限..."，存档里存的就是这一截"""
+        owed = self._owed()
+        owed["chat_name"], owed["company"] = "朱女士", "招商银行股份有限"
+        row = {"index": 3, "name": "朱女士", "company": "招商银行股份有限..."}
+        lp = self._loop([owed], [row])
+        lp._backfill_pending_resumes()
+        assert lp.actions and lp.actions[0][0] == "resume"
+
+    def test_这条会话已经发过简历就不再动它(self):
+        """补扫必须认账：否则每次重启都会给同一个 HR 再发一遍，
+        或者被 resume_send_once 降级成"简历已发您了"那句重复提醒"""
+        row = {"index": 7, "name": "江女士", "company": "孤波", "preview": ""}
+        lp = self._loop([self._owed()], [row])
+        sent = set()
+        lp._state_store.resume_sent = lambda name: name in sent
+        lp._backfill_pending_resumes()
+        assert lp.actions and lp.actions[0][0] == "resume"
+        sent.add("江女士")                  # 发出去之后 state 会记上
+        lp.actions.clear()
+        lp._backfill_pending_resumes()
+        assert lp.actions == [], "已经发过的不能再进会话"
 
     def test_没有欠简历的不去翻侧栏(self):
         conv = self._owed()

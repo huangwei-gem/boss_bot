@@ -60,14 +60,24 @@ def _backup_cookies() -> Path:
 
 
 def list_pending(account_index=None) -> dict:
-    """按账号列出欠简历的会话（只读存档，不开浏览器）"""
+    """按账号列出欠简历的会话（只读存档，不开浏览器）
+
+    和生产口径一致：state 里标了 resume_sent 的会话算已经还掉了，
+    否则脚本会一直报"仍欠"，而实际上一轮已经发出去了。
+    """
+    from boss_bot.config import STATE_FILE
     from boss_bot.message_store import MessageStore
+    from boss_bot.state_store import StateStore
+    from boss_bot.unified_config import account_file
+
     out = {}
     idxs = [account_index] if account_index is not None else [0, 1]
     for i in idxs:
         convs = [c for c in MessageStore(account_index=i).get_all_chats_detail()
                  if c.get("account_index") == i]
-        out[i] = pending_resume_asks(convs)
+        state = StateStore(path=account_file(STATE_FILE, i))
+        out[i] = [p for p in pending_resume_asks(convs)
+                  if not state.resume_sent(p["chat_name"])]
     return out
 
 

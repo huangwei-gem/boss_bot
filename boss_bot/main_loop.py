@@ -1723,6 +1723,22 @@ class UnifiedBotLoop:
                 self._log("WARN", f"[{name}] 全量同步失败（继续下一个）: {e}")
         self._log("INFO", f"启动全量同步完成：{synced}/{len(chats)} 个会话已同步，之后只采未读")
 
+    @staticmethod
+    def _sidebar_row_for(rows, name: str, company: str):
+        """在侧栏行里找到这一条会话，找不到或多解都返回 None（宁可跳过也不猜人）"""
+        def same(a, b):
+            # BOSS 会自己把公司名截成"招商银行股份有限..."，两边都可能是截断后的
+            a = (a or "").strip().rstrip(".")
+            b = (b or "").strip().rstrip(".")
+            if not a or not b:
+                return False
+            n = min(len(a), len(b))
+            return a[:n] == b[:n]
+
+        hits = [r for r in rows or []
+                if r.get("name") == name and (not company or same(r.get("company"), company))]
+        return hits[0] if len(hits) == 1 else None
+
     def _backfill_pending_resumes(self):
         """补发"HR 要过简历、但我们没发出去"的会话。
 
@@ -1735,7 +1751,10 @@ class UnifiedBotLoop:
         """
         convs = [c for c in self._msg_store.get_all_chats_detail()
                  if c.get("account_index") == self.account_index]
-        pending = pending_resume_asks(convs)
+        # 认账：state 里标了"这个会话已发过简历"的不再进，否则每次重启都会给同一个
+        # HR 再发一遍，或者被 resume_send_once 降级成"简历已发您了"那句重复提醒
+        pending = [p for p in pending_resume_asks(convs)
+                   if not self._state_store.resume_sent(p["chat_name"])]
         if not pending:
             self._log("INFO", "补扫欠简历的会话：没有")
             return
@@ -1744,9 +1763,10 @@ class UnifiedBotLoop:
         rows = self._chat_handler.get_all_chats()
         for item in pending:
             name = item["chat_name"]
-            row = next((r for r in rows if r.get("name") == name), None)
+            row = self._sidebar_row_for(rows, name, item.get("company", ""))
             if row is None:
-                self._log("INFO", f"⏭️ 跳过 [{name}]：侧栏已找不到这个会话")
+                self._log("INFO", f"⏭️ 跳过 [{name}]：侧栏按 姓名+公司 对不上这一行"
+                                  f"（存档公司={item.get('company', '')!r}），不猜人")
                 continue
             if not self._chat_handler.enter_chat(row):
                 self._log("WARN", f"⏭️ 跳过 [{name}]：会话切换校验失败")
@@ -1760,6 +1780,9 @@ class UnifiedBotLoop:
                 continue
             job_name = self._chat_handler.get_job_name() or item.get("job_name", "")
             self._log("INFO", f"[{name}] 欠着的索要: {item['ask'][:40]}")
+            # 每条一个时间戳：不然这一轮 8 条回复记录全挤在同一秒，
+            # 面板上看不出先后，也没法跟 BOSS 端逐条对齐
+            self._reply_engine.begin_event_ts()
             self._handle_reply_action("resume", None, {"source": "backfill"},
                                       name, job_name, item["ask"])
             self._reply_engine.wait_human_delay()
