@@ -469,6 +469,8 @@ a{color:var(--accent);text-decoration:none}
 .boss-chat-item-name{font-size:13px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* 同昵称不同岗位是两个会话，列表里必须带岗位才分得开 */
 .boss-chat-item-job{font-size:10px;font-weight:400;color:var(--fg-4th);margin-left:6px}
+/* 「全部账号」下撞车的身份挂的账号标记：不挂的话两行长得完全一样 */
+.boss-chat-item-acc{font-size:9.5px;font-weight:600;color:var(--accent);border:1px solid var(--bd-2);border-radius:5px;padding:0 4px;margin-left:6px;flex-shrink:0}
 .boss-chat-item-preview{font-size:11.5px;color:var(--fg-3rd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .boss-chat-item-meta{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
 .boss-chat-item-time{font-size:10px;color:var(--fg-4th);white-space:nowrap}
@@ -493,7 +495,12 @@ a{color:var(--accent);text-decoration:none}
 .boss-msg-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6bfa);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
 .boss-msg-avatar.me{background:linear-gradient(135deg,#10b981,#34d399)}
 .boss-msg-avatar.system{background:var(--fg-4th);font-size:10px}
-.boss-msg-bubble{max-width:70%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5;word-break:break-word;white-space:pre-wrap;position:relative;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.boss-msg-bubble{max-width:100%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5;word-break:break-word;white-space:pre-wrap;position:relative;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+/* 气泡宽度由外层 wrapper 管：wrapper 以前不限宽，长消息一撑就占满整行，
+   justify-content 就没地方可推 —— 结果我方气泡画在左边，和 BOSS 端左右相反 */
+.boss-msg-row.me>div,.boss-msg-row.hr>div{max-width:78%;min-width:0;display:flex;flex-direction:column}
+.boss-msg-row.me>div{align-items:flex-end}
+.boss-msg-row.hr>div{align-items:flex-start}
 .boss-msg-row.hr .boss-msg-bubble{background:#fff;color:#333;border-top-left-radius:4px;border:1px solid var(--bd-2)}
 [data-theme="dark"] .boss-msg-row.hr .boss-msg-bubble{background:rgba(255,255,255,.08);color:var(--fg)}
 .boss-msg-row.me .boss-msg-bubble{background:linear-gradient(135deg,#5b7cfa,#4365e8);color:#fff;border-top-right-radius:4px}
@@ -700,6 +707,14 @@ a{color:var(--accent);text-decoration:none}
 .login-modal-body{padding:20px 32px 28px;text-align:center}
 .login-modal-desc{font-size:13px;color:var(--fg-2nd);margin-bottom:24px;line-height:1.7}
 .login-modal-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+/* 归档弹窗套的是扫码登录那套头（紫底渐变 + 42px 跳动图标），
+   一个数据表格长得像登录页；plain 变体只改头部观感，不动登录页 */
+.login-modal-plain .login-modal-header{background:var(--surface-soft);padding:14px 22px;text-align:left;border-bottom:1px solid var(--bd)}
+.login-modal-plain .login-modal-header::after{display:none}
+.login-modal-plain .login-modal-icon{display:flex;align-items:center;gap:8px;font-size:18px;animation:none;margin:0;filter:none;color:var(--accent)}
+.login-modal-plain .login-modal-icon-text{font-size:13.5px;font-weight:600;color:var(--fg);margin-top:0;line-height:1.3}
+.login-modal-plain .login-modal-body{text-align:left;padding:16px 22px 20px}
+.login-modal-plain .login-modal-actions{justify-content:flex-start}
 .login-modal-btn{display:inline-flex;align-items:center;gap:6px;padding:11px 22px;border-radius:var(--r-md);font-size:13.5px;font-weight:600;background:var(--accent);color:#fff;transition:all var(--dur) var(--ease);box-shadow:0 2px 8px rgba(30,75,210,.25)}
 .login-modal-btn:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 6px 18px rgba(30,75,210,.35)}
 .login-modal-btn:active{transform:translateY(0)}
@@ -3646,10 +3661,18 @@ function renderMetrics() {
   if (!d) return;
   var daily = d.daily || {}, total = d.total || {};
   var limit = d.daily_limit;
+  // 上限是按号算的：全部账号范围下要把各号的额度加起来，
+  // 不然会出现"已投递 160 / 今日已达上限 150"这种自相矛盾的说法
+  var on = 0;
+  (d.accounts || []).forEach(function (a) { if (a.enabled !== false) on++; });
+  var all = String(d.scope) === 'all' && on > 1;
+  var cap = limit ? (all ? limit * on : limit) : 0;
   setText('statTotal', total.greet_sent || 0);
   setText('statApplied', daily.greet_sent || 0);
-  setText('statAppliedSub', (limit && (daily.greet_sent || 0) >= limit)
-    ? '今日已达上限 ' + limit : '每日上限 ' + (limit || '未设置'));
+  setText('statAppliedSub', !cap ? '未设置上限'
+    : (daily.greet_sent || 0) >= cap ? '今日已达上限 ' + cap
+    : all ? '每号 ' + limit + ' × ' + on + ' 号 = ' + cap
+    : '每日上限 ' + cap);
   setText('statResume', daily.resume_sent || 0);
   setText('statResumeSub', '累计 ' + (total.resume_sent || 0));
   setText('statInterview', daily.interview || 0);
@@ -4199,10 +4222,26 @@ function renderBossChatList(groups) {
     return;
   }
   if (countBadge) countBadge.textContent = groups.length;
+  // 「全部账号」下同一个 姓名+公司 可能是两个号各自的对话（实测 陆女士@深圳小智
+  // 两号都在聊，存档一个是号1 一个是号2）。两行长得一模一样，点哪个全凭猜，
+  // 所以只给撞了车的身份挂账号标记——不撞车的不挂，免得整列都是噪声。
+  var dupIds = {};
+  if (dataScope === 'all') {
+    var seenId = {};
+    groups.forEach(function(g) {
+      var id = g.chat_id || ((g.chat_name || '') + '#' + (g.company || g.job_name || ''));
+      seenId[id] = (seenId[id] || 0) + 1;
+    });
+    Object.keys(seenId).forEach(function(id) { if (seenId[id] > 1) dupIds[id] = 1; });
+  }
   var html = '';
   groups.forEach(function(g) {
     var key = chatKey(g);
     var chatName = g.chat_name || '(未知)';
+    var gid = g.chat_id || (chatName + '#' + (g.company || g.job_name || ''));
+    var acctTag = dupIds[gid]
+      ? '<span class="boss-chat-item-acc">号' + (Number(g.account_index || 0) + 1) + '</span>'
+      : '';
     var avatarText = chatName ? chatName.charAt(0) : '?';
     var preview = g.last_message || g.last_reply || '';
     if (preview.length > 30) preview = preview.substring(0, 30) + '...';
@@ -4221,6 +4260,7 @@ function renderBossChatList(groups) {
     html += '  <div class="boss-chat-item-info">';
     html += '    <div class="boss-chat-item-name">'+escHtml(chatName)
          +   (subLine ? '<span class="boss-chat-item-job">'+escHtml(subLine)+'</span>' : '')
+         +   acctTag
          +   '</div>';
     html += '    <div class="boss-chat-item-preview">'+escHtml(preview)+'</div>';
     html += '  </div>';
@@ -5586,7 +5626,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Archive Modal (历史数据) -->
 <div class="login-modal-overlay" id="archiveModal" style="display:none">
-  <div class="login-modal" style="max-width:600px">
+  <div class="login-modal login-modal-plain" style="max-width:600px">
     <div class="login-modal-header">
       <div class="login-modal-icon"><i data-ki="archive"></i><div class="login-modal-icon-text">历史数据归档（保留最近10天）</div></div>
     </div>

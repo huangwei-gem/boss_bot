@@ -152,3 +152,12 @@ def test_导出图标不是宽扁的透视桌():
     assert 0 < w <= h, f"导出图标画布 {w}x{h} 还是横扁的"
     src = (ROOT / "tools" / "build_ui_icons.py").read_text(encoding="utf-8")
     assert '"export": "table"' not in src
+
+
+def test_全部账号下撞车身份要挂账号标记():
+    """同一个 姓名+公司 可能是两个号各自的对话（实测 陆女士@深圳小智两号都在聊）。
+    「全部账号」列表里两行长得完全一样，点哪条全凭运气——撞车的身份必须标出号几。"""
+    body = HTML[HTML.index("function renderBossChatList"):HTML.index("// 会话身份：BOSS 侧栏一行显示")]
+    assert "boss-chat-item-acc" in body, "列表行里没有账号标记"
+    assert "dataScope === 'all'" in body, "标记不分范围，单账号下也会挂出噪声"
+    assert ".boss-chat-item-acc{" in HTML, "账号标记没有样式，会跟正文糊在一起"
