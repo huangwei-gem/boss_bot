@@ -30,11 +30,12 @@ import random
 import os
 import json
 import shutil
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from pathlib import Path
 from typing import Optional, Callable
 
-from boss_bot.unified_config import UnifiedConfig, BASE_DIR, resolve_path, account_file
+from boss_bot.unified_config import (UnifiedConfig, BASE_DIR, resolve_path,
+                                     account_file, write_json_atomic)
 from boss_bot.browser_launcher import BrowserManager, BOSS_AUTH_COOKIES
 from boss_bot.greet_engine import (GreetEngine, GREETING_MISSING_REASON,
                                    in_probe_band)
@@ -45,6 +46,8 @@ from boss_bot.state_store import StateStore
 from boss_bot.stats import Stats
 from boss_bot.notify import Notifier
 from boss_bot.message_store import MessageStore
+from boss_bot.reply_queue import (chat_state, inbound_body, owed_replies,
+                                  followup_due, mark_followed)
 from boss_bot.self_evolve import SelfEvolveEngine
 from boss_bot.metrics import get_metrics
 
@@ -58,6 +61,15 @@ logger = logging.getLogger(__name__)
 
 # 打招呼两轮搜索之间的间隔秒数
 GREET_ROUND_INTERVAL = 30
+
+# 主动跟进的记账文件：谁追过几次、最后一次什么时候，重启不能重置
+FOLLOWUP_STATE_FILE = BASE_DIR / "data" / "followup_state.json"
+
+# 追到面试的话术：第 1 次问岗位还在不在并约面试，第 2 次换个说法，别复读
+FOLLOWUP_LINES = (
+    "{boss}您好，之前聊的{job}我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+    "{boss}您好，{company}这个岗位还在招吗？我随时能到岗，想约个时间当面聊聊。",
+)
 
 # 等待人工登录时的登录态轮询间隔（秒）
 LOGIN_POLL_INTERVAL = 5
@@ -212,6 +224,11 @@ class UnifiedBotLoop:
         self._probe_used_this_round = 0
         # 采集口径：启动后全量同步一次侧栏，之后回复轮只看未读
         self._full_sync_done = False
+        # 存档里欠回复的会话：一条处理失败后多久才再试（侧栏对不上行时会反复空跑）
+        self._owed_attempt_at = {}
+        # 主动跟进：上次扫描的时刻 + 各会话已追了几次（落盘，重启不重追）
+        self._followup_last_scan = None
+        self._followup_state = self._load_followup_state()
         # 自进化引擎在 _init_engines 里构造（先置空，热重载/状态查询要能安全引用）
         self._self_evolve = None
         self._current_mode = "idle"
@@ -1606,6 +1623,8 @@ class UnifiedBotLoop:
 
                 self._current_mode = "reply"
                 self._run_reply_round()
+                # 追到面试：回复轮只管"对方说了什么"，这一句管"我们说完对方没回"
+                self._run_followup_round()
 
                 # 回复检查间隔
                 check_interval = self.config.reply.check_interval
@@ -1660,10 +1679,20 @@ class UnifiedBotLoop:
             unread_chats = self._chat_handler.get_unread_chats()
             self._log("DEBUG", f"获取到未读会话数: {len(unread_chats)}")
 
-            if not unread_chats:
+            # 红点只是其中一条腿，另外一条腿在本地存档：
+            # 启动全量同步把每个会话点开读过一遍，红点是我们自己清掉的，
+            # 侧栏又是虚拟列表（一屏只渲染 ~20 行），真提问经常根本进不了候选。
+            candidates = list(unread_chats) + self._archive_owed_chats(unread_chats)
+            owed_n = len(candidates) - len(unread_chats)
+            if owed_n:
+                self._log("INFO", f"另外从存档补了 {owed_n} 个欠着的会话"
+                                  f"（红点已被启动全量同步清掉）")
+
+            if not candidates:
                 self._log("DEBUG", "无未读消息")
             else:
-                self._log("INFO", f"发现 {len(unread_chats)} 个未读会话")
+                self._log("INFO", f"发现 {len(candidates)} 个待处理会话"
+                                  f"（未读 {len(unread_chats)} + 存档补 {owed_n}）")
                 # 把 BOSS 自己报的未读数记下来：界面的红点只认这个数，
                 # 不再用"本地存了几条 HR 消息"去猜（猜出来的 53/118 和线上 13/1 对不上）
                 for chat_info in unread_chats:
@@ -1673,7 +1702,7 @@ class UnifiedBotLoop:
                         chat_info.get("job_name", ""),
                         chat_info.get("company", ""))
 
-                for chat_info in unread_chats:
+                for chat_info in candidates:
                     if not self._running or self._reply_paused:
                         break
 
@@ -1704,6 +1733,189 @@ class UnifiedBotLoop:
                 self._try_reconnect_browser()
 
         self._log("INFO", "━━━ 回复轮次结束 ━━━")
+
+    # 一条欠着的会话处理失败后多久才再试：侧栏对不上行时会一直空跑
+    OWED_RETRY_SECONDS = 20 * 60
+
+    def _archive_owed_chats(self, unread_chats) -> list:
+        """从本地存档里补出"HR 最后说话、我们没接"的会话，当作本轮候选。
+
+        侧栏红点不可靠（全量同步读过就清掉 + 虚拟列表只渲染 ~20 行），
+        2026-10-04 实测连 289 轮"0 个未读"，同期存档里压着「大四还有课吗」
+        「通勤距离怎么样」这类真提问没人接。
+        只补 姓名+公司 能对上的：实测 34 行里有 4 组重名昵称，公司空着就是猜人。
+        """
+        cfg = self.config.reply
+        convs = [c for c in self._msg_store.get_all_chats_detail()
+                 if c.get("account_index") == self.account_index]
+        owed = owed_replies(convs, max_age_hours=cfg.owed_max_age_hours,
+                            limit=max(cfg.owed_per_round, 0) + len(unread_chats))
+        if not owed:
+            return []
+
+        taken = {(c.get("name", ""), (c.get("company") or "").strip())
+                 for c in unread_chats}
+        now = time.time()
+        out = []
+        for item in owed:
+            key = "%s|%s" % (item["name"], item["company"])
+            if (item["name"], item["company"]) in taken:
+                continue
+            if not item["company"]:
+                self._log("INFO", f"⏭️ 欠回复 [{item['name']}]：存档里没有公司名，"
+                                  f"重名对不上是谁，不猜")
+                continue
+            if now - self._owed_attempt_at.get(key, 0) < self.OWED_RETRY_SECONDS:
+                continue
+            self._owed_attempt_at[key] = now
+            # index=-1：enter_chat 万一没按 姓名+公司 对上，会退回按索引点第一行，
+            # 那等于点进别人的会话；给个不可能的行号，让它老实回报 not_found
+            out.append({"name": item["name"], "company": item["company"],
+                        "job_name": item["job_name"], "index": -1,
+                        "unread_count": 0, "preview": item["ask"]})
+            self._log("INFO", f"📌 存档欠回复 [{item['name']}|{item['company']}] "
+                              f"已等 {item['age_hours']}h：{item['ask'][:40]}")
+        return out[:max(cfg.owed_per_round, 0)]
+
+    @staticmethod
+    def _load_followup_state() -> dict:
+        """谁追过几次、最后一次追是什么时候——重启不能把次数忘掉，否则每次都从第 1 次重追。"""
+        try:
+            with open(resolve_path(FOLLOWUP_STATE_FILE), "r", encoding="utf-8") as f:
+                data = json.load(f)
+            return data if isinstance(data, dict) else {}
+        except Exception:
+            return {}
+
+    def _save_followup_state(self):
+        try:
+            write_json_atomic(resolve_path(FOLLOWUP_STATE_FILE), self._followup_state)
+        except Exception as e:
+            self._log("WARN", f"跟进次数没记进 {FOLLOWUP_STATE_FILE.name}（本次仍会追）: {e}")
+
+    def _followup_text(self, item: dict, boss: str, job_name: str) -> str:
+        """固定话术而不是让 AI 现编：要追的就是"能不能约个面试"这一句，
+        一次扫出几十个会话时 AI 又慢又贵，模板反而稳。"""
+        tpl = FOLLOWUP_LINES[min(int(item.get("times") or 0), len(FOLLOWUP_LINES) - 1)]
+        return tpl.format(boss=boss,
+                          job=(job_name or "").strip() or "这个岗位",
+                          company=(item.get("company") or "").strip() or "贵公司")
+
+    def _run_followup_round(self):
+        """我们说完、对方沉默够久的会话，主动追一句把话头接到面试上。
+
+        漏斗不会自己往前走：只打招呼不追，转化率永远停在"已沟通"。
+        够久 / 次数上限 / 两次间隔三条闸门都在 reply_queue.followup_due 里，
+        防的是骚扰，也是 BOSS 的反爬。
+        """
+        cfg = self.config.reply
+        if not cfg.followup_enabled:
+            return
+        now = datetime.now()
+        if (self._followup_last_scan
+                and now - self._followup_last_scan < timedelta(minutes=cfg.followup_every_minutes)):
+            return
+        self._followup_last_scan = now
+
+        convs = [c for c in self._msg_store.get_all_chats_detail()
+                 if c.get("account_index") == self.account_index]
+
+        def worth_chasing(c):
+            """只对真聊上过话的人追。
+
+            存档里有一类孤儿文件：整份对话只有一条我们自己写的 [简历已发送]，
+            公司名也空着（补扫那条链 append_bot_message 没带 company）。
+            给从没理过我们的 HR 群发"约面试"是骚扰，也最容易踩反爬。
+            """
+            if not (c.get("company") or "").strip():
+                return False
+            return any(inbound_body(m) for m in c.get("messages") or [])
+
+        convs = [c for c in convs if worth_chasing(c)]
+        due = followup_due(convs, self._followup_state, now=now,
+                           after_hours=cfg.followup_after_hours,
+                           gap_hours=cfg.followup_gap_hours,
+                           max_times=cfg.followup_max_times, limit=6)
+        if not due:
+            return
+        self._log("INFO", f"主动跟进：{len(due)} 个会话对方已沉默 —— "
+                          + "、".join(f"{d['name']}({d['idle_hours']}h)" for d in due))
+        for item in due:
+            if not self._running or self._reply_paused or self._state_store.is_paused():
+                break
+            # 跟进也吃"每小时最多回复"这个额度：面板上那个框管的是所有主动发送，
+            # 只让回复轮计数的话，跟进就能在额度之外另发一串
+            if not self._reply_engine.can_reply():
+                self._log("INFO", "本轮跟进收工：已到每小时回复上限")
+                break
+            self._current_chat = item["name"]
+            self._send_followup(item)
+            self._reply_engine.wait_human_delay()
+        self._current_chat = None
+
+    def _send_followup(self, item: dict) -> bool:
+        """点开会话、按页面上的实时消息再判一次，才决定追不追。
+
+        存档会滞后（发出去的那句、HR 后来补的话都可能还没读进来），
+        只看存档就发等于凭旧账说话。
+        """
+        name, company = item["name"], item["company"]
+        if not self._chat_handler.enter_chat({"name": name, "company": company, "index": -1}):
+            self._log("WARN", f"⏭️ 跟进跳过 [{name}]：会话切换校验失败")
+            return False
+        sel = self._chat_handler.read_selected_row() or {}
+        if sel.get("name") and sel.get("name") != name:
+            self._log("WARN", f"⏭️ 跟进跳过 [{name}]：选中的是 [{sel.get('name')}]，不猜人")
+            return False
+
+        live = self._chat_handler.read_all_messages() or []
+        if not live:
+            self._log("INFO", f"⏭️ 跟进跳过 [{name}]：页面上没读到消息")
+            return False
+        job_name = self._chat_handler.get_job_name() or item.get("job_name", "")
+        try:
+            self._msg_store.merge_messages(chat_name=name, new_messages=live,
+                                           job_name=job_name, company=company)
+        except Exception as e:
+            self._log("WARN", f"[{name}] 跟进前同步存档失败（不影响本次判断）: {e}")
+
+        kind, info = chat_state(live)
+        if kind != "follow":
+            self._log("INFO", f"⏭️ 跟进跳过 [{name}]：页面上现在不是我们话说完了（{kind}）")
+            return False
+        if conversation_rejected(live):
+            self._log("INFO", f"⏭️ 跟进跳过 [{name}]：HR 已拒绝，再追是骚扰")
+            return False
+
+        text = self._followup_text(item, name, job_name)
+        self._reply_engine.begin_event_ts()
+        if self._dry_run("本应跟进", f"[{name}] {text}"):
+            return False
+        self._reply_engine.wait_human_delay()
+        if not self._chat_handler.send_text(text):
+            self._log("WARN", f"跟进 [{name}] 文字发送失败")
+            return False
+
+        mark_followed(self._followup_state, item["key"], now=datetime.now())
+        self._save_followup_state()
+        self._reply_engine.record_reply()
+        self._stats.record_reply(source="followup", action="text")
+        self._stats_dict["reply_sent"] += 1
+        self._msg_store.append_bot_message(
+            name, text, job_name, reply_source="followup", action="text", company=company)
+        self._reply_engine._add_record(
+            chat_name=name, job_name=job_name,
+            received_message=item.get("last_we_said", ""), reply_content=text,
+            reply_source="followup", reply_intent="followup",
+            reply_reason=f"对方静默 {item['idle_hours']}h，主动追一次把话头接到面试",
+        )
+        self._emit_reply_event(
+            contact_name=name, job_name=job_name,
+            message_received=item.get("last_we_said", ""), reply_sent=text,
+            ai_model="", intent="followup", status="replied",
+        )
+        self._log("INFO", f"📞 已跟进 [{name}]（第 {item.get('times', 0) + 1} 次）: {text}")
+        return True
 
     def _full_sync_chats(self):
         """启动后全量同步：侧栏每个会话点开读一遍最新消息，只存档不回复。"""
@@ -1798,7 +2010,8 @@ class UnifiedBotLoop:
             # 面板上看不出先后，也没法跟 BOSS 端逐条对齐
             self._reply_engine.begin_event_ts()
             self._handle_reply_action("resume", None, {"source": "backfill"},
-                                      name, job_name, item["ask"])
+                                      name, job_name, item["ask"],
+                                      item.get("company", ""))
             self._reply_engine.wait_human_delay()
 
     def _process_single_chat(self, chat_info: dict):
@@ -1883,10 +2096,11 @@ class UnifiedBotLoop:
         latest_other_msg = None
         latest_other_msg_time = ""
         for msg in reversed(messages):
-            # 卡片的 .text-content 是空的，正文在 card_text（HR 点"求附件简历"就是张卡片）：
-            # 只认 text 会把这条当成"没说话"，规则和意图全部失灵
-            body = (msg.get("text") or msg.get("card_text") or "").strip()
-            if not msg.get("is_mine") and body:
+            # 卡片的 .text-content 是空的，正文在 card_text（HR 点"求附件简历"就是张卡片），
+            # 但同一套读法也会把平台自己塞的"竞争者PK/已发送"卡片读成 HR 在说话——
+            # 那种回一句就是对着空气讲话，过滤规则收在 reply_queue.inbound_body 里
+            body = inbound_body(msg)
+            if body:
                 latest_other_msg = body
                 latest_other_msg_time = msg.get("time", "")
                 break

@@ -370,6 +370,15 @@ class ReplyConfig:
     max_delay: int = 5
     pause_on_important: bool = True
     resume_send_once: bool = True
+    # 回复候选的第二条腿：BOSS 的红点会被启动全量同步清掉，只认红点会静默停摆
+    owed_per_round: int = 8             # 每轮最多补回几个存档里欠着的会话
+    owed_max_age_hours: int = 72        # 太旧的账不翻（对方早就不在招了）
+    # 追到面试：我们说完对方沉默够久，主动跟一次，不追就永远停在"已沟通"
+    followup_enabled: bool = True
+    followup_after_hours: int = 8       # 静默多久算"没回"
+    followup_gap_hours: int = 24        # 同一会话两次跟进的最小间隔
+    followup_max_times: int = 2         # 同一会话最多追几次，再多就是骚扰
+    followup_every_minutes: int = 15    # 跟进扫描的频率（比回复轮次低得多）
     chat_url: str = "https://www.zhipin.com/web/geek/chat"
     use_ai: bool = True                 # 兼容 reply_engine.py 已有接口
     ai_model: str = "agnes-2.5-flash"    # 兼容 reply_engine.py 已有接口
@@ -865,6 +874,12 @@ class UnifiedConfig:
                 self.reply.pause_on_important = bool(reply["pause_on_important"])
             if "resume_send_once" in reply:
                 self.reply.resume_send_once = bool(reply["resume_send_once"])
+            for k in ("owed_per_round", "owed_max_age_hours", "followup_after_hours",
+                      "followup_gap_hours", "followup_max_times", "followup_every_minutes"):
+                if k in reply:
+                    setattr(self.reply, k, int(reply[k]))
+            if "followup_enabled" in reply:
+                self.reply.followup_enabled = bool(reply["followup_enabled"])
             if "chat_url" in reply:
                 self.reply.chat_url = str(reply["chat_url"])
 
@@ -1286,6 +1301,13 @@ class UnifiedConfig:
                 "max_delay": self.reply.max_delay,
                 "pause_on_important": self.reply.pause_on_important,
                 "resume_send_once": self.reply.resume_send_once,
+                "owed_per_round": self.reply.owed_per_round,
+                "owed_max_age_hours": self.reply.owed_max_age_hours,
+                "followup_enabled": self.reply.followup_enabled,
+                "followup_after_hours": self.reply.followup_after_hours,
+                "followup_gap_hours": self.reply.followup_gap_hours,
+                "followup_max_times": self.reply.followup_max_times,
+                "followup_every_minutes": self.reply.followup_every_minutes,
                 "chat_url": self.reply.chat_url,
             },
             "notify": {

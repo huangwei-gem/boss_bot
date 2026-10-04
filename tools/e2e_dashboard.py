@@ -399,6 +399,36 @@ def main():
         restored_dry = json.load(f).get("dry_run")
     check("演练", "再点一次能关回 false", restored_dry is False, restored_dry)
 
+    # ── 6c. 回复补漏/主动跟进的 7 个输入框：回填 + 存回后端（红线：输入框必须真生效）──
+    reply_keys = {"advOwedPerRound": "owed_per_round", "advOwedMaxAge": "owed_max_age_hours",
+                  "advFollowAfter": "followup_after_hours", "advFollowGap": "followup_gap_hours",
+                  "advFollowMax": "followup_max_times", "advFollowEvery": "followup_every_minutes"}
+    empty = [tid for tid in reply_keys
+             if not str(js(page, "document.getElementById('%s').value" % tid) or "").strip()]
+    check("跟进配置", "6 个数字框都按配置回填了", not empty, empty or "全部有值")
+    before_max = js(page, '''(function(){var x=new XMLHttpRequest();
+      x.open("GET","/api/config",false);x.send();var c=JSON.parse(x.responseText);
+      return ((c.config||c).reply||{}).followup_max_times;})()''')
+    js(page, '''(function(){var e=document.getElementById("advFollowMax");
+      e.value="3";e.dispatchEvent(new Event("change"));})()''')
+    time.sleep(2.2)
+    after_max = get_cfg("(c.reply||{}).followup_max_times")
+    check("跟进配置", "改次数存得进后端", str(after_max) == "3", f"读回 {after_max}")
+    js(page, '''(function(){var e=document.getElementById("advFollowMax");
+      e.value="%s";e.dispatchEvent(new Event("change"));})()''' % before_max)
+    time.sleep(2.2)
+    on_before = js(page, "document.getElementById('advFollowup').classList.contains('on')")
+    js(page, 'toggleAdvBool("followup_enabled")')
+    time.sleep(2.2)
+    fu = get_cfg("(c.reply||{}).followup_enabled")
+    check("跟进配置", "主动跟进开关存得进后端", str(bool(fu)) == str(not bool(on_before)),
+          f"点前={on_before} 读回={fu}")
+    js(page, 'toggleAdvBool("followup_enabled")')
+    time.sleep(2.2)
+    check("跟进配置", "再点一次能关回原值",
+          str(bool(get_cfg("(c.reply||{}).followup_enabled"))) == str(bool(on_before)),
+          get_cfg("(c.reply||{}).followup_enabled"))
+
     # ── 7. 弹窗 / Esc / 主题 / 断线横幅 ──
     js(page, 'showTemplatesModal()')
     time.sleep(1.2)

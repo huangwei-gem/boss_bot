@@ -947,6 +947,14 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
             <div class="adv-group-title">投递/回复限制</div>
             <div class="adv-field-row"><label>每小时最多打招呼</label><input class="side-form-input" id="advMaxGreet" type="number" value="30" min="1" max="200" step="1" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label>每小时最多回复</label><input class="side-form-input" id="advMaxReply" type="number" value="30" min="1" max="200" step="1" onchange="onAdvChange()"></div>
+            <div class="adv-group-title">回复补漏与主动跟进</div>
+            <div class="adv-field-row"><label title="侧栏红点会被启动全量同步清掉，而且它一屏只渲染约 20 行；每轮再从本地存档补几个「HR 最后说话、我们没接」的会话">每轮补回欠回复(个)</label><input class="side-form-input" id="advOwedPerRound" type="number" value="8" min="0" max="50" step="1" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="太旧的账不翻：那个 HR 早就不在招了，回过去只是浪费一次发送额度">欠回复最多等(小时)</label><input class="side-form-input" id="advOwedMaxAge" type="number" value="72" min="1" max="720" step="1" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="我们说完对方没回的会话，主动追一句把话头接到面试；关掉就只被动回复">主动追到面试</label><span id="advFollowup" class="toggle-switch" onclick="toggleAdvBool('followup_enabled')"></span></div>
+            <div class="adv-field-row"><label title="静默不满这个时长不追，免得刚发完就催">静默多久后追(小时)</label><input class="side-form-input" id="advFollowAfter" type="number" value="8" min="1" max="168" step="1" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="同一会话两次跟进之间的最小间隔">两次跟进至少隔(小时)</label><input class="side-form-input" id="advFollowGap" type="number" value="24" min="1" max="168" step="1" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="追到这个次数就不再追了，再多就是骚扰">同会话最多追(次)</label><input class="side-form-input" id="advFollowMax" type="number" value="2" min="1" max="5" step="1" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="跟进要滚动逐个开会话，扫得比回复轮稀得多">跟进扫描间隔(分钟)</label><input class="side-form-input" id="advFollowEvery" type="number" value="15" min="1" max="240" step="1" onchange="onAdvChange()"></div>
             <div class="adv-group-title">运行时开关（改完立即生效）</div>
             <div class="adv-field-row"><label title="照常搜索岗位、照常让 AI 判分和生成回复，只在最后一步不点发送：不消耗每日上限，也不会打扰 HR">演练模式（只筛不发）</label><span id="advDryRun" class="toggle-switch" onclick="toggleAdvBool('dry_run')"></span></div>
             <div class="adv-field-row"><label title="容灾链不再把 30s 预算浪费在体检明确不可用的接口上（相对顺序不变）；全部不可用时自动不生效">跳过体检不可用的AI接口</label><span id="advSkipUnhealthy" class="toggle-switch" onclick="toggleAdvBool('skip_unhealthy')"></span></div>
@@ -2831,6 +2839,13 @@ function renderAdvSettings() {
   setVal('advMaxGreet', _grl.max_per_hour != null ? _grl.max_per_hour : 30);
   var _rl = config.reply || {};
   setVal('advMaxReply', _rl.max_replies_per_hour != null ? _rl.max_replies_per_hour : 30);
+  setVal('advOwedPerRound', _rl.owed_per_round != null ? _rl.owed_per_round : 8);
+  setVal('advOwedMaxAge', _rl.owed_max_age_hours != null ? _rl.owed_max_age_hours : 72);
+  setEl('advFollowup', 'toggle-switch' + (_rl.followup_enabled !== false ? ' on' : ''));
+  setVal('advFollowAfter', _rl.followup_after_hours != null ? _rl.followup_after_hours : 8);
+  setVal('advFollowGap', _rl.followup_gap_hours != null ? _rl.followup_gap_hours : 24);
+  setVal('advFollowMax', _rl.followup_max_times != null ? _rl.followup_max_times : 2);
+  setVal('advFollowEvery', _rl.followup_every_minutes != null ? _rl.followup_every_minutes : 15);
 
   // 运行时开关：演练 / 跳过不可用AI接口 / 自进化记录
   setEl('advDryRun', 'toggle-switch' + (config.dry_run ? ' on' : ''));
@@ -2874,6 +2889,11 @@ function toggleAdvBool(key) {
     config.ai.skip_unhealthy = !(config.ai.skip_unhealthy !== false);
     setEl('advSkipUnhealthy', 'toggle-switch' + (config.ai.skip_unhealthy ? ' on' : ''));
     toast(config.ai.skip_unhealthy ? '将跳过体检不可用的 AI 接口' : '容灾链恢复按原顺序全试');
+  } else if (key === "followup_enabled") {
+    if (!config.reply) config.reply = {};
+    config.reply.followup_enabled = !(config.reply.followup_enabled !== false);
+    setEl('advFollowup', 'toggle-switch' + (config.reply.followup_enabled ? ' on' : ''));
+    toast(config.reply.followup_enabled ? '已开启主动跟进：对方沉默够久会追一句约面试' : '已关闭主动跟进：只被动回复');
   } else if (key === "self_evolve") {
     config.self_evolve_enabled = !(config.self_evolve_enabled !== false);
     setEl('advSelfEvolve', 'toggle-switch' + (config.self_evolve_enabled ? ' on' : ''));
@@ -2918,6 +2938,18 @@ function onAdvChange() {
   config.greet.rate_limit.max_per_hour = parseInt(document.getElementById('advMaxGreet').value) || 30;
   if (!config.reply) config.reply = {};
   config.reply.max_replies_per_hour = parseInt(document.getElementById('advMaxReply').value) || 30;
+  // 0 是有效值（"每轮补 0 个"就是把补漏关掉），这里不能用 parseInt(x) || 默认
+  function _replyNum(id, def) {
+    var v = parseInt(document.getElementById(id).value, 10);
+    return isNaN(v) ? def : v;
+  }
+  config.reply.owed_per_round = _replyNum('advOwedPerRound', 8);
+  config.reply.owed_max_age_hours = _replyNum('advOwedMaxAge', 72);
+  config.reply.followup_enabled = document.getElementById('advFollowup').classList.contains('on');
+  config.reply.followup_after_hours = _replyNum('advFollowAfter', 8);
+  config.reply.followup_gap_hours = _replyNum('advFollowGap', 24);
+  config.reply.followup_max_times = _replyNum('advFollowMax', 2);
+  config.reply.followup_every_minutes = _replyNum('advFollowEvery', 15);
 
   // 测试模式
   config.dry_run = document.getElementById('advDryRun').classList.contains('on');
@@ -4044,6 +4076,7 @@ function getReplySourceLabel(replySource) {
   if (replySource === 'greet') return '机器招呼';
   if (replySource === 'skip') return '跳过';
   if (replySource === 'rejection') return '拒绝接受';
+  if (replySource === 'followup') return '主动跟进';
   if (replySource) return replySource;
   return '—';
 }
