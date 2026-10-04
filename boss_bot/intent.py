@@ -126,3 +126,21 @@ def is_resume_request(message: str) -> bool:
         return False
     return any(re.search(p, text) for p in _RESUME_ASK_PATTERNS)
 
+
+# BOSS 的交换联系方式卡片：标题一律是"我想要和您交换微信/一个您的电话号码，您是否同意"，
+# 下面挂着 拒绝 / 同意 两个按钮（读回来时按钮文字会并进同一句 card_text）
+_CONTACT_CARD_MARKS = ("交换微信", "交换电话", "您的电话号码", "您的微信号")
+
+
+def is_contact_exchange_card(message: str) -> bool:
+    """这句话是不是那张可以点"同意"的交换联系方式卡片。
+
+    判据要窄：HR 在正文里顺口说"加个微信聊"、平台那句
+    "为保障您的安全建议在平台内沟通，微信沟通中需特别保护您的…"的安全提示，
+    都不是卡片 —— 对着它们点"同意"等于凭空找一个不存在的按钮。
+    """
+    text = (message or "").strip()
+    if not text or "是否同意" not in text:
+        return False
+    return any(k in text for k in _CONTACT_CARD_MARKS)
+

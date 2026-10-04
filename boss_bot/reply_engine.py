@@ -32,7 +32,7 @@ from boss_bot.config import (
     USER_PROFILE, render_template,
 )
 from boss_bot.rules import RuleEngine
-from boss_bot.intent import classify, is_resume_request
+from boss_bot.intent import classify, is_resume_request, is_contact_exchange_card
 from boss_bot.prompts import build_system_prompt, build_user_prompt
 from boss_bot.reply_record import ReplyRecord, ReplyRecordStore, _get_reply_store
 
@@ -578,6 +578,10 @@ class ReplyEngine:
         # ── 2. 意图识别回复 ──
         if meta["intent"] in INTENT_REPLIES:
             action, template = INTENT_REPLIES[meta["intent"]]
+            # 交换微信/电话那张卡片是平台给的"同意/拒绝"两个按钮，回一段话等于没处理；
+            # HR 顺口提微信、平台的安全提示都不是卡片，仍走原来的平台内沟通话术
+            if meta["intent"] == "contact_request" and is_contact_exchange_card(latest):
+                action, template = "contact", None
             content = render_template(template, USER_PROFILE) if template else None
             # 重复发送检测
             if action == "text" and content and \

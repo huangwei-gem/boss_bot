@@ -2359,6 +2359,63 @@ class UnifiedBotLoop:
                     status="replied",
                 )
 
+        elif action == "contact":
+            # HR 点的是平台那张"交换微信/电话号码，您是否同意"卡片：能点掉就别回话，
+            # 回一段"还是在平台上聊吧"等于把送上门的联系方式推回去
+            if not self.config.reply.accept_contact_exchange:
+                reason = "交换联系方式的开关是关的，这张卡片留给人工处理"
+                self._log("INFO", f"⏭️ [{name}] {reason}")
+                self._reply_engine._add_record(
+                    chat_name=name, job_name=job_name,
+                    received_message=latest_other_msg, reply_content=None,
+                    reply_source="skip", reply_intent=meta.get("intent", ""),
+                    reply_reason=reason, is_skipped=True, skip_reason=reason,
+                )
+                return True
+            if self._dry_run("本应同意交换联系方式", f"[{name}]（{job_name or '未知岗位'}）"):
+                return False
+            self._reply_engine.wait_human_delay()
+            if self._chat_handler.accept_contact_exchange():
+                note = "[已同意交换联系方式]"
+                self._stats.record_reply(source=meta.get("source", "intent"),
+                                         action="contact")
+                self._msg_store.append_bot_message(
+                    name, note, job_name,
+                    reply_source=meta.get("source", ""), action="contact",
+                    company=chat_company,
+                )
+                self._reply_engine._add_record(
+                    chat_name=name, job_name=job_name,
+                    received_message=latest_other_msg, reply_content=note,
+                    reply_source="contact", reply_intent=meta.get("intent", ""),
+                    reply_reason="HR 发来交换微信/电话的卡片，已点同意",
+                )
+                self._emit_reply_event(
+                    contact_name=name, job_name=job_name,
+                    message_received=latest_other_msg, reply_sent=note,
+                    ai_model="", intent=meta.get("intent", ""),
+                    status="replied",
+                )
+                self._log("INFO", "已同意交换联系方式")
+            else:
+                # 卡片上没有可点的「同意」= 这张已经被处理过或不是那张卡片。
+                # 记一条留痕，别再拿文字去追一遍，两个号都回一次就是骚扰
+                reason = "卡片上没找到可点的「同意」（可能已经处理过），没有真的交换"
+                self._log("WARN", f"⏭️ [{name}] {reason}")
+                self._reply_engine._add_record(
+                    chat_name=name, job_name=job_name,
+                    received_message=latest_other_msg, reply_content=None,
+                    reply_source="skip", reply_intent=meta.get("intent", ""),
+                    reply_reason=reason, is_skipped=True, skip_reason=reason,
+                )
+                self._emit_reply_event(
+                    contact_name=name, job_name=job_name,
+                    message_received=latest_other_msg, reply_sent="",
+                    ai_model="", intent=meta.get("intent", ""),
+                    status="skipped",
+                )
+            return True
+
         elif action == "text" and content:
             if self._dry_run("本应回复", f"[{name}] {content}"):
                 return False

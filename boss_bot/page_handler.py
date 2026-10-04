@@ -1239,6 +1239,48 @@ class BossChatHandler:
         logger.error(f"发送文字最终失败: {text[:30]}...")
         return False
 
+    def accept_contact_exchange(self) -> bool:
+        """点掉 HR 那张"我想要和您交换微信/电话号码，您是否同意"卡片上的「同意」。
+
+        实测 CSS（取自 tools/chat_page_structure.json 里的线上真实 DOM）:
+        - 卡片: .message-card-wrap（.dialog-icon.weixin 是微信那张）
+        - 标题: .message-card-top-title → "我想要和您交换微信，您是否同意"
+        - 按钮: .message-card-buttons > span.card-btn，文字分别是 拒绝 / 同意
+        已经处理过的卡片，BOSS 会把这两个按钮换掉，那时找不到「同意」就返回 False，
+        绝不退而求其次去点页面上别的同名按钮。
+        """
+        try:
+            result = self.page.run_js('''(
+                function() {
+                    function vis(el) {
+                        return !!(el && el.getClientRects && el.getClientRects().length);
+                    }
+                    var cards = document.querySelectorAll(".message-card-wrap");
+                    var hit = null;
+                    for (var i = 0; i < cards.length; i++) {
+                        var t = cards[i].querySelector(".message-card-top-title");
+                        var tx = t ? (t.textContent || "") : "";
+                        if (tx.indexOf("是否同意") < 0) continue;
+                        if (tx.indexOf("微信") < 0 && tx.indexOf("电话") < 0) continue;
+                        hit = cards[i];          // 取最后一张：卡片会被新的顶掉
+                    }
+                    if (!hit) return "no-card";
+                    var btns = hit.querySelectorAll(".message-card-buttons .card-btn");
+                    for (var j = 0; j < btns.length; j++) {
+                        if ((btns[j].textContent || "").trim() === "同意" && vis(btns[j])) {
+                            btns[j].click();
+                            return "clicked";
+                        }
+                    }
+                    return "no-agree-btn";
+                }
+            )()''', as_expr=True)
+            logger.info(f"交换联系方式卡片点同意结果: {result}")
+            return result == "clicked"
+        except Exception as e:
+            logger.error(f"点交换联系方式卡片的同意失败: {e}")
+            return False
+
     def send_resume(self, retries: int = 2) -> bool:
         """
         点击发送简历按钮，确认发送。

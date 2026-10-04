@@ -370,6 +370,9 @@ class ReplyConfig:
     max_delay: int = 5
     pause_on_important: bool = True
     resume_send_once: bool = True
+    # HR 发"我想要和您交换微信/电话号码，您是否同意"那张卡片时要不要点同意；
+    # 关掉就是只回话不交换，留给人工决定（联系方式给出去收不回来）
+    accept_contact_exchange: bool = True
     # 回复候选的第二条腿：BOSS 的红点会被启动全量同步清掉，只认红点会静默停摆
     owed_per_round: int = 8             # 每轮最多补回几个存档里欠着的会话
     owed_max_age_hours: int = 72        # 太旧的账不翻（对方早就不在招了）
@@ -874,6 +877,8 @@ class UnifiedConfig:
                 self.reply.pause_on_important = bool(reply["pause_on_important"])
             if "resume_send_once" in reply:
                 self.reply.resume_send_once = bool(reply["resume_send_once"])
+            if "accept_contact_exchange" in reply:
+                self.reply.accept_contact_exchange = bool(reply["accept_contact_exchange"])
             for k in ("owed_per_round", "owed_max_age_hours", "followup_after_hours",
                       "followup_gap_hours", "followup_max_times", "followup_every_minutes"):
                 if k in reply:
@@ -1301,6 +1306,7 @@ class UnifiedConfig:
                 "max_delay": self.reply.max_delay,
                 "pause_on_important": self.reply.pause_on_important,
                 "resume_send_once": self.reply.resume_send_once,
+                "accept_contact_exchange": self.reply.accept_contact_exchange,
                 "owed_per_round": self.reply.owed_per_round,
                 "owed_max_age_hours": self.reply.owed_max_age_hours,
                 "followup_enabled": self.reply.followup_enabled,
