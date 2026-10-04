@@ -226,6 +226,7 @@ class UnifiedBotLoop:
         self._full_sync_done = False
         # 存档里欠回复的会话：一条处理失败后多久才再试（侧栏对不上行时会反复空跑）
         self._owed_attempt_at = {}
+        self._owed_last_scan = 0.0
         # 主动跟进：上次扫描的时刻 + 各会话已追了几次（落盘，重启不重追）
         self._followup_last_scan = None
         self._followup_state = self._load_followup_state()
@@ -1736,6 +1737,9 @@ class UnifiedBotLoop:
 
     # 一条欠着的会话处理失败后多久才再试：侧栏对不上行时会一直空跑
     OWED_RETRY_SECONDS = 20 * 60
+    # 存档扫描节流：回复轮不到 10 秒一轮，每轮都把 600 多个会话文件读一遍太浪费，
+    # 而且 8 条回复挤在 9 秒里发出去对 BOSS 也太像机器
+    OWED_SCAN_SECONDS = 60
 
     def _archive_owed_chats(self, unread_chats) -> list:
         """从本地存档里补出"HR 最后说话、我们没接"的会话，当作本轮候选。
@@ -1746,6 +1750,10 @@ class UnifiedBotLoop:
         只补 姓名+公司 能对上的：实测 34 行里有 4 组重名昵称，公司空着就是猜人。
         """
         cfg = self.config.reply
+        now = time.time()
+        if now - self._owed_last_scan < self.OWED_SCAN_SECONDS:
+            return []
+        self._owed_last_scan = now
         convs = [c for c in self._msg_store.get_all_chats_detail()
                  if c.get("account_index") == self.account_index]
         owed = owed_replies(convs, max_age_hours=cfg.owed_max_age_hours,
@@ -1755,7 +1763,6 @@ class UnifiedBotLoop:
 
         taken = {(c.get("name", ""), (c.get("company") or "").strip())
                  for c in unread_chats}
-        now = time.time()
         out = []
         for item in owed:
             key = "%s|%s" % (item["name"], item["company"])
@@ -1801,6 +1808,16 @@ class UnifiedBotLoop:
                           job=(job_name or "").strip() or "这个岗位",
                           company=(item.get("company") or "").strip() or "贵公司")
 
+    @staticmethod
+    def _in_quiet_hours(now=None) -> bool:
+        """23:00–07:00 不主动追。
+
+        被动回复随时都行（对方半夜发消息，第二天看到回复很正常）；
+        半夜三点冒出一句"方便约个面试吗"最像机器人，白天被 HR 翻到反而掉好感。
+        """
+        h = (now or datetime.now()).hour
+        return h >= 23 or h < 7
+
     def _run_followup_round(self):
         """我们说完、对方沉默够久的会话，主动追一句把话头接到面试上。
 
@@ -1812,6 +1829,8 @@ class UnifiedBotLoop:
         if not cfg.followup_enabled:
             return
         now = datetime.now()
+        if self._in_quiet_hours(now):
+            return
         if (self._followup_last_scan
                 and now - self._followup_last_scan < timedelta(minutes=cfg.followup_every_minutes)):
             return

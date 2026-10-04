@@ -124,6 +124,7 @@ class OwedFromArchiveTest:
             _conv("刘女士", [_hr("大四还有课吗")], company="珍岛集团"),
         ]
         assert len(loop._archive_owed_chats([])) == 1
+        loop._owed_last_scan = 0          # 绕开扫描节流，只看单条会话的重试窗口
         assert loop._archive_owed_chats([]) == [], "对不上行就每轮重滚一次侧栏是空转"
 
     def test_每轮补的数量受配置限制(self, tmp_path, monkeypatch):
@@ -141,6 +142,20 @@ class OwedFromArchiveTest:
             _conv("刘女士", [_hr("大四还有课吗")], company="珍岛集团", updated_at=_ago(72)),
         ]
         assert loop._archive_owed_chats([]) == []
+
+    def test_存档扫描有节流(self, tmp_path, monkeypatch):
+        """回复轮不到 10 秒一轮，每轮把 600 多个会话文件读一遍是白读；
+        8 条回复挤在 9 秒里发出去也太像机器。"""
+        loop = _make_loop(tmp_path, monkeypatch)
+        loop._msg_store.get_all_chats_detail.return_value = [
+            _conv("刘女士", [_hr("大四还有课吗")], company="珍岛集团"),
+        ]
+        assert len(loop._archive_owed_chats([])) == 1
+        loop._msg_store.get_all_chats_detail.return_value = [
+            _conv("陈女士", [_hr("在吗")], company="爱森电商"),
+        ]
+        assert loop._archive_owed_chats([]) == [], "60 秒内第二次扫就不该再读盘"
+        assert loop._msg_store.get_all_chats_detail.call_count == 1
 
 
 class ReplyRoundMergeTest:
@@ -329,3 +344,20 @@ class FollowupRoundTest:
         from boss_bot.main_loop import UnifiedBotLoop
         src = inspect.getsource(UnifiedBotLoop._reply_loop)
         assert "_run_followup_round()" in src, "方法没人调用等于没做"
+
+    def test_深夜不主动追(self):
+        """半夜三点冒出一句"约面试"最像机器人，白天被 HR 翻到反而掉好感。"""
+        from datetime import datetime as DT
+        from boss_bot.main_loop import UnifiedBotLoop
+        assert UnifiedBotLoop._in_quiet_hours(DT(2026, 10, 4, 23, 30)) is True
+        assert UnifiedBotLoop._in_quiet_hours(DT(2026, 10, 4, 3, 0)) is True
+        assert UnifiedBotLoop._in_quiet_hours(DT(2026, 10, 4, 6, 59)) is True
+        assert UnifiedBotLoop._in_quiet_hours(DT(2026, 10, 4, 7, 0)) is False
+        assert UnifiedBotLoop._in_quiet_hours(DT(2026, 10, 4, 22, 59)) is False
+
+    def test_静默时段一轮扫不出去(self, tmp_path, monkeypatch):
+        loop = self._due_loop(tmp_path, monkeypatch)
+        loop._in_quiet_hours = lambda now=None: True
+        loop._send_followup = MagicMock()
+        loop._run_followup_round()
+        assert loop._send_followup.call_count == 0

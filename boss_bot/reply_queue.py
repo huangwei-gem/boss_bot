@@ -57,6 +57,12 @@ def msg_time(m: dict, fallback: str = "") -> datetime:
     raw = (m.get("time") or "").strip()
     parts = raw.split()
     try:
+        if len(parts) == 2 and parts[0] in ("昨天", "前天"):
+            # 盘上实测有 5 条是这种写法：不认的话会解析成 datetime.min，
+            # 于是"欠回复"被当成三个月前（不再补）、"该追的"被当成过期（不再追）
+            hm = parts[1].split(":")
+            base = datetime.now() - timedelta(days=1 if parts[0] == "昨天" else 2)
+            return base.replace(hour=int(hm[0]), minute=int(hm[1]), second=0, microsecond=0)
         if len(parts) == 2 and "-" in parts[0]:
             md, hm = parts
             if md.count("-") == 2:
