@@ -132,9 +132,10 @@ class _DisconnectHarness:
         eng._random_delay = lambda a, b: None
         eng._query = "数据分析"
         eng._city = "长沙"
-        eng._build_search_url = lambda q, c: ("https://www.zhipin.com/web/geek/jobs"
-                                              "?query=%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90"
-                                              "&city=101250100")
+        eng._job_type = ""            # __init__ 里会建，harness 绕过 __init__ 要自己补
+        eng._build_search_url = lambda q, c, jt="": ("https://www.zhipin.com/web/geek/jobs"
+                                                     "?query=%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90"
+                                                     "&city=101250100")
         eng.check_login = lambda *a, **k: True
         return eng, inst, bm
 

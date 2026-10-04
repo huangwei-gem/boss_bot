@@ -2903,6 +2903,7 @@ def api_get_jobs():
                 "job_index": job_idx,
                 "query": job.query,
                 "city": job.city,
+                "job_type": job.job_type,
                 "scroll_pages": job.scroll_pages,
                 "greeting_message": job.greeting_message,
                 "enabled": job.enabled,
@@ -2927,6 +2928,7 @@ def api_add_job():
         new_job = JobConfig(
             query=data.get("query", "数据分析"),
             city=data.get("city", "上海"),
+            job_type=str(data.get("job_type", "") or ""),
             scroll_pages=data.get("scroll_pages", 5),
             greeting_message=data.get("greeting_message", ""),
             enabled=data.get("enabled", True),
@@ -2990,6 +2992,8 @@ def api_update_job():
             job.query = str(data["query"])
         if "city" in data:
             job.city = str(data["city"])
+        if "job_type" in data:
+            job.job_type = str(data["job_type"] or "").strip()
         if "scroll_pages" in data:
             job.scroll_pages = int(data["scroll_pages"])
         if "greeting_message" in data:

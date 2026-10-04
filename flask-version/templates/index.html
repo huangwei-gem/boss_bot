@@ -866,8 +866,13 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
         </div>
         <div class="acc-field-row" style="flex-direction:column;align-items:stretch;gap:4px;margin-top:8px">
           <label style="font-size:12px;font-weight:600">自定义筛选词</label>
-          <input class="side-form-input" id="customFilterKeywords" type="text" placeholder="输入筛选关键词，逗号分隔，如：Python,SQL,大数据" style="width:100%;box-sizing:border-box" onchange="onCustomAiChange()">
-          <div style="font-size:10px;color:var(--fg-4th);line-height:1.5">这些关键词会追加到AI打分提示词中，AI会额外关注这些条件</div>
+          <input class="side-form-input" id="customFilterKeywords" type="text" placeholder="输入筛选关键词，逗号或顿号分隔，如：主播、地推、需坐班" style="width:100%;box-sizing:border-box" onchange="onCustomAiChange()">
+          <div style="font-size:10px;color:var(--fg-4th);line-height:1.5">这些关键词会追加到AI打分提示词中，AI会额外关注这些条件；一条一个词，逗号/顿号/分号都能分</div>
+        </div>
+        <div class="acc-field-row" style="gap:6px;margin-top:6px;align-items:flex-start">
+          <input type="checkbox" id="aiVetoOnly" style="margin-top:2px" onchange="onCustomAiChange()">
+          <label for="aiVetoOnly" style="font-size:12px;font-weight:600">只看否决词</label>
+          <div style="font-size:10px;color:var(--fg-4th);line-height:1.5">勾上后 AI 的分数和"方向不符/经验不符"一律不拦，只有命中上面筛选词的岗位才不发。要放量时用；招呼语仍由 AI 按岗位现编。</div>
         </div>
         <div class="acc-field-row" style="flex-direction:column;align-items:stretch;gap:4px;margin-top:6px">
           <label style="font-size:12px;font-weight:600">自定义打分提示词</label>
@@ -1204,7 +1209,7 @@ function controlUrl(base) {
 }
 
 // 硬编码城市列表
-const cityList = ['北京','上海','广州','深圳','杭州','成都','长沙','武汉','南京','重庆','西安','苏州','天津','郑州','青岛','宁波','厦门','福州','合肥','济南','大连','沈阳','哈尔滨','长春','南昌','贵阳','昆明','太原','石家庄','兰州','乌鲁木齐','南宁','海口','三亚','无锡','温州','东莞','佛山','珠海','中山','惠州','汕头','江门','湛江','株洲','湘潭','衡阳','岳阳','常德','益阳','郴州','永州','怀化','娄底','邵阳','张家界','湘西'];
+const cityList = ['全国','北京','上海','广州','深圳','杭州','成都','长沙','武汉','南京','重庆','西安','苏州','天津','郑州','青岛','宁波','厦门','福州','合肥','济南','大连','沈阳','哈尔滨','长春','南昌','贵阳','昆明','太原','石家庄','兰州','乌鲁木齐','南宁','海口','三亚','无锡','温州','东莞','佛山','珠海','中山','惠州','汕头','江门','湛江','株洲','湘潭','衡阳','岳阳','常德','益阳','郴州','永州','怀化','娄底','邵阳','张家界','湘西'];
 
 // ── AI 配置的作用对象 ──
 // 不写清楚就会误判：选中账号2 改了阈值，其实只影响那个号；点「全部账号」改的才是基准
@@ -1229,7 +1234,8 @@ function renderAiConfig() {
   setVal('aiAnalyzeMaxTokens', config.ai.analyze_max_tokens || 1600);
   setVal('aiProbeMaxPerRound', typeof config.ai.probe_max_per_round === 'number'
     ? config.ai.probe_max_per_round : 5);
-  setVal('customFilterKeywords', (config.ai.custom_filter_keywords || []).join(', '));
+  setVal('customFilterKeywords', (config.ai.custom_filter_keywords || []).join('、'));
+  document.getElementById('aiVetoOnly').checked = !!config.ai.veto_only_match;
   setVal('customScoringPrompt', config.ai.custom_scoring_prompt || '');
   const badge = document.getElementById('aiBadge');
   if (badge) badge.textContent = config.ai.enabled ? '开' : '关';
@@ -1530,8 +1536,9 @@ function onAiChange() {
 function onCustomAiChange() {
   if (!config.ai) config.ai = {};
   config.ai.custom_filter_keywords = document.getElementById('customFilterKeywords').value
-    .split(',').map(function(s){return s.trim();}).filter(function(s){return s.length > 0;});
+    .split(/[，,、;；\n]+/).map(function(s){return s.trim();}).filter(function(s){return s.length > 0;});
   config.ai.custom_scoring_prompt = document.getElementById('customScoringPrompt').value.trim();
+  config.ai.veto_only_match = document.getElementById('aiVetoOnly').checked;
   saveConfig().catch(function(){});
 }
 
@@ -2989,7 +2996,7 @@ function updateSbarJobs() {
         '<span class="job-toggle toggle-switch' + (j.enabled !== false ? ' on' : '') + '" onclick="event.stopPropagation();toggleJob('+i+')"></span>' +
         '<div style="flex:1;min-width:0">' +
           '<div class="sbar-job-query">' + escHtml(j.query||'') + '</div>' +
-          '<div class="sbar-job-city">' + escHtml(j.city||'') + (j.scroll_pages ? ' · ' + j.scroll_pages + '页' : '') + (j.image_files && j.image_files.length ? ' · 图片' + j.image_files.length : '') + '</div>' +
+          '<div class="sbar-job-city">' + escHtml(j.city||'') + (j.job_type ? ' · ' + escHtml(j.job_type) : '') + (j.scroll_pages ? ' · ' + j.scroll_pages + '页' : '') + (j.image_files && j.image_files.length ? ' · 图片' + j.image_files.length : '') + '</div>' +
           thumbs +
         '</div>' +
         '<span class="job-del" onclick="event.stopPropagation();deleteJob('+i+')" title="删除">x</span>' +
@@ -3034,7 +3041,7 @@ let editingJobIdx = -1;
 
 function addJob() {
   editingJobIdx = -1;
-  showJobModal({enabled:true,city:'长沙',query:'数据分析',scroll_pages:5,greeting_message:''});
+  showJobModal({enabled:true,city:'全国',query:'数据分析 线上',job_type:'兼职',scroll_pages:5,greeting_message:''});
 }
 
 function editJob(i) {
@@ -3054,6 +3061,13 @@ function showJobModal(job) {
         '<span style="font-size:11px;font-weight:400;color:var(--fg-3rd);margin-left:6px">'+escHtml(editingAccountLabel())+'</span></h3>'+
       '<div class="modal-field"><label>城市</label><input id="modalCity" value="'+escHtml(job.city||'')+'" placeholder="例如: 长沙" list="cityList"><datalist id="cityList"></datalist></div>'+
       '<div class="modal-field"><label>搜索关键词</label><input id="modalQuery" value="'+escHtml(job.query||'')+'" placeholder="例如: 数据分析"></div>'+
+      '<div class="modal-field"><label>求职类型</label><select id="modalJobType">'+
+        ['','全职','兼职','实习'].map(function(v){
+          return '<option value="'+v+'"'+((job.job_type||'')===v?' selected':'')+'>'+
+                 (v||'不限')+'</option>';
+        }).join('')+
+      '</select></div>'+
+      '<div style="font-size:10px;color:var(--fg-4th);margin:-4px 0 6px;line-height:1.5">选"兼职"就是 BOSS 搜索页的求职类型筛选（jobType=1903），不是只把字塞进关键词；城市选"全国"=city=100010000，结果会跨省</div>'+
       '<div class="modal-field"><label>翻页数</label><input id="modalPages" type="number" value="'+(job.scroll_pages||5)+'" min="1" max="20"></div>'+
       "<div class=\"modal-field\"><label>打招呼消息（岗位专属，留空则用账号级招呼语）</label>"+"<textarea id=\"modalGreeting\" placeholder=\"留空=用账号级招呼语；两级都空则该岗位不发送\" style=\"min-height:80px\">"+escHtml(job.greeting_message||'')+'</textarea></div>'+
       '<div class="modal-field"><label>作品图片</label>'+
@@ -3177,11 +3191,13 @@ function saveJobModal() {
   const query = document.getElementById('modalQuery').value.trim();
   const pages = parseInt(document.getElementById('modalPages').value) || 5;
   const greeting = document.getElementById('modalGreeting').value.trim();
+  var jtEl = document.getElementById('modalJobType');
+  const jobType = jtEl ? jtEl.value.trim() : '';
   if (!city || !query) { addLog('ERROR','城市和关键词不能为空'); return; }
   const a = config.accounts[activeAccountIdx];
   if (!a) return;
   if (!a.jobs) a.jobs = [];
-  const job = { enabled:true, city:city, query:query, scroll_pages:pages, greeting_message:greeting };
+  const job = { enabled:true, city:city, query:query, job_type:jobType, scroll_pages:pages, greeting_message:greeting };
   if (editingJobIdx >= 0 && editingJobIdx < a.jobs.length) {
     const old = a.jobs[editingJobIdx];
     job.image_files = old.image_files || [];

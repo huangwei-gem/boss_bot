@@ -296,6 +296,7 @@ class MaxTokensTest:
         e._ai_fail_action = "default"
         e._ai_custom_filter_keywords = []
         e._ai_custom_scoring_prompt = ""
+        e._ai_veto_only = False       # _apply_ai_config 会算出来的字段，绕过它就要自己补
         e._resume_cfg = {}
         e._analyze_max_tokens = 1900
         e._log = lambda *a: None

@@ -13,6 +13,7 @@
 
 import os
 import json
+import re
 import copy
 import logging
 from pathlib import Path
@@ -321,6 +322,9 @@ class JobConfig:
     enabled: bool = True
     city: str = "上海"
     query: str = "数据分析"
+    # 求职类型："全职"/"实习"/"兼职"，空=不限。BOSS 的 jobType 参数，实测编码见
+    # greet_engine.JOB_TYPE_CODES
+    job_type: str = ""
     scroll_pages: int = 5
     greeting_message: str = ""      # 留空 = 这个岗位不发招呼；不再回落默认串
     image_files: list = field(default_factory=list)
@@ -401,6 +405,9 @@ class AIConfig:
     api_base: str = "https://apihub.agnes-ai.com/v1"  # 兼容旧格式
     model: str = "agnes-2.5-flash"       # 兼容旧格式
     custom_filter_keywords: list = field(default_factory=list)  # 用户自定义筛选关键词
+    # 只看否决词：AI 的 score/is_match 不再参与放行决定，只有命中自定义筛选词才拦。
+    # 用户要"线上兼职先放开量"时用；提示词单独说"别考虑背景"压不住基础提示词那段简历。
+    veto_only_match: bool = False
     custom_scoring_prompt: str = ""  # 用户自定义打分提示词（追加到系统默认提示词后）
     # 容灾链是否跳过"体检明确不可用"的接口。关掉就是按原顺序硬试：
     # 22 个接口里 16 个不可用时，单岗位判分会烧光 60s 预算并落到"默认通过"，
@@ -478,6 +485,55 @@ class LogConfig:
     log_level: str = "INFO"
     log_retention_days: int = 14
     event_log_enabled: bool = True
+
+
+_FILTER_SEP_RE = re.compile("[，,、;；\\n]+")
+
+
+def normalize_filter_keywords(value) -> list:
+    """把"一整串用逗号连着的"筛选词拆成一条条能用的词。
+
+    面板早期只按英文逗号切，用户输中文逗号（主播，地推，销售）就落成一个条目，
+    而否决词要求整条出现在 JD 里，于是三个词一个都没生效。读盘时自愈，
+    不依赖前端有没有修好。
+    """
+    if not value:
+        return []
+    items = value if isinstance(value, (list, tuple)) else [value]
+    out = []
+    for item in items:
+        if item is None:
+            continue
+        for part in _FILTER_SEP_RE.split(str(item)):
+            word = part.strip()
+            if word and word not in out:
+                out.append(word)
+    return out
+
+
+def _accounts_of(data: dict) -> list:
+    """配置文件里的账号列表：新版写在 accounts，老版写在 greet.accounts。"""
+    accounts = data.get("accounts")
+    if isinstance(accounts, list):
+        return accounts
+    greet = data.get("greet")
+    if isinstance(greet, dict) and isinstance(greet.get("accounts"), list):
+        return greet["accounts"]
+    return []
+
+
+def _looks_like_default_fallback(new: dict, old: dict) -> bool:
+    """新内容是不是"加载失败退回的默认值"。
+
+    只看这一个组合：账号比磁盘上少，同时 AI 接口从有到无。用户正常删账号 or
+    删接口只会命中一边，不会两个一起缩水。
+    """
+    new_accounts, old_accounts = _accounts_of(new), _accounts_of(old)
+    if len(new_accounts) >= len(old_accounts):
+        return False
+    new_providers = (new.get("ai") or {}).get("providers") or []
+    old_providers = (old.get("ai") or {}).get("providers") or []
+    return bool(old_providers) and not new_providers
 
 
 @dataclass
@@ -717,7 +773,10 @@ class UnifiedConfig:
                     if isinstance(p, dict)
                 ]
             if "custom_filter_keywords" in ai:
-                self.ai.custom_filter_keywords = list(ai["custom_filter_keywords"])
+                self.ai.custom_filter_keywords = normalize_filter_keywords(
+                    ai["custom_filter_keywords"])
+            if "veto_only_match" in ai:
+                self.ai.veto_only_match = bool(ai["veto_only_match"])
             if "custom_scoring_prompt" in ai:
                 self.ai.custom_scoring_prompt = str(ai["custom_scoring_prompt"])
             if "skip_unhealthy" in ai:
@@ -766,6 +825,7 @@ class UnifiedConfig:
                         enabled=job.get("enabled", True),
                         city=job.get("city", "上海"),
                         query=job.get("query", "数据分析"),
+                        job_type=str(job.get("job_type", "") or ""),
                         scroll_pages=job.get("scroll_pages", 5),
                         greeting_message=strip_default_greeting(
                             job.get("greeting_message", "")),
@@ -1086,19 +1146,40 @@ class UnifiedConfig:
         theme），to_dict() 不包含它们。整体覆盖写会把别的入口刚写进去的设置抹掉，
         表现为"主题/高级设置在保存配置后弹回默认"，所以先读回旧文件再补空位。
 
+        两道防出厂设置的闸，都来自 2026-10-04 那次覆盖事故（2 账号 / 12 个 AI
+        接口 / 17 条规则的配置被一份 3644 字节的默认值盖掉）：
+          1. 覆盖写之前先把旧文件存成 <name>.bak-<时间>，出事了能原地回滚；
+          2. "账号变少"且"AI 接口清空"同时出现时拒绝写盘 —— 单独删账号或单独
+             清空接口都是用户在界面上的正常操作，只有加载失败退回默认值才会
+             两个一起缩水。
         Args:
             config_path: 保存路径，默认为 bot_config.json
         """
+        from datetime import datetime
         path = Path(config_path) if config_path else BOT_CONFIG_FILE
         data = self.to_dict()
+        existing = None
         try:
             if path.exists():
                 existing = json.loads(path.read_text(encoding="utf-8"))
-                if isinstance(existing, dict):
-                    for key, value in existing.items():
-                        data.setdefault(key, value)
         except (json.JSONDecodeError, OSError) as e:
             logger.warning(f"读取 {path.name} 以保留未建模字段失败: {e}")
+        if not isinstance(existing, dict):
+            existing = None
+        if existing and _looks_like_default_fallback(data, existing):
+            logger.warning(
+                f"拒绝写 {path.name}：内存里这份是出厂默认（账号 "
+                f"{len(_accounts_of(existing))}→{len(_accounts_of(data))} 且 AI 接口被清空），"
+                f"落盘会覆盖已有的账号/接口/规则。先排查加载为什么退回了默认值。")
+            return
+        if existing:
+            stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+            try:
+                write_json_atomic(path.with_name(f"{path.name}.bak-{stamp}"), existing)
+            except OSError as e:
+                logger.warning(f"备份 {path.name} 失败: {e}")
+            for key, value in existing.items():
+                data.setdefault(key, value)
         write_json_atomic(path, data)
 
     def to_dict(self) -> dict:
@@ -1143,6 +1224,7 @@ class UnifiedConfig:
                 "probe_max_per_round": self.ai.probe_max_per_round,
                 "fail_action": self.ai.fail_action,
                 "custom_filter_keywords": list(self.ai.custom_filter_keywords),
+                "veto_only_match": bool(self.ai.veto_only_match),
                 "custom_scoring_prompt": self.ai.custom_scoring_prompt,
                 "skip_unhealthy": self.ai.skip_unhealthy,
                 "providers": [
@@ -1180,6 +1262,7 @@ class UnifiedConfig:
                             "enabled": job.enabled,
                             "city": job.city,
                             "query": job.query,
+                            "job_type": job.job_type,
                             "scroll_pages": job.scroll_pages,
                             "greeting_message": job.greeting_message,
                             "image_files": job.image_files,

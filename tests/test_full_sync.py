@@ -65,7 +65,6 @@ class FullSyncTest:
     def test_全量同步逐个点开只存档不回复(self):
         loop = _make_loop()
         loop._running = True
-        loop._on_captcha_page = lambda: False
         chats = [
             {"index": 0, "name": "陈女士", "company": "小智时代", "preview": "你好"},
             {"index": 1, "name": "王女士", "company": "艾秒广告", "preview": "在吗"},
@@ -91,7 +90,6 @@ class FullSyncTest:
     def test_切换校验失败不中断整体同步(self):
         loop = _make_loop()
         loop._running = True
-        loop._on_captcha_page = lambda: False
         loop._chat_handler = MagicMock()
         loop._chat_handler.get_all_chats.return_value = [
             {"index": 0, "name": "甲", "company": "", "preview": ""},
@@ -112,8 +110,8 @@ class FullSyncTest:
     def test_中途出现验证页立即中止(self):
         loop = _make_loop()
         loop._running = True
-        loop._on_captcha_page = lambda: True
         loop._chat_handler = MagicMock()
+        loop._chat_handler.check_health.return_value = "captcha"
         loop._chat_handler.get_all_chats.return_value = [
             {"index": 0, "name": "甲", "company": "", "preview": ""},
         ]

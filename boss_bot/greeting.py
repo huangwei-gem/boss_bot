@@ -79,6 +79,10 @@ def _skills_text(skills, direction, resume) -> str:
 def compose_account_default(account, resume=None, profile=None) -> str:
     """按这个账号自己的信息拼一条默认招呼语——不联网、不调 AI，永远给得出来。"""
     cities, direction = account_focus(account, resume, profile)
+    # "全国"是搜索范围，不是城市，念进招呼语读不通
+    cities = [c for c in cities if c and c != "全国"]
+    part_time = any(str(_g(j, "job_type", "")).strip() == "兼职"
+                    for j in enabled_jobs(account))
     skills = _g(resume, "skills", []) or _g(profile, "skills", []) or []
     if isinstance(skills, str):
         skills = [skills]
@@ -90,7 +94,8 @@ def compose_account_default(account, resume=None, profile=None) -> str:
     who = "".join(x for x in (school, major, degree) if x)
     looking = ""
     if direction:
-        looking = f"在{'、'.join(cities)}找{direction}的机会" if cities else f"想找{direction}方向的机会"
+        base = f"在{'、'.join(cities)}找{direction}" if cities else f"想找{direction}"
+        looking = f"{base}的线上兼职机会" if part_time else f"{base}的机会"
 
     first = "您好～"
     if who and looking:

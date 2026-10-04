@@ -239,7 +239,6 @@ class UncertainHandlingTest(unittest.TestCase):
         with patch("boss_bot.main_loop.BrowserManager"):
             loop = UnifiedBotLoop(config=UC.UnifiedConfig())
         loop._log = lambda *a, **k: None
-        loop._interruptible_sleep = lambda *a, **k: None
         loop._cookie_file = lambda: "zhipin_cookies.json"
         loop.browser_manager = MagicMock()
         loop.browser_manager.load_cookies.return_value = True

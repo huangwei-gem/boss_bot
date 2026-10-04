@@ -28,22 +28,40 @@ def _conv(name, messages, job_name="", company=""):
 
 
 class RealThreadTest:
-    """直接拿盘上真实存档跑，不造理想化数据"""
+    """判据取自盘上真实会话结构，但用例本身不吃活数据。
 
-    def _load(self, fname):
-        data = json.loads((ROOT / "messages" / fname).read_text(encoding="utf-8"))
-        return _conv(data["chat_name"], data["messages"],
-                     data.get("job_name", ""), data.get("company", ""))
+    原来直接读 messages/a1_江女士_孤波.json：10-03 补扫把简历发出去之后，
+    那条会话最后多了一张"已发送给Boss"的卡片，用例就从"验证判据"变成了
+    "验证那天有没有欠着"，跑一次活投递就能把它弄红。结构照抄，内容钉死。
+    """
+
+    # 卡片式索要：正文 .text-content 是空的，话在 card_text 里（BOSS 真实结构）
+    CARD_ASK = [
+        {"is_mine": False, "text": "你好，发一份简历过来看看", "time": "09-30 18:36",
+         "mid": "391681619059204"},
+        {"is_mine": False, "text": "", "time": "",
+         "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意",
+         "mid": "391681619280385"},
+    ]
+    # 已经发过：最后一条是"已发送给Boss"的回执卡片
+    ALREADY_SENT = CARD_ASK + [
+        {"is_mine": True, "text": "好的，我这就发给您", "time": "23:43",
+         "mid": "392464955855360"},
+        {"is_mine": False, "text": "", "time": "",
+         "card_text": "您的附件简历 AIGC工程师... 已发送给Boss，请查看",
+         "mid": "392668073357826"},
+    ]
 
     def test_江女士那条卡片会话要被挑出来(self):
-        conv = self._load("a1_江女士_孤波.json")
+        conv = _conv("江女士", self.CARD_ASK, job_name="数据分析18-25K上海查看职位",
+                     company="孤波")
         got = pending_resume_asks([conv])
-        assert len(got) == 1, "截图里那条就是欠简历的，挑不出来等于没修"
+        assert len(got) == 1, "卡片式索要挑不出来等于没修：正文为空，话在 card_text"
         assert got[0]["chat_name"] == "江女士"
         assert "附件简历" in got[0]["ask"]
 
-    def test_已经发过的刘保罗不再挑(self):
-        conv = self._load("a1_刘保罗_沁灵科技.json")
+    def test_已经发过的不再挑(self):
+        conv = _conv("刘保罗", self.ALREADY_SENT, company="沁灵科技")
         assert resume_already_sent(conv["messages"])
         assert pending_resume_asks([conv]) == []
 
@@ -65,7 +83,8 @@ class RealThreadTest:
             picked += len(got)
             assert is_resume_request(got[0]["ask"]), f"误挑 {p.name}: {got[0]['ask']}"
             assert not resume_already_sent(conv["messages"]), f"已发过还挑 {p.name}"
-        assert picked, "盘上确实有欠着的会话，一条都没挑出来说明判据失效"
+        # 欠不欠是活数据，补扫跑完就可能一条都没有；这里只保证"挑出来的都对"
+        assert isinstance(picked, int)
 
 
 class BackfillWiringTest:

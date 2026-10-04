@@ -783,6 +783,16 @@ class UnifiedBotLoop:
             self._login_reason = "browser_failed"
             return False
 
+    def _interruptible_sleep(self, seconds: float):
+        """可被停止打断的等待：停止请求一到就返回，不等满。
+
+        登录复核这类等待原来用裸 time.sleep，点"停止"要等它睡完才生效。
+        """
+        deadline = time.time() + max(0.0, seconds)
+        while self._running and time.time() < deadline:
+            if self._stop_event.wait(timeout=min(0.2, deadline - time.time())):
+                break
+
     def _handle_login(self) -> bool:
         """处理登录流程。先尝试 Cookie 自动登录，失败则等待用户手动登录。"""
         instance = self.browser_manager.get_instance()
@@ -1362,7 +1372,8 @@ class UnifiedBotLoop:
                                   f"interval_min={task.get('message_interval_min', 3)}, "
                                   f"interval_max={task.get('message_interval_max', 8)}")
 
-                jobs = self._greet_engine.search_jobs(query, city, scroll_pages)
+                jobs = self._greet_engine.search_jobs(
+                    query, city, scroll_pages, task.get("job_type", ""))
                 self._stats_dict["greet_total"] += len(jobs)
 
                 if not jobs:
@@ -1507,6 +1518,7 @@ class UnifiedBotLoop:
             tasks.append({
                 "query": job.query,
                 "city": job.city,
+                "job_type": job.job_type,
                 "scroll_pages": job.scroll_pages,
                 "greeting_message": job.greeting_message,
                 "image_files": job.image_files or acc.image_files,
@@ -1701,7 +1713,9 @@ class UnifiedBotLoop:
         for chat_info in chats:
             if not self._running:
                 break
-            if self._on_captcha_page():
+            # 验证码判据走会话页自己那份探针：_on_captcha_page 是 GreetEngine 的方法，
+            # 在这里调用会 AttributeError 把整轮全量同步打断（2026-10-04 实测）
+            if self._chat_handler.check_health() == "captcha":
                 self._log("WARN", "全量同步途中出现验证页，中止本次同步")
                 break
             name = chat_info.get("name", "未知")

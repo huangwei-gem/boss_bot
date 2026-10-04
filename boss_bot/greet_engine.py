@@ -389,7 +389,12 @@ CITY_CODES = {
     "珠海": "101280700", "惠州": "101280300", "徐州": "101190800",
     "海口": "101310100", "乌鲁木齐": "101130100", "绍兴": "101210500",
     "中山": "101281700", "台州": "101210600", "兰州": "101160100",
+    # 城市弹层里点"全国"实测落到 city=100010000（结果立刻跨省份）
+    "全国": "100010000",
 }
+
+# 求职类型 → BOSS 的 jobType 参数（2026-10-03 在搜索页逐个点出来读 URL 实测）
+JOB_TYPE_CODES = {"全职": "1901", "实习": "1902", "兼职": "1903"}
 
 
 # ─────────────────────────────────────────────
@@ -525,6 +530,7 @@ class AIAnalyzerChain:
         skip_unhealthy: bool = True,
         analyze_max_tokens: int = 0,
         fail_action: str = "default",
+        veto_only_match: bool = False,
     ):
         self.providers = []
         for p in providers:
@@ -559,6 +565,8 @@ class AIAnalyzerChain:
         # skip = 这一轮不投。以前判分链写死 default，配置里那个开关只对回复生效，
         # 于是接口全 429 的一轮会 score 50 一路放行，用户看到的是"没筛过却投了几十个"
         self.fail_action = fail_action if fail_action in ("skip", "default") else "default"
+        # 只看否决词：AI 的分和结论不参与放行，只有命中自定义筛选词才拦
+        self.veto_only_match = bool(veto_only_match)
 
         self.analyzed_count = 0
         self.match_count = 0
@@ -915,10 +923,17 @@ class AIAnalyzerChain:
 
         # 自定义筛选条件是硬否决：模型自己承认命中就不能因为分高而放行
         veto = str(result.get("veto_hit") or "").strip()
-        if veto and is_match:
+        if veto:
             result["is_match"] = False
             result["score"] = min(score, max(0, self.match_threshold - 1))
             result["reason"] = f"命中硬性筛选条件「{veto}」，不予通过。{result.get('reason', '')}"
+        elif self.veto_only_match:
+            # 开了"只看否决词"：没命中否决词就放行，AI 那句"与求职方向不符"
+            # 不能拦人——基础提示词里带着简历/求职意向，模型照样会按方向打分，
+            # 光改判分提示词压不住它（2026-10-04 实测：客服 10 分、视频剪辑 15 分）
+            result["is_match"] = True
+            result["score"] = max(score, 95)
+            result["reason"] = "只看否决词：未命中否决条件，放行。" + str(result.get("reason", ""))
         return result
 
     def _call_provider_api(self, provider: AIProviderConfig, messages: list,
@@ -1036,7 +1051,15 @@ class AIAnalyzerChain:
         ]
 
     def _make_cache_key(self, job_url: str, resume_hash: str) -> str:
-        raw = f"{job_url}:{resume_hash}"
+        # 口径必须进键：只按"岗位URL+简历"缓存的话，改了判分提示词/阈值/否决词
+        # 还是命中旧结论，等于改了不生效（2026-10-04 一轮 62 次判分 54 次是缓存）
+        rule = "|".join([
+            str(self.match_threshold),
+            str(self.veto_only_match),
+            str(self.custom_scoring_prompt or ""),
+            ",".join(self.custom_filter_keywords or []),
+        ])
+        raw = f"{job_url}:{resume_hash}:{rule}"
         return hashlib.md5(raw.encode("utf-8")).hexdigest()
 
     def _load_cache(self) -> dict:
@@ -1141,6 +1164,7 @@ class GreetEngine:
         # 当前任务参数
         self._query = ""
         self._city = "上海"
+        self._job_type = ""
         self._scroll_pages = 5
         self._greeting_source = "默认"
         self._image_files = []
@@ -1211,7 +1235,7 @@ class GreetEngine:
         ai = self.config.ai
         sig = (ai.enabled, ai.match_threshold, ai.analyze_max_tokens,
                tuple(ai.custom_filter_keywords or []), ai.custom_scoring_prompt,
-               ai.skip_unhealthy, ai.fail_action,
+               ai.skip_unhealthy, ai.fail_action, bool(ai.veto_only_match),
                tuple((p.name, p.model, p.api_base, bool(p.api_key)) for p in ai.providers))
         if getattr(self, "_ai_config_sig", None) == sig:
             return
@@ -1224,6 +1248,7 @@ class GreetEngine:
         self._ai_custom_scoring_prompt = ai.custom_scoring_prompt
         self._ai_skip_unhealthy = ai.skip_unhealthy
         self._ai_fail_action = ai.fail_action
+        self._ai_veto_only = bool(ai.veto_only_match)
         self._analyze_max_tokens = ai.analyze_max_tokens
 
         # AI providers 列表（从 UnifiedConfig 转换为 AIAnalyzerChain 所需格式）
@@ -1285,6 +1310,7 @@ class GreetEngine:
                 job = acc.jobs[0]
                 self._query = job.query
                 self._city = job.city
+                self._job_type = getattr(job, "job_type", "") or ""
                 self._scroll_pages = job.scroll_pages
                 self._greeting_source = "岗位配置"
                 self._image_files = job.image_files or self._image_files
@@ -1526,13 +1552,15 @@ class GreetEngine:
         except Exception:
             return False
 
-    def search_jobs(self, query: str, city: str, scroll_pages: int = 5) -> list:
+    def search_jobs(self, query: str, city: str, scroll_pages: int = 5,
+                    job_type: str = "") -> list:
         """搜索岗位并返回岗位列表。
 
         Args:
             query: 搜索关键词，如 "数据分析"
-            city: 城市名称，如 "上海"
+            city: 城市名称，如 "上海"，也可以填 "全国"
             scroll_pages: 滚动翻页次数
+            job_type: 求职类型 "全职"/"实习"/"兼职"，空=不限
 
         Returns:
             岗位信息字典列表，每个包含 job_name/salary/experience/education/
@@ -1540,6 +1568,7 @@ class GreetEngine:
         """
         self._query = query
         self._city = city
+        self._job_type = job_type or ""
         self._scroll_pages = scroll_pages
         self._parse_job_list()
         return self.jobs
@@ -1665,16 +1694,27 @@ class GreetEngine:
                 return self.check_login()
         return False
 
-    def _build_search_url(self, query: str, city: str) -> str:
+    def _build_search_url(self, query: str, city: str, job_type: str = "") -> str:
         """构建搜索 URL。"""
         from urllib.parse import quote
         city_code = self._get_city_id(city) if city else ""
         self._log("INFO", f"城市: {city}, 编码: {city_code}")
+        type_code = ""
+        job_type = (job_type or "").strip()
+        if job_type:
+            type_code = JOB_TYPE_CODES.get(job_type, "")
+            if not type_code:
+                self._log("WARN", f"求职类型「{job_type}」没有对应的 BOSS 编码，"
+                                  f"这次搜索不会带这个筛选（可选：{'、'.join(JOB_TYPE_CODES)}）")
         encoded_query = quote(query, safe="")
+        url = "https://www.zhipin.com/web/geek/jobs?"
         if city_code:
-            return f"https://www.zhipin.com/web/geek/jobs?query={encoded_query}&city={city_code}&industry=&position="
+            url += f"query={encoded_query}&city={city_code}&industry=&position="
         else:
-            return f"https://www.zhipin.com/web/geek/jobs?query={encoded_query}&industry=&position="
+            url += f"query={encoded_query}&industry=&position="
+        if type_code:
+            url += f"&jobType={type_code}"
+        return url
 
     def _parse_job_list(self):
         """解析岗位列表。"""
@@ -1686,7 +1726,7 @@ class GreetEngine:
 
         self._log("INFO", "正在解析岗位列表...")
 
-        search_url = self._build_search_url(self._query, self._city)
+        search_url = self._build_search_url(self._query, self._city, self._job_type)
         self._log("INFO", f"访问搜索页面: {search_url}")
         instance.get(search_url)
         self._random_delay(3, 6)
@@ -1955,6 +1995,7 @@ class GreetEngine:
                     skip_unhealthy=self._ai_skip_unhealthy,
                     analyze_max_tokens=self._analyze_max_tokens,
                     fail_action=self._ai_fail_action,
+                    veto_only_match=self._ai_veto_only,
                 )
             else:
                 self._log("WARN", "AI 已启用但未配置任何 provider")
@@ -2056,7 +2097,7 @@ class GreetEngine:
 
         targets = []
         try:
-            targets.append(self._build_search_url(self._query, self._city))
+            targets.append(self._build_search_url(self._query, self._city, self._job_type))
         except Exception:
             pass
         targets.append("https://www.zhipin.com")
