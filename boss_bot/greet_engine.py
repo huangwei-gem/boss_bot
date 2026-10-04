@@ -2204,6 +2204,14 @@ class GreetEngine:
         with self._apply_lock:
             return self._apply_job_inner(job, _disconnect_retry)
 
+    def greet_cooldown_left(self, now=None) -> float:
+        """打招呼还剩几秒冷却（不在冷却中返回 0.0）。
+
+        轮次要在岗位循环之前就问这一句：闸门放在点「沟通」那一步，
+        一轮里每个岗位都要跑完搜索→详情→判分才撞上它，白烧记录也白烧时间。
+        """
+        return max(0.0, self._greet_cooldown_until - (now or time.time()))
+
     def _apply_job_inner(self, job: dict, _disconnect_retry: int = 0):
         """实际投递逻辑（内部方法）。
 
@@ -2220,7 +2228,7 @@ class GreetEngine:
 
         # 冷却期内不再跑"搜索→详情→点沟通"这一整套：连着几次都停在同一个地方，
         # 说明卡的是账号层面的额度，不是这个岗位
-        left = self._greet_cooldown_until - time.time()
+        left = self.greet_cooldown_left()
         if left > 0:
             return False, (f"打招呼已冷却（连续 {self._no_drawer_streak} 次点了「立即沟通」"
                            f"没出聊天抽屉，疑似本号当日沟通额度用完），"

@@ -1372,6 +1372,17 @@ class UnifiedBotLoop:
         # .env + bot_config + user_profile + overrides 四个文件
         self._hot_reload_config()
 
+        # 额度见底时整轮直接不开。闸门放在点「沟通」那一步的话，
+        # 每 30 秒的一轮仍会把列表里几十个岗位逐个走一遍、每个都记一条"已冷却"跳过，
+        # 记录表被同一句话灌满，岗位却在这一轮被过完、冷却结束也不回头补投。
+        # 返回 True：这既不是"搜索为空"也不是异常，别让空轮计数把它当成投完而永久暂停
+        cooldown_left = self._greet_engine.greet_cooldown_left()
+        if cooldown_left > 0:
+            self._log("INFO", f"⏸️ 打招呼冷却中，本轮不搜索不建记录"
+                              f"（剩 {int(cooldown_left // 60) + 1} 分钟，"
+                              f"疑似本号当日沟通额度用完）")
+            return True
+
         try:
             tasks = self._build_greet_tasks()
             self._log("DEBUG", f"构建打招呼任务数: {len(tasks)}")

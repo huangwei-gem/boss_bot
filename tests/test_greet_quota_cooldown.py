@@ -101,3 +101,65 @@ def test_提示探针不许用宽匹配():
     probe = src[src.index("var toast ="):src.index("return JSON.stringify({url:")]
     assert '[class*="limit"]' not in probe and '[class*="tip-txt"]' not in probe
     assert "position" in probe, "没要求 fixed/absolute，页面里任何元素都能被当提示"
+
+
+# ── 冷却期整轮跳过 ──
+# 闸门加在 _apply_job_inner 里之后，线上观察到的新毛病：打招呼线程每 30 秒起一轮，
+# 一轮里有几十上百个岗位，每个岗位都要走到闸门才返回"已冷却"，
+# 于是 2026-10-04 23:40 起 1 分钟内攒了 22 条跳过记录（整份记录才 1117 条）。
+# 用户看到的"记录全红"就是这个；更糟的是岗位被这一轮过完，冷却结束也不会回头补投。
+
+
+def test_剩余冷却时间可读():
+    """轮次要在进岗位循环之前就判断该不该跑，所以引擎得把剩余秒数交出去。"""
+    eng = _engine()
+    assert eng.greet_cooldown_left() == 0.0
+    eng._greet_cooldown_until = time.time() + 600
+    assert 590 <= eng.greet_cooldown_left() <= 600
+
+
+def test_冷却中整轮不搜索不建记录():
+    """一轮都不该开：既不搜索也不落记录，只报一句还剩几分钟。"""
+    from boss_bot.main_loop import UnifiedBotLoop
+
+    calls = []
+    lp = UnifiedBotLoop.__new__(UnifiedBotLoop)
+    lp._log = lambda *a, **k: calls.append(("log", a[1] if len(a) > 1 else ""))
+    lp._stats_dict = {"greet_rounds": 0}
+    lp._probe_used_this_round = 0
+    lp._running = True
+    lp._greet_paused = False
+    lp._hot_reload_config = lambda: None
+
+    def _boom():
+        raise AssertionError("冷却中不该构建任务/搜索岗位")
+
+    lp._build_greet_tasks = _boom
+    lp._greet_engine = SimpleNamespace(
+        greet_cooldown_left=lambda: 900.0,
+        search_jobs=_boom,
+        account_index=1,
+    )
+
+    assert lp._run_greet_round() is True, \
+        "返回 False 会被当成空搜索，连续三轮就把打招呼永久暂停了"
+    assert not any("打招呼任务" in str(c) for c in calls)
+
+
+def test_没冷却时照常构建任务():
+    from boss_bot.main_loop import UnifiedBotLoop
+
+    lp = UnifiedBotLoop.__new__(UnifiedBotLoop)
+    lp._log = lambda *a, **k: None
+    lp._stats_dict = {"greet_rounds": 0}
+    lp._probe_used_this_round = 0
+    lp._running = True
+    lp._greet_paused = False
+    lp._hot_reload_config = lambda: None
+    lp._greet_engine = SimpleNamespace(greet_cooldown_left=lambda: 0.0)
+    built = []
+    lp._build_greet_tasks = lambda: built.append(1) or []
+
+    assert lp._run_greet_round() is False
+    assert built, "没冷却就必须照常搜索，别把这条闸门变成永远不投递"
+

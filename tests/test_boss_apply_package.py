@@ -120,7 +120,8 @@ def test_打包产物只含该含的东西(tmp_path):
     import subprocess
     out = tmp_path / "boss-apply.skill"
     r = subprocess.run([sys.executable, str(ROOT / "tools" / "build_boss_apply_skill.py"),
-                        "--out", str(out)], capture_output=True, text=True)
+                        "--out", str(out)], capture_output=True, text=True,
+                        encoding="utf-8", errors="replace")
     assert r.returncode == 0, r.stderr or r.stdout
     import zipfile
     names = set(zipfile.ZipFile(out).namelist())

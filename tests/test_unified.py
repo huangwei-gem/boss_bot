@@ -3028,6 +3028,7 @@ class GreetCapAutoResumeTest:
         loop._state_store.is_paused.return_value = False
         eng = MagicMock()
         eng._max_per_day = 150
+        eng.greet_cooldown_left.return_value = 0.0
         eng._greet_store.filter.return_value = []   # 新的一天：今天还没投
         loop._greet_engine = eng
         return loop
@@ -3086,6 +3087,7 @@ class GreetRoundDryRunTest:
                                             "message_interval_max": 0}]
         eng = MagicMock()
         eng._max_per_day = 150
+        eng.greet_cooldown_left.return_value = 0.0
         eng._greet_store.filter.return_value = []
         # 关掉限流与 AI 分支，让轮次走最短路径到发送点
         eng._rate_limit_enabled = False

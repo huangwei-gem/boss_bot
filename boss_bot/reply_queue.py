@@ -49,11 +49,16 @@ def order_key(m: dict):
     return (int(mid) if mid.isdigit() else 0, str(m.get("time") or ""))
 
 
-def msg_time(m: dict, fallback: str = "") -> datetime:
+def msg_time(m: dict, fallback: str = "", now=None) -> datetime:
     """把 BOSS 的相对时间折成绝对时间：'10:50'=今天，'09-29 09:18'=今年，带年就用年。
 
     读不准就退回存档 updated_at：跟进只看"够不够久"，误差一小时可以接受。
+
+    `now` 是折算的基准钟。'昨天'/'前天' 必须按调用方的钟推，不能各读各的墙上时间：
+    否则同一条存档在跨午夜前后跑出来的绝对时间差一天，欠回复的账龄会从 16 小时
+    变成 0 小时（这条测试 2026-10-05 00:02 就红过一次）。
     """
+    now = now or datetime.now()
     raw = (m.get("time") or "").strip()
     parts = raw.split()
     try:
@@ -61,20 +66,20 @@ def msg_time(m: dict, fallback: str = "") -> datetime:
             # 盘上实测有 5 条是这种写法：不认的话会解析成 datetime.min，
             # 于是"欠回复"被当成三个月前（不再补）、"该追的"被当成过期（不再追）
             hm = parts[1].split(":")
-            base = datetime.now() - timedelta(days=1 if parts[0] == "昨天" else 2)
+            base = now - timedelta(days=1 if parts[0] == "昨天" else 2)
             return base.replace(hour=int(hm[0]), minute=int(hm[1]), second=0, microsecond=0)
         if len(parts) == 2 and "-" in parts[0]:
             md, hm = parts
             if md.count("-") == 2:
                 return datetime.strptime(raw, "%Y-%m-%d %H:%M")
-            year = (fallback[:4] or str(datetime.now().year))
+            year = (fallback[:4] or str(now.year))
             dt = datetime.strptime("%s-%s %s" % (year, md, hm), "%Y-%m-%d %H:%M")
-            if dt > datetime.now() + timedelta(days=1):   # 12-30 出现在 1 月 → 是去年的
+            if dt > now + timedelta(days=1):   # 12-30 出现在 1 月 → 是去年的
                 dt = dt.replace(year=dt.year - 1)
             return dt
         if len(parts) == 1 and ":" in parts[0]:
             hm = parts[0].split(":")
-            base = datetime.strptime((fallback or datetime.now().strftime("%Y-%m-%d"))[:10], "%Y-%m-%d")
+            base = datetime.strptime((fallback or now.strftime("%Y-%m-%d"))[:10], "%Y-%m-%d")
             return base.replace(hour=int(hm[0]), minute=int(hm[1]))
     except Exception:
         pass
@@ -96,6 +101,7 @@ def chat_state(messages, now=None, fallback_time=""):
       'follow'  —— 我们最后一句对方没回，详情=我们说的原文
       'idle'    —— 没有可动作的内容
     """
+    now = now or datetime.now()
     seq = _sorted(messages)
     if not seq:
         return "idle", {}
@@ -107,10 +113,12 @@ def chat_state(messages, now=None, fallback_time=""):
         if m.get("is_mine"):
             last_out = m
     if last_in and (not last_out or order_key(last_in) > order_key(last_out)):
-        return "reply", {"ask": msg_body(last_in), "at": msg_time(last_in, fallback_time),
+        return "reply", {"ask": msg_body(last_in),
+                         "at": msg_time(last_in, fallback_time, now),
                          "mid": str(last_in.get("mid") or "")}
     if last_out:
-        return "follow", {"said": msg_body(last_out), "at": msg_time(last_out, fallback_time)}
+        return "follow", {"said": msg_body(last_out),
+                          "at": msg_time(last_out, fallback_time, now)}
     return "idle", {}
 
 

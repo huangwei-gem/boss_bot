@@ -177,6 +177,7 @@ class TestGreetRoundOrder:
         loop._stats_dict = {"greet_rounds": 0, "greet_total": 0,
                             "greet_skipped": 0, "greet_applied": 0}
         eng = loop._greet_engine = MagicMock()
+        eng.greet_cooldown_left.return_value = 0.0
         eng._rate_limit_enabled = False
         eng._greeting_for.return_value = (greeting, "岗位配置" if greeting else "未配置")
         eng.search_jobs.return_value = [{"job_name": "岗位A", "url": "u1"}]

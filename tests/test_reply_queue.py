@@ -134,15 +134,15 @@ class TestTimeParsing:
 
     def test_昨天和前天要认得出来(self):
         """盘上实测有这种写法；不认就等于解析成 datetime.min：
-        欠回复的被当成三个月前（不补），该追的被当成过期（不追）。"""
-        yesterday = datetime.now() - timedelta(days=1)
-        got = msg_time({"time": "昨天 21:54"}, "")
-        assert (got.month, got.day, got.hour, got.minute) == (
-            yesterday.month, yesterday.day, 21, 54)
-        two_back = datetime.now() - timedelta(days=2)
-        got2 = msg_time({"time": "前天 09:10"}, "")
-        assert (got2.month, got2.day) == (two_back.month, two_back.day)
-        assert got2.hour == 9
+        欠回复的被当成三个月前（不补），该追的被当成过期（不追）。
+
+        基准钟必须由调用方给：以前"昨天"跟着 datetime.now() 推，
+        跨午夜一过同一条存档折出来的绝对时间就跳了一天。
+        """
+        got = msg_time({"time": "昨天 21:54"}, "", now=NOW)
+        assert got.strftime("%Y-%m-%d %H:%M") == "2026-10-03 21:54"
+        got2 = msg_time({"time": "前天 09:10"}, "", now=NOW)
+        assert got2.strftime("%Y-%m-%d %H:%M") == "2026-10-02 09:10"
 
     def test_昨天的提问仍在欠回复窗口内(self):
         c = chat([hr("大四还有课吗", 7)])
