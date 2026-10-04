@@ -119,6 +119,14 @@ class WiringTest(unittest.TestCase):
         self.assertIn("button", CHAT_SNAPSHOT_JS)
         self.assertIn("return", CHAT_SNAPSHOT_JS.lstrip()[:8])
 
+    def test_快照要分清看得见的和隐藏模板(self):
+        """BOSS 岗位详情页常驻一份 display:none 的注册/登录抽屉模板。探针以前只报
+        "类名在不在 DOM 里"，于是登录态正常的号也被归成"要求重新登录"，
+        一天 44 次（取证见 tests/test_greet_failure_reason.py）。可见性必须问 DOM。"""
+        from boss_bot.greet_engine import CHAT_SNAPSHOT_JS
+        self.assertIn("getClientRects", CHAT_SNAPSHOT_JS)
+        self.assertIn("visible", CHAT_SNAPSHOT_JS)
+
 
 if __name__ == "__main__":
     unittest.main()

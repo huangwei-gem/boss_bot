@@ -67,17 +67,25 @@ return (function(){
     if (typeof c === 'string' && c.trim()) return c.trim();
     return (el.getAttribute && el.getAttribute('type')) || '';
   }
+  // 页面上真看得见才算证据：BOSS 的岗位详情页常驻一份隐藏的注册/登录抽屉模板，
+  // 只看"类名在不在 DOM 里"会把登录态正常的号判成"要求重新登录"
+  function vis(el){
+    if (!el.getClientRects || !el.getClientRects().length) return false;   // display:none（含祖先）
+    var s = window.getComputedStyle(el);
+    return s.visibility !== 'hidden' && s.opacity !== '0';
+  }
   var inputs = [];
   var nodes = document.querySelectorAll('input, textarea');
   for (var i = 0; i < nodes.length && inputs.length < 30; i++) {
     var v = cls(nodes[i]);
-    if (v) inputs.push(v);
+    if (v) inputs.push({cls: v, visible: vis(nodes[i])});
   }
   var sels = ['#chat-input', '.chat-input', '[contenteditable="true"]', '.input-area',
               '.chat-container', '.chat-popup', '.drawer', '.modal-content', '.send-message'];
   var found = [];
   for (var j = 0; j < sels.length; j++) {
-    if (document.querySelector(sels[j])) found.push(sels[j]);
+    var e = document.querySelector(sels[j]);
+    if (e && vis(e)) found.push(sels[j]);
   }
   var btns = [];
   var bs = document.querySelectorAll('button, a.btn, div.btn, [role="button"]');
@@ -118,6 +126,24 @@ _INPUTISH = ("#chat-input", ".chat-input", '[contenteditable="true"]', ".input-a
 _LOGIN_CLS = ("ipt-phone", "ipt-sms")
 
 
+def _visible_inputs(snap):
+    """快照里的输入框类名，只算页面上真看得见的。
+
+    BOSS 的岗位详情页常驻一份隐藏的注册/登录抽屉模板，ipt-phone / ipt-sms
+    就挂在里面 —— 只看"类名在不在 DOM 里"，登录态好好的也会被判成"要求重新登录"
+    （2026-10-04 一天 44 次误判，取证见 tests/test_greet_failure_reason.py）。
+    老快照传的是裸类名、没有可见性字段，那种按原样算，不放过真墙。
+    """
+    out = []
+    for c in (snap.get("inputs") or []):
+        if isinstance(c, dict):
+            if not c.get("visible"):
+                continue
+            c = c.get("cls")
+        out.append(str(c or "").lower())
+    return out
+
+
 def chat_failure_reason(snap):
     """把失败瞬间的页面快照归成一句能照着修的原因。"""
     snap = snap or {}
@@ -126,7 +152,7 @@ def chat_failure_reason(snap):
     if "断开" in err or "disconnect" in low or "connection" in low or "refused" in low:
         return DISCONNECTED_REASON
 
-    inputs = [str(c).lower() for c in (snap.get("inputs") or [])]
+    inputs = _visible_inputs(snap)
     url = str(snap.get("url") or "")
     # 只认页面证据：BOSS 那个静默风控参数会挂在地址上，而带着它落地的那一页
     # 照样读到 JD、点中"立即沟通"、把招呼语发出去（判据的取证见 page_handler
@@ -271,7 +297,7 @@ def chat_button_failure_reason(requested_url: str, landed_url: str, snap: dict):
     if "job_detail" in landed and not same_job_page(requested_url, landed):
         return OFFLINE_JOB_REASON, False
 
-    inputs = [str(c).lower() for c in (snap.get("inputs") or [])]
+    inputs = _visible_inputs(snap)
     if any(any(k in c for k in _LOGIN_CLS) for c in inputs):
         return LOGIN_WALL_REASON, False
 
@@ -2593,9 +2619,16 @@ class GreetEngine:
                 snap = self._chat_snapshot(instance)
                 reason = chat_failure_reason(snap)
                 self._log("WARN", f"未找到输入框｜{reason}")
+                # 看得见的类名才值得念一遍；隐藏的登录模板只报个数量，
+                # 否则日志里全是"ipt-phone"，看着就像真掉了登录态
+                raw_inputs = list(snap.get("inputs") or [])
+                shown = [str(i.get("cls") if isinstance(i, dict) else i)
+                         for i in raw_inputs
+                         if not isinstance(i, dict) or i.get("visible")]
+                hidden = len(raw_inputs) - len(shown)
                 self._log("WARN", f"  现场 url={str(snap.get('url'))[:80]} "
                                   f"抽屉元素={snap.get('chat_elements') or '无'} "
-                                  f"input样式={list(snap.get('inputs') or [])[:8]}")
+                                  f"可见输入框={shown[:8]} 隐藏模板输入框={hidden} 个")
                 if reason == CAPTCHA_REASON:
                     # 认出来了就得等人工：60 秒时限、到点算一次、连续三次停轮都在闸门里。
                     # 过完验证也不在这里补点「沟通」——抽屉是平台弹的，重演一次点击

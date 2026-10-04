@@ -40,6 +40,30 @@ class ChatFailureReasonTest(unittest.TestCase):
         self.assertIn("沟通", r)
         self.assertNotIn("登录", r)
 
+    def test_藏在模板里的手机短信框不算登录墙(self):
+        """BOSS 岗位详情页常驻一份 display:none 的注册/登录抽屉模板，ipt-phone/ipt-sms
+        就挂在里面。探针以前只看"类名在不在 DOM 里"，于是登录态好好的也报"要求重新登录"。
+
+        真机取证 2026-10-04：账号2 在 17:09:45、17:10:48 连发两份简历成功，
+        17:11:15 报登录墙，17:11:20 又发出去一份——登出状态做不到这三件事；
+        /api/check_cookie 联网核对两个号也都是 valid=True。今天这类误判 44 次。
+        """
+        snap = {"url": "https://www.zhipin.com/job_detail/x.html",
+                "inputs": [{"cls": "ipt-search", "visible": True},
+                           {"cls": "ipt-phone required", "visible": False},
+                           {"cls": "ipt-sms required", "visible": False}],
+                "chat_elements": [], "error": ""}
+        r = chat_failure_reason(snap)
+        self.assertNotIn("重新登录", r)
+
+    def test_看得见的手机短信框仍算登录墙(self):
+        """反过来不能放过真墙：登录框摆在页面上就是要重新登录"""
+        snap = {"url": "https://www.zhipin.com/job_detail/x.html",
+                "inputs": [{"cls": "ipt-search", "visible": True},
+                           {"cls": "ipt-phone required", "visible": True}],
+                "chat_elements": [], "error": ""}
+        self.assertIn("重新登录", chat_failure_reason(snap))
+
     def test_页面掉线不能算没找到输入框(self):
         snap = {"url": "", "inputs": [], "chat_elements": [],
                 "error": "与页面的连接已断开"}
