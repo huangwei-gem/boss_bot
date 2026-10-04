@@ -7,7 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><defs><linearGradient id=%22g%22 x1=%220%%22 y1=%220%%22 x2=%22100%%22 y2=%22100%%22><stop offset=%220%%22 stop-color=%22%235b7cfa%22/><stop offset=%22100%%22 stop-color=%22%231e4bd2%22/></linearGradient></defs><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22url(%23g)%22/><text x=%2250%22 y=%2265%22 text-anchor=%22middle%22 font-size=%2250%22 font-weight=%22bold%22 fill=%22%23fff%22 font-family=%22Arial%22>B</text></svg>">
 <script src="/static/vendor/socket.io.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="/static/icons/icons.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
@@ -16,8 +16,13 @@
    Dual theme system — Light / Dark */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
-/* Lucide icons global style */
-[data-lucide]{width:1em;height:1em;stroke-width:2;vertical-align:middle;display:inline-block}
+/* 图标统一走本地雪碧图（static/icons/ui-sprite.svg，画风 Koboyo Original）：
+   图标本体一律 currentColor，所以尺寸用 em 跟字号走，颜色跟按钮/文字走。 */
+.ki{width:1em;height:1em;flex:none;display:inline-block;vertical-align:-0.15em;overflow:visible}
+.ki-lg{width:1em;height:1em}
+.ki-spin{animation:kiSpin .9s linear infinite;transform-origin:50% 50%}
+@keyframes kiSpin{to{transform:rotate(360deg)}}
+[data-ki]{width:1em;height:1em;display:inline-block;vertical-align:-0.15em}
 
 /* Light Theme - default when no data-theme set */
 [data-theme="light"], :root{
@@ -128,7 +133,7 @@ a{color:var(--accent);text-decoration:none}
 /* Advanced settings collapsible */
 .adv-toggle{cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 4px;border-radius:4px;transition:all var(--dur) var(--ease);font-size:10.5px;font-weight:600;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em;margin-top:14px;width:100%;border:none;background:none}
 .adv-toggle:hover{background:var(--surface-hover);color:var(--fg)}
-.adv-toggle .arrow{transition:transform .2s ease;font-size:8px;margin-left:auto}
+.adv-toggle .arrow{transition:transform .2s ease;font-size:12px;margin-left:auto}
 .adv-toggle.open .arrow{transform:rotate(90deg)}
 .adv-section{overflow:hidden;max-height:0;transition:max-height .3s ease;display:flex;flex-direction:column;gap:8px}
 .adv-section.open{max-height:2000px}
@@ -291,7 +296,7 @@ a{color:var(--accent);text-decoration:none}
 .ai-provider-latency{font-size:11px;color:var(--fg-3rd);font-variant-numeric:tabular-nums}
 .stat-card .stat-icon{font-size:20px;flex-shrink:0;opacity:.8}
 .stat-card .stat-body{flex:1;min-width:0}
-.stat-label{white-space:nowrap;font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fg-3rd)}
+.stat-label{display:flex;align-items:center;gap:5px;white-space:nowrap;font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fg-3rd)}
 .stat-value{font-size:20px;font-weight:700;margin:1px 0;letter-spacing:-.03em;color:var(--fg);line-height:1.1}
 .stat-sub{font-size:10px;color:var(--fg-3rd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 
@@ -628,10 +633,11 @@ a{color:var(--accent);text-decoration:none}
 .notif-actions{display:flex;gap:6px;padding:6px 10px;border-bottom:1px solid var(--bd-2)}
 .notif-actions button{flex:1;padding:4px;border:1px solid var(--bd-2);border-radius:4px;background:var(--side-input-bg);color:var(--fg);font-size:10px;cursor:pointer;transition:all var(--dur) var(--ease)}
 .notif-actions button:hover{background:var(--surface-hover);color:var(--fg)}
-.notif-center-header{cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:6px 4px;border-radius:4px;transition:all var(--dur) var(--ease);font-size:10.5px;font-weight:600;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em;margin-top:14px;width:100%;border:none;background:none}
+.notif-center-header{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:6px;padding:6px 4px;border-radius:4px;transition:all var(--dur) var(--ease);font-size:10.5px;font-weight:600;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em;margin-top:14px;width:100%;border:none;background:none}
 .notif-center-header:hover{background:var(--surface-hover);color:var(--fg)}
-.notif-center-header .arrow{transition:transform .2s ease;font-size:8px;margin-left:auto}
+.notif-center-header .arrow{transition:transform .2s ease;font-size:12px;margin-left:auto}
 .notif-center-header.open .arrow{transform:rotate(90deg)}
+.notif-center-header>span:first-child{display:inline-flex;align-items:center;gap:6px}
 
 /* Login Modal */
 .login-modal-overlay{position:fixed;inset:0;background:var(--modal-overlay);z-index:9999;display:none;align-items:center;justify-content:center;animation:fadeIn .25s ease;-webkit-backdrop-filter:blur(8px) saturate(140%);backdrop-filter:blur(8px) saturate(140%)}
@@ -639,6 +645,7 @@ a{color:var(--accent);text-decoration:none}
 .login-modal{position:relative;background:var(--surface);border-radius:24px;padding:0;max-width:440px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,.28),0 0 0 1px var(--bd);border:1px solid var(--bd);animation:modalPop .28s cubic-bezier(.2,.9,.3,1.2);overflow:hidden;-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
 .login-modal-header{background:linear-gradient(135deg,var(--accent),#7c5bfa);padding:28px 32px 24px;text-align:center;position:relative}
 .login-modal-header::after{content:"";position:absolute;bottom:-12px;left:0;right:0;height:24px;background:var(--surface);border-radius:18px 18px 0 0}
+.login-modal-icon-text{font-size:17px;font-weight:700;line-height:1.35;margin-top:8px;color:#fff}
 .login-modal-icon{font-size:42px;line-height:1;margin-bottom:10px;display:inline-block;animation:iconBob 2.2s ease-in-out infinite;filter:drop-shadow(0 2px 8px rgba(0,0,0,.2))}
 .login-modal-title{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.01em;text-shadow:0 1px 3px rgba(0,0,0,.15)}
 .login-modal-body{padding:20px 32px 28px;text-align:center}
@@ -792,7 +799,7 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
 </style>
 </head>
 <body>
-<button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="切换菜单"><i data-lucide="menu"></i></button>
+<button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="切换菜单"><i data-ki="menu"></i></button>
 <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 <div class="app">
   <div class="side">
@@ -803,21 +810,21 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
     </div>
     <div class="side-scroll" id="sideScroll">
       <div>
-        <div class="side-section-title">账号 <span class="badge-count" id="accBadge">1</span></div>
+        <div class="side-section-title"><i data-ki="account"></i>账号 <span class="badge-count" id="accBadge">1</span></div>
         <div id="accountTabs" style="margin-bottom:6px"></div>
         <div class="side-btn-row">
-          <button class="side-btn side-btn-ghost side-btn-sm" onclick="addAccount()"><i data-lucide="plus" style="font-size:12px;vertical-align:-2px;margin-right:2px"></i> 添加</button>
-          <button class="side-btn side-btn-ghost side-btn-sm side-btn-danger" onclick="deleteAccount()" title="删除当前账号">删除</button>
+          <button class="side-btn side-btn-ghost side-btn-sm" onclick="addAccount()"><i data-ki="plus" style="font-size:12px;vertical-align:-2px;margin-right:2px"></i> 添加</button>
+          <button class="side-btn side-btn-ghost side-btn-sm side-btn-danger" onclick="deleteAccount()" title="删除当前账号"><i data-ki="delete"></i>删除</button>
         </div>
       </div>
       <div>
-        <div class="side-section-title">账号设置 <span style="font-size:10px;color:var(--fg-4th);font-weight:400">(独立)</span> <span id="accConfigScope" style="font-size:10px;color:var(--fg-4th);font-weight:400"></span></div>
+        <div class="side-section-title"><i data-ki="settings"></i>账号设置 <span style="font-size:10px;color:var(--fg-4th);font-weight:400">(独立)</span> <span id="accConfigScope" style="font-size:10px;color:var(--fg-4th);font-weight:400"></span></div>
         <div class="acc-field-row"><label>名称</label><input class="side-form-input" id="accName" type="text" placeholder="主账号" onchange="onAccChange()"></div>
         <div class="acc-field-row"><label>Cookie</label>
           <div class="file-input-wrap">
             <input class="side-form-input" id="accCookie" type="text" placeholder="zhipin_cookies.json" onchange="onAccChange()">
-            <button class="file-btn" onclick="document.getElementById('cookieFileInput').click()" title="上传 Cookie 文件">上传</button>
-            <button class="file-btn" style="background:var(--danger-bg);color:var(--danger)" onclick="deleteCookieFile()">删除</button>
+            <button class="file-btn" onclick="document.getElementById('cookieFileInput').click()" title="上传 Cookie 文件"><i data-ki="upload"></i>上传</button>
+            <button class="file-btn" style="background:var(--danger-bg);color:var(--danger)" onclick="deleteCookieFile()"><i data-ki="delete"></i>删除</button>
             <input type="file" id="cookieFileInput" class="hidden" accept=".json,.txt" onchange="uploadCookieFile(event)">
           </div>
         </div>
@@ -826,7 +833,7 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
           <textarea class="side-form-input" id="accGreeting" rows="3" style="resize:vertical;min-height:52px;line-height:1.45"
                     placeholder="本账号的招呼语；留空则按本账号的城市/方向/技能自动生成一条默认" onchange="onAccChange()"></textarea>
           <button class="file-btn" style="margin-top:5px" onclick="regenGreeting()"
-                  title="按这个账号自己的城市/岗位方向/简历画像重生成一条默认招呼语">重新生成</button>
+                  title="按这个账号自己的城市/岗位方向/简历画像重生成一条默认招呼语"><i data-ki="regenerate"></i>重新生成</button>
         </div>
         <div id="accGreetingMode" style="font-size:10px;margin-top:2px;line-height:1.5;color:var(--fg-4th)"></div>
         <div style="font-size:10px;color:var(--fg-4th);margin-top:2px;line-height:1.5">
@@ -841,8 +848,8 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
         </div>
       </div>
       <div>
-        <div class="side-section-title">AI 智能解析 <span class="badge-count" id="aiBadge">关</span> <span id="aiScopeNote" style="font-size:10px;color:var(--fg-4th);font-weight:400"></span></div>
-        <div style="font-size:10px;color:var(--warning);margin-bottom:4px;display:flex;align-items:center;gap:4px"><i data-lucide="alert-triangle" style="font-size:11px"></i> 此开关仅控制打招呼的AI岗位解析，自动回复AI始终开启</div>
+        <div class="side-section-title"><i data-ki="ai"></i>AI 智能解析 <span class="badge-count" id="aiBadge">关</span> <span id="aiScopeNote" style="font-size:10px;color:var(--fg-4th);font-weight:400"></span></div>
+        <div style="font-size:10px;color:var(--warning);margin-bottom:4px;display:flex;align-items:center;gap:4px"><i data-ki="alert-triangle" style="font-size:11px"></i> 此开关仅控制打招呼的AI岗位解析，自动回复AI始终开启</div>
         <div class="acc-field-row" style="padding:6px 8px;border-radius:8px;background:var(--side-input-bg);border:1px solid var(--bd-2)"><label style="font-size:12px;font-weight:600">启用 AI</label><span id="aiEnabled" class="toggle-switch ai-switch" onclick="toggleAiEnabled()" style="margin-left:auto"></span></div>
         <div class="acc-field-row"><label>匹配阈值</label><input class="side-form-input" id="aiThreshold" type="number" min="0" max="100" placeholder="70" onchange="onAiChange()"></div>
         <div class="acc-field-row" title="一次岗位判分允许模型输出多少 token。带思考(reasoning)的接口会把预算花在思考上，不够就正文为空、这次判分作废换下一个接口">
@@ -850,12 +857,12 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
         <div class="acc-field-row" title="AI 判「不符合」后，只追问分数离阈值最近的那批（阈值-15 到阈值）到底卡在哪一条硬性要求。一次追问≈一次判分的耗时；填 0 就是关掉">
           <label>复盘追问/每号每轮</label><input class="side-form-input" id="aiProbeMaxPerRound" type="number" min="0" max="20" step="1" placeholder="5" onchange="onAiChange()"></div>
         <button class="adv-toggle" id="aiProvToggle" onclick="toggleAiProviders()">
-          AI 接口列表 <span class="arrow">></span>
+          <i data-ki="ai"></i>AI 接口列表 <i data-ki="chevron-right" class="arrow"></i>
           <span id="aiProvSummary" style="margin-left:4px;font-size:10px;color:var(--fg-3rd);font-weight:400"></span>
         </button>
         <div class="adv-section" id="aiProvSection">
           <div class="ai-health-bar">
-            <button class="side-btn side-btn-ghost side-btn-sm" id="btnAiHealthAll" onclick="runAiHealth()">全部接口体检</button>
+            <button class="side-btn side-btn-ghost side-btn-sm" id="btnAiHealthAll" onclick="runAiHealth()"><i data-ki="healthcheck"></i>全部接口体检</button>
             <span class="ai-health-summary" id="aiHealthSummary">未检测</span>
           </div>
           <div class="ai-quality-line" id="aiQualityLine" title="兜底 = AI 没给出判断，这个岗位按默认话术直接打招呼了，等于没筛">判分质量：未统计</div>
@@ -880,13 +887,13 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
           <div style="font-size:10px;color:var(--fg-4th);line-height:1.5">追加到AI系统提示词后，用于自定义打分标准。留空则使用系统默认打分逻辑</div>
         </div>
         <div class="side-btn-row" style="margin-top:6px;flex-wrap:wrap">
-          <button class="side-btn side-btn-ghost side-btn-sm" onclick="addAiProvider()">添加 AI 接口</button>
-          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showResumeModal()">编辑简历</button>
-          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showPromptModal()">编辑提示词</button>
-          <button class="side-btn side-btn-ghost side-btn-sm" onclick="testAi()">测试 AI</button>
-          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showRulesModal()">编辑规则</button>
-          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showTemplatesModal()">编辑模板</button>
-          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showEvolutionModal()">自进化</button>
+          <button class="side-btn side-btn-ghost side-btn-sm" onclick="addAiProvider()"><i data-ki="plus"></i>添加 AI 接口</button>
+          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showResumeModal()"><i data-ki="edit-resume"></i>编辑简历</button>
+          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showPromptModal()"><i data-ki="edit-prompt"></i>编辑提示词</button>
+          <button class="side-btn side-btn-ghost side-btn-sm" onclick="testAi()"><i data-ki="test-ai"></i>测试 AI</button>
+          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showRulesModal()"><i data-ki="edit-rules"></i>编辑规则</button>
+          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showTemplatesModal()"><i data-ki="edit-template"></i>编辑模板</button>
+          <button class="side-btn side-btn-ghost side-btn-sm" onclick="showEvolutionModal()"><i data-ki="evolve"></i>自进化</button>
         </div>
         <div id="aiStatus" style="font-size:10px;color:var(--fg-3rd);margin-top:4px;word-break:break-all"></div>
         <!-- AI 测试对比面板 -->
@@ -894,8 +901,8 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
           <div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin-bottom:6px">AI 测试对比</div>
           <textarea id="aiTestJobDesc" placeholder="粘贴岗位描述（JD）进行测试..." style="width:100%;min-height:60px;padding:6px 8px;font-size:11px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg);color:var(--fg);resize:vertical;box-sizing:border-box;margin-bottom:6px"></textarea>
           <div class="side-btn-row" style="margin-bottom:6px;flex-wrap:wrap">
-            <button class="side-btn side-btn-ghost side-btn-sm" onclick="runAiTest()">运行测试</button>
-            <button class="side-btn side-btn-ghost side-btn-sm" onclick="clearAiTest()">清空</button>
+            <button class="side-btn side-btn-ghost side-btn-sm" onclick="runAiTest()"><i data-ki="start"></i>运行测试</button>
+            <button class="side-btn side-btn-ghost side-btn-sm" onclick="clearAiTest()"><i data-ki="clear"></i>清空</button>
           </div>
           <div id="aiTestResults" style="font-size:10.5px;color:var(--fg-2nd);max-height:200px;overflow-y:auto"></div>
         </div>
@@ -903,7 +910,7 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
       <div style="flex:1">
         <div>
           <button class="adv-toggle" id="advToggle" onclick="toggleAdvSection()">
-            高级设置 <span class="arrow">></span>
+            <i data-ki="advanced"></i>高级设置 <i data-ki="chevron-right" class="arrow"></i>
           </button>
           <div class="adv-section" id="advSection">
             <div class="adv-group-title">浏览器</div>
@@ -943,7 +950,7 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
           </div>
         </div>
 
-        <div class="side-section-title">岗位列表 <span class="badge-count" id="sbarJobCount">0</span> <span id="sbarJobScope" style="font-size:10px;color:var(--fg-4th);font-weight:400"></span></div>
+        <div class="side-section-title"><i data-ki="jobs"></i>岗位列表 <span class="badge-count" id="sbarJobCount">0</span> <span id="sbarJobScope" style="font-size:10px;color:var(--fg-4th);font-weight:400"></span></div>
         <div id="sbarJobs" style="display:flex;flex-direction:column;min-height:40px"></div>
         <button class="side-btn side-btn-ghost side-btn-sm side-btn-block" onclick="addJob()" style="margin-top:6px;padding:8px 12px;font-size:11px;font-weight:500;border:1px dashed var(--bd-2);background:var(--side-input-bg);border-radius:6px;cursor:pointer" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--bd-2)';this.style.color='var(--fg-2nd)'">+ 添加岗位</button>
       </div>
@@ -951,9 +958,9 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
       <!-- 配置预览区域：显示所有配置项的值，确保页面加载后即可看到配置内容 -->
       <div class="sidebar-section" id="configPreviewSection">
         <button class="notif-center-header open" id="configPreviewToggle" onclick="toggleConfigPreview()">
-          <span>配置预览</span>
+          <span><i data-ki="preview"></i>配置预览</span>
           <span style="display:flex;align-items:center;gap:6px">
-            <span class="arrow">›</span>
+            <i data-ki="chevron-right" class="arrow"></i>
           </span>
         </button>
         <div id="configPreviewList" class="notif-list" style="display:block;max-height:400px;overflow-y:auto;padding:8px 4px">
@@ -964,10 +971,10 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
       <!-- 风控通知中心入口 -->
       <div class="sidebar-section" id="notificationCenter">
         <button class="notif-center-header" id="notifCenterToggle" onclick="toggleNotifications()">
-          <span>通知中心</span>
+          <span><i data-ki="bell"></i>通知中心</span>
           <span style="display:flex;align-items:center;gap:6px">
             <span id="notifBadge" class="notif-badge" style="display:none">0</span>
-            <span class="arrow">›</span>
+            <i data-ki="chevron-right" class="arrow"></i>
           </span>
         </button>
         <div id="notifList" class="notif-list" style="display:none">
@@ -983,45 +990,45 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
   </div>
   <div class="main">
     <div class="topbar">
-      <div class="topbar-title"><i data-lucide="clock" style="font-size:18px;vertical-align:-3px;margin-right:4px"></i><span class="highlight">AI</span> 自动投递</div>
+      <div class="topbar-title"><i data-ki="zap" style="font-size:18px;vertical-align:-3px;margin-right:4px"></i><span class="highlight">AI</span> 自动投递</div>
       <div class="topbar-task" id="topbarTask"></div>
       <div class="topbar-right">
         <span class="topbar-badge">v2.0</span>
         <button class="theme-toggle" onclick="toggleTheme()" title="切换主题" aria-label="切换主题">
-          <span class="toggle-icon" id="themeIcon"><i data-lucide="sun"></i></span>
+          <span class="toggle-icon" id="themeIcon"><i data-ki="sun"></i></span>
           <span id="themeLabel">暗色</span>
         </button>
       </div>
     </div>
     <div class="content">
       <div class="stats-grid">
-        <div class="stat-card accent"><div class="stat-label">累计投递</div><div class="stat-value" id="statTotal">0</div><div class="stat-sub" id="statTotalSub">历史打招呼成功数</div></div>
-        <div class="stat-card success"><div class="stat-label">已投递</div><div class="stat-value" id="statApplied">0</div><div class="stat-sub" id="statAppliedSub">每日上限 150</div></div>
-        <div class="stat-card warning"><div class="stat-label">接收简历</div><div class="stat-value" id="statResume">0</div><div class="stat-sub" id="statResumeSub">累计 0</div></div>
-        <div class="stat-card info"><div class="stat-label">面试数</div><div class="stat-value" id="statInterview">0</div><div class="stat-sub" id="statInterviewSub">累计 0 · 按会话去重</div></div>
+        <div class="stat-card accent"><div class="stat-label"><i data-ki="sent-total"></i>累计投递</div><div class="stat-value" id="statTotal">0</div><div class="stat-sub" id="statTotalSub">历史打招呼成功数</div></div>
+        <div class="stat-card success"><div class="stat-label"><i data-ki="sent-today"></i>已投递</div><div class="stat-value" id="statApplied">0</div><div class="stat-sub" id="statAppliedSub">每日上限 150</div></div>
+        <div class="stat-card warning"><div class="stat-label"><i data-ki="resume-in"></i>接收简历</div><div class="stat-value" id="statResume">0</div><div class="stat-sub" id="statResumeSub">累计 0</div></div>
+        <div class="stat-card info"><div class="stat-label"><i data-ki="interview"></i>面试数</div><div class="stat-value" id="statInterview">0</div><div class="stat-sub" id="statInterviewSub">累计 0 · 按会话去重</div></div>
       </div>
       <div class="metrics-scope" id="metricsScope"></div>
       <div class="action-bar">
-        <span class="action-label">操作</span>
+        <span class="action-label"><i data-ki="power"></i>操作</span>
         <span class="scope-hint" id="actionScopeLabel" title="上方按钮只作用于当前数据范围"></span>
-        <button class="btn btn-success btn-sm" id="btnStartAll" onclick="startAll()">启动</button>
-        <button class="btn btn-danger btn-sm" id="btnStopAll" onclick="stopAll()" style="display:none">停止</button>
-        <button class="btn btn-ghost btn-sm" id="btnSaveConfig" onclick="saveConfigShow()" title="把当前侧边栏里的配置写入 bot_config.json">保存配置</button>
-        <button class="btn btn-ghost btn-sm" onclick="showExcelModal()">Excel 导出</button>
-        <button class="btn btn-warn btn-sm" id="btnPauseGreet" onclick="pauseGreet()" style="display:none">暂停打招呼</button>
-        <button class="btn btn-success btn-sm" id="btnResumeGreet" onclick="resumeGreet()" style="display:none">恢复打招呼</button>
-        <button class="btn btn-warn btn-sm" id="btnPauseReply" onclick="pauseReply()" style="display:none">暂停回复</button>
-        <button class="btn btn-success btn-sm" id="btnResumeReply" onclick="resumeReply()" style="display:none">恢复回复</button>
-        <button class="btn btn-ghost btn-sm" onclick="downloadReplyRecords()">下载回复记录</button>
-        <button class="btn btn-ghost btn-sm" onclick="downloadGreetRecords()">下载打招呼记录</button>
-        <button class="btn btn-ghost btn-sm" onclick="showArchiveModal()">历史数据</button>
+        <button class="btn btn-success btn-sm" id="btnStartAll" onclick="startAll()"><i data-ki="start"></i>启动</button>
+        <button class="btn btn-danger btn-sm" id="btnStopAll" onclick="stopAll()" style="display:none"><i data-ki="stop"></i>停止</button>
+        <button class="btn btn-ghost btn-sm" id="btnSaveConfig" onclick="saveConfigShow()" title="把当前侧边栏里的配置写入 bot_config.json"><i data-ki="save"></i>保存配置</button>
+        <button class="btn btn-ghost btn-sm" onclick="showExcelModal()"><i data-ki="export"></i>Excel 导出</button>
+        <button class="btn btn-warn btn-sm" id="btnPauseGreet" onclick="pauseGreet()" style="display:none"><i data-ki="mute"></i>暂停打招呼</button>
+        <button class="btn btn-success btn-sm" id="btnResumeGreet" onclick="resumeGreet()" style="display:none"><i data-ki="greet"></i>恢复打招呼</button>
+        <button class="btn btn-warn btn-sm" id="btnPauseReply" onclick="pauseReply()" style="display:none"><i data-ki="mute"></i>暂停回复</button>
+        <button class="btn btn-success btn-sm" id="btnResumeReply" onclick="resumeReply()" style="display:none"><i data-ki="reply"></i>恢复回复</button>
+        <button class="btn btn-ghost btn-sm" onclick="downloadReplyRecords()"><i data-ki="download"></i>下载回复记录</button>
+        <button class="btn btn-ghost btn-sm" onclick="downloadGreetRecords()"><i data-ki="download"></i>下载打招呼记录</button>
+        <button class="btn btn-ghost btn-sm" onclick="showArchiveModal()"><i data-ki="history"></i>历史数据</button>
       </div>
       <div class="panel-row">
         <div class="panel panel-full">
-          <div class="panel-header"><span class="panel-icon"><i data-lucide="file-text"></i></span><span class="panel-title">投递记录</span><div class="panel-actions"><button class="btn btn-ghost btn-sm" onclick="clearCurrentRecordTab()">清空</button></div></div>
+          <div class="panel-header"><span class="panel-icon"><i data-ki="file-text"></i></span><span class="panel-title">投递记录</span><div class="panel-actions"><button class="btn btn-ghost btn-sm" onclick="clearCurrentRecordTab()"><i data-ki="clear"></i>清空</button></div></div>
           <div class="record-tabs" style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto">
-            <button class="record-tab active" onclick="switchRecordTab('greet')">打招呼记录 <span class="tab-count" id="greetTabCount">0</span></button>
-            <button class="record-tab" onclick="switchRecordTab('reply')">回复记录 <span class="tab-count" id="replyTabCount">0</span></button>
+            <button class="record-tab active" onclick="switchRecordTab('greet')"><i data-ki="greet"></i>打招呼记录 <span class="tab-count" id="greetTabCount">0</span></button>
+            <button class="record-tab" onclick="switchRecordTab('reply')"><i data-ki="reply"></i>回复记录 <span class="tab-count" id="replyTabCount">0</span></button>
             <!-- 打招呼筛选栏（和tab同一行） -->
             <div id="greetFilterBar" style="display:flex;align-items:center;gap:2px;flex:1;justify-content:flex-end;flex-wrap:nowrap;overflow-x:auto;font-size:11px">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">开始</label>
@@ -1041,8 +1048,8 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
                 <option value="already">已沟通</option>
                 <option value="error">失败</option>
               </select>
-              <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="applyGreetFilter()">筛选</button>
-              <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="resetGreetFilter()">重置</button>
+              <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="applyGreetFilter()"><i data-ki="filter"></i>筛选</button>
+              <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="resetGreetFilter()"><i data-ki="reset"></i>重置</button>
               <span id="greetFilterCount" style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0"></span>
             </div>
             <!-- 回复筛选栏（和tab同一行，默认隐藏） -->
@@ -1070,19 +1077,19 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
                 <option value="skipped">跳过</option>
                 <option value="error">失败</option>
               </select>
-              <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="applyReplyFilter()">筛选</button>
-              <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="resetReplyFilter()">重置</button>
+              <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="applyReplyFilter()"><i data-ki="filter"></i>筛选</button>
+              <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="resetReplyFilter()"><i data-ki="reset"></i>重置</button>
               <span id="replyFilterCount" style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0"></span>
             </div>
           </div>
           <div class="record-tab-content active" id="greetTabContent" style="padding:0;flex:1;overflow-y:auto">
-            <div id="greetAlert" class="greet-alert" style="display:none"><i data-lucide="alert-triangle" style="width:14px;height:14px"></i><span><span class="greet-alert-names" id="greetAlertNames"></span> <span id="greetAlertWhy"></span></span><button class="btn btn-ghost btn-sm" id="greetAlertGo">去填写</button></div>
+            <div id="greetAlert" class="greet-alert" style="display:none"><i data-ki="alert-triangle" style="width:14px;height:14px"></i><span><span class="greet-alert-names" id="greetAlertNames"></span> <span id="greetAlertWhy"></span></span><button class="btn btn-ghost btn-sm" id="greetAlertGo"><i data-ki="edit"></i>去填写</button></div>
             <table class="greet-table" id="greetTable">
               <thead><tr><th>时间</th><th>岗位</th><th>公司</th><th>薪资</th><th>状态</th><th>跳过原因</th><th>AI</th></tr></thead>
               <tbody id="greetTableBody"></tbody>
             </table>
             <div class="empty-state" id="greetEmpty" style="height:100%;min-height:200px">
-              <div class="empty-icon" style="font-size:36px;opacity:0.3"><i data-lucide="clipboard-list"></i></div>
+              <div class="empty-icon"><i data-ki="empty-greet"></i></div>
               <div class="empty-desc" style="font-size:13px;font-weight:600;margin-top:8px">暂无投递记录</div>
               <div class="empty-hint" style="font-size:11px;color:var(--fg-3rd);margin-top:4px">
                 点击上方 <span style="color:var(--accent);font-weight:600">启动</span> 按钮开始自动投递
@@ -1101,14 +1108,14 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
               </div>
               <div class="boss-chat-main" id="bossChatMain">
                 <div class="boss-chat-empty">
-                  <div class="boss-chat-empty-icon"><i data-lucide="message-circle"></i></div>
+                  <div class="boss-chat-empty-icon"><i data-ki="empty-chat"></i></div>
                   <div class="boss-chat-empty-text">暂无回复记录</div>
                   <div class="boss-chat-empty-hint">启动机器人后，收到消息将自动回复并记录在此</div>
                 </div>
               </div>
             </div>
             <div class="empty-state" id="replyEmpty" style="height:100%;min-height:200px;display:none">
-              <div class="empty-icon" style="font-size:36px;opacity:0.3"><i data-lucide="message-circle"></i></div>
+              <div class="empty-icon"><i data-ki="empty-reply"></i></div>
               <div class="empty-desc" style="font-size:13px;font-weight:600;margin-top:8px">暂无回复记录</div>
               <div class="empty-hint" style="font-size:11px;color:var(--fg-3rd);margin-top:4px">
                 启动机器人后，收到消息将自动回复并记录在此
@@ -1119,8 +1126,8 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
       </div>
       <div class="panel-row" style="margin-top:8px;flex:0 0 auto">
         <div class="panel log-panel collapsed" id="logPanel">
-          <div class="panel-header" onclick="toggleLogPanel()" style="cursor:pointer;user-select:none"><span class="panel-icon"><i data-lucide="file-text"></i></span><span class="panel-title">系统日志</span><span class="log-toggle-icon" style="margin-left:auto;transition:transform .2s ease;font-size:10px;color:var(--fg-3rd)"><i data-lucide="chevron-down"></i></span><div class="panel-actions" onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="copyLog()">复制</button><button class="btn btn-ghost btn-sm" onclick="clearLog()">清空</button></div></div>
-          <div class="panel-body log-area" id="logArea"><div class="log-empty"><div class="empty-icon">等待操作...</div></div></div>
+          <div class="panel-header" onclick="toggleLogPanel()" style="cursor:pointer;user-select:none"><span class="panel-icon"><i data-ki="log"></i></span><span class="panel-title">系统日志</span><span class="log-toggle-icon" style="margin-left:auto;transition:transform .2s ease;font-size:10px;color:var(--fg-3rd)"><i data-ki="chevron-down"></i></span><div class="panel-actions" onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="copyLog()"><i data-ki="copy"></i>复制</button><button class="btn btn-ghost btn-sm" onclick="clearLog()"><i data-ki="clear"></i>清空</button></div></div>
+          <div class="panel-body log-area" id="logArea"><div class="log-empty"><div class="empty-icon"><i data-ki="empty-log"></i></div><div class="empty-desc">等待操作...</div></div></div>
         </div>
       </div>
     </div>
@@ -1258,7 +1265,7 @@ function renderAiConfig() {
     html += '</div>';
   }
   container.innerHTML = html;
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  if (typeof KIcon !== 'undefined') KIcon.createIcons();
   var summary = document.getElementById('aiProvSummary');
   if (summary) {
     if (providers.length === 0) {
@@ -1576,7 +1583,7 @@ function runAiTest() {
   if (!desc) { addLog('ERROR', '请先输入岗位描述'); return; }
   const resultsEl = document.getElementById('aiTestResults');
   resultsEl.innerHTML = '<div style="color:var(--fg-3rd)">分析中...</div>';
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  if (typeof KIcon !== 'undefined') KIcon.createIcons();
   const startTime = Date.now();
   fetch('/api/ai/analyze', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({job_desc: desc, provider_index: 0})})
   .then(function(r){return r.json()})
@@ -1592,7 +1599,7 @@ function runAiTest() {
   })
   .catch(function(e) {
     resultsEl.innerHTML = '<div style="color:var(--danger)">失败: ' + e.message + '</div>';
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof KIcon !== 'undefined') KIcon.createIcons();
     addLog('ERROR', 'AI 测试失败: ' + e.message);
   });
 }
@@ -1610,7 +1617,7 @@ function renderAiTestResults() {
       '<div style="color:var(--fg-3rd);margin-top:2px;white-space:pre-wrap">'+escHtml(r.analysis || '')+'</div>'+
     '</div>';
   }).join('');
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  if (typeof KIcon !== 'undefined') KIcon.createIcons();
 }
 
 function clearAiTest() {
@@ -1630,7 +1637,7 @@ function showExcelModal() {
     overlay.id = 'excelModal';
     let listHtml = '';
     if (files.length === 0) {
-      listHtml = '<div class="empty-state"><div class="empty-icon">暂无导出文件</div><div class="empty-desc">投递岗位后会自动生成 Excel 记录</div></div>';
+      listHtml = '<div class="empty-state"><div class="empty-icon"><i data-ki="export"></i></div><div class="empty-desc" style="font-weight:600;color:var(--fg-2nd)">暂无导出文件</div><div class="empty-desc">投递岗位后会自动生成 Excel 记录</div></div>';
     } else {
       listHtml = files.map(function(f) {
         return '<div class="excel-file-row">'+
@@ -1649,7 +1656,7 @@ function showExcelModal() {
         '<div class="modal-actions"><button class="btn btn-cancel" onclick="closeExcelModal()">关闭</button></div>'+
       '</div>';
     document.body.appendChild(overlay);
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof KIcon !== 'undefined') KIcon.createIcons();
   }).catch(function(e){addLog('ERROR', '加载文件列表失败: ' + e)});
 }
 
@@ -1688,7 +1695,7 @@ function showPromptModal() {
         '</div>'+
       '</div>';
     document.body.appendChild(overlay);
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof KIcon !== 'undefined') KIcon.createIcons();
   }).catch(function(e){addLog('ERROR', '加载提示词失败: ' + e)});
 }
 
@@ -1766,7 +1773,7 @@ function showResumeModal() {
       '<div class="modal modal-large">'+
         '<h3>简历信息预览</h3>'+
         '<div style="background:var(--warning-bg);color:var(--warning);padding:10px 12px;border-radius:8px;font-size:11px;margin-bottom:14px;display:flex;gap:8px;align-items:flex-start">'+
-          '<span style="font-size:14px"><i data-lucide="lightbulb"></i></span>'+
+          '<span style="font-size:14px"><i data-ki="lightbulb"></i></span>'+
           '<span>请在 <strong>BOSS 直聘网页/App</strong> 上编辑你的简历，这里只做简历信息预览，用于 AI 匹配分析。<br>修改简历请前往：<a href="https://www.zhipin.com/web/geek/resume" target="_blank" style="color:var(--accent);text-decoration:underline">https://www.zhipin.com/web/geek/resume</a></span>'+
         '</div>'+
         '<div style="max-height:50vh;overflow-y:auto">'+rowsHtml+'</div>'+
@@ -1775,7 +1782,7 @@ function showResumeModal() {
         '</div>'+
       '</div>';
     document.body.appendChild(overlay);
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof KIcon !== 'undefined') KIcon.createIcons();
   }).catch(function(e){
     addLog('ERROR', '加载简历信息失败: ' + e.message);
     // 兜底：用 config 中的简历信息
@@ -1831,7 +1838,7 @@ function showRulesModal() {
     const ruleKeys = Object.keys(replyRules);
     let rulesHtml = '';
     if (ruleKeys.length === 0) {
-      rulesHtml = '<div id="rulesList"><div class="empty-state"><div class="empty-icon">暂无回复规则</div><div class="empty-desc">添加规则以控制自动回复行为</div></div></div>';
+      rulesHtml = '<div id="rulesList"><div class="empty-state"><div class="empty-icon"><i data-ki="edit-rules"></i></div><div class="empty-desc" style="font-weight:600;color:var(--fg-2nd)">暂无回复规则</div><div class="empty-desc">添加规则以控制自动回复行为</div></div></div>';
     } else {
       rulesHtml = '<div id="rulesList">' + ruleKeys.map(function(k, i) {
         return renderRuleRow(i, k, replyRules[k]||'');
@@ -1855,7 +1862,7 @@ function showRulesModal() {
         '</div>'+
       '</div>';
     document.body.appendChild(overlay);
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof KIcon !== 'undefined') KIcon.createIcons();
   }).catch(function(e){addLog('ERROR', '加载规则失败: ' + e)});
 }
 
@@ -1873,8 +1880,8 @@ function removeRuleRow(btn) {
   // 如果删空了，显示空状态
   var list = document.getElementById('rulesList');
   if (list && list.children.length === 0) {
-    list.innerHTML = '<div class="empty-state"><div class="empty-icon">暂无回复规则</div><div class="empty-desc">添加规则以控制自动回复行为</div></div>';
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon"><i data-ki="edit-rules"></i></div><div class="empty-desc" style="font-weight:600;color:var(--fg-2nd)">暂无回复规则</div><div class="empty-desc">添加规则以控制自动回复行为</div></div>';
+    if (typeof KIcon !== 'undefined') KIcon.createIcons();
   }
 }
 
@@ -1978,7 +1985,7 @@ function showTemplatesModal() {
         '</div>'+
       '</div>';
     document.body.appendChild(overlay);
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof KIcon !== 'undefined') KIcon.createIcons();
   }).catch(function(e){addLog('ERROR', '加载模板失败: ' + e)});
 }
 
@@ -2107,7 +2114,7 @@ function showEvolutionModal() {
       }).join('');
     }
     if (!reportHtml) {
-      reportHtml = '<div class="empty-state"><div class="empty-icon">暂无进化数据</div><div class="empty-desc">运行一段时间后会有数据</div></div>';
+      reportHtml = '<div class="empty-state"><div class="empty-icon"><i data-ki="evolve"></i></div><div class="empty-desc" style="font-weight:600;color:var(--fg-2nd)">暂无进化数据</div><div class="empty-desc">运行一段时间后会有数据</div></div>';
     }
     var accChips = (config.accounts || []).map(function (a, i) {
       return '<button class="scope-chip' + (i === evolutionAccount ? ' active' : '') +
@@ -2142,7 +2149,7 @@ function showEvolutionModal() {
         '</div>'+
       '</div>';
     document.body.appendChild(overlay);
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof KIcon !== 'undefined') KIcon.createIcons();
   }).catch(function(e){addLog('ERROR', '加载自进化数据失败: ' + e)});
 }
 
@@ -2283,23 +2290,23 @@ function loadTheme() {
 function updateThemeUI(theme) {
   const isDark = theme === 'dark';
   document.getElementById('themeIcon').innerHTML = isDark
-    ? '<i data-lucide="moon"></i>'
-    : '<i data-lucide="sun"></i>';
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+    ? '<i data-ki="moon"></i>'
+    : '<i data-ki="sun"></i>';
+  if (typeof KIcon !== 'undefined') KIcon.createIcons();
   document.getElementById('themeLabel').textContent = isDark ? '亮色' : '暗色';
 }
 
 // ── 日志操作 ──
 function clearLog() {
-  document.getElementById('logArea').innerHTML = '<div class="log-empty"><div class="empty-icon">等待操作...</div></div>';
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  document.getElementById('logArea').innerHTML = '<div class="log-empty"><div class="empty-icon"><i data-ki="empty-log"></i></div><div class="empty-desc">等待操作...</div></div>';
+  if (typeof KIcon !== 'undefined') KIcon.createIcons();
 }
 function toggleLogPanel() {
   var p = document.getElementById('logPanel');
   p.classList.toggle('collapsed');
   var icon = p.querySelector('.log-toggle-icon');
-  if (icon) icon.innerHTML = p.classList.contains('collapsed') ? '<i data-lucide="chevron-right"></i>' : '<i data-lucide="chevron-down"></i>';
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  if (icon) icon.innerHTML = p.classList.contains('collapsed') ? '<i data-ki="chevron-right"></i>' : '<i data-ki="chevron-down"></i>';
+  if (typeof KIcon !== 'undefined') KIcon.createIcons();
 }
 
 function copyLog() {
@@ -2600,7 +2607,7 @@ function renderConfigPreview() {
   html += '</div>';
 
   container.innerHTML = html;
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  if (typeof KIcon !== 'undefined') KIcon.createIcons();
 }
 
 // ── 账号渲染 ──
@@ -3002,11 +3009,11 @@ function updateSbarJobs() {
         '<span class="job-del" onclick="event.stopPropagation();deleteJob('+i+')" title="删除">x</span>' +
       '</div>';
     }).join('');
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof KIcon !== 'undefined') KIcon.createIcons();
   } else {
     if (badge) badge.textContent = '0';
     el.innerHTML = '<span style="color:var(--fg-3rd);font-size:10px;padding:8px 0;display:block;text-align:center">暂无岗位，点击上方添加</span>';
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof KIcon !== 'undefined') KIcon.createIcons();
   }
 }
 
@@ -3083,7 +3090,7 @@ function showJobModal(job) {
       '</div>'+
     '</div>';
   document.body.appendChild(overlay);
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  if (typeof KIcon !== 'undefined') KIcon.createIcons();
   if (typeof renderJobImageChips === 'function') renderJobImageChips();
   loadCityList();
 }
@@ -3097,7 +3104,7 @@ function loadCityList() {
   var dl = document.getElementById('cityList');
   if (!dl) return;
   dl.innerHTML = cityList.map(function(c){return '<option value="'+escHtml(c)+'">'}).join('');
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  if (typeof KIcon !== 'undefined') KIcon.createIcons();
 }
 
 function handleJobImageUpload(event) {
@@ -3172,9 +3179,9 @@ function showImageLightbox(src) {
     img.style.display = 'none';
     var err = document.createElement('div');
     err.style.cssText = 'color:#fff;font-size:14px;text-align:center;padding:20px';
-    err.innerHTML = '<i data-lucide="alert-triangle" style="font-size:14px;vertical-align:-2px;margin-right:4px"></i>图片加载失败<br><span style="font-size:12px;opacity:.7">' + src + '</span>';
+    err.innerHTML = '<i data-ki="alert-triangle" style="font-size:14px;vertical-align:-2px;margin-right:4px"></i>图片加载失败<br><span style="font-size:12px;opacity:.7">' + src + '</span>';
     overlay.appendChild(err);
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof KIcon !== 'undefined') KIcon.createIcons();
   };
   img.src = src;
   overlay.appendChild(img);
@@ -3268,7 +3275,7 @@ function deleteAccount() {
 // ── 启动/停止（按数据范围：选中账号就只动那个号） ──
 function startAll() {
   const btn = document.getElementById('btnStartAll');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i data-lucide="loader-2" style="font-size:12px"></i> 启动中...'; if (typeof lucide !== 'undefined') lucide.createIcons(); }
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i data-ki="loader" class="ki-spin" style="font-size:12px"></i> 启动中...'; if (typeof KIcon !== 'undefined') KIcon.createIcons(); }
   saveConfig()
     .then(function() {
       return fetch(controlUrl('start'), {method:'POST'});
@@ -3281,12 +3288,12 @@ function startAll() {
       addLog('SUCCESS', (data && data.message) || '任务已启动');
       toast('已启动' + scopeLabel(), 'ok');
       setControls(true);
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="chevron-right" style="font-size:12px"></i> 启动'; if (typeof lucide !== 'undefined') lucide.createIcons(); }
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i data-ki="chevron-right" style="font-size:12px"></i> 启动'; if (typeof KIcon !== 'undefined') KIcon.createIcons(); }
     })
     .catch(function(e) {
       addLog('ERROR', '启动失败: ' + e.message);
       toast('启动失败：' + e.message, 'err');
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="chevron-right" style="font-size:12px"></i> 启动'; btn.style.display = ''; if (typeof lucide !== 'undefined') lucide.createIcons(); }
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i data-ki="chevron-right" style="font-size:12px"></i> 启动'; btn.style.display = ''; if (typeof KIcon !== 'undefined') KIcon.createIcons(); }
     });
 }
 
@@ -3450,7 +3457,7 @@ function downloadGreetRecords() {
 // ── 控制按钮状态 ──
 function setControls(running) {
   const s=document.getElementById('btnStartAll'),p=document.getElementById('btnStopAll'),cl=document.getElementById('btnConfirmLogin'),dot=document.getElementById('sbarDot'),st=document.getElementById('sbarStatus');
-  if(s) { s.style.display=running?'none':''; s.disabled=false; s.innerHTML='<i data-lucide="chevron-right" style="font-size:12px"></i> 启动'; if (typeof lucide !== 'undefined') lucide.createIcons(); }
+  if(s) { s.style.display=running?'none':''; s.disabled=false; s.innerHTML='<i data-ki="chevron-right" style="font-size:12px"></i> 启动'; if (typeof KIcon !== 'undefined') KIcon.createIcons(); }
   if(p) { p.style.display=running?'':'none'; }
   if(cl) { cl.style.display=running?'':'none'; }
   if(dot) dot.className='status-dot'+(running?' running':' idle');
@@ -3701,10 +3708,10 @@ function toast(msg, level, ms) {
   }
   var el = document.createElement('div');
   el.className = 'toast ' + level;
-  el.innerHTML = '<i data-lucide="' + (TOAST_ICONS[level] || 'info') + '"></i><span></span>';
+  el.innerHTML = '<i data-ki="' + (TOAST_ICONS[level] || 'info') + '"></i><span></span>';
   el.querySelector('span').textContent = msg;
   stack.appendChild(el);
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  if (typeof KIcon !== 'undefined') KIcon.createIcons();
   // 同类提示堆太多时把最老的顶掉，不让它挡住内容
   while (stack.children.length > 4) stack.removeChild(stack.firstChild);
   var ttl = ms || (level === 'err' ? 6000 : 3200);
@@ -3742,21 +3749,21 @@ function addLog(level,message){
   const ts=new Date().toLocaleTimeString();
   // 根据日志级别添加对应的 Lucide 图标前缀
   var levelIcon = '';
-  if (level === 'ERROR') levelIcon = '<i data-lucide="x-circle" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
-  else if (level === 'WARN') levelIcon = '<i data-lucide="alert-triangle" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
-  else if (level === 'SUCCESS') levelIcon = '<i data-lucide="check-circle" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
-  else if (level === 'SYSTEM') levelIcon = '<i data-lucide="settings" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
-  else if (level === 'INFO') levelIcon = '<i data-lucide="info" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
+  if (level === 'ERROR') levelIcon = '<i data-ki="x-circle" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
+  else if (level === 'WARN') levelIcon = '<i data-ki="alert-triangle" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
+  else if (level === 'SUCCESS') levelIcon = '<i data-ki="check-circle" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
+  else if (level === 'SYSTEM') levelIcon = '<i data-ki="settings" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
+  else if (level === 'INFO') levelIcon = '<i data-ki="info" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
   div.innerHTML='<span class="log-time">'+ts+'</span><span class="log-message log-'+level+'">'+levelIcon+escHtml(message)+'</span>';
   area.appendChild(div);
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  if (typeof KIcon !== 'undefined') KIcon.createIcons();
   area.scrollTop=area.scrollHeight;
   while(area.children.length>300) area.removeChild(area.firstChild);
 }
 
 // ── 投递记录表格 ──
 const greetStatusMap = {
-  success: {label:'<i data-lucide="check-circle"></i> 已投递', cls:'greet-status-success'},
+  success: {label:'<i data-ki="check-circle"></i> 已投递', cls:'greet-status-success'},
   skip: {label:'跳过', cls:'greet-status-skip'},
   ai_skip: {label:'AI不匹配', cls:'greet-status-ai_skip'},
   already: {label:'已沟通', cls:'greet-status-already'},
@@ -4052,7 +4059,7 @@ function renderBossChatList(groups) {
   if (!list) return;
   if (!groups || groups.length === 0) {
     list.innerHTML = '<div class="boss-chat-loading">暂无聊天记录</div>';
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof KIcon !== 'undefined') KIcon.createIcons();
     if (countBadge) countBadge.textContent = '0';
     return;
   }
@@ -4089,7 +4096,7 @@ function renderBossChatList(groups) {
     html += '</div>';
   });
   list.innerHTML = html;
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  if (typeof KIcon !== 'undefined') KIcon.createIcons();
 }
 
 // 会话身份：BOSS 侧栏一行显示「姓名+公司」，同昵称是两段不同对话
@@ -4181,8 +4188,8 @@ function renderBossChatDetail(key) {
   if (!main) return;
   var g = replyChatCache[key];
   if (!g) {
-    main.innerHTML = '<div class="boss-chat-empty"><div class="boss-chat-empty-icon"><i data-lucide="message-circle"></i></div><div class="boss-chat-empty-text">未找到聊天记录</div></div>';
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    main.innerHTML = '<div class="boss-chat-empty"><div class="boss-chat-empty-icon"><i data-ki="empty-chat"></i></div><div class="boss-chat-empty-text">未找到聊天记录</div></div>';
+    if (typeof KIcon !== 'undefined') KIcon.createIcons();
     return;
   }
   var chatNameDisplay = g.chat_name || displayChatName(key);
@@ -4281,7 +4288,7 @@ function renderBossChatDetail(key) {
   // 滚动到底部（最新消息在最下方，一比一复刻BOSS直聘聊天页面）
   var msgs = document.getElementById('bossChatMessages');
   if (msgs) msgs.scrollTop = msgs.scrollHeight;
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  if (typeof KIcon !== 'undefined') KIcon.createIcons();
 }
 
 // 渲染单条消息气泡（对齐 BOSS 直聘线上：气泡方向 / 送达·已读 / 图片 / 简历·职位卡片 / 系统条）
@@ -4721,7 +4728,7 @@ function applyGreetFilter() {
       tr.innerHTML = buildGreetRowHtml(rec);
       body.appendChild(tr);
     });
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof KIcon !== 'undefined') KIcon.createIcons();
   }
   var fc = document.getElementById('greetFilterCount');
   if (fc) fc.textContent = '共 ' + filtered.length + ' / ' + allGreetRecords.length + ' 条';
@@ -4855,7 +4862,7 @@ function loadNotifications() {
   if (!listEl) return;
   // 显示加载中
   listEl.innerHTML = '<div class="notif-empty">加载中...</div>';
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  if (typeof KIcon !== 'undefined') KIcon.createIcons();
   fetch('/api/notifications')
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -4872,7 +4879,7 @@ function loadNotifications() {
     })
     .catch(function(e) {
       listEl.innerHTML = '<div class="notif-empty">加载失败</div>';
-      if (typeof lucide !== 'undefined') lucide.createIcons();
+      if (typeof KIcon !== 'undefined') KIcon.createIcons();
       console.error('loadNotifications:', e);
     });
 }
@@ -4883,7 +4890,7 @@ function renderNotifList(notifs) {
   if (!listEl) return;
   if (!notifs || notifs.length === 0) {
     listEl.innerHTML = '<div class="notif-empty">暂无通知</div>';
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof KIcon !== 'undefined') KIcon.createIcons();
     return;
   }
   // 顶部操作按钮
@@ -4899,11 +4906,11 @@ function renderNotifList(notifs) {
     var ntime = n.time || n.created_at || n.timestamp || '';
     var nread = !!n.read || !!n.is_read;
     // 类型图标
-    var typeIcon = '<i data-lucide="info"></i>';
-    if (ntype === 'wind_control') typeIcon = '<i data-lucide="alert-triangle"></i>';
-    else if (ntype === 'error') typeIcon = '<i data-lucide="x-circle"></i>';
-    else if (ntype === 'success') typeIcon = '<i data-lucide="check-circle"></i>';
-    else if (ntype === 'warn' || ntype === 'warning') typeIcon = '<i data-lucide="zap"></i>';
+    var typeIcon = '<i data-ki="info"></i>';
+    if (ntype === 'wind_control') typeIcon = '<i data-ki="alert-triangle"></i>';
+    else if (ntype === 'error') typeIcon = '<i data-ki="x-circle"></i>';
+    else if (ntype === 'success') typeIcon = '<i data-ki="check-circle"></i>';
+    else if (ntype === 'warn' || ntype === 'warning') typeIcon = '<i data-ki="zap"></i>';
     html += '<div class="notif-item' + (nread ? '' : ' unread') + '" onclick="markNotifRead(\'' + escAttr(String(nid)) + '\')">' +
       '<span class="notif-time">' + escHtml(ntime) + '</span>' +
       '<span class="notif-type ' + escHtml(ntype) + '">' + typeIcon + ' ' + escHtml(ntype) + '</span>' +
@@ -4911,7 +4918,7 @@ function renderNotifList(notifs) {
     '</div>';
   });
   listEl.innerHTML = html;
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  if (typeof KIcon !== 'undefined') KIcon.createIcons();
 }
 
 // 调用 GET /api/notifications/unread_count 更新红点数字
@@ -5021,8 +5028,8 @@ function showConnLost(msg){
     el.className = 'conn-lost';
     document.body.appendChild(el);
   }
-  el.innerHTML = '<i data-lucide="wifi-off"></i><span>' + escHtml(msg) + '</span>';
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  el.innerHTML = '<i data-ki="wifi-off"></i><span>' + escHtml(msg) + '</span>';
+  if (typeof KIcon !== 'undefined') KIcon.createIcons();
 }
 function hideConnLost(){
   var el = document.getElementById('connLost');
@@ -5058,9 +5065,9 @@ socket.on('wind_control',function(data){
     // 显示醒目警告
     var w = document.createElement('div');
     w.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#fef3c7;color:#92400e;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.15);max-width:90vw;display:flex;align-items:center;gap:8px';
-    w.innerHTML = '<i data-lucide="alert-triangle" style="font-size:16px"></i> ' + escHtml(data.message);
+    w.innerHTML = '<i data-ki="alert-triangle" style="font-size:16px"></i> ' + escHtml(data.message);
     document.body.appendChild(w);
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof KIcon !== 'undefined') KIcon.createIcons();
     setTimeout(function(){ w.style.opacity='0'; w.style.transition='opacity .5s'; setTimeout(function(){w.remove();},500); }, 10000);
     // 风控事件触发后刷新通知红点
     updateNotifBadge();
@@ -5197,7 +5204,7 @@ socket.on('scheduler_status', function(data) {
   }
   if (!data.running) {
     var btn = document.getElementById('btnStartAll');
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="chevron-right" style="font-size:12px"></i> 启动'; btn.style.display = ''; if (typeof lucide !== 'undefined') lucide.createIcons(); }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-ki="chevron-right" style="font-size:12px"></i> 启动'; btn.style.display = ''; if (typeof KIcon !== 'undefined') KIcon.createIcons(); }
     var stopBtn = document.getElementById('btnStopAll');
     if (stopBtn) stopBtn.style.display = 'none';
   }
@@ -5355,7 +5362,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // 初始化 Lucide 图标
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  if (typeof KIcon !== 'undefined') KIcon.createIcons();
   if (typeof anime === 'undefined') return;
 
   anime({
@@ -5430,7 +5437,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="login-modal-overlay" id="loginModal">
   <div class="login-modal">
     <div class="login-modal-header">
-      <div class="login-modal-icon">需要登录 Boss 直聘</div>
+      <div class="login-modal-icon"><i data-ki="key"></i><div class="login-modal-icon-text">需要登录 Boss 直聘</div></div>
     </div>
     <div class="login-modal-body">
       <div class="login-modal-desc" id="loginModalDesc">登录已过期或未登录，请在弹出的浏览器中完成登录，然后点击下方按钮继续。</div>
@@ -5446,7 +5453,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="login-modal-overlay" id="archiveModal" style="display:none">
   <div class="login-modal" style="max-width:600px">
     <div class="login-modal-header">
-      <div class="login-modal-icon">历史数据归档（保留最近10天）</div>
+      <div class="login-modal-icon"><i data-ki="archive"></i><div class="login-modal-icon-text">历史数据归档（保留最近10天）</div></div>
     </div>
     <div class="login-modal-body">
       <div class="login-modal-desc" id="archiveModalDesc">加载中...</div>
@@ -5494,7 +5501,7 @@ function loadArchiveList() {
     if (!list) return;
     if (archives.length === 0) {
       list.innerHTML = '<div style="text-align:center;color:var(--fg-3rd);padding:20px">暂无归档数据</div>';
-      if (typeof lucide !== 'undefined') lucide.createIcons();
+      if (typeof KIcon !== 'undefined') KIcon.createIcons();
       return;
     }
     var html = '<table class="greet-table" style="width:100%"><thead><tr><th>日期</th><th>打招呼</th><th>回复</th><th>大小</th><th>操作</th></tr></thead><tbody>';
@@ -5509,7 +5516,7 @@ function loadArchiveList() {
     });
     html += '</tbody></table>';
     list.innerHTML = html;
-    if (typeof lucide !== 'undefined') lucide.createIcons();
+    if (typeof KIcon !== 'undefined') KIcon.createIcons();
   }).catch(function(e){
     if (desc) desc.textContent = '加载失败: ' + e;
   });

@@ -126,3 +126,9 @@ tools/*_probe.json
 *.json.bak*
 bot_config.json.bak*
 *.backup
+
+# 第三方 skill 安装目录、图标中间缓存与临时排查文件（都不该进版本库）
+.qoder/
+.kb/
+flask-version/static/icons/src/
+_tmp_*
