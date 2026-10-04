@@ -2390,6 +2390,35 @@ class ProcessSingleChatRejectionTest:
         loop._process_single_chat({"name": "杨女士"})
         loop._reply_engine.get_reply.assert_called_once()
 
+    def test_存档补出来的会话不被已处理过挡掉(self):
+        """was_handled 只说明"这条消息我们看过"，不说明"我们回过"。
+        欠回复的判据取自存档本身（HR 的话排在最后），再拿它当闸门就等于
+        把当年那次"看过但没回"永久判成已办。2026-10-04 实测：重启后 50 分钟里
+        存档补出来的 20 个会话被它挡掉，真回复只有 8 个。
+        """
+        loop = self._make_loop(
+            live_messages=[_me("您好，我是双一流的本科"), _hr("你好啊，可以聊一聊~")],
+            live_job="数据分析",
+            stored_detail={"chat_name": "杨女士", "job_name": "数据分析"},
+            stored_dialog=[_hr("你好啊，可以聊一聊~")],
+        )
+        loop._state_store.was_handled.return_value = True
+        loop._process_single_chat({"name": "杨女士", "company": "某某科技", "owed": True})
+        loop._reply_engine.get_reply.assert_called_once()
+
+    def test_红点那条路仍然认真防重复(self):
+        """只有存档补出来的才绕过；未读红点走的还是老判据，否则一句 HR 的话
+        会在每轮回复里被回一遍。"""
+        loop = self._make_loop(
+            live_messages=[_me("您好，我是双一流的本科"), _hr("你好啊，可以聊一聊~")],
+            live_job="数据分析",
+            stored_detail={"chat_name": "杨女士", "job_name": "数据分析"},
+            stored_dialog=[_hr("你好啊，可以聊一聊~")],
+        )
+        loop._state_store.was_handled.return_value = True
+        loop._process_single_chat({"name": "杨女士", "company": "某某科技"})
+        loop._reply_engine.get_reply.assert_not_called()
+
     def test_会话身份用姓名加公司(self):
         """同名的两个 HR 分开存：落文件时带上 selected 行上的公司，不再靠岗位猜"""
         loop = self._make_loop(

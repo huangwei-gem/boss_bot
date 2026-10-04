@@ -1796,7 +1796,7 @@ class UnifiedBotLoop:
             # 那等于点进别人的会话；给个不可能的行号，让它老实回报 not_found
             out.append({"name": item["name"], "company": item["company"],
                         "job_name": item["job_name"], "index": -1,
-                        "unread_count": 0, "preview": item["ask"]})
+                        "unread_count": 0, "preview": item["ask"], "owed": True})
             self._log("INFO", f"📌 存档欠回复 [{item['name']}|{item['company']}] "
                               f"已等 {item['age_hours']}h：{item['ask'][:40]}")
         return out[:max(cfg.owed_per_round, 0)]
@@ -2057,7 +2057,7 @@ class UnifiedBotLoop:
             self._reply_engine.wait_human_delay()
 
     def _process_single_chat(self, chat_info: dict):
-        """处理单个未读聊天会话。"""
+        """处理一个会话：候选来自未读红点，或存档里欠着的回复（chat_info["owed"]）。"""
         name = chat_info.get("name", "未知")
         # 这一轮的回复记录与实时推送共用一个时间戳（见 ReplyEngine.begin_event_ts）
         self._reply_engine.begin_event_ts()
@@ -2197,7 +2197,10 @@ class UnifiedBotLoop:
         # 完整消息已通过 merge_messages 合并保存到 message_store，
         # 不再单独调用 append_hr_message 保存最新一条 HR 消息（避免重复）
 
-        if self._state_store.was_handled(name, latest_other_msg):
+        # 存档补出来的（owed）不看这条：was_handled 只说明"这条消息我们看过"，
+        # 而欠回复的判据是"HR 的话排在最后、我们没接"。拿前者当闸门，当年那次
+        # "看过但没回"就永远翻不了账（2026-10-04 实测：50 分钟里挡掉 20 个，只回了 8 个）
+        if not chat_info.get("owed") and self._state_store.was_handled(name, latest_other_msg):
             self._log("INFO", "该消息已处理过，跳过（防重复回复）")
             self._stats.record_skip()
             boss_name = self._chat_handler.get_boss_name()
