@@ -101,13 +101,18 @@ return (function(){
     if (t) { notice = t.slice(0, 60); break; }
   }
   // 浮层提示：BOSS 说"今日沟通次数已用完"这类话只出现在 toast 里，
-  // 不抓下来，日志就只剩一句"抽屉没出现"，谁也分不清是额度、风控还是页面卡住
+  // 不抓下来，日志就只剩一句"抽屉没出现"，谁也分不清是额度、风控还是页面卡住。
+  // 选择器要收窄：第一版写了 [class*="limit"] / [class*="tip-txt"] 这类宽匹配，
+  // 结果抓到过顶导航"南通招聘"，等于给原因串塞进一句无关的话。
   var toast = "";
-  var ts = document.querySelectorAll('[class*="toast"], [class*="Toast"], [role="alert"], '
-                                     + '[class*="tip-txt"], [class*="limit"], [class*="warn-txt"]');
+  var ts = document.querySelectorAll('[class*="toast"], [role="alert"], [class*="dialog-msg"], '
+                                      + '.chat-limit-tips, .limit-tips');
   for (var q = 0; q < ts.length; q++) {
-    var tt = (ts[q].innerText || "").trim();
-    if (tt && vis(ts[q])) { toast = tt.slice(0, 60); break; }
+    var el = ts[q], tt = (el.innerText || "").trim();
+    if (!tt || tt.length > 40 || !vis(el)) continue;
+    var pos = getComputedStyle(el).position;
+    if (pos !== "fixed" && pos !== "absolute") continue;
+    toast = tt; break;
   }
   return JSON.stringify({url: location.href, inputs: inputs, chat_elements: found,
                          buttons: btns, notice: notice, toast: toast});

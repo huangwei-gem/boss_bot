@@ -90,3 +90,14 @@ def test_冷却时长是一个半小时以内():
     """太长就等于今天不再投递；BOSS 的额度按天回，半小时够避开临时限流。"""
     assert 300 <= NO_DRAWER_COOLDOWN_SEC <= 3600
     assert NO_DRAWER_STREAK_LIMIT == 3
+
+
+def test_提示探针不许用宽匹配():
+    """第一版写了 [class*="limit"]、[class*="tip-txt"]，结果抓到过顶导航"南通招聘"，
+    等于往跳过原因里塞一句无关的话。toast 探针只认浮层自己的类名和 role，
+    并且要求它是 fixed/absolute 悬在页面上的。"""
+    import inspect
+    src = inspect.getsource(inspect.getmodule(GreetEngine))
+    probe = src[src.index("var toast ="):src.index("return JSON.stringify({url:")]
+    assert '[class*="limit"]' not in probe and '[class*="tip-txt"]' not in probe
+    assert "position" in probe, "没要求 fixed/absolute，页面里任何元素都能被当提示"
