@@ -77,6 +77,57 @@ class CacheKeyTest:
         assert self._key(veto_only=True) != self._key(veto_only=False)
 
 
+class CodeSideVetoTest:
+    """否决词必须代码直查 JD，不能只信模型自报的 veto_hit。
+
+    开了"只看否决词"之后，唯一的拦人依据就是否决词；而 veto_hit 是模型自己填的
+    字段，它不填就等于全线放行——那样这个开关变成了"什么都拦不住"。
+    """
+
+    def _chain(self, keywords):
+        return AIAnalyzerChain(providers=PROVIDERS, match_threshold=70,
+                              cache_enabled=False, custom_filter_keywords=keywords,
+                              veto_only_match=True)
+
+    def _run(self, chain, job):
+        calls = []
+
+        def fake_call(provider, messages, normalize=True):
+            calls.append(provider)
+            return {"score": 95, "is_match": True, "reason": "模型觉得挺好",
+                    "veto_hit": "", "suggested_greeting": "您好，看到贵司在招…"}
+
+        chain._call_provider_api = fake_call
+        return chain.analyze_job(job), calls
+
+    def test_命中否决词直接拦且不必问模型(self):
+        chain = self._chain(["需坐班"])
+        result, calls = self._run(chain, {
+            "url": "https://zhipin/job/x", "job_name": "数据处理",
+            "description": "需坐班，每天到公司打卡", "requirements": "", "company": "某公司"})
+        assert result["is_match"] is False, result
+        assert "需坐班" in result["reason"]
+        assert calls == [], "命中否决词还去问模型，白烧一次请求"
+
+    def test_岗位名里命中也算(self):
+        chain = self._chain(["主播"])
+        result, calls = self._run(chain, {"url": "u", "job_name": "线上主播助理",
+                                          "description": "", "company": ""})
+        assert result["is_match"] is False and "主播" in result["reason"]
+
+    def test_没命中才去问模型(self):
+        chain = self._chain(["需坐班"])
+        result, calls = self._run(chain, {"url": "u", "job_name": "居家数据标注",
+                                          "description": "时间自由，线上交付", "company": ""})
+        assert len(calls) == 1, "没命中否决词就该正常走 AI"
+        assert result["is_match"] is True
+
+    def test_没设否决词时一律走模型(self):
+        chain = self._chain([])
+        result, calls = self._run(chain, {"url": "u", "job_name": "居家数据标注"})
+        assert len(calls) == 1 and result["is_match"] is True
+
+
 class ConfigWiringTest:
     def test_配置存得下读得出(self, tmp_path):
         cfg_file = tmp_path / "bot_config.json"

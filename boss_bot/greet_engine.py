@@ -676,12 +676,35 @@ class AIAnalyzerChain:
             json.dumps(resume, ensure_ascii=False, sort_keys=True).encode("utf-8")
         ).hexdigest()
 
+    def _veto_keyword_hit(self, job: dict) -> str:
+        """自定义筛选词直接在岗位文本里查，返回命中的那条（没命中返回空串）。
+
+        这些词原来只写进提示词，靠模型自己填 veto_hit。开了"只看否决词"之后
+        它是唯一拦人的依据，模型不填就等于什么都拦不住，所以代码再查一遍。
+        """
+        if not self.custom_filter_keywords:
+            return ""
+        text = "|".join(str(job.get(k) or "") for k in
+                        ("job_name", "description", "requirements", "company"))
+        for kw in self.custom_filter_keywords:
+            word = str(kw or "").strip()
+            if word and word in text:
+                return word
+        return ""
+
     def analyze_job(self, job: dict) -> dict:
         """分析单个岗位。依次尝试所有 provider，直到成功。
 
         AI 完全不可用时返回带 `ai_error` 标记的结果，调用方据此区分
         「AI 说这个岗位不匹配」和「AI 没给出判断」——两者的处理方式相反。
         """
+        hit = self._veto_keyword_hit(job)
+        if hit:
+            # 命中否决词就不用问模型了：既拦住了，也省一次请求
+            return {"score": 0, "is_match": False, "veto_hit": hit,
+                    "reason": f"命中否决词「{hit}」（代码直查 JD）",
+                    "strengths": [], "weaknesses": [], "suggested_greeting": ""}
+
         if not self.providers:
             self.fallback_count += 1
             return self._fallback_result("未配置 AI 接口")
