@@ -510,10 +510,11 @@ def main():
     # ── 6c. 回复补漏/主动跟进的 7 个输入框：回填 + 存回后端（红线：输入框必须真生效）──
     reply_keys = {"advOwedPerRound": "owed_per_round", "advOwedMaxAge": "owed_max_age_hours",
                   "advFollowAfter": "followup_after_hours", "advFollowGap": "followup_gap_hours",
-                  "advFollowMax": "followup_max_times", "advFollowEvery": "followup_every_minutes"}
+                  "advFollowMax": "followup_max_times", "advFollowEvery": "followup_every_minutes",
+                  "advPauseResumeMin": "pause_auto_resume_minutes"}
     empty = [tid for tid in reply_keys
              if not str(js(page, "document.getElementById('%s').value" % tid) or "").strip()]
-    check("跟进配置", "6 个数字框都按配置回填了", not empty, empty or "全部有值")
+    check("跟进配置", "%d 个数字框都按配置回填了" % len(reply_keys), not empty, empty or "全部有值")
     before_max = js(page, '''(function(){var x=new XMLHttpRequest();
       x.open("GET","/api/config",false);x.send();var c=JSON.parse(x.responseText);
       return ((c.config||c).reply||{}).followup_max_times;})()''')
@@ -536,6 +537,20 @@ def main():
     check("跟进配置", "再点一次能关回原值",
           str(bool(get_cfg("(c.reply||{}).followup_enabled"))) == str(bool(on_before)),
           get_cfg("(c.reply||{}).followup_enabled"))
+
+    # 新加的"重要消息暂停自动恢复(分钟)"：填进去要存得进后端，也得回得来
+    before_pr = get_cfg("(c.reply||{}).pause_auto_resume_minutes")
+    js(page, '''(function(){var e=document.getElementById("advPauseResumeMin");
+      e.value="18";e.dispatchEvent(new Event("change"));})()''')
+    time.sleep(2.2)
+    after_pr = get_cfg("(c.reply||{}).pause_auto_resume_minutes")
+    check("回复设置", "暂停自动恢复分钟数存得进后端", str(after_pr) == "18", f"读回 {after_pr}")
+    js(page, '''(function(){var e=document.getElementById("advPauseResumeMin");
+      e.value="%s";e.dispatchEvent(new Event("change"));})()''' % before_pr)
+    time.sleep(2.2)
+    check("回复设置", "改回原值也存回去",
+          str(get_cfg("(c.reply||{}).pause_auto_resume_minutes")) == str(before_pr),
+          get_cfg("(c.reply||{}).pause_auto_resume_minutes"))
 
     # ── 7. 弹窗 / Esc / 主题 / 断线横幅 ──
     js(page, 'showTemplatesModal()')

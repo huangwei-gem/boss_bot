@@ -812,6 +812,67 @@ class BossChatHandler:
 
         return messages
 
+    # 滚到聊天区顶部触发"加载更早"。必须每轮真的滚一次：以前把 while 循环写在
+    # 一段同步 JS 里，同一次执行等不到页面的异步加载，等于只滚了一下。
+    _CHAT_SCROLL_TOP_JS = '''(
+        function() {
+            /* SCROLL_TOP */
+            var box = document.querySelector(".chat-content")
+                   || document.querySelector(".message-list")
+                   || document.querySelector(".chat-message-wrap")
+                   || document.querySelector(".message-wrap");
+            if (!box) return "no-box";
+            box.scrollTop = 0;
+            box.dispatchEvent(new Event("scroll", {bubbles: true}));
+            return "ok";
+        }
+    )()'''
+
+    _CHAT_MSG_COUNT_JS = '''(
+        function() {
+            /* MSG_COUNT */
+            return String(document.querySelectorAll(".message-item").length);
+        }
+    )()'''
+
+    def _chat_msg_count(self):
+        """当前渲染出来的消息条数；读不到返回 None。"""
+        try:
+            raw = self.page.run_js(self._CHAT_MSG_COUNT_JS, as_expr=True)
+            return int(str(raw).strip() or 0)
+        except Exception:
+            return None
+
+    def _load_chat_history(self, max_rounds: int = 5,
+                           settle_ms: int = 600, poll_ms: int = 150):
+        """把更早的历史滚出来：滚一下、看条数长没长，不长就收。
+
+        多数会话根本没有更早的东西，所以关键是"没有就别等"。原来的写法是
+        同步 JS 里空滚一次，再无条件 sleep(轮数 × 800ms) —— 一个会话白等 4 秒，
+        一轮回复里同一个会话还要读两三次，实测单条 2.5~7 秒全花在这上面。
+        """
+        prev = self._chat_msg_count()
+        if prev is None:
+            return
+        for _ in range(max_rounds):
+            try:
+                self.page.run_js(self._CHAT_SCROLL_TOP_JS, as_expr=True)
+            except Exception:
+                return
+            grown = False
+            waited = 0
+            while waited < settle_ms:
+                time.sleep(poll_ms / 1000.0)
+                waited += poll_ms
+                now = self._chat_msg_count()
+                if now is None:
+                    return
+                if now > prev:
+                    prev, grown = now, True
+                    break
+            if not grown:
+                return
+
     def read_all_messages(self, max_scroll_rounds: int = 5,
                           scroll_wait_ms: int = 800) -> List[Dict]:
         """
@@ -834,47 +895,9 @@ class BossChatHandler:
         """
         messages = []
         try:
-            # 第一步：向上滚动加载更多历史消息
-            try:
-                self.page.run_js(f'''(
-                    function() {{
-                        var chatContent = document.querySelector(".chat-content")
-                                     || document.querySelector(".message-list")
-                                     || document.querySelector(".chat-message-wrap")
-                                     || document.querySelector(".message-wrap");
-                        if (!chatContent) return JSON.stringify({{ok: false, reason: "no_container"}});
-                        var prevCount = -1;
-                        var rounds = 0;
-                        // 同步滚动若干次（每次滚动后由 Python 侧等待异步加载）
-                        while (rounds < {max_scroll_rounds}) {{
-                            var curCount = document.querySelectorAll(".message-item").length;
-                            if (curCount === prevCount) {{
-                                // 数量未变，可能已加载完所有历史
-                                break;
-                            }}
-                            prevCount = curCount;
-                            // 滚动到顶部触发加载更多
-                            chatContent.scrollTop = 0;
-                            rounds++;
-                        }}
-                        return JSON.stringify({{ok: true, rounds: rounds, finalCount: prevCount}});
-                    }}
-                )()''', as_expr=True)
-            except Exception as e:
-                logger.debug(f"滚动加载历史异常（不影响后续读取）: {e}")
-
-            # 每次滚动后等待页面异步加载更多历史消息
-            for _ in range(max_scroll_rounds):
-                time.sleep(scroll_wait_ms / 1000.0)
-                # 检查消息数量是否还在增长，若不再增长则提前结束等待
-                try:
-                    cur_count_js = self.page.run_js(
-                        'document.querySelectorAll(".message-item").length', as_expr=True
-                    )
-                    if cur_count_js is None:
-                        break
-                except Exception:
-                    break
+            # 第一步：把更早的历史滚出来（等它长，不长就收）
+            self._load_chat_history(max_rounds=max_scroll_rounds,
+                                    settle_ms=scroll_wait_ms)
 
             # 第二步：读取所有 .message-item 元素
             # mid 与 block 必须一起取：mid 是线上每条都有的唯一键（顺序与去重靠它），
@@ -949,40 +972,9 @@ class BossChatHandler:
         """
         messages: List[Dict] = []
         try:
-            # 第一步：向上滚动加载更多历史消息（与 read_all_messages 同策略）
-            try:
-                self.page.run_js(f'''(
-                    function() {{
-                        var chatContent = document.querySelector(".chat-content")
-                                     || document.querySelector(".message-list")
-                                     || document.querySelector(".chat-message-wrap")
-                                     || document.querySelector(".message-wrap");
-                        if (!chatContent) return JSON.stringify({{ok: false, reason: "no_container"}});
-                        var prevCount = -1;
-                        var rounds = 0;
-                        while (rounds < {max_scroll_rounds}) {{
-                            var curCount = document.querySelectorAll(".message-item").length;
-                            if (curCount === prevCount) break;
-                            prevCount = curCount;
-                            chatContent.scrollTop = 0;
-                            rounds++;
-                        }}
-                        return JSON.stringify({{ok: true, rounds: rounds, finalCount: prevCount}});
-                    }}
-                )()''', as_expr=True)
-            except Exception as e:
-                logger.debug(f"滚动加载历史异常（不影响后续读取）: {e}")
-
-            for _ in range(max_scroll_rounds):
-                time.sleep(scroll_wait_ms / 1000.0)
-                try:
-                    cur_count_js = self.page.run_js(
-                        'document.querySelectorAll(".message-item").length', as_expr=True
-                    )
-                    if cur_count_js is None:
-                        break
-                except Exception:
-                    break
+            # 第一步：把更早的历史滚出来（与 read_all_messages 同一套等待）
+            self._load_chat_history(max_rounds=max_scroll_rounds,
+                                    settle_ms=scroll_wait_ms)
 
             # 第二步：用 JS 提取完整元数据
             # 注意：sender 用三态互斥 class 精确区分（item-friend/item-myself/item-system）

@@ -1018,7 +1018,8 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
             <div class="adv-field-row"><label>最大间隔</label><input class="side-form-input" id="advMsgIntervalMax" type="number" value="8" min="1" max="120" step="1" onchange="onAdvChange()"></div>
             <div class="adv-group-title">投递/回复限制</div>
             <div class="adv-field-row"><label>每小时最多打招呼</label><input class="side-form-input" id="advMaxGreet" type="number" value="30" min="1" max="200" step="1" onchange="onAdvChange()"></div>
-            <div class="adv-field-row"><label>每小时最多回复</label><input class="side-form-input" id="advMaxReply" type="number" value="30" min="1" max="200" step="1" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label>每小时最多回复</label><input class="side-form-input" id="advMaxReply" type="number" value="60" min="1" max="200" step="1" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="HR 发来 offer/面试邀请这类重要消息时机器人会停手等人工，但一句话不该把整个号锁住：超过这个分钟数自动恢复回复。手动按「暂停回复」不受影响，0 = 永不自动恢复">重要消息暂停自动恢复(分钟)</label><input class="side-form-input" id="advPauseResumeMin" type="number" value="10" min="0" max="720" step="1" onchange="onAdvChange()"></div>
             <div class="adv-group-title">回复补漏与主动跟进</div>
             <div class="adv-field-row"><label title="侧栏红点会被启动全量同步清掉，而且它一屏只渲染约 20 行；每轮再从本地存档补几个「HR 最后说话、我们没接」的会话">每轮补回欠回复(个)</label><input class="side-form-input" id="advOwedPerRound" type="number" value="8" min="0" max="50" step="1" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label title="太旧的账不翻：那个 HR 早就不在招了，回过去只是浪费一次发送额度">欠回复最多等(小时)</label><input class="side-form-input" id="advOwedMaxAge" type="number" value="72" min="1" max="720" step="1" onchange="onAdvChange()"></div>
@@ -2919,7 +2920,8 @@ function renderAdvSettings() {
   var _grl = (config.greet && config.greet.rate_limit) || config.rate_limit || {};
   setVal('advMaxGreet', _grl.max_per_hour != null ? _grl.max_per_hour : 30);
   var _rl = config.reply || {};
-  setVal('advMaxReply', _rl.max_replies_per_hour != null ? _rl.max_replies_per_hour : 30);
+  setVal('advMaxReply', _rl.max_replies_per_hour != null ? _rl.max_replies_per_hour : 60);
+  setVal('advPauseResumeMin', _rl.pause_auto_resume_minutes != null ? _rl.pause_auto_resume_minutes : 10);
   setVal('advOwedPerRound', _rl.owed_per_round != null ? _rl.owed_per_round : 8);
   setVal('advOwedMaxAge', _rl.owed_max_age_hours != null ? _rl.owed_max_age_hours : 72);
   setEl('advFollowup', 'toggle-switch' + (_rl.followup_enabled !== false ? ' on' : ''));
@@ -3037,6 +3039,7 @@ function onAdvChange() {
     return isNaN(v) ? def : v;
   }
   config.reply.owed_per_round = _replyNum('advOwedPerRound', 8);
+  config.reply.pause_auto_resume_minutes = _replyNum('advPauseResumeMin', 10);
   config.reply.owed_max_age_hours = _replyNum('advOwedMaxAge', 72);
   config.reply.followup_enabled = document.getElementById('advFollowup').classList.contains('on');
   config.reply.followup_after_hours = _replyNum('advFollowAfter', 8);

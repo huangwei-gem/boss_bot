@@ -377,3 +377,55 @@ class FollowupRoundTest:
         loop._send_followup = MagicMock()
         loop._run_followup_round()
         assert loop._send_followup.call_count == 0
+
+
+class ReplyBudgetTest:
+    """面板上那个"每小时最多回复"必须真管着回复轮，而且只数真发出去的句子。"""
+
+    def test_额度用完本轮收工并说明原因(self, tmp_path, monkeypatch):
+        loop = _make_loop(tmp_path, monkeypatch)
+        loop._running = True
+        loop._reply_paused = False
+        loop._chat_handler.get_unread_chats.return_value = [
+            {"name": "徐女士", "company": "准雀教育", "unread_count": 1, "index": 0},
+        ]
+        loop._reply_engine = MagicMock()
+        loop._reply_engine.can_reply.return_value = False
+        loop._reply_engine._max_replies_per_hour = 60
+        loop._process_single_chat = MagicMock()
+        logs = []
+        loop._log = lambda *a, **k: logs.append(a[-1])
+
+        loop._run_reply_round()
+
+        loop._process_single_chat.assert_not_called()
+        assert any("每小时" in str(x) for x in logs), f"要留下为什么停手的话：{logs}"
+
+    def test_额度还在就照常处理(self, tmp_path, monkeypatch):
+        loop = _make_loop(tmp_path, monkeypatch)
+        loop._running = True
+        loop._reply_paused = False
+        loop._chat_handler.get_unread_chats.return_value = [
+            {"name": "徐女士", "company": "准雀教育", "unread_count": 1, "index": 0},
+        ]
+        loop._reply_engine = MagicMock()
+        loop._reply_engine.can_reply.return_value = True
+        loop._process_single_chat = MagicMock()
+
+        loop._run_reply_round()
+
+        assert loop._process_single_chat.call_count == 1
+
+    def test_每小时额度只数真发出去的句子(self):
+        """跳过、人工接管、侧栏对不上行都不算发送：把这些也计数，
+        一小时内点过 30 个没回成的会话就把真回复全挡在外面。"""
+        import inspect
+        from boss_bot.main_loop import UnifiedBotLoop
+        src = inspect.getsource(UnifiedBotLoop._handle_reply_action)
+        anchor = "if self._chat_handler.send_text(content):"
+        assert anchor in src
+        before, after = src.split(anchor, 1)
+        assert "record_reply()" not in before, \
+            "发送之前不占额度（函数结尾那种无条件计数就是老写法）"
+        assert "self._reply_engine.record_reply()" in after.split("else:", 1)[0], \
+            "发送成功那一路要占额度"

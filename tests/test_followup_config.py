@@ -13,15 +13,19 @@ NEW_KEYS = {
     "followup_gap_hours": 30,
     "followup_max_times": 3,
     "followup_every_minutes": 20,
+    "pause_auto_resume_minutes": 25,
 }
 
 
 def test_默认值就是面板上写的那几个():
     r = UnifiedConfig().reply
-    assert (r.owed_per_round, r.owed_max_age_hours) == (8, 72)
+    assert (r.owed_per_round, r.owed_max_age_hours) == (12, 72)
     assert r.followup_enabled is True
     assert (r.followup_after_hours, r.followup_gap_hours, r.followup_max_times,
             r.followup_every_minutes) == (8, 24, 2, 15)
+    # 每小时额度 60：真实负载一小时 25~30 条，卡在 30 会把攒下来的欠回复挡到下一小时
+    # 重要消息暂停 10 分钟自动恢复：一句 HR 的话不能把整个号的回复轮锁死
+    assert (r.max_replies_per_hour, r.pause_auto_resume_minutes) == (60, 10)
 
 
 def test_to_dict_带着这些键出去():

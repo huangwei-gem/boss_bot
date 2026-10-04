@@ -47,7 +47,7 @@ class UnifiedConfigTest:
         assert cfg.login.wait_timeout == 300
         assert cfg.login.clear_cookies_on_failure is True
         assert cfg.reply.check_interval == 8
-        assert cfg.reply.max_replies_per_hour == 30
+        assert cfg.reply.max_replies_per_hour == 60
         assert cfg.reply.min_delay == 2
         assert cfg.reply.max_delay == 5
         assert cfg.reply.pause_on_important is True
@@ -1812,14 +1812,15 @@ class HotReloadEffectivenessTest:
 class ManualPauseSurvivesTest:
     """人工接管暂停不能被热重载自动解除"""
 
-    def _make_loop(self, reason):
+    def _make_loop(self, reason, at="", minutes=10):
         from boss_bot.main_loop import UnifiedBotLoop
         with patch('boss_bot.main_loop.BrowserManager'):
             loop = UnifiedBotLoop()
         loop._reply_paused = True
+        loop.config.reply.pause_auto_resume_minutes = minutes
         loop._state_store = MagicMock()
         loop._state_store.is_paused.return_value = True
-        loop._state_store.pause_info.return_value = {"reason": reason}
+        loop._state_store.pause_info.return_value = {"reason": reason, "at": at}
         return loop
 
     def test_manual_takeover_not_auto_resumed(self):
@@ -1833,6 +1834,44 @@ class ManualPauseSurvivesTest:
         loop._maybe_auto_resume_reply()
         assert loop._reply_paused is False
         loop._state_store.resume.assert_called_once()
+
+    IMPORTANT = "收到重要消息: 我们有一个面试邀请想确认您到岗时间"
+
+    def test_重要消息的暂停不能把整个号锁死(self):
+        """2026-10-05 实测：账号2 在 00:32 因为一句 HR 消息进人工接管，
+        00:37 还在暂停，中间那轮 9 个待处理会话一个都没点开。
+        暂停原因里那句原文永远含重要关键词，"不再匹配"这条路走不通，
+        所以要靠超时自己恢复——HR 的一句话不等于用户正在电脑前打字。"""
+        from datetime import datetime as DT, timedelta as TD
+        at = (DT.now() - TD(minutes=11)).strftime("%Y-%m-%d %H:%M:%S")
+        loop = self._make_loop(self.IMPORTANT, at=at)
+        loop._maybe_auto_resume_reply()
+        assert loop._reply_paused is False
+        loop._state_store.resume.assert_called_once()
+
+    def test_刚暂停的还在等人工(self):
+        from datetime import datetime as DT, timedelta as TD
+        at = (DT.now() - TD(minutes=3)).strftime("%Y-%m-%d %H:%M:%S")
+        loop = self._make_loop(self.IMPORTANT, at=at)
+        loop._maybe_auto_resume_reply()
+        assert loop._reply_paused is True
+        loop._state_store.resume.assert_not_called()
+
+    def test_手动按下的暂停按钮永不自动恢复(self):
+        from datetime import datetime as DT, timedelta as TD
+        at = (DT.now() - TD(hours=2)).strftime("%Y-%m-%d %H:%M:%S")
+        loop = self._make_loop("手动暂停回复（人工接管）", at=at)
+        loop._maybe_auto_resume_reply()
+        assert loop._reply_paused is True
+        loop._state_store.resume.assert_not_called()
+
+    def test_配成零就是不自动恢复(self):
+        from datetime import datetime as DT, timedelta as TD
+        at = (DT.now() - TD(hours=5)).strftime("%Y-%m-%d %H:%M:%S")
+        loop = self._make_loop(self.IMPORTANT, at=at, minutes=0)
+        loop._maybe_auto_resume_reply()
+        assert loop._reply_paused is True
+        loop._state_store.resume.assert_not_called()
 
     def test_missing_state_store_is_noop(self):
         from boss_bot.main_loop import UnifiedBotLoop

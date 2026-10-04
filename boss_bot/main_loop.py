@@ -1730,6 +1730,14 @@ class UnifiedBotLoop:
                     if not self._running or self._reply_paused:
                         break
 
+                    # 每小时主动发送额度是面板上那个框管的东西，回复轮和跟进轮共用。
+                    # 到点就收工，剩下的下一小时接着做：一路点进去只读不回更糟——
+                    # 红点被自己清掉，存档却一条没回，界面看上去"处理过了"。
+                    if not self._reply_engine.can_reply():
+                        self._log("INFO", f"本轮回复收工：已到每小时上限"
+                                          f"（{self._reply_engine._max_replies_per_hour} 条/小时）")
+                        break
+
                     name = chat_info.get("name", "未知")
                     self._current_chat = name
 
@@ -2433,6 +2441,10 @@ class UnifiedBotLoop:
             self._reply_engine.wait_human_delay()
             if self._chat_handler.send_text(content):
                 self._stats.record_reply(source=meta.get("source", "rule"), action="text")
+                # 只有真发出去的一句才占每小时额度：跳过、人工接管、侧栏对不上行
+                # 都点在函数结尾计数的话，一小时点过 30 个没回成的会话
+                # 就把后面的真回复全挡在门外了
+                self._reply_engine.record_reply()
                 self._stats_dict["reply_sent"] += 1
                 self._msg_store.append_bot_message(
                     name, content, job_name,
@@ -2511,7 +2523,6 @@ class UnifiedBotLoop:
             # [跳过] 系统消息污染。跳过原因仍通过 reply_records 记录。
 
         self._state_store.mark_handled(name, latest_other_msg, action or "none")
-        self._reply_engine.record_reply()
         return True
 
     # ─────────────────────────────────────────────
@@ -2631,6 +2642,23 @@ class UnifiedBotLoop:
         pause_reason = str(pause_info.get("reason", ""))
         if "人工接管" in pause_reason or "手动" in pause_reason:
             return
+
+        # 事件暂停要会自己过期。IMPORTANCE_KEYWORDS 命中的是暂停原因里那句 HR 原文，
+        # 而那句话永远含关键词——所以"不再匹配"这条路几乎不会走到，一条推销消息
+        # 就能把整个号的回复轮一直挂着（实测挂着之后 9 个真提问没人点）。
+        minutes = int(getattr(self.config.reply, "pause_auto_resume_minutes", 0) or 0)
+        at = str(pause_info.get("at") or "")
+        if minutes > 0 and at:
+            try:
+                paused_at = datetime.strptime(at[:19], "%Y-%m-%d %H:%M:%S")
+            except Exception:
+                paused_at = None
+            if paused_at and datetime.now() - paused_at >= timedelta(minutes=minutes):
+                self._reply_paused = False
+                self._state_store.resume()
+                self._log("INFO", f"人工接管已超 {minutes} 分钟，自动恢复回复"
+                                  f"（当初触发的那条：{pause_reason[:40]}）")
+                return
 
         # 检查暂停原因中的消息是否还匹配当前的重要关键词
         from boss_bot.config import IMPORTANCE_KEYWORDS

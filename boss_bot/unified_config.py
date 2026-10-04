@@ -365,16 +365,20 @@ class ReplyConfig:
     enabled: bool = True
     check_interval: int = 8
     context_message_count: int = 10
-    max_replies_per_hour: int = 30
+    max_replies_per_hour: int = 60
     min_delay: int = 2
     max_delay: int = 5
     pause_on_important: bool = True
+    # 重要消息触发的"人工接管"暂停多久自己解除：0 = 永不自动恢复。
+    # 一句 HR 的"可以聊聊吗"不该把整个号的回复轮锁住——实测暂停期间
+    # 后面 9 个真提问一个都没点开。面板上的「暂停回复」按钮不受这条影响。
+    pause_auto_resume_minutes: int = 10
     resume_send_once: bool = True
     # HR 发"我想要和您交换微信/电话号码，您是否同意"那张卡片时要不要点同意；
     # 关掉就是只回话不交换，留给人工决定（联系方式给出去收不回来）
     accept_contact_exchange: bool = True
     # 回复候选的第二条腿：BOSS 的红点会被启动全量同步清掉，只认红点会静默停摆
-    owed_per_round: int = 8             # 每轮最多补回几个存档里欠着的会话
+    owed_per_round: int = 12            # 每轮最多补回几个存档里欠着的会话
     owed_max_age_hours: int = 72        # 太旧的账不翻（对方早就不在招了）
     # 追到面试：我们说完对方沉默够久，主动跟一次，不追就永远停在"已沟通"
     followup_enabled: bool = True
@@ -880,7 +884,8 @@ class UnifiedConfig:
             if "accept_contact_exchange" in reply:
                 self.reply.accept_contact_exchange = bool(reply["accept_contact_exchange"])
             for k in ("owed_per_round", "owed_max_age_hours", "followup_after_hours",
-                      "followup_gap_hours", "followup_max_times", "followup_every_minutes"):
+                      "followup_gap_hours", "followup_max_times", "followup_every_minutes",
+                      "pause_auto_resume_minutes"):
                 if k in reply:
                     setattr(self.reply, k, int(reply[k]))
             if "followup_enabled" in reply:
@@ -1305,6 +1310,7 @@ class UnifiedConfig:
                 "min_delay": self.reply.min_delay,
                 "max_delay": self.reply.max_delay,
                 "pause_on_important": self.reply.pause_on_important,
+                "pause_auto_resume_minutes": self.reply.pause_auto_resume_minutes,
                 "resume_send_once": self.reply.resume_send_once,
                 "accept_contact_exchange": self.reply.accept_contact_exchange,
                 "owed_per_round": self.reply.owed_per_round,
