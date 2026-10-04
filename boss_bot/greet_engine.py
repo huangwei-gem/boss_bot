@@ -100,8 +100,17 @@ return (function(){
     var t = (ns[n].innerText || "").trim();
     if (t) { notice = t.slice(0, 60); break; }
   }
+  // 浮层提示：BOSS 说"今日沟通次数已用完"这类话只出现在 toast 里，
+  // 不抓下来，日志就只剩一句"抽屉没出现"，谁也分不清是额度、风控还是页面卡住
+  var toast = "";
+  var ts = document.querySelectorAll('[class*="toast"], [class*="Toast"], [role="alert"], '
+                                     + '[class*="tip-txt"], [class*="limit"], [class*="warn-txt"]');
+  for (var q = 0; q < ts.length; q++) {
+    var tt = (ts[q].innerText || "").trim();
+    if (tt && vis(ts[q])) { toast = tt.slice(0, 60); break; }
+  }
   return JSON.stringify({url: location.href, inputs: inputs, chat_elements: found,
-                         buttons: btns, notice: notice});
+                         buttons: btns, notice: notice, toast: toast});
 })();
 '''
 
@@ -120,6 +129,11 @@ GREETING_MISSING_REASON = ("未配置招呼语：这个账号没写话术、岗�
 LOGIN_WALL_REASON = "BOSS 要求重新登录（页面出现手机号+短信验证码框），登录态已失效"
 CAPTCHA_REASON = "BOSS 弹出人机验证，需要人工在浏览器窗口完成（超时会自动跳过）"
 DISCONNECTED_REASON = "聊天页与浏览器连接已断开（标签页被关或被别的线程抢走）"
+# 点了沟通既没抽屉也没新标签页：BOSS 把当日沟通额度用完时就是这个表现
+# （实测账号2 今天投到 118 单后从 14:32 起 36 连败，全在这一条上）
+NO_DRAWER_REASON = "点了「立即沟通」但聊天抽屉没在这个标签页里出现（URL 仍停在岗位详情页）"
+NO_DRAWER_STREAK_LIMIT = 3
+NO_DRAWER_COOLDOWN_SEC = 30 * 60
 
 
 _INPUTISH = ("#chat-input", ".chat-input", '[contenteditable="true"]', ".input-area")
@@ -166,12 +180,15 @@ def chat_failure_reason(snap):
         return "BOSS 要求重新登录（页面被送到登录页 %s），登录态已失效" % url[:50]
 
     chat = list(snap.get("chat_elements") or [])
+    # 页面上飘过的提示一起带进原因串：光说"抽屉没出现"分不清是额度、风控还是卡页面
+    tip = str(snap.get("toast") or snap.get("notice") or "").strip()
+    suffix = ("；页面提示：" + tip) if tip else ""
     if chat and not any(c in _INPUTISH for c in chat):
         return "聊天抽屉容器已出现但输入框没渲染（页面卡在半成品状态）"
     if not chat:
         if "job_detail" in url:
-            return "点了「立即沟通」但聊天抽屉没在这个标签页里出现（URL 仍停在岗位详情页）"
-        return "页面已跳走且没有聊天元素（当前 URL: %s）" % (url[:60] or "未知")
+            return NO_DRAWER_REASON + suffix
+        return "页面已跳走且没有聊天元素（当前 URL: %s）%s" % (url[:60] or "未知", suffix)
     return "未找到聊天输入框，页面上有抽屉相关元素: %s" % ", ".join(chat[:4])
 
 
@@ -1206,6 +1223,10 @@ class GreetEngine:
         self.applied_count = 0
         self.skipped_count = 0
         self.total_jobs = 0
+        # 连续"点了沟通没出抽屉"的次数与冷却截止：BOSS 当日沟通额度用完后
+        # 这个失败会一直重复，不停手就是整夜每 7 分钟白跑一趟
+        self._no_drawer_streak = 0
+        self._greet_cooldown_until = 0.0
 
         # 城市字典（从 API 捕获）
         self._city_dict = {}
@@ -1644,6 +1665,7 @@ class GreetEngine:
         try:
             success, fail_reason = self._apply_job(job_info)
             if success:
+                self._no_drawer_streak = 0
                 self.applied_count += 1
                 self._log("SUCCESS", f"✅ 已投递: {job_name}")
                 # _apply_job_inner 在点发送那一刻已经即时记过，这里再记一次
@@ -2191,6 +2213,14 @@ class GreetEngine:
         if not url:
             return False, "岗位URL为空"
 
+        # 冷却期内不再跑"搜索→详情→点沟通"这一整套：连着几次都停在同一个地方，
+        # 说明卡的是账号层面的额度，不是这个岗位
+        left = self._greet_cooldown_until - time.time()
+        if left > 0:
+            return False, (f"打招呼已冷却（连续 {self._no_drawer_streak} 次点了「立即沟通」"
+                           f"没出聊天抽屉，疑似本号当日沟通额度用完），"
+                           f"{int(left // 60) + 1} 分钟后重试")
+
         # 招呼语空缺必须在这里拦住，不能等到输入框那步：BOSS 点「沟通」本身就等于
         # 发起招呼（第二种机制还会立刻自动发平台预设文案），先点再发现没配就晚了。
         # 这里不打日志：原因串会原样返回给 send_greeting，那边"⏭️ 跳过: 岗位（原因:…）"
@@ -2619,6 +2649,17 @@ class GreetEngine:
                 snap = self._chat_snapshot(instance)
                 reason = chat_failure_reason(snap)
                 self._log("WARN", f"未找到输入框｜{reason}")
+                if reason.startswith(NO_DRAWER_REASON):
+                    self._no_drawer_streak += 1
+                    if self._no_drawer_streak >= NO_DRAWER_STREAK_LIMIT:
+                        self._greet_cooldown_until = time.time() + NO_DRAWER_COOLDOWN_SEC
+                        self._log("WARN",
+                                  f"连续 {self._no_drawer_streak} 次点了「立即沟通」都不出聊天抽屉，"
+                                  f"疑似本号当日沟通额度已用完 —— 打招呼冷却 "
+                                  f"{NO_DRAWER_COOLDOWN_SEC // 60} 分钟，别整夜白试；"
+                                  f"想立刻确认就在浏览器窗口里手动点一次「立即沟通」")
+                else:
+                    self._no_drawer_streak = 0
                 # 看得见的类名才值得念一遍；隐藏的登录模板只报个数量，
                 # 否则日志里全是"ipt-phone"，看着就像真掉了登录态
                 raw_inputs = list(snap.get("inputs") or [])
@@ -2904,7 +2945,7 @@ class GreetEngine:
     def _chat_snapshot(self, instance) -> dict:
         """抓一次页面现场（输入框/抽屉/按钮/提示/验证码），取不到就把异常带进去。"""
         snap = {"url": "", "inputs": [], "chat_elements": [], "buttons": [],
-                "notice": "", "captcha": False, "captcha_why": "", "error": ""}
+                "notice": "", "toast": "", "captcha": False, "captcha_why": "", "error": ""}
         try:
             got = json.loads(instance.run_js(CHAT_SNAPSHOT_JS) or "{}")
             if isinstance(got, dict):
