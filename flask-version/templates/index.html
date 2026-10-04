@@ -6,11 +6,8 @@
 <title>Boss直聘 · 智能投递助手</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><defs><linearGradient id=%22g%22 x1=%220%%22 y1=%220%%22 x2=%22100%%22 y2=%22100%%22><stop offset=%220%%22 stop-color=%22%235b7cfa%22/><stop offset=%22100%%22 stop-color=%22%231e4bd2%22/></linearGradient></defs><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22url(%23g)%22/><text x=%2250%22 y=%2265%22 text-anchor=%22middle%22 font-size=%2250%22 font-weight=%22bold%22 fill=%22%23fff%22 font-family=%22Arial%22>B</text></svg>">
 <script src="/static/vendor/socket.io.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
+<script src="/static/vendor/anime.min.js"></script>
 <script src="/static/icons/icons.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
 <style>
 /* taste-skill: DESIGN_VARIANCE=5, MOTION_INTENSITY=4, VISUAL_DENSITY=5
    Dual theme system — Light / Dark */
@@ -28,19 +25,19 @@
 [data-theme="light"], :root{
   --r-sm:8px;--r-md:14px;--r-lg:20px;--dur:.2s;--ease:cubic-bezier(.4,0,.2,1);--header-h:56px;
   --bg:#eef1fb;--surface:rgba(255,255,255,.62);--surface-soft:rgba(255,255,255,.45);--surface-hover:rgba(255,255,255,.8);
-  --accent:#5b7cfa;--accent-light:rgba(91,124,250,.14);--accent-hover:#4365e8;
-  --success:#10b981;--success-bg:rgba(16,185,129,.15);--warning:#f59e0b;--warning-bg:rgba(245,158,11,.15);
-  --danger:#ef4444;--danger-bg:rgba(239,68,68,.14);--info:#3b82f6;--info-bg:rgba(59,130,246,.14);
-  --fg:#23233a;--fg-2nd:#555a70;--fg-3rd:#8b90a3;--fg-4th:#b0b4c4;
+  --accent:#3f5fd6;--accent-light:rgba(91,124,250,.14);--accent-hover:#3450c0;
+  --success:#067a55;--success-bg:rgba(16,185,129,.15);--warning:#a45a06;--warning-bg:rgba(245,158,11,.15);
+  --danger:#c62b2b;--danger-bg:rgba(239,68,68,.14);--info:#1d63d8;--info-bg:rgba(59,130,246,.14);
+  --fg:#23233a;--fg-2nd:#555a70;--fg-3rd:#62677a;--fg-4th:#666b80;
   --bd:rgba(255,255,255,.6);--bd-2:rgba(160,170,220,.35);
   --sh-sm:0 1px 3px rgba(30,40,80,.06);--sh:0 4px 14px rgba(30,40,80,.07),0 1px 2px rgba(30,40,80,.04);
   --sh-md:0 8px 28px rgba(30,40,80,.09);--sh-lg:0 20px 60px rgba(30,40,80,.14);
   --side-bg:rgba(255,255,255,.5);
   --side-text:#23233a;--side-input-bg:rgba(255,255,255,.5);--side-input-bd:rgba(160,170,220,.25);
-  --side-label:rgba(70,80,120,.45);
-  --chip-bg:rgba(91,124,250,.14);--chip-text:#5b7cfa;--chip-del:rgba(91,124,250,.35);
+  --side-label:#535a72;
+  --chip-bg:rgba(91,124,250,.14);--chip-text:#3f5fd6;--chip-del:rgba(91,124,250,.35);
   --modal-overlay:rgba(30,40,80,.25);--scrollbar-thumb:rgba(160,170,220,.5);
-  --img-checked-bd:#5b7cfa;--img-checked-bg:rgba(91,124,250,.1);
+  --img-checked-bd:#3f5fd6;--img-checked-bg:rgba(91,124,250,.1);
   --glass-blur:blur(30px) saturate(185%);
   /* 兼容早期内联样式里用的变量名，统一映射到主题 token */
   --border-2nd:var(--bd-2);--bg-1st:rgba(255,255,255,.72);--fg-1st:var(--fg);--bg-2:var(--surface-soft);
@@ -62,13 +59,13 @@
   --accent:#6b96ff;--accent-light:rgba(107,150,255,.16);--accent-hover:#8aadff;
   --success:#34d399;--success-bg:rgba(52,211,153,.16);--warning:#fbbf24;--warning-bg:rgba(251,191,36,.16);
   --danger:#f87171;--danger-bg:rgba(248,113,113,.16);--info:#60a5fa;--info-bg:rgba(96,165,250,.16);
-  --fg:#eef0f8;--fg-2nd:#b3b9cc;--fg-3rd:#7a8098;--fg-4th:#545a70;
+  --fg:#eef0f8;--fg-2nd:#b3b9cc;--fg-3rd:#a8aebf;--fg-4th:#8b91a8;
   --bd:rgba(255,255,255,.09);--bd-2:rgba(255,255,255,.16);
   --sh-sm:0 1px 3px rgba(0,0,0,.3);--sh:0 4px 14px rgba(0,0,0,.35),0 1px 2px rgba(0,0,0,.3);
   --sh-md:0 8px 28px rgba(0,0,0,.45);--sh-lg:0 20px 60px rgba(0,0,0,.55);
   --side-bg:rgba(22,25,40,.55);
   --side-text:#eef0f8;--side-input-bg:rgba(255,255,255,.06);--side-input-bd:rgba(255,255,255,.1);
-  --side-label:rgba(255,255,255,.4);
+  --side-label:rgba(255,255,255,.68);
   --chip-bg:rgba(107,150,255,.18);--chip-text:#6b96ff;--chip-del:rgba(107,150,255,.35);
   --modal-overlay:rgba(0,0,0,.6);--scrollbar-thumb:rgba(255,255,255,.18);
   --img-checked-bd:#6b96ff;--img-checked-bg:rgba(107,150,255,.14);
@@ -93,11 +90,18 @@ body{transition:background-color .3s ease,color .3s ease}
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+/* 数据密集面板的公共底线：焦点不被顶栏压住、数字不跳字、小按钮有能点中的面积 */
+html{scroll-padding-top:64px}
+.acc-counts,.tab-count,.badge-count,.notif-badge,.stat-sub{font-variant-numeric:tabular-nums}
+.btn-sm,.side-btn-sm,.file-btn,.record-tab,.scope-chip,.adv-toggle{min-height:28px}
+.file-btn{display:inline-flex;align-items:center;gap:5px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
 
 /* Base */
 html,body{height:100%}
 body{transition:background-color .3s ease,color .3s ease}
-body{font-family:Inter,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans SC,sans-serif;font-size:13.5px;line-height:1.55;background:var(--bg);color:var(--fg);display:flex;overflow:hidden;-webkit-font-smoothing:antialiased}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei UI","Microsoft YaHei",Roboto,"Helvetica Neue","Noto Sans SC",sans-serif;font-size:13.5px;line-height:1.55;background:var(--bg);color:var(--fg);display:flex;overflow:hidden;-webkit-font-smoothing:antialiased}
 body{background:
   radial-gradient(1100px 700px at 8% -5%, rgba(120,150,255,.16), transparent 60%),
   radial-gradient(900px 650px at 108% 10%, rgba(255,170,210,.18), transparent 55%),
@@ -133,8 +137,8 @@ a{color:var(--accent);text-decoration:none}
 /* Advanced settings collapsible */
 .adv-toggle{cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 4px;border-radius:4px;transition:all var(--dur) var(--ease);font-size:10.5px;font-weight:600;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em;margin-top:14px;width:100%;border:none;background:none}
 .adv-toggle:hover{background:var(--surface-hover);color:var(--fg)}
-.adv-toggle .arrow{transition:transform .2s ease;font-size:12px;margin-left:auto}
-.adv-toggle.open .arrow{transform:rotate(90deg)}
+.adv-toggle .arrow{transition:rotate .2s ease;font-size:12px;margin-left:auto;transform-origin:50% 50%}
+.adv-toggle.open .arrow{rotate:90deg}
 .adv-section{overflow:hidden;max-height:0;transition:max-height .3s ease;display:flex;flex-direction:column;gap:8px}
 .adv-section.open{max-height:2000px}
 .adv-field-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--fg-2nd);padding:2px 0}
@@ -147,10 +151,10 @@ a{color:var(--accent);text-decoration:none}
 .account-tab:hover{background:var(--surface-hover);color:var(--fg);box-shadow:var(--sh-sm)}
 /* 登录按钮是这一行的主要动作，行本身不再响应点击（切数据在右上角） */
 .acc-login-btn{border:1px solid var(--side-input-bd);background:var(--surface);color:var(--fg-2nd);font-size:10px;font-weight:600;padding:1px 8px;border-radius:10px;cursor:pointer;margin-left:2px}
-.acc-login-btn:hover{background:rgba(91,124,250,.16);color:#5b7cfa;border-color:rgba(91,124,250,.35)}
-.account-tab.active{background:rgba(91,124,250,.15);color:#5b7cfa;border-color:rgba(91,124,250,.32);box-shadow:0 2px 8px rgba(91,124,250,.15)}
+.acc-login-btn:hover{background:rgba(91,124,250,.16);color:var(--accent);border-color:rgba(91,124,250,.35)}
+.account-tab.active{background:rgba(91,124,250,.15);color:var(--accent);border-color:rgba(91,124,250,.32);box-shadow:0 2px 8px rgba(91,124,250,.15)}
 .account-tab .badge{display:inline-block;font-size:9px;padding:1px 5px;border-radius:8px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.5);font-weight:600;margin-left:4px}
-.account-tab.active .badge{background:rgba(91,124,250,.25);color:#5b7cfa}
+.account-tab.active .badge{background:rgba(91,124,250,.25);color:var(--accent)}
 .account-tab .acc-status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .account-tab .acc-status-dot.idle{background:var(--fg-4th)}
 .account-tab .acc-status-dot.running{background:var(--success);animation:pulse 1.5s ease-in-out infinite}
@@ -176,7 +180,7 @@ a{color:var(--accent);text-decoration:none}
 /* File upload */
 .file-input-wrap{display:flex;flex:1;gap:4px}
 .file-input-wrap .side-form-input{flex:1}
-.file-btn{flex-shrink:0;padding:6px 10px;font-size:10.5px;font-weight:500;border-radius:4px;background:rgba(91,124,250,.2);color:#5b7cfa;border:1px solid rgba(91,124,250,.25);transition:all var(--dur) var(--ease);white-space:nowrap}
+.file-btn{flex-shrink:0;padding:6px 10px;font-size:10.5px;font-weight:500;border-radius:4px;background:rgba(91,124,250,.2);color:var(--accent);border:1px solid rgba(91,124,250,.25);transition:all var(--dur) var(--ease);white-space:nowrap}
 .file-btn:hover{background:rgba(91,124,250,.32)}
 
 /* Toggle switch — 统一样式，OFF状态清晰可见 */
@@ -297,7 +301,7 @@ a{color:var(--accent);text-decoration:none}
 .stat-card .stat-icon{font-size:20px;flex-shrink:0;opacity:.8}
 .stat-card .stat-body{flex:1;min-width:0}
 .stat-label{display:flex;align-items:center;gap:5px;white-space:nowrap;font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fg-3rd)}
-.stat-value{font-size:20px;font-weight:700;margin:1px 0;letter-spacing:-.03em;color:var(--fg);line-height:1.1}
+.stat-value{font-size:20px;font-weight:700;margin:1px 0;letter-spacing:-.03em;color:var(--fg);line-height:1.1;font-variant-numeric:tabular-nums}
 .stat-sub{font-size:10px;color:var(--fg-3rd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 
 /* Action bar */
@@ -365,7 +369,7 @@ a{color:var(--accent);text-decoration:none}
 /* Modal large variant */
 .modal-large{max-width:800px;width:90%}
 .modal-large textarea{width:100%;padding:8px 12px;font-size:12px;border:1px solid var(--bd-2);border-radius:8px;background:var(--side-input-bg);color:var(--fg);resize:vertical;box-sizing:border-box;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-.modal-large textarea:focus{outline:none;border-color:var(--accent)}
+.modal-large textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light)}
 
 /* Excel file list */
 .excel-file-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--bd-2);border-radius:8px;margin-bottom:8px}
@@ -635,8 +639,8 @@ a{color:var(--accent);text-decoration:none}
 .notif-actions button:hover{background:var(--surface-hover);color:var(--fg)}
 .notif-center-header{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:6px;padding:6px 4px;border-radius:4px;transition:all var(--dur) var(--ease);font-size:10.5px;font-weight:600;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em;margin-top:14px;width:100%;border:none;background:none}
 .notif-center-header:hover{background:var(--surface-hover);color:var(--fg)}
-.notif-center-header .arrow{transition:transform .2s ease;font-size:12px;margin-left:auto}
-.notif-center-header.open .arrow{transform:rotate(90deg)}
+.notif-center-header .arrow{transition:rotate .2s ease;font-size:12px;margin-left:auto;transform-origin:50% 50%}
+.notif-center-header.open .arrow{rotate:90deg}
 .notif-center-header>span:first-child{display:inline-flex;align-items:center;gap:6px}
 
 /* Login Modal */
@@ -984,7 +988,7 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
     </div>
     <div class="side-footer">
       <div class="status-dot idle" id="sbarDot"></div>
-      <span class="status-text" id="sbarStatus">就绪</span>
+      <span class="status-text" id="sbarStatus" role="status" aria-live="polite" aria-atomic="true">就绪</span>
       <span class="status-label" id="currentTaskLabel"></span>
     </div>
   </div>
@@ -1410,7 +1414,7 @@ function adoptAiReview(i, btn) {
   }).then(function(r){return r.json()}).then(function(d) {
     btn.disabled = false;
     if (d && d.status === 'ok') {
-      logToPanel('✓ ' + (d.message || '已采纳'), 'success');
+      logToPanel(d.message || '已采纳', 'success');
       loadAiReview();
       loadConfig();
     } else {
@@ -2625,6 +2629,8 @@ var LOGIN_REASON_LABEL = {
   session_lost: '登录态失效（被踢下线或要验证码）'
 };
 
+// 状态点只有颜色，颜色之外要有字能说清同一件事
+var ACC_STATE_WORD = {idle:'空闲', running:'运行', starting:'启动', paused:'暂停', needs_login:'待登录'};
 function accDotClass(st) {
   if (!st || !st.phase) return st && st.running ? 'running' : 'idle';
   if (st.phase === 'waiting_login') return 'needs_login';
@@ -2944,8 +2950,8 @@ function updateGreetingModeHint() {
   var txt = ((document.getElementById('accGreeting') || {}).value || '').trim();
   var auto = row.greeting_mode === '自动生成的默认';
   var msg = !txt ? '空着也能发：发送前会按本账号的城市/方向/技能自动生成一条默认'
-    : (auto ? '● 这条是系统按本账号信息生成的默认，改成你自己的话就以你的为准'
-            : '● 这条是你自己写的，发送时优先用你写的');
+    : (auto ? '这条是系统按本账号信息生成的默认，改成你自己的话就以你的为准'
+            : '这条是你自己写的，发送时优先用你写的');
   if (el.textContent !== msg) el.textContent = msg;
   el.style.color = auto ? 'var(--warning)' : 'var(--fg-4th)';
 }
@@ -3585,10 +3591,11 @@ function renderMetricsScope() {
     var txt = a.name + (a.enabled === false ? '（停用）' : '');
     if (nameEl.textContent !== txt) nameEl.textContent = txt;
     var dot = b.querySelector('.acc-status-dot');
-    var dotCls = 'acc-status-dot ' + accDotClass(st);
-    if (dot && dot.className !== dotCls) dot.className = dotCls;
-    var numTxt = (st.running || s.greet_applied || s.reply_sent)
-      ? '投' + (s.greet_applied || 0) + '·回' + (s.reply_sent || 0) : '';
+    var stCls = accDotClass(st);
+    if (dot && dot.className !== 'acc-status-dot ' + stCls) dot.className = 'acc-status-dot ' + stCls;
+    if (dot) dot.title = accTitle(st, a.name || '');
+    var numTxt = ACC_STATE_WORD[stCls] || '';
+    if (st.running || s.greet_applied || s.reply_sent) numTxt += '·投' + (s.greet_applied || 0) + '·回' + (s.reply_sent || 0);
     if (numEl.textContent !== numTxt) numEl.textContent = numTxt;
     numEl.style.display = numTxt ? '' : 'none';
   });
@@ -3831,7 +3838,7 @@ function buildGreetRowHtml(data) {
       // skip_reason 限长 200 字，四段挤进去会互相顶掉
       var probe = data.ai_probe || null;
       if (probe && probe.blocking_requirement) {
-        skipReasonHtml += '<details class="greet-probe"><summary>🔎 追问原因</summary>'
+        skipReasonHtml += '<details class="greet-probe"><summary><i data-ki="probe"></i> 追问原因</summary>'
           + '<div class="greet-probe-body">'
           + '<div><b>卡在哪条硬性要求</b>' + escHtml(probe.blocking_requirement) + '</div>'
           + '<div><b>简历缺的证据</b>' + escHtml(probe.evidence_missing || '—') + '</div>'
@@ -4331,13 +4338,13 @@ function renderBossMessageBubble(msg, chatName) {
       : '<div class="boss-msg-card"><div class="boss-msg-card-title">[图片]</div>'
         + '<div class="boss-msg-card-sub">' + escHtml(cardText) + '</div></div>';
   } else if (type === 'resume') {
-    body = '<div class="boss-msg-card"><div class="boss-msg-card-title">📎 附件简历</div>'
+    body = '<div class="boss-msg-card"><div class="boss-msg-card-title"><i data-ki="edit-resume"></i> 附件简历</div>'
          + '<div class="boss-msg-card-sub">' + escHtml(cardText) + '</div></div>';
   } else if (type === 'job_card') {
     body = '<div class="boss-msg-card"><div class="boss-msg-card-title">职位卡片</div>'
          + '<div class="boss-msg-card-sub">' + escHtml(cardText) + '</div></div>';
   } else if (type === 'voice') {
-    body = '<div class="boss-msg-card"><div class="boss-msg-card-title">🔊 语音消息</div>'
+    body = '<div class="boss-msg-card"><div class="boss-msg-card-title"><i data-ki="volume"></i> 语音消息</div>'
          + '<div class="boss-msg-card-sub">' + escHtml(cardText) + '</div></div>';
   } else if (kind === 'card') {
     // 卡片就显示线上那段整块文本（PK 分析、职位卡等）。不加"卡片消息"这类线上
