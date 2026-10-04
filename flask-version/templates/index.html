@@ -14,12 +14,12 @@
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
 /* 图标统一走本地雪碧图（static/icons/ui-sprite.svg，画风 Koboyo Original）：
-   图标本体一律 currentColor，所以尺寸用 em 跟字号走，颜色跟按钮/文字走。 */
-.ki{width:1em;height:1em;flex:none;display:inline-block;vertical-align:-0.15em;overflow:visible}
-.ki-lg{width:1em;height:1em}
+   图标本体一律 currentColor，所以尺寸跟字号走、颜色跟按钮/文字走，暗色模式不用另存一套。
+   下限 15px：这一屏里大量标签只有 9.5~12px，纯 1em 会把图标缩到看不清。 */
+.ki{width:1em;height:1em;min-width:15px;min-height:15px;flex:none;display:inline-block;vertical-align:-0.22em;overflow:visible}
 .ki-spin{animation:kiSpin .9s linear infinite;transform-origin:50% 50%}
 @keyframes kiSpin{to{transform:rotate(360deg)}}
-[data-ki]{width:1em;height:1em;display:inline-block;vertical-align:-0.15em}
+[data-ki]{width:1em;height:1em;min-width:15px;min-height:15px;display:inline-block;vertical-align:-0.22em}
 
 /* Light Theme - default when no data-theme set */
 [data-theme="light"], :root{
@@ -38,7 +38,7 @@
   --chip-bg:rgba(91,124,250,.14);--chip-text:#3f5fd6;--chip-del:rgba(91,124,250,.35);
   --modal-overlay:rgba(30,40,80,.25);--scrollbar-thumb:rgba(160,170,220,.5);
   --img-checked-bd:#3f5fd6;--img-checked-bg:rgba(91,124,250,.1);
-  --glass-blur:blur(30px) saturate(185%);
+  --glass-blur:blur(18px) saturate(160%);
   /* 兼容早期内联样式里用的变量名，统一映射到主题 token */
   --border-2nd:var(--bd-2);--bg-1st:rgba(255,255,255,.72);--fg-1st:var(--fg);--bg-2:var(--surface-soft);
   /* 毛玻璃 v2：边缘高光 + 内投影 + 分层阴影，避免"灰蒙蒙一块" */
@@ -69,7 +69,7 @@
   --chip-bg:rgba(107,150,255,.18);--chip-text:#6b96ff;--chip-del:rgba(107,150,255,.35);
   --modal-overlay:rgba(0,0,0,.6);--scrollbar-thumb:rgba(255,255,255,.18);
   --img-checked-bd:#6b96ff;--img-checked-bg:rgba(107,150,255,.14);
-  --glass-blur:blur(30px) saturate(175%);
+  --glass-blur:blur(18px) saturate(150%);
   --border-2nd:var(--bd-2);--bg-1st:rgba(30,34,54,.86);--fg-1st:var(--fg);--bg-2:var(--surface-soft);
   --ring:rgba(255,255,255,.11);--ring-2:rgba(255,255,255,.18);
   --inset-hi:inset 0 1px 1px rgba(255,255,255,.14);
@@ -102,15 +102,15 @@ html{scroll-padding-top:64px}
 html,body{height:100%}
 body{transition:background-color .3s ease,color .3s ease}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei UI","Microsoft YaHei",Roboto,"Helvetica Neue","Noto Sans SC",sans-serif;font-size:13.5px;line-height:1.55;background:var(--bg);color:var(--fg);display:flex;overflow:hidden;-webkit-font-smoothing:antialiased}
+/* 背景只留一个冷光源：三团粉/青彩斑在毛玻璃后面会糊成脏色，
+   也把他要的"Codex 那种"克制感冲没了 */
 body{background:
-  radial-gradient(1100px 700px at 8% -5%, rgba(120,150,255,.16), transparent 60%),
-  radial-gradient(900px 650px at 108% 10%, rgba(255,170,210,.18), transparent 55%),
-  radial-gradient(1000px 800px at 50% 120%, rgba(120,240,220,.14), transparent 60%),
+  radial-gradient(1200px 760px at 6% -8%, rgba(120,150,255,.13), transparent 62%),
+  radial-gradient(900px 620px at 96% 108%, rgba(150,170,220,.09), transparent 60%),
   var(--bg);}
 [data-theme="dark"] body{background:
-  radial-gradient(1100px 700px at 8% -5%, rgba(90,120,255,.22), transparent 60%),
-  radial-gradient(900px 650px at 108% 10%, rgba(200,110,190,.18), transparent 55%),
-  radial-gradient(1000px 800px at 50% 120%, rgba(60,190,180,.14), transparent 60%),
+  radial-gradient(1200px 760px at 6% -8%, rgba(96,126,255,.20), transparent 62%),
+  radial-gradient(900px 620px at 96% 108%, rgba(120,150,220,.10), transparent 60%),
   var(--bg);}
 button{cursor:pointer;border:none;background:none;font:inherit;color:inherit}
 input,textarea,select{font:inherit;color:inherit;outline:none;border:none;background:transparent;width:100%}
@@ -145,6 +145,8 @@ a{color:var(--accent);text-decoration:none}
 .adv-field-row label{flex-shrink:0;font-size:10.5px;font-weight:500;color:var(--side-label);min-width:56px}
 .adv-field-row .side-form-input{flex:1}
 .adv-group-title{font-size:10px;font-weight:600;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em;padding:4px 0 2px;border-bottom:1px solid var(--side-input-bd)}
+/* 左栏说明文字统一一档：10px 次级色，正文一句说完，细节进 title */
+.side-hint{font-size:10px;line-height:1.5;color:var(--fg-4th);margin-top:2px}
 
 /* Account tabs */
 .account-tab{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;font-size:11.5px;font-weight:500;border-radius:20px;background:var(--side-input-bg);color:var(--fg-2nd);border:1px solid var(--side-input-bd);transition:all var(--dur) var(--ease);cursor:pointer;margin-right:4px;margin-bottom:4px}
@@ -441,10 +443,11 @@ a{color:var(--accent);text-decoration:none}
 .boss-chat-header-name{font-size:14px;font-weight:600;color:var(--fg)}
 .boss-chat-header-job{font-size:11.5px;color:var(--fg-3rd);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .boss-chat-header-actions{display:flex;gap:6px;align-items:center}
-.boss-chat-header-actions .chat-header-btn{font-size:11px;padding:4px 10px;border-radius:6px;background:var(--surface);border:1px solid var(--bd);color:var(--fg-2nd);cursor:pointer;transition:all var(--dur) var(--ease)}
+.boss-chat-header-actions .chat-header-btn{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;border-radius:6px;background:var(--surface);border:1px solid var(--bd);color:var(--fg-2nd);cursor:pointer;transition:all var(--dur) var(--ease);min-height:28px}
 .boss-chat-header-actions .chat-header-btn:hover{background:var(--surface-hover);color:var(--fg)}
 .boss-chat-messages{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:14px;min-height:0}
-.boss-chat-messages-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--fg-4th);font-size:13px}
+.boss-chat-messages-empty{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--fg-4th);font-size:13px}
+.boss-chat-messages-empty .ki{opacity:.45}
 .boss-msg-row{display:flex;gap:8px;align-items:flex-start;animation:msgFadeIn .25s ease}
 .boss-msg-row.hr{justify-content:flex-start}
 .boss-msg-row.me{justify-content:flex-end}
@@ -458,12 +461,12 @@ a{color:var(--accent);text-decoration:none}
 .boss-msg-row.me .boss-msg-bubble{background:linear-gradient(135deg,#5b7cfa,#4365e8);color:#fff;border-top-right-radius:4px}
 .boss-msg-row.system .boss-msg-bubble{background:var(--warning-bg);color:var(--warning);font-size:11.5px;padding:6px 12px;border-radius:8px;max-width:90%;text-align:center}
 /* 送达 / 已读：BOSS 在我方气泡下方显示，之前完全没渲染 */
-.boss-msg-status{font-size:11px;color:var(--fg-3rd);margin-left:6px}
+.boss-msg-status{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--fg-3rd);margin-left:6px}
 .boss-msg-status.read{color:var(--success)}
 /* 非文字消息：图片缩略图、简历/职位卡片、系统条 */
 .boss-msg-img{max-width:180px;max-height:220px;border-radius:8px;display:block;border:1px solid var(--bd-2)}
 .boss-msg-card{border:1px solid var(--bd-2);border-radius:10px;padding:9px 12px;background:var(--bg-2);font-size:12.5px;line-height:1.45;max-width:280px}
-.boss-msg-card-title{font-weight:600;color:var(--fg);margin-bottom:3px;word-break:break-all}
+.boss-msg-card-title{display:flex;align-items:center;gap:6px;font-weight:600;color:var(--fg);margin-bottom:3px;word-break:break-all}
 .boss-msg-card-sub{font-size:11.5px;color:var(--fg-3rd)}
 .boss-msg-card-text{font-size:12.5px;color:var(--fg-2nd);line-height:1.45;white-space:pre-wrap;word-break:break-word}
 .boss-msg-divider{text-align:center;font-size:11px;color:var(--fg-3rd);margin:10px 0}
@@ -483,13 +486,13 @@ a{color:var(--accent);text-decoration:none}
 .boss-chat-empty-text{font-size:13px;font-weight:500}
 .boss-chat-empty-hint{font-size:11px;color:var(--fg-4th)}
 @keyframes msgFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.boss-chat-loading{padding:20px;text-align:center;color:var(--fg-3rd);font-size:12px}
+.boss-chat-loading{display:flex;align-items:center;justify-content:center;gap:6px;padding:20px;text-align:center;color:var(--fg-3rd);font-size:12px}
 /* 底部监控视图提示（一比一复刻BOSS直聘聊天页面底部输入区，但只读） */
-.boss-chat-footer{flex-shrink:0;padding:10px 18px;border-top:1px solid var(--bd);background:var(--surface-soft);display:flex;align-items:center;justify-content:center}
+.boss-chat-footer{flex-shrink:0;padding:10px 18px;border-top:1px solid var(--bd);background:var(--surface-soft);display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
 .boss-chat-footer-hint{font-size:11.5px;color:var(--fg-4th);font-style:italic}
 /* 引擎自记标记（[简历已发送] 这类线上没有的条目）：居中小字，不伪装成气泡 */
 .boss-msg-row.engine-mark{justify-content:center}
-.boss-msg-mark{font-size:11px;color:var(--fg-4th);background:var(--bd-1);
+.boss-msg-mark{font-size:11px;color:var(--fg-4th);background:var(--surface-soft);
   border-radius:10px;padding:3px 10px;max-width:80%;text-align:center}
 .boss-chat-marks{font-size:11.5px;color:var(--fg-3rd);display:flex;align-items:center;
   gap:5px;cursor:pointer;user-select:none}
@@ -750,15 +753,16 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
   -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
   animation:toastIn var(--dur-2) var(--ease-spring) both;pointer-events:auto}
 .toast.out{animation:toastOut .24s var(--ease) forwards}
-.toast i{width:14px;height:14px;flex-shrink:0}
+/* 图标换进雪碧图后元素已是 <svg class="ki">，选择器再写 `i` 就一条都不中（颜色会退回正文色） */
+.toast .ki{flex-shrink:0}
 .toast.ok{border-left:3px solid var(--success)}
-.toast.ok i{color:var(--success)}
+.toast.ok .ki{color:var(--success)}
 .toast.err{border-left:3px solid var(--danger)}
-.toast.err i{color:var(--danger)}
+.toast.err .ki{color:var(--danger)}
 .toast.warn{border-left:3px solid var(--warning)}
-.toast.warn i{color:var(--warning)}
+.toast.warn .ki{color:var(--warning)}
 .toast.info{border-left:3px solid var(--accent)}
-.toast.info i{color:var(--accent)}
+.toast.info .ki{color:var(--accent)}
 @keyframes toastIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
 @keyframes toastOut{to{opacity:0;transform:translateY(6px) scale(.97)}}
 .btn[disabled]{opacity:.55;pointer-events:none}
@@ -778,7 +782,7 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
 .greet-alert{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 12px;
   padding:9px 12px;border-radius:10px;background:var(--warning-bg);
   border:1px solid var(--warning-bg);color:var(--warning);font-size:12px;line-height:1.6}
-.greet-alert i{flex-shrink:0}
+.greet-alert .ki{flex-shrink:0}
 .greet-alert .greet-alert-names{font-weight:650}
 .greet-alert .btn{margin-left:auto;flex-shrink:0}
 
@@ -801,6 +805,10 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
   .boss-msg-row,.pulse-once{animation:none}
 }
 </style>
+<script>
+// 首帧就按上次的主题画：以前 HTML 写死 light，深色要等接口回来才改，每次开屏先白一下再转暗
+try{document.documentElement.setAttribute('data-theme',localStorage.getItem('boss-theme')||'dark')}catch(e){}
+</script>
 </head>
 <body>
 <button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="切换菜单"><i data-ki="menu"></i></button>
@@ -840,20 +848,23 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
                   title="按这个账号自己的城市/岗位方向/简历画像重生成一条默认招呼语"><i data-ki="regenerate"></i>重新生成</button>
         </div>
         <div id="accGreetingMode" style="font-size:10px;margin-top:2px;line-height:1.5;color:var(--fg-4th)"></div>
-        <div style="font-size:10px;color:var(--fg-4th);margin-top:2px;line-height:1.5">
-          发送时按这个顺序取：岗位里改过的 &gt; AI 按岗位+公司+JD 现编的 &gt; 上面这段账号招呼语。
-          这段空着时系统按本账号的城市/方向/简历画像生成一条默认（就是框里现在这句），改成你的话就以你的为准
-        </div>
-        <div style="font-size:10px;color:var(--fg-4th);margin-top:4px;line-height:1.5">
-          <b>按号独立：</b>Cookie、浏览器（除端口与用户目录）、招呼语、岗位任务、AI 判分、回复参数、
-          回复模板、投递频率与重试、登录、通知；投递/回复记录与运行状态本来就按号分<br>
-          <b>全局共享：</b>简历信息、个人画像、回复规则、重要关键词——两个号是同一个人，
-          学历和技能不可能一个号一套说法
+        <!-- 取话顺序只留一行，完整规则挂在 title 上：左栏一屏装不下两段说明 -->
+        <div class="side-hint" title="发送时按这个顺序取：岗位里改过的 &gt; AI 按岗位+公司+JD 现编的 &gt; 上面这段账号招呼语。这段空着时系统按本账号的城市/方向/简历画像生成一条默认（就是框里现在这句），改成你的话就以你的为准">
+          取话顺序：岗位改过的 &gt; AI 现编 &gt; 这段招呼语</div>
+        <button class="adv-toggle" id="scopeNoteToggle" onclick="toggleBlock('scopeNoteToggle','scopeNoteBox')"><i data-ki="info"></i>按号独立 / 全局共享 <i data-ki="chevron-right" class="arrow"></i></button>
+        <div class="adv-section" id="scopeNoteBox">
+          <div class="side-hint" style="margin-top:0">
+            <b>按号独立：</b>Cookie、浏览器（除端口与用户目录）、招呼语、岗位任务、AI 判分、回复参数、
+            回复模板、投递频率与重试、登录、通知；投递/回复记录与运行状态本来就按号分<br>
+            <b>全局共享：</b>简历信息、个人画像、回复规则、重要关键词——两个号是同一个人，
+            学历和技能不可能一个号一套说法
+          </div>
         </div>
       </div>
       <div>
         <div class="side-section-title"><i data-ki="ai"></i>AI 智能解析 <span class="badge-count" id="aiBadge">关</span> <span id="aiScopeNote" style="font-size:10px;color:var(--fg-4th);font-weight:400"></span></div>
-        <div style="font-size:10px;color:var(--warning);margin-bottom:4px;display:flex;align-items:center;gap:4px"><i data-ki="alert-triangle" style="font-size:11px"></i> 此开关仅控制打招呼的AI岗位解析，自动回复AI始终开启</div>
+        <div class="side-hint" style="color:var(--warning);display:flex;align-items:center;gap:5px;margin:0 0 4px"
+             title="这个开关只管打招呼时的 AI 岗位判分；HR 来了消息的自动回复 AI 是常开的，关不掉"><i data-ki="alert-triangle"></i>只管打招呼的岗位判分；自动回复 AI 一直开</div>
         <div class="acc-field-row" style="padding:6px 8px;border-radius:8px;background:var(--side-input-bg);border:1px solid var(--bd-2)"><label style="font-size:12px;font-weight:600">启用 AI</label><span id="aiEnabled" class="toggle-switch ai-switch" onclick="toggleAiEnabled()" style="margin-left:auto"></span></div>
         <div class="acc-field-row"><label>匹配阈值</label><input class="side-form-input" id="aiThreshold" type="number" min="0" max="100" placeholder="70" onchange="onAiChange()"></div>
         <div class="acc-field-row" title="一次岗位判分允许模型输出多少 token。带思考(reasoning)的接口会把预算花在思考上，不够就正文为空、这次判分作废换下一个接口">
@@ -872,23 +883,23 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
           <div class="ai-quality-line" id="aiQualityLine" title="兜底 = AI 没给出判断，这个岗位按默认话术直接打招呼了，等于没筛">判分质量：未统计</div>
           <div class="ai-quality-line" id="aiReviewLine" title="AI 判「不符合」后追问出来的原因排行。建议要点「采纳」才会写进配置">判分复盘：未统计</div>
           <div class="review-detail" id="aiReviewDetail" style="display:none"></div>
-          <div style="font-size:10px;color:var(--fg-4th);line-height:1.5;margin:-4px 0 8px">体检会给每个接口真实发一条 4 个字的测试消息，只有返回了内容才算可用；推理模型正文为空但 reasoning 有内容的也算可用。不可用的接口会标出具体原因（Key 失效 / 额度用尽 / 模型名不对 / 地址不对）。</div>
+          <div class="side-hint" style="margin:-4px 0 8px" title="体检会给每个接口真实发一条 4 个字的测试消息，返回了内容才算可用（推理模型正文为空但 reasoning 有内容也算可用）；不可用的接口会标出具体原因：Key 失效 / 额度用尽 / 模型名不对 / 地址不对">体检=真发一条测试消息，返回内容才算可用</div>
           <div id="aiProviders" style="margin-top:8px"></div>
         </div>
         <div class="acc-field-row" style="flex-direction:column;align-items:stretch;gap:4px;margin-top:8px">
           <label style="font-size:12px;font-weight:600">自定义筛选词</label>
           <input class="side-form-input" id="customFilterKeywords" type="text" placeholder="输入筛选关键词，逗号或顿号分隔，如：主播、地推、需坐班" style="width:100%;box-sizing:border-box" onchange="onCustomAiChange()">
-          <div style="font-size:10px;color:var(--fg-4th);line-height:1.5">这些关键词会追加到AI打分提示词中，AI会额外关注这些条件；一条一个词，逗号/顿号/分号都能分</div>
+          <div class="side-hint" title="这些关键词会追加到 AI 打分提示词里，让它额外关注这些条件；一条一个词，逗号/顿号/分号都能分">追加进打分提示词，逗号或顿号分隔</div>
         </div>
         <div class="acc-field-row" style="gap:6px;margin-top:6px;align-items:flex-start">
           <input type="checkbox" id="aiVetoOnly" style="margin-top:2px" onchange="onCustomAiChange()">
           <label for="aiVetoOnly" style="font-size:12px;font-weight:600">只看否决词</label>
-          <div style="font-size:10px;color:var(--fg-4th);line-height:1.5">勾上后 AI 的分数和"方向不符/经验不符"一律不拦，只有命中上面筛选词的岗位才不发。要放量时用；招呼语仍由 AI 按岗位现编。</div>
+          <div class="side-hint" title="勾上后 AI 的分数和&quot;方向不符/经验不符&quot;一律不拦，只有命中上面筛选词的岗位才不发。要放量时用；招呼语仍由 AI 按岗位现编。">只拦命中筛选词的，分数与方向一律放行</div>
         </div>
         <div class="acc-field-row" style="flex-direction:column;align-items:stretch;gap:4px;margin-top:6px">
           <label style="font-size:12px;font-weight:600">自定义打分提示词</label>
           <textarea id="customScoringPrompt" rows="3" placeholder="输入自定义打分要求，如：优先考虑有大数据经验的岗位，扣分项：加班严重、单休" style="width:100%;min-height:80px;box-sizing:border-box;padding:6px 8px;font-size:12px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg);color:var(--fg);resize:vertical;font-family:inherit" onchange="onCustomAiChange()"></textarea>
-          <div style="font-size:10px;color:var(--fg-4th);line-height:1.5">追加到AI系统提示词后，用于自定义打分标准。留空则使用系统默认打分逻辑</div>
+          <div class="side-hint" title="追加到 AI 系统提示词后面，用于自定义打分标准；留空则使用系统默认打分逻辑">追加到系统提示词；留空=用默认打分逻辑</div>
         </div>
         <div class="side-btn-row" style="margin-top:6px;flex-wrap:wrap">
           <button class="side-btn side-btn-ghost side-btn-sm" onclick="addAiProvider()"><i data-ki="plus"></i>添加 AI 接口</button>
@@ -967,15 +978,15 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
         <button class="side-btn side-btn-ghost side-btn-sm side-btn-block" onclick="addJob()" style="margin-top:6px;padding:8px 12px;font-size:11px;font-weight:500;border:1px dashed var(--bd-2);background:var(--side-input-bg);border-radius:6px;cursor:pointer" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--bd-2)';this.style.color='var(--fg-2nd)'">+ 添加岗位</button>
       </div>
 
-      <!-- 配置预览区域：显示所有配置项的值，确保页面加载后即可看到配置内容 -->
+      <!-- 配置预览区域：整份配置的取值一览，默认收起（展开会占掉半栏，把要填的表单挤出首屏） -->
       <div class="sidebar-section" id="configPreviewSection">
-        <button class="notif-center-header open" id="configPreviewToggle" onclick="toggleConfigPreview()">
+        <button class="notif-center-header" id="configPreviewToggle" onclick="toggleConfigPreview()">
           <span><i data-ki="preview"></i>配置预览</span>
           <span style="display:flex;align-items:center;gap:6px">
             <i data-ki="chevron-right" class="arrow"></i>
           </span>
         </button>
-        <div id="configPreviewList" class="notif-list" style="display:block;max-height:400px;overflow-y:auto;padding:8px 4px">
+        <div id="configPreviewList" class="notif-list" style="display:none;max-height:400px;overflow-y:auto;padding:8px 4px">
           <!-- 配置项动态填充 -->
         </div>
       </div>
@@ -1042,7 +1053,7 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
             <button class="record-tab active" onclick="switchRecordTab('greet')"><i data-ki="greet"></i>打招呼记录 <span class="tab-count" id="greetTabCount">0</span></button>
             <button class="record-tab" onclick="switchRecordTab('reply')"><i data-ki="reply"></i>回复记录 <span class="tab-count" id="replyTabCount">0</span></button>
             <!-- 打招呼筛选栏（和tab同一行） -->
-            <div id="greetFilterBar" style="display:flex;align-items:center;gap:2px;flex:1;justify-content:flex-end;flex-wrap:nowrap;overflow-x:auto;font-size:11px">
+            <div id="greetFilterBar" style="display:flex;align-items:center;gap:4px 6px;flex:1;justify-content:flex-end;flex-wrap:wrap;font-size:11px">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">开始</label>
               <input type="date" id="greetFilterDateStart" style="width:130px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyGreetFilter()" oninput="applyGreetFilter()">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">结束</label>
@@ -1065,7 +1076,7 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
               <span id="greetFilterCount" style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0"></span>
             </div>
             <!-- 回复筛选栏（和tab同一行，默认隐藏） -->
-            <div id="replyFilterBar" style="display:none;align-items:center;gap:2px;flex:1;justify-content:flex-end;flex-wrap:nowrap;overflow-x:auto;font-size:11px">
+            <div id="replyFilterBar" style="display:none;align-items:center;gap:4px 6px;flex:1;justify-content:flex-end;flex-wrap:wrap;font-size:11px">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">开始</label>
               <input type="date" id="replyFilterDateStart" style="width:130px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyReplyFilter()" oninput="applyReplyFilter()">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">结束</label>
@@ -1073,7 +1084,7 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">岗位</label>
               <input type="text" id="replyFilterJob" placeholder="数据分析" style="width:80px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyReplyFilter()" oninput="applyReplyFilter()">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">来源</label>
-              <select id="replyFilterSource" style="width:80px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyReplyFilter()" oninput="applyReplyFilter()">
+              <select id="replyFilterSource" style="width:96px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyReplyFilter()" oninput="applyReplyFilter()">
                 <option value="">全部</option>
                 <option value="ai">机器自动</option>
                 <option value="rule">规则匹配</option>
@@ -1081,6 +1092,11 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
                 <option value="default">兜底回复</option>
                 <option value="followup">主动跟进</option>
                 <option value="manual">人工发送</option>
+                <!-- 盘上真实存在这几类，缺一项就筛不到 -->
+                <option value="greet">机器招呼</option>
+                <option value="rejection">拒绝接受</option>
+                <option value="scam_filter">骗子过滤·婉拒</option>
+                <option value="backfill">补发简历</option>
                 <option value="skip">跳过</option>
               </select>
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">状态</label>
@@ -2868,6 +2884,12 @@ function toggleAiProviders() {
   btn.classList.toggle("open");
 }
 
+// 长说明默认收起来，点开才看细节（左栏一屏装不下）
+function toggleBlock(btnId, boxId) {
+  document.getElementById(boxId).classList.toggle("open");
+  document.getElementById(btnId).classList.toggle("open");
+}
+
 function toggleAdvBool(key) {
   if (key === "headless") {
     if (!config.browser) config.browser = {};
@@ -2982,9 +3004,9 @@ function updateGreetingModeHint() {
   var row = accs[Number(activeAccountIdx)] || {};
   var txt = ((document.getElementById('accGreeting') || {}).value || '').trim();
   var auto = row.greeting_mode === '自动生成的默认';
-  var msg = !txt ? '空着也能发：发送前会按本账号的城市/方向/技能自动生成一条默认'
-    : (auto ? '这条是系统按本账号信息生成的默认，改成你自己的话就以你的为准'
-            : '这条是你自己写的，发送时优先用你写的');
+  var msg = !txt ? '空着也能发：发送前按本账号信息自动生成'
+    : (auto ? '系统生成的默认，改成你的就以你的为准'
+            : '你自己写的，发送时优先用这句');
   if (el.textContent !== msg) el.textContent = msg;
   el.style.color = auto ? 'var(--warning)' : 'var(--fg-4th)';
 }
@@ -4078,7 +4100,10 @@ function getReplySourceLabel(replySource) {
   if (replySource === 'skip') return '跳过';
   if (replySource === 'rejection') return '拒绝接受';
   if (replySource === 'followup') return '主动跟进';
-  if (replySource) return replySource;
+  // 这两类记录盘上已有 27 条，以前没有中文名，界面上直接印出 scam_filter 这种内部键
+  if (replySource === 'scam_filter') return '骗子过滤·婉拒';
+  if (replySource === 'backfill') return '补发简历';
+  if (replySource) { console.warn('[来源标签未登记]', replySource); return '未登记来源'; }
   return '—';
 }
 
@@ -4090,6 +4115,8 @@ function getReplySourceClass(replySource) {
   if (replySource === 'default') return 'default';
   if (replySource === 'skip') return 'skip';
   if (replySource === 'greet') return 'ai';
+  if (replySource === 'scam_filter') return 'skip';
+  if (replySource === 'backfill') return 'ai';
   return '';
 }
 
@@ -4099,7 +4126,7 @@ function renderBossChatList(groups) {
   var countBadge = document.getElementById('bossChatCount');
   if (!list) return;
   if (!groups || groups.length === 0) {
-    list.innerHTML = '<div class="boss-chat-loading">暂无聊天记录</div>';
+    list.innerHTML = '<div class="boss-chat-loading"><i data-ki="empty-chat"></i>暂无聊天记录</div>';
     if (typeof KIcon !== 'undefined') KIcon.createIcons();
     if (countBadge) countBadge.textContent = '0';
     return;
@@ -4248,7 +4275,7 @@ function renderBossChatDetail(key) {
   html += '    <div class="boss-chat-header-job">'+escHtml(jobName || '未知岗位')+'</div>';
   html += '  </div>';
   html += '  <div class="boss-chat-header-actions">';
-  html += '    <button class="chat-header-btn" onclick="refreshBossChatDetail(\''+escAttr(key)+'\')">刷新</button>';
+  html += '    <button class="chat-header-btn" onclick="refreshBossChatDetail(\''+escAttr(key)+'\')"><i data-ki="reset"></i>刷新</button>';
   html += '  </div>';
   html += '</div>';
   // 消息列表
@@ -4263,7 +4290,7 @@ function renderBossChatDetail(key) {
       return (msg.kind || '') !== 'action';
     });
     if (visibleMsgs.length === 0) {
-      html += '<div class="boss-chat-messages-empty">暂无消息</div>';
+      html += '<div class="boss-chat-messages-empty"><i data-ki="empty-chat"></i>暂无消息</div>';
     } else {
       visibleMsgs.forEach(function(msg) {
         html += renderBossMessageBubble(msg, chatNameDisplay);
@@ -4285,7 +4312,7 @@ function renderBossChatDetail(key) {
       return ta.localeCompare(tb); // 正序：旧的在上，新的在下
     });
     if (sortedRecords.length === 0) {
-      html += '<div class="boss-chat-messages-empty">暂无消息</div>';
+      html += '<div class="boss-chat-messages-empty"><i data-ki="empty-chat"></i>暂无消息</div>';
     } else {
       sortedRecords.forEach(function(r) {
         var tFull = formatFullTimestamp(r.timestamp || r.time || '');
@@ -4315,7 +4342,7 @@ function renderBossChatDetail(key) {
       });
     }
   } else {
-    html += '<div class="boss-chat-messages-empty">暂无消息</div>';
+    html += '<div class="boss-chat-messages-empty"><i data-ki="empty-chat"></i>暂无消息</div>';
   }
   html += '</div>';
   // 底部监控视图提示（一比一复刻BOSS直聘聊天页面底部输入区，但只读）
@@ -4369,13 +4396,13 @@ function renderBossMessageBubble(msg, chatName) {
     body = msg.media
       ? '<img class="boss-msg-img" src="' + escAttr(msg.media) + '" alt="图片" loading="lazy">'
         + (content ? '<div class="boss-msg-card-sub" style="margin-top:4px">' + escHtml(content) + '</div>' : '')
-      : '<div class="boss-msg-card"><div class="boss-msg-card-title">[图片]</div>'
+      : '<div class="boss-msg-card"><div class="boss-msg-card-title"><i data-ki="image"></i> 图片</div>'
         + '<div class="boss-msg-card-sub">' + escHtml(cardText) + '</div></div>';
   } else if (type === 'resume') {
     body = '<div class="boss-msg-card"><div class="boss-msg-card-title"><i data-ki="edit-resume"></i> 附件简历</div>'
          + '<div class="boss-msg-card-sub">' + escHtml(cardText) + '</div></div>';
   } else if (type === 'job_card') {
-    body = '<div class="boss-msg-card"><div class="boss-msg-card-title">职位卡片</div>'
+    body = '<div class="boss-msg-card"><div class="boss-msg-card-title"><i data-ki="briefcase"></i> 职位卡片</div>'
          + '<div class="boss-msg-card-sub">' + escHtml(cardText) + '</div></div>';
   } else if (type === 'voice') {
     body = '<div class="boss-msg-card"><div class="boss-msg-card-title"><i data-ki="volume"></i> 语音消息</div>'
@@ -4395,9 +4422,9 @@ function renderBossMessageBubble(msg, chatName) {
     // 送达 / 已读：BOSS 显示在我方气泡下方
     var statusHtml = '';
     if (msg.status === 'read') {
-      statusHtml = '<span class="boss-msg-status read">已读</span>';
+      statusHtml = '<span class="boss-msg-status read"><i data-ki="check-circle"></i>已读</span>';
     } else if (msg.status === 'delivery') {
-      statusHtml = '<span class="boss-msg-status">送达</span>';
+      statusHtml = '<span class="boss-msg-status"><i data-ki="check"></i>送达</span>';
     } else if (msg.status === 'unread') {
       statusHtml = '<span class="boss-msg-status">未读</span>';
     }

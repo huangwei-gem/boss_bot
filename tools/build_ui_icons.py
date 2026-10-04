@@ -79,6 +79,9 @@ ICONS = {
     "mute": "mute-speaker",
     "check": "check",
     "cross": "close-cross",
+    # BOSS 消息界面还原用：图片消息、职位卡片（这两类以前只有方括号文字）
+    "image": "wallpaper",
+    "briefcase": "briefcase",
     "sparkle": "sparkle",
     "shield": "shield",
     "clock": "countdown-timer",

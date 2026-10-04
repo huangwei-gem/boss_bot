@@ -225,8 +225,11 @@ def test_socket_客户端走本地文件不靠_public_CDN():
 
 def test_取不到_io_时页面照常能用():
     """本地文件也可能被误删/被拦：拿不到 io 就退化成空实现，
-    实时推送没了照样有 20 秒轮询，不许再把整块脚本带死。"""
-    first = re.search(r"<script>\n(.*?)</script>", HTML, re.S).group(1)
-    head = first[:900]
+    实时推送没了照样有 20 秒轮询，不许再把整块脚本带死。
+    按内容找那块脚本：head 里还有一段主题首帧脚本，它不再恰好是第一段。"""
+    scripts = re.findall(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", HTML, re.S)
+    boot = [s for s in scripts if "typeof io" in s]
+    assert boot, "页面里没有 socket 兜底了"
+    head = boot[0][:900]
     assert "typeof io === 'function'" in head, "socket 初始化没有兜底"
     assert re.search(r"const socket = io\(", head) is None

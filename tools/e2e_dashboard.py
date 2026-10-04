@@ -211,6 +211,14 @@ def main():
                         'selectBossChat(keys[i]);return keys[i];}}return "";})('
                         + json.dumps(chat_id, ensure_ascii=False) + ',' + str(int(acct)) + ')')
 
+    # 会话视图挂在"回复记录"页签后面：不切过去，截图拍到的永远是打招呼表格，
+    # 用户点名的"BOSS 直聘端那边没换成 svg"就看不见
+    js(page, 'switchRecordTab("reply")')
+    time.sleep(.6)
+    check("聊天", "回复记录页签切得过去",
+          "active" in js(page, 'document.getElementById("replyTabContent").className'),
+          js(page, 'document.getElementById("replyTabContent").className'))
+
     for acct, cand in ((0, acct0_chats), (1, acct1_chats)):
         if not cand:
             continue
@@ -236,6 +244,16 @@ def main():
         mine_ok = all(a["mine"] == b["mine"] for a, b in zip(ui, be))
         check(tag, "我方/对方方向正确", mine_ok)
         page.get_screenshot(path=os.path.join(SHOTS, f"chat_a{acct}.png"))
+
+    # 来源标签直出内部键（截图里看到过 scam_filter）= 界面在念数据库。
+    # 趁会话视图正显示着查：切回打招呼表格后这些节点全是隐藏的，等于没验
+    leak = js(page, '''(function(){var s=document.querySelectorAll(".boss-msg-source"),n=[];
+      for(var i=0;i<s.length;i++){if(!s[i].offsetParent)continue;
+        var t=(s[i].textContent||"").trim();
+        if(/^[a-z]+(_[a-z]+)+$/.test(t))n.push(t);}
+      return JSON.stringify([n.slice(0,8),s.length]);})()''')
+    check("聊天", "来源标签都是中文，不直出内部键",
+          leak[0] == [] and leak[1] > 0, leak)
 
     # ── 4b. 同昵称的两段对话必须互不串台 ──
     # 实测侧栏 34 行里 4 组重名（陈女士/唐女士/刘女士/易女士），
@@ -278,6 +296,10 @@ def main():
             for(var i=0;i<it.length;i++){if((it[i].textContent||"").trim())return true;}
             return false;})()'''),
           "副标题（公司）没显示，同名会话在列表里分不出来")
+
+    # 会话这段验完切回打招呼表格，后面的截图和检查保持原来的场景
+    js(page, 'switchRecordTab("greet")')
+    time.sleep(.4)
 
     # ── 5. AI 体检（真实网络请求） ──
     js(page, 'toggleAiProviders()')
@@ -603,6 +625,54 @@ def main():
     check("多账号", "切回全部账号能看到所有记录",
           rows_all_after == int(d_all["total"]),
           f"页面{rows_all_after} 接口{d_all['total']}")
+
+    # 图标尺寸与左栏简洁度：这两条都是用户 2026-10-04 直接点名的
+    # （"svg 图标太小了"、"左边配置栏的文字太多了…或者把它默认隐藏起来"），
+    # 只能靠真机量出来的像素说话，源码里写了 min-width 不代表渲染出来够用
+    sizes = js(page, '''(function(){var s=document.querySelectorAll("svg.ki"),min=99,bad=[];
+      for(var i=0;i<s.length;i++){if(!s[i].offsetParent)continue;
+        var r=s[i].getBoundingClientRect();
+        if(!r.width)continue;
+        if(r.width<min)min=r.width;
+        if(r.width<14)bad.push((s[i].getAttribute("class")||"")+"@"+Math.round(r.width));}
+      return JSON.stringify([Math.round(min*10)/10,bad.slice(0,6),s.length]);})()''')
+    check("图标", "看得见的图标都不小于 14px", sizes[0] >= 14 and sizes[1] == [], sizes)
+    check("图标", "面板确实挂着雪碧图图标", sizes[2] > 40, f"{sizes[2]} 个 svg.ki")
+
+    boss = js(page, '''(function(){var b=document.querySelector(".chat-header-btn");
+      return JSON.stringify([!!(b&&b.querySelector("svg.ki")),
+        document.body.innerText.indexOf("[图片]")<0,
+        document.querySelectorAll("#bossChatMessages svg.ki").length]);})()''')
+    check("BOSS视图", "刷新按钮带图标", boss[0] is True, boss)
+    check("BOSS视图", "不再出现 [图片] 这类方括号占位", boss[1] is True, boss)
+
+    side = js(page, '''(function(){
+      function clipped(el){var p=el.parentElement;while(p&&p!==document.body){
+        if(p.classList&&p.classList.contains("adv-section")&&!p.classList.contains("open"))return true;
+        p=p.parentElement;}return false;}
+      var h=document.querySelectorAll("#sideScroll .side-hint"),n=[];
+      for(var i=0;i<h.length;i++){if(!h[i].offsetParent||clipped(h[i]))continue;
+        var t=(h[i].textContent||"").replace(/\\s+/g,"").length;
+        if(t>22)n.push(t+"|"+(h[i].textContent||"").trim().slice(0,16));}
+      return JSON.stringify([n.slice(0,4),
+        document.getElementById("configPreviewList").style.display,
+        document.getElementById("scopeNoteBox").className]);})()''')
+    check("左栏", "摊开的说明都是一行内的短句", side[0] == [], side[0])
+    check("左栏", "配置预览默认收起", side[1] == "none", side[1])
+    check("左栏", "按号独立清单默认收起", "open" not in side[2], side[2])
+    js(page, 'toggleBlock("scopeNoteToggle","scopeNoteBox")')
+    time.sleep(.6)
+    opened = js(page, 'document.getElementById("scopeNoteBox").className')
+    check("左栏", "点标题能展开看完整清单", "open" in opened, opened)
+    box_h = js(page, 'Math.round(document.getElementById("scopeNoteBox").getBoundingClientRect().height)')
+    check("左栏", "展开后清单真的占出高度", box_h > 20, box_h)
+    js(page, 'toggleBlock("scopeNoteToggle","scopeNoteBox")')
+    time.sleep(.6)
+    check("左栏", "再点一次收回去",
+          "open" not in js(page, 'document.getElementById("scopeNoteBox").className'))
+
+    check("主题", "首帧就是深色（不用等接口回来才转暗）",
+          js(page, 'document.documentElement.getAttribute("data-theme")') == "dark")
 
     errs = js(page, 'JSON.stringify(window.__jsErrors||[])')
     check("稳定性", "操作过程中无 JS 报错", not errs, errs)
