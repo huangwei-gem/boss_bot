@@ -227,6 +227,8 @@ class UnifiedBotLoop:
         # 存档里欠回复的会话：一条处理失败后多久才再试（侧栏对不上行时会反复空跑）
         self._owed_attempt_at = {}
         self._owed_last_scan = 0.0
+        # 红点深扫（滚到侧栏底部）上次时刻：0 = 启动后第一轮就深扫一次
+        self._deep_sweep_at = 0.0
         # 主动跟进：上次扫描的时刻 + 各会话已追了几次（落盘，重启不重追）
         self._followup_last_scan = None
         self._followup_state = self._load_followup_state()
@@ -1611,8 +1613,14 @@ class UnifiedBotLoop:
                 self._check_and_archive_daily_data()
 
                 # 采集口径：启动后先全量同步一次最新消息（只存档不回复），
-                # 之后回复轮只看未读，不再每轮全量点开
+                # 之后回复轮只看未读，不再每轮全量点开。
+                # 但同步要把 270 多个会话逐个点开，实测要 25~50 分钟——上一轮存档里
+                # 明明压着欠着的提问，却被这段同步挡在后面（用户 2026-10-04：
+                # "现在好多的回复没有回"）。所以先把已知欠的回完，再做全量同步。
                 if not self._full_sync_done:
+                    self._current_mode = "reply"
+                    self._run_reply_round()
+                    self._run_followup_round()
                     self._full_sync_done = True
                     try:
                         self._sync_chat_tab()
@@ -1675,9 +1683,13 @@ class UnifiedBotLoop:
             self._chat_handler.go_to_chat()
             self._log("DEBUG", "聊天页面导航完成")
 
-            # 获取未读聊天列表
-            self._log("DEBUG", "正在获取未读聊天列表...")
-            unread_chats = self._chat_handler.get_unread_chats()
+            # 获取未读聊天列表：默认只滚到列表靠前那 ~120 行（BOSS 按活跃时间排序，
+            # 新消息基本都在前面）；每 5 分钟另有一次滚到底的深扫，捞那些排在后面的红点
+            deep = time.time() >= self._deep_sweep_at
+            if deep:
+                self._deep_sweep_at = time.time() + self.DEEP_SWEEP_SECONDS
+            self._log("DEBUG", "正在获取未读聊天列表...（深扫=%s）" % ("是" if deep else "否"))
+            unread_chats = self._chat_handler.get_unread_chats(max_rounds=30 if deep else 12)
             self._log("DEBUG", f"获取到未读会话数: {len(unread_chats)}")
 
             # 红点只是其中一条腿，另外一条腿在本地存档：
@@ -1740,6 +1752,11 @@ class UnifiedBotLoop:
     # 存档扫描节流：回复轮不到 10 秒一轮，每轮都把 600 多个会话文件读一遍太浪费，
     # 而且 8 条回复挤在 9 秒里发出去对 BOSS 也太像机器
     OWED_SCAN_SECONDS = 60
+    # 红点深扫（滚到侧栏底）的间隔：平时只滚靠前那 ~120 行就够了
+    DEEP_SWEEP_SECONDS = 300
+    # 全量同步每读这么多个会话就插一轮回复：整轮同步要逐个点开 270 多个会话
+    # （实测 25~50 分钟），一路挡住回复轮就等于这段时间里没人回话
+    SYNC_REPLY_EVERY = 20
 
     def _archive_owed_chats(self, unread_chats) -> list:
         """从本地存档里补出"HR 最后说话、我们没接"的会话，当作本轮候选。
@@ -1964,6 +1981,12 @@ class UnifiedBotLoop:
                     job_name=self._chat_handler.get_job_name(), company=company)
                 synced += 1
                 self._reply_engine.wait_human_delay()
+                if synced % self.SYNC_REPLY_EVERY == 0:
+                    # 同步要点开 270 多个会话（实测 25~50 分钟），一路挡住回复轮就等于
+                    # 这段时间没人回话（用户 2026-10-04："现在好多的回复没有回"）
+                    self._log("INFO", f"全量同步已读 {synced}/{len(chats)}，先插一轮回复")
+                    self._run_reply_round()
+                    self._run_followup_round()
             except Exception as e:
                 self._log("WARN", f"[{name}] 全量同步失败（继续下一个）: {e}")
         self._log("INFO", f"启动全量同步完成：{synced}/{len(chats)} 个会话已同步，之后只采未读")

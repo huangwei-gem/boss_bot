@@ -350,80 +350,47 @@ class BossChatHandler:
             self.page.get(CHAT_URL)
             time.sleep(3)
 
-    def get_unread_chats(self) -> List[Dict]:
-        """
-        获取所有未读聊天会话列表。
+    def get_unread_chats(self, max_rounds: int = 12) -> List[Dict]:
+        """边滚边收侧栏里带红点的会话。
 
-        实测 CSS（2026-09-09 浏览器验证）:
-        - 聊天项容器: .friend-content（不是 ul[role='group'] > li[role='listitem']）
-        - 未读标记: .notice-badge（在 .figure 内）
+        以前这里只读当前 DOM：侧栏是虚拟列表，一屏只渲染 ~20 行（实测账号2 侧栏 272 行，
+        不滚只读到 40 行），红点落在渲染窗口外就整轮"0 个未读"——2026-10-04 那次
+        几百条 HR 提问没人接，一部分就是这么漏掉的。
+        BOSS 按最后活跃时间排序，新消息基本都排在靠前的几十行里，所以默认只滚 12 轮
+        （约 120 行，一秒多一轮）；每几分钟另有一次滚到底的深扫。
+
+        判据（2026-09-09 浏览器验证）:
+        - 聊天项容器: .friend-content（不是 ul[role='group'] > li[role=listitem]）
+        - 未读标记: .notice-badge（在 .figure 内，要可见且有计数文本）
         - 名称: .name-text（在 .title-box .name-box 内）
-        - 最后一条消息: .last-msg-text（在 .gray.last-msg 内）
+        - 公司: .name-box 的第二截，重名昵称唯一可靠的判据
         """
         self.go_to_chat()
         time.sleep(1)
 
         unread_chats = []
         try:
-            # 用 JS 获取未读聊天信息（DrissionPage eles 对 li[role=listitem] 返回 0）
-            result = self.page.run_js('''(
-                function() {
-                    var friendEls = document.querySelectorAll(".friend-content");
-                    var unread = [];
-                    for (var i = 0; i < friendEls.length; i++) {
-                        var el = friendEls[i];
-                        // 检查是否有未读标记（必须可见且有计数文本）
-                        var badge = el.querySelector(".notice-badge");
-                        if (!badge) continue;
-                        if (badge.offsetParent === null) continue;
-                        var countText = badge.textContent.trim();
-                        if (!countText) continue;
-                        var count = parseInt(countText) || 1;
-
-                        var nameEl = el.querySelector(".name-text");
-                        var name = nameEl ? nameEl.textContent.trim() : "未知";
-
-                        // 公司：重名昵称唯一可靠的判据（实测 34 行 (姓名,公司) 全唯一，
-                        // 只用姓名有 4 组撞车），且它就挂在行上，不依赖"点开的是谁"
-                        var box = el.querySelector(".name-box");
-                        var company = "";
-                        if (box) {
-                            var spans = [];
-                            for (var k = 0; k < box.children.length; k++) {
-                                var c = box.children[k];
-                                if (c.tagName === "SPAN") {
-                                    var t = (c.textContent || "").trim();
-                                    if (t) spans.push(t);
-                                }
-                            }
-                            company = spans.length > 1 ? spans[1] : "";
-                        }
-
-                        var previewEl = el.querySelector(".last-msg-text");
-                        var preview = previewEl ? previewEl.textContent.trim() : "";
-
-                        unread.push({
-                            index: i,
-                            name: name,
-                            company: company,
-                            preview: preview,
-                            unread_count: count
-                        });
-                    }
-                    return JSON.stringify(unread);
-                }
-            )()''', as_expr=True)
-
-            if result:
-                unread_chats = json.loads(result)
-            # 注意：不保存 DrissionPage element 引用。
-            # 实测 eles() 返回数量与 DOM 不一致（会话卡片 active 时漏元素），
-            # 统一用 JS 按 index 点击（与扫描同一 DOM 顺序，索引绝对一致）。
-
+            self.page.run_js(self._SIDEBAR_RESET_JS, as_expr=True)
+            time.sleep(0.4)
+            merged = {}
+            prev_pos = None
+            for _ in range(max_rounds):
+                for row in self._sidebar_rows():
+                    # 只认 BOSS 自己报的红点数，不拿"本地存了几条 HR 消息"去猜
+                    if row.get("unread_count"):
+                        merged.setdefault((row.get("name", ""), row.get("company", "")), row)
+                pos = str(self.page.run_js(self._SIDEBAR_SCROLL_JS, as_expr=True))
+                time.sleep(0.6)
+                if not self._SIDEBAR_POS_RE.match(pos):
+                    break                  # 这页没有可滚的容器，读到多少算多少
+                if pos == prev_pos:
+                    break                  # 已经到底
+                prev_pos = pos
+            unread_chats = list(merged.values())
         except Exception as e:
             logger.error(f"获取未读聊天列表失败: {e}")
 
-        logger.debug(f"发现 {len(unread_chats)} 个未读会话")
+        logger.debug(f"发现 {len(unread_chats)} 个未读会话（滚了 {max_rounds} 轮上限内）")
         return unread_chats
 
     # 滚动探针回报"当前位置/总高"，读不出这个格式就说明这页没有可滚的列表
@@ -570,12 +537,19 @@ class BossChatHandler:
                         }
                         var previewEl = el.querySelector(".last-msg-text");
                         var preview = previewEl ? previewEl.textContent.trim() : "";
+                        // 红点：必须在可见且有计数文本时才算（隐藏的模板行会带空标记）
+                        var unread = 0;
+                        var badge = el.querySelector(".notice-badge");
+                        if (badge && badge.offsetParent !== null) {
+                            var bt = badge.textContent.trim();
+                            if (bt) unread = parseInt(bt) || 1;
+                        }
                         rows.push({
                             index: i,
                             name: name,
                             company: company,
                             preview: preview,
-                            unread_count: 0
+                            unread_count: unread
                         });
                     }
                     return JSON.stringify(rows);

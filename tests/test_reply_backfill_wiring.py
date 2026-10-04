@@ -184,6 +184,19 @@ class ReplyRoundMergeTest:
         assert "inbound_body(" in src
         assert 'msg.get("text") or msg.get("card_text")' not in src
 
+    def test_首轮深扫到底之后每轮只看靠前那些(self, tmp_path, monkeypatch):
+        """每轮都滚到底太贵；BOSS 按活跃时间排序，靠前的几十行足够日常用。"""
+        loop = _make_loop(tmp_path, monkeypatch)
+        loop._running = True
+        loop._reply_paused = False
+        loop._process_single_chat = MagicMock()
+
+        loop._run_reply_round()
+        assert loop._chat_handler.get_unread_chats.call_args.kwargs["max_rounds"] == 30
+        loop._owed_last_scan = 0.0
+        loop._run_reply_round()
+        assert loop._chat_handler.get_unread_chats.call_args.kwargs["max_rounds"] == 12
+
 
 class FollowupRoundTest:
     def _due_loop(self, tmp_path, monkeypatch, live=None, state=None):
