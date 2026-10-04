@@ -154,45 +154,49 @@ class MessageStore:
                                f"{_safe_filename(self.chat_id(chat_name, company, job_name))}.json"
 
     def _own_files(self):
-        """本账号的文件。账号0 的前缀是空的，glob 会把 a1_ 的文件一起吃进来，
-        所以必须按文件名里的 aN_ 再筛一遍，否则账号0 会读到账号2 的对话。"""
+        """本账号的文件：文件名前缀必须正好等于本账号的前缀。
+
+        账号0 的前缀是空的，glob 会把 a1_ 的文件一起吃进来；反过来账号1 的 glob
+        也会把账号0 那些无前缀的文件当成自己的（实测 16 个 a1_ 存档就是这么被
+        账号0 的对话覆盖过内容的）。所以两个方向都要按前缀筛，不能只筛一头。
+        """
         for path in sorted(self.base_dir.glob("*.json")):
             if path.name.endswith(".meta.json"):
                 continue
             m = re.match(r"^a(\d+)_", path.name)
-            if m and int(m.group(1)) != self.account_index:
+            file_index = int(m.group(1)) if m else 0
+            if file_index != self.account_index:
                 continue
             yield path
 
     def _candidates(self, chat_name: str, company: str = "",
                     job_name: str = "") -> list:
-        """按身份挑该读哪个文件：本账号优先，其次跨账号。
+        """按身份挑该读哪个文件，只在本账号的文件里找。
 
-        Web 端默认拿账号0 的实例浏览全部聊天，所以要允许跨账号；但同昵称是两段
-        对话，给了身份尾串（公司/岗位）就必须对得上，否则两个"陈女士"会互相串，
-        界面内容就跟 BOSS 对不上了。
+        同昵称是两段对话，给了身份尾串（公司/岗位）就必须对得上，否则两个
+        "陈女士"会互相串，界面内容就跟 BOSS 对不上了。
+        跨账号兜底（2026-10-04 删掉）看着是给 Web 端"全部账号"用的，实际是串号
+        的入口：merge_messages 用这里返回的路径读、用 _path 写，于是账号1 同步一次
+        就把账号0 的整段对话复制进自己的存档。面板列会话走 get_all_chats_detail
+        （全目录扫描 + 每条标注 account_index），读详情按 ?account=N 建实例，
+        都不需要在这里跨号。
         """
         want = self.job_key(company or job_name)
-        seen = set()
         exact, loose = [], []
-        for paths in (list(self._own_files()), sorted(self.base_dir.glob("*.json"))):
-            for path in paths:
-                if path.name.endswith(".meta.json") or path in seen:
-                    continue
-                seen.add(path)
-                try:
-                    with open(path, "r", encoding="utf-8") as f:
-                        data = json.load(f)
-                except Exception:
-                    continue
-                if data.get("chat_name") != chat_name:
-                    continue
-                have = self.job_key(data.get("company")
-                                    or data.get("job_name") or "")
-                if want and have and have == want:
-                    exact.append(path)
-                elif not want or not have:
-                    loose.append(path)
+        for path in self._own_files():
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception:
+                continue
+            if data.get("chat_name") != chat_name:
+                continue
+            have = self.job_key(data.get("company")
+                                or data.get("job_name") or "")
+            if want and have and have == want:
+                exact.append(path)
+            elif not want or not have:
+                loose.append(path)
         return exact + loose
 
     def _read_path(self, chat_name: str, company: str = "",

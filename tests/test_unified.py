@@ -2622,7 +2622,9 @@ class AccountIsolationTest:
         assert src.count("set_boss_unread(") >= 2, "扫到要记 N，读完要归零"
 
     def test_default_account_still_sees_all_chats(self, tmp_path):
-        """Web 端用账号0 的实例列会话，账号2 的也要能看到"""
+        """Web 端用账号0 的实例列会话，账号2 的也要能看到——但只能"看到"，
+        读正文必须按号来：账号0 的实例去 get_messages 别的号的会话，
+        正是 merge 时把对方对话并进自己存档的入口（2026-10-04 修）。"""
         from boss_bot.message_store import MessageStore
         MessageStore(base_dir=tmp_path, account_index=1).save_messages(
             "胡女士", [{"text": "只有账号2 有", "is_mine": False}], "岗位丙")
@@ -2630,7 +2632,9 @@ class AccountIsolationTest:
         listing = a0.get_chat_list()
         assert [c["chat_name"] for c in listing] == ["胡女士"]
         assert listing[0]["account_index"] == 1
-        assert a0.get_messages("胡女士")[0]["text"] == "只有账号2 有"
+        assert a0.get_messages("胡女士") == []
+        assert MessageStore(base_dir=tmp_path, account_index=1).get_messages(
+            "胡女士")[0]["text"] == "只有账号2 有"
 
     def test_meta_files_not_listed_as_chats(self, tmp_path):
         from boss_bot.message_store import MessageStore
