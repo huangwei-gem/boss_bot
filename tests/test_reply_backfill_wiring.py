@@ -208,6 +208,9 @@ class FollowupRoundTest:
                   company="伍爱创意", updated_at=_ago(3)),
         ]
         loop._followup_state = state if state is not None else {}
+        # 深夜闸门（23:00–07:00 不主动追）有它自己的用例，这里测的是"该不该追"的判定。
+        # 不钉住它，晚上 23 点以后跑这套就会 5 条全红——结果取决于几点跑的。
+        loop._in_quiet_hours = lambda now=None: False
         loop._chat_handler.enter_chat.return_value = True
         loop._chat_handler.read_selected_row.return_value = {
             "name": "张女士", "company": "伍爱创意"}
