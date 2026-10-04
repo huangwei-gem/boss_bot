@@ -56,3 +56,26 @@ def test_日志是真的被挪走而不是被丢掉():
     target = TEST_LOG_DIR / "greet_engine.log"
     assert target.exists() and sentinel in target.read_text(encoding="utf-8")
     handler.close()
+
+
+def test_面板自己的日志不能是黑洞():
+    """app.py 的 boss-web logger 自己没有 handler，文件/界面两个处理器都挂在 root 上。
+
+    它以前被设成 propagate=False（注释写的是"防重复处理"），于是面板里所有
+    logger.info 全部落地无声：2026-10-04 想查"是谁把两个号的投递轮停了"，
+    boss_bot.log 里连一条 boss-web 都找不到。这里只断言接线，不发日志——
+    真发一条就会违反上面那条"测试不许写仓库日志"。
+    """
+    import sys
+    from pathlib import Path
+
+    flask_dir = str(Path(__file__).resolve().parent.parent / "flask-version")
+    if flask_dir not in sys.path:
+        sys.path.insert(0, flask_dir)
+    import app as FLASK_APP  # noqa: F401
+
+    panel = logging.getLogger("boss-web")
+    assert panel.propagate is not False, "面板日志被自己掐断了，永远进不了日志文件"
+    root = logging.getLogger()
+    assert any(isinstance(h, TimedRotatingFileHandler) for h in root.handlers), \
+        "root 上没有文件处理器，面板日志无处可去"

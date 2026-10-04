@@ -126,9 +126,11 @@ if not _has_file_handler:
     root_logger.addHandler(file_handler)
 
 logger = logging.getLogger("boss-web")
-# 关键修复：设置 propagate=False，避免日志向 root logger 传播后被 root 的 handler
-# 重复处理（root logger 已有 web_handler 和 file_handler）。
-logger.propagate = False
+# propagate 必须留着：这个 logger 自己没有 handler，文件与界面两个处理器都挂在
+# root logger 上。以前在这儿写了 propagate=False（当时的理由是"防重复"），
+# 结果是面板自己的 logger.info 全被丢掉——日志文件里连一条 boss-web 都没有，
+# 想查"谁把投递停了"根本查不到。
+logger.setLevel(logging.INFO)
 
 # ===================== Flask 应用 =====================
 
