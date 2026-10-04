@@ -13,7 +13,6 @@ import argparse
 import json
 import os
 import sys
-import threading
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -26,6 +25,13 @@ BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CLOAK = os.path.join(BASE, "cloakbrowser", "chrome.exe")
 PORT = 9402
 DASH = os.environ.get("BOSS_PANEL_URL", "http://127.0.0.1:5000")
+# 本脚本会真点「启动/停止/暂停」按钮：对着线上面板点下去就是把投递轮打断
+# （2026-10-04 20:44 两个号的轮次就被这么停过一次）。要么走
+# tests/run_dashboard_on_temp_panel.py 起临时面板，要么显式 BOSS_E2E_ALLOW_LIVE=1。
+if ":5000" in DASH and os.environ.get("BOSS_E2E_ALLOW_LIVE") != "1":
+    raise SystemExit(
+        f"拒绝对着线上面板跑实测（{DASH}）：本脚本会点启停按钮。\n"
+        f"请用 python tests/run_dashboard_on_temp_panel.py")
 SHOTS = os.path.join(BASE, "tools", "e2e")
 os.makedirs(SHOTS, exist_ok=True)
 
@@ -50,23 +56,21 @@ def js(tab, code):
     return raw
 
 
-def start_flask():
-    sys.path.insert(0, os.path.join(BASE, "flask-version"))
-    import app as A
-    A._open_dashboard = lambda *a, **k: None
-    A._auto_ai_health = lambda *a, **k: None
-    kwargs = {"host": "127.0.0.1", "port": 5000, "debug": False, "use_reloader": False}
-    if A._socketio_kwargs.get("async_mode") == "threading":
-        kwargs["allow_unsafe_werkzeug"] = True
-    threading.Thread(target=lambda: A.socketio.run(A.app, **kwargs), daemon=True).start()
+def wait_panel():
+    """等面板就绪。面板由调用方（tests/run_dashboard_on_temp_panel.py）起。
+
+    以前这里自己 `socketio.run(port=5000)`：Windows 允许两个进程同时 bind 同一端口，
+    于是实测脚本和线上面板抢同一个 5000，请求随机落到其中一边——
+    落到脚本这边就是"点了停止，线上那两个号的投递轮被停"。
+    """
     import urllib.request
-    for _ in range(80):
+    for _ in range(60):
         try:
             if urllib.request.urlopen(DASH, timeout=2).status == 200:
-                return A
+                return
         except Exception:
             time.sleep(0.5)
-    raise RuntimeError("Flask 未就绪")
+    raise RuntimeError(f"面板没起来：{DASH}")
 
 
 def launch():
@@ -77,7 +81,12 @@ def launch():
     co.set_argument(f"--user-data-dir={os.path.join(BASE, 'browser_data', 'e2e')}")
     co.set_argument("--disable-blink-features=AutomationControlled")
     co.set_argument("--window-size=1440,900")
-    return ChromiumPage(co)
+    page = ChromiumPage(co)
+    # 脚本退了浏览器不能留着：browser_data/e2e 被它占住，下一次实测和
+    # 截图巡检都会连不上（verify_three_way 还因此把账号2 的正式 profile 锁了）
+    import atexit
+    atexit.register(lambda: getattr(page, "quit", lambda: None)())
+    return page
 
 
 COLLECT_ERRORS = '''(function(){
@@ -93,8 +102,8 @@ def main():
     ap.add_argument("--headed", action="store_true")
     args = ap.parse_args()
 
-    print("== 起后端 ==")
-    A = start_flask()
+    print("== 等面板就绪 ==")
+    wait_panel()
     print("== 起破解版浏览器 ==")
     page = launch()
 
@@ -120,6 +129,15 @@ def main():
           str(api["total"]["greet_sent"]) == cards[0]["value"].strip(),
           f"后端{api['total']['greet_sent']} 前端{cards[0]['value']}")
     check("指标", "每日上限取自配置", "150" in (cards[1]["sub"] or ""), cards[1]["sub"])
+    # 上限是按号算的：全部账号范围下"已投递 160 / 今日已达上限 150"这种自相矛盾
+    # 是以前真在屏上挂着的（两号各 150，合计 300 才算到顶）
+    cap_line = js(page, '''(function(){var v=document.getElementById("statApplied"),
+      s=document.getElementById("statAppliedSub");
+      var nums=(s.textContent||"").match(/\\d+/g)||[];
+      return JSON.stringify([Number(v.textContent),nums.map(Number),s.textContent.trim()]);})()''')
+    check("指标", "今日已投递不会超过标签上写的上限",
+          not cap_line[1] or cap_line[0] <= max(cap_line[1]),
+          cap_line[2])
     chips = js(page, '''(function(){var b=document.querySelectorAll("#metricsScope .scope-chip"),r=[];
       for(var i=0;i<b.length;i++)r.push(b[i].textContent);return JSON.stringify(r);})()''')
     check("指标", "账号范围切换可用", len(chips) >= 3, chips)
@@ -243,6 +261,28 @@ def main():
         check(tag, "时间标签照搬线上", time_bad == 0, f"{time_bad} 条时间不符")
         mine_ok = all(a["mine"] == b["mine"] for a, b in zip(ui, be))
         check(tag, "我方/对方方向正确", mine_ok)
+        # class 上有 me 不代表画在右边：气泡外层 wrapper 以前不限宽，
+        # 长消息一撑就占满整行，justify-content 推不动 —— 我方气泡被画到左边，
+        # 和 BOSS 端左右相反。这一条只能量像素。
+        sides = js(page, '''(function(){var box=document.getElementById("bossChatMessages");
+          if(!box)return JSON.stringify([null,null,null]);
+          var br=box.getBoundingClientRect(),mine=[],hr=[];
+          var rows=box.querySelectorAll(".boss-msg-row");
+          for(var i=0;i<rows.length;i++){
+            var el=rows[i].querySelector(".boss-msg-bubble")||rows[i].querySelector(".boss-msg-card");
+            if(!el||!(el.textContent||"").trim())continue;
+            var r=el.getBoundingClientRect();
+            if(r.width<40)continue;
+            var cls=rows[i].className;
+            if(/(^|\\s)me(\\s|$)/.test(cls))mine.push(Math.round(br.right-r.right));
+            else if(/(^|\\s)hr(\\s|$)/.test(cls))hr.push(Math.round(r.left-br.left));
+          }
+          return JSON.stringify([mine,hr,Math.round(br.width)]);})()''')
+        m_off, h_off, pane_w = sides
+        check(tag, "我方气泡贴着右边画（像素级）",
+              bool(m_off) and max(m_off) <= 28, f"右边距 {m_off} 栏宽 {pane_w}")
+        check(tag, "对方气泡贴着左边画（像素级）",
+              bool(h_off) and max(h_off) <= 60, f"左边距 {h_off} 栏宽 {pane_w}")
         page.get_screenshot(path=os.path.join(SHOTS, f"chat_a{acct}.png"))
 
     # 来源标签直出内部键（截图里看到过 scam_filter）= 界面在念数据库。
@@ -280,13 +320,30 @@ def main():
         each_matches_own_file = all(len(r) == len(b) and
                                     all(a["text"] == c["text"] for a, c in zip(r, b))
                                     for _, r, b, _ in per_identity)
+        detail = ""
+        if not each_matches_own_file:
+            # 光说"不对"没法定位：把每一路的行数差和第一条不一致的原文打出来
+            parts = []
+            for cid, r, b, _ in per_identity:
+                first_bad = next(
+                    (f"第{i}条 界面={(a['text'] or '')[:14]!r} 存档={(c['text'] or '')[:14]!r}"
+                     for i, (a, c) in enumerate(zip(r, b)) if a["text"] != c["text"]),
+                    "文本一致" if len(r) == len(b) else "条数不同")
+                parts.append(f"{(cid.split('#')[-1] or cid)[:10]}: "
+                             f"界面{len(r)}行/存档{len(b)}行 {first_bad}")
+            detail = " | ".join(parts)
+            print("      同昵称比对:", detail)
         # 两路的正文可以撞车（PK 分析卡那句话 BOSS 给谁都一样），
-        # 真正能证明"没并成一个文件"的是 data-mid：线上每条唯一
+        # 真正能证明"没并成一个文件"的是 data-mid：线上每条唯一。
+        # 只有"一条带 mid 的消息都没有"的那一路不参与比对：整路都是引擎自记的
+        # action 标记或老数据时本来就没 mid，拿它去比交集只会把"没证据"报成"有 bug"
         mids = [s for _, _, _, s in per_identity]
-        disjoint = all(mids) and not set.intersection(*[set(s) for s in mids])
+        keyed = [s for s in mids if s]
+        disjoint = len(keyed) >= 2 and not set.intersection(*[set(s) for s in keyed])
         check("会话身份", f"同昵称 {name}×{len(two)} 各自显示自己那一路",
-              each_matches_own_file, "点开后读到的不是该身份自己的文件")
-        check("会话身份", f"同昵称 {name}×{len(two)} 的 data-mid 互不重叠",
+              each_matches_own_file, detail or "点开后读到的不是该身份自己的文件")
+        check("会话身份", f"同昵称 {name}×{len(two)} 的 data-mid 互不重叠"
+              + (f"（{len(mids) - len(keyed)} 路无 mid，不参与）" if len(keyed) != len(mids) else ""),
               disjoint, f"mid 集合={mids}")
     else:
         check("会话身份", "存在同昵称多路会话可供校验", False,
@@ -296,6 +353,19 @@ def main():
             for(var i=0;i<it.length;i++){if((it[i].textContent||"").trim())return true;}
             return false;})()'''),
           "副标题（公司）没显示，同名会话在列表里分不出来")
+    # 全部账号下，同一个 姓名+公司 可能是两个号各自的对话（实测 陆女士@深圳小智）。
+    # 不挂账号标记，列表里就是两行一模一样的东西，点哪条全凭运气
+    dup = js(page, '''(function(){var rows=document.querySelectorAll(".boss-chat-item");
+      var ids={},tagged=0,bad=[];
+      function base(r){return (r.getAttribute("data-chat-key")||"").split("@a")[0];}
+      for(var i=0;i<rows.length;i++) ids[base(rows[i])]=(ids[base(rows[i])]||0)+1;
+      for(var j=0;j<rows.length;j++){
+        var b=base(rows[j]), chip=rows[j].querySelector(".boss-chat-item-acc");
+        if(ids[b]>1){ if(!chip) bad.push("缺标记:"+b.slice(0,18)); else tagged++; }
+        else if(chip) bad.push("多余:"+b.slice(0,18)); }
+      return JSON.stringify([tagged,bad.slice(0,4),rows.length]);})()''')
+    check("会话身份", "全部账号下撞车的身份挂了账号标记",
+          dup[0] > 0 and dup[1] == [], dup)
 
     # 会话这段验完切回打招呼表格，后面的截图和检查保持原来的场景
     js(page, 'switchRecordTab("greet")')
@@ -664,7 +734,27 @@ def main():
     time.sleep(.6)
     opened = js(page, 'document.getElementById("scopeNoteBox").className')
     check("左栏", "点标题能展开看完整清单", "open" in opened, opened)
-    box_h = js(page, 'Math.round(document.getElementById("scopeNoteBox").getBoundingClientRect().height)')
+    # max-height 是 .3s 过渡出来的：加完 class 立刻量会量到 0（实测偶发），
+    # 所以要轮询到它稳住，而不是"读一次说没高度"
+    box_h = 0
+    for _ in range(12):
+        time.sleep(.2)
+        box_h = js(page, 'Math.round(document.getElementById("scopeNoteBox")'
+                         '.getBoundingClientRect().height)') or 0
+        if box_h > 20:
+            break
+    if not box_h > 20:
+        # 只报"高度 0"没法定位：把祖先链的 display/max-height 和自身 scrollHeight 打出来，
+        # 才分得清是"祖先藏着"还是"点开又被谁收回去了"
+        box_h = js(page, '''(function(){var el=document.getElementById("scopeNoteBox");
+          var chain=[],p=el;
+          for(var i=0;i<5&&p;i++){var s=getComputedStyle(p);
+            chain.push((p.id||p.className).slice(0,24)+":"+s.display+"/"+s.maxHeight+"/h"+
+                       Math.round(p.getBoundingClientRect().height));
+            p=p.parentElement;}
+          return "高"+Math.round(el.getBoundingClientRect().height)
+                 +" scroll"+el.scrollHeight+" open="+el.classList.contains("open")
+                 +" 链["+chain.join(" < ")+"]";})()''')
     check("左栏", "展开后清单真的占出高度", box_h > 20, box_h)
     js(page, 'toggleBlock("scopeNoteToggle","scopeNoteBox")')
     time.sleep(.6)

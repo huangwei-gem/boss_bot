@@ -144,7 +144,25 @@ def same_text(a, b):
 
 
 def start_flask():
+    """前端这一腿要有个面板：线上面板已经起着就直接用，别再绑一个 5000。
+
+    Windows 允许两个进程同时 bind 同一端口，请求会被随机分到其中一边——
+    之前在这里又起一个实例，界面读到的就是"半真半假"的面板，
+    而且那一份实例的启停请求会打到真的投递轮上。
+    """
     sys.path.insert(0, os.path.join(BASE, "flask-version"))
+    import urllib.request
+
+    def alive():
+        try:
+            return urllib.request.urlopen(DASH, timeout=2).status == 200
+        except Exception:
+            return False
+
+    if alive():
+        print("   复用已在运行的面板，不再另起 5000 实例")
+        import app as A
+        return A
     import app as A
     A._open_dashboard = lambda *a, **k: None
     A._auto_ai_health = lambda *a, **k: None
@@ -152,35 +170,32 @@ def start_flask():
     if A._socketio_kwargs.get("async_mode") == "threading":
         kwargs["allow_unsafe_werkzeug"] = True
     threading.Thread(target=lambda: A.socketio.run(A.app, **kwargs), daemon=True).start()
-    import urllib.request
     for _ in range(60):
-        try:
-            if urllib.request.urlopen(DASH, timeout=2).status == 200:
-                return A
-        except Exception:
-            time.sleep(0.5)
+        if alive():
+            return A
+        time.sleep(0.5)
     raise RuntimeError("Flask 未就绪")
 
 
-def launch_browser():
+def launch_browser(account):
     assert os.path.exists(CLOAK), f"破解版浏览器不存在: {CLOAK}"
+    prof = os.path.join(BASE, "browser_data", f"account_{account}")
     co = ChromiumOptions()
     co.set_browser_path(CLOAK)
-    co.set_local_port(PORT)
-    # 用主账号的真实 profile：里面是已登录的 BOSS 会话
-    co.set_argument(f"--user-data-dir={os.path.join(BASE, 'browser_data', 'account_0')}")
+    co.set_local_port(9401 + account)
+    # 用该账号的真实 profile：里面是已登录的 BOSS 会话
+    co.set_argument(f"--user-data-dir={prof}")
     co.set_argument("--disable-blink-features=AutomationControlled")
     try:
         return ChromiumPage(co)
     except Exception as e:
         # 最常见原因：同一个 user-data-dir 已被另一个 Chrome 实例占用
-        # （account_0 是正式 profile，机器人正在跑时也会占）
-        prof = os.path.join(BASE, 'browser_data', 'account_0')
+        # （account_N 是正式 profile，机器人正在跑时也会占）
         print(f"浏览器起不来：{e}\n"
               f"多半是 profile 被占用：{prof}\n"
               f"查占用进程（只列不改）：\n"
               f'  powershell -NoProfile -Command "Get-CimInstance Win32_Process '
-              f'-Filter \\"Name=\'chrome.exe\'\\" | Where-Object {{ $_.CommandLine -like \'*account_0*\' }} '
+              f'-Filter \\"Name=\'chrome.exe\'\\" | Where-Object {{ $_.CommandLine -like \'*account_{account}*\' }} '
               f'| Select-Object ProcessId,CreationDate"\n'
               f"若机器人正在运行，请先在界面里点「停止」再跑本脚本。")
         raise
@@ -189,20 +204,30 @@ def launch_browser():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--chats", type=int, default=3, help="比对最近几个会话")
+    ap.add_argument("--account", type=int, default=0,
+                    help="比对哪个号（0=主账号）：profile、存档、界面数据范围都跟着切")
     args = ap.parse_args()
+    account = args.account
 
-    print("1) 起后端 ...")
+    print(f"1) 起后端（账号{account}）...")
     start_flask()
     from boss_bot.message_store import MessageStore
-    store = MessageStore(account_index=0)
-    backend_chats = {c["chat_id"]: c for c in store.get_chat_list()}
+    store = MessageStore(account_index=account)
+    # 只比对该号自己的存档：get_chat_list 是全目录扫描，别的号的文件混进来
+    # 就会把"BOSS 有、后端没存"判成有
+    backend_chats = {c["chat_id"]: c for c in store.get_chat_list()
+                     if int(c.get("account_index") or 0) == account}
     backend_by_name = {}
     for _cid, _c in backend_chats.items():
         backend_by_name.setdefault(_c["chat_name"], []).append(_c)
     print(f"   后端已存会话 {len(backend_chats)} 个")
 
     print("2) 起破解版浏览器，打开 BOSS 聊天页 ...")
-    page = launch_browser()
+    page = launch_browser(account)
+    # 用完必须关掉：这个浏览器占的是 browser_data/account_N 正式 profile，
+    # 脚本退了它不退，机器人再启动就连不上 922x（实测账号2 就是这么起不来的）
+    import atexit
+    atexit.register(lambda: getattr(page, "quit", lambda: None)())
     boss = page.new_tab(CHAT_URL)
     time.sleep(8)
 
@@ -215,14 +240,19 @@ def main():
     report["summary"]["backend_conversations"] = len(backend_chats)
 
     def identity_of(boss_row):
-        """BOSS 行 → 后端会话：先按 姓名+公司 精确认，认不出才算同名唯一的那条"""
+        """BOSS 行 → 后端会话：必须 姓名+公司 都对得上。
+
+        以前认不出就退到"同名唯一的那条"，结果把两段不同的对话当成一段比：
+        实测 熊女士 线上在聊 长沙乐芒少年文化传媒，存档里只有 熊女士#益丰大药房
+        （另一段对话），退路让脚本报出"后端 0 条 / 前端 2 条"这种假不一致。
+        对不上就是对不上，让它进"BOSS 有但后端没存"的名单。
+        """
         cands = backend_by_name.get(boss_row["name"]) or []
         comp = (boss_row.get("company") or "").strip()
-        if comp:
-            hits = [c for c in cands if (c.get("company") or "").strip() == comp]
-            if hits:
-                return hits[0]
-        return cands[0] if len(cands) == 1 else None
+        if not comp:
+            return cands[0] if len(cands) == 1 else None
+        hits = [c for c in cands if (c.get("company") or "").strip() == comp]
+        return hits[0] if hits else None
 
     # 会话身份集合比对：BOSS 有而后端没有的，按 姓名 报（重名不再互相顶替）
     boss_names = [b["name"] for b in boss_list if b["name"]]
@@ -236,6 +266,15 @@ def main():
 
     dash = page.new_tab(DASH)
     time.sleep(4)
+    # 前端这一腿也要跟着号走：数据范围不停在"全部账号"，
+    # 否则 selectBossChat(裸身份) 会挑到另一个号的同名会话
+    dash.run_js("setDataScope(%s)" % json.dumps(str(account)), as_expr=True)
+    time.sleep(2.5)
+    if account and str(account) not in (dash.run_js(
+            "(function(){var b=document.querySelector('.scope-chip.active');"
+            "return String((b&&b.getAttribute('data-scope'))||dataScope);})()",
+            as_expr=True) or ""):
+        print("   !! 界面数据范围没切到账号%d，前端这一腿不可信" % account)
 
     for t in targets:
         name, comp = t["name"], t.get("company") or ""
@@ -344,15 +383,17 @@ def main():
               + ("" if not row["issues"] else "  -> " + "; ".join(row["issues"])))
 
     bad = [c for c in report["chats"] if c["issues"]]
+    report["summary"]["account"] = account
     report["summary"]["checked"] = len(report["chats"])
     report["summary"]["inconsistent"] = len(bad)
     print("\n结论：")
-    print(f"  比对会话 {len(report['chats'])} 个，三端不一致 {len(bad)} 个")
+    print(f"  账号{account}：比对会话 {len(report['chats'])} 个，三端不一致 {len(bad)} 个")
     print(f"  BOSS 有但后端没存的会话：{report['summary']['boss_not_in_backend_count']} 个"
           f"（新会话未抓取/重名合并都会进这个名单）")
-    with open(os.path.join(BASE, "tools", "verify_three_way.json"), "w", encoding="utf-8") as f:
+    out = os.path.join(BASE, "tools", f"verify_three_way_a{account}.json")
+    with open(out, "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=2)
-    print("  明细：tools/verify_three_way.json")
+    print(f"  明细：{os.path.relpath(out, BASE)}")
     return 0 if not bad else 1
 
 

@@ -97,7 +97,7 @@ flask-version/*.log
 tools/e2e/
 tools/e2e_live/
 tools/*.png
-tools/verify_three_way.json
+tools/verify_three_way*.json
 tools/verify_dashboard_ui.json
 tools/full_test_result.json
 tools/message_types.json

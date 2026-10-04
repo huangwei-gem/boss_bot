@@ -556,6 +556,18 @@ def _enrich_status(data: dict) -> dict:
 
 # ===================== 启动/停止 API =====================
 
+def _control_trace():
+    """是谁按的启动/停止：来源 IP、UA、数据范围。
+
+    2026-10-04 20:44 两个号的投递轮被一次停止打断，事后查不到是谁发的
+    （werkzeug 的访问日志不进 boss_bot.log），只能靠这条留痕。
+    """
+    ua = (request.headers.get("User-Agent") or "")[:90]
+    return (f"来源={request.remote_addr} scope={request.args.get('scope')}"
+            f" referer={(request.headers.get('Referer') or '')[-40:]}"
+            f" ua={ua}")
+
+
 def _ensure_status_pusher():
     """状态推送线程只由 /api/start 拉起过；单独启动某个账号时也要有，
     否则界面只能靠自己轮询，账号点的状态半天不动。"""
@@ -567,9 +579,22 @@ def _ensure_status_pusher():
     _status_thread.start()
 
 
+def _control_trace():
+    """启停这种"会把投递打断"的动作，必须能从日志里回溯到是谁发的。
+
+    2026-10-04 20:44 两个号的轮次被一次停止请求打断，事后查不到来源，
+    只能靠 werkzeug 的访问日志（默认没进 boss_bot.log）。这里补一条。
+    """
+    return "%s ua=%s referer=%s" % (
+        request.remote_addr,
+        (request.headers.get("User-Agent") or "-")[:60],
+        (request.headers.get("Referer") or "-")[:60])
+
+
 @app.route("/api/start", methods=["POST"])
 def api_start():
     """启动所有启用的账号。"""
+    logger.info("[/api/start] 来源 %s", _control_trace())
     manager = _ensure_manager()
     status = manager.get_status()
     if status.get("running"):
@@ -592,6 +617,7 @@ def api_stop():
     3. 任何异常都吞掉并记录日志，始终返回 200 响应
     """
     global _status_thread
+    logger.info("[/api/stop] 来源 %s", _control_trace())
     _status_stop.set()
     stop_errors = []
     try:
