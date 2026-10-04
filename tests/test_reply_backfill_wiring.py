@@ -429,3 +429,43 @@ class ReplyBudgetTest:
             "发送之前不占额度（函数结尾那种无条件计数就是老写法）"
         assert "self._reply_engine.record_reply()" in after.split("else:", 1)[0], \
             "发送成功那一路要占额度"
+
+
+class RoundBudgetTest:
+    """一轮回复要有时间预算：一轮跑五分钟，期间新来的红点就只能等下一轮。"""
+
+    def _loop(self, tmp_path, monkeypatch, n_unread, per_chat_seconds):
+        loop = _make_loop(tmp_path, monkeypatch)
+        loop._running = True
+        loop._reply_paused = False
+        loop._chat_handler.get_unread_chats.return_value = [
+            {"name": f"HR{i}", "company": f"公司{i}", "unread_count": 1, "index": i}
+            for i in range(n_unread)]
+        loop._msg_store.get_all_chats_detail.return_value = []
+        loop._reply_engine = MagicMock()
+        loop._reply_engine.can_reply.return_value = True
+        handled = []
+        clock = {"t": 0.0}
+        monkeypatch.setattr("boss_bot.main_loop.time.time", lambda: clock["t"])
+
+        def _handle(info):
+            handled.append(info["name"])
+            clock["t"] += per_chat_seconds      # 每个会话要点开、判分、发送：真实耗时
+
+        loop._process_single_chat = _handle
+        loop.REPLY_ROUND_BUDGET_SECONDS = 120
+        return loop, handled
+
+    def test_超预算就收工留下没处理的(self, tmp_path, monkeypatch):
+        # 每个会话 30 秒：4 个之后到 120 秒，第 5 个就不该再开
+        loop, handled = self._loop(tmp_path, monkeypatch, 8, 30)
+        logs = []
+        loop._log = lambda *a, **k: logs.append(a[-1])
+        loop._run_reply_round()
+        assert len(handled) == 4, f"到点就该收工，实际处理了 {len(handled)} 个"
+        assert any("预算" in str(x) or "下一轮" in str(x) for x in logs), logs
+
+    def test_没超预算就全做完(self, tmp_path, monkeypatch):
+        loop, handled = self._loop(tmp_path, monkeypatch, 3, 10)
+        loop._run_reply_round()
+        assert len(handled) == 3

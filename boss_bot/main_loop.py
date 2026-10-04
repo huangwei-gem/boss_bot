@@ -1676,6 +1676,7 @@ class UnifiedBotLoop:
     def _run_reply_round(self):
         """执行一轮回复任务：检查未读消息并回复。"""
         self._log("INFO", "━━━ 开始回复轮次 ━━━")
+        round_started = time.time()
         self._stats_dict["reply_rounds"] += 1
         self._last_check = datetime.now().strftime("%H:%M:%S")
 
@@ -1726,8 +1727,17 @@ class UnifiedBotLoop:
                         chat_info.get("job_name", ""),
                         chat_info.get("company", ""))
 
-                for chat_info in candidates:
+                for _ci, chat_info in enumerate(candidates):
                     if not self._running or self._reply_paused:
+                        break
+
+                    # 一轮要有时间预算：候选按"新红点在前、存档欠账在后"排，
+                    # 一轮跑到五六分钟的话，中途刚来的 HR 消息要等整轮做完才轮得上。
+                    # 到点收工不影响吞吐——没处理的不会被标已处理，下一轮接着做。
+                    spent = time.time() - round_started
+                    if spent >= self.REPLY_ROUND_BUDGET_SECONDS:
+                        self._log("INFO", f"本轮 {int(spent)}s 到预算，收工；"
+                                          f"剩 {len(candidates) - _ci} 个下一轮接着做")
                         break
 
                     # 每小时主动发送额度是面板上那个框管的东西，回复轮和跟进轮共用。
@@ -1773,6 +1783,8 @@ class UnifiedBotLoop:
     OWED_SCAN_SECONDS = 60
     # 红点深扫（滚到侧栏底）的间隔：平时只滚靠前那 ~120 行就够了
     DEEP_SWEEP_SECONDS = 300
+    # 一轮回复的时间预算：超了就收工，下一轮接着做，别让新来的红点等整轮
+    REPLY_ROUND_BUDGET_SECONDS = 120
     # 全量同步每读这么多个会话就插一轮回复：整轮同步要逐个点开 270 多个会话
     # （实测 25~50 分钟），一路挡住回复轮就等于这段时间里没人回话
     SYNC_REPLY_EVERY = 20

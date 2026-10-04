@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from boss_bot.self_evolve import SelfEvolveEngine
+from boss_bot.self_evolve import SelfEvolveEngine, _is_leaked_reply
 
 
 def _engine(tmp_path, records=None, stats=None, templates=None):
@@ -177,23 +177,34 @@ class PurifyTest:
         assert e._reply_stats["negative"] == 2
 
     def test_真实数据能过purify(self, tmp_path):
-        """用生产文件的真实脏记录跑一遍，确认纠正方向正确。"""
-        # 取快照而不是直接读生产文件：面板在跑就会持续重写它，断言会随机飘
+        """生产文件要能过 purify：不炸、方向不越界、幂等、不改源文件。
+
+        以前这里按 id 断言（by_id[1]、by_id[7]…），也断言"数据里必须有拒绝记录"。
+        生产文件是一直往前滚的 200 条窗口，昨天的 id 今天就被挤出去了——
+        测试会因为"账本换了"而红，跟被测代码对不对没关系。
+        "拒绝话术必须判成 negative"这条方向性断言留在上面的合成用例里，那里数据是钉死的。
+        """
         snapshot = tmp_path / "prod_snapshot.json"
         snapshot.write_bytes(Path("data/evolution_data_account_1.json").read_bytes())
-        src = json.load(open(snapshot, encoding="utf-8"))
+        pristine = json.load(open(snapshot, encoding="utf-8"))
+        import copy
+        src = copy.deepcopy(pristine)
+        # 生产数据大多已被线上引擎标过 purified（purify 只重判没标过的），
+        # 这里把标记去掉，让这份真实形状全量走一遍判据
+        for r in src["reply_records"]:
+            r.pop("purified", None)
         e = _engine(tmp_path, src["reply_records"], src["reply_stats"],
                     src["template_effectiveness"])
         e.purify_records()
-        by_id = {r["id"]: r for r in e._reply_records}
-        assert by_id[1]["effect"] == "negative"
-        assert by_id[4]["effect"] == "negative"
-        assert by_id[13]["effect"] == "negative"
-        assert by_id[20]["effect"] == "negative"
-        assert by_id[7].get("excluded") is True
-        assert by_id[8].get("excluded") is True
-        assert by_id[9].get("excluded") is True
-        assert by_id[21].get("excluded") is True
-        assert by_id[50].get("excluded") is True
+
+        legal = {None, "positive", "neutral", "negative", "ignored"}
+        odd = [(r.get("id"), r.get("effect")) for r in e._reply_records
+               if r.get("effect") not in legal]
+        assert not odd, f"purify 不该产出没定义过的标签：{odd[:5]}"
+        leaked = [r for r in e._reply_records if _is_leaked_reply(r.get("reply_text") or "")]
+        assert all(r.get("excluded") for r in leaked), "泄漏思考过程的记录要被剔除出统计"
+
+        again = e.purify_records()
+        assert sum(again.values()) == 0, "purify 必须幂等：第二次不该再改任何东西"
         # purify 不动读进来的那份数据，归档写到引擎自己的目录
-        assert json.load(open(snapshot, encoding="utf-8")) == src
+        assert json.load(open(snapshot, encoding="utf-8")) == pristine
