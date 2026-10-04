@@ -46,8 +46,13 @@ def check(group, name, ok, detail=""):
 
 
 def js(tab, code):
-    """run_js 包装：把 JSON 字符串还原成 Python 对象"""
-    raw = tab.run_js(code, as_expr=True)
+    """run_js 包装：把 JSON 字符串还原成 Python 对象
+
+    60 秒而不是默认 30 秒：跑实测时线上面板正在做启动全量同步（逐个点开 270 个会话），
+    加上两个真浏览器和 AI 请求，页面主线程被排到后面，读一个按钮文字也能超 30 秒——
+    整场实测就这么在 64 项之后崩掉，看不出任何被测代码的问题。
+    """
+    raw = tab.run_js(code, as_expr=True, timeout=60)
     if isinstance(raw, str) and raw[:1] in "[{":
         try:
             return json.loads(raw)
@@ -81,7 +86,18 @@ def launch():
     co.set_argument(f"--user-data-dir={os.path.join(BASE, 'browser_data', 'e2e')}")
     co.set_argument("--disable-blink-features=AutomationControlled")
     co.set_argument("--window-size=1440,900")
-    page = ChromiumPage(co)
+    # 机器忙时 cloakbrowser 起得慢，DrissionPage 连不上 9402 就抛 BrowserConnectError，
+    # 而它拉起的浏览器还活着——下一次实测会被自己留下的 profile 锁挡住。多试两次即可。
+    last_err = None
+    for _ in range(3):
+        try:
+            page = ChromiumPage(co)
+            break
+        except Exception as e:
+            last_err = e
+            time.sleep(6)
+    else:
+        raise last_err
     # 脚本退了浏览器不能留着：browser_data/e2e 被它占住，下一次实测和
     # 截图巡检都会连不上（verify_three_way 还因此把账号2 的正式 profile 锁了）
     import atexit

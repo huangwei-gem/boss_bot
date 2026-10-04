@@ -502,13 +502,53 @@ class ReplyRecordStore:
             logger.error(f"保存回复记录失败: {e}")
 
     def add(self, record: ReplyRecord):
-        """添加一条回复记录。"""
+        """添加一条回复记录；同一件事的两次落库并成一条。
+
+        一次回复天生被写两遍：decide_reply 生成时记一条（带 system_prompt、
+        ai_raw_response 这些证据），发出去以后 main_loop 又记一条（"…已发送"）。
+        两边都有用——前者是"这句话怎么来的"，后者是"确实发出去了"——所以不删任何
+        一边，而是把后一条并进前一条。1730 条记录里 657 条是这么重复出来的，
+        界面上每条回复成对出现，"已回复"的计数也翻倍。
+        """
         with self._lock:
+            prev = self._find_same_event(record)
+            if prev is not None:
+                for field, value in record.to_dict().items():
+                    if value in (None, "", False):
+                        continue
+                    if hasattr(prev, field):
+                        setattr(prev, field, value)
+                self._save()
+                return
             self._records.append(record)
             # 超过上限时截断旧记录
             if len(self._records) > MAX_REPLY_RECORDS * 2:
                 self._records = self._records[-MAX_REPLY_RECORDS:]
             self._save()
+
+    _DUP_WINDOW_SEC = 600
+
+    def _find_same_event(self, record: ReplyRecord):
+        """在最近若干条里找"同一件事"：同一账号、同一会话、回的是同一句、答的是同一句。
+
+        跳过和发出不能并：跳过那条是"为什么没回"的证据，并掉就等于把账抹了。
+        """
+        for prev in reversed(self._records[-30:]):
+            if bool(prev.is_skipped) != bool(record.is_skipped):
+                continue
+            if (str(prev.account_index), prev.chat_name,
+                    prev.received_message, prev.reply_content) != (
+                    str(record.account_index), record.chat_name,
+                    record.received_message, record.reply_content):
+                continue
+            try:
+                a = datetime.strptime(prev.timestamp[:19], "%Y-%m-%d %H:%M:%S")
+                b = datetime.strptime(record.timestamp[:19], "%Y-%m-%d %H:%M:%S")
+            except Exception:
+                continue
+            if abs((b - a).total_seconds()) <= self._DUP_WINDOW_SEC:
+                return prev
+        return None
 
     def get_all(self) -> List[ReplyRecord]:
         """获取所有回复记录。"""
