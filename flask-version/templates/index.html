@@ -122,10 +122,15 @@ a{color:var(--accent);text-decoration:none}
 .hidden{display:none!important}
 
 /* Layout */
+/* 左栏两列布局：标签一列、控件一列。列宽做成变量，窄屏时一起缩，
+   不随窗口变化的话 360px 栏里就会挤出一堆参差（2026-10-04 实测 8 种控件左边缘） */
+:root{--side-label-w:96px;--side-w:360px}
 .app{display:flex;width:100%;height:100vh;height:100dvh}
-.side{flex:0 0 360px;display:flex;flex-direction:column;background:var(--side-bg);color:var(--side-text);position:relative;z-index:10;border-right:1px solid var(--bd);overflow:hidden;-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+.side{flex:0 0 var(--side-w);width:var(--side-w);display:flex;flex-direction:column;background:var(--side-bg);color:var(--side-text);position:relative;z-index:10;border-right:1px solid var(--bd);overflow:hidden;-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
 .side-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--side-input-bd);flex-shrink:0}
-.side-head .logo-wrap{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#5b7cfa,#8a6bfa);display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;flex-shrink:0;box-shadow:0 2px 12px rgba(91,124,250,.35);transition:transform .2s ease,box-shadow .2s ease}.side-head .logo-wrap:hover{transform:scale(1.1);box-shadow:0 4px 20px rgba(91,124,250,.5)}
+.side-head .logo-wrap{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--accent);background:linear-gradient(180deg,rgba(91,124,250,.26),rgba(91,124,250,.10));border:1px solid rgba(91,124,250,.4);box-shadow:0 2px 12px rgba(91,124,250,.25),inset 0 1px 0 rgba(255,255,255,.18);transition:transform .2s ease,box-shadow .2s ease}
+.side-head .logo-wrap .ki{width:19px;height:19px}
+.side-head .logo-wrap:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(91,124,250,.38)}
 .side-head .logo-text{font-size:14px;font-weight:600;flex:1;letter-spacing:-.02em;text-wrap:balance}
 .side-head .conn-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500;background:var(--success-bg);color:var(--success)}
 .side-head .conn-badge.disconnected{background:var(--danger-bg);color:var(--danger)}
@@ -141,9 +146,9 @@ a{color:var(--accent);text-decoration:none}
 .adv-toggle.open .arrow{rotate:90deg}
 .adv-section{overflow:hidden;max-height:0;transition:max-height .3s ease;display:flex;flex-direction:column;gap:8px}
 .adv-section.open{max-height:2000px}
-.adv-field-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--fg-2nd);padding:2px 0}
-.adv-field-row label{flex-shrink:0;font-size:10.5px;font-weight:500;color:var(--side-label);min-width:56px}
-.adv-field-row .side-form-input{flex:1}
+.adv-field-row{display:grid;grid-template-columns:var(--side-label-w) minmax(0,1fr);column-gap:8px;align-items:center;font-size:12px;color:var(--fg-2nd);padding:2px 0}
+.adv-field-row label{font-size:10.5px;font-weight:500;color:var(--side-label);line-height:1.3;min-width:0}
+.adv-field-row .side-form-input{width:100%;min-width:0}
 .adv-group-title{font-size:10px;font-weight:600;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em;padding:4px 0 2px;border-bottom:1px solid var(--side-input-bd)}
 /* 左栏说明文字统一一档：10px 次级色，正文一句说完，细节进 title */
 .side-hint{font-size:10px;line-height:1.5;color:var(--fg-4th);margin-top:2px}
@@ -176,12 +181,21 @@ a{color:var(--accent);text-decoration:none}
 .side-form-input:focus,.side-form-select:focus{border-color:rgba(91,124,250,.55);box-shadow:0 0 0 3px rgba(91,124,250,.15)}
 .side-form-input::placeholder{color:var(--fg-4th)}
 .side-form-select option{background:var(--surface);color:var(--fg)}
-.acc-field-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--fg-2nd)}
-.acc-field-row label{flex-shrink:0;font-size:10.5px;font-weight:500;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em;min-width:48px}
+.acc-field-row{display:grid;grid-template-columns:var(--side-label-w) minmax(0,1fr);column-gap:8px;align-items:center;font-size:12px;color:var(--fg-2nd)}
+.acc-field-row label{font-size:10.5px;font-weight:500;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em;line-height:1.3;min-width:0}
+/* 说明行横跨两列：跟在复选框后面会被挤成 88px 宽的三行小条 */
+.acc-field-row>.side-hint,.adv-field-row>.side-hint{grid-column:1/-1}
+/* 竖排的字段行（标签在上、输入框在下），不参与两列对齐 */
+.acc-stack{display:flex;flex-direction:column;align-items:stretch;gap:4px}
+.acc-cell{display:flex;flex-direction:column;gap:4px;min-width:0}
+.acc-cell .file-btn{align-self:flex-end}
+.acc-inline{display:flex;align-items:center;gap:6px;min-width:0}
 
 /* File upload */
-.file-input-wrap{display:flex;flex:1;gap:4px}
-.file-input-wrap .side-form-input{flex:1}
+/* Cookie 那一行：控件列只有 ~220px，输入框和两个按钮挤一行会把文件名截断，
+   所以输入框独占一行，上传/删除落到下一行 */
+.file-input-wrap{display:flex;flex-wrap:wrap;gap:4px;min-width:0}
+.file-input-wrap .side-form-input{flex:1 1 100%;min-width:0}
 .file-btn{flex-shrink:0;padding:6px 10px;font-size:10.5px;font-weight:500;border-radius:4px;background:rgba(91,124,250,.2);color:var(--accent);border:1px solid rgba(91,124,250,.25);transition:all var(--dur) var(--ease);white-space:nowrap}
 .file-btn:hover{background:rgba(91,124,250,.32)}
 
@@ -323,6 +337,30 @@ a{color:var(--accent);text-decoration:none}
 .btn-ghost:hover{background:var(--surface-hover);color:var(--fg);box-shadow:var(--sh);transform:translateY(-1px)}
 .btn-warn{background:var(--warning);color:#fff;box-shadow:0 2px 8px rgba(245,158,11,.22)}
 .btn-warn:hover{filter:brightness(1.05);box-shadow:0 6px 18px rgba(245,158,11,.32);transform:translateY(-1px)}
+/* 运行控制：启动/停止是同一颗按钮的两个状态，形状必须一致。
+   以前是实心绿块/实心红块，和旁边一排玻璃按钮完全不搭（2026-10-04 用户："停止和开启的这个UI不太好看"） */
+.btn-run{display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:0 14px;border-radius:999px;
+  font-size:11.5px;font-weight:600;letter-spacing:.01em;color:var(--accent);
+  border:1px solid rgba(91,124,250,.45);
+  background:linear-gradient(180deg,rgba(91,124,250,.22),rgba(91,124,250,.08));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 3px 12px rgba(91,124,250,.16);
+  transition:all var(--dur) var(--ease)}
+.btn-run:hover{border-color:rgba(91,124,250,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 5px 18px rgba(91,124,250,.26);transform:translateY(-1px)}
+.btn-run:active{transform:translateY(0)}
+.btn-run:disabled{opacity:.5;pointer-events:none}
+.btn-run .run-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none;box-shadow:0 0 0 3px rgba(91,124,250,.16)}
+.btn-run.stop{color:var(--danger);border-color:rgba(198,43,43,.45);
+  background:linear-gradient(180deg,rgba(239,68,68,.18),rgba(239,68,68,.06));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 3px 12px rgba(239,68,68,.14)}
+.btn-run.stop:hover{border-color:rgba(239,68,68,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 5px 18px rgba(239,68,68,.22)}
+.btn-run.stop .run-dot{box-shadow:0 0 0 3px rgba(239,68,68,.16);animation:runPulse 1.4s ease-in-out infinite}
+@keyframes runPulse{0%,100%{opacity:1}50%{opacity:.3}}
+@media(prefers-reduced-motion:reduce){.btn-run.stop .run-dot{animation:none}}
+/* 暂停/恢复这类次级运行按钮：跟着语义着色，但不再整块刷成实心色 */
+.btn-tint{background:var(--surface-soft);border:1px solid var(--bd);color:var(--fg-2nd);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+.btn-tint:hover{transform:translateY(-1px);box-shadow:var(--sh)}
+.btn-tint.warn{color:var(--warning);border-color:rgba(245,158,11,.34);background:var(--warning-bg)}
+.btn-tint.ok{color:var(--success);border-color:rgba(16,185,129,.3);background:var(--success-bg)}
 
 /* Panels */
 .panel-row{display:flex;gap:8px;flex:1;min-height:0}
@@ -550,8 +588,12 @@ a{color:var(--accent);text-decoration:none}
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
 /* Responsive */
+/* 侧栏宽度以前写死 flex-basis:360px，@media 里那条 280px 的 .side 宽度被 flex-basis 压住从不生效；
+   现在两档都用变量收，窄窗口下右栏还有地方放，两列对齐关系不变 */
+@media(max-width:1180px){:root{--side-w:326px;--side-label-w:88px}}
+@media(max-width:1000px){:root{--side-w:296px;--side-label-w:80px}}
 @media(max-width:1200px){.stats-grid{grid-template-columns:repeat(4,1fr)}.panel-half{flex:none;width:100%}.panel-row{flex-direction:column}}
-@media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}.side{width:280px}.panel-row{flex-direction:column}}
+@media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}.panel-row{flex-direction:column}}
 @media(max-width:600px){.side{display:none}.stats-grid{grid-template-columns:1fr}.content{padding:12px}.topbar{padding:8px 12px}.topbar-title{font-size:14px}.stat-card{padding:10px}.stat-value{font-size:20px}.btn-sm{padding:4px 8px;font-size:11px}.modal{width:95%;max-width:400px}.modal-large{width:95%;max-width:600px}}
 
 /* ── 移动端适配 ── */
@@ -816,7 +858,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
 <div class="app">
   <div class="side">
     <div class="side-head">
-      <div class="logo-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M12 8v8M8 12h8"/></svg></div>
+      <div class="logo-wrap"><i data-ki="briefcase"></i></div>
       <div class="logo-text">Boss直聘</div>
       <span class="conn-badge" id="connStatus">已连接</span>
     </div>
@@ -842,10 +884,12 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
         </div>
         <div class="acc-field-row" style="gap:6px"><label>启用</label><span id="accEnabled" class="toggle-switch on" onclick="toggleAccEnabled()"></span></div>
         <div class="acc-field-row" style="align-items:flex-start"><label style="margin-top:5px">招呼语</label>
-          <textarea class="side-form-input" id="accGreeting" rows="3" style="resize:vertical;min-height:52px;line-height:1.45"
-                    placeholder="本账号的招呼语；留空则按本账号的城市/方向/技能自动生成一条默认" onchange="onAccChange()"></textarea>
-          <button class="file-btn" style="margin-top:5px" onclick="regenGreeting()"
-                  title="按这个账号自己的城市/岗位方向/简历画像重生成一条默认招呼语"><i data-ki="regenerate"></i>重新生成</button>
+          <div class="acc-cell">
+            <textarea class="side-form-input" id="accGreeting" rows="3" style="resize:vertical;min-height:52px;line-height:1.45;width:100%"
+                      placeholder="本账号的招呼语；留空则按本账号的城市/方向/技能自动生成一条默认" onchange="onAccChange()"></textarea>
+            <button class="file-btn" onclick="regenGreeting()"
+                    title="按这个账号自己的城市/岗位方向/简历画像重生成一条默认招呼语"><i data-ki="regenerate"></i>重新生成</button>
+          </div>
         </div>
         <div id="accGreetingMode" style="font-size:10px;margin-top:2px;line-height:1.5;color:var(--fg-4th)"></div>
         <!-- 取话顺序只留一行，完整规则挂在 title 上：左栏一屏装不下两段说明 -->
@@ -886,17 +930,19 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
           <div class="side-hint" style="margin:-4px 0 8px" title="体检会给每个接口真实发一条 4 个字的测试消息，返回了内容才算可用（推理模型正文为空但 reasoning 有内容也算可用）；不可用的接口会标出具体原因：Key 失效 / 额度用尽 / 模型名不对 / 地址不对">体检=真发一条测试消息，返回内容才算可用</div>
           <div id="aiProviders" style="margin-top:8px"></div>
         </div>
-        <div class="acc-field-row" style="flex-direction:column;align-items:stretch;gap:4px;margin-top:8px">
+        <div class="acc-field-row acc-stack" style="margin-top:8px">
           <label style="font-size:12px;font-weight:600">自定义筛选词</label>
           <input class="side-form-input" id="customFilterKeywords" type="text" placeholder="输入筛选关键词，逗号或顿号分隔，如：主播、地推、需坐班" style="width:100%;box-sizing:border-box" onchange="onCustomAiChange()">
           <div class="side-hint" title="这些关键词会追加到 AI 打分提示词里，让它额外关注这些条件；一条一个词，逗号/顿号/分号都能分">追加进打分提示词，逗号或顿号分隔</div>
         </div>
-        <div class="acc-field-row" style="gap:6px;margin-top:6px;align-items:flex-start">
-          <input type="checkbox" id="aiVetoOnly" style="margin-top:2px" onchange="onCustomAiChange()">
+        <div class="acc-field-row" style="margin-top:6px">
           <label for="aiVetoOnly" style="font-size:12px;font-weight:600">只看否决词</label>
-          <div class="side-hint" title="勾上后 AI 的分数和&quot;方向不符/经验不符&quot;一律不拦，只有命中上面筛选词的岗位才不发。要放量时用；招呼语仍由 AI 按岗位现编。">只拦命中筛选词的，分数与方向一律放行</div>
+          <div class="acc-inline">
+            <input type="checkbox" id="aiVetoOnly" style="width:auto;flex-shrink:0" onchange="onCustomAiChange()">
+            <span class="side-hint" style="margin:0" title="勾上后 AI 的分数和&quot;方向不符/经验不符&quot;一律不拦，只有命中上面筛选词的岗位才不发。要放量时用；招呼语仍由 AI 按岗位现编。">只拦命中筛选词的，分数与方向一律放行</span>
+          </div>
         </div>
-        <div class="acc-field-row" style="flex-direction:column;align-items:stretch;gap:4px;margin-top:6px">
+        <div class="acc-field-row acc-stack" style="margin-top:6px">
           <label style="font-size:12px;font-weight:600">自定义打分提示词</label>
           <textarea id="customScoringPrompt" rows="3" placeholder="输入自定义打分要求，如：优先考虑有大数据经验的岗位，扣分项：加班严重、单休" style="width:100%;min-height:80px;box-sizing:border-box;padding:6px 8px;font-size:12px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg);color:var(--fg);resize:vertical;font-family:inherit" onchange="onCustomAiChange()"></textarea>
           <div class="side-hint" title="追加到 AI 系统提示词后面，用于自定义打分标准；留空则使用系统默认打分逻辑">追加到系统提示词；留空=用默认打分逻辑</div>
@@ -966,6 +1012,8 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
             <div class="adv-field-row"><label title="同一会话两次跟进之间的最小间隔">两次跟进至少隔(小时)</label><input class="side-form-input" id="advFollowGap" type="number" value="24" min="1" max="168" step="1" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label title="追到这个次数就不再追了，再多就是骚扰">同会话最多追(次)</label><input class="side-form-input" id="advFollowMax" type="number" value="2" min="1" max="5" step="1" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label title="跟进要滚动逐个开会话，扫得比回复轮稀得多">跟进扫描间隔(分钟)</label><input class="side-form-input" id="advFollowEvery" type="number" value="15" min="1" max="240" step="1" onchange="onAdvChange()"></div>
+            <div class="adv-group-title">HR 索要联系方式</div>
+            <div class="adv-field-row"><label title="HR 发来「是否同意交换微信/电话」的卡片时直接点卡片上的「同意」；关掉则只回话、不点卡片，留给人工处理">自动点同意交换</label><span id="advAcceptContact" class="toggle-switch" onclick="toggleAdvBool('accept_contact_exchange')"></span></div>
             <div class="adv-group-title">运行时开关（改完立即生效）</div>
             <div class="adv-field-row"><label title="照常搜索岗位、照常让 AI 判分和生成回复，只在最后一步不点发送：不消耗每日上限，也不会打扰 HR">演练模式（只筛不发）</label><span id="advDryRun" class="toggle-switch" onclick="toggleAdvBool('dry_run')"></span></div>
             <div class="adv-field-row"><label title="容灾链不再把 30s 预算浪费在体检明确不可用的接口上（相对顺序不变）；全部不可用时自动不生效">跳过体检不可用的AI接口</label><span id="advSkipUnhealthy" class="toggle-switch" onclick="toggleAdvBool('skip_unhealthy')"></span></div>
@@ -1034,14 +1082,14 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
       <div class="action-bar">
         <span class="action-label"><i data-ki="power"></i>操作</span>
         <span class="scope-hint" id="actionScopeLabel" title="上方按钮只作用于当前数据范围"></span>
-        <button class="btn btn-success btn-sm" id="btnStartAll" onclick="startAll()"><i data-ki="start"></i>启动</button>
-        <button class="btn btn-danger btn-sm" id="btnStopAll" onclick="stopAll()" style="display:none"><i data-ki="stop"></i>停止</button>
+        <button class="btn-run" id="btnStartAll" onclick="startAll()"><span class="run-dot"></span><i data-ki="start"></i>启动</button>
+        <button class="btn-run stop" id="btnStopAll" onclick="stopAll()" style="display:none"><span class="run-dot"></span><i data-ki="stop"></i>停止</button>
         <button class="btn btn-ghost btn-sm" id="btnSaveConfig" onclick="saveConfigShow()" title="把当前侧边栏里的配置写入 bot_config.json"><i data-ki="save"></i>保存配置</button>
         <button class="btn btn-ghost btn-sm" onclick="showExcelModal()"><i data-ki="export"></i>Excel 导出</button>
-        <button class="btn btn-warn btn-sm" id="btnPauseGreet" onclick="pauseGreet()" style="display:none"><i data-ki="mute"></i>暂停打招呼</button>
-        <button class="btn btn-success btn-sm" id="btnResumeGreet" onclick="resumeGreet()" style="display:none"><i data-ki="greet"></i>恢复打招呼</button>
-        <button class="btn btn-warn btn-sm" id="btnPauseReply" onclick="pauseReply()" style="display:none"><i data-ki="mute"></i>暂停回复</button>
-        <button class="btn btn-success btn-sm" id="btnResumeReply" onclick="resumeReply()" style="display:none"><i data-ki="reply"></i>恢复回复</button>
+        <button class="btn btn-sm btn-tint warn" id="btnPauseGreet" onclick="pauseGreet()" style="display:none"><i data-ki="mute"></i><span class="btn-label">暂停打招呼</span></button>
+        <button class="btn btn-sm btn-tint ok" id="btnResumeGreet" onclick="resumeGreet()" style="display:none"><i data-ki="greet"></i><span class="btn-label">恢复打招呼</span></button>
+        <button class="btn btn-sm btn-tint warn" id="btnPauseReply" onclick="pauseReply()" style="display:none"><i data-ki="mute"></i><span class="btn-label">暂停回复</span></button>
+        <button class="btn btn-sm btn-tint ok" id="btnResumeReply" onclick="resumeReply()" style="display:none"><i data-ki="reply"></i><span class="btn-label">恢复回复</span></button>
         <button class="btn btn-ghost btn-sm" onclick="downloadReplyRecords()"><i data-ki="download"></i>下载回复记录</button>
         <button class="btn btn-ghost btn-sm" onclick="downloadGreetRecords()"><i data-ki="download"></i>下载打招呼记录</button>
         <button class="btn btn-ghost btn-sm" onclick="showArchiveModal()"><i data-ki="history"></i>历史数据</button>
@@ -1091,6 +1139,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
                 <option value="intent">意图匹配</option>
                 <option value="default">兜底回复</option>
                 <option value="followup">主动跟进</option>
+                <option value="contact">同意交换</option>
                 <option value="manual">人工发送</option>
                 <!-- 盘上真实存在这几类，缺一项就筛不到 -->
                 <option value="greet">机器招呼</option>
@@ -2863,6 +2912,7 @@ function renderAdvSettings() {
   setVal('advFollowGap', _rl.followup_gap_hours != null ? _rl.followup_gap_hours : 24);
   setVal('advFollowMax', _rl.followup_max_times != null ? _rl.followup_max_times : 2);
   setVal('advFollowEvery', _rl.followup_every_minutes != null ? _rl.followup_every_minutes : 15);
+  setEl('advAcceptContact', 'toggle-switch' + (_rl.accept_contact_exchange !== false ? ' on' : ''));
 
   // 运行时开关：演练 / 跳过不可用AI接口 / 自进化记录
   setEl('advDryRun', 'toggle-switch' + (config.dry_run ? ' on' : ''));
@@ -2917,6 +2967,11 @@ function toggleAdvBool(key) {
     config.reply.followup_enabled = !(config.reply.followup_enabled !== false);
     setEl('advFollowup', 'toggle-switch' + (config.reply.followup_enabled ? ' on' : ''));
     toast(config.reply.followup_enabled ? '已开启主动跟进：对方沉默够久会追一句约面试' : '已关闭主动跟进：只被动回复');
+  } else if (key === "accept_contact_exchange") {
+    if (!config.reply) config.reply = {};
+    config.reply.accept_contact_exchange = !(config.reply.accept_contact_exchange !== false);
+    setEl('advAcceptContact', 'toggle-switch' + (config.reply.accept_contact_exchange ? ' on' : ''));
+    toast(config.reply.accept_contact_exchange ? '已开启：HR 要交换微信/电话时直接点同意' : '已关闭：交换联系方式留给人工处理');
   } else if (key === "self_evolve") {
     config.self_evolve_enabled = !(config.self_evolve_enabled !== false);
     setEl('advSelfEvolve', 'toggle-switch' + (config.self_evolve_enabled ? ' on' : ''));
@@ -2973,6 +3028,7 @@ function onAdvChange() {
   config.reply.followup_gap_hours = _replyNum('advFollowGap', 24);
   config.reply.followup_max_times = _replyNum('advFollowMax', 2);
   config.reply.followup_every_minutes = _replyNum('advFollowEvery', 15);
+  config.reply.accept_contact_exchange = document.getElementById('advAcceptContact').classList.contains('on');
 
   // 测试模式
   config.dry_run = document.getElementById('advDryRun').classList.contains('on');
@@ -3334,9 +3390,15 @@ function deleteAccount() {
 }
 
 // ── 启动/停止（按数据范围：选中账号就只动那个号） ──
+// 这颗按钮的 innerHTML 只在这里拼：以前四处各写一遍，漏一处图标就从 play 变成 chevron
+function runBtnHtml(kind) {
+  return kind === 'busy'
+    ? '<span class="run-dot"></span><i data-ki="loader" class="ki-spin"></i>启动中…'
+    : '<span class="run-dot"></span><i data-ki="start"></i>启动';
+}
 function startAll() {
   const btn = document.getElementById('btnStartAll');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i data-ki="loader" class="ki-spin" style="font-size:12px"></i> 启动中...'; if (typeof KIcon !== 'undefined') KIcon.createIcons(); }
+  if (btn) { btn.disabled = true; btn.innerHTML = runBtnHtml('busy'); if (typeof KIcon !== 'undefined') KIcon.createIcons(); }
   saveConfig()
     .then(function() {
       return fetch(controlUrl('start'), {method:'POST'});
@@ -3349,12 +3411,12 @@ function startAll() {
       addLog('SUCCESS', (data && data.message) || '任务已启动');
       toast('已启动' + scopeLabel(), 'ok');
       setControls(true);
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i data-ki="chevron-right" style="font-size:12px"></i> 启动'; if (typeof KIcon !== 'undefined') KIcon.createIcons(); }
+      if (btn) { btn.disabled = false; btn.innerHTML = runBtnHtml(); if (typeof KIcon !== 'undefined') KIcon.createIcons(); }
     })
     .catch(function(e) {
       addLog('ERROR', '启动失败: ' + e.message);
       toast('启动失败：' + e.message, 'err');
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i data-ki="chevron-right" style="font-size:12px"></i> 启动'; btn.style.display = ''; if (typeof KIcon !== 'undefined') KIcon.createIcons(); }
+      if (btn) { btn.disabled = false; btn.innerHTML = runBtnHtml(); btn.style.display = ''; if (typeof KIcon !== 'undefined') KIcon.createIcons(); }
     });
 }
 
@@ -3496,11 +3558,14 @@ function updatePauseButtons() {
   if (rg) rg.style.display = gp ? '' : 'none';
   if (pr) pr.style.display = rp ? 'none' : '';
   if (rr) rr.style.display = rp ? '' : 'none';
+  // 只改 .btn-label 里的文字：以前整颗按钮 textContent 一赋值，前面的 <svg> 图标就被抹掉了
   [pg, rg, pr, rr].forEach(function(b) {
     if (!b) return;
-    var base = b.getAttribute('data-base-label');
-    if (!base) { base = b.textContent.trim(); b.setAttribute('data-base-label', base); }
-    b.textContent = base + scopeLabel();
+    var lbl = b.querySelector('.btn-label');
+    if (!lbl) return;
+    var base = lbl.getAttribute('data-base');
+    if (!base) { base = lbl.textContent.trim(); lbl.setAttribute('data-base', base); }
+    lbl.textContent = base + scopeLabel();
   });
 }
 
@@ -3518,7 +3583,7 @@ function downloadGreetRecords() {
 // ── 控制按钮状态 ──
 function setControls(running) {
   const s=document.getElementById('btnStartAll'),p=document.getElementById('btnStopAll'),cl=document.getElementById('btnConfirmLogin'),dot=document.getElementById('sbarDot'),st=document.getElementById('sbarStatus');
-  if(s) { s.style.display=running?'none':''; s.disabled=false; s.innerHTML='<i data-ki="chevron-right" style="font-size:12px"></i> 启动'; if (typeof KIcon !== 'undefined') KIcon.createIcons(); }
+  if(s) { s.style.display=running?'none':''; s.disabled=false; s.innerHTML=runBtnHtml(); if (typeof KIcon !== 'undefined') KIcon.createIcons(); }
   if(p) { p.style.display=running?'':'none'; }
   if(cl) { cl.style.display=running?'':'none'; }
   if(dot) dot.className='status-dot'+(running?' running':' idle');
@@ -4100,6 +4165,7 @@ function getReplySourceLabel(replySource) {
   if (replySource === 'skip') return '跳过';
   if (replySource === 'rejection') return '拒绝接受';
   if (replySource === 'followup') return '主动跟进';
+  if (replySource === 'contact') return '同意交换联系方式';
   // 这两类记录盘上已有 27 条，以前没有中文名，界面上直接印出 scam_filter 这种内部键
   if (replySource === 'scam_filter') return '骗子过滤·婉拒';
   if (replySource === 'backfill') return '补发简历';
@@ -4117,6 +4183,7 @@ function getReplySourceClass(replySource) {
   if (replySource === 'greet') return 'ai';
   if (replySource === 'scam_filter') return 'skip';
   if (replySource === 'backfill') return 'ai';
+  if (replySource === 'contact') return 'ai';
   return '';
 }
 
@@ -5272,7 +5339,7 @@ socket.on('scheduler_status', function(data) {
   }
   if (!data.running) {
     var btn = document.getElementById('btnStartAll');
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-ki="chevron-right" style="font-size:12px"></i> 启动'; btn.style.display = ''; if (typeof KIcon !== 'undefined') KIcon.createIcons(); }
+    if (btn) { btn.disabled = false; btn.innerHTML = runBtnHtml(); btn.style.display = ''; if (typeof KIcon !== 'undefined') KIcon.createIcons(); }
     var stopBtn = document.getElementById('btnStopAll');
     if (stopBtn) stopBtn.style.display = 'none';
   }

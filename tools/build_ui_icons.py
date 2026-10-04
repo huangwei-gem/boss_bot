@@ -41,7 +41,9 @@ ICONS = {
     "start": "play",
     "stop": "square-stop",
     "save": "save",
-    "export": "table",
+    # 原来用 table：那张画布是 247x146 的宽扁透视桌，缩到 14px 只剩几道竖线，
+    # 看着不像表格（2026-10-04 用户："Excel 导出的这个 SVG 图标感觉不是很符合"）
+    "export": "clipboard-list",
     "greet": "hand-waving",
     "reply": "speech-bubble",
     "download": "download",

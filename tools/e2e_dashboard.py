@@ -671,6 +671,83 @@ def main():
     check("左栏", "再点一次收回去",
           "open" not in js(page, 'document.getElementById("scopeNoteBox").className'))
 
+    # ── 左栏两列对齐（2026-10-04 用户："你自己看你左边的配置栏乱成啥样了"）──
+    # 以前标签按自然宽度排，一栏里量出 8 种控件左边缘；改成 grid 后同一容器里只能有一条竖线。
+    # 按行自身的 x 分组：岗位卡片、AI 接口卡片各自带内边距，那是两套基准线，不算歪。
+    align = js(page, '''(function(){
+      var side=document.getElementById("sideScroll");
+      if(!side)return JSON.stringify([[],0,0]);
+      var rows=side.querySelectorAll(".acc-field-row,.adv-field-row"),groups={},n=0;
+      for(var i=0;i<rows.length;i++){
+        var row=rows[i];
+        if(row.classList.contains("acc-stack"))continue;      // 标签在上、控件铺满，本来就不对齐
+        var ctrl=row.querySelector(".side-form-input");        // 开关靠右是设计，不参与对齐统计
+        if(!ctrl||!ctrl.offsetParent)continue;
+        var rr=row.getBoundingClientRect(),cr=ctrl.getBoundingClientRect();
+        if(cr.width<1)continue;
+        n++;
+        var k=Math.round(rr.x);
+        (groups[k]=groups[k]||{})[Math.round(cr.x)]=1;
+      }
+      var bad=[];
+      Object.keys(groups).forEach(function(k){
+        var xs=Object.keys(groups[k]);
+        if(xs.length>1)bad.push("行x="+k+" 控件x="+xs.join("/"));
+      });
+      var box=side.closest(".side");
+      return JSON.stringify([bad,box.scrollWidth-box.clientWidth,n]);})()''')
+    check("左栏", "同一容器里的控件都对到同一条竖线上", align[0] == [], align[0])
+    check("左栏", "没有横向滚动条", align[1] <= 0, align[1])
+    check("左栏", "对齐检查覆盖到的行数够多", align[2] >= 25, f"{align[2]} 行")
+
+    veto = js(page, '''(function(){var cb=document.getElementById("aiVetoOnly");
+      if(!cb)return JSON.stringify([-1,-1]);
+      var row=cb.closest(".acc-field-row"),hint=row.querySelector(".side-hint");
+      var r=hint.getBoundingClientRect();
+      return JSON.stringify([Math.round(r.width),Math.round(r.height),
+        Math.round(row.querySelector("label").getBoundingClientRect().x)]);})()''')
+    check("左栏", "否决词说明不再被挤成一小坨", veto[0] >= 110 and veto[1] <= 20, veto)
+
+    logo = js(page, '''(function(){var w=document.querySelector(".side-head .logo-wrap");
+      var svg=w?w.querySelector("svg.ki use"):null;
+      return JSON.stringify([!!svg,svg?svg.getAttribute("href"):"",
+        !!w&&w.querySelector("svg.ki")?Math.round(w.querySelector("svg.ki").getBoundingClientRect().width):0]);})()''')
+    check("图标", "左上角用的是图标库的 svg", logo[0] is True and "#i-briefcase" in logo[1], logo)
+    check("图标", "logo 尺寸够看清", logo[2] >= 16, logo)
+
+    # Excel 导出那张以前是 247x146 的宽扁透视桌，缩到 14px 只剩几道竖线
+    sprite = js(page, '''(function(){var x=new XMLHttpRequest();
+      x.open("GET","/static/icons/ui-sprite.svg",false);x.send();
+      var m=/id="i-export"[^>]*viewBox="0 0 ([\\d.]+) ([\\d.]+)"/.exec(x.responseText);
+      return m?JSON.stringify([Number(m[1]),Number(m[2]),x.responseText.length]):JSON.stringify([-1,-1,0]);})()''')
+    check("图标", "导出图标是竖版画布（不是宽扁透视桌）",
+          sprite[0] > 0 and sprite[0] <= sprite[1], sprite[:2])
+
+    run = js(page, '''(function(){var s=document.getElementById("btnStartAll");
+      return JSON.stringify([s.className,!!s.querySelector(".run-dot"),
+        !!s.querySelector("svg.ki"),getComputedStyle(s).borderRadius,
+        document.getElementById("btnStopAll").className]);})()''')
+    check("运行控制", "启动是同一套胶囊样式", "btn-run" in run[0] and run[1] is True, run)
+    check("运行控制", "图标没被 innerHTML 写丢", run[2] is True, run)
+    check("运行控制", "胶囊圆角", float(str(run[3]).replace("px", "")) >= 12, run[3])
+    check("运行控制", "停止与启动同形状（只换配色）",
+          "btn-run" in run[4] and "stop" in run[4], run[4])
+    # 切到运行态：只动 DOM，不发任何请求
+    js(page, 'setControls(true)')
+    time.sleep(.8)
+    running = js(page, '''(function(){
+      function shot(id){var b=document.getElementById(id);
+        return [b.style.display!=="none",!!b.querySelector("svg.ki"),
+                (b.querySelector(".btn-label")||b).textContent.trim()];}
+      return JSON.stringify([shot("btnStopAll"),shot("btnPauseGreet"),shot("btnResumeReply")]);})()''')
+    check("运行控制", "运行态下停止按钮可见且带图标", running[0][0] is True and running[0][1] is True, running[0])
+    check("运行控制", "暂停/恢复按钮改文字时不吞图标",
+          running[1][0] is True and running[1][1] is True and "暂停" in running[1][2], running[1])
+    js(page, 'setControls(false)')
+    time.sleep(.6)
+    check("运行控制", "测完收回未启动态",
+          js(page, 'document.getElementById("btnStopAll").style.display') == "none")
+
     check("主题", "首帧就是深色（不用等接口回来才转暗）",
           js(page, 'document.documentElement.getAttribute("data-theme")') == "dark")
 

@@ -84,3 +84,71 @@ def test_首帧就按上次的主题画():
     assert "localStorage.getItem('boss-theme')" in head
     assert re.search(r"<script>\s*//[^\n]*\ntry\{document\.documentElement", head), \
         "主题预置脚本不在了"
+
+
+# ── 2026-10-04 第二轮："你自己看你左边的配置栏乱成啥样了" ──
+
+def test_左栏字段行是两列grid():
+    """标签按自然宽度排，一栏里就量出 8 种控件左边缘（真机 80/87/98/104/108/109/115/125px）。
+    两列 grid 才能不管窗口多宽都对到同一条竖线上。"""
+    for rule in (".acc-field-row", ".adv-field-row"):
+        body = _css(rule)
+        assert "display:grid" in body, f"{rule} 又退回 flex 了：{body}"
+        assert "var(--side-label-w)" in body, f"{rule} 的标签列没走变量：{body}"
+        assert "minmax(0,1fr)" in body, f"{rule} 的控件列会被长内容撑破：{body}"
+
+
+def test_说明行横跨两列而不是挤在复选框后面():
+    """.side-hint 跟在复选框后面时只有 88px 宽，一句短话排成三行。"""
+    assert re.search(r"\.acc-field-row>\.side-hint[^{]*\{[^}]*grid-column:1/-1", HTML), \
+        "说明行没横跨两列"
+
+
+def test_侧栏宽度收在变量里():
+    """以前 @media 里的 .side{width:280px} 被 flex-basis:360px 压住，从不生效。"""
+    body = _css(".side")
+    assert "var(--side-w)" in body, body
+    assert "@media(max-width:1180px){:root{--side-w:" in HTML, "窄窗口没有收侧栏这一档"
+    assert ".side{width:280px}" not in HTML, "又写回那条被 flex-basis 压住的死规则了"
+
+
+def test_logo用的是图标库里的图形():
+    """左上角以前是手写的 rect+加号：既不是图标库画风，也说明不了这是个招聘工具。"""
+    assert '<div class="logo-wrap"><i data-ki="briefcase"></i></div>' in HTML
+    assert '<rect x="2" y="3"' not in HTML, "手写的占位 svg 又回来了"
+
+
+def test_启动按钮的文字只拼一处():
+    """四处各写一遍 innerHTML，漏一处图标就从 play 变成 chevron（真就是这样跑了一周）。"""
+    assert HTML.count("runBtnHtml(") >= 6, "又有人直接给启动按钮拼 innerHTML 了"
+    assert 'chevron-right" style="font-size:12px"></i> 启动' not in HTML
+
+
+def test_运行控制是胶囊不是实心色块():
+    """实心绿块/红块和旁边一排玻璃按钮完全不搭（用户："停止和开启的这个UI不太好看"）。"""
+    body = _css(".btn-run")
+    assert "border-radius:999px" in body, body
+    assert 'class="btn-run" id="btnStartAll"' in HTML
+    assert 'class="btn-run stop" id="btnStopAll"' in HTML
+    for bid in ("btnPauseGreet", "btnResumeGreet", "btnPauseReply", "btnResumeReply"):
+        line = [ln for ln in HTML.splitlines() if f'id="{bid}"' in ln and "<button" in ln]
+        assert line and "btn-tint" in line[0], f"{bid} 还是整块实心色"
+        assert "btn-success" not in line[0] and "btn-warn" not in line[0], line[0]
+
+
+def test_改按钮文字不吞掉图标():
+    """updatePauseButtons 以前给整颗按钮赋 textContent，前面的 <svg> 图标一起被抹掉。"""
+    body = HTML[HTML.index("function updatePauseButtons"):HTML.index("// ── 下载回复/打招呼记录")]
+    assert "querySelector('.btn-label')" in body
+    assert "b.textContent =" not in body, "又在整颗按钮上赋 textContent"
+    assert HTML.count('<span class="btn-label">') >= 4
+
+
+def test_导出图标不是宽扁的透视桌():
+    """table 那张画布是 247x146，缩到 14px 只剩几道竖线，看着不像表格。"""
+    m = re.search(r'id="i-export"[^>]*viewBox="0 0 ([\d.]+) ([\d.]+)"', SPRITE)
+    assert m, "雪碧图里没有 i-export"
+    w, h = float(m.group(1)), float(m.group(2))
+    assert 0 < w <= h, f"导出图标画布 {w}x{h} 还是横扁的"
+    src = (ROOT / "tools" / "build_ui_icons.py").read_text(encoding="utf-8")
+    assert '"export": "table"' not in src
