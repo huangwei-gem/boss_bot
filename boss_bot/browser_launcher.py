@@ -1057,9 +1057,21 @@ def _launch_windows(
     co.set_argument('--disable-dev-shm-usage')
     co.set_argument('--no-first-run')
     co.set_argument('--no-default-browser-check')
-    co.set_argument('--disable-features=DnsOverHttps')
+    co.set_argument('--disable-features=DnsOverHttps,BackForwardCache')
     co.set_argument('--disable-blink-features=AutomationControlled')
     co.set_argument(f'--window-size={viewport_width},{viewport_height}')
+    # 内存：两个号的 cloakbrowser 实测占 3.0 GB（面板本身只有 90 MB），
+    # 大头都在浏览器进程架构上，所以这里能省的是"别多开进程、别留死页面"。
+    # - BackForwardCache 会把上一页整个留在内存里，而打招呼是同一个标签页
+    #   在几十个 job_detail 之间来回跳，等于攒了一叠再也用不上的岗位页；
+    # - renderer-process-limit 让同站的聊天页和岗位页挤一个渲染进程；
+    # - 后面几个 disable 关掉的是崩溃上报/组件更新/同步这类后台服务进程。
+    co.set_argument('--renderer-process-limit=2')
+    co.set_argument('--disable-breakpad')
+    co.set_argument('--disable-component-update')
+    co.set_argument('--disable-domain-reliability')
+    co.set_argument('--disable-sync')
+    co.set_argument('--metrics-recording-only')
 
     # 先确认端口上没有别人的浏览器，再动本账号的 profile 目录
     if port > 0 and _is_port_open("127.0.0.1", port):
