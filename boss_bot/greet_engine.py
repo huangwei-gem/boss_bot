@@ -273,6 +273,57 @@ def pick_continue_btn(dialog) -> str:
     return ""
 
 
+# 点完「立即沟通」只有三种结局：抽屉弹出来了、平台自己发了（弹窗）、什么都没发生。
+# 原来的写法是把十个输入框选择器 each timeout=3 轮着试三轮，什么都没发生时要在
+# 空等上花掉 3.5 分钟——而成功的岗位整条路只要 60~70 秒。改成先一次 JS 问清
+# 楚结局，探测不到再退回原来的慢路径兜底。
+DRAWER_READY_TIMEOUT_SEC = 20.0
+DRAWER_READY_POLL_SEC = 1.5
+# 点了「继续沟通」之后等会话渲染。留 4 次×2 秒：抽屉真出现时够读到气泡，
+# 读不到就是它开在回复引擎那个标签页里（实测绝大多数如此），再多等只是空耗投递时间
+CHAT_OPEN_POLLS = 4
+CHAT_OPEN_POLL_SEC = 2.0
+DRAWER_READY_JS = r'''
+return (function(){
+  var sel = ['#chat-input', '.chat-input', '.input-area',
+             'textarea[placeholder*="回复"]', 'textarea[placeholder*="输入"]',
+             '[contenteditable="true"]'];
+  var drawer = false;
+  for (var i = 0; i < sel.length; i++) {
+    var nodes = document.querySelectorAll(sel[i]);
+    for (var k = 0; k < nodes.length; k++) {
+      var e = nodes[k], r = e.getBoundingClientRect(), s = getComputedStyle(e);
+      if (r.width > 4 && r.height > 4 && s.display !== 'none' && s.visibility !== 'hidden') {
+        drawer = true; break;
+      }
+    }
+    if (drawer) break;
+  }
+  var dialog = false;
+  if (!drawer) {
+    var boxes = document.querySelectorAll("div,section");
+    for (var j = 0; j < boxes.length; j++) {
+      var tx = boxes[j].innerText || "";
+      if (tx.indexOf("已向BOSS发送") >= 0 && tx.indexOf("留在此页") >= 0) { dialog = true; break; }
+    }
+  }
+  return JSON.stringify({drawer: drawer, dialog: dialog});
+})()'''
+
+
+def parse_drawer_probe(raw) -> dict:
+    """探测 JS 的返回值 → {"drawer": bool, "dialog": bool}；拿不到就当没发生。"""
+    if not raw or not isinstance(raw, str):
+        return {}
+    try:
+        data = json.loads(raw)
+    except (ValueError, TypeError):
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    return {"drawer": bool(data.get("drawer")), "dialog": bool(data.get("dialog"))}
+
+
 # 补发时找输入框/发送按钮的选择器，与正常路径同源（会话输入框是 contenteditable）
 AUTO_GREET_INPUT_SELECTORS = (
     "#chat-input", ".chat-input", ".input-area",
@@ -2359,20 +2410,27 @@ class GreetEngine:
             pre_tab_ids = set(browser.tab_ids) if browser else set()
             chat_btn.click()
             self._log("INFO", "已点击沟通按钮，等待输入框...")
-            # 等待聊天窗口加载（参考原项目auto_boss: timeout=10秒）
-            # 关键修复：BOSS直聘点击"立即沟通"后聊天窗口为页面内弹出层（popup），
-            # 弹出层加载比新标签页慢，需要更长等待时间。从5-8秒增加到8-12秒。
-            self._random_delay(8, 12)
+            # 先问一次结局，别急着死等：抽屉弹出来了 / 平台自己发了 / 还看不出来
+            drawer_ready = self._wait_drawer_or_dialog(instance)
+            if drawer_ready == "dialog":
+                handled = self._auto_greet_path(instance, job, greeting)
+                if handled is not None:
+                    return handled
+            if not drawer_ready:
+                # 等待聊天窗口加载（参考原项目auto_boss: timeout=10秒）
+                # 关键修复：BOSS直聘点击"立即沟通"后聊天窗口为页面内弹出层（popup），
+                # 弹出层加载比新标签页慢，需要更长等待时间。从5-8秒增加到8-12秒。
+                self._random_delay(8, 12)
 
             # 关键修复：不依赖弹窗容器检测，直接尝试查找输入框。
             # BOSS直聘的弹窗可能用各种 class 名，硬编码检测列表容易漏判。
             # 弹窗检测只作为辅助日志，不影响后续输入框查找流程。
             # 如果能找到输入框，说明弹窗已弹出；找不到再检查风控/验证弹窗。
-            chat_popup_selectors = [
+            chat_popup_selectors = ([] if drawer_ready else [
                 ".chat-container", ".chat-popup", ".chat-modal", ".drawer",
                 ".modal-content", ".message-input", "#chat-input", ".chat-input",
                 ".input-area", ".chat-footer",
-            ]
+            ])
             popup_detected = False
             for popup_sel in chat_popup_selectors:
                 try:
@@ -2383,7 +2441,7 @@ class GreetEngine:
                         break
                 except Exception:
                     pass
-            if not popup_detected:
+            if not popup_detected and not drawer_ready:
                 # 辅助日志：未检测到弹窗容器，但不中断流程，继续尝试查找输入框
                 self._log("INFO", "未检测到聊天弹窗容器（不影响流程，将继续查找输入框）")
                 # 检查是否有风控/验证弹窗（仅记录日志，不中断）
@@ -2638,27 +2696,9 @@ class GreetEngine:
                         self._log("DEBUG", f"标签页遍历失败: {e}")
 
             if not input_area:
-                dialog = self._auto_greet_dialog(instance)
-                if dialog:
-                    # 平台自己发出去了，再报"未找到输入框"就掩盖了真正发生的事
-                    self._log("WARN", f"BOSS 自动发出招呼语（第二种机制）| 弹窗class="
-                                      f"{dialog.get('cls', '')} | 按钮={dialog.get('buttons', [])}")
-                    self._log("WARN", f"  弹窗文本: {str(dialog.get('text', ''))[:120]}")
-                    outcome = self._auto_greet_followup(instance, greeting, dialog)
-                    if outcome in ("matched", "sent"):
-                        job["_auto_greet_note"] = (
-                            "BOSS 自动发出的即本号招呼语，未重复发送" if outcome == "matched"
-                            else "BOSS 自动发的是平台预设文案，已补发本号招呼语")
-                        self._mark_chatted(job)
-                        self._record_sent_now(job)
-                        return True, ""
-                    self._mark_chatted(job)
-                    # 走到这里 = 弹窗确实在（平台已经把招呼发出去了），只是没能进会话核对文案。
-                    # 记成功并留痕，不记失败：记失败就是用户报的「BOSS 上明明投了，记录里
-                    # 却没有 / 是红的」那一类对不上
-                    job["_auto_greet_note"] = "平台已自动发出招呼语，未能进会话核对文案（建议抽查）"
-                    self._record_sent_now(job)
-                    return True, ""
+                handled = self._auto_greet_path(instance, job, greeting)
+                if handled is not None:
+                    return handled
                 snap = self._chat_snapshot(instance)
                 reason = chat_failure_reason(snap)
                 self._log("WARN", f"未找到输入框｜{reason}")
@@ -2995,6 +3035,59 @@ class GreetEngine:
             self._log("DEBUG", f"自动发送弹窗探测失败: {e}")
             return {}
 
+    def _drawer_probe(self, instance):
+        try:
+            return instance.run_js(DRAWER_READY_JS)
+        except Exception as e:
+            self._log("DEBUG", f"抽屉/弹窗状态探测失败: {e}")
+            return ""
+
+    def _wait_drawer_or_dialog(self, instance) -> str:
+        """点完「立即沟通」先问清结局："drawer" / "dialog" / ""（看不出来）。
+
+        返回 "" 不等于失败，意思是"这里探测不出来，走原来那条慢路径兜底"——
+        选择器逐个试、iframe、遍历标签页都还留着，BOSS 哪天换了弹窗形态也不至于
+        突然一个都认不出来。
+        """
+        attempts = max(1, int(DRAWER_READY_TIMEOUT_SEC // DRAWER_READY_POLL_SEC))
+        for _ in range(attempts):
+            if not self.running:
+                return ""
+            got = parse_drawer_probe(self._drawer_probe(instance))
+            if got.get("drawer"):
+                return "drawer"
+            if got.get("dialog"):
+                return "dialog"
+            self._interruptible_sleep(DRAWER_READY_POLL_SEC)
+        return ""
+
+    def _auto_greet_path(self, instance, job, greeting):
+        """BOSS 第二种打招呼机制：平台自己把招呼发出去了，就地结算。
+
+        返回 None 表示"不是这个弹窗"，调用方继续走原流程；返回 (True, "")
+        表示这一单已经投出去了。记失败就是用户报的「BOSS 上明明投了，记录里
+        却是红的」那一类对不上。
+        """
+        dialog = self._auto_greet_dialog(instance)
+        if not dialog:
+            return None
+        self._log("WARN", f"BOSS 自动发出招呼语（第二种机制）| 弹窗class="
+                          f"{dialog.get('cls', '')} | 按钮={dialog.get('buttons', [])}")
+        self._log("WARN", f"  弹窗文本: {str(dialog.get('text', ''))[:120]}")
+        outcome = self._auto_greet_followup(instance, greeting, dialog)
+        if outcome in ("matched", "sent"):
+            job["_auto_greet_note"] = (
+                "BOSS 自动发出的即本号招呼语，未重复发送" if outcome == "matched"
+                else "BOSS 自动发的是平台预设文案，已补发本号招呼语")
+            self._mark_chatted(job)
+            self._record_sent_now(job)
+            return True, ""
+        # 弹窗在 = 平台已经把招呼发出去了，只是没能进会话核对文案。留痕，不记失败。
+        self._mark_chatted(job)
+        job["_auto_greet_note"] = "平台已自动发出招呼语，未能进会话核对文案（建议抽查）"
+        self._record_sent_now(job)
+        return True, ""
+
     def _read_last_outgoing(self, tab) -> dict:
         """读会话里我方最后一条已发出的气泡；读不到返回空 dict。"""
         try:
@@ -3058,53 +3151,66 @@ class GreetEngine:
         except Exception as e:
             self._log("WARN", f"点击「{btn_text}」失败: {e}")
             return "none"
-        self._random_delay(2, 3)
 
-        for tab in self._greet_tab_candidates(instance):
-            read = self._read_last_outgoing(tab)
-            if not read or not read.get("chat_page"):
+        tab, read = self._wait_chat_open(instance)
+        if tab is None:
+            self._log("WARN", f"点了「继续沟通」也读不到会话气泡"
+                              f"（{CHAT_OPEN_POLLS} 次 × {CHAT_OPEN_POLL_SEC:.0f}s），不盲发")
+            return "none"
+        sent_text = read.get("text", "")
+        if auto_greet_matches(sent_text, greeting):
+            self._log("INFO", "BOSS 自动发出的就是本号招呼语，不重复发送")
+            return "matched"
+        if not norm_greeting(greeting):
+            self._log("WARN", "本号招呼语为空，不补发")
+            return "none"
+
+        input_area = None
+        for sel in AUTO_GREET_INPUT_SELECTORS:
+            try:
+                input_area = tab.ele(sel, timeout=3)
+                if input_area:
+                    break
+            except Exception:
                 continue
-            sent_text = read.get("text", "")
-            if auto_greet_matches(sent_text, greeting):
-                self._log("INFO", "BOSS 自动发出的就是本号招呼语，不重复发送")
-                return "matched"
-            if not norm_greeting(greeting):
-                self._log("WARN", "本号招呼语为空，不补发")
-                return "none"
+        if not input_area:
+            self._log("WARN", f"进了会话但没找到输入框（我方气泡 {read.get('mine')} 条，"
+                              f"最后一条: {str(sent_text)[:40]}）")
+            return "none"
 
-            input_area = None
-            for sel in AUTO_GREET_INPUT_SELECTORS:
-                try:
-                    input_area = tab.ele(sel, timeout=3)
-                    if input_area:
-                        break
-                except Exception:
-                    continue
-            if not input_area:
-                self._log("WARN", f"进了会话但没找到输入框（我方气泡 {read.get('mine')} 条，"
-                                  f"最后一条: {str(sent_text)[:40]}）")
+        input_area.input(greeting)
+        self._random_delay(1, 2)
+        send_btn = None
+        for sel in AUTO_GREET_SEND_SELECTORS:
+            try:
+                send_btn = tab.ele(sel, timeout=3)
+                if send_btn:
+                    break
+            except Exception:
                 continue
+        if send_btn:
+            send_btn.click()
+        else:
+            input_area.input("\n")
+        self._log("INFO", f"BOSS 自动发的是平台预设文案"
+                          f"（{str(sent_text)[:30] or '无我方气泡'}），已补发本号招呼语: "
+                          f"{greeting[:40]}")
+        return "sent"
 
-            input_area.input(greeting)
-            self._random_delay(1, 2)
-            send_btn = None
-            for sel in AUTO_GREET_SEND_SELECTORS:
-                try:
-                    send_btn = tab.ele(sel, timeout=3)
-                    if send_btn:
-                        break
-                except Exception:
-                    continue
-            if send_btn:
-                send_btn.click()
-            else:
-                input_area.input("\n")
-            self._log("INFO", f"BOSS 自动发的是平台预设文案"
-                              f"（{str(sent_text)[:30] or '无我方气泡'}），已补发本号招呼语: "
-                              f"{greeting[:40]}")
-            return "sent"
+    def _wait_chat_open(self, instance):
+        """点完「继续沟通」等到会话真的渲染出来；返回 (tab, 我方气泡) 或 (None, {})。
 
-        return "none"
+        会话是异步加载的，固定等 2~3 秒常常正好卡在气泡还没画出来的时候——
+        那时判"进不去"，本号招呼语就永远补不上，HR 只看到平台那句默认文案。
+        """
+        for attempt in range(CHAT_OPEN_POLLS):
+            for tab in self._greet_tab_candidates(instance):
+                read = self._read_last_outgoing(tab)
+                if read and read.get("chat_page"):
+                    return tab, read
+            if attempt + 1 < CHAT_OPEN_POLLS and self.running:
+                self._interruptible_sleep(CHAT_OPEN_POLL_SEC)
+        return None, {}
 
     def _on_captcha_page(self, instance) -> bool:
         """当前页面是不是 BOSS 的人机验证页。"""

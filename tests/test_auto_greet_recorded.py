@@ -77,9 +77,11 @@ class GreetEnginePlumbingTest:
 
 class UnverifiedDialogCountsAsSentTest:
     def test_弹窗未核对那一支记成功并当场落库(self):
+        # 这段结算从 _apply_job_inner 抽到了 _auto_greet_path，锁的还是同一件事：
+        # 平台已经替我们把招呼发出去了，就不能记失败，而且要点完立刻落库
         src = inspect.getsource(
             __import__("boss_bot.greet_engine", fromlist=["GreetEngine"]).GreetEngine
-            ._apply_job_inner)
+            ._auto_greet_path)
         i = src.index("job[\"_auto_greet_note\"] = \"平台已自动发出招呼语")
         seg = src[i:i + 260]
         assert "_record_sent_now(job)" in seg, "没当场落库 → 界面就是要慢一拍"

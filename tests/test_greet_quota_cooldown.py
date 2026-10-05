@@ -103,6 +103,43 @@ def test_提示探针不许用宽匹配():
     assert "position" in probe, "没要求 fixed/absolute，页面里任何元素都能被当提示"
 
 
+def test_冷却是在这一轮中途挂上的也要整轮收手():
+    """2026-10-05 21:54 现场：账号2 投到 118 单后当轮里挂上冷却，剩下的岗位还是一个
+    个点开再被岗位级闸门弹回去，两分钟刷出 6 条一模一样的"已冷却"跳过记录。
+    轮首那道闸门只挡得住"上一轮就已经冷却"的情况。"""
+    from unittest.mock import MagicMock
+
+    from boss_bot.main_loop import UnifiedBotLoop
+
+    loop = UnifiedBotLoop.__new__(UnifiedBotLoop)
+    loop._running = True
+    loop._greet_paused = False
+    loop._log = lambda *a, **k: None
+    loop._stats_dict = {"greet_total": 0, "greet_applied": 0,
+                        "greet_skipped": 0, "greet_rounds": 0}
+    loop._build_greet_tasks = lambda: [{"query": "数据分析", "city": "全国"}]
+
+    eng = MagicMock()
+    eng.search_jobs.return_value = [{"job_name": f"岗位{i}"} for i in range(8)]
+    eng._rate_limit_enabled = False
+    hits = []
+
+    def left():
+        hits.append(1)
+        # 只有轮首那一次是"还没冷却"，之后一律算冷却中：
+        # 岗位循环里只要还在逐个调用，就会露出来
+        return 0.0 if len(hits) == 1 else 25 * 60.0
+
+    eng.greet_cooldown_left = left
+    loop._greet_engine = eng
+
+    assert loop._run_greet_round() is True, "返回 False 会被当空轮，三轮就永久停打招呼了"
+    assert len(hits) <= 2, f"冷却挂上后还在逐岗位往下走（探测了 {len(hits)} 次）"
+    eng._apply_job_inner.assert_not_called()
+    eng.apply_job.assert_not_called()
+
+
+
 # ── 冷却期整轮跳过 ──
 # 闸门加在 _apply_job_inner 里之后，线上观察到的新毛病：打招呼线程每 30 秒起一轮，
 # 一轮里有几十上百个岗位，每个岗位都要走到闸门才返回"已冷却"，

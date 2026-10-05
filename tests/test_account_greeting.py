@@ -97,19 +97,27 @@ class AutoGreetDialogTest(unittest.TestCase):
         import inspect
 
         from boss_bot.greet_engine import GreetEngine
-        src = inspect.getsource(GreetEngine._apply_job_inner)
-        pos_probe = src.index("self._auto_greet_dialog(instance)")
-        pos_snap = src.index("chat_failure_reason(snap)")
+        inner = inspect.getsource(GreetEngine._apply_job_inner)
+        pos_probe = inner.index("self._auto_greet_path(instance, job, greeting)")
+        pos_snap = inner.index("chat_failure_reason(snap)")
         self.assertLess(pos_probe, pos_snap, "自动发送的现场被通用归因吃掉了")
-        self.assertIn("_auto_greet_note", src, "认出自动发送后没留痕，界面就看不出少核对了一步")
+        path = inspect.getsource(GreetEngine._auto_greet_path)
+        self.assertIn("_auto_greet_note", path, "认出自动发送后没留痕，界面就看不出少核对了一步")
 
     def test_自动发送要算已沟通(self):
-        """平台已经发出去了，下一轮不该再撞同一个岗位"""
+        """平台已经发出去了，下一轮不该再撞同一个岗位。
+
+        结算逻辑从 _apply_job_inner 抽成了 _auto_greet_path（点完沟通的快速探测
+        也要用同一套），所以断言跟着挪，但锁的还是那件事：认出台自动发送必须
+        标记已沟通。
+        """
         import inspect
 
         from boss_bot.greet_engine import GreetEngine
-        src = inspect.getsource(GreetEngine._apply_job_inner)
-        self.assertIn("_mark_chatted(job)", src[:src.index("chat_failure_reason(snap)")])
+        path = inspect.getsource(GreetEngine._auto_greet_path)
+        self.assertIn("_mark_chatted(job)", path)
+        inner = inspect.getsource(GreetEngine._apply_job_inner)
+        self.assertIn("self._auto_greet_path(instance, job, greeting)", inner)
 
 
 class FakeEle:
@@ -312,11 +320,13 @@ class AutoGreetWiringTest(unittest.TestCase):
         import inspect
 
         from boss_bot.greet_engine import GreetEngine
-        src = inspect.getsource(GreetEngine._apply_job_inner)
-        pos = src.index("self._auto_greet_followup(")
-        self.assertLess(pos, src.index("chat_failure_reason(snap)"),
+        inner = inspect.getsource(GreetEngine._apply_job_inner)
+        path = inspect.getsource(GreetEngine._auto_greet_path)
+        pos = path.index("self._auto_greet_followup(instance, greeting, dialog)")
+        self.assertLess(inner.index("self._auto_greet_path(instance, job, greeting)"),
+                        inner.index("chat_failure_reason(snap)"),
                         "补发要排在通用归因之前，否则自动发送会被报成未找到输入框")
-        seg = src[pos:pos + 900]
+        seg = path[pos:pos + 900]
         self.assertIn("_record_sent_now(job)", seg, "补发成功当场就该落库")
         self.assertIn("_mark_chatted(job)", seg)
         self.assertIn("return True", seg, "招呼语已发出就该算投递成功，不能再算跳过")
@@ -325,10 +335,13 @@ class AutoGreetWiringTest(unittest.TestCase):
         import inspect
 
         from boss_bot.greet_engine import GreetEngine
-        src = inspect.getsource(GreetEngine._apply_job_inner)
-        pos = src.index("self._auto_greet_followup(")
-        seg = src[max(0, pos - 400):pos + 100]
+        path = inspect.getsource(GreetEngine._auto_greet_path)
+        pos = path.index("self._auto_greet_followup(")
+        seg = path[max(0, pos - 400):pos + 100]
         self.assertIn("greeting", seg, "补发那段文案必须来自 _greeting_for 的结果")
+        inner = inspect.getsource(GreetEngine._apply_job_inner)
+        self.assertIn("self._auto_greet_path(instance, job, greeting)", inner,
+                      "传进去的必须是本号招呼语，不是岗位默认模板")
 
 
 if __name__ == "__main__":

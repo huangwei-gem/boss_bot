@@ -1418,6 +1418,14 @@ class UnifiedBotLoop:
                 for job in jobs:
                     if not self._running or self._greet_paused:
                         break
+                    cooldown_now = self._greet_engine.greet_cooldown_left()
+                    if cooldown_now > 0:
+                        # 冷却多半是这一轮里刚挂上的（额度见底）。这时候剩下的岗位
+                        # 每一个都会先花 20~40 秒点开再被闸门弹回去，一晚上能刷出
+                        # 几百条一模一样的"已冷却"记录，所以整轮直接收手
+                        self._log("WARN", f"⏸️ 本轮到此为止：打招呼进入冷却（剩 "
+                                          f"{int(cooldown_now // 60) + 1} 分钟），不再逐岗位空跑")
+                        return True
 
                     # 这一次岗位的落库与实时推送共用一个时间戳（见 GreetEngine.begin_event_ts）
                     self._greet_engine.begin_event_ts()
