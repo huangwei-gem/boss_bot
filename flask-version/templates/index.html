@@ -454,6 +454,18 @@ a{color:var(--accent);text-decoration:none}
 .record-tab.active .tab-count{background:var(--accent-light);color:var(--accent)}
 .record-tab-content{display:none;flex:1;overflow-y:auto}
 .record-tab-content.active{display:block}
+/* ── 联系与简历台账 ── */
+.ledger-note{padding:7px 10px;font-size:11px;line-height:1.5;color:var(--fg-3rd);background:var(--surface-soft);border-bottom:1px solid var(--bd-2)}
+.ledger-kind{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10.5px;font-weight:600;white-space:nowrap}
+.ledger-kind.num{background:var(--success-bg);color:var(--success)}
+.ledger-kind.ask{background:var(--warning-bg);color:var(--warning)}
+.ledger-kind.plain{background:var(--surface-soft);color:var(--fg-3rd)}
+.ledger-num{cursor:pointer;border-bottom:1px dashed var(--bd-2);font-variant-numeric:tabular-nums}
+.ledger-num:hover{color:var(--accent)}
+.ledger-resume-sent{color:var(--success);font-weight:600}
+.ledger-resume-owed{color:var(--warning);font-weight:600}
+.ledger-quote{color:var(--fg-3rd);font-size:11px}
+.ledger-link{display:inline-flex;vertical-align:-2px;margin-left:4px;color:var(--accent)}
 
 /* ── 回复记录聊天界面（一比一模仿BOSS直聘） ── */
 .boss-chat-wrap{display:flex;width:100%;height:100%;min-height:480px;overflow:hidden;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--bd)}
@@ -1112,10 +1124,11 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
       </div>
       <div class="panel-row">
         <div class="panel panel-full">
-          <div class="panel-header"><span class="panel-icon"><i data-ki="file-text"></i></span><span class="panel-title">投递记录</span><div class="panel-actions"><button class="btn btn-ghost btn-sm" onclick="clearCurrentRecordTab()"><i data-ki="clear"></i>清空</button></div></div>
+          <div class="panel-header"><span class="panel-icon"><i data-ki="file-text"></i></span><span class="panel-title">投递记录</span><div class="panel-actions"><button class="btn btn-ghost btn-sm" id="btnClearRecord" onclick="clearCurrentRecordTab()"><i data-ki="clear"></i>清空</button></div></div>
           <div class="record-tabs" style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto">
             <button class="record-tab active" onclick="switchRecordTab('greet')"><i data-ki="greet"></i>打招呼记录 <span class="tab-count" id="greetTabCount">0</span></button>
             <button class="record-tab" onclick="switchRecordTab('reply')"><i data-ki="reply"></i>回复记录 <span class="tab-count" id="replyTabCount">0</span></button>
+            <button class="record-tab" onclick="switchRecordTab('contact')"><i data-ki="clipboard-list"></i>联系与简历 <span class="tab-count" id="contactTabCount">0</span></button>
             <!-- 打招呼筛选栏（和tab同一行） -->
             <div id="greetFilterBar" style="display:flex;align-items:center;gap:4px 6px;flex:1;justify-content:flex-end;flex-wrap:wrap;font-size:11px">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">开始</label>
@@ -1213,6 +1226,30 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
               <div class="empty-desc" style="font-size:13px;font-weight:600;margin-top:8px">暂无回复记录</div>
               <div class="empty-hint" style="font-size:11px;color:var(--fg-3rd);margin-top:4px">
                 启动机器人后，收到消息将自动回复并记录在此
+              </div>
+            </div>
+          </div>
+          <div class="record-tab-content" id="contactTabContent" style="padding:0;flex:1;overflow-y:auto">
+            <div class="ledger-note">这张表每行是一个「聊到留联系方式或收发简历」的会话，现算自会话存档，不另存一份。「依据」列就是被判进来的那句原话，判错了照它改判据。点号码可复制。</div>
+            <table class="greet-table" id="contactTable">
+              <thead><tr>
+                <th style="width:104px">时间</th>
+                <th style="width:34px">号</th>
+                <th style="width:132px">HR·公司</th>
+                <th>岗位</th>
+                <th style="width:124px">薪资·城市</th>
+                <th style="width:88px">联系方式</th>
+                <th style="width:142px">号码 / 微信号</th>
+                <th style="width:84px">简历</th>
+                <th style="width:240px">依据原话</th>
+              </tr></thead>
+              <tbody id="contactTableBody"></tbody>
+            </table>
+            <div class="empty-state" id="contactEmpty" style="height:100%;min-height:200px;display:none">
+              <div class="empty-icon"><i data-ki="empty-reply"></i></div>
+              <div class="empty-desc" style="font-size:13px;font-weight:600;margin-top:8px">还没有拿到联系方式或发出简历的会话</div>
+              <div class="empty-hint" style="font-size:11px;color:var(--fg-3rd);margin-top:4px">
+                对方同意交换微信/电话、或简历发出去之后，会话会自动进这张表
               </div>
             </div>
           </div>
@@ -3830,6 +3867,8 @@ function applyScopeToView() {
   loadMetrics(true);
   loadGreetRecords();
   loadReplyChatList();
+  // 台账跟着范围走：只看账号2 时不许冒出账号1 拿到的号码
+  if (contactLedgerLoaded) loadContactLedger(true);
   loadAiQuality();
   loadAiReview();
   updatePauseButtons();
@@ -3936,23 +3975,101 @@ function switchRecordTab(tab) {
   var contents = document.querySelectorAll('.record-tab-content');
   tabs.forEach(function(t){ t.classList.remove('active'); });
   contents.forEach(function(c){ c.classList.remove('active'); });
-  var greetBar = document.getElementById('greetFilterBar');
-  var replyBar = document.getElementById('replyFilterBar');
-  if (tab === 'greet') {
-    var gt = document.querySelector('.record-tab[onclick*="greet"]');
-    var gc = document.getElementById('greetTabContent');
-    if (gt) gt.classList.add('active');
-    if (gc) gc.classList.add('active');
-    if (greetBar) greetBar.style.display = 'flex';
-    if (replyBar) replyBar.style.display = 'none';
-  } else {
-    var rt = document.querySelector('.record-tab[onclick*="reply"]');
-    var rc = document.getElementById('replyTabContent');
-    if (rt) rt.classList.add('active');
-    if (rc) rc.classList.add('active');
-    if (greetBar) greetBar.style.display = 'none';
-    if (replyBar) replyBar.style.display = 'flex';
+  var bars = {greet: 'greetFilterBar', reply: 'replyFilterBar'};
+  Object.keys(bars).forEach(function(k) {
+    var el = document.getElementById(bars[k]);
+    if (el) el.style.display = (k === tab) ? 'flex' : 'none';
+  });
+  var btn = document.querySelector('.record-tab[onclick*="' + tab + '"]');
+  if (btn) btn.classList.add('active');
+  var content = document.getElementById(tab + 'TabContent');
+  if (content) content.classList.add('active');
+  // 台账是从会话存档现算出来的，没有"清空"这回事：留着这颗按钮，
+  // 点下去清的是回复记录，表里的行却还在，等于给了个假开关
+  var clearBtn = document.getElementById('btnClearRecord');
+  if (clearBtn) clearBtn.style.display = (tab === 'contact') ? 'none' : '';
+  if (tab === 'contact') loadContactLedger();
+}
+
+// ── 联系与简历台账 ──
+// 现算自 messages/*.json，面板不另存一份：存了就会有"和 BOSS 上对不上"的一天
+let contactLedgerLoaded = false;
+
+function loadContactLedger(force) {
+  if (contactLedgerLoaded && !force) return;
+  var body = document.getElementById('contactTableBody');
+  if (!body) return;
+  if (!body.children.length || force) {
+    body.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--fg-3rd);padding:24px">正在从会话存档里捞联系方式…</td></tr>';
   }
+  fetch('/api/contact_ledger' + scopeQs()).then(function(r) { return r.json(); }).then(function(data) {
+    if (data.status !== 'ok') {
+      body.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--danger);padding:24px">台账读取失败：' + escAttr(data.message || '未知错误') + '</td></tr>';
+      return;
+    }
+    contactLedgerLoaded = true;
+    renderContactLedger(data.rows || []);
+  }).catch(function(e) {
+    body.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--danger);padding:24px">台账读取异常：' + escAttr(e.message) + '</td></tr>';
+  });
+}
+
+function ledgerKindHtml(kind) {
+  if (!kind) return '<span style="color:var(--fg-4th)">—</span>';
+  var cls = kind === '给了号码' || kind === '卡片已同意' ? 'num'
+          : kind === '发起交换请求' ? 'ask' : 'plain';
+  return '<span class="ledger-kind ' + cls + '" title="' + escAttr(kind) + '">' + escAttr(kind) + '</span>';
+}
+
+function copyLedgerContact(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() { toast('已复制 ' + text, 'ok'); })
+      .catch(function() { fallbackCopy(text); });
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function renderContactLedger(rows) {
+  var body = document.getElementById('contactTableBody');
+  var table = document.getElementById('contactTable');
+  var empty = document.getElementById('contactEmpty');
+  var badge = document.getElementById('contactTabCount');
+  if (badge) badge.textContent = rows.length;
+  if (!body) return;
+  if (!rows.length) {
+    body.innerHTML = '';
+    if (table) table.style.display = 'none';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (table) table.style.display = '';
+  if (empty) empty.style.display = 'none';
+  var dash = '<span style="color:var(--fg-4th)">—</span>';
+  body.innerHTML = rows.map(function(r) {
+    var acc = (config.accounts || [])[Number(r.account_index)] || {};
+    var accName = acc.name || ('账号' + (Number(r.account_index) + 1));
+    var nums = (r.wechats || []).concat(r.phones || []);
+    var numHtml = nums.length ? nums.map(function(n) {
+      return '<span class="ledger-num" title="点击复制" onclick="copyLedgerContact(\'' + escAttr(n) + '\')">' + escAttr(n) + '</span>';
+    }).join('<br>') : dash;
+    var resume = r.resume_sent ? '<span class="ledger-resume-sent">已发</span>'
+      : r.resume_asked ? '<span class="ledger-resume-owed" title="对方要过简历，存档里没找到发送记录">要过·未发</span>' : dash;
+    var link = r.job_url ? '<a class="ledger-link" href="' + escAttr(r.job_url) + '" target="_blank" rel="noopener" title="在 BOSS 上看这个岗位"><i data-ki="link"></i></a>' : '';
+    var pay = [r.salary, r.city].filter(Boolean).join(' · ') || dash;
+    return '<tr>'
+      + '<td title="' + escAttr(r.last_activity) + '">' + escAttr((r.last_activity || '').slice(5, 16)) + '</td>'
+      + '<td title="' + escAttr(accName) + '">' + escAttr(String(Number(r.account_index) + 1)) + '</td>'
+      + '<td title="' + escAttr(r.chat_name + ' · ' + r.company) + '">' + escAttr(r.chat_name) + '<br><span style="color:var(--fg-3rd);font-size:11px">' + escAttr(r.company) + '</span></td>'
+      + '<td title="' + escAttr(r.job_name) + '">' + escAttr(r.job_title || r.job_name) + link + '</td>'
+      + '<td>' + escAttr(pay) + '</td>'
+      + '<td>' + ledgerKindHtml(r.contact_kind) + '</td>'
+      + '<td>' + numHtml + '</td>'
+      + '<td>' + resume + '</td>'
+      + '<td class="ledger-quote" title="' + escAttr(r.matched_quote || r.hr_last_message) + '">' + escAttr(r.matched_quote || r.hr_last_message) + '</td>'
+      + '</tr>';
+  }).join('');
+  if (window.KIcon) KIcon.createIcons(body);
 }
 
 function buildGreetRowHtml(data) {

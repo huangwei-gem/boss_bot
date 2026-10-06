@@ -66,6 +66,7 @@ from boss_bot.reply_record import (
     _get_reply_store, _get_greet_store,
 )
 from boss_bot.message_store import MessageStore
+from boss_bot.contact_ledger import contact_rows
 
 # ===================== 日志缓冲区 =====================
 
@@ -2147,6 +2148,54 @@ def api_reply_records():
         })
     except Exception as e:
         logger.exception("获取回复记录列表失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+_ARCHIVE_GREETS_CACHE = {"key": None, "rows": []}
+
+
+def _greet_rows_with_archive() -> list:
+    """当前打招呼记录 + 已归档的历史记录，给台账补岗位链接用。
+
+    岗位链接只存在打招呼记录里，而它按天归档：只看当前文件的话，
+    134 行台账里只有 4 行能点开岗位，翻几天前的线索就断了。
+    归档文件写完不再变，所以按 (日期, mtime, 大小) 缓存，不每次重解析 27MB；
+    当天的那份从内存里的 store 取，投递写一条台账就能看到。
+    """
+    archive_dir = _get_archive_dir()
+    paths = sorted(archive_dir.glob("*/greet_records.json"))
+    key = tuple((p.parent.name, p.stat().st_mtime_ns, p.stat().st_size) for p in paths)
+    if _ARCHIVE_GREETS_CACHE["key"] != key:
+        rows = []
+        for p in paths:
+            try:
+                with open(p, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception:
+                continue
+            rows.extend(data.get("records") or [])
+        _ARCHIVE_GREETS_CACHE.update({"key": key, "rows": rows})
+    live = [r.to_dict() for r in _get_greet_store().get_all()]
+    return live + _ARCHIVE_GREETS_CACHE["rows"]
+
+
+@app.route("/api/contact_ledger")
+def api_contact_ledger():
+    """「联系与简历」台账：HR 给了电话/微信、简历已发或对方要了没发的会话。
+
+    每次现算，不再另存一份：会话存档是唯一真源，另存就会和 BOSS 上对不齐
+    （回复记录已经为此返过一次工）。?account=N 只看某个号。
+    """
+    try:
+        account = _account_arg()
+        chats = MessageStore().get_all_chats_detail()
+        if account is not None:
+            chats = [c for c in chats if c.get("account_index") == account]
+        rows = contact_rows(chats, _greet_rows_with_archive())
+        return jsonify({"status": "ok", "total": len(rows),
+                        "account": account, "rows": rows})
+    except Exception as e:
+        logger.exception("获取联系与简历台账失败")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
