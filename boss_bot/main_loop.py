@@ -1518,6 +1518,13 @@ class UnifiedBotLoop:
                     has_ai = self._greet_engine._ai_enabled and bool(self._greet_engine._ai_providers)
                     if has_ai:
                         ai_result, ai_duration = self._greet_engine._analyze_job_with_ai(job)
+                        if ai_result is None and job.get("_ai_no_candidate"):
+                            # 体检判死 + 冷却把可试的接口清零了。这既不是"AI 说不匹配"
+                            # 也不是"AI 答不出"，投出去就是盲投；写 ai_skip 记录又会
+                            # 每个岗位烧一条（同 冷却期不烧记录 那条）。留给下一轮真判。
+                            self._log("WARN", f"⏸️ 暂无可用 AI 接口，本岗位留到下一轮: "
+                                              f"{job.get('job_name', '')}")
+                            continue
                         if ai_result is None and self._greet_engine._init_ai() is not None:
                             # AI 判"不匹配"（或按 fail_action 跳过）：原因取自这条岗位自己的
                             # 判分结果，传给 skip_reason 让前端完整显示

@@ -275,8 +275,11 @@ class TestAiFailAction:
         from boss_bot.greet_engine import AIAnalyzerChain
         # 成败回写体检表会落盘，测试只验容灾链的判定，不碰文件
         monkeypatch.setattr(ai_health, "report_runtime_result", lambda *a, **k: None)
-        provider = {"name": "P1", "api_key": "k", "api_base": "https://x/v1",
-                    "model": "m"}
+        # 冷却表是全进程共享的（按服务商名记账），两个用例共用一个名字的话，
+        # 前一条 429 会把后一条的接口直接冻住——那时"一个都没轮到试"走的是
+        # 池空分支，不是"试过但失败"的 fail_action 分支，测的就不是同一件事了。
+        provider = {"name": f"P-{fail_action}", "api_key": "k",
+                    "api_base": "https://x/v1", "model": "m"}
         chain = AIAnalyzerChain(providers=[provider], match_threshold=70,
                                 log_callback=lambda *a, **k: None,
                                 fail_action=fail_action)

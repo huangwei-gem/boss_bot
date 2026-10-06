@@ -11,6 +11,7 @@ AskDiandian-Dots3 因为 enable_thinking 把 1024 token 预算全花在思考上
 截断要认出来，兜底要留痕。
 """
 import json
+import time
 from pathlib import Path
 from unittest.mock import patch
 
@@ -228,6 +229,44 @@ class FailoverTest:
         assert result["ai_error"] is True
         assert result["is_match"] is True
         assert "截断" in result["reason"] or "没有 JSON" in result["reason"]
+
+    def test_一个接口都没轮到试时不许算默认通过(self):
+        """体检把 13 家判死 + 剩下 2 家在冷却 = 一个都没试过。
+
+        这种"没问成"和"问了但答不出"是两回事：按默认通过处理就是当着 HR
+        的面把没过筛的岗位投出去。实测 2026-10-07 01:14-01:17，池子空的那三分钟里
+        每一条招呼都是这么发出去的（日志里全是 0.0s 的"AI 分析异常: None"）。
+        """
+        chain = make_chain(n=2)
+        until = time.time() + 300
+        chain._cooldown_until = {"p0": until, "p1": until}
+        result = chain.analyze_job(JOB)
+        assert result.get("no_candidate") is True, f"没区分开“没得试”和“试过失败”: {result}"
+        assert result["ai_error"] is True
+        assert result["is_match"] is False, "一个接口都没试成就默认通过，等于盲投"
+        assert "冷却" in result["reason"] or "不可用" in result["reason"], result["reason"]
+
+    def test_没得试时不看fail_action脸色(self):
+        """fail_action=skip 是"AI 答不出就别投"，不是"AI 没答也别记成一轮失败"。
+
+        这条岗位要留给下一轮真判，所以既不能投出去，也不能算兜底次数。
+        """
+        chain = make_chain(n=1, fail_action="default")
+        chain._cooldown_until = {"p0": time.time() + 300}
+        chain.analyze_job(JOB)
+        assert chain.fallback_count == 0, "池空不是兜底，别把它记成一次 AI 失败"
+
+    def test_打招呼轮把没得试的岗位留给下一轮(self):
+        """链子标了 no_candidate，轮次那边必须认这个标记。
+
+        不认的话它会走进"AI判定不匹配"那条分支：照样不投，但每个岗位都烧一条
+        ai_skip 记录、还追着空池子发追问，一轮下来记录全是假不匹配。
+        """
+        import inspect
+        from boss_bot.main_loop import UnifiedBotLoop
+        src = inspect.getsource(UnifiedBotLoop)
+        assert "_ai_no_candidate" in src, "轮次没接这个标记，池空时会写成 AI判定不匹配"
+        assert "continue" in src[src.index("_ai_no_candidate"):src.index("_ai_no_candidate") + 400]
 
     def test_兜底不计入判分成功(self):
         chain = make_chain(n=1)

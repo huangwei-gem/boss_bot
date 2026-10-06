@@ -956,6 +956,18 @@ class AIAnalyzerChain:
         if unhealthy:
             self._log("INFO", f"按体检结果跳过 {len(unhealthy)} 个已知不可用的 AI 接口")
 
+        if attempts == 0:
+            # 一个接口都没轮到试：和"试过了但答不出"是两回事。
+            # 走 fail_action 就是把没看过 JD 的岗位投出去——实测 2026-10-07 01:14
+            # 那三分钟，体检判死 13 家、剩 2 家在冷却，每条招呼都是这么盲发出去的。
+            # 这里既不投也不算兜底，把这条岗位留给冷却到期后的下一轮。
+            reason = (f"没有可试的 AI 接口（{len(unhealthy)} 个体检不可用、"
+                      f"{skipped_cooling} 个在冷却中）")
+            self._log("WARN", f"⚠️ {reason}，本岗位不投也不记兜底，留给下一轮")
+            return {"score": 0, "is_match": False, "ai_error": True,
+                    "no_candidate": True, "reason": reason,
+                    "strengths": [], "weaknesses": [], "suggested_greeting": ""}
+
         # 全部失败
         self._log("ERROR", f"所有 AI 接口均失败，最后错误: {last_error}")
         self.fallback_count += 1
@@ -2246,6 +2258,13 @@ class GreetEngine:
             _start = time.time()
             result = analyzer.analyze_job(ai_job)
             duration = time.time() - _start
+            if result.get("no_candidate"):
+                # 「一个接口都没轮到试」不能当「AI 判了不匹配」：不投，也不写
+                # ai_skip 记录、不追问答复（追问照样要打 AI，池空时纯属白费）。
+                # 打上标记让打招呼轮把这条岗位留给下一轮。
+                job["_ai_no_candidate"] = True
+                self._bind_ai_result(job, result, analyzer, duration)
+                return None, duration
             score = result.get("score", 50)
             is_match = result.get("is_match", True)
             # 判分结果绑到这条岗位上（见 _bind_ai_result）
