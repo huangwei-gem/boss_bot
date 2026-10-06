@@ -57,3 +57,83 @@ def test_既写现场又写线上时按现场处理():
 def test_空文本不算邀请():
     assert classify_interview_invite("") == "unknown"
     assert classify_interview_invite(None) == "unknown"
+
+
+# 2026-10-06 从当天回复记录里抄的真句子：这几条都被旧判据放过了，
+# 引擎回的是"工作日下午都可以安排面试"——13:43 那条就是这么把 10/07 的线下面试应下来的。
+让人过来 = "什么时候方便过来面试呢？"
+合适再过来 = "您好，蓝思直招非中介，加微信发完整简章和福利待遇。平台回复不及时，加微信随时沟通，合适再过来面试。"
+会议室那句 = "#腾讯会议：834-440-982，今天全天都在这个会议室，您可以随时进入会议室。如果正巧有人在面试就请排队稍等片刻"
+只是提到面试 = "您好，我们需要有教学经验的老师，就可以参加面试哦"
+
+
+def test_让人过来的就是到场面试():
+    assert classify_interview_invite(让人过来) == "offline", \
+        '"过来面试"没进判据，机器就替 HR 把到场面试答应了'
+
+
+def test_合适再过来面试同样算到场():
+    assert classify_interview_invite(合适再过来) == "offline"
+
+
+def test_会议室里面试的是远程():
+    assert classify_interview_invite(会议室那句) == "online"
+
+
+def test_只是提到面试不算到场():
+    assert classify_interview_invite(只是提到面试) == "unknown", \
+        '"可以参加面试哦"没说在哪儿面，判成现场就是凭空拒一单'
+
+
+def test_现场面试卡片不能被关键词规则抢先答应():
+    """规则表里 '面试' 是子串匹配，回"工作日下午都可以安排面试"。
+
+    那张卡片正文就带"面试"两个字，所以规则层跑在策略层前面的话，
+    拒绝那条路永远走不到——实测 10-06 00:33、01:21 两条现场面试卡片就是这么被答应的。
+    """
+    from boss_bot.reply_engine import ReplyEngine
+    e = _引擎()
+    action, content, meta = e.get_reply([{"is_mine": False, "text": 现场卡片}])
+    assert action == "reject_interview", f"实际走了 {action}/{content}"
+
+
+def test_策略不能挂在意图上():
+    """detect_intent 认这张卡片是 other（它是系统卡片，不是 HR 说话）。
+
+    所以"invite_interview/ask_interview 且判成现场"那条老写法永远不会触发，
+    判据只能落在正文本身。
+    """
+    from boss_bot.reply_engine import ReplyEngine
+    e = _引擎()
+    action, _, meta = e.get_reply([{"is_mine": False, "text": 现场卡片}])
+    assert meta["intent"] == "other", "意图判出来了就说明这条前提变了，策略要跟着改"
+    assert action == "reject_interview"
+
+
+def test_让人过来的问句也走拒绝():
+    """13:43 阳霖龙那句"什么时候方便过来面试呢？"是 HR 白话，意图判成 invite_interview。"""
+    from boss_bot.reply_engine import ReplyEngine
+    e = _引擎()
+    action, content, _ = e.get_reply([{"is_mine": False, "text": 让人过来}])
+    assert action == "reject_interview", f"实际走了 {action}/{content}"
+
+
+def test_线上面试照旧答应():
+    from boss_bot.reply_engine import ReplyEngine
+    e = _引擎()
+    action, content, _ = e.get_reply([{"is_mine": False, "text": 线上邀请}])
+    assert action == "text" and "面试" in content
+
+
+def _引擎():
+    from boss_bot.reply_engine import ReplyEngine
+    from boss_bot.rules import RuleEngine
+    e = ReplyEngine()
+    e.rule_engine = RuleEngine({"面试": "工作日下午都可以安排面试，您看哪个时间段方便？"})
+    e._message_store = None
+    e._self_evolve = None
+    e._ask_ai = lambda *a, **k: None
+    e._add_record = lambda **kw: None
+    e._record_to_evolve = lambda *a, **k: None
+    e._log_decision = lambda *a, **k: None
+    return e

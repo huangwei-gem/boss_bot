@@ -528,6 +528,23 @@ class ReplyEngine:
                 )
                 return ("text", reply, meta)
 
+        # ── 0.7. 现场/线下的面试邀请先于关键词规则定罪 ──
+        # 规则表里 '面试' 是子串匹配，卡片正文"邀请您现场面试"、HR 那句
+        # "什么时候方便过来面试呢"都会被它接走，回一句"工作日下午都可以安排面试"
+        # ——实测 10-06 00:33 / 01:21 / 13:43 三单线下面试就是这么当面应下来的。
+        # 用户只要线上，所以这一步必须排在规则前面，否则 reject_interview 永远走不到。
+        if latest and classify_interview_invite(latest) == "offline":
+            meta["source"] = "interview_policy"
+            logger.info("[面试策略] 现场/线下的面试邀请 → 动作 reject_interview")
+            self._log_decision(chat_name, latest, meta, "reject_interview", decision_start)
+            self._add_record(
+                chat_name=chat_name, job_name=job_name, received_message=latest,
+                reply_content=None, reply_source="policy",
+                reply_intent=meta["intent"],
+                reply_reason="只找线上兼职，现场/线下的面试邀请去点平台上的「拒绝」",
+            )
+            return ("reject_interview", None, meta)
+
         # ── 1. 关键词规则直通（最高优先级）──
         if latest:
             result = self.rule_engine.match(latest)
@@ -583,12 +600,6 @@ class ReplyEngine:
             # HR 顺口提微信、平台的安全提示都不是卡片，仍走原来的平台内沟通话术
             if meta["intent"] == "contact_request" and is_contact_exchange_card(latest):
                 action, template = "contact", None
-            # 现场/线下面试的邀请：用户只要线上，回"工作日下午都可以安排面试"
-            # 等于替 HR 把到场面试应下来（今天三单线下面试就是这么来的）。
-            # 判成 offline 就改成点平台上那张邀请的「拒绝」，不发消息。
-            if meta["intent"] in ("invite_interview", "ask_interview") and \
-                    classify_interview_invite(latest) == "offline":
-                action, template = "reject_interview", None
             content = render_template(template, USER_PROFILE) if template else None
             # 重复发送检测
             if action == "text" and content and \

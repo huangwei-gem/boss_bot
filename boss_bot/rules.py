@@ -20,6 +20,21 @@ _QUESTION_NEGATIVE_RE = re.compile(
 # 关键词前缀检查窗口长度（字符）
 _CONTEXT_WINDOW = 10
 
+# 纯打招呼的键：整句只是在打招呼时才接话。
+# "您好"是 HR  opening 的惯用开头，"您好，咱们之前做过类似数据标注的工作吗"
+# 这种带正事的句子被它代答成"我对这个岗位很感兴趣"就是答非所问
+# （实测 2026-10-06 一天 18 条），所以去掉招呼词和标点后还剩话就不算打招呼。
+_GREETING_KEYS = ("您好", "你好", "在吗", "在不在", "哈喽", "嗨")
+_GREETING_PUNCT_RE = re.compile(r"[\s，。！？～~,.;:、…\-]*")
+
+
+def _is_bare_greeting(message: str) -> bool:
+    """这句话除了打招呼还剩什么：剩不下两个字就算纯寒暄。"""
+    rest = message
+    for key in _GREETING_KEYS:
+        rest = rest.replace(key, "")
+    return len(_GREETING_PUNCT_RE.sub("", rest)) < 2
+
 
 class RuleEngine:
     """关键词规则引擎"""
@@ -43,6 +58,8 @@ class RuleEngine:
         if not message:
             return None
         for keyword, response in self.rules.items():
+            if keyword in _GREETING_KEYS and not _is_bare_greeting(message):
+                continue  # 只是句子开头带了句"您好"，不是在打招呼，让给意图/AI 回
             for m in self._compiled[keyword].finditer(message):
                 prefix = message[max(0, m.start() - _CONTEXT_WINDOW):m.start()]
                 if _QUESTION_NEGATIVE_RE.search(prefix):
