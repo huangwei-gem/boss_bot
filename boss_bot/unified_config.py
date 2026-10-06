@@ -415,7 +415,11 @@ class AIConfig:
     enabled: bool = False
     providers: list = field(default_factory=list)  # AIProvider 列表
     fail_action: str = "default"         # skip | default (default=句句有回应)
-    max_tokens: int = 200
+    max_tokens: int = 1200
+    # 回复的输出预算：带 thinking 的接口实测正文被思考吃光（content 为空），
+    # 今日 160 次失败里思考字数中位 318、p95 896，200 的预算连思考都不够，
+    # 正文一个字不剩 → 只能换接口，四个接口连着同一个坑就等于没回复。
+    # 判分那条链同理，早就放到 analyze_max_tokens=1600。
     # 岗位判分的输出预算：带 thinking 的接口实测 1024 token 会被思考吃光，
     # 正文为空 → 只能换接口，见 greet_engine.AIAnalyzerChain
     analyze_max_tokens: int = 1600
@@ -776,6 +780,10 @@ class UnifiedConfig:
                 self.ai.match_threshold = int(ai["match_threshold"])
             if "analyze_max_tokens" in ai:
                 self.ai.analyze_max_tokens = int(ai["analyze_max_tokens"])
+            if ai.get("max_tokens"):
+                # 回复预算以前只认环境变量，文件里的值直接丢掉，
+                # 于是面板改不动、文件里写了也不生效
+                self.ai.max_tokens = int(ai["max_tokens"])
             if "probe_max_per_round" in ai:
                 # 夹住而不是照收：界面填 999 就是每号每轮 999 次额外 AI 调用
                 self.ai.probe_max_per_round = max(
@@ -1254,6 +1262,7 @@ class UnifiedConfig:
                 "api_base": self.ai.api_base,
                 "model": self.ai.model,
                 "match_threshold": self.ai.match_threshold,
+                "max_tokens": self.ai.max_tokens,
                 "analyze_max_tokens": self.ai.analyze_max_tokens,
                 "probe_max_per_round": self.ai.probe_max_per_round,
                 "fail_action": self.ai.fail_action,
