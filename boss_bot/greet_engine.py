@@ -691,6 +691,7 @@ class AIAnalyzerChain:
         analyze_max_tokens: int = 0,
         fail_action: str = "default",
         veto_only_match: bool = False,
+        judge_timeout: int = 0,
     ):
         self.providers = []
         for p in providers:
@@ -727,6 +728,10 @@ class AIAnalyzerChain:
         self.fail_action = fail_action if fail_action in ("skip", "default") else "default"
         # 只看否决词：AI 的分和结论不参与放行，只有命中自定义筛选词才拦
         self.veto_only_match = bool(veto_only_match)
+        # 单接口判分的超时上限（秒）。体检那边必须留足 45 秒——慢但活着的服务商
+        # 不能被判成不可用；可判分等不起：实测 AMD/NVIDIA 三家 46~50 秒超时，
+        # 链子按各自 45 秒干等，一轮下来还没换到能用的一家，这一单就按"默认通过"投了。
+        self.judge_timeout = max(0, int(judge_timeout or 0))
 
         self.analyzed_count = 0
         self.match_count = 0
@@ -1111,6 +1116,13 @@ class AIAnalyzerChain:
             result["reason"] = "只看否决词：未命中否决条件，放行。" + str(result.get("reason", ""))
         return result
 
+    def _provider_timeout(self, provider) -> int:
+        """这次请求给多少秒：判分有上限，服务商自己更快就按它自己的。"""
+        base = int(getattr(provider, "timeout", 0) or 0) or 30
+        if self.judge_timeout <= 0:
+            return base
+        return min(base, self.judge_timeout)
+
     def _call_provider_api(self, provider: AIProviderConfig, messages: list,
                            normalize: bool = True) -> dict:
         """调用指定 AI 接口，返回一份可信判分；拿不到就抛 AIResponseUnusable。
@@ -1132,12 +1144,12 @@ class AIAnalyzerChain:
         req.add_header("Authorization", f"Bearer {provider.api_key}")
 
         try:
-            with urlopen(req, timeout=provider.timeout) as resp:
+            with urlopen(req, timeout=self._provider_timeout(provider)) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
         except URLError as e:
             raise Exception(f"API 请求失败: {e}")
         except TimeoutError:
-            raise Exception(f"请求超时（{provider.timeout}s）")
+            raise Exception(f"请求超时（{self._provider_timeout(provider)}s）")
 
         try:
             choice = data["choices"][0]
@@ -1415,6 +1427,7 @@ class GreetEngine:
         sig = (ai.enabled, ai.match_threshold, ai.analyze_max_tokens,
                tuple(ai.custom_filter_keywords or []), ai.custom_scoring_prompt,
                ai.skip_unhealthy, ai.fail_action, bool(ai.veto_only_match),
+               getattr(ai, "judge_timeout", 0),
                tuple((p.name, p.model, p.api_base, bool(p.api_key)) for p in ai.providers))
         if getattr(self, "_ai_config_sig", None) == sig:
             return
@@ -1429,6 +1442,7 @@ class GreetEngine:
         self._ai_fail_action = ai.fail_action
         self._ai_veto_only = bool(ai.veto_only_match)
         self._analyze_max_tokens = ai.analyze_max_tokens
+        self._ai_judge_timeout = int(getattr(ai, "judge_timeout", 0) or 0)
 
         # AI providers 列表（从 UnifiedConfig 转换为 AIAnalyzerChain 所需格式）
         self._ai_providers = []
@@ -2176,6 +2190,7 @@ class GreetEngine:
                     analyze_max_tokens=self._analyze_max_tokens,
                     fail_action=self._ai_fail_action,
                     veto_only_match=self._ai_veto_only,
+                    judge_timeout=self._ai_judge_timeout,
                 )
             else:
                 self._log("WARN", "AI 已启用但未配置任何 provider")

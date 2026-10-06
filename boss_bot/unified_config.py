@@ -424,6 +424,12 @@ class AIConfig:
     # 正文为空 → 只能换接口，见 greet_engine.AIAnalyzerChain
     analyze_max_tokens: int = 1600
     rate_limit_wait: int = 30
+    # 判分时单个接口的超时上限（秒）。体检那边仍按服务商自己的 timeout（默认 45 秒），
+    # 慢但活着的服务商不该被判成不可用；判分等不起——实测 AMD/NVIDIA 三家
+    # 46~50 秒超时，链子按 45 秒干等，一轮还没换到能用的一家，这一单就按默认通过投了
+    # （2026-10-07 00 点那段：167 条记录 41 条 ai_error，其中 30 条真的发出去了）。
+    # 0 = 不另设上限。
+    judge_timeout: int = 12
     match_threshold: int = 70            # auto_boss: match_threshold
     api_key: str = ""                    # 兼容旧格式
     api_base: str = "https://apihub.agnes-ai.com/v1"  # 兼容旧格式
@@ -780,6 +786,8 @@ class UnifiedConfig:
                 self.ai.match_threshold = int(ai["match_threshold"])
             if "analyze_max_tokens" in ai:
                 self.ai.analyze_max_tokens = int(ai["analyze_max_tokens"])
+            if "judge_timeout" in ai:
+                self.ai.judge_timeout = max(0, int(ai["judge_timeout"] or 0))
             if ai.get("max_tokens"):
                 # 回复预算以前只认环境变量，文件里的值直接丢掉，
                 # 于是面板改不动、文件里写了也不生效
@@ -1264,6 +1272,7 @@ class UnifiedConfig:
                 "match_threshold": self.ai.match_threshold,
                 "max_tokens": self.ai.max_tokens,
                 "analyze_max_tokens": self.ai.analyze_max_tokens,
+                "judge_timeout": self.ai.judge_timeout,
                 "probe_max_per_round": self.ai.probe_max_per_round,
                 "fail_action": self.ai.fail_action,
                 "custom_filter_keywords": list(self.ai.custom_filter_keywords),

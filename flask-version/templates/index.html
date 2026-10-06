@@ -944,6 +944,8 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
           <label>回复预算 tokens</label><input class="side-form-input" id="aiMaxTokens" type="number" min="512" max="8192" step="100" placeholder="1200" onchange="onAiChange()"></div>
         <div class="acc-field-row" title="AI 判「不符合」后，只追问分数离阈值最近的那批（阈值-15 到阈值）到底卡在哪一条硬性要求。一次追问≈一次判分的耗时；填 0 就是关掉">
           <label>复盘追问/每号每轮</label><input class="side-form-input" id="aiProbeMaxPerRound" type="number" min="0" max="20" step="1" placeholder="5" onchange="onAiChange()"></div>
+        <div class="acc-field-row" title="判分时单个接口最多等几秒，超了就换下一家。体检那边仍按服务商自己的 45 秒等（慢但活着的不算坏），但判分等不起：实测三家 46~50 秒超时，一轮还没换到能用的一家，这条岗位就按「默认通过」盲投出去了。填 0 = 不另设上限">
+          <label>判分单接口超时（秒）</label><input class="side-form-input" id="aiJudgeTimeout" type="number" min="0" max="60" step="1" placeholder="12" onchange="onAiChange()"></div>
         <button class="adv-toggle" id="aiProvToggle" onclick="toggleAiProviders()">
           <i data-ki="ai"></i>AI 接口列表 <i data-ki="chevron-right" class="arrow"></i>
           <span id="aiProvSummary" style="margin-left:4px;font-size:10px;color:var(--fg-3rd);font-weight:400"></span>
@@ -1369,11 +1371,13 @@ function updateAiScopeNote() {
 // ── AI 配置渲染 ──
 function renderAiConfig() {
   if (!config.ai) config.ai = {};
-  config.ai = Object.assign({enabled:true,api_key:'',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,max_tokens:1200,analyze_max_tokens:1600,providers:[]}, config.ai);
+  config.ai = Object.assign({enabled:true,api_key:'',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,max_tokens:1200,analyze_max_tokens:1600,judge_timeout:12,providers:[]}, config.ai);
   setEl('aiEnabled', 'toggle-switch ai-switch' + (config.ai.enabled ? ' on' : ''));
   setVal('aiThreshold', config.ai.match_threshold || 70);
   setVal('aiMaxTokens', config.ai.max_tokens || 1200);
   setVal('aiAnalyzeMaxTokens', config.ai.analyze_max_tokens || 1600);
+  setVal('aiJudgeTimeout', typeof config.ai.judge_timeout === 'number'
+    ? config.ai.judge_timeout : 12);
   setVal('aiProbeMaxPerRound', typeof config.ai.probe_max_per_round === 'number'
     ? config.ai.probe_max_per_round : 5);
   setVal('customFilterKeywords', (config.ai.custom_filter_keywords || []).join('、'));
@@ -1663,6 +1667,9 @@ function onAiChange() {
   config.ai.match_threshold = parseInt(document.getElementById('aiThreshold').value) || 70;
   config.ai.max_tokens = parseInt(document.getElementById('aiMaxTokens').value) || 1200;
   config.ai.analyze_max_tokens = parseInt(document.getElementById('aiAnalyzeMaxTokens').value) || 1600;
+  // 判分超时：0 是「不另设上限」这个合法值，不能用 || 兜底（一兜就把 0 变成 12）
+  var judgeTo = parseInt(document.getElementById('aiJudgeTimeout').value, 10);
+  config.ai.judge_timeout = isNaN(judgeTo) ? 12 : judgeTo;
   // 0 是「关掉复盘」这个合法值，所以不能像上面那样用 || 兜底
   var probeVal = parseInt(document.getElementById('aiProbeMaxPerRound').value);
   config.ai.probe_max_per_round = isNaN(probeVal) ? 5 : Math.max(0, Math.min(20, probeVal));
@@ -2502,7 +2509,7 @@ function loadConfig() {
     config.rate_limit = Object.assign({enabled:true,max_per_hour:30,max_per_day:150}, config.rate_limit);
     config.retry = Object.assign({max_attempts:3,base_delay:2,backoff_factor:2}, config.retry);
     if (!config.ai) config.ai = {};
-    config.ai = Object.assign({enabled:true,api_key:'',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,max_tokens:1200,analyze_max_tokens:1600,probe_max_per_round:5,providers:[]}, config.ai);
+    config.ai = Object.assign({enabled:true,api_key:'',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,max_tokens:1200,analyze_max_tokens:1600,probe_max_per_round:5,judge_timeout:12,providers:[]}, config.ai);
     if (!config.resume) config.resume = {};
     config.resume = Object.assign({school:'某某大学',major:'统计学',degree:'本科',skills:['Excel','SQL','Python','数据分析'],experience:'负责业务数据报表与洞察分析',target_position:'数据分析师',self_intro:'做事严谨细心，学习能力强'}, config.resume);
     if (!config.accounts || !config.accounts.length) {
