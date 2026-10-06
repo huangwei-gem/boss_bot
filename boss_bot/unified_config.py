@@ -435,9 +435,11 @@ class AIConfig:
     # 而这些超时会被 report_runtime_result 记 strike（连续 2 次就判该接口不可用），
     # 于是活着的服务商一家家被除名，池子空了 —— 每个岗位 0.0 秒就报
     # "所有 AI 接口均失败"，全按默认通过盲投，比原来的毛病更严重。
-    # 20 秒只削尾巴：留下 3/4 的成功判分，砍掉的是 42~135 秒那一段。
+    # 30 秒才削尾巴：20 秒那一版仍然掐死了大约 1/4 的成功判分，02:44 重体检
+    # 出来的 10 家可用服务商平均延迟就是 19.4 秒，掐它们等于把池子再次清空。
+    # 单岗位还有 JOB_BUDGET_SECONDS=60 的总预算兜着，不会因为放宽而拖死整轮。
     # 0 = 不另设上限。
-    judge_timeout: int = 20
+    judge_timeout: int = 30
     match_threshold: int = 70            # auto_boss: match_threshold
     api_key: str = ""                    # 兼容旧格式
     api_base: str = "https://apihub.agnes-ai.com/v1"  # 兼容旧格式

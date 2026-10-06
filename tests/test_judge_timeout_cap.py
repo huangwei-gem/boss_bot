@@ -14,7 +14,8 @@ AMD-DeepSeek / NVIDIA-GLM-5.3 / NVIDIA-Kimi 三家是 46s、50s 的请求超时�
 p50 12.8s / p75 20.2s / p90 42.2s / p95 53.0s。第一版取 12 秒砍在一半上，
 被自己掐死的那 56% 会记 strike（连续 2 次判该接口不可用），活着的一家家的被除名，
 池子空了之后每个岗位 0.0 秒就报"所有 AI 接口均失败"、全按默认通过盲投——
-比它要修的毛病更严重。默认因此定 20 秒（只削 42~135 秒那条尾巴）。
+比它要修的毛病更严重。默认因此定 30 秒：留到 p90 之外才砍（02:44 重体检 10 家可用的平均延迟就是 19.4 秒，
+20 秒仍然会把活着的一家家掐出去，池子再次空掉）。
 """
 import sys
 from pathlib import Path
@@ -55,8 +56,8 @@ def _调用(chain):
         pass
 
 
-def test_判分默认只等二十秒():
-    assert UnifiedConfig().ai.judge_timeout == 20
+def test_判分默认只等三十秒():
+    assert UnifiedConfig().ai.judge_timeout == 30
 
 
 def test_判分超时压住服务商的四十秒(monkeypatch):
