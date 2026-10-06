@@ -33,7 +33,8 @@ flask-version/browser_data/
 
 # 配置文件中的敏感数据
 bot_config.json
-bot_config.json.*   # 每次保存自动留的 .bak-<时间> 和坏掉那份，里面是 AI key，绝不入库
+# 每次保存自动留的 .bak-<时间> 和坏掉那份都在下面这条里，里面是 AI key，绝不入库
+bot_config.json.*
 user_profile.json
 config_overrides.json
 zhipin_cookies.json
