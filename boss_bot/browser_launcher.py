@@ -877,6 +877,7 @@ def launch_browser(
     browser_type: str = "chrome",
     user_data_dir: str = "",
     background: bool = True,
+    extra_args: tuple = (),
 ) -> BrowserInstance:
     """启动浏览器（跨平台，支持 Chrome、Edge、Chromium）
 
@@ -890,6 +891,7 @@ def launch_browser(
         chrome_path: 浏览器路径（空则自动检测）
         browser_type: 浏览器类型，"chrome" / "edge" / "chromium"
         background: 有头模式下把窗口直接收进任务栏，不前置、不抢用户焦点
+        extra_args: 追加的 Chrome 启动参数（只用于内存参数的 A/B 实测）
 
     Returns:
         BrowserInstance: 浏览器实例
@@ -935,6 +937,7 @@ def launch_browser(
             viewport_height=viewport_height,
             port=port or _find_free_port(),
             user_data_dir=user_data_dir,
+            extra_args=extra_args,
         )
     else:
         return _launch_windows(
@@ -947,6 +950,7 @@ def launch_browser(
             port=port,
             user_data_dir=user_data_dir,
             background=background,
+            extra_args=extra_args,
         )
 
 
@@ -959,6 +963,7 @@ def _launch_macos(
     viewport_height: int,
     port: int,
     user_data_dir: str = "",
+    extra_args: tuple = (),
 ) -> BrowserInstance:
     """macOS 启动 Chrome（手动启动 + Chromium 连接）
 
@@ -992,6 +997,8 @@ def _launch_macos(
 
     if headless:
         args.append('--headless=new')
+
+    args.extend(extra_args)
 
     if user_agent:
         args.append(f'--user-agent={user_agent}')
@@ -1161,6 +1168,7 @@ def _launch_windows(
     port: int = 0,
     user_data_dir: str = "",
     background: bool = True,
+    extra_args: tuple = (),
 ) -> BrowserInstance:
     """Windows 启动 Chrome（使用原生 ChromiumPage）"""
 
@@ -1170,10 +1178,18 @@ def _launch_windows(
     co.set_browser_path(chrome_path)
     co.set_argument('--no-sandbox')
     co.set_argument('--disable-gpu')
+    # --disable-gpu 在 --headless=new 下并没有真的去掉 GPU 子进程：实测每个号还挂着
+    # 一个 346 MB 的 gpu-process。--in-process-gpu 把它折进浏览器主进程，
+    # tools/measure_browser_memory.py 两轮 A/B：2643 → 2383 MB/实例（两个号合计省 ~520 MB）。
+    # 渲染进程上限保持 2：收到 1 测下来 renderer 总量没降（1251→1300），
+    # 省不到内存反而多一个"一个标签页崩了另一个陪葬"的连坐风险。
+    # 别再顺手关掉软件光栅化（software rasterizer）：它和 --disable-gpu 一起会把 WebGL 打死，
+    # 实测 navigator 报 no-webgl，而 WebGL 串正是 BOSS 风控要读的家底（省的那点不如别暴露自己）。
+    co.set_argument('--in-process-gpu')
     co.set_argument('--disable-dev-shm-usage')
     co.set_argument('--no-first-run')
     co.set_argument('--no-default-browser-check')
-    co.set_argument('--disable-features=DnsOverHttps,BackForwardCache')
+    co.set_argument('--disable-features=DnsOverHttps,BackForwardCache,Translate,MediaRouter,OptimizationHints')
     co.set_argument('--disable-blink-features=AutomationControlled')
     co.set_argument(f'--window-size={viewport_width},{viewport_height}')
     # 内存：两个号的 cloakbrowser 实测占 3.0 GB（面板本身只有 90 MB），
@@ -1193,6 +1209,8 @@ def _launch_windows(
     # 所以窗口收起来之前必须先把这三档节流关掉。
     for _bg_flag in BACKGROUND_FLAGS:
         co.set_argument(_bg_flag)
+    for _flag in extra_args:
+        co.set_argument(_flag)
 
     # 先确认端口上没有别人的浏览器，再动本账号的 profile 目录
     if port > 0 and _is_port_open("127.0.0.1", port):
