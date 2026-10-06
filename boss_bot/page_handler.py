@@ -510,6 +510,93 @@ class BossChatHandler:
             logger.debug(f"侧栏滚动定位失败 [{name}]: {e}")
         return False
 
+    # 聊天页左上角的联系人搜索框（placeholder="搜索30天内的联系人"）。
+    # 这是 React 受控输入：直接赋 .value 组件不认，要走原生 setter 再派发 input。
+    _CONTACT_FILTER_JS = '''(
+        function() {
+            var inp = document.querySelector("input.boss-search-input");
+            if (!inp) return "no-input";
+            var setter = Object.getOwnPropertyDescriptor(
+                window.HTMLInputElement.prototype, "value").set;
+            setter.call(inp, __WANT__);
+            inp.dispatchEvent(new Event("input", {bubbles: true}));
+            return "ok";
+        }
+    )()'''
+
+    def _set_contact_filter(self, keyword: str) -> bool:
+        js = self._CONTACT_FILTER_JS.replace(
+            "__WANT__", json.dumps(keyword, ensure_ascii=False))
+        try:
+            return self.page.run_js(js, as_expr=True) == "ok"
+        except Exception as e:
+            logger.debug(f"联系人搜索框写入失败: {e}")
+            return False
+
+    # 搜索框打字后弹出来的是自己的结果浮层，不是筛过的侧栏（实测）：
+    #   li.search-list > .text > .first-line > .boss-name（里面按命中字符切成 <h>）
+    #                                          > .gray > .company-name / .vline / 角色
+    #                          > .sec-line > 职位标题
+    # 回车没有反应要点那一行；侧栏的 .friend-content 全程不动。
+    _SEARCH_RESULT_JS = '''(
+        function() {
+            var items = document.querySelectorAll("li.search-list");
+            var want = __WANT__;
+            function norm(s) { return (s || "").replace(/\\s+/g, ""); }
+            function hit(li) {
+                var n = li.querySelector(".boss-name");
+                var c = li.querySelector(".company-name");
+                if (!n || norm(n.textContent) !== want.n) return false;
+                if (!want.c) return true;
+                var a = norm(want.c), b = norm(c ? c.textContent : "");
+                // 浮层里的公司名是简称（"创响教育"），存档里是全称
+                // （"湖南创响教育科技有限公司"），谁包含谁都算同一家。
+                // 名字相同公司不同的一律不点：重名在侧栏实测 4 组/34 行。
+                return !!b && (a === b || a.indexOf(b) >= 0 || b.indexOf(a) >= 0);
+            }
+            for (var i = 0; i < items.length; i++) {
+                if (hit(items[i])) { items[i].click(); return "ok"; }
+            }
+            return items.length ? "name_only" : "no_result";
+        }
+    )()'''
+
+    def _open_chat_by_search(self, name: str, company: str,
+                             timeout: float = 6.0) -> str:
+        """用聊天页的联系人搜索直接点开那条会话。
+
+        侧栏是虚拟列表，171 行只渲染 ~40 行："今天不排在前面"的人滚到底
+        也不在 DOM 里，日志一天三百多条「侧栏滚到底也没有会话」就是这么来的，
+        这些人一次回复都收不到。搜索框不筛侧栏，它弹自己的结果浮层，
+        点浮层里 (姓名+公司) 都对得上的那一行才算数。
+
+        返回 ok / name_only / no_result / no_input / no_name，由调用方决定
+        要不要清搜索框（见 enter_chat 的 finally）。
+        """
+        if not name:
+            return "no_name"
+        if not self._set_contact_filter(name):
+            return "no_input"
+        js = self._SEARCH_RESULT_JS.replace(
+            "__WANT__", json.dumps({"n": name, "c": company}, ensure_ascii=False))
+        end = time.time() + timeout
+        verdict = "no_result"
+        while time.time() < end:
+            try:
+                verdict = self.page.run_js(js, as_expr=True) or "no_result"
+            except Exception as e:
+                logger.debug(f"搜索结果点击失败 [{name}]: {e}")
+                return "error"
+            if verdict in ("ok", "name_only"):
+                return verdict
+            time.sleep(0.5)
+        return verdict
+
+    def _clear_contact_filter(self) -> None:
+        """清空搜索框：浮层和输入值留着会干扰下一轮的行定位。"""
+        self._set_contact_filter("")
+        time.sleep(0.4)
+
     def _sidebar_rows(self) -> List[Dict]:
         """读一次当前渲染出来的侧栏行（不滚动）"""
         all_chats = []
@@ -616,19 +703,48 @@ class BossChatHandler:
         点击的那一行确实变成 selected，且 selected 行的姓名与目标一致。
         返回 True=切换成功并确认；False=校验失败（调用方应跳过该会话）。
         """
-        idx = chat_info.get('index', 0)
         expected_name = chat_info.get('name', '')
         expected_company = chat_info.get('company', '')
 
-        # 先确认目标行真的在渲染出来的那几十行里，不在就滚过去。
-        # 侧栏是虚拟列表：账号2 实测 171 行只渲染 ~20 行，采集时记下的 index
-        # 到点击时早就不是同一个人了（按旧 index 点"孙先生|沐数科技"，那位置
-        # 上已经是"马女士|掌门教育"，三次重试全点在错的人身上）。
-        if not self._sidebar_has_row(expected_name, expected_company):
-            if not self._scroll_to_chat_row(expected_name, expected_company):
-                logger.warning(
-                    f"侧栏滚到底也没有会话 [{expected_name}|{expected_company}]，跳过")
-                return False
+        # 先确认目标行真的在渲染出来的那几十行里，不在就滚过去，再不在就用
+        # 联系人搜索直接点开。侧栏是虚拟列表：账号2 实测 171 行只渲染 ~20 行，
+        # 采集时记下的 index 到点击时早就不是同一个人了（按旧 index 点
+        # "孙先生|沐数科技"，那位置上已经是"马女士|掌门教育"，三次重试全点在
+        # 错的人身上）。
+        found, opened = self._locate_chat_row(expected_name, expected_company)
+        if not found:
+            logger.warning(
+                f"侧栏滚到底、搜索也找不到会话 [{expected_name}|{expected_company}]，跳过")
+            return False
+        try:
+            # 搜索浮层那一下点击已经把会话打开了，只剩核对，不许再点一次侧栏
+            if opened:
+                return self._wait_and_verify(expected_name, expected_company)
+            return self._click_and_verify(chat_info, retries)
+        finally:
+            # 搜索框里的字不清掉，下一轮的行定位看到的还是这一屏
+            if opened:
+                self._clear_contact_filter()
+
+    def _locate_chat_row(self, name: str, company: str) -> tuple:
+        """把目标会话弄到屏幕上：认现成的行 → 滚 → 联系人搜索点开。
+
+        返回 (找得到吗, 是不是搜索直接点开的)，后者决定调用方要不要清搜索框、
+        以及还需不需要再点一次侧栏行。
+        """
+        if self._sidebar_has_row(name, company):
+            return True, False
+        if self._scroll_to_chat_row(name, company):
+            return True, False
+        if self._open_chat_by_search(name, company) == "ok":
+            return True, True
+        return False, False
+
+    def _click_and_verify(self, chat_info: dict, retries: int) -> bool:
+        """点进行、等输入框就绪、核对 selected 行与顶栏姓名是不是同一个人。"""
+        idx = chat_info.get('index', 0)
+        expected_name = chat_info.get('name', '')
+        expected_company = chat_info.get('company', '')
 
         for attempt in range(1, retries + 2):
             # 按 姓名+公司 定位行：实测 34 行里 (姓名,公司) 唯一 34/34，
@@ -674,44 +790,53 @@ class BossChatHandler:
                     continue
                 logger.warning(f"侧栏滚到底也找不到会话 [{expected_name}]，跳过")
                 return False
-            time.sleep(3)
-
-            # 等待输入框加载
-            for _ in range(10):
-                ready = self.page.run_js(
-                    'document.querySelector("#chat-input") ? "ready" : "not ready"',
-                    as_expr=True
-                )
-                if ready == 'ready':
-                    break
-                time.sleep(0.5)
-
-            # 校验"选中的就是我要的那一行"：selected 行的姓名/公司 与 顶栏姓名 三方对齐
-            sel = self.read_selected_row()
-            header_name = self.get_boss_name()
-            head_ok = (not header_name or not expected_name
-                       or header_name == expected_name)
-            if not sel:
-                # 读到 0 行 selected（BOSS 改了类名等）时不能整轮罢工：
-                # 这时只剩顶栏姓名可核，同名风险由调用方按岗位/公司再判
-                logger.debug(f"侧栏没有 selected 标记，退回顶栏姓名核对 [{expected_name}]")
-                if head_ok:
-                    return True
-            else:
-                sel_ok = (not expected_name or sel.get("name") == expected_name) \
-                    and (not expected_company or sel.get("company") == expected_company)
-                if sel_ok and head_ok:
-                    if click_result == "by_index":
-                        logger.debug(f"按索引点开会话 [{expected_name}]，selected 复核通过")
-                    return True
+            if self._wait_and_verify(expected_name, expected_company,
+                                     opened_by_index=(click_result == "by_index")):
+                return True
             logger.warning(
                 f"会话切换校验失败（第 {attempt}/{retries + 1} 次）: "
-                f"期望[{expected_name}|{expected_company}], "
-                f"selected={sel.get('index')}/{sel.get('name')}|{sel.get('company')}, "
-                f"顶栏={header_name!r}，重试..."
+                f"期望[{expected_name}|{expected_company}]，重试..."
             )
 
         logger.error(f"会话 [{expected_name}|{expected_company}] 切换校验最终失败，应跳过该会话")
+        return False
+
+    def _wait_and_verify(self, expected_name: str, expected_company: str,
+                         opened_by_index: bool = False) -> bool:
+        """等聊天面板加载，再核对"现在打开的就是我要的那个人"。
+
+        selected 行的姓名/公司与顶栏姓名三方对齐才算过：光核姓名会被重名的人
+        骗过去（实测侧栏 34 行里有 4 组同名昵称）。
+        """
+        time.sleep(3)
+        for _ in range(10):
+            ready = self.page.run_js(
+                'document.querySelector("#chat-input") ? "ready" : "not ready"',
+                as_expr=True
+            )
+            if ready == 'ready':
+                break
+            time.sleep(0.5)
+
+        sel = self.read_selected_row()
+        header_name = self.get_boss_name()
+        head_ok = (not header_name or not expected_name
+                   or header_name == expected_name)
+        if not sel:
+            # 读到 0 行 selected（BOSS 改了类名等）时不能整轮罢工：
+            # 这时只剩顶栏姓名可核，同名风险由调用方按岗位/公司再判
+            logger.debug(f"侧栏没有 selected 标记，退回顶栏姓名核对 [{expected_name}]")
+            return head_ok
+        sel_ok = (not expected_name or sel.get("name") == expected_name) \
+            and (not expected_company or sel.get("company") == expected_company)
+        if sel_ok and head_ok:
+            if opened_by_index:
+                logger.debug(f"按索引点开会话 [{expected_name}]，selected 复核通过")
+            return True
+        logger.debug(
+            f"会话核对不上: 期望[{expected_name}|{expected_company}] "
+            f"selected={sel.get('index')}/{sel.get('name')}|{sel.get('company')} "
+            f"顶栏={header_name!r}")
         return False
 
     # 实测线上结构（2026-09-27 抓取 .chat-record 子树）：
