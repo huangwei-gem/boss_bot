@@ -157,8 +157,13 @@ def main():
 
         # ── 1. 点右侧 chip：立刻高亮，且记录跟着切 ──
         target = n_accounts          # 最后一个 chip = 最后一个账号
+        # 只取 .chip-name：chip 里还挂着状态点和"空闲/投递中"这类计数，
+        # 拿整颗 chip 的 textContent 会得到「账号2空闲」，跟提示语里的
+        # 账号名永远对不上（这条曾经就是这么假失败的）。
         chip_text = (page.run_js(
-            "return (document.querySelectorAll('.scope-chip')[%d]||{}).textContent||''" % target)
+            "var c=document.querySelectorAll('.scope-chip')[%d]||{};"
+            "var n=c.querySelector?c.querySelector('.chip-name'):null;"
+            "return (n?n.textContent:(c.textContent||''))||''" % target)
             or "").strip()
         assert chip_text and click_chip(page, target), "点不到账号 chip"
         check("点一下 chip 高亮立即换人",
@@ -208,10 +213,14 @@ def main():
         page.run_js(f"setDataScope('{n_accounts - 1}');return 1")
         time.sleep(0.6)
         filled = str(page.run_js("return document.getElementById('accGreeting').value") or "")
-        own_city = str(((seeded["accounts"][n_accounts - 1].get("jobs") or [{}])[0]).get("city") or "")
+        # 判据用这个号自己的搜索词，不用第一条岗位的城市：一个号现在挂着
+        # 「长沙/数据分析」和「全国/数据处理 线上」两条岗位，招呼语按当前
+        # 在投的那条编，硬要求出现某一条的城市是假失败。
+        own_words = [w for j in (seeded["accounts"][n_accounts - 1].get("jobs") or [])
+                     for w in str(j.get("query") or "").split() if len(w) >= 3]
         check("选中新号后招呼语框里是按本账号信息生成的默认（不是全局模板）",
               bool(filled.strip()) and filled.strip() != DEFAULT_GREETING.strip()
-              and (not own_city or own_city in filled), repr(filled[:60]))
+              and any(w in filled for w in own_words), repr(filled[:60]))
         page.run_js(f"document.getElementById('accGreeting').value='{MARK}';"
                     "onAccChange();return 1")
         time.sleep(1.5)
