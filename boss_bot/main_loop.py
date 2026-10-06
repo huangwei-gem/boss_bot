@@ -82,6 +82,11 @@ CAPTCHA_WAIT_SECONDS = 60
 CAPTCHA_POLL_SECONDS = 2
 # 连续这么多次都没人应答才真暂停，避免对着验证页无限空转
 CAPTCHA_STRIKES_TO_PAUSE = 3
+# 机器自己判出来的暂停（空搜索、验证码连击）过这么久要自己再试一次。
+# 实测 10-06 两个号 07:09 被"连续3轮搜索结果为0"暂停后一直挂到中午，
+# 那段时间 BOSS 的当日沟通额度还没重置、搜索页也只是暂时空白，
+# 永久暂停等于把"投递中"变成了"没人点就永远停着"。
+GREET_PAUSE_RETRY_SEC = 900
 
 # 按天归档的进程内互斥：记录文件所有账号共用，一天只能归一次
 _ARCHIVE_LOCK = threading.Lock()
@@ -213,6 +218,8 @@ class UnifiedBotLoop:
         # 只有"因为到达每日上限而暂停"才允许跨零点自动恢复；人工暂停不动
         self._greet_paused_by_cap = False
         self._greet_cap_paused_on = ""
+        # 机器自判暂停的重试时刻（0 = 没有，人工暂停一律留 0）
+        self._greet_auto_resume_at = 0.0
         self._reply_paused = False
         # 连续多少次"等了 60 秒没人过验证"之后才真暂停
         self._captcha_strikes = 0
@@ -449,9 +456,14 @@ class UnifiedBotLoop:
         self._log("INFO", "主循环已停止")
 
     def pause_greet(self):
-        """暂停打招呼功能。回复功能不受影响。"""
+        """暂停打招呼功能。回复功能不受影响。
+
+        人工暂停不带自动恢复：清掉上一轮机器设的重试时刻，
+        否则用户刚点完暂停，十几分钟后机器人自己跑回去投递。
+        """
         self._greet_paused = True
         self._greet_paused_by_cap = False
+        self._greet_auto_resume_at = 0.0
         if self._greet_engine is not None:
             self._greet_engine.stop()
         self._log("INFO", "打招呼已暂停")
@@ -460,6 +472,7 @@ class UnifiedBotLoop:
         """恢复打招呼功能。"""
         self._greet_paused = False
         self._greet_paused_by_cap = False
+        self._greet_auto_resume_at = 0.0
         self._log("INFO", "打招呼已恢复")
 
     def pause_reply(self):
@@ -1299,9 +1312,12 @@ class UnifiedBotLoop:
                 if round_had_jobs is False:
                     consecutive_empty_rounds += 1
                     if consecutive_empty_rounds >= 3:
-                        self._log("ERROR", "⚠️ 连续3轮搜索结果为0，可能触发风控或岗位已投完。打招呼已暂停，请检查BOSS直聘页面")
+                        self._log("ERROR", "⚠️ 连续3轮搜索结果为0，可能触发风控或岗位已投完。"
+                                          f"打招呼暂停 {GREET_PAUSE_RETRY_SEC // 60} 分钟后自动再试，"
+                                          "也可以现在就去 BOSS 直聘页面看看")
                         self._emit_wind("连续3轮搜索结果为0，请检查BOSS直聘页面", "limit")
                         self._greet_paused = True
+                        self._greet_auto_resume_at = time.time() + GREET_PAUSE_RETRY_SEC
                         consecutive_empty_rounds = 0
                 else:
                     consecutive_empty_rounds = 0
@@ -2622,12 +2638,21 @@ class UnifiedBotLoop:
             self._log("WARN", f"热重载配置失败，保留旧配置: {e}")
 
     def _maybe_auto_resume_greet(self):
-        """跨过零点后，因每日上限暂停的打招呼要自己恢复。
+        """机器自己判出来的暂停要能自己醒；人工点的永远挂着。
 
-        不恢复的话：当天投满 150 → _greet_paused=True → 进程一直开着，
-        第二天也不会再投，表现就是"机器人悄悄停了"。人工暂停不在此列。
+        两条路：
+        - 空搜索/验证码连击：设了 _greet_auto_resume_at，到点醒过来再试一轮；
+        - 投满每日上限：BOSS 的额度按天回，跨过零点才醒（_greet_paused_by_cap）。
+        以前只有第二条，第一条就是"悄悄停机"的来源：07:09 暂停，中午还没投。
         """
-        if not self._greet_paused or not self._greet_paused_by_cap:
+        if not self._greet_paused:
+            return
+        if self._greet_auto_resume_at and time.time() >= self._greet_auto_resume_at:
+            self._greet_auto_resume_at = 0.0
+            self._greet_paused = False
+            self._log("SUCCESS", "空搜索/风控暂停到点，打招呼自动恢复，再试一轮")
+            return
+        if not self._greet_paused_by_cap:
             return
         if self._greet_cap_paused_on == date.today().isoformat():
             return  # 还是同一天，不必每 10 秒翻一遍记录文件
@@ -2804,6 +2829,9 @@ class UnifiedBotLoop:
                 self._reply_paused = True
             else:
                 self._greet_paused = True
+                # 打招呼这边要自己再试：验证页常常是几分钟的临时风控，
+                # 挂到人回来点按钮，等于这一天的额度白扔
+                self._greet_auto_resume_at = time.time() + GREET_PAUSE_RETRY_SEC
             self._emit_wind("连续多次验证码都没人处理，"
                             f"{'自动回复' if pause_field == 'reply' else '打招呼'}已暂停；"
                             "手动过完验证后点恢复", "captcha")
