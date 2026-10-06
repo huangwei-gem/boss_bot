@@ -125,8 +125,10 @@ READ_SEARCH_JS = r'''(
         for (var i = 0; i < items.length; i++) {
             var n = items[i].querySelector(".boss-name");
             var c = items[i].querySelector(".company-name");
+            var sec = items[i].querySelector(".sec-line");
             out.push({n: n ? n.textContent.trim() : "",
-                      c: c ? c.textContent.trim() : ""});
+                      c: c ? c.textContent.trim() : "",
+                      j: sec ? sec.textContent.trim().replace(/\\s+/g, "") : ""});
         }
         return out;
     }
