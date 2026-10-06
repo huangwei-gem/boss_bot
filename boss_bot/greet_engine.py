@@ -140,6 +140,53 @@ NO_DRAWER_REASON = "点了「立即沟通」但聊天抽屉没在这个标签页
 NO_DRAWER_STREAK_LIMIT = 3
 NO_DRAWER_COOLDOWN_SEC = 30 * 60
 
+# JD 正文短到这个字数就当作"没写具体工作内容"。数字是现算的，不是拍的：
+# 日志里 934 个取到过 JD 的岗位，正文中位 316 字、p10 也还有 146 字，
+# 低于 80 字的只有 15 个（1.6%），其中 2 个一个字都没有——挂个标题就来要人的
+# 就是用户说的诈骗/中介引流。卡 80 只误伤 1.6%，卡 120 就要吃掉 6%。
+JD_THIN_CHARS = 80
+JD_THIN_REASON = "JD 没写具体工作内容（正文太短），按疑似诈骗/中介引流跳过"
+
+# 否决词要扫的字段。jd_* 是详情页抓回来才有的，标题写得再干净，
+# 正文里一句"到岗面试/进厂流水线"也照样得拦住。
+VETO_FIELDS = ("job_name", "description", "requirements", "company",
+               "jd_description", "jd_requirements")
+
+
+def veto_keyword_hit(keywords, job: dict) -> str:
+    """在岗位文本里直查自定义否决词，返回命中的那一条（没命中返回空串）。
+
+    做成模块级纯函数：判分链和"JD 到手后的第二道闸门"共用同一套词、同一个
+    匹配口径，两边各写一遍迟早漂。AI 关掉时它还得能拦人，所以不挂分析器实例。
+    """
+    if not keywords:
+        return ""
+    text = "|".join(str(job.get(k) or "") for k in VETO_FIELDS)
+    for kw in keywords:
+        word = str(kw or "").strip()
+        if word and word in text:
+            return word
+    return ""
+
+
+def jd_gate(keywords, job: dict, thin_chars: int = JD_THIN_CHARS) -> str:
+    """详情页的 JD 拿到手之后、点「立即沟通」之前的第二道闸门。
+
+    返回跳过原因，空串=放行。两条判据：
+    1. 否决词命中 JD 正文（工厂岗、到场岗、引流话术大多只有正文里才写）；
+    2. 正文短到没具体内容——标题能编，"来看看再说"的挂法编不出工作量。
+    """
+    hit = veto_keyword_hit(keywords, job)
+    if hit:
+        return f"JD 命中否决词「{hit}」"
+    # 任职要求也算正文：有的岗位把工作内容写在要求那一栏，只量描述会误杀
+    body = (str(job.get("jd_description") or "").strip()
+            or str(job.get("jd_requirements") or "").strip())
+    if len(body) < thin_chars:
+        return f"{JD_THIN_REASON}（正文仅 {len(body)} 字，门槛 {thin_chars} 字）"
+    return ""
+
+
 
 _INPUTISH = ("#chat-input", ".chat-input", '[contenteditable="true"]', ".input-area")
 _LOGIN_CLS = ("ipt-phone", "ipt-sms")
@@ -795,15 +842,7 @@ class AIAnalyzerChain:
         这些词原来只写进提示词，靠模型自己填 veto_hit。开了"只看否决词"之后
         它是唯一拦人的依据，模型不填就等于什么都拦不住，所以代码再查一遍。
         """
-        if not self.custom_filter_keywords:
-            return ""
-        text = "|".join(str(job.get(k) or "") for k in
-                        ("job_name", "description", "requirements", "company"))
-        for kw in self.custom_filter_keywords:
-            word = str(kw or "").strip()
-            if word and word in text:
-                return word
-        return ""
+        return veto_keyword_hit(self.custom_filter_keywords, job)
 
     def analyze_job(self, job: dict) -> dict:
         """分析单个岗位。依次尝试所有 provider，直到成功。
@@ -2411,6 +2450,13 @@ class GreetEngine:
             job["jd_description"] = job_description
             job["jd_requirements"] = job_requirements
             self._log("INFO", f"JD 描述长度: {len(job_description)} 字符")
+
+            # ── 3.5 JD 到手后再判一次，拦在点「立即沟通」之前 ──
+            blocked = jd_gate(self._ai_custom_filter_keywords, job)
+            if blocked:
+                reason = f"{blocked}｜{job.get('job_name', '')}"
+                self._log("WARN", f"⛔ JD 闸门跳过: {reason}")
+                return False, reason
 
             # ── 4. 点击立即沟通 ──
             self._log("INFO", "开始点击沟通按钮...")
