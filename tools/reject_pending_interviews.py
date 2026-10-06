@@ -55,13 +55,15 @@ def run_one(row, send):
     try:
         if not handler.enter_chat({"name": row["name"], "company": row["company"], "index": -1}):
             return "跳过：侧栏和搜索都找不到这家会话"
-        verdict = handler.reject_interview_invite(execute=send)
+        verdict = handler.reject_interview_invite(execute=send, expect=row["company"] or "")
         if verdict == "no-btn" and handler.open_interview_invite():
             # 「立即查看」展开的面板是异步渲染的，实测 2~5 秒。之前这里固定睡 2 秒，
             # --check 就把 8 个里的 7 个报成"没有可点的拒绝"——不是没按钮，是没等到。
-            verdict = handler.reject_interview_invite(execute=send, wait_sec=8)
+            verdict = handler.reject_interview_invite(execute=send, wait_sec=8,
+                                                      expect=row["company"] or "")
         if not send:
             return {"found": "有可点的「拒绝」（--check 未点）",
+                    "ambiguous": "挂着好几块面试面板、公司名挑不出这一单，不动",
                     "no-btn": "页面上没有可点的「拒绝」（多半已取消/过期）"}[verdict]
         if verdict not in ("clicked", "clicked-confirmed"):
             return f"没点成：{verdict}"

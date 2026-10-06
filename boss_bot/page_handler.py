@@ -1451,8 +1451,13 @@ class BossChatHandler:
             logger.error(f"展开面试邀请卡片失败: {e}")
             return False
 
-    def _locate_interview_reject_btn(self) -> str:
-        """找到就把按钮标上 data-boss-reject，返回 found；没有返回 no-btn。"""
+    def _locate_interview_reject_btn(self, expect: str = "") -> str:
+        """找到就把按钮标上 data-boss-reject。
+
+        返回 found / ambiguous / no-btn。ambiguous 是"页面上挂着好几块认不出哪块
+        是这一单"——宁可不动也不许猜：面试弹窗换了会话也不销毁（2026-10-07 隔离实测），
+        点错一次就是当着 HR 的面把人家另一条面试撤掉。
+        """
         return self.page.run_js('''(
             function() {
                 function vis(el) {
@@ -1460,26 +1465,51 @@ class BossChatHandler:
                 }
                 var old = document.querySelectorAll('[data-boss-reject]');
                 for (var n = 0; n < old.length; n++) old[n].removeAttribute("data-boss-reject");
+                var expect = __EXPECT__;
                 var btns = document.querySelectorAll("button.btn-v2.btn-outline-v2, "
                                                      + "a.btn-v2.btn-outline-v2");
+                var cands = [];
                 for (var i = 0; i < btns.length; i++) {
                     var b = btns[i];
                     if ((b.textContent || "").trim() !== "拒绝" || !vis(b)) continue;
-                    var box = b.parentElement, scope = "";
-                    for (var up = 0; up < 4 && box; up++) {
-                        scope = (box.textContent || "").trim();
-                        if (scope.indexOf("面试") >= 0 && scope.length <= 400) {
-                            b.setAttribute("data-boss-reject", "1");
-                            return "found";
-                        }
+                    var box = b.parentElement, cancelled = false, modal = null, texts = [];
+                    for (var up = 0; up < 6 && box; up++) {
+                        var cls = String(box.className || "");
+                        /* 已拒绝/已超时的壳里"拒绝"两个字照旧挂在 DOM 上，
+                           点它没意义，还会把"这单还活着"回报给调用方 */
+                        if (cls.indexOf("interview-cancel") >= 0) { cancelled = true; break; }
+                        if (cls.indexOf("interview-modal") >= 0
+                            || cls.indexOf("interview-wrap") >= 0) modal = box;
+                        texts.push((box.textContent || "").trim());
                         box = box.parentElement;
                     }
+                    if (cancelled) continue;
+                    /* 往上几层里必须真写着"面试"：页面上交换联系方式那张也带"拒绝" */
+                    if (!texts.some(function (t) {
+                            return t.indexOf("面试") >= 0 && t.length <= 400; })) continue;
+                    cands.push({b: b, text: modal ? (modal.textContent || "")
+                                                  : texts.join(" ")});
                 }
-                return "no-btn";
+                if (!cands.length) return "no-btn";
+                if (expect) {
+                    for (var k = 0; k < cands.length; k++) {
+                        if (cands[k].text.indexOf(expect) >= 0) {
+                            cands[k].b.setAttribute("data-boss-reject", "1");
+                            return "found";
+                        }
+                    }
+                }
+                if (cands.length === 1) {
+                    cands[0].b.setAttribute("data-boss-reject", "1");
+                    return "found";
+                }
+                return "ambiguous";
             }
-        )()''', as_expr=True)
+        )()'''.replace("__EXPECT__", json.dumps(expect or "", ensure_ascii=False)),
+            as_expr=True)
 
-    def reject_interview_invite(self, execute: bool = True, wait_sec: float = 0.0) -> str:
+    def reject_interview_invite(self, execute: bool = True, wait_sec: float = 0.0,
+                                expect: str = "") -> str:
         """点掉那张面试邀请上的「拒绝」。
 
         实测 CSS（2026-10-06 tools/probe_interview_invites.py 真机 dump）：
@@ -1495,19 +1525,22 @@ class BossChatHandler:
         固定 sleep 会把这一单漏掉（--check 就是这么报出 7 个"没有可点的拒绝"的），
         所以在预算里轮询到按钮出现为止；不传就只看一眼。
 
-        返回：no-btn / found / clicked / clicked-confirmed / clicked-dialog-unknown
+        返回：no-btn / ambiguous / found / clicked / clicked-confirmed /
+        clicked-dialog-unknown。expect 传这个会话的公司名：多块面板同时挂着时
+        用它挑出这一单，挑不出就报 ambiguous（调用方退回发文字拒绝）。
         """
         try:
             deadline = time.time() + max(0.0, wait_sec)
             found = "no-btn"
             while True:
-                found = self._locate_interview_reject_btn()
-                if found == "found" or time.time() >= deadline:
+                found = self._locate_interview_reject_btn(expect=expect)
+                # ambiguous 是终局：再等下去只会多挂一块面板，不会把它变清楚
+                if found in ("found", "ambiguous") or time.time() >= deadline:
                     break
                 time.sleep(0.5)
             if found != "found":
                 logger.info(f"面试邀请拒绝按钮: {found}")
-                return "no-btn"
+                return found
             if not execute:
                 # --check 用：只报"这一单有没有可点的拒绝"，一次都不点
                 logger.info("面试邀请拒绝按钮: found（只核对，未点击）")

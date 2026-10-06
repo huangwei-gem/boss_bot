@@ -114,6 +114,50 @@ def test_断线异常不能炸调用方():
     assert h.reject_interview_invite() == "no-btn"
 
 
+def test_两块面试面板同时挂着时一块都不点():
+    """聊天 SPA 的面试弹窗换了会话也不销毁（2026-10-07 隔离实测）。
+
+    页面上挂着上一单的面板时，"第一个看起来像面试的拒绝"就是别人的面试——
+    点错一次是当着 HR 的面把人家发的面试撤掉，比不点严重得多。
+    认不出该点哪块就回报 ambiguous，由调用方退回发文字拒绝。
+    """
+    got, page = _跑(["ambiguous"])
+    assert got == "ambiguous"
+    assert len(page.seen) == 1, "认不出就该停住，不许再往下点"
+
+
+def test_公司名认得出时按公司名挑那一块():
+    sent = []
+
+    class _记:
+        def run_js(self, script, *args, **kwargs):
+            sent.append(script)
+            return "no-btn"
+
+    h = BossChatHandler.__new__(BossChatHandler)
+    h.page = _记()
+    h._locate_interview_reject_btn(expect="湖南九片云")
+    assert "九片云" in sent[0], f"公司名没传进页面，多块面板时没法定位是哪一单"
+
+
+def test_已拒绝或过期的面板直接跳过():
+    """interview-cancel 那一支是"已拒绝/已超时"的壳，按钮文字照旧在 DOM 里。
+
+    实测 dump 过 6 张这种：真点下去不但没意义，还会把"这单还活着"的假象
+    回报给调用方，于是那条会话既没拒绝也没发文字。
+    """
+    src = inspect.getsource(BossChatHandler._locate_interview_reject_btn)
+    assert "interview-cancel" in src, "没排除已处理的面板，会把过期卡片当可点的拒绝"
+
+
+def test_等待预算里认不准也立刻收手():
+    h = BossChatHandler.__new__(BossChatHandler)
+    page = _脚本页(["no-btn", "ambiguous", "found"])
+    h.page = page
+    assert h.reject_interview_invite(execute=False, wait_sec=8) == "ambiguous"
+    assert len(page.seen) == 2, " ambiguous 是终局，不该继续白等到预算用完"
+
+
 def test_定位必须靠面试字样而不是card_btn():
     src = (inspect.getsource(BossChatHandler.reject_interview_invite)
            + inspect.getsource(BossChatHandler._locate_interview_reject_btn))
