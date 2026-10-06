@@ -60,14 +60,14 @@ def resume_reply(client):
 
 
 def attach(account_index):
-    """连回该账号正在用的浏览器，另开一个聊天标签页。"""
+    """连回该账号正在用的浏览器，另开一个聊天标签页，返回那个标签页的实例。"""
     from DrissionPage import ChromiumOptions, ChromiumPage
     co = ChromiumOptions()
     co.set_local_port(9222 + account_index)
     page = ChromiumPage(co)
     tab = page.new_tab(CHAT_URL)
     time.sleep(4)
-    return page, BrowserInstance(chrome_page=tab)
+    return BrowserInstance(chrome_page=tab)
 
 
 def search_contact(tab, name):
@@ -102,7 +102,7 @@ def looks_like_offline_invite(messages):
 
 
 def run_one(account_index, target, send):
-    page, instance = attach(account_index)
+    instance = attach(account_index)
     handler = BossChatHandler(browser_instance=instance)
     try:
         search_contact(instance, target["name"])
@@ -125,7 +125,10 @@ def run_one(account_index, target, send):
         return target["name"], "已拒绝", evidence
     finally:
         try:
-            page.close_tab(instance._get_active())
+            # 这版 DrissionPage 的 ChromiumPage 没有关标签页的方法（只有 tab 自己有），
+            # 早前写成 page 上的 close_tab 只会抛 AttributeError 再被下面那句吃掉
+            # ——实测这样漏了几十个标签页。
+            instance._get_active().close()
         except Exception:
             pass
 

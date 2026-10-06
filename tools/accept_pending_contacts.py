@@ -75,7 +75,7 @@ def pending_rows(limit):
 def run_one(row, send):
     account = int(row.get("account_index") or 0)
     name, company = row["chat_name"], row["company"]
-    page, instance = attach(account)
+    instance = attach(account)
     handler = BossChatHandler(browser_instance=instance)
     try:
         # 不再自己往搜索框里打字：enter_chat 现在滚不到就会自己用搜索点开，
@@ -114,7 +114,7 @@ def run_one(row, send):
             if got else "点了，这一屏还没看到号放出来")
     finally:
         try:
-            page.close_tab(instance._get_active())
+            instance._get_active().close()
         except Exception:
             pass
 
