@@ -88,6 +88,12 @@ CAPTCHA_STRIKES_TO_PAUSE = 3
 # 永久暂停等于把"投递中"变成了"没人点就永远停着"。
 GREET_PAUSE_RETRY_SEC = 900
 
+# 现场/线下面试邀请：优先点平台上的「拒绝」，点不到才发这句话（同一口径的两种落法）。
+# 用户 2026-10-06："我只要线上的兼职不要线下的…他发面试邀请，你直接拒绝就行了"。
+OFFLINE_INTERVIEW_DECLINE = (
+    "不好意思，我这边只找线上远程就能完成的兼职，线下面试就不占用您的时间了，"
+    "这个岗位我先放弃，感谢您的邀请。")
+
 # 按天归档的进程内互斥：记录文件所有账号共用，一天只能归一次
 _ARCHIVE_LOCK = threading.Lock()
 
@@ -2332,6 +2338,48 @@ class UnifiedBotLoop:
         return self._handle_reply_action(action, content, meta, name, job_name,
                                          latest_other_msg, chat_company)
 
+    def _send_offline_interview_decline(self, name, job_name, chat_company,
+                                        latest_other_msg, meta, verdict) -> bool:
+        """点不到「拒绝」按钮时，退回发一句文字拒绝。
+
+        单独一个方法是为了让演练闸门贴着发送点：这一路也是真的往 HR 那边发消息，
+        闸门写在调用它的分支顶上，隔着一整段拒绝逻辑看不出来。
+        """
+        if self._dry_run("本应发文字拒绝现场面试邀请", f"[{name}] {OFFLINE_INTERVIEW_DECLINE}"):
+            return False
+        if not self._chat_handler.send_text(OFFLINE_INTERVIEW_DECLINE):
+            # 和文字回复那条路同一个约定：记一条跳过、算处理过，
+            # 返回 False 会让调用方以为没动过它，下一轮又进来发一遍
+            self._stats.record_reply(source="policy", action="skip")
+            reason = f"拒绝话术没发出去（{verdict}）"
+            self._reply_engine._add_record(
+                chat_name=name, job_name=job_name,
+                received_message=latest_other_msg, reply_content=None,
+                reply_source="skip", reply_intent=meta.get("intent", ""),
+                reply_reason=reason, is_skipped=True, skip_reason=reason)
+            self._emit_reply_event(
+                contact_name=name, job_name=job_name,
+                message_received=latest_other_msg, reply_sent="",
+                ai_model="", intent=meta.get("intent", ""), status="error")
+            return True
+        self._stats.record_reply(source="policy", action="text")
+        self._reply_engine.record_reply()
+        self._stats_dict["reply_sent"] += 1
+        self._msg_store.append_bot_message(
+            name, OFFLINE_INTERVIEW_DECLINE, job_name,
+            reply_source="policy", action="text", company=chat_company)
+        self._reply_engine._add_record(
+            chat_name=name, job_name=job_name,
+            received_message=latest_other_msg, reply_content=OFFLINE_INTERVIEW_DECLINE,
+            reply_source="policy", reply_intent=meta.get("intent", ""),
+            reply_reason="现场面试邀请，页面上没有可点的「拒绝」，改发文字拒绝",
+        )
+        self._emit_reply_event(
+            contact_name=name, job_name=job_name,
+            message_received=latest_other_msg, reply_sent=OFFLINE_INTERVIEW_DECLINE,
+            ai_model="", intent=meta.get("intent", ""), status="replied")
+        return True
+
     def _handle_reply_action(self, action, content, meta, name, job_name,
                              latest_other_msg, chat_company="") -> bool:
         """执行本次回复并落回复记录。
@@ -2470,6 +2518,41 @@ class UnifiedBotLoop:
                     status="skipped",
                 )
             return True
+
+        elif action == "reject_interview":
+            # 现场/线下面试的邀请：用户只要线上（2026-10-06 原话"他发面试邀请，
+            # 你直接拒绝就行了"）。优先点平台上那张邀请的「拒绝」——那才是真的把
+            # 面试撤掉；按钮找不到（邀请过期/面板没展开）才退回发一句拒绝话术。
+            if self._dry_run("本应拒绝现场面试邀请", f"[{name}]（{job_name or '未知岗位'}）"):
+                return False
+            self._reply_engine.wait_human_delay()
+            verdict = self._chat_handler.reject_interview_invite()
+            if verdict == "no-btn" and self._chat_handler.open_interview_invite():
+                time.sleep(2)
+                verdict = self._chat_handler.reject_interview_invite()
+            if verdict in ("clicked", "clicked-confirmed"):
+                note = "[已拒绝现场面试邀请]"
+                self._stats.record_reply(source="policy", action="reject_interview")
+                self._msg_store.append_bot_message(
+                    name, note, job_name, reply_source="policy", action="text",
+                    company=chat_company)
+                self._reply_engine._add_record(
+                    chat_name=name, job_name=job_name,
+                    received_message=latest_other_msg, reply_content=note,
+                    reply_source="policy", reply_intent=meta.get("intent", ""),
+                    reply_reason="邀请写的是现场/线下面试，只找线上的，已点平台上的「拒绝」",
+                )
+                self._emit_reply_event(
+                    contact_name=name, job_name=job_name,
+                    message_received=latest_other_msg, reply_sent=note,
+                    ai_model="", intent=meta.get("intent", ""), status="replied")
+                self._log("INFO", f"已拒绝现场面试邀请 [{name}]（{verdict}）")
+                return True
+
+            # 点不到按钮：至少把话说明白，别让 HR 一直等一个不会到的人
+            self._log("WARN", f"️ [{name}] 面试邀请没找到可点的「拒绝」（{verdict}），改发文字拒绝")
+            return self._send_offline_interview_decline(
+                name, job_name, chat_company, latest_other_msg, meta, verdict)
 
         elif action == "text" and content:
             if self._dry_run("本应回复", f"[{name}] {content}"):

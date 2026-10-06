@@ -32,7 +32,8 @@ from boss_bot.config import (
     USER_PROFILE, render_template,
 )
 from boss_bot.rules import RuleEngine
-from boss_bot.intent import classify, is_resume_request, is_contact_exchange_card
+from boss_bot.intent import (classify, classify_interview_invite, is_contact_exchange_card,
+                             is_resume_request)
 from boss_bot.prompts import build_system_prompt, build_user_prompt
 from boss_bot.reply_record import ReplyRecord, ReplyRecordStore, _get_reply_store
 
@@ -582,6 +583,12 @@ class ReplyEngine:
             # HR 顺口提微信、平台的安全提示都不是卡片，仍走原来的平台内沟通话术
             if meta["intent"] == "contact_request" and is_contact_exchange_card(latest):
                 action, template = "contact", None
+            # 现场/线下面试的邀请：用户只要线上，回"工作日下午都可以安排面试"
+            # 等于替 HR 把到场面试应下来（今天三单线下面试就是这么来的）。
+            # 判成 offline 就改成点平台上那张邀请的「拒绝」，不发消息。
+            if meta["intent"] in ("invite_interview", "ask_interview") and \
+                    classify_interview_invite(latest) == "offline":
+                action, template = "reject_interview", None
             content = render_template(template, USER_PROFILE) if template else None
             # 重复发送检测
             if action == "text" and content and \

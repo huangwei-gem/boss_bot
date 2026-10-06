@@ -144,3 +144,27 @@ def is_contact_exchange_card(message: str) -> bool:
         return False
     return any(k in text for k in _CONTACT_CARD_MARKS)
 
+
+# 面试邀请分现场/线上用字样。BOSS 的邀请卡片实测一律写成"邀请您现场面试"
+# （messages/ 里 7 条全是这个形状），日程页那一栏直接印"线下面试"；
+# 视频/线上/远程是要留下的那一头，所以"现场/线下"优先判。
+_OFFLINE_INTERVIEW_MARKS = ("现场面试", "线下面试", "到面", "到场", "来公司", "面试地点")
+_ONLINE_INTERVIEW_MARKS = ("视频面试", "线上面试", "远程面试", "电话面试",
+                           "腾讯会议", "钉钉会议", "zoom", "飞书会议")
+
+
+def classify_interview_invite(message: str) -> str:
+    """这条面试邀请是要人到场的、还是远程的、还是说不清。
+
+    返回 "offline" / "online" / "unknown"。判错一次就是当着 HR 的面把人家发的面试撤掉，
+    所以说不清的（只写"邀请您面试"）一律 unknown，不自动点拒绝。
+    """
+    text = (message or "").strip()
+    if not text or "面试" not in text:
+        return "unknown"
+    if any(k in text for k in _OFFLINE_INTERVIEW_MARKS):
+        return "offline"
+    if any(k in text.lower() for k in _ONLINE_INTERVIEW_MARKS):
+        return "online"
+    return "unknown"
+

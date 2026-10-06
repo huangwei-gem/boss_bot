@@ -1405,6 +1405,124 @@ class BossChatHandler:
             logger.error(f"点交换联系方式卡片的同意失败: {e}")
             return False
 
+    def open_interview_invite(self) -> bool:
+        """把面试邀请卡片点开（卡片上只有"立即查看"，拒绝按钮在展开之后才出现）。
+
+        实测：卡片是 .message-card-wrap.boss-green，正文"XX邀请您现场面试，前往查看，
+        确认是否接受"，按钮 span.card-btn.one-btn 文字"立即查看"，点了不跳页、不新开标签，
+        是在聊天页里把那块 拒绝/接受 面板展开。
+        """
+        try:
+            result = self.page.run_js('''(
+                function() {
+                    function vis(el) {
+                        return !!(el && el.getClientRects && el.getClientRects().length);
+                    }
+                    var cards = document.querySelectorAll(".message-card-wrap");
+                    for (var i = cards.length - 1; i >= 0; i--) {
+                        var c = cards[i], tx = (c.textContent || "");
+                        if (tx.indexOf("面试") < 0 || tx.indexOf("邀请") < 0) continue;
+                        var btns = c.querySelectorAll(".card-btn");
+                        for (var j = 0; j < btns.length; j++) {
+                            if ((btns[j].textContent || "").trim() === "立即查看" && vis(btns[j])) {
+                                btns[j].click();
+                                return "clicked";
+                            }
+                        }
+                    }
+                    return "no-card";
+                }
+            )()''', as_expr=True)
+            logger.info(f"展开面试邀请卡片: {result}")
+            return result == "clicked"
+        except Exception as e:
+            logger.error(f"展开面试邀请卡片失败: {e}")
+            return False
+
+    def reject_interview_invite(self) -> str:
+        """点掉那张面试邀请上的「拒绝」。
+
+        实测 CSS（2026-10-06 tools/probe_interview_invites.py 真机 dump）：
+        面试邀请不是 message-card-wrap 那套（那张的按钮是 card-btn 的 拒绝/同意，
+        属于交换联系方式/简历卡片），而是聊天页里另一块面板：
+            .btns                     容器，文字是"拒绝接受"
+              button.btn-v2.btn-outline-v2   拒绝
+              button.btn-v2.btn-sure-v2      接受
+        所以定位只认 btn-outline-v2 这一支，并且要求它往上几层的文字里真的写着"面试"——
+        页面上还有交换联系方式那张也带"拒绝"两个字，点错等于把送上门的号拒掉。
+
+        返回：no-btn / clicked / clicked-confirmed / clicked-dialog-unknown
+        """
+        try:
+            result = self.page.run_js('''(
+                function() {
+                    function vis(el) {
+                        return !!(el && el.getClientRects && el.getClientRects().length);
+                    }
+                    var btns = document.querySelectorAll("button.btn-v2.btn-outline-v2, "
+                                                         + "a.btn-v2.btn-outline-v2");
+                    for (var i = 0; i < btns.length; i++) {
+                        var b = btns[i];
+                        if ((b.textContent || "").trim() !== "拒绝" || !vis(b)) continue;
+                        var box = b.parentElement, scope = "";
+                        for (var up = 0; up < 4 && box; up++) {
+                            scope = (box.textContent || "").trim();
+                            if (scope.indexOf("面试") >= 0 && scope.length <= 400) {
+                                b.click();
+                                return "clicked";
+                            }
+                            box = box.parentElement;
+                        }
+                    }
+                    return "no-btn";
+                }
+            )()''', as_expr=True)
+            logger.info(f"面试邀请点拒绝结果: {result}")
+            if result != "clicked":
+                return result
+            # BOSS 有的版本点完直接拒，有的会再弹一层确认；弹了就得把它点掉，
+            # 否则邀请其实没被撤回，界面上还挂着"待接受"。
+            for _ in range(4):
+                time.sleep(1.0)
+                confirm = self.page.run_js('''(
+                    function() {
+                        function vis(el) {
+                            return !!(el && el.getClientRects && el.getClientRects().length);
+                        }
+                        var pops = document.querySelectorAll(
+                            ".boss-popup__wrapper, .dialog-wrapper, .ui-pop-confirm");
+                        for (var i = 0; i < pops.length; i++) {
+                            var p = pops[i];
+                            if (!vis(p)) continue;
+                            var btns = p.querySelectorAll("button, .btn-v2, .boss-button");
+                            for (var j = 0; j < btns.length; j++) {
+                                var t = (btns[j].textContent || "").trim();
+                                if (!vis(btns[j])) continue;
+                                if (t === "确定" || t === "确认" || t === "提交") {
+                                    btns[j].click();
+                                    return "confirmed";
+                                }
+                            }
+                            return "dialog-no-confirm:" + (p.textContent || "")
+                                .replace(/\\s+/g, " ").trim().slice(0, 60);
+                        }
+                        return "no-dialog";
+                    }
+                )()''', as_expr=True)
+                if confirm == "confirmed":
+                    logger.info("面试邀请的二次确认已点掉")
+                    return "clicked-confirmed"
+                if confirm == "no-dialog":
+                    return "clicked"
+                if str(confirm).startswith("dialog-no-confirm"):
+                    # 弹了却不认识那个按钮：不猜，报回去让人看
+                    logger.warning(f"面试邀请拒绝后弹了一层，但没认出确认按钮：{confirm}")
+                    return "clicked-dialog-unknown"
+            return "clicked-dialog-unknown"
+        except Exception as e:
+            logger.error(f"点面试邀请的拒绝失败: {e}")
+            return "no-btn"
+
     def send_resume(self, retries: int = 2) -> bool:
         """
         点击发送简历按钮，确认发送。
