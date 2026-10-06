@@ -1357,7 +1357,7 @@ class BossChatHandler:
         return False
 
     def accept_contact_exchange(self) -> bool:
-        """点掉 HR 那张"我想要和您交换微信/电话号码，您是否同意"卡片上的「同意」。
+        """点掉 HR 那张"我想要和您交换微信/电话/联系方式，您是否同意"卡片上的「同意」。
 
         实测 CSS（取自 tools/chat_page_structure.json 里的线上真实 DOM）:
         - 卡片: .message-card-wrap（.dialog-icon.weixin 是微信那张）
@@ -1378,7 +1378,14 @@ class BossChatHandler:
                         var t = cards[i].querySelector(".message-card-top-title");
                         var tx = t ? (t.textContent || "") : "";
                         if (tx.indexOf("是否同意") < 0) continue;
-                        if (tx.indexOf("微信") < 0 && tx.indexOf("电话") < 0) continue;
+                        // 只认"微信/电话"会漏掉同一张卡的另一种说法：真机见过
+                        // "我想要和您交换联系方式，您是否同意"和"我想要一个您的
+                        // 电话号码，您是否同意"，一模一样能点，却因为措辞被判成
+                        // "没有卡片"，一下午白跳过十几条。
+                        // 简历那张也带"是否同意"，但它不是交换联系方式，不许点。
+                        var isContact = tx.indexOf("交换") >= 0 || tx.indexOf("联系方式") >= 0
+                            || tx.indexOf("电话号码") >= 0 || tx.indexOf("微信号码") >= 0;
+                        if (!isContact || tx.indexOf("简历") >= 0) continue;
                         hit = cards[i];          // 取最后一张：卡片会被新的顶掉
                     }
                     if (!hit) return "no-card";

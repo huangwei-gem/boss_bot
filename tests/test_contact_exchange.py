@@ -82,6 +82,16 @@ class 点按钮Test:
         src = inspect.getsource(BossChatHandler.accept_contact_exchange)
         assert "getClientRects" in src, "已经处理过的卡片按钮会留在 DOM 里但不可见"
 
+    def test_交换联系方式那种说法也算数(self):
+        """真机踩过：卡片写"我想要和您交换联系方式，您是否同意"，
+        只认"微信/电话"两个词就被判成"没有卡片"，一下午十几条能点的白跳过。"""
+        from boss_bot.page_handler import BossChatHandler
+        src = inspect.getsource(BossChatHandler.accept_contact_exchange)
+        assert 'indexOf("交换")' in src
+        assert 'indexOf("电话号码")' in src, "「我想要一个您的电话号码」也是同一张卡"
+        assert 'indexOf("联系方式")' in src
+        assert 'tx.indexOf("简历") >= 0' in src, "简历那张也带「是否同意」，不能顺手点掉"
+
     def test_三种结果只有一种算成功(self):
         from boss_bot.page_handler import BossChatHandler
 
