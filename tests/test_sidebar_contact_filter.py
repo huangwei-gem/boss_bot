@@ -44,6 +44,8 @@ class Recorder:
 
     def search(self, name, company, timeout=6.0):
         self.calls.append(("search", name, company))
+        if isinstance(self._search_ok, str):
+            return self._search_ok
         return "ok" if self._search_ok else "no_result"
 
     def clear(self):
@@ -65,6 +67,16 @@ def wire():
             setattr(ph, k, v)
         return ph
     return build
+
+
+def _handler_with(rec):
+    """不用 fixture 的写法：有些类里的用例只想按录好的答案走一遍三级定位。"""
+    ph = _handler()
+    ph._sidebar_has_row = rec.sidebar_has_row
+    ph._scroll_to_chat_row = rec.scroll
+    ph._open_chat_by_search = rec.search
+    ph._clear_contact_filter = rec.clear
+    return ph
 
 
 class Test定位三级:
@@ -146,6 +158,30 @@ class Test搜索框写法:
         assert ".boss-name" in js and ".company-name" in js
         assert "indexOf(b) >= 0" in js and "b.indexOf(a) >= 0" in js
         assert 'items[i].click()' in js, "浮层不点就没有下一步，回车是没用的"
+
+    def test_浮层只剩一个人时公司截断也要点开(self):
+        """存档里的公司是被截过名的（"义乌市睿笔网络技..."），互为包含也配不上。
+
+        实测 2026-10-07：跳过 156 次里 23 个是"姓名在浮层、公司全等失败"。
+        搜索关键字就是姓名，浮层只剩一行时已经没有第二种可能，
+        不点等于当着 HR 的面不回话；点完还有顶栏姓名核对兜着。
+        """
+        js = PageHandler._SEARCH_RESULT_JS
+        assert "unique_name" in js, "浮层唯一命中没被区分出来，只能整条判成找不到"
+        assert "items.length === 1" in js
+
+    def test_唯一命中当成正面结果(self):
+        rec = Recorder(has_row=False, scroll_ok=False, search_ok="unique_name")
+        ph = _handler_with(rec)
+        assert ph._locate_chat_row("陈女士", "旺旺集团") == (True, True)
+
+    def test_多个同名时不许猜一个(self):
+        """重名是实测存在的：浮层里剩 3 个"刘女士"时，公司又对不上就只能放弃，
+        点错一个等于给另一个公司的人回话。"""
+        rec = Recorder(has_row=False, scroll_ok=False, search_ok="name_only")
+        ph = _handler_with(rec)
+        assert ph._locate_chat_row("刘女士", "沙果") == (False, False)
+        assert "clear" not in rec.names(), "没点开就别清搜索框，更别核对陌生人"
 
     def test_写字时姓名转义进JS(self):
         sent = []

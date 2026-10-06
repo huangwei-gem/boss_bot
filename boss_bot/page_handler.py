@@ -543,19 +543,30 @@ class BossChatHandler:
             var items = document.querySelectorAll("li.search-list");
             var want = __WANT__;
             function norm(s) { return (s || "").replace(/\\s+/g, ""); }
-            function hit(li) {
+            function nameEq(li) {
                 var n = li.querySelector(".boss-name");
+                return !!n && norm(n.textContent) === want.n;
+            }
+            function hit(li) {
+                if (!nameEq(li)) return false;
                 var c = li.querySelector(".company-name");
-                if (!n || norm(n.textContent) !== want.n) return false;
                 if (!want.c) return true;
                 var a = norm(want.c), b = norm(c ? c.textContent : "");
                 // 浮层里的公司名是简称（"创响教育"），存档里是全称
                 // （"湖南创响教育科技有限公司"），谁包含谁都算同一家。
-                // 名字相同公司不同的一律不点：重名在侧栏实测 4 组/34 行。
                 return !!b && (a === b || a.indexOf(b) >= 0 || b.indexOf(a) >= 0);
             }
             for (var i = 0; i < items.length; i++) {
                 if (hit(items[i])) { items[i].click(); return "ok"; }
+            }
+            // 关键字本来就是姓名，浮层只剩一行时已经没有第二种可能：存档里的
+            // 公司常被截断（"义乌市睿笔网络技..."），包含关系也配不上，一律不点
+            // 就永远不回话。点完还有 enter_chat 的顶栏姓名核对兜着。
+            // 同名剩几行的场合不猜：重名在侧栏实测 4 组/34 行，点错就是替
+            // 另一家公司的人收这条消息。
+            if (items.length === 1 && nameEq(items[0])) {
+                items[0].click();
+                return "unique_name";
             }
             return items.length ? "name_only" : "no_result";
         }
@@ -565,13 +576,14 @@ class BossChatHandler:
                              timeout: float = 6.0) -> str:
         """用聊天页的联系人搜索直接点开那条会话。
 
-        侧栏是虚拟列表，171 行只渲染 ~40 行："今天不排在前面"的人滚到底
+        侧栏是虚拟列表，171 行只渲染 ~40 行："今天不排在前面的人"滚到底
         也不在 DOM 里，日志一天三百多条「侧栏滚到底也没有会话」就是这么来的，
         这些人一次回复都收不到。搜索框不筛侧栏，它弹自己的结果浮层，
-        点浮层里 (姓名+公司) 都对得上的那一行才算数。
+        点浮层里 (姓名+公司) 都对得上的那一行；公司配不上但浮层只剩这一行时
+        也算点开（unique_name），只剩名字对不上的多行时才放弃（name_only）。
 
-        返回 ok / name_only / no_result / no_input / no_name，由调用方决定
-        要不要清搜索框（见 enter_chat 的 finally）。
+        返回 ok / unique_name / name_only / no_result / no_input / no_name，
+        由调用方决定要不要清搜索框（见 enter_chat 的 finally）。
         """
         if not name:
             return "no_name"
@@ -587,7 +599,7 @@ class BossChatHandler:
             except Exception as e:
                 logger.debug(f"搜索结果点击失败 [{name}]: {e}")
                 return "error"
-            if verdict in ("ok", "name_only"):
+            if verdict in ("ok", "unique_name"):
                 return verdict
             time.sleep(0.5)
         return verdict
@@ -736,7 +748,7 @@ class BossChatHandler:
             return True, False
         if self._scroll_to_chat_row(name, company):
             return True, False
-        if self._open_chat_by_search(name, company) == "ok":
+        if self._open_chat_by_search(name, company) in ("ok", "unique_name"):
             return True, True
         return False, False
 
