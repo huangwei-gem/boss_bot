@@ -324,6 +324,20 @@ def parse_drawer_probe(raw) -> dict:
     return {"drawer": bool(data.get("drawer")), "dialog": bool(data.get("dialog"))}
 
 
+def input_lookup_attempts(probe_ready, configured_max) -> int:
+    """探针已经说过"抽屉没来"时，兜底扫描只做一遍，不再乘重试配置。
+
+    实测 10-06 两个号投满当日额度后，一单的时间线是
+    11:59:15 点击 → 12:00:06 弹窗容器没有 → 12:00:51 扫 iframe
+    → 12:01:51 遍历标签页 → 12:02:21 重试 2/3 → 12:03:57 又扫一遍，
+    一单 250 秒，而探针 20 秒内就给了同样的结论。留一遍是给探针看不见的
+    iframe / 新标签页兜底，BOSS 哪天换了弹窗形态也不至于突然全认不出来。
+    """
+    if not probe_ready:
+        return 1
+    return max(1, int(configured_max or 1))
+
+
 # 补发时找输入框/发送按钮的选择器，与正常路径同源（会话输入框是 contenteditable）
 AUTO_GREET_INPUT_SELECTORS = (
     "#chat-input", ".chat-input", ".input-area",
@@ -2551,7 +2565,7 @@ class GreetEngine:
             # 关键修复：增加重试机制（次数按 greet.retry.max_attempts 配置，递增等待）
             # 日志显示"未找到输入框"时URL还在job_detail页面，
             # 说明弹窗可能延迟弹出，需要重试查找
-            _input_attempts = max(1, self._retry_max_attempts)
+            _input_attempts = input_lookup_attempts(drawer_ready, self._retry_max_attempts)
             for _input_retry in range(_input_attempts):
                 if input_area:
                     break
