@@ -10,6 +10,7 @@ chrome://newtab）。`_launch_windows` 走 `co.set_local_port(9222)`，而 Driss
 直接落在 DrissionPage 默认的 9222 + 临时目录上。
 """
 
+import json
 import re
 from pathlib import Path
 
@@ -169,3 +170,47 @@ class NoToolSquatsDefaultPortTest:
         assert re.search(r"set_local_port|auto_port", body), f"{name} 没设端口"
         assert re.search(r"user_data_path|user-data-dir", body), \
             f"{name} 没设 profile，会用 DrissionPage 临时目录"
+
+    def test_面板检测Cookie也占专用端口(self, tmp_path, monkeypatch):
+        """/api/accounts/N/check_cookie 以前既不传端口也不传 profile：
+        DrissionPage 退回默认 9222，于是"点一下检测账号2的登录态"是连进主账号
+        正在投递的浏览器里翻页面，还顺手把 Cookie 文件里的旧会话注进去。"""
+        from boss_bot import browser_launcher as BL
+
+        seen = {}
+
+        class FakeInstance:
+            url = "https://www.zhipin.com/web/geek/job-recommend"
+
+            def get(self, _u):
+                pass
+
+            def load_cookies(self, _p):
+                return True
+
+            def ele(self, _sel, timeout=None):
+                return None
+
+            def quit(self):
+                pass
+
+        def fake_launch(**kw):
+            seen.update(kw)
+            return FakeInstance()
+
+        monkeypatch.setattr(BL, "launch_browser", fake_launch)
+        ck = tmp_path / "cookies.json"
+        ck.write_text(json.dumps([{"name": "wt2", "value": "x", "domain": ".zhipin.com",
+                                   "path": "/", "expires": -1}]), encoding="utf-8")
+        BL.check_cookie_valid(str(ck), port=9501, user_data_dir=str(tmp_path / "probe"))
+        assert seen.get("port") == 9501, "检测 Cookie 不许退回默认端口"
+        assert seen.get("user_data_dir"), "检测 Cookie 要用一次性 profile"
+
+    def test_检测环境照抄生产而不是写死无头(self):
+        """判定要代表真跑得通：生产改无头后被 BOSS 拦，检测也得跟着报失效，
+        反过来写死 headless=True 会把好 Cookie 判死。"""
+        src = (Path(__file__).resolve().parent.parent / "flask-version" / "app.py"
+               ).read_text(encoding="utf-8")
+        call = src.split("result = check_cookie_valid(")[1].split(")\n")[0]
+        assert "headless=browser_cfg.headless" in call
+        assert "port=9500 + idx" in call

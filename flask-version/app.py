@@ -18,6 +18,7 @@ import io
 import json
 import uuid
 import shutil
+import tempfile
 import logging
 import warnings
 from logging.handlers import TimedRotatingFileHandler
@@ -859,14 +860,25 @@ def api_account_check_cookie(idx: int):
                 "cookie_file": cookie_file_name,
             })
 
-        # 启动浏览器做完整检测
+        # 启动浏览器做完整检测。
+        # 端口和 profile 都必须另开一份：留空会让 DrissionPage 退回默认的 9222，
+        # 于是"点一下检测账号2的Cookie"其实是连进主账号正在投递的浏览器里翻页面，
+        # 顺手把 Cookie 文件里的旧会话注进去。检测环境还要跟生产一致（headless
+        # 照抄配置），否则无头被 BOSS 拦出来的假"失效"会把好 Cookie 判死。
         browser_cfg = cfg.browser
-        result = check_cookie_valid(
-            cookie_file=cookie_file_path,
-            headless=True,
-            chrome_path=browser_cfg.chrome_path,
-            browser_type=browser_cfg.browser_type,
-        )
+        probe_profile = tempfile.mkdtemp(prefix="boss_cookie_check_")
+        try:
+            result = check_cookie_valid(
+                cookie_file=cookie_file_path,
+                headless=browser_cfg.headless,
+                chrome_path=browser_cfg.chrome_path,
+                browser_type=browser_cfg.browser_type,
+                port=9500 + idx,
+                user_data_dir=probe_profile,
+                background=browser_cfg.background,
+            )
+        finally:
+            shutil.rmtree(probe_profile, ignore_errors=True)
 
         return jsonify({
             "status": "ok",

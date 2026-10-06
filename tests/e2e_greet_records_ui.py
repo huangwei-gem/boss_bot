@@ -80,11 +80,17 @@ def open_browser():
         raise RuntimeError(f"实测必须用项目内置 cloakbrowser，拿到的是 {browser_type}: {exe}")
     print(f"  使用浏览器: {exe}", flush=True)
     profile = tempfile.mkdtemp(prefix="boss_ui_probe_")
+    args = [exe, f"--remote-debugging-port={DEBUG_PORT}", f"--user-data-dir={profile}",
+            "--no-first-run", "--no-default-browser-check",
+            # 窗口太窄会切到移动端布局：侧栏直接隐藏，元素取不到矩形，点不了
+            "--window-size=1680,1050"]
+    # BOSS_PROBE_HEADLESS=1：整轮真机实测在无头下重跑一遍。既不弹窗口抢焦点，
+    # 也顺带证明这些 UI 在没有窗口的前提下照样点得到。
+    if os.environ.get("BOSS_PROBE_HEADLESS", "") == "1":
+        args.append("--headless=new")
+        print("  无头模式：BOSS_PROBE_HEADLESS=1", flush=True)
     proc = subprocess.Popen(
-        [exe, f"--remote-debugging-port={DEBUG_PORT}", f"--user-data-dir={profile}",
-         "--no-first-run", "--no-default-browser-check",
-         # 窗口太窄会切到移动端布局：侧栏直接隐藏，元素取不到矩形，点不了
-         "--window-size=1680,1050", "about:blank"],
+        args + ["about:blank"],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
     if not _wait_for_port("127.0.0.1", DEBUG_PORT, timeout=25):

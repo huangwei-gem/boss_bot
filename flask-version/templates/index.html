@@ -1009,6 +1009,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
               </select>
             </div>
             <div class="adv-field-row"><label>无头</label><span id="advHeadless" class="toggle-switch" onclick="toggleAdvBool('headless')"></span></div>
+            <div class="adv-field-row"><label>后台</label><span id="advBackground" class="toggle-switch" onclick="toggleAdvBool('background')"></span></div>
             <div class="adv-field-row"><label>宽度</label><input class="side-form-input" id="advViewportW" type="number" placeholder="1280" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label>高度</label><input class="side-form-input" id="advViewportH" type="number" placeholder="800" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label>超时(s)</label><input class="side-form-input" id="advTimeout" type="number" placeholder="30" onchange="onAdvChange()"></div>
@@ -2492,7 +2493,7 @@ function loadConfig() {
     if (!config.login) config.login = {};
     if (!config.rate_limit) config.rate_limit = {};
     if (!config.retry) config.retry = {};
-    config.browser = Object.assign({headless:false,viewport_width:1280,viewport_height:800,page_load_timeout:30,custom_user_agent:'',proxy:'',browser_type:'chrome'}, config.browser);
+    config.browser = Object.assign({headless:false,background:true,viewport_width:1280,viewport_height:800,page_load_timeout:30,custom_user_agent:'',proxy:'',browser_type:'chrome'}, config.browser);
     config.login = Object.assign({wait_timeout:300,clear_cookies_on_failure:true}, config.login);
     config.rate_limit = Object.assign({enabled:true,max_per_hour:30,max_per_day:150}, config.rate_limit);
     config.retry = Object.assign({max_attempts:3,base_delay:2,backoff_factor:2}, config.retry);
@@ -2924,6 +2925,7 @@ function setPlh(id, v) { var e = document.getElementById(id); if (e) e.placehold
 function renderAdvSettings() {
   const b = config.browser || {};
   setEl('advHeadless', 'toggle-switch' + (b.headless ? ' on' : ''));
+  setEl('advBackground', 'toggle-switch' + (b.background !== false ? ' on' : ''));
   setVal('advBrowserType', b.browser_type || 'chrome');
   setVal('advViewportW', b.viewport_width != null ? b.viewport_width : 1280);
   setVal('advViewportH', b.viewport_height != null ? b.viewport_height : 800);
@@ -2999,6 +3001,16 @@ function toggleAdvBool(key) {
     if (!config.browser) config.browser = {};
     config.browser.headless = !config.browser.headless;
     setEl('advHeadless', 'toggle-switch' + (config.browser.headless ? ' on' : ''));
+    toast(config.browser.headless
+      ? '无头已开启：没有窗口，下一次启动浏览器才生效（扫码登录要关掉它）'
+      : '无头已关闭：改回有头窗口');
+  } else if (key === "background") {
+    if (!config.browser) config.browser = {};
+    config.browser.background = config.browser.background === false;
+    setEl('advBackground', 'toggle-switch' + (config.browser.background ? ' on' : ''));
+    toast(config.browser.background
+      ? '后台已开启：浏览器启动就收进任务栏，不抢焦点'
+      : '后台已关闭：浏览器窗口会前置显示在桌面上');
   } else if (key === "rate_limit_enabled") {
     if (!config.rate_limit) config.rate_limit = {};
     config.rate_limit.enabled = !config.rate_limit.enabled;
@@ -3037,6 +3049,7 @@ function toggleAdvBool(key) {
 function onAdvChange() {
   if (!config.browser) config.browser = {};
   config.browser.headless = document.getElementById('advHeadless').classList.contains('on');
+  config.browser.background = document.getElementById('advBackground').classList.contains('on');
   config.browser.browser_type = document.getElementById('advBrowserType').value || 'chrome';
   config.browser.viewport_width = parseInt(document.getElementById('advViewportW').value) || 1280;
   config.browser.viewport_height = parseInt(document.getElementById('advViewportH').value) || 800;

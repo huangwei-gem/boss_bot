@@ -48,6 +48,116 @@ BOSS_AUTH_COOKIES = ("wt2", "zp_at", "bst", "wbg")
 # 判定误报"过期"直接把文件删了，人工连"当时里面到底是什么"都查不了。
 COOKIE_BACKUP_KEEP = 5
 
+# ──────────────────────────────────────────────────────────────
+# 后台运行（窗口不前置、不抢焦点）
+# ──────────────────────────────────────────────────────────────
+# Chrome 把"最小化/被遮挡"的窗口当后台标签页省电：定时器降到每分钟一次、
+# requestAnimationFrame 直接停。自动化在这种窗口上表现为"元素点得到但等不到
+# 渲染"，所以一旦允许后台就必须同时关掉这三档节流。
+BACKGROUND_FLAGS = (
+    '--disable-backgrounding-occluded-windows',
+    '--disable-renderer-backgrounding',
+    '--disable-background-timer-throttling',
+)
+
+# SW_SHOWMINNOACTIVE：最小化但不把焦点从这个窗口抢走（SW_MINIMIZE 会，
+# 于是"收到后台"变成了"每启动一次就把用户正在打的字打断"）
+SW_SHOWMINNOACTIVE = 7
+CHROME_WINDOW_CLASS = "Chrome_WidgetWin_1"
+
+
+def current_foreground_window() -> int:
+    """当前拿到焦点的窗口句柄（0 = 拿不到）。非 Windows 恒为 0。
+
+    启动浏览器前后各读一次，两次相同才算"没有把窗口顶到最前面"。
+    """
+    if not _IS_WINDOWS:
+        return 0
+    try:
+        import ctypes
+        return int(ctypes.windll.user32.GetForegroundWindow() or 0)
+    except Exception:
+        return 0
+
+
+def is_browser_window(class_name: str, visible: bool, iconic: bool,
+                      pid: int, owner_pids) -> bool:
+    """这个顶层窗口是不是"还挂在桌面上、属于我们要收起来的浏览器"。
+
+    Chrome_WidgetWin_1 同时是隐藏的消息窗口和 DevTools 窗口的类名，所以
+    必须再要 visible；已经最小化（iconic）的不重复处理。
+    """
+    return bool(class_name == CHROME_WINDOW_CLASS and visible and not iconic
+                and pid and pid in set(owner_pids or ()))
+
+
+def pick_browser_windows(windows, owner_pids) -> list:
+    """从 [(hwnd, 类名, 可见, 已最小化, pid)] 里挑出要收起来的窗口句柄。"""
+    return [w[0] for w in windows
+            if is_browser_window(w[1], w[2], w[3], w[4], owner_pids)]
+
+
+def _enumerate_top_windows() -> list:
+    """列出桌面上所有顶层窗口：[(hwnd, 类名, 可见, 已最小化, 所属 pid)]。
+
+    拿不到（非 Windows、ctypes 异常）就返回空表 —— 后台化是加分项，
+    绝不能因为收不了窗口而把浏览器启动本身堵死。
+    """
+    if not _IS_WINDOWS:
+        return []
+    try:
+        import ctypes
+        from ctypes import wintypes
+        user32 = ctypes.windll.user32
+    except Exception:
+        return []
+
+    out = []
+    buf = ctypes.create_unicode_buffer(256)
+    proc_id = wintypes.DWORD()
+
+    @ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)
+    def _collect(hwnd, _lparam):
+        try:
+            user32.GetClassNameW(hwnd, buf, 256)
+            user32.GetWindowThreadProcessId(hwnd, ctypes.byref(proc_id))
+            out.append((int(hwnd), buf.value, bool(user32.IsWindowVisible(hwnd)),
+                        bool(user32.IsIconic(hwnd)), int(proc_id.value)))
+        except Exception:
+            pass
+        return True
+
+    try:
+        user32.EnumWindows(_collect, 0)
+    except Exception:
+        return []
+    return out
+
+
+def minimize_browser_windows(pid: int, timeout: float = 8.0) -> int:
+    """把这个浏览器的窗口收进任务栏，焦点留在原处不动。返回处理了几个窗口。"""
+    if not _IS_WINDOWS or not pid:
+        return 0
+    import ctypes
+    user32 = ctypes.windll.user32
+
+    handles = pick_browser_windows(_enumerate_top_windows(), (pid,))
+    for hwnd in handles:
+        try:
+            user32.ShowWindowAsync(ctypes.c_void_p(hwnd), SW_SHOWMINNOACTIVE)
+        except Exception:
+            continue
+    if not handles:
+        return 0
+    # 窗口是异步收起来的，等它真 minimize 再返回；等不到也只当"没挡住流程"
+    end = time.time() + timeout
+    while time.time() < end:
+        if all(user32.IsIconic(ctypes.c_void_p(h)) for h in handles):
+            return len(handles)
+        time.sleep(0.2)
+    return len(handles)
+
+
 
 def _cookie_backup_dir() -> str:
     return str(resolve_path(Path("data") / "cookie_backups"))
@@ -766,6 +876,7 @@ def launch_browser(
     chrome_path: str = "",
     browser_type: str = "chrome",
     user_data_dir: str = "",
+    background: bool = True,
 ) -> BrowserInstance:
     """启动浏览器（跨平台，支持 Chrome、Edge、Chromium）
 
@@ -778,6 +889,7 @@ def launch_browser(
         port: 调试端口（0 表示自动选择）
         chrome_path: 浏览器路径（空则自动检测）
         browser_type: 浏览器类型，"chrome" / "edge" / "chromium"
+        background: 有头模式下把窗口直接收进任务栏，不前置、不抢用户焦点
 
     Returns:
         BrowserInstance: 浏览器实例
@@ -812,6 +924,8 @@ def launch_browser(
         )
 
     if _IS_MACOS:
+        if background and not headless:
+            logger.info("macOS 没有不抢焦点的最小化口子，后台开关在这里不生效")
         return _launch_macos(
             chrome_path=chrome_path,
             headless=headless,
@@ -832,6 +946,7 @@ def launch_browser(
             viewport_height=viewport_height,
             port=port,
             user_data_dir=user_data_dir,
+            background=background,
         )
 
 
@@ -1045,6 +1160,7 @@ def _launch_windows(
     viewport_height: int,
     port: int = 0,
     user_data_dir: str = "",
+    background: bool = True,
 ) -> BrowserInstance:
     """Windows 启动 Chrome（使用原生 ChromiumPage）"""
 
@@ -1072,6 +1188,11 @@ def _launch_windows(
     co.set_argument('--disable-domain-reliability')
     co.set_argument('--disable-sync')
     co.set_argument('--metrics-recording-only')
+    # 后台跑（最小化 / 被别的窗口挡住）时 Chrome 会把这个页面当"看不见的标签页"，
+    # 定时器降到每分钟一次、动画帧直接停；打招呼等的就是页面里的延时渲染，
+    # 所以窗口收起来之前必须先把这三档节流关掉。
+    for _bg_flag in BACKGROUND_FLAGS:
+        co.set_argument(_bg_flag)
 
     # 先确认端口上没有别人的浏览器，再动本账号的 profile 目录
     if port > 0 and _is_port_open("127.0.0.1", port):
@@ -1101,7 +1222,30 @@ def _launch_windows(
     page = ChromiumPage(co)
     logger.info(f"Windows: ChromiumPage 启动成功 (port={port})")
 
+    # 无头本来就没有窗口；有头才需要"启动即收起"，省得每轮投递都把用户的
+    # 输入法焦点抢走（面板一天启动两次浏览器，两个号 = 一天两次打断）。
+    if background and not headless:
+        _minimize_new_window(page)
+
     return BrowserInstance(chrome_page=page)
+
+
+def _minimize_new_window(page) -> None:
+    """把刚启动的浏览器窗口收进任务栏。
+
+    窗口挂在浏览器主进程上，进程号直接问浏览器自己（CDP SystemInfo），
+    复用一个已经在跑的浏览器也问得出同一个号。
+    """
+    try:
+        pid = int(page.browser.process_id or 0)
+    except Exception:
+        pid = 0
+    if not pid:
+        logger.warning("拿不到浏览器进程号，窗口只能留在桌面上（不影响功能）")
+        return
+    n = minimize_browser_windows(pid)
+    logger.info(f"浏览器窗口已收进任务栏 (PID={pid}, {n} 个窗口)"
+                if n else f"没找到需要收起的窗口 (PID={pid})")
 
 
 # ──────────────────────────────────────────────────────────────
@@ -1137,6 +1281,7 @@ class BrowserManager:
         Args:
             config: 配置对象，需包含以下属性（均可选）：
                 - headless: bool - 是否无头模式
+                - background: bool - 有头模式下是否把窗口收进任务栏
                 - user_agent: str - 自定义 UA
                 - proxy: str - 代理地址
                 - viewport_width: int - 视口宽度
@@ -1164,6 +1309,10 @@ class BrowserManager:
 
         # 从 config 提取参数，兼容 None 和对象两种情况
         self._headless = getattr(config, 'headless', False) if config else False
+        # 缺省后台运行：投递一天要启动两次浏览器，每次都前置就会打断用户
+        self._background = getattr(config, 'background', True) if config else True
+        # 缺省按"后台"走：这个浏览器一天要启动两次，前置一次就打断一次用户
+        self._background = getattr(config, 'background', True) if config else True
         self._user_agent = getattr(config, 'user_agent', "") if config else ""
         self._proxy = getattr(config, 'proxy', "") if config else ""
         self._viewport_width = getattr(config, 'viewport_width', 1280) if config else 1280
@@ -1220,6 +1369,7 @@ class BrowserManager:
             chrome_path=self._chrome_path,
             browser_type=self._browser_type,
             user_data_dir=self._user_data_dir,
+            background=self._background,
         )
 
         # 尝试加载 Cookie
@@ -1495,10 +1645,13 @@ class BrowserManager:
 # ──────────────────────────────────────────────────────────────
 
 def check_cookie_valid(cookie_file: str,
-                       headless: bool = True,
+                       headless: bool = False,
                        chrome_path: str = "",
                        browser_type: str = "chrome",
-                       timeout: int = 20) -> dict:
+                       timeout: int = 20,
+                       port: int = 0,
+                       user_data_dir: str = "",
+                       background: bool = True) -> dict:
     """检测 Cookie 是否有效（参考 auto_boss 项目的 check_login_status 方法）。
 
     使用 DrissionPage 启动浏览器，加载 Cookie 后访问 BOSS 直聘首页，
@@ -1509,10 +1662,14 @@ def check_cookie_valid(cookie_file: str,
 
     Args:
         cookie_file: Cookie 文件路径
-        headless: 是否无头模式（默认 True）
+        headless: 是否无头模式（调用方按生产配置传，判定才代表真跑得通）
         chrome_path: 浏览器路径（空则自动检测）
         browser_type: 浏览器类型
         timeout: 总超时时间（秒）
+        port: 专用调试端口。留 0 会让 DrissionPage 退回默认 9222，
+            也就是直接连进主账号正在用的浏览器里翻页面
+        user_data_dir: 一次性 profile 目录（同上，不能拿账号在用的那份）
+        background: 有头时把窗口收进任务栏，别打断用户
 
     Returns:
         dict:
@@ -1559,6 +1716,9 @@ def check_cookie_valid(cookie_file: str,
             headless=headless,
             chrome_path=chrome_path,
             browser_type=browser_type,
+            port=port,
+            user_data_dir=user_data_dir,
+            background=background,
         )
 
         # 先访问 BOSS 直聘首页，再加载 Cookie

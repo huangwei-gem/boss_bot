@@ -280,6 +280,10 @@ def _build_providers_from_legacy() -> list:
 class BrowserConfig:
     """浏览器配置（合并 auto_boss + BOSS-auto-reply-bot）"""
     headless: bool = False
+    # 后台运行：有头模式下窗口启动即收进任务栏，不前置、不抢用户焦点。
+    # 无头时这个开关没有意义（根本没有窗口），保留是为了"从有头切回无头
+    # 再切回来"不至于又变成抢焦点的老行为。
+    background: bool = True
     viewport_width: int = 1280
     viewport_height: int = 800
     page_load_timeout: int = 30          # auto_boss: page_load_timeout
@@ -702,6 +706,8 @@ class UnifiedConfig:
         if isinstance(browser, dict):
             if "headless" in browser:
                 self.browser.headless = bool(browser["headless"])
+            if "background" in browser:
+                self.browser.background = bool(browser["background"])
             if "viewport_width" in browser:
                 self.browser.viewport_width = int(browser["viewport_width"])
             if "viewport_height" in browser:
@@ -1034,9 +1040,11 @@ class UnifiedConfig:
         if os.environ.get("BOSS_BOT_DRY_RUN", "") == "1":
             self.dry_run = True
 
-        # 浏览器：无头模式
+        # 浏览器：无头模式 / 后台运行（=0 用来临时把窗口放回桌面，比如扫码登录）
         if os.environ.get("BOSS_BOT_HEADLESS", "") == "1":
             self.browser.headless = True
+        if os.environ.get("BOSS_BOT_BACKGROUND", "") in ("0", "1"):
+            self.browser.background = os.environ["BOSS_BOT_BACKGROUND"] == "1"
 
         # AI 配置
         if os.environ.get("ENABLE_AI", "").lower() == "true":
@@ -1212,6 +1220,7 @@ class UnifiedConfig:
         return {
             "browser": {
                 "headless": self.browser.headless,
+                "background": self.browser.background,
                 "viewport_width": self.browser.viewport_width,
                 "viewport_height": self.browser.viewport_height,
                 "page_load_timeout": self.browser.page_load_timeout,
@@ -1610,6 +1619,7 @@ def _default_config_dict() -> dict:
     return {
         "browser": {
             "headless": False,
+            "background": True,
             "viewport_width": 1280,
             "viewport_height": 800,
             "page_load_timeout": 30,
