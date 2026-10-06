@@ -2528,8 +2528,8 @@ class UnifiedBotLoop:
             self._reply_engine.wait_human_delay()
             verdict = self._chat_handler.reject_interview_invite()
             if verdict == "no-btn" and self._chat_handler.open_interview_invite():
-                time.sleep(2)
-                verdict = self._chat_handler.reject_interview_invite()
+                # 展开是异步的，实测 2~5 秒才渲染出 拒绝/接受，固定 sleep 会漏单
+                verdict = self._chat_handler.reject_interview_invite(wait_sec=8)
             if verdict in ("clicked", "clicked-confirmed"):
                 note = "[已拒绝现场面试邀请]"
                 self._stats.record_reply(source="policy", action="reject_interview")

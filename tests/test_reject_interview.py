@@ -31,27 +31,77 @@ class _脚本页:
         return self._rets.pop(0)
 
 
-def _跑(rets):
-    page = _脚本页(rets)
-    return BossChatHandler.reject_interview_invite(SimpleNamespace(page=page)), page
+def _页(rets):
+    h = BossChatHandler.__new__(BossChatHandler)
+    h.page = _脚本页(rets)
+    return h
+
+
+def _跑(rets, execute=True):
+    h = _页(rets)
+    return (h.reject_interview_invite(execute=execute), h.page)
 
 
 def test_没有可点的拒绝按钮就报no_btn():
     got, page = _跑(["no-btn"])
     assert got == "no-btn"
-    assert len(page.seen) == 1, "没点到就不该再去问二次确认"
+    assert len(page.seen) == 1, "没找到就不该再去点、再去问二次确认"
+
+
+def test_只核对模式下找到按钮也不点():
+    got, page = _跑(["found"], execute=False)
+    assert got == "found"
+    assert len(page.seen) == 1, "--check 多跑一轮就是真点下去了"
 
 
 def test_点掉之后没有二次确认就是clicked():
-    assert _跑(["clicked", "no-dialog"])[0] == "clicked"
+    assert _跑(["found", "clicked", "no-dialog"])[0] == "clicked"
 
 
 def test_有二次确认要跟着点掉():
-    assert _跑(["clicked", "confirmed"])[0] == "clicked-confirmed"
+    assert _跑(["found", "clicked", "confirmed"])[0] == "clicked-confirmed"
 
 
 def test_弹了却不认识确认按钮时不许乱点():
-    assert _跑(["clicked", "dialog-no-confirm:请选择拒绝原因 关闭"])[0] == "clicked-dialog-unknown"
+    assert _跑(["found", "clicked", "dialog-no-confirm:请选择拒绝原因 关闭"])[0] \
+        == "clicked-dialog-unknown"
+
+
+class _按钮晚点出现:
+    """「立即查看」点下去到那块面板渲染出来有 2~5 秒，页面就是这么慢。"""
+
+    def __init__(self, after):
+        self.calls, self.after = 0, after
+
+    def run_js(self, script, *args, **kwargs):
+        self.calls += 1
+        return "found" if self.calls > self.after else "no-btn"
+
+
+def _晚点页(after):
+    h = BossChatHandler.__new__(BossChatHandler)
+    page = _按钮晚点出现(after)
+    h.page = page
+    return h, page
+
+
+def test_给了等待预算就轮询到按钮出现为止():
+    h, page = _晚点页(after=2)
+    assert h.reject_interview_invite(execute=False, wait_sec=8) == "found", \
+        "等一会儿就有的按钮报成 no-btn，等于这单没拒掉"
+    assert page.calls == 3, "前三次都在问按钮在不在，第三次才等到"
+
+
+def test_等待预算用尽了才认no_btn():
+    h, page = _晚点页(after=999)
+    assert h.reject_interview_invite(execute=False, wait_sec=1.0) == "no-btn"
+    assert page.calls >= 2, "预算没花完就收手，跟固定 sleep 一样会漏单"
+
+
+def test_没给等待预算就只看一次():
+    h, page = _晚点页(after=999)
+    assert h.reject_interview_invite(execute=False) == "no-btn"
+    assert page.calls == 1, "默认不等待：没展开卡片时不该白等 8 秒"
 
 
 def test_断线异常不能炸调用方():
@@ -59,12 +109,14 @@ def test_断线异常不能炸调用方():
         def run_js(self, *args, **kwargs):
             raise RuntimeError("与页面的连接已断开")
 
-    assert BossChatHandler.reject_interview_invite(
-        SimpleNamespace(page=_Boom())) == "no-btn"
+    h = BossChatHandler.__new__(BossChatHandler)
+    h.page = _Boom()
+    assert h.reject_interview_invite() == "no-btn"
 
 
 def test_定位必须靠面试字样而不是card_btn():
-    src = inspect.getsource(BossChatHandler.reject_interview_invite)
+    src = (inspect.getsource(BossChatHandler.reject_interview_invite)
+           + inspect.getsource(BossChatHandler._locate_interview_reject_btn))
     assert "btn-outline-v2" in src, "拒绝按钮的类名变了要重新实测"
     assert 'indexOf("面试")' in src, "不按「面试」分家就会点到交换联系方式那张的拒绝"
     assert ".card-btn" not in src, "card-btn 是联系方式/简历卡片，不是面试邀请"
@@ -92,11 +144,12 @@ class 落账Test:
         lp = UnifiedBotLoop.__new__(UnifiedBotLoop)
         lp.config = SimpleNamespace(dry_run=dry_run, reply=SimpleNamespace())
         lp.records, lp.events, lp.bots, lp.logs = [], [], [], []
-        lp.calls = {"reject": 0, "open": 0, "send": 0}
+        lp.calls = {"reject": 0, "open": 0, "send": 0, "wait": []}
         queue = list(verdicts)
 
-        def _reject():
+        def _reject(*args, **kwargs):
             lp.calls["reject"] += 1
+            lp.calls["wait"].append(kwargs.get("wait_sec") or 0)
             return queue.pop(0) if queue else "no-btn"
 
         def _open():
@@ -141,6 +194,8 @@ class 落账Test:
         assert self._call(lp) is True
         assert lp.calls["open"] == 1 and lp.calls["reject"] == 2
         assert lp.calls["send"] == 0
+        assert lp.calls["wait"] == [0, 8], \
+            "展开后面板是异步渲染的，第二次必须带等待预算，固定 sleep 会漏单"
         assert lp.records[-1]["reply_content"] == "[已拒绝现场面试邀请]"
 
     def test_展开也点不到才退回发文字拒绝(self):
@@ -158,4 +213,4 @@ class 落账Test:
     def test_演练模式不点也不发(self):
         lp = self._loop(dry_run=True)
         assert self._call(lp) is False, "演练要返回 False，调用方才不会标成已回复"
-        assert lp.calls == {"reject": 0, "open": 0, "send": 0}
+        assert lp.calls == {"reject": 0, "open": 0, "send": 0, "wait": []}

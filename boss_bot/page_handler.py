@@ -1439,7 +1439,35 @@ class BossChatHandler:
             logger.error(f"展开面试邀请卡片失败: {e}")
             return False
 
-    def reject_interview_invite(self) -> str:
+    def _locate_interview_reject_btn(self) -> str:
+        """找到就把按钮标上 data-boss-reject，返回 found；没有返回 no-btn。"""
+        return self.page.run_js('''(
+            function() {
+                function vis(el) {
+                    return !!(el && el.getClientRects && el.getClientRects().length);
+                }
+                var old = document.querySelectorAll('[data-boss-reject]');
+                for (var n = 0; n < old.length; n++) old[n].removeAttribute("data-boss-reject");
+                var btns = document.querySelectorAll("button.btn-v2.btn-outline-v2, "
+                                                     + "a.btn-v2.btn-outline-v2");
+                for (var i = 0; i < btns.length; i++) {
+                    var b = btns[i];
+                    if ((b.textContent || "").trim() !== "拒绝" || !vis(b)) continue;
+                    var box = b.parentElement, scope = "";
+                    for (var up = 0; up < 4 && box; up++) {
+                        scope = (box.textContent || "").trim();
+                        if (scope.indexOf("面试") >= 0 && scope.length <= 400) {
+                            b.setAttribute("data-boss-reject", "1");
+                            return "found";
+                        }
+                        box = box.parentElement;
+                    }
+                }
+                return "no-btn";
+            }
+        )()''', as_expr=True)
+
+    def reject_interview_invite(self, execute: bool = True, wait_sec: float = 0.0) -> str:
         """点掉那张面试邀请上的「拒绝」。
 
         实测 CSS（2026-10-06 tools/probe_interview_invites.py 真机 dump）：
@@ -1451,30 +1479,34 @@ class BossChatHandler:
         所以定位只认 btn-outline-v2 这一支，并且要求它往上几层的文字里真的写着"面试"——
         页面上还有交换联系方式那张也带"拒绝"两个字，点错等于把送上门的号拒掉。
 
-        返回：no-btn / clicked / clicked-confirmed / clicked-dialog-unknown
+        wait_sec 是给「立即查看」展开之后用的：面板异步渲染，实测有 2~5 秒才出现，
+        固定 sleep 会把这一单漏掉（--check 就是这么报出 7 个"没有可点的拒绝"的），
+        所以在预算里轮询到按钮出现为止；不传就只看一眼。
+
+        返回：no-btn / found / clicked / clicked-confirmed / clicked-dialog-unknown
         """
         try:
+            deadline = time.time() + max(0.0, wait_sec)
+            found = "no-btn"
+            while True:
+                found = self._locate_interview_reject_btn()
+                if found == "found" or time.time() >= deadline:
+                    break
+                time.sleep(0.5)
+            if found != "found":
+                logger.info(f"面试邀请拒绝按钮: {found}")
+                return "no-btn"
+            if not execute:
+                # --check 用：只报"这一单有没有可点的拒绝"，一次都不点
+                logger.info("面试邀请拒绝按钮: found（只核对，未点击）")
+                return "found"
             result = self.page.run_js('''(
                 function() {
-                    function vis(el) {
-                        return !!(el && el.getClientRects && el.getClientRects().length);
-                    }
-                    var btns = document.querySelectorAll("button.btn-v2.btn-outline-v2, "
-                                                         + "a.btn-v2.btn-outline-v2");
-                    for (var i = 0; i < btns.length; i++) {
-                        var b = btns[i];
-                        if ((b.textContent || "").trim() !== "拒绝" || !vis(b)) continue;
-                        var box = b.parentElement, scope = "";
-                        for (var up = 0; up < 4 && box; up++) {
-                            scope = (box.textContent || "").trim();
-                            if (scope.indexOf("面试") >= 0 && scope.length <= 400) {
-                                b.click();
-                                return "clicked";
-                            }
-                            box = box.parentElement;
-                        }
-                    }
-                    return "no-btn";
+                    var b = document.querySelector('[data-boss-reject="1"]');
+                    if (!b) return "no-btn";
+                    b.removeAttribute("data-boss-reject");
+                    b.click();
+                    return "clicked";
                 }
             )()''', as_expr=True)
             logger.info(f"面试邀请点拒绝结果: {result}")
