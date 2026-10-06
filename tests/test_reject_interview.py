@@ -136,6 +136,21 @@ def test_回复引擎把现场邀请改判成拒绝动作():
     assert '"reject_interview"' in src
 
 
+def test_拒掉的线下面试既不计数也不停轮():
+    """结构锁：拒绝护栏必须罩住面试计数和"重要消息→人工接管"两块。
+
+    IMPORTANCE_KEYWORDS 里有"面试"，pause_on_important 线上是 True——
+    不加这道护栏，机器刚替用户拒完一单，就把整条回复轮挂成等人点恢复。
+    """
+    from boss_bot.main_loop import UnifiedBotLoop
+    src = inspect.getsource(UnifiedBotLoop._process_single_chat)
+    guard = 'if action != "reject_interview":'
+    assert src.count(guard) == 1, "护栏应当只有一处，且正好罩住那两个块"
+    at = src.index(guard)
+    for token in ("add_interview", "notify_if_important", "_state_store.pause"):
+        assert src.index(token) > at, f"{token} 跑到护栏前面了"
+
+
 class 落账Test:
     """四条路都要留痕：点成、展开后点成、点不到退回发文字、演练。"""
 

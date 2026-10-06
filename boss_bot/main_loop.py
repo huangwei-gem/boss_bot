@@ -2310,30 +2310,34 @@ class UnifiedBotLoop:
         )
         self._log("DEBUG", f"回复引擎决策: action={action}, meta={meta}")
 
-        # 面试数：HR 这条消息的意图是邀约/敲定面试，同一个会话只算一次
-        if meta.get("intent") in ("invite_interview", "ask_interview"):
-            if self._metrics.add_interview(self.account_index, name):
-                self._log("SUCCESS", f"🎯 新增面试会话：[{name}]（{job_name or '未知岗位'}）")
+        # 现场/线下的面试邀请是去点「拒绝」的，下面两件事都不能再照原样办：
+        # ①计入面试数——那是一条刚被我拒掉的单，界面上多一个"面试"就是虚报；
+        # ②按"重要消息"挂成人工接管——用户要的是它自己拒掉，不是一停就等他点恢复。
+        if action != "reject_interview":
+            # 面试数：HR 这条消息的意图是邀约/敲定面试，同一个会话只算一次
+            if meta.get("intent") in ("invite_interview", "ask_interview"):
+                if self._metrics.add_interview(self.account_index, name):
+                    self._log("SUCCESS", f"🎯 新增面试会话：[{name}]（{job_name or '未知岗位'}）")
 
-        # 重要事件检测
-        if self._notifier.notify_if_important(
-            latest_other_msg, chat_name=name, job_name=job_name,
-            intent=meta.get("intent", "")
-        ):
-            self._stats.record_important()
-            self._stats_dict["important_events"] += 1
-            if self.config.reply.pause_on_important:
-                self._state_store.pause(
-                    reason=f"收到重要消息: {latest_other_msg[:50]}",
-                    chat_name=name,
-                )
-                self._reply_paused = True
-                self._notifier.send_notification(
-                    title="机器人已暂停，转人工模式",
-                    content="检测到重要消息，自动回复已暂停。在 Web 界面点击「恢复」可恢复。",
-                    level="info",
-                )
-                self._log("WARN", "已切换为人工接管模式，自动回复暂停")
+            # 重要事件检测
+            if self._notifier.notify_if_important(
+                latest_other_msg, chat_name=name, job_name=job_name,
+                intent=meta.get("intent", "")
+            ):
+                self._stats.record_important()
+                self._stats_dict["important_events"] += 1
+                if self.config.reply.pause_on_important:
+                    self._state_store.pause(
+                        reason=f"收到重要消息: {latest_other_msg[:50]}",
+                        chat_name=name,
+                    )
+                    self._reply_paused = True
+                    self._notifier.send_notification(
+                        title="机器人已暂停，转人工模式",
+                        content="检测到重要消息，自动回复已暂停。在 Web 界面点击「恢复」可恢复。",
+                        level="info",
+                    )
+                    self._log("WARN", "已切换为人工接管模式，自动回复暂停")
 
         return self._handle_reply_action(action, content, meta, name, job_name,
                                          latest_other_msg, chat_company)
