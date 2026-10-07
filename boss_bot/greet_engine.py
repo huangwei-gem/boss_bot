@@ -31,7 +31,7 @@ from urllib.error import URLError
 
 from boss_bot.unified_config import DEFAULT_GREETING, UnifiedConfig, BASE_DIR, resolve_path, write_json_atomic
 from boss_bot.unified_config import (TITLE_VETO_KEYWORDS_DEFAULT)
-from boss_bot.intent import keyword_hit, title_veto_hit
+from boss_bot.intent import body_veto_hit, title_veto_hit
 from boss_bot.greeting import (account_greeting_mode, effective_account_greeting,
                                sanitize_ai_greeting)
 from boss_bot.unified_config import strip_default_greeting
@@ -165,17 +165,14 @@ def veto_keyword_hit(keywords, job: dict, title_keywords=None) -> str:
     它们写进正文会误杀"标注快递场景录音"这类正常岗，见
     unified_config.TITLE_VETO_KEYWORDS_DEFAULT 上面那段。
     """
-    if keywords:
-        text = "|".join(str(job.get(k) or "") for k in VETO_FIELDS)
-        # 走 intent 那一份匹配口径：否定式（"不坐班""无需坐班"）不算命中，
-        # 否则回复侧放行的线上岗，投递侧还会照杀
-        hit = keyword_hit(keywords, text)
-        if hit:
-            return hit
-    hit = title_veto_hit(title_keywords or [], str(job.get("job_name") or ""))
+    标题 = str(job.get("job_name") or "")
+    正文 = "|".join(str(job.get(k) or "") for k in VETO_FIELDS if k != "job_name")
+    hit = title_veto_hit(title_keywords or [], 标题)
     if hit:
         return hit
-    return ""
+    # 正文这一遍交给 intent 那份口径：蓝领类型词不在正文定罪（"标注快递场景录音"
+    # 是要的岗），主播族与销售/中介这类"岗位本身"的词照查；条件词认否定式。
+    return body_veto_hit(keywords, title_keywords or (), title=标题, text=正文)
 
 
 def jd_gate(keywords, job: dict, thin_chars: int = JD_THIN_CHARS,

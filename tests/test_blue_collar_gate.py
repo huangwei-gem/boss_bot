@@ -686,3 +686,67 @@ class 销售内置Test:
         from boss_bot.intent import veto_hit_anywhere
         for 标题 in self.要拒的标题:
             assert veto_hit_anywhere(TITLE_VETO_KEYWORDS_DEFAULT, [], title=标题) != "", 标题
+
+
+class 否决词误杀Test:
+    """2026-10-07 晚上回放当天 1278 条投递记录抓出来的误杀。
+
+    当天 444 条"JD 命中否决词"里，被杀掉的一大把正是用户点名要的方向：
+      「数据分析师」← 进阶：中介、调节、稳健性、内生性、分组回归   （统计学里的中介效应）
+      「线上运营」   ← 统筹产品、市场、销售、供应链等业务模块       （并列提到的部门名）
+      「线上录题老师」← 无需坐班 / 不承担任何销售压力 / 不涉及课程销售（否定式说法）
+    组合口径：岗位类型词只在标题定罪（主播族例外，BOSS 把"不用露脸"只写在正文）；
+    条件词认小句内的否定式；"中介"后接效应/变量/费、或同句是统计方法列表时不算。
+    回放结果：今天放行 290 条、仍拦 170 条，放行的里面没有一条带主播族字样。
+    """
+
+    JD = {
+        "统计中介": "实证数据分析接单，R/Python。进阶：中介、调节、稳健性、内生性、分组回归",
+        "并列销售": "负责统筹产品、市场、销售、供应链等业务模块的线上运营协作",
+        "否定坐班": "居家办公，无需到公司坐班，时间自主安排，按件结算",
+        "否定销售": "纯教学岗位，不涉及课程销售或学生招揽，提供课件与前期培训",
+        "中介费": "真实可靠，无任何中介费押金，一单一结",
+    }
+
+    def test_统计学中介不算中介(self):
+        from boss_bot.intent import veto_hit_anywhere
+        from boss_bot.unified_config import TITLE_VETO_KEYWORDS_DEFAULT as T
+        for 标题 in ("数据分析师", "兼职·数据标注/AI训练师", "Python大数据工程师（长期线上兼职）"):
+            assert veto_hit_anywhere(T, ["中介"], title=标题, text=self.JD["统计中介"]) == "", 标题
+            assert veto_hit_anywhere(T, ["中介"], title=标题, text=self.JD["中介费"]) == ""
+
+    def test_并列提到的销售不算销售岗(self):
+        from boss_bot.intent import veto_hit_anywhere
+        from boss_bot.unified_config import TITLE_VETO_KEYWORDS_DEFAULT as T
+        assert veto_hit_anywhere(T, ["销售"], title="线上运营助理", text=self.JD["并列销售"]) == ""
+
+    def test_否定式条件词不算命中(self):
+        from boss_bot.intent import veto_hit_anywhere
+        from boss_bot.unified_config import TITLE_VETO_KEYWORDS_DEFAULT as T
+        assert veto_hit_anywhere(T, ["坐班"], title="兼职·线上录题老师", text=self.JD["否定坐班"]) == ""
+        assert veto_hit_anywhere(T, ["销售"], title="兼职·线上单词陪练老师", text=self.JD["否定销售"]) == ""
+
+    def test_真销售岗照杀(self):
+        from boss_bot.intent import veto_hit_anywhere
+        from boss_bot.unified_config import TITLE_VETO_KEYWORDS_DEFAULT as T
+        assert veto_hit_anywhere(T, ["销售"], title="销售专员4-9K长沙", text="负责客户开发与跟单") == "销售"
+        assert veto_hit_anywhere(T, ["销售"], title="线上运营助理",
+                                 text="本岗主要做课程销售，底薪3000加提成") == "销售"
+
+    def test_主播族藏在正文也要拦(self):
+        """"线上小游戏兼职"正文写"不用露脸"——岗位性质就写在正文里，不能放。"""
+        from boss_bot.intent import veto_hit_anywhere
+        from boss_bot.unified_config import TITLE_VETO_KEYWORDS_DEFAULT as T
+        assert veto_hit_anywhere(T, ["不露脸"], title="线上小游戏兼职",
+                                 text="在家打游戏就行，不用露脸，日结200") != ""
+
+    def test_投递侧同一口径(self):
+        from boss_bot.greet_engine import veto_keyword_hit
+        from boss_bot.unified_config import TITLE_VETO_KEYWORDS_DEFAULT as T
+        job = {"job_name": "数据分析师", "jd_description": self.JD["统计中介"]}
+        assert veto_keyword_hit(["中介"], job, title_keywords=T) == ""
+        assert veto_keyword_hit(["中介"], {"job_name": "数据标注员",
+                                           "jd_description": "招兼职，非中介，按件结算"},
+                                title_keywords=T) == "中介"
+        assert veto_keyword_hit(["销售"], {"job_name": "销售专员", "jd_description": ""},
+                                title_keywords=T) == "销售"

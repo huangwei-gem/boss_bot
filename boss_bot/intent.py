@@ -151,19 +151,61 @@ def _tight(text) -> str:
 
 
 _NEGATED_RE = re.compile(r"[不无没][得有要需用不没]{0,2}$")
-# 小句开头的"不用/无需/没有/不需要"管到整句：「全程远程协作，无需到公司坐班」
-# 里那个"坐班"离否定词隔了四个字，就近窗口够不着，但意思仍然是否定。
-# 只认 不/无/没 + 虚词 这一种开头，"不露脸主播"那种描述性的不算。
-_CLAUSE_SEPS = "，,。.;；、!！?？:：\n（）()【】[]/\\|｜~～ "
-_NEGATED_CLAUSE_RE = re.compile(r"^[不无没][得有要需用]")
+# 小句按"，。；：！？（）/ 换行"切，**不按顿号切**：「无需招生、销售」里那个顿号是并列，
+# 不是新起一句——按顿号切就看不出"无需"也管着"销售"。
+# '+' '~' '-' 这些是 BOSS 标题里当项目符号用的（"28/H包吃住+可预支+不体检"），
+# 不当分隔符的话，"不体检"会把后面正儿八经的"包吃住"赦免掉（实测红过一条）。
+_CLAUSE_SEPS = "，,。.;；!！?？:：\n（）()【】[]/\\|｜~～+-－— "
+# 命中前后都是顿号 = 它在列举业务范围，不是在说这份工本身
+# （「线上运营」写"统筹产品、市场、销售、供应链等业务模块"就这么被杀过）。
+_ENUM = "、"
+# "中介"在数据岗 JD 里通常是统计学方法（中介效应）或"无中介费"的免责说法。
+# 2026-10-07 它单枪匹马误杀了 26 条「数据分析师」、25 条「数据标注/AI训练师」。
+_EXCEPTIONS = {
+    "中介": {"后缀": ("效应", "变量", "费", "作用"),
+             "同句": ("检验", "回归", "稳健性", "内生性", "异质性", "调节", "计量", "DID")},
+}
+
+
+def _clause(body: str, idx: int) -> str:
+    start = max([body.rfind(sep, 0, idx) for sep in _CLAUSE_SEPS] + [-1]) + 1
+    return body[start:idx]
+
+
+_DISCLAIMER_RE = re.compile(
+    r"(无需|不需|不用|不要|不涉及|不接受|不承担|不收取|不含|没有|不会)"
+    r"[\u4e00-\u9fff、，]{0,6}$")
 
 
 def _negated(body: str, idx: int) -> bool:
-    """命中位置前面是不是否定说法（就近窗口，或所在小句以否定词开头）。"""
-    if _NEGATED_RE.search(body[:idx]):
+    """命中位置前面是不是否定说法。
+
+    两种认法：①紧邻窗口（"不坐班""无需坐班"）；②整段免责说法后面跟着的并列项
+    （"无需招生、销售"、"不涉及课程销售"、"不承担任何销售压力"）。
+    光看"小句里有没有 不/无/没"是不行的——「直招·无押金提供住宿」那个"无"管的是押金，
+    不是住宿（这条被测试抓回来过）。
+    """
+    前 = body[:idx]
+    if _NEGATED_RE.search(前):
         return True
-    start = max([body.rfind(sep, 0, idx) for sep in _CLAUSE_SEPS] + [-1]) + 1
-    return bool(_NEGATED_CLAUSE_RE.match(body[start:idx]))
+    return bool(_DISCLAIMER_RE.search(前))
+
+
+def _is_exception(word: str, body: str, idx: int) -> bool:
+    """命中位置其实在列举或其实是别的词，不算否决。"""
+    前 = body[idx - 1:idx]
+    后 = body[idx + len(word):idx + len(word) + 1]
+    if 前 == _ENUM and 后 == _ENUM:
+        return True
+    条 = _EXCEPTIONS.get(word)
+    if not 条:
+        return False
+    if body[idx + len(word):idx + len(word) + 2].startswith(tuple(条["后缀"])):
+        return True
+    # 同句看命中两侧各 24 字：「进阶：中介、调节、稳健性、分组回归」里
+    # "中介"前面只有"进阶："，统计方法的线索都在它后面。
+    窗口 = body[max(0, idx - 24):idx + len(word) + 24]
+    return any(k in 窗口 for k in 条["同句"])
 
 
 def keyword_hit(words, text: str, honor_negation: bool = True) -> str:
@@ -171,9 +213,9 @@ def keyword_hit(words, text: str, honor_negation: bool = True) -> str:
 
     口径只有一份：否决词要求整条出现，面板上把"主播，地推"输成一格就该拆成两条，
     所以这里不做分词、不做模糊；只抹掉 BOSS 的隔字写法（_tight），
-    外加认否定式（_negated）这一种语法变化。
+    外加认否定式（_negated）与列举/同音词例外（_is_exception）。
     同一个词在一段里可能出现两次（"不用坐班，但周末要坐班"），逐处看，
-    有一处不是否定式就算命中。
+    有一处是肯定说法就算命中。
 
     honor_negation=False 给岗位类型表用：那里的否定式不改变岗位性质——
     "不露脸主播""无需坐班的普工"还主播、还是普工；"非中介"更是派遣岗的卖点。
@@ -190,7 +232,9 @@ def keyword_hit(words, text: str, honor_negation: bool = True) -> str:
             i = body.find(word, start)
             if i < 0:
                 break
-            if not honor_negation or not _negated(body, i):
+            if not honor_negation:
+                return str(kw).strip()
+            if not _negated(body, i) and not _is_exception(word, body, i):
                 return str(kw).strip()
             start = i + len(word)
     return ""
@@ -212,6 +256,37 @@ def title_veto_hit(title_keywords, title: str) -> str:
     return keyword_hit(title_keywords, body, honor_negation=False)
 
 
+# 主播族的词，BOSS 常只写在 JD 正文里（"不用露脸，居家语音厅"），所以正文这一遍要查它们；
+# 而且查的时候不认否定式——"不用露脸"本身就是这一行的名字。
+ANCHOR_FAMILY = frozenset({"主播", "主包", "直播", "互动播", "团播", "带播", "口播", "带货",
+                           "语音厅", "场控", "露脸", "不露脸", "陪聊", "情感互动", "聊天室"})
+# 但只有这一小组能在正文里定罪：「数据标注专员」的 JD 写"包含直播间的语音切片"、
+# 「视频剪辑」写"抖音主播素材二次剪辑"，那是内容不是岗位（回归里就锁着这条）。
+ANCHOR_IN_BODY = frozenset({"露脸", "不露脸", "主包", "语音厅", "团播", "带播", "口播",
+                            "互动播", "陪聊", "情感互动", "聊天室", "场控"})
+# 既是岗位类型又描述"这份工本身"的词，正文里出现照样算（销售/中介/派遣）。
+KEEP_IN_BODY = frozenset({"销售", "中介", "派遣职位", "电销", "电话销售"})
+
+
+def body_veto_hit(body_keywords, title_keywords, title: str = "", text: str = "") -> str:
+    """否决词那一遍：蓝领类型词不在正文定罪。
+
+    普工/分拣/骑手/外卖这些词写进 JD 正文，九成是"内容场景"而不是"这份工的岗位"——
+    「兼职数据采集」让人录超市理货视频、「语音标注」要标快递场景录音，都是这种。
+    2026-10-07 回放当天 1278 条投递记录：这么一分开放行 290 条（数据标注/线上运营/
+    线上老师为主），仍拦 170 条，放行的里面没有一条带主播族字样。
+    """
+    类型 = set(title_keywords or ())
+    # 标题这一遍用全词表：「线上主播助理」被"助理"这张职业白名单放行之后，
+    # 他自己填的"主播"总得在标题上拦得住（回归里锁着这条）。
+    正文词 = [w for w in (body_keywords or [])
+             if w not in 类型 or w in KEEP_IN_BODY]
+    主播词 = sorted((类型 | set(body_keywords or ())) & ANCHOR_IN_BODY)
+    正文 = _tight(text)
+    return (keyword_hit(body_keywords, title) or keyword_hit(正文词, 正文)
+            or keyword_hit(主播词, 正文, honor_negation=False))
+
+
 def veto_hit_anywhere(title_keywords, body_keywords, title: str = "",
                       text: str = "") -> str:
     """这一单是不是"不要的那一类"，命中就返回命中的那个词（回复/卡片/跟进共用）。
@@ -224,8 +299,7 @@ def veto_hit_anywhere(title_keywords, body_keywords, title: str = "",
     内容，量正文会误杀；否决词本来就是"要坐班/包吃住"的说法，出现在哪一句都算数。
     """
     return (title_veto_hit(title_keywords, title)
-            or keyword_hit(body_keywords, title)
-            or keyword_hit(body_keywords, text))
+            or body_veto_hit(body_keywords, title_keywords, title=title, text=text))
 
 
 def is_contact_exchange_card(message: str) -> bool:
