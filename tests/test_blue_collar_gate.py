@@ -239,7 +239,7 @@ class 回复侧Test:
     def test_岗位类型要让位给面试拒绝(self):
         """普工岗发线下面试邀请时，要走点「拒绝」那条——只回一句文字，面试还挂在 HR 那边。
 
-        这一步排在面试策略之后是有原因的：见 tests/test_offline_interview_policy.py
+        这一步排在面试策略之后是有原因的：见 tests/test_interview_invite_policy.py
         那条"策略要跑在关键词直通之前"的同一类顺序坑。
         """
         eng = self._引擎()

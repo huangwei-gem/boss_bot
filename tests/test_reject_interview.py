@@ -172,12 +172,29 @@ def test_展开卡片只点面试邀请上的立即查看():
 
 
 def test_回复引擎把现场邀请改判成拒绝动作():
-    """路由写死在 reply_engine 的意图分支里：判成 offline 就不该再回
-    "工作日下午都可以安排面试"——那等于替 HR 把到场面试应下来。"""
+    """路由锁在 reply_engine 里：判成到场面试就不该再回
+    "工作日下午都可以安排面试"——那等于替 HR 把到场面试应下来。
+
+    锁的是顺序而不是某一行写法：策略层必须排在关键词规则直通之前，
+    规则表里 '面试' 是子串匹配，跑在前面就把这条抢走了。
+    """
     from boss_bot.reply_engine import ReplyEngine
     src = inspect.getsource(ReplyEngine)
-    assert 'classify_interview_invite(latest) == "offline"' in src
-    assert '"reject_interview"' in src
+    assert "classify_interview_invite" in src and '"reject_interview"' in src
+    assert src.index("reject_interview") < src.index("rule_engine.match"), \
+        "面试策略被规则直通排到后面，等于永远走不到"
+    from boss_bot.rules import RuleEngine
+    e = ReplyEngine()
+    e.rule_engine = RuleEngine({"面试": "工作日下午都可以安排面试，您看哪个时间段方便？"})
+    e._message_store = None
+    e._self_evolve = None
+    e._ask_ai = lambda *a, **k: None
+    e._add_record = lambda **kw: None
+    e._record_to_evolve = lambda *a, **k: None
+    e._log_decision = lambda *a, **k: None
+    action, content, _ = e.get_reply(
+        [{"is_mine": False, "text": "湖南九片云邀请您现场面试，前往查看，确认是否接受 立即查看"}])
+    assert action == "reject_interview", f"实际走了 {action}/{content}"
 
 
 def test_拒掉的线下面试既不计数也不停轮():

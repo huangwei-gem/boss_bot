@@ -50,7 +50,7 @@ DECLINE = ("不好意思，我这边只找线上远程就能完成的兼职，�
 # 那三条存档证据定（地址/来公司/包住坐班），页面上只复核"有没有邀约"这一件事。
 # "地址/来公司"是实测补进来的：姬广凯那句只写了写字楼门牌号和前台签到，
 # 陈女士那句写的是"可直接来公司参观详聊"，光盯"面试"两个字会把这两单漏掉。
-INVITE_MARKS = ("面试", "邀约", "约个时间", "过来", "到岗", "地址", "来公司")
+INVITE_MARKS = ("面试", "邀约", "约个时间", "过来", "到岗", "地址", "来公司", "线下")
 
 
 def pause_reply(client):
@@ -136,12 +136,54 @@ def run_one(account_index, target, send):
 
 
 
+def committed_targets():
+    """从存档里捞出"我们自己回话应了线下到场、之后又没拒绝过"的会话。
+
+    2026-10-07 中午的窟窿就在这儿：判据只认平台那张"邀请您现场面试"卡片，
+    HR 换成"明天下午几点可以过来""地址：××大厦413"这种口语约时间时，
+    策略层不触发，AI 就正常聊天聊成了"好的，我准时到"——12:02、12:35 两条
+    连"明天10点准时到新天地1310面试"都说出口了。
+    所以名单不能靠判据，直接看我们发出去的话。
+    """
+    import re
+    from boss_bot.contact_ledger import _message_text
+    from boss_bot.reply_queue import order_key
+
+    应约 = re.compile(r"准时到|准时到达|准时过去|我确定来|按约定准时|可以过去|我按时到")
+    已拒 = re.compile(r"不占用您的时间|先放弃|拒绝了面试邀请|只找线上")
+    out = []
+    for c in MessageStore().get_all_chats_detail() or []:
+        msgs = sorted([m for m in (c.get("messages") or []) if _message_text(m)],
+                      key=order_key)
+        mine = [i for i, m in enumerate(msgs)
+                if m.get("is_mine") and 应约.search(_message_text(m))]
+        if not mine:
+            continue
+        # 这一会话里我们任何时候说过拒绝话术就算结了——不按"应约之后"判断：
+        # 工具补写的那条拒绝消息没有 data-mid，order_key 排 0，会被_sort_到最前面，
+        # 按位置判断就会把已经拒过的 王女士/王博/迟女士 又列一遍（实测 14:35 复现）。
+        if any(m.get("is_mine") and 已拒.search(_message_text(m)) for m in msgs):
+            continue
+        company = (c.get("company") or "").strip()
+        if not company:
+            continue      # 公司名空着没法双重核对，绝不按姓名点
+        out.append({"account": int(c.get("account_index") or 0),
+                    "name": c.get("chat_name"), "company": company,
+                    "job": c.get("job_name") or ""})
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true", help="只核对不发送")
     ap.add_argument("--only", default="", help="只处理这个名字的会话")
+    ap.add_argument("--from-archive", action="store_true",
+                    help="名单取自存档里我们应过线下到场的会话，而不是写死的 TARGETS")
     args = ap.parse_args()
     send = not args.check
+    targets = committed_targets() if args.from_archive else TARGETS
+    print(f"待处理 {len(targets)} 单：",
+          "、".join(f"{t['name']}|{t['company'][:10]}" for t in targets), flush=True)
 
     import requests
     if send:
@@ -149,7 +191,7 @@ def main():
         print("暂停回复轮:", r.json(), flush=True)
     results = []
     try:
-        for t in TARGETS:
+        for t in targets:
             if args.only and args.only != t["name"]:
                 continue
             try:

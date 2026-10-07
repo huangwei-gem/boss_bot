@@ -137,3 +137,83 @@ def _引擎():
     e._record_to_evolve = lambda *a, **k: None
     e._log_decision = lambda *a, **k: None
     return e
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# 2026-10-07 中午真发出去的到场承诺（存档原文，工具核对过）：
+#   12:02 迟女士  「收到，明天10点准时到新天地1310面试」  ← HR 上一句只有「公司地址新天地1310」
+#   12:35 王博    「方便，明天下午两点我可以准时到公司面试」
+#   13:39 周杰    「好的，我确定来，现在就接受您的邀请，四点半准时到」
+#   07:45 陈先生  「好的，收到。下午三点我准时过去」        ← HR 只发了「a栋3307 到前台刷电梯卡上来」
+# 根因：classify_interview_invite 第一行就要看见"面试"两个字才判，
+# 而 HR 约到场时经常只发门牌号、只问"几点方便过来"，压根不提面试。
+# ────────────────────────────────────────────────────────────────────────────
+
+只发地址 = "公司地址新天地1310"
+电梯卡 = "a栋3307 到前台刷电梯卡上来"
+大厦房间号 = "聊城创业大厦A塔3115 到了联系我就行"
+问几点过来 = "明天下午几点可以过来"
+来看线下 = "方便来线下看看吗"
+要接受邀请 = "来的话可以接受一下邀请 上面也有地址方便看"
+平台告诫 = "亲，先不要直接过来面试哈，请等待微信或电话沟通确认之后再确定哈～"
+要简历 = "方便发一份你的简历过来吗？"
+
+
+def test_只发门牌号也算到场():
+    assert classify_interview_invite(只发地址) == "offline"
+
+
+def test_写楼层前台电梯的也算到场():
+    assert classify_interview_invite(电梯卡) == "offline"
+    assert classify_interview_invite(大厦房间号) == "offline"
+
+
+def test_问几点过来算到场():
+    assert classify_interview_invite(问几点过来) == "offline"
+    assert classify_interview_invite(来看线下) == "offline"
+    assert classify_interview_invite(要接受邀请) == "offline"
+
+
+def test_平台那句别直接过来的告诫不算邀请():
+    """那句是提醒你别贸然上门，不是约你到场——判成现场会凭空撤掉别人的面试。"""
+    assert classify_interview_invite(平台告诫) != "offline"
+
+
+def test_要简历那句带过来的不算到场():
+    assert classify_interview_invite(要简历) == "unknown"
+
+
+def test_地址后面跟一句别的也要拒():
+    """策略层只看最新那一句时，"公司地址新天地1310"在上一句就等于没看见。"""
+    e = _引擎()
+    action, content, _ = e.get_reply([
+        {"is_mine": False, "text": "对 明天10点?"},
+        {"is_mine": False, "text": 只发地址},
+        {"is_mine": True, "text": "好的，我准时到"},
+        {"is_mine": False, "text": "嗯"}])
+    assert action == "reject_interview", f"实际走了 {action}/{content}"
+
+
+def test_承诺到场的句子发不出去():
+    """最后一道闸：不管哪一层生成的，只要是我们应下来场面的话，一律不发。"""
+    from boss_bot.intent import commits_offline_visit
+    for 句 in ("收到，明天10点准时到新天地1310面试",
+               "方便，明天下午两点我可以准时到公司面试",
+               "好的，我确定来，现在就接受您的邀请，四点半准时到",
+               "明天下午3点可以，我会准时到达。期待与您交流。"):
+        assert commits_offline_visit(句), 句
+
+
+def test_拒绝话术自己不能被闸门拦掉():
+    from boss_bot.intent import commits_offline_visit
+    from boss_bot.main_loop import OFFLINE_INTERVIEW_DECLINE
+    assert commits_offline_visit(OFFLINE_INTERVIEW_DECLINE) == ""
+    assert commits_offline_visit("不好意思，我只找线上远程的兼职，线下面试就不占用您的时间了") == ""
+    assert commits_offline_visit("请问这个岗位是线上远程的吗？") == ""
+
+
+def test_发送出口真的接了这道闸():
+    import inspect
+    from boss_bot.page_handler import BossChatHandler
+    src = inspect.getsource(BossChatHandler.send_text)
+    assert "commits_offline_visit" in src, "send_text 没接闸门，承诺照样发得出去"

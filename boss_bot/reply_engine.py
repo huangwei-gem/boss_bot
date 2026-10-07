@@ -557,17 +557,28 @@ class ReplyEngine:
         # "什么时候方便过来面试呢"都会被它接走，回一句"工作日下午都可以安排面试"
         # ——实测 10-06 00:33 / 01:21 / 13:43 三单线下面试就是这么当面应下来的。
         # 用户只要线上，所以这一步必须排在规则前面，否则 reject_interview 永远走不到。
-        if latest and classify_interview_invite(latest) == "offline":
-            meta["source"] = "interview_policy"
-            logger.info("[面试策略] 现场/线下的面试邀请 → 动作 reject_interview")
-            self._log_decision(chat_name, latest, meta, "reject_interview", decision_start)
-            self._add_record(
-                chat_name=chat_name, job_name=job_name, received_message=latest,
-                reply_content=None, reply_source="policy",
-                reply_intent=meta["intent"],
-                reply_reason="只找线上兼职，现场/线下的面试邀请去点平台上的「拒绝」",
-            )
-            return ("reject_interview", None, meta)
+        # 判据看的是最近几句 HR 的话，不只是最新那一条：约到场时"面试"两个字经常在
+        # 上一句（「公司地址新天地1310」在前，最新只回了个"嗯"），只看一条就放过去了。
+        # 反过来最新那句要是说清了是视频/线上面试，就以它为准，不翻旧账。
+        if latest and classify_interview_invite(latest) != "online":
+            hr_recent = [str(m.get("text") or m.get("card_text") or "")
+                         for m in history if not m.get("is_mine")] or [latest]
+            hr_recent = " ".join(hr_recent[-4:])
+            已回绝 = any(m.get("is_mine") and
+                        any(k in str(m.get("text") or "") for k in
+                            ("只找线上远程就能", "就不占用您的时间", "先放弃"))
+                        for m in history)
+            if not 已回绝 and classify_interview_invite(hr_recent) == "offline":
+                meta["source"] = "interview_policy"
+                logger.info("[面试策略] 现场/线下的面试邀请 → 动作 reject_interview")
+                self._log_decision(chat_name, latest, meta, "reject_interview", decision_start)
+                self._add_record(
+                    chat_name=chat_name, job_name=job_name, received_message=latest,
+                    reply_content=None, reply_source="policy",
+                    reply_intent=meta["intent"],
+                    reply_reason="只找线上兼职，现场/线下的面试邀请去点平台上的「拒绝」",
+                )
+                return ("reject_interview", None, meta)
 
         # ── 0.7. 岗位类型硬否决：普工/主播/快递/保洁这一类，开口就是拒绝 ──
         # 这些会话不是我们投的，是 HR 主动找上门的（2026-10-07 盘上：长白班普工、

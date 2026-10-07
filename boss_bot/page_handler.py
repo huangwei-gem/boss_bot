@@ -1317,7 +1317,15 @@ class BossChatHandler:
         - 输入框: #chat-input.chat-input（contenteditable div）
         - 发送按钮: .btn-v2.btn-sure-v2.btn-send（注意有 disabled class 时不可点击）
         - 输入方式: textContent + dispatchEvent('input') 才能触发 Vue 响应
+
+        最后一道闸：答应到场面的话（"准时到""我确定来"）一律不发。
+        2026-10-07 中午策略层漏判过六单，六条承诺都是从这一句发出去的。
         """
+        from boss_bot.intent import commits_offline_visit
+        hit = commits_offline_visit(text)
+        if hit:
+            logger.error(f"🚫 拒绝发送：这句话里承诺到场面试（「{hit}」），只找线上兼职")
+            return False
         for attempt in range(1, retries + 1):
             try:
                 # 转义特殊字符

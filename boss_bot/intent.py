@@ -248,6 +248,20 @@ _OFFLINE_INTERVIEW_MARKS = ("现场面试", "线下面试", "到面", "到场", 
                             "过来面试", "上门面试", "到店面试")
 _ONLINE_INTERVIEW_MARKS = ("视频面试", "线上面试", "远程面试", "电话面试",
                            "腾讯会议", "钉钉会议", "zoom", "飞书会议")
+# HR 约到场时经常不提"面试"两个字，只发门牌号或只问几点过来。2026-10-07 中午
+# 就是这样连发六条到场承诺：「公司地址新天地1310」→"明天10点准时到"、
+# 「a栋3307 到前台刷电梯卡上来」→"下午三点我准时过去"、
+# 「聊城创业大厦A塔3115 到了联系我就行」、「明天下午几点可以过来」、
+# 「方便来线下看看吗」、「来的话可以接受一下邀请 上面也有地址」。
+# 用词都取具体形状（到前台/刷电梯/写字楼…），不敢用裸的"线下""地址"——
+# HR 也会说"我们不是线下，全程线上"，那种判成现场就是凭空撤掉别人的面试。
+_OFFLINE_VISIT_MARKS = ("过来面试", "可以过来", "方便过来", "过来一趟", "过来聊聊",
+                        "几点过来", "什么时候方便过来", "方便过来", "来公司", "到公司",
+                        "去公司面试", "面试地点", "公司地址", "写字楼", "大厦", "到前台",
+                        "刷电梯", "电梯卡", "到楼下", "楼层", "来线下", "线下看看",
+                        "过来一趟聊", "也有地址")
+# 平台/HR 提醒"别贸然上门"的话术，不是邀约：盘上 3 条都是这个形状。
+_NOT_AN_INVITE = re.compile(r"(不要|别|切勿|先别).{0,6}(直接过来|直接来|贸然)|请等待.{0,12}(确认|沟通)")
 
 
 def classify_interview_invite(message: str) -> str:
@@ -257,11 +271,34 @@ def classify_interview_invite(message: str) -> str:
     所以说不清的（只写"邀请您面试"）一律 unknown，不自动点拒绝。
     """
     text = (message or "").strip()
-    if not text or "面试" not in text:
+    if not text or _NOT_AN_INVITE.search(text):
         return "unknown"
     if any(k in text for k in _OFFLINE_INTERVIEW_MARKS):
+        return "offline"
+    if any(k in text for k in _OFFLINE_VISIT_MARKS):
         return "offline"
     if any(k in text.lower() for k in _ONLINE_INTERVIEW_MARKS):
         return "online"
     return "unknown"
+
+
+# 我们自己应下到场面的说法——这些一律不许发出去（发送出口最后一道闸）。
+# 词形取自当天真发出去的那几条：「准时到新天地1310面试」「我确定来…四点半准时到」
+# 「我会准时到达。期待与您见面交流」。拒绝话术里不会出现这些。
+_COMMIT_VISIT_RE = re.compile(
+    r"准时到|按时到|我会到|我准时|我确定来|按约定准时|这就过去|马上到|稍后过去"
+    r"|过去面试|到公司面试|来公司面试|到楼下联系|到了联系(您|你)|见面交流")
+
+
+def commits_offline_visit(text: str) -> str:
+    """这句要发出去的话是不是答应了到场——是就返回命中的说法，否则空串。
+
+    放在发送出口而不只在策略层：策略层判的是 HR 说了什么，可承诺是从我们这头说出去的；
+    哪一层（AI、规则直通、意图、主动跟进、人工点发）漏判，句子都不该离开这台机器。
+    """
+    body = str(text or "")
+    if not body:
+        return ""
+    m = _COMMIT_VISIT_RE.search(body)
+    return m.group(0) if m else ""
 
