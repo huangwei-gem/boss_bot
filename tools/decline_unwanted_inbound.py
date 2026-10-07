@@ -30,7 +30,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 from decline_offline_interviews import PANEL, attach  # noqa: E402
 
 import requests  # noqa: E402
-from boss_bot.contact_ledger import _message_text  # noqa: E402
+from boss_bot.contact_ledger import CONTACT_DECLINED_MARK, _message_text  # noqa: E402
 from boss_bot.intent import (classify_interview_invite, is_contact_exchange_card,  # noqa: E402
                              veto_hit_anywhere)
 from boss_bot.message_store import MessageStore  # noqa: E402
@@ -40,7 +40,15 @@ from boss_bot.reply_engine import (FAMILY_DECLINE_REPLY, REPLY_REFUSAL_MARK,  # 
 from boss_bot.unified_config import UnifiedConfig, TITLE_VETO_KEYWORDS_DEFAULT  # noqa: E402
 
 # 我们自己的拒绝话术里出现这些就算这一单已经表过态，不再重复发
-REFUSED_MARKS = (REPLY_REFUSAL_MARK, "先放弃", "只找线上远程就能", "祝您招聘顺利")
+# 卡片那一趟记的是 "[已拒绝交换联系方式]"（见 record()），漏了它同一单每轮都会重新出现在待拒名单里
+REFUSED_MARKS = (REPLY_REFUSAL_MARK, CONTACT_DECLINED_MARK,
+                 "先放弃", "只找线上远程就能", "祝您招聘顺利")
+
+
+def already_declined(msgs):
+    """这个会话里我们是不是已经表过态（含在卡片上点过「拒绝」的那条记账）。"""
+    return any(m.get("is_mine") and any(k in (_message_text(m) or "")
+                                        for k in REFUSED_MARKS) for m in msgs)
 
 
 def tables():
@@ -87,8 +95,7 @@ def owed(limit):
         hit, _why = hit_of(title_words, body_words, c.get("job_name") or "", msgs)
         if not hit:
             continue
-        if any(m.get("is_mine") and any(k in (_message_text(m) or "")
-                                        for k in REFUSED_MARKS) for m in msgs):
+        if already_declined(msgs):
             continue
         if conversation_rejected(msgs):
             continue          # HR 已经拒过我们，别再追着说话
@@ -134,8 +141,7 @@ def run_one(row, send):
         hit, why = hit_of(title_words, body_words, live_title, live)
         if not hit:
             return f"跳过：页面上不像不该要的一单（岗位「{live_title[:20]}」没命中）"
-        if any(m.get("is_mine") and any(k in (_message_text(m) or "")
-                                        for k in REFUSED_MARKS) for m in live):
+        if already_declined(live):
             return "跳过：这一会话里已经说过拒绝话术"
         if not send:
             return f"核对通过：{why}「{hit}」（未发送）"
