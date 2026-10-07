@@ -268,6 +268,39 @@ ANCHOR_IN_BODY = frozenset({"露脸", "不露脸", "主包", "语音厅", "团�
 KEEP_IN_BODY = frozenset({"销售", "中介", "派遣职位", "电销", "电话销售"})
 
 
+# 标题已经说明这是数据/分析/标注的活时，正文里的"销售"多半是**被分析的业务域**
+# ——"清洗销售及进销存数据""分析防盗门销售数据""监控销售指标波动""对接销售、采购部门
+# 落地数据建议"。2026-10-08 00:04 的「数据分析师」（河北日上防盗门）就是这么被
+# 「销售」连杀两天：10-07+10-08 目标标题里这种形状 15 条。
+# 只豁免这一小撮词、只豁免正文那一遍，并且词只要挨着"经验/专员/拓展/负责…"这种
+# 岗位形状就照旧定罪——「AI+数据合伙人」写"有一定的销售/商务拓展经验"仍然拦得住。
+_DATA_SHAPE_RE = re.compile(r"数据|分析|标注")
+_DOMAIN_WORDS = frozenset({"销售"})
+_ROLE_TAIL = ("经验", "专员", "代表", "顾问", "经理", "总监", "提成", "考核",
+              "业绩", "拓展", "开发", "谈单", "拜访", "跟单")
+_ROLE_HEAD = ("负责", "从事", "做过", "担任", "岗位", "承担", "完成")
+# 词后面直接接着"被统计的东西"时，它在讲数据域不在讲岗位——"完成销售数据整理"
+# 里"完成"挨着岗位词，可这份工是整理数据的那个人。
+_DATA_TAIL = ("数据", "指标", "报表", "看板", "口径", "明细", "周报", "月报",
+              "统计", "分析", "情况")
+
+
+def _word_is_the_job(word: str, body: str) -> bool:
+    """正文里这个词是不是在说"这份工就要干这个"（而不是被分析的对象）。"""
+    start = 0
+    while True:
+        i = body.find(word, start)
+        if i < 0:
+            return False
+        后 = body[i + len(word):i + len(word) + 6]
+        前 = body[max(0, i - 4):i]
+        if not any(k in 后 for k in _DATA_TAIL) and (
+                any(k in 后 for k in _ROLE_TAIL)
+                or any(k in 前 for k in _ROLE_HEAD)):
+            return True
+        start = i + len(word)
+
+
 def body_veto_hit(body_keywords, title_keywords, title: str = "", text: str = "") -> str:
     """否决词那一遍：蓝领类型词不在正文定罪。
 
@@ -283,8 +316,19 @@ def body_veto_hit(body_keywords, title_keywords, title: str = "", text: str = ""
              if w not in 类型 or w in KEEP_IN_BODY]
     主播词 = sorted((类型 | set(body_keywords or ())) & ANCHOR_IN_BODY)
     正文 = _tight(text)
-    return (keyword_hit(body_keywords, title) or keyword_hit(正文词, 正文)
-            or keyword_hit(主播词, 正文, honor_negation=False))
+    标题 = _tight(title or "")
+    数据岗 = bool(_DATA_SHAPE_RE.search(标题))
+    标题命中 = keyword_hit(body_keywords, 标题)
+    if 标题命中:
+        return 标题命中
+    for word in 正文词:
+        hit = keyword_hit([word], 正文)
+        if not hit:
+            continue
+        if 数据岗 and hit in _DOMAIN_WORDS and not _word_is_the_job(hit, 正文):
+            continue          # 销售是被分析的业务域，不是岗位
+        return hit
+    return keyword_hit(主播词, 正文, honor_negation=False)
 
 
 def veto_hit_anywhere(title_keywords, body_keywords, title: str = "",
