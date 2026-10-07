@@ -1181,6 +1181,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
                 <option value="contact">同意交换</option>
                 <option value="reject_contact">拒绝交换</option>
                 <option value="family_filter">岗位类型拒绝</option>
+                <option value="policy">线下面试拒绝</option>
                 <option value="manual">人工发送</option>
                 <!-- 盘上真实存在这几类，缺一项就筛不到 -->
                 <option value="greet">机器招呼</option>
@@ -4346,6 +4347,8 @@ function getReplySourceLabel(replySource) {
   // 命中岗位类型/否决词之后的两个动作：卡片点拒绝、开口就拒绝
   if (replySource === 'reject_contact') return '拒绝交换联系方式';
   if (replySource === 'family_filter') return '岗位类型·拒绝';
+  // 线下面试那一路：策略层判成到场面试后去点平台「拒绝」，盘上 22 条一直没有中文名
+  if (replySource === 'policy') return '线下面试·拒绝';
   // 这两类记录盘上已有 27 条，以前没有中文名，界面上直接印出 scam_filter 这种内部键
   if (replySource === 'scam_filter') return '骗子过滤·婉拒';
   if (replySource === 'backfill') return '补发简历';
@@ -4366,6 +4369,7 @@ function getReplySourceClass(replySource) {
   if (replySource === 'contact') return 'ai';
   if (replySource === 'reject_contact') return 'skip';
   if (replySource === 'family_filter') return 'skip';
+  if (replySource === 'policy') return 'skip';
   return '';
 }
 
@@ -5139,8 +5143,14 @@ function applyReplyFilter() {
     newG.records = filteredRecords;
     newG.messages = filteredMessages;
     newG.message_count = filteredRecords.length;
+    // 来源/状态筛的是"我们回过什么"，而 HR 的消息上面一律保留着，
+    // 光靠"分组非空"根本挡不住：实测筛 family_filter 时 1606 个会话还剩 1002 个，
+    // 真相只有 101 个——列出来一大半跟筛选无关，等于没筛。
+    // 所以这两个条件生效时，分组必须至少有一条匹配的记录才留下。
+    newG._要匹配记录 = !!(sourceFilter || statusFilter);
     return newG;
   }).filter(function(g) {
+    if (g._要匹配记录) return (g.records || []).length > 0;
     // 过滤掉空分组
     return (g.records && g.records.length > 0) || (g.messages && g.messages.length > 0);
   });

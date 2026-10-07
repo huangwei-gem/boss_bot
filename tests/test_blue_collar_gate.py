@@ -194,6 +194,26 @@ class 面板Test:
         assert "setVal('aiTitleVetoKeywords',(config.ai.title_veto_keywords||[]).join" in flat
 
 
+    def test_盘上出现过的来源都得有中文名(self, html):
+        """用户在界面上看到的必须是中文标签，不是 scam_filter / policy 这种内部键。
+
+        2026-10-07 发现 policy（线下面试拒绝，盘上 22 条）没有登记；这条锁把整类问题
+        钉住：以后新增 reply_source 忘了配中文名，测试就红。
+        """
+        import json
+        rows = json.loads((ROOT / "data" / "reply_records.json").read_text(encoding="utf-8"))
+        rows = rows if isinstance(rows, list) else (rows.get("records") or [])
+        for src in sorted({r.get("reply_source") for r in rows if r.get("reply_source")}):
+            assert f"replySource === '{src}'" in html, f"{src} 没有中文名，界面会印内部键"
+
+    def test_拒绝类来源都在筛选下拉里(self, html):
+        """筛不到就等于没显示：拒绝的三类都得是下拉里的一个选项。"""
+        for src, label in (("family_filter", "岗位类型拒绝"),
+                           ("reject_contact", "拒绝交换"),
+                           ("policy", "线下面试拒绝")):
+            assert f'<option value="{src}">{label}</option>' in html, f"{src} 不在筛选里"
+
+
 class 回复侧Test:
     def _引擎(self):
         from boss_bot.reply_engine import ReplyEngine

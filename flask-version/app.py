@@ -62,7 +62,7 @@ from boss_bot.greeting import compose_account_default, ensure_account_default
 from boss_bot.main_loop import UnifiedBotLoop, MultiAccountManager
 from boss_bot.self_evolve import SelfEvolveEngine
 from boss_bot.reply_record import (
-    ReplyRecordStore, GreetRecordStore,
+    ReplyRecord, ReplyRecordStore, GreetRecordStore,
     export_reply_records, export_greet_records,
     _get_reply_store, _get_greet_store,
 )
@@ -2259,6 +2259,45 @@ def _chat_id_for_record(chat_index, msg_store, record) -> str:
         if len(hits) == 1:
             return hits[0]["chat_id"]
     return msg_store.chat_id(name, "", job)
+
+
+@app.route("/api/reply_records", methods=["POST"])
+def api_append_reply_record():
+    """让在线面板自己追加一条回复记录（工具/脚本用）。
+
+    为什么非要走接口：面板进程把 reply_records 整份写回磁盘。工具在另一个进程里
+    append 再 save，面板下一次落盘就把它覆盖掉了——2026-10-07 清剿 68 单拒绝，
+    会话气泡（分文件合并写）活下来了，回复记录全没了，前端筛不到。
+    单写者只能是进程内那个 store，所以外部要记账就得走这里。
+    """
+    允许的来源 = {"family_filter", "reject_contact", "policy", "manual", "backfill"}
+    try:
+        data = request.get_json(force=True, silent=True) or {}
+        src = str(data.get("reply_source") or "")
+        if src not in 允许的来源:
+            return jsonify({"status": "error",
+                            "message": f"reply_source 只认 {sorted(允许的来源)}，收到 {src!r}"}), 400
+        if not (data.get("chat_name") or "").strip():
+            return jsonify({"status": "error", "message": "chat_name 不能空"}), 400
+        store = _ensure_reply_store()
+        record = ReplyRecord(
+            timestamp=str(data.get("timestamp") or datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+            chat_name=str(data.get("chat_name")),
+            job_name=str(data.get("job_name") or ""),
+            received_message=str(data.get("received_message") or ""),
+            reply_content=str(data.get("reply_content") or ""),
+            reply_source=src,
+            reply_intent=str(data.get("reply_intent") or "other"),
+            reply_reason=str(data.get("reply_reason") or ""),
+            account_index=int(data.get("account_index") or 0),
+        )
+        store.add(record)
+        socketio.emit("reply_record", record.to_dict())
+        return jsonify({"status": "ok", "chat_name": record.chat_name,
+                        "reply_source": src})
+    except Exception as e:
+        logger.exception("追加回复记录失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 @app.route("/api/reply_records/grouped")

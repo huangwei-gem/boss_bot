@@ -58,3 +58,20 @@ def test_按账号覆盖也认这些键():
     assert got.followup_max_times == 1
     assert got.followup_enabled is False
     assert base.reply.followup_max_times == 2, "覆盖不能漏到全局基准上"
+
+
+def test_跟进话术不许承诺到场():
+    """16:59 真发出去的一条跟进写着"我随时能到岗，想约个时间当面聊聊"。
+
+    跟进轮是模板拼接，不过判据也不过分层拦截——它自己就是最后一个能漏的口子。
+    用户只要线上：每条模板都得明说线上/远程，且不出现到场说法。
+    """
+    from boss_bot.main_loop import FOLLOWUP_LINES
+    from boss_bot.intent import commits_offline_visit
+    到场说法 = ("准时", "到岗", "当面", "过去面", "到公司", "到楼下")
+    for 句 in FOLLOWUP_LINES:
+        填 = 句.format(boss="王女士", company="某某网络", job="线上剪辑")
+        assert commits_offline_visit(填) == "", 填
+        assert not any(k in 填 for k in 到场说法), 填
+        assert ("线上" in 填 or "远程" in 填), f"跟进里得把只找线上这条讲明白：{填}"
+        assert "不耽误您时间" not in 填, "跟进话术里别用拒绝标记，那条会话会被当成已回绝不再跟进"
