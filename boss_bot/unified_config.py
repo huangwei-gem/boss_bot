@@ -406,6 +406,48 @@ class AIProvider:
     timeout: int = 30
 
 
+# 岗位类型否决词：只查岗位标题，不查 JD 正文。
+#
+# 为什么不并进 custom_filter_keywords（那一串是查正文的）：这些字在正文里到处是
+# 顺带一提——"标注快递物流场景的录音""直播间的语音切片""处理快递问题的客服"，
+# 照正文杀就把用户真正要的方向（数据标注／数据分析／线上运营）一起杀掉了。
+# 反过来标题就是岗位的类型，"长白班普工包吃住""快手居家不露脸直播兼职"这种
+# 一眼就不是他要的活。2026-10-07 用户原话：「这种普工进厂的岗位为啥没还统一啊，
+# 还有主播，快递保洁这些你别同意，直接拒绝就行。」
+#
+# 默认值只有这一份，前端不抄副本（抄了之后「恢复默认」会把削弱版写回配置）。
+TITLE_VETO_KEYWORDS_DEFAULT = [
+    # 进厂／普工一族：标题里出现"直招/包吃住"的多半也是这一类
+    # 末尾这几个是 2026-10-07 从盘上补的：当时拦不住的「【白班坐岗】28/H包吃住」
+    # 「免体检小时工…汽配厂」「岳麓区坐班临时工/包住宿」「7000+包吃住（派遣职位）」
+    # 全在这一类里，而带这些字样的线上岗一条都没有（"线上/居家"不会写成"坐岗"）。
+    "普工", "操作工", "技工", "焊工", "钳工", "学徒工", "工厂", "进厂", "车间",
+    "流水线", "电子厂", "分拣", "打包", "装卸", "贴标", "仓管", "倒班", "两班倒",
+    "白班", "夜班", "坐岗", "小时工", "临时工", "汽配厂", "派遣职位",
+    # 主播一族（含规避写法：主包、互动播、团播、露脸、语音厅、陪聊）
+    # "露脸"而不是"不露脸"：BOSS 上这一类既写"不露脸"也写"无需露脸"，
+    # 否定式在这张表里不改变岗位性质（见 intent.title_veto_hit 上面那段）。
+    "主播", "主包", "直播", "互动播", "口播", "带货", "语音厅", "场控", "露脸",
+    "团播", "带播", "陪聊", "情感互动", "聊天室",
+    # 跑腿／配送一族（"提供电动车""站点直招"是骑手岗的标准写法）
+    "快递", "驿站", "骑手", "外卖", "配送", "跑腿", "司机", "代驾", "网约车",
+    "电动车", "站点直招",
+    # 保洁／保安／到店服务一族
+    "保洁", "环卫", "保安", "门卫", "店员", "导购", "服务员", "收银", "传菜",
+    "洗碗", "保姆", "月嫂", "钟点工", "足疗", "按摩", "KTV",
+]
+
+# 标题里同时出现这些职业词时，岗位类型词放行："直播运营助理""电商客服"
+# 是用户点名要的方向，不能被"直播/快递"两个字顺手杀掉。
+# 刻意不放"线上/居家/兼职/可短期"这类修饰词——每个兼职标题都写着它们，
+# 放进去等于这张白名单失效。
+TITLE_VETO_EXEMPT_KEYWORDS = [
+    "客服", "运营", "助理", "标注", "数据", "分析", "剪辑", "后期", "设计",
+    "文案", "翻译", "审核", "录入", "资料", "文员", "会计", "程序", "代码",
+    "测试", "建模", "画图", "策划", "编辑", "招聘", "代练", "打手", "陪玩",
+]
+
+
 @dataclass
 class AIConfig:
     """AI 配置（合并 auto_boss + BOSS-auto-reply-bot）
@@ -445,6 +487,9 @@ class AIConfig:
     api_base: str = "https://apihub.agnes-ai.com/v1"  # 兼容旧格式
     model: str = "agnes-2.5-flash"       # 兼容旧格式
     custom_filter_keywords: list = field(default_factory=list)  # 用户自定义筛选关键词
+    # 岗位类型否决词（只查标题）：默认表见 TITLE_VETO_KEYWORDS_DEFAULT 上面那段注释
+    title_veto_keywords: list = field(
+        default_factory=lambda: list(TITLE_VETO_KEYWORDS_DEFAULT))
     # 只看否决词：AI 的 score/is_match 不再参与放行决定，只有命中自定义筛选词才拦。
     # 用户要"线上兼职先放开量"时用；提示词单独说"别考虑背景"压不住基础提示词那段简历。
     veto_only_match: bool = False
@@ -823,6 +868,9 @@ class UnifiedConfig:
             if "custom_filter_keywords" in ai:
                 self.ai.custom_filter_keywords = normalize_filter_keywords(
                     ai["custom_filter_keywords"])
+            if "title_veto_keywords" in ai:
+                self.ai.title_veto_keywords = normalize_filter_keywords(
+                    ai["title_veto_keywords"])
             if "veto_only_match" in ai:
                 self.ai.veto_only_match = bool(ai["veto_only_match"])
             if "custom_scoring_prompt" in ai:
@@ -1286,6 +1334,7 @@ class UnifiedConfig:
                 "probe_max_per_round": self.ai.probe_max_per_round,
                 "fail_action": self.ai.fail_action,
                 "custom_filter_keywords": list(self.ai.custom_filter_keywords),
+                "title_veto_keywords": list(self.ai.title_veto_keywords),
                 "veto_only_match": bool(self.ai.veto_only_match),
                 "custom_scoring_prompt": self.ai.custom_scoring_prompt,
                 "skip_unhealthy": self.ai.skip_unhealthy,

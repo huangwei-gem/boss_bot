@@ -45,6 +45,9 @@ EXCHANGE_REQUEST_RE = re.compile(
 
 RESUME_SENT_MARK = "[简历已发送]"
 CONTACT_AGREED_MARK = "[已同意交换联系方式]"
+# 普工/主播/快递/保洁这一类点的是「拒绝」——那一行不能还算成"发起交换请求"挂着，
+# 看表的人会以为漏处理了，其实已经当面拒掉了
+CONTACT_DECLINED_MARK = "[已拒绝交换联系方式]"
 # 我们自己的话里出现"加微信"不算对方给了联系方式，只是回应对方的客套
 OUR_OWN_ECHO = ("我稍后添加您微信", "稍后加您微信", "方便的话我加您微信")
 RESUME_ASK_WORDS = ("简历发我", "发份简历", "发一下简历", "投个简历", "简历发一份",
@@ -167,6 +170,7 @@ def contact_rows(chats, greet_rows=None) -> list:
     for chat in chats or []:
         phones, wechats, hinted = [], [], False
         resume_sent = contact_agreed = asked_resume = exchange_requested = False
+        contact_declined = False
         hr_last = ""
         quotes = []
         for msg in chat.get("messages") or []:
@@ -178,6 +182,9 @@ def contact_rows(chats, greet_rows=None) -> list:
                 continue
             if CONTACT_AGREED_MARK in text:
                 contact_agreed = True
+                continue
+            if CONTACT_DECLINED_MARK in text:
+                contact_declined = True
                 continue
             if not _is_from_hr(msg):
                 continue
@@ -194,7 +201,7 @@ def contact_rows(chats, greet_rows=None) -> list:
             if any(w in text for w in RESUME_ASK_WORDS):
                 asked_resume = True
         if not (phones or wechats or hinted or exchange_requested
-                or resume_sent or contact_agreed or asked_resume):
+                or resume_sent or contact_agreed or contact_declined or asked_resume):
             continue
         raw_job = chat.get("job_name") or ""
         parts = split_job_title(raw_job)
@@ -212,6 +219,7 @@ def contact_rows(chats, greet_rows=None) -> list:
             "phones": phones,
             "wechats": wechats,
             "contact_kind": ("卡片已同意" if contact_agreed else
+                             "卡片已拒绝" if contact_declined else
                              "给了号码" if (phones or wechats) else
                              "发起交换请求" if exchange_requested else
                              "说要给没留号" if hinted else ""),

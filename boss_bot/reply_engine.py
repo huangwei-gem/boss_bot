@@ -32,16 +32,25 @@ from boss_bot.config import (
     USER_PROFILE, render_template,
 )
 from boss_bot.rules import RuleEngine
+from boss_bot.unified_config import TITLE_VETO_KEYWORDS_DEFAULT
 from boss_bot.intent import (classify, classify_interview_invite, is_contact_exchange_card,
-                             is_resume_request)
+                             is_resume_request, veto_hit_anywhere)
 from boss_bot.prompts import build_system_prompt, build_user_prompt
 from boss_bot.reply_record import ReplyRecord, ReplyRecordStore, _get_reply_store
 
 logger = logging.getLogger(__name__)
 
+# 岗位类型命中（普工/主播/快递/保洁）时开口就说的拒绝。和骗子话术同一个口径：
+# 只说"只找线上远程"，不报具体方向——对着标注 HR 报"我是做数据分析的"等于把话聊死。
+FAMILY_DECLINE_REPLY = (
+    "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，"
+    "这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~")
+# 我们自己的话里出现过这一句，说明这一单已经当面拒过了；同一会话再复读一遍就是骚扰
+# （骗子过滤那句也以它收尾，两条链共用这一个标记）
+REPLY_REFUSAL_MARK = "就不耽误您时间了"
+
 # 单次 AI 请求超时（秒）。不设超时会在网络异常时长时间挂住回复线程。
-AI_REQUEST_TIMEOUT = 30
-# 一条消息最多尝试几个 AI 接口（容灾链常有二十多个，全试会拖死回复线程）
+AI_REQUEST_TIMEOUT = 30# 一条消息最多尝试几个 AI 接口（容灾链常有二十多个，全试会拖死回复线程）
 AI_MAX_ATTEMPTS = 4
 
 # 意图 -> 动作/话术模板（从个人画像渲染占位符）
@@ -358,6 +367,10 @@ class ReplyEngine:
         self._ai_max_tokens: int = config.AI_MAX_TOKENS
         self._ai_fail_action: str = config.AI_FAIL_ACTION
         self._ai_rate_limit_wait: int = config.AI_RATE_LIMIT_WAIT
+        # 岗位类型否决词（只查标题）与正文否决词：主循环热重载按配置刷新，
+        # 默认给代码那一份，保证裸构造的引擎也拦得住普工/主播这一类。
+        self._title_veto_keywords = list(TITLE_VETO_KEYWORDS_DEFAULT)
+        self._body_veto_keywords: list = []
 
     # ---------- 决策入口 ----------
 
@@ -539,7 +552,7 @@ class ReplyEngine:
                 )
                 return ("text", reply, meta)
 
-        # ── 0.7. 现场/线下的面试邀请先于关键词规则定罪 ──
+        # ── 0.6. 现场/线下的面试邀请先于关键词规则定罪 ──
         # 规则表里 '面试' 是子串匹配，卡片正文"邀请您现场面试"、HR 那句
         # "什么时候方便过来面试呢"都会被它接走，回一句"工作日下午都可以安排面试"
         # ——实测 10-06 00:33 / 01:21 / 13:43 三单线下面试就是这么当面应下来的。
@@ -555,6 +568,43 @@ class ReplyEngine:
                 reply_reason="只找线上兼职，现场/线下的面试邀请去点平台上的「拒绝」",
             )
             return ("reject_interview", None, meta)
+
+        # ── 0.7. 岗位类型硬否决：普工/主播/快递/保洁这一类，开口就是拒绝 ──
+        # 这些会话不是我们投的，是 HR 主动找上门的（2026-10-07 盘上：长白班普工、
+        # 桶装水配送、店员直招、蓝思普工、主包语音厅、足疗按摩师全都没有打招呼记录）。
+        # 以前这一层什么都没有：AI 对着"两班倒可以接受吗"回"好的，我来添加您的微信号"
+        # （08:10 蓝思那条），等于当面应下了进厂的活。
+        # 卡片不在这里回话——那张有「拒绝」按钮，交给点按钮那条分支，
+        # 不然文字和按钮各来一遍。
+        if latest and not is_contact_exchange_card(latest):
+            family_hit = veto_hit_anywhere(self._title_veto_keywords,
+                                           self._body_veto_keywords,
+                                           title=job_name or "", text=latest)
+            if family_hit:
+                if any(REPLY_REFUSAL_MARK in str(m.get("text") or "")
+                       for m in history if m.get("is_mine")):
+                    reason = f"这一类岗位（「{family_hit}」）已经拒绝过了，不再重复"
+                    logger.info(f"[岗位类型过滤] {reason}")
+                    meta["source"] = "family_filter"
+                    self._log_decision(chat_name, latest, meta, "none", decision_start)
+                    self._add_record(
+                        chat_name=chat_name, job_name=job_name, received_message=latest,
+                        reply_content=None, reply_source="skip",
+                        reply_intent=meta["intent"], reply_reason=reason,
+                        is_skipped=True, skip_reason=reason,
+                    )
+                    return ("none", None, meta)
+                reason = f"岗位类型命中「{family_hit}」，只找线上兼职"
+                logger.info(f"[岗位类型过滤] {reason}")
+                meta["source"] = "family_filter"
+                meta["intent"] = meta.get("intent") or "other"
+                self._log_decision(chat_name, latest, meta, "text", decision_start)
+                self._add_record(
+                    chat_name=chat_name, job_name=job_name, received_message=latest,
+                    reply_content=FAMILY_DECLINE_REPLY, reply_source="family_filter",
+                    reply_intent=meta["intent"], reply_reason=reason,
+                )
+                return ("text", FAMILY_DECLINE_REPLY, meta)
 
         # ── 1. 关键词规则直通（最高优先级）──
         if latest:

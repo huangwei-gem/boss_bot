@@ -40,6 +40,8 @@ from boss_bot.browser_launcher import BrowserManager, BOSS_AUTH_COOKIES
 from boss_bot.greet_engine import (GreetEngine, GREETING_MISSING_REASON,
                                    in_probe_band)
 from boss_bot.reply_engine import ReplyEngine, conversation_rejected
+from boss_bot.intent import veto_hit_anywhere
+from boss_bot.contact_ledger import CONTACT_DECLINED_MARK
 from boss_bot.page_handler import BossChatHandler
 from boss_bot.pending_resume import pending_resume_asks, resume_already_sent
 from boss_bot.state_store import StateStore
@@ -47,7 +49,8 @@ from boss_bot.stats import Stats
 from boss_bot.notify import Notifier
 from boss_bot.message_store import MessageStore
 from boss_bot.reply_queue import (chat_state, inbound_body, owed_replies,
-                                  followup_due, mark_followed)
+                                  followup_due, mark_followed,
+                                  worth_following_up)
 from boss_bot.self_evolve import SelfEvolveEngine
 from boss_bot.metrics import get_metrics
 
@@ -1924,18 +1927,12 @@ class UnifiedBotLoop:
         convs = [c for c in self._msg_store.get_all_chats_detail()
                  if c.get("account_index") == self.account_index]
 
-        def worth_chasing(c):
-            """只对真聊上过话的人追。
-
-            存档里有一类孤儿文件：整份对话只有一条我们自己写的 [简历已发送]，
-            公司名也空着（补扫那条链 append_bot_message 没带 company）。
-            给从没理过我们的 HR 群发"约面试"是骚扰，也最容易踩反爬。
-            """
-            if not (c.get("company") or "").strip():
-                return False
-            return any(inbound_body(m) for m in c.get("messages") or [])
-
-        convs = [c for c in convs if worth_chasing(c)]
+        # 只对真聊上过话、而且这一类岗位我们还没判死的会话追：
+        # 孤儿存档（没公司名、HR 从没开口）追过去是骚扰；普工/主播那一类
+        # 前面刚拒完，后脚问"还在招人吗"就是自己打自己脸。
+        convs = [c for c in convs
+                 if worth_following_up(c, self.config.ai.title_veto_keywords,
+                                       self.config.ai.custom_filter_keywords)]
         due = followup_due(convs, self._followup_state, now=now,
                            after_hours=cfg.followup_after_hours,
                            gap_hours=cfg.followup_gap_hours,
@@ -2391,6 +2388,56 @@ class UnifiedBotLoop:
             ai_model="", intent=meta.get("intent", ""), status="replied")
         return True
 
+    def _decline_contact_card(self, name, job_name, chat_company,
+                              latest_other_msg, meta, hit) -> bool:
+        """命中岗位类型的那张交换卡片：点「拒绝」，绝不点「同意」。
+
+        只点按钮、不再追一句话：卡片本身已经把"我不同意"报给平台了，紧接着再发
+        一条文字，两个号各发一遍就成了追着人说话。点不到（已经处理过）只记跳过。
+        """
+        if self._dry_run("本应拒绝交换联系方式卡片",
+                         f"[{name}]（{job_name or '未知岗位'}）命中「{hit}」"):
+            return False
+        self._reply_engine.wait_human_delay()
+        if self._chat_handler.decline_contact_exchange():
+            note = CONTACT_DECLINED_MARK
+            self._stats.record_reply(source=meta.get("source", "intent"),
+                                     action="reject_contact")
+            self._msg_store.append_bot_message(
+                name, note, job_name,
+                reply_source="reject_contact", action="reject_contact",
+                company=chat_company,
+            )
+            self._reply_engine._add_record(
+                chat_name=name, job_name=job_name,
+                received_message=latest_other_msg, reply_content=note,
+                reply_source="reject_contact", reply_intent=meta.get("intent", ""),
+                reply_reason=f"岗位类型命中「{hit}」，交换联系方式的卡片已点拒绝",
+            )
+            self._emit_reply_event(
+                contact_name=name, job_name=job_name,
+                message_received=latest_other_msg, reply_sent=note,
+                ai_model="", intent=meta.get("intent", ""),
+                status="replied",
+            )
+            self._log("INFO", f"⛔ 命中岗位类型「{hit}」，已拒绝交换联系方式")
+        else:
+            reason = f"卡片上没找到可点的「拒绝」（可能已经处理过），没有真的拒绝"
+            self._log("WARN", f"⏭️ [{name}] {reason}")
+            self._reply_engine._add_record(
+                chat_name=name, job_name=job_name,
+                received_message=latest_other_msg, reply_content=None,
+                reply_source="skip", reply_intent=meta.get("intent", ""),
+                reply_reason=reason, is_skipped=True, skip_reason=reason,
+            )
+            self._emit_reply_event(
+                contact_name=name, job_name=job_name,
+                message_received=latest_other_msg, reply_sent="",
+                ai_model="", intent=meta.get("intent", ""),
+                status="skipped",
+            )
+        return True
+
     def _handle_reply_action(self, action, content, meta, name, job_name,
                              latest_other_msg, chat_company="") -> bool:
         """执行本次回复并落回复记录。
@@ -2486,6 +2533,18 @@ class UnifiedBotLoop:
                     reply_reason=reason, is_skipped=True, skip_reason=reason,
                 )
                 return True
+            # 普工/主播/快递/保洁这一类：号码交出去就收不回来，卡片只准点「拒绝」。
+            # 这些会话大多不是我们投的，是 HR 主动找上门的，所以闸门只能设在发送点，
+            # 指望投递侧拦不住（2026-10-07 盘上 6 张这一类的卡片全被点了同意）。
+            # 标题两道表都过（岗位类型词 + 否决词），消息正文只过否决词那一遍：
+            # 「【白班坐岗】28/H包吃住」这种类型就写在标题里，光过岗位类型词会漏。
+            # 闸门排在演练判断之前，演练日志才不会报反。
+            hit = veto_hit_anywhere(self.config.ai.title_veto_keywords,
+                                    self.config.ai.custom_filter_keywords,
+                                    title=job_name, text=latest_other_msg)
+            if hit:
+                return self._decline_contact_card(name, job_name, chat_company,
+                                                  latest_other_msg, meta, hit)
             if self._dry_run("本应同意交换联系方式", f"[{name}]（{job_name or '未知岗位'}）"):
                 return False
             self._reply_engine.wait_human_delay()
@@ -2708,6 +2767,8 @@ class UnifiedBotLoop:
                     self._ai_providers_fp = fp
                     self._greet_engine._ai_analyzer = None
                 self._greet_engine._ai_custom_filter_keywords = self.config.ai.custom_filter_keywords
+                self._greet_engine._ai_title_veto_keywords = list(
+                    self.config.ai.title_veto_keywords)
                 self._greet_engine._ai_custom_scoring_prompt = self.config.ai.custom_scoring_prompt
 
             if self._reply_engine:
@@ -2720,6 +2781,12 @@ class UnifiedBotLoop:
                 self._reply_engine._ai_max_tokens = self.config.ai.max_tokens
                 self._reply_engine._ai_fail_action = self.config.ai.fail_action
                 self._reply_engine._ai_rate_limit_wait = self.config.ai.rate_limit_wait
+                # 岗位类型词/否决词也要跟着热重载：面板改了词框，运行中的回复轮
+                # 下一句就得按新表判，不能等重启
+                self._reply_engine._title_veto_keywords = list(
+                    self.config.ai.title_veto_keywords)
+                self._reply_engine._body_veto_keywords = list(
+                    self.config.ai.custom_filter_keywords)
             if self._self_evolve:
                 self._self_evolve.enabled = self.config.self_evolve_enabled
 

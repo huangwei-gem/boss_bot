@@ -339,6 +339,7 @@ class MaxTokensTest:
         e._resume_cfg = {}
         e._analyze_max_tokens = 1900
         e._ai_judge_timeout = 12
+        e._ai_title_veto_keywords = []   # 同上：_apply_ai_config 算出来的字段
         e._log = lambda *a: None
         chain = e._init_ai()
         assert chain.analyze_max_tokens == 1900

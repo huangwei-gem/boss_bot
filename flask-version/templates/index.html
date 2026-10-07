@@ -966,6 +966,11 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
           <input class="side-form-input" id="customFilterKeywords" type="text" placeholder="输入筛选关键词，逗号或顿号分隔，如：主播、地推、需坐班" style="width:100%;box-sizing:border-box" onchange="onCustomAiChange()">
           <div class="side-hint" title="这些关键词会追加到 AI 打分提示词里，让它额外关注这些条件；一条一个词，逗号/顿号/分号都能分">追加进打分提示词，逗号或顿号分隔</div>
         </div>
+        <div class="acc-field-row acc-stack" style="margin-top:8px">
+          <label style="font-size:12px;font-weight:600">岗位类型词（只看岗位标题）</label>
+          <input class="side-form-input" id="aiTitleVetoKeywords" type="text" placeholder="普工、主播、直播、快递、保洁、骑手" style="width:100%;box-sizing:border-box" onchange="onCustomAiChange()">
+          <div class="side-hint" title="只查岗位标题，命中就不投、HR 发来交换微信/电话的卡片也只点「拒绝」。刻意不查 JD 正文：正文里"标注快递场景""直播间语音切片"到处都是，照正文杀会把数据标注、线上运营这些真正要的方向一起杀掉。标题里同时带"客服/运营/标注/剪辑"这类职业词的放行（直播运营助理、电商客服）">命中就不投，交换联系方式的卡片也只点拒绝；标题带客服/运营/标注这类职业词时放行</div>
+        </div>
         <div class="acc-field-row" style="margin-top:6px">
           <label for="aiVetoOnly" style="font-size:12px;font-weight:600">只看否决词</label>
           <div class="acc-inline">
@@ -1174,6 +1179,8 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
                 <option value="default">兜底回复</option>
                 <option value="followup">主动跟进</option>
                 <option value="contact">同意交换</option>
+                <option value="reject_contact">拒绝交换</option>
+                <option value="family_filter">岗位类型拒绝</option>
                 <option value="manual">人工发送</option>
                 <!-- 盘上真实存在这几类，缺一项就筛不到 -->
                 <option value="greet">机器招呼</option>
@@ -1381,6 +1388,7 @@ function renderAiConfig() {
   setVal('aiProbeMaxPerRound', typeof config.ai.probe_max_per_round === 'number'
     ? config.ai.probe_max_per_round : 5);
   setVal('customFilterKeywords', (config.ai.custom_filter_keywords || []).join('、'));
+  setVal('aiTitleVetoKeywords', (config.ai.title_veto_keywords || []).join('、'));
   document.getElementById('aiVetoOnly').checked = !!config.ai.veto_only_match;
   setVal('customScoringPrompt', config.ai.custom_scoring_prompt || '');
   const badge = document.getElementById('aiBadge');
@@ -1686,6 +1694,8 @@ function onAiChange() {
 function onCustomAiChange() {
   if (!config.ai) config.ai = {};
   config.ai.custom_filter_keywords = document.getElementById('customFilterKeywords').value
+    .split(/[，,、;；\n]+/).map(function(s){return s.trim();}).filter(function(s){return s.length > 0;});
+  config.ai.title_veto_keywords = document.getElementById('aiTitleVetoKeywords').value
     .split(/[，,、;；\n]+/).map(function(s){return s.trim();}).filter(function(s){return s.length > 0;});
   config.ai.custom_scoring_prompt = document.getElementById('customScoringPrompt').value.trim();
   config.ai.veto_only_match = document.getElementById('aiVetoOnly').checked;
@@ -4333,6 +4343,9 @@ function getReplySourceLabel(replySource) {
   if (replySource === 'rejection') return '拒绝接受';
   if (replySource === 'followup') return '主动跟进';
   if (replySource === 'contact') return '同意交换联系方式';
+  // 命中岗位类型/否决词之后的两个动作：卡片点拒绝、开口就拒绝
+  if (replySource === 'reject_contact') return '拒绝交换联系方式';
+  if (replySource === 'family_filter') return '岗位类型·拒绝';
   // 这两类记录盘上已有 27 条，以前没有中文名，界面上直接印出 scam_filter 这种内部键
   if (replySource === 'scam_filter') return '骗子过滤·婉拒';
   if (replySource === 'backfill') return '补发简历';
@@ -4351,6 +4364,8 @@ function getReplySourceClass(replySource) {
   if (replySource === 'scam_filter') return 'skip';
   if (replySource === 'backfill') return 'ai';
   if (replySource === 'contact') return 'ai';
+  if (replySource === 'reject_contact') return 'skip';
+  if (replySource === 'family_filter') return 'skip';
   return '';
 }
 

@@ -12,12 +12,20 @@
 import re
 from datetime import datetime, timedelta
 
+from boss_bot.intent import veto_hit_anywhere
+
 # 平台自己塞进会话的卡片，回它等于对着空气说话（实测 248/303 张卡片都是这一句）
 NOISE_CARDS = ("竞争者PK", "查看详细分析", "请求已发送", "已发送给Boss",
                "AI自动沟通", "AI生成回复", "点击预览附件简历", "对方向你发送了")
 # 要我们表态的卡片：同意与否直接决定能不能换到微信/电话/面试
 ACTION_CARDS = ("附件简历，您是否同意", "交换微信", "电话号码，您是否同意",
                 "是否接受此工作地点", "互换电话", "电话联系TA")
+
+# 我们自己的收尾话术里带这几串，说明这一单已经当面拒过了：岗位类型拒绝
+# （reply_engine.FAMILY_DECLINE_REPLY）、线下面试拒绝（main_loop.OFFLINE_INTERVIEW_DECLINE）。
+# 追这种会话等于前脚说"不考虑"、后脚问"还在招人吗"。
+# 文案改了要同步这里——tests/test_blue_collar_gate.py 有一致性锁。
+REFUSAL_ENDINGS = ("就不耽误您时间了", "不占用您的时间", "先放弃")
 
 
 def msg_body(m: dict) -> str:
@@ -146,6 +154,28 @@ def owed_replies(chats, now=None, max_age_hours=72, limit=15):
     return out[:limit]
 
 
+def worth_following_up(chat, title_keywords=(), body_keywords=()) -> bool:
+    """这一会话值不值得去追一句"还在招人吗"。
+
+    两条否决：
+    1. 连公司名都空着（补扫那条链以前没带 company）、或 HR 从没开过口的孤儿存档——
+       给从没理过我们的 HR 发"约面试"是骚扰，也最容易踩反爬；
+    2. 岗位类型命中：普工/主播/快递/保洁这一类我们已经判死不投了，
+       再去追一句等于自己打自己脸。判据和回复轮那一层完全同一套（veto_hit_anywhere），
+       否则就会出现"文字拒了但还在被追"的自相矛盾（2026-10-07 11:57 那条
+       「【白班坐岗】28/H包吃住…」就是这么追出去的）。
+    """
+    if not (chat.get("company") or "").strip():
+        return False
+    bodies = [inbound_body(m) for m in _sorted(chat.get("messages") or [])]
+    bodies = [b for b in bodies if b]
+    if not bodies:
+        return False
+    return not veto_hit_anywhere(title_keywords, body_keywords,
+                                 title=chat.get("job_name") or "",
+                                 text=bodies[-1])
+
+
 def followup_due(chats, state, now=None, after_hours=8, gap_hours=24,
                  max_times=2, within_days=4, limit=6):
     """我们说完对方就沉默的会话——要追，不然漏斗永远停在"已沟通"。
@@ -158,6 +188,10 @@ def followup_due(chats, state, now=None, after_hours=8, gap_hours=24,
     for c in chats or []:
         kind, info = chat_state(c.get("messages") or [], now, c.get("updated_at") or "")
         if kind != "follow":
+            continue
+        # 上一句就是我们自己说的"这个不考虑了"，再追一句"还在招人吗"就是反悔骚扰
+        # （2026-10-07 09:54 账号2 真的对一单不露脸主播追过）
+        if any(mark in (info.get("said") or "") for mark in REFUSAL_ENDINGS):
             continue
         idle = now - info.get("at", datetime.min)
         if idle < timedelta(hours=after_hours) or idle > timedelta(days=within_days):

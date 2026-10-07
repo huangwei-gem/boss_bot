@@ -1417,6 +1417,48 @@ class BossChatHandler:
             logger.error(f"点交换联系方式卡片的同意失败: {e}")
             return False
 
+    def decline_contact_exchange(self) -> bool:
+        """点掉那张交换联系方式卡片上的「拒绝」。
+
+        和 accept_contact_exchange 同一套定位（只认卡片内部那两枚按钮、只认看得见的），
+        差别只在按钮文字。这一枚点下去是真的替用户把这次交换回绝掉，
+        所以调用方必须先过岗位类型闸门；卡片已经处理过时返回 False，
+        绝不退而求其次去点页面上别的同名按钮。
+        """
+        try:
+            result = self.page.run_js('''(
+                function() {
+                    function vis(el) {
+                        return !!(el && el.getClientRects && el.getClientRects().length);
+                    }
+                    var cards = document.querySelectorAll(".message-card-wrap");
+                    var hit = null;
+                    for (var i = 0; i < cards.length; i++) {
+                        var t = cards[i].querySelector(".message-card-top-title");
+                        var tx = t ? (t.textContent || "") : "";
+                        if (tx.indexOf("是否同意") < 0) continue;
+                        var isContact = tx.indexOf("交换") >= 0 || tx.indexOf("联系方式") >= 0
+                            || tx.indexOf("电话号码") >= 0 || tx.indexOf("微信号码") >= 0;
+                        if (!isContact || tx.indexOf("简历") >= 0) continue;
+                        hit = cards[i];
+                    }
+                    if (!hit) return "no-card";
+                    var btns = hit.querySelectorAll(".message-card-buttons .card-btn");
+                    for (var j = 0; j < btns.length; j++) {
+                        if ((btns[j].textContent || "").trim() === "拒绝" && vis(btns[j])) {
+                            btns[j].click();
+                            return "clicked";
+                        }
+                    }
+                    return "no-reject-btn";
+                }
+            )()''', as_expr=True)
+            logger.info(f"交换联系方式卡片点拒绝结果: {result}")
+            return result == "clicked"
+        except Exception as e:
+            logger.error(f"点交换联系方式卡片的拒绝失败: {e}")
+            return False
+
     def open_interview_invite(self) -> bool:
         """把面试邀请卡片点开（卡片上只有"立即查看"，拒绝按钮在展开之后才出现）。
 

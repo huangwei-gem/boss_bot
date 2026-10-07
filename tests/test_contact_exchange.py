@@ -127,6 +127,9 @@ class 落账Test:
         lp = UnifiedBotLoop.__new__(UnifiedBotLoop)
         lp.config = SimpleNamespace(
             dry_run=dry_run,
+            # 这一组只验开关/演练/点到点不到，岗位类型闸门给空表（默认表在
+            # tests/test_blue_collar_gate.py 里单独验，别把两件事搅在一起）
+            ai=SimpleNamespace(title_veto_keywords=[], custom_filter_keywords=[]),
             reply=SimpleNamespace(accept_contact_exchange=accept))
         lp.records = []
         lp.events = []

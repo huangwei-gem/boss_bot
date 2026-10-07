@@ -119,7 +119,8 @@ def main():
         check("岗位不带「查看职位」这种侧栏尾巴",
               all("查看职位" not in (r["job_title"] or "") for r in all_rows))
         check("联系方式一列有说法",
-              row_check["kind"] in ("卡片已同意", "给了号码", "发起交换请求", "说要给没留号"),
+              row_check["kind"] in ("卡片已同意", "卡片已拒绝", "给了号码", "发起交换请求",
+                                    "说要给没留号"),
               row_check["kind"])
 
         nums = js(page, "return document.querySelectorAll('#contactTableBody .ledger-num').length;")

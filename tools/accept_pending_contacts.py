@@ -26,8 +26,10 @@ sys.path.insert(0, str(ROOT / "tools"))
 from decline_offline_interviews import PANEL, attach  # noqa: E402
 
 from boss_bot.contact_ledger import contact_rows, extract_contacts, _message_text  # noqa: E402
+from boss_bot.intent import veto_hit_anywhere  # noqa: E402
 from boss_bot.message_store import MessageStore  # noqa: E402
 from boss_bot.page_handler import BossChatHandler  # noqa: E402
+from boss_bot.unified_config import UnifiedConfig  # noqa: E402
 
 # 只探不点：报告这一行现在到底有没有可同意的卡片
 PROBE_JS = '''(
@@ -72,6 +74,19 @@ def pending_rows(limit):
     return todo[:limit], len(todo)
 
 
+def family_hit(row, job_name=""):
+    """这一行是不是普工/主播/快递/保洁那一类（判据和线上回复轮完全同一套）。
+
+    补点工具以前是无条件点「同意」的：一跑就把这批号的微信/电话全交出去，
+    而用户明确说过这一类「别同意，直接拒绝就行」。
+    """
+    cfg = UnifiedConfig.load().apply_account(int(row.get("account_index") or 0))
+    title = job_name or row.get("job_name", "")
+    return veto_hit_anywhere(cfg.ai.title_veto_keywords,
+                             cfg.ai.custom_filter_keywords,
+                             title=title, text=row.get("hr_last_message", ""))
+
+
 def run_one(row, send):
     account = int(row.get("account_index") or 0)
     name, company = row["chat_name"], row["company"]
@@ -82,6 +97,14 @@ def run_one(row, send):
         # 并且用完会清框。这里先打一遍的话，人正好在屏幕上时那条筛条没人清。
         if not handler.enter_chat({"name": name, "company": company, "index": -1}):
             return name, company, "跳过：搜索也没把这行会话找出来", ""
+        live_job = handler.get_job_name() or ""
+        hit = family_hit(row, live_job)
+        if hit and send:
+            if not handler.decline_contact_exchange():
+                return name, company, f"跳过：命中「{hit}」但没点到「拒绝」", ""
+            return name, company, f"已拒绝（命中「{hit}」）", live_job[:30]
+        if hit:
+            return name, company, f"该拒绝：命中岗位类型「{hit}」", live_job[:30]
         if not send:
             titles = json.loads(handler.page.run_js(PROBE_JS, as_expr=True) or "[]")
             has = any("是否同意" in t for t in titles)
@@ -145,11 +168,14 @@ def main():
             print("恢复回复轮:", requests.post(f"{PANEL}/api/resume_reply").json(), flush=True)
 
     agreed = 0
+    declined = 0
     for name, company, verdict, extra in results:
         if verdict == "已同意":
             agreed += 1
+        if verdict.startswith("已拒绝"):
+            declined += 1
         print(f"  {name}｜{company}: {verdict}" + (f" — {extra}" if extra else ""))
-    print(f"\n同意 {agreed} / 处理 {len(results)}")
+    print(f"\n同意 {agreed} / 拒绝 {declined} / 处理 {len(results)}")
     return 0
 
 
