@@ -1756,6 +1756,16 @@ class UnifiedBotLoop:
                 self._log("INFO", f"另外从存档补了 {owed_n} 个欠着的会话"
                                   f"（红点已被启动全量同步清掉）")
 
+            # 先排空"待评估"再处理本轮：要评估的会话多半根本不在这一轮候选里
+            # ——HR 回过话之后我们那轮常走跳过分支，就再也不会进 get_reply，
+            # 效果统计与 lessons 的支撑量一直饿着（2026-10-07 挂着 48 条）。
+            if self._self_evolve and self._self_evolve.enabled:
+                try:
+                    self._self_evolve.drain_pending_evaluations(
+                        self._msg_store.get_all_chats_detail())
+                except Exception as e:
+                    self._log("WARN", f"排空待评估失败（不影响本轮回复）: {e}")
+
             if not candidates:
                 self._log("DEBUG", "无未读消息")
             else:

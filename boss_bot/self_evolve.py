@@ -813,6 +813,42 @@ class SelfEvolveEngine:
             self._save_internal()
         self._log("INFO", f"发送闸门拦下一条草稿（{(reason or '')[:60]}），已留痕")
 
+    def drain_pending_evaluations(self, chats: List[dict], limit: int = 20) -> int:
+        """按会话回头消费"待评估"，别只等下一次 get_reply 顺手带上。
+
+        2026-10-07 盘上 48 条一直挂着：evaluate_previous_replies 只在**同一会话再次进
+        get_reply** 时按 chat_name 找未评估记录，可 HR 回过话之后我们那轮常走跳过分支
+        （防重复、已处理、冷却），根本不再进 get_reply —— 效果统计与 lessons 的支撑量
+        就一直饿着（refine 报"看到 7 类模式、落库 0 条"）。
+        评估本身是正则判词，不调模型，所以每轮限量排空即可，不会拖长回复轮。
+        """
+        if not self.enabled or not chats:
+            return 0
+        with self._lock:
+            挂着 = sorted({r.get("chat_name") for r in self._reply_records
+                          if not r.get("evaluated") and r.get("chat_name")})
+        if not 挂着:
+            return 0
+        消息按会话 = {}
+        for c in chats or []:
+            名 = c.get("chat_name")
+            if 名 in 挂着 and 名 not in 消息按会话:
+                消息按会话[名] = c.get("messages") or []
+        做 = 0
+        for 名 in 挂着:
+            if 做 >= limit:
+                break
+            if 名 not in 消息按会话:
+                continue          # 存档里找不到这个会话（多半是旧的已清理）
+            self.evaluate_previous_replies(消息按会话[名], chat_name=名)
+            做 += 1
+        # 超时未答那一类原先只在触发优化时才扫，于是永远留在 pending 里占数
+        self.sweep_ignored_replies()
+        if 做:
+            self._log("INFO", f"排空待评估：本次消费 {做} 个会话，剩余 "
+                             f"{self.get_pending_evaluations()} 条")
+        return 做
+
     def evaluate_previous_replies(self, new_messages: List[dict], chat_name: str = ""):
         """收到新消息时，评估之前 AI 回复的效果。
 
