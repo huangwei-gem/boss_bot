@@ -40,6 +40,10 @@ logger = logging.getLogger("browser_launcher")
 _IS_MACOS = platform.system().lower() == "darwin"
 _IS_WINDOWS = platform.system().lower() == "windows"
 
+# 本进程起过的浏览器：端口 → 是否无头。cloakbrowser 会伪装 UA，问浏览器问不出
+# "是不是无头"，只能自己记（界面/监控显示真实模式用的就是这份）。
+LAUNCHED_MODES: dict = {}
+
 # 实测承载 BOSS 直聘登录态的 Cookie 名（缺这些或过期即需要重新登录）
 BOSS_AUTH_COOKIES = ("wt2", "zp_at", "bst", "wbg")
 
@@ -598,6 +602,44 @@ def _get_ws_url(host: str, port: int, retries: int = 5) -> str:
     return ""
 
 
+def browser_mode(port: int, host: str = "127.0.0.1") -> dict:
+    """这个调试端口上的浏览器：在不在跑、是不是无头、按什么判的。
+
+    两个坑，都是实测撞出来的：
+    1) 界面上原来只有"无头"开关，说的是**配置**；浏览器是启动那一刻定型的，
+       改完没重启、或者那个端口上根本是别人的浏览器（9223 被别的项目占过），
+       光看开关一律看不出来——所以我原来只能去翻进程命令行。
+    2) **不能拿 UA 判无头**：cloakbrowser 是反指纹的，`--headless=new` 起来之后
+       UA 里的 HeadlessChrome 被抹平了（实测 9222 进程命令行 headless=YES，
+       而 /json/version 报的是普通 Chrome/146 UA）。所以无头与否以我们自己
+       启动时记下的那份为准，UA 只用来发现"端口上是别人起的浏览器"。
+    """
+    out = {"running": False, "headless": None, "port": port,
+           "browser": "", "依据": "", "与启动记录不符": False}
+    try:
+        with urlopen(f'http://{host}:{port}/json/version', timeout=3) as resp:
+            data = json.loads(resp.read())
+    except Exception as e:
+        logger.debug(f"读 {port} 的浏览器形态失败（多半没在跑）: {e}")
+        out["headless"] = LAUNCHED_MODES.get(port)          # 端口没答，但记过就是起过
+        out["依据"] = "启动记录（端口未响应）"
+        return out
+    ua = str(data.get("User-Agent") or "")
+    browser = str(data.get("Browser") or "")
+    launched = LAUNCHED_MODES.get(port)
+    out["running"] = True
+    out["browser"] = browser
+    if launched is None:
+        # 不是我们起的：只能报 UA 看到的，并说明依据
+        out["headless"] = "Headless" in ua or "Headless" in browser
+        out["依据"] = "UA（不是我们启动的浏览器）"
+    else:
+        out["headless"] = bool(launched)
+        out["依据"] = "本进程启动记录"
+        out["与启动记录不符"] = ("Headless" in ua) and not launched
+    return out
+
+
 def _find_free_port() -> int:
     """找一个空闲端口"""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -881,6 +923,9 @@ def launch_browser(
 ) -> BrowserInstance:
     """启动浏览器（跨平台，支持 Chrome、Edge、Chromium）
 
+    显式给了端口时，把"这次是不是无头启动的"记进 LAUNCHED_MODES（见下方赋值）：
+    cloakbrowser 会抹掉 UA 里的 HeadlessChrome，界面上要显示真实形态只能靠自己这份记录。
+
     Args:
         headless: 是否无头模式
         user_agent: 自定义 User-Agent
@@ -900,6 +945,8 @@ def launch_browser(
         FileNotFoundError: 未找到任何浏览器
         RuntimeError: 浏览器启动失败
     """
+    if port:
+        LAUNCHED_MODES[int(port)] = bool(headless)
     browser_type = (browser_type or "chrome").lower().strip()
 
     # 如果用户没有手动指定路径，自动查找最佳浏览器

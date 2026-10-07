@@ -61,6 +61,7 @@ from boss_bot.greet_engine import account_greeting_ready, account_greeting_mode
 from boss_bot.greeting import compose_account_default, ensure_account_default
 from boss_bot.main_loop import UnifiedBotLoop, MultiAccountManager
 from boss_bot.self_evolve import SelfEvolveEngine
+from boss_bot.browser_launcher import browser_mode
 from boss_bot.reply_record import (
     ReplyRecord, ReplyRecordStore, GreetRecordStore,
     export_reply_records, export_greet_records,
@@ -546,13 +547,22 @@ def api_status():
 
 
 def _enrich_status(data: dict) -> dict:
-    """给每个账号补 cookie 字段，前端状态点因此能随轮询自己更新。"""
+    """给每个账号补 cookie 字段，前端状态点因此能随轮询自己更新。
+
+    browser 那一栏补的是**此刻真跑着的是什么**（在不在、是不是无头、哪个端口）：
+    "无头"开关说的只是配置，浏览器是启动那一刻定型的，两者可以不一致
+    （改完没重启、或者那个端口上根本是别人的浏览器）。
+    """
     try:
         accounts = _ensure_config().greet.accounts
         for acc in data.get("accounts", []):
             idx = acc.get("index", 0)
             if 0 <= idx < len(accounts):
                 acc["cookie"] = _account_cookie_state(idx, account=accounts[idx])
+            try:
+                acc["browser"] = browser_mode(9222 + int(idx))
+            except Exception as e:
+                logger.debug(f"读账号{idx}浏览器形态失败: {e}")
     except Exception:
         pass
     return data

@@ -1017,7 +1017,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
                 <option value="edge">Microsoft Edge</option>
               </select>
             </div>
-            <div class="adv-field-row"><label>无头</label><span id="advHeadless" class="toggle-switch" onclick="toggleAdvBool('headless')"></span></div>
+            <div class="adv-field-row"><label>无头</label><span id="advHeadless" class="toggle-switch" onclick="toggleAdvBool('headless')"></span><span id="advHeadlessReal" style="font-size:11px;color:var(--fg-3rd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="开关说的是配置；这里问的是浏览器本身，启动那一刻就定型了">实际：读取中…</span></div>
             <div class="adv-field-row"><label>后台</label><span id="advBackground" class="toggle-switch" onclick="toggleAdvBool('background')"></span></div>
             <div class="adv-field-row"><label>宽度</label><input class="side-form-input" id="advViewportW" type="number" placeholder="1280" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label>高度</label><input class="side-form-input" id="advViewportH" type="number" placeholder="800" onchange="onAdvChange()"></div>
@@ -5456,8 +5456,33 @@ socket.on('ai_health_done',function(data){
   toast(msg, (data.available||0) > 0 ? 'ok' : 'err', 5000);
   loadAiHealth();
 });
+// 无头开关只说配置，浏览器是启动那一刻定型的：改完没重启、或者那个端口上根本
+// 是别人的浏览器（9223 被别的项目占用过），光看开关会误判。这里把 /api/status
+// 里问浏览器本身拿到的形态贴出来，配置与实际不一致时明说"要重启才生效"。
+function renderHeadlessReality(data) {
+  var el = document.getElementById('advHeadlessReal');
+  if (!el) return;
+  var list = (data && data.accounts) || [];
+  if (!list.length) { el.textContent = '实际：面板未启动'; return; }
+  var parts = [], mismatch = false;
+  list.forEach(function (acc) {
+    var b = acc.browser || {};
+    var tag = '号' + (acc.index + 1);
+    if (!b.running) { parts.push(tag + ' 未起'); return; }
+    parts.push(tag + (b.headless ? ' 无头' : ' 有头') + ':' + b.port);
+    // config 是 let 声明的，不挂在 window 上（和 dataScope 同一个坑），
+    // 从 window 上取属性会永远读到 undefined，不一致判定就成了假话
+    var want = !!(typeof config !== 'undefined' && config && config.browser
+                  && config.browser.headless);
+    if (want !== !!b.headless) mismatch = true;
+  });
+  el.textContent = '实际：' + parts.join('，') + (mismatch ? '（与开关不一致，重启面板才生效）' : '');
+  el.style.color = mismatch ? 'var(--warn)' : 'var(--fg-3rd)';
+}
+
 function applyStatusUpdate(data) {
   if (!data) return;
+  renderHeadlessReality(data);
   if (data.accounts && Array.isArray(data.accounts)) {
     accountStatuses = data.accounts.map(function(acc) {
       // 完整透传：phase / login_reason / 暂停标记 / 当前会话 / 本账号统计
