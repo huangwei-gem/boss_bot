@@ -25,6 +25,9 @@ def _engine():
     eng.running = True
     eng._log = lambda *a, **k: None
     eng._no_drawer_streak = 0
+    eng._no_drawer_recent = []
+    eng._applied_recent = []
+    eng._greet_cooldown_reason = ""
     eng._greet_cooldown_until = 0.0
     eng.browser_manager = MagicMock()
     # 冷却检查在招呼语检查之前，但 _greeting_for 要读账号配置：
@@ -77,13 +80,14 @@ def test_冷却到点就放行():
 def test_计数与停手写在同一条失败路径上():
     """三处必须都在：数次数、到限进冷却、成功清零。少一处就会永远冷却或永远不停。"""
     body = inspect.getsource(GreetEngine._apply_job_inner)
-    assert "self._no_drawer_streak += 1" in body
+    assert "self._note_drawer_fail(" in body
+    assert "self._drawer_quota_hit(" in body
     assert ">= NO_DRAWER_STREAK_LIMIT" in body
     assert "self._greet_cooldown_until = time.time() + NO_DRAWER_COOLDOWN_SEC" in body
     assert "else:\n                    self._no_drawer_streak = 0" in body, \
-        "换了别的失败原因要把计数清零，否则攒够三次就误停"
-    send = inspect.getsource(GreetEngine.send_greeting)
-    assert "self._no_drawer_streak = 0" in send, "投成功要清零"
+        "换了别的失败原因要把连续计数清零，否则攒够三次就误停"
+    投 = inspect.getsource(GreetEngine.send_greeting)
+    assert "self._note_applied()" in 投, "投成功要记账，窗口那份账靠它才判得出来"
 
 
 def test_冷却时长是一个半小时以内():
@@ -200,3 +204,63 @@ def test_没冷却时照常构建任务():
     assert lp._run_greet_round() is False
     assert built, "没冷却就必须照常搜索，别把这条闸门变成永远不投递"
 
+
+
+def _窗口引擎():
+    """按时间窗判额度：失败与成功的时间戳都要能灌进去。"""
+    eng = _engine()
+    eng._no_drawer_recent = []
+    eng._applied_recent = []
+    return eng
+
+
+def test_夹着成功的交替失败也要停手():
+    """2026-10-07 白天那 41 条就是这么漏的：老口径要"连续 3 次"，一次成功就清零。
+
+    真实形状是 失败,成功,失败,成功… 交替——投得动几单、又连着点不出抽屉，
+    这种就是账号层面的额度在限流，不是每个岗位各自的问题。
+    """
+    eng = _窗口引擎()
+    for i in range(8):
+        eng._note_drawer_fail(now=1000.0 + i * 100)
+        if i < 7:
+            eng._note_applied(now=1000.0 + i * 100 + 50)
+    话 = eng._drawer_quota_hit(now=1900.0)
+    assert 话, "交替失败没触发窗口判定，还是会整晚一单一单白试"
+    assert "额度" in 话 and "8" in 话, 话
+
+
+def test_投得动的时候不许误停():
+    """失败 6 次但成功 25 次：说明是偶发页面抖动，不能停 30 分钟。"""
+    eng = _窗口引擎()
+    for i in range(6):
+        eng._note_drawer_fail(now=1000.0 + i * 300)
+    for i in range(25):
+        eng._note_applied(now=1000.0 + i * 70)
+    assert eng._drawer_quota_hit(now=2800.0) == ""
+
+
+def test_窗口外的老账不算():
+    eng = _窗口引擎()
+    for i in range(8):
+        eng._note_drawer_fail(now=1000.0 + i * 1200)      # 每 20 分钟一次，跨 2.6 小时
+    assert eng._drawer_quota_hit(now=1000.0 + 8 * 1200) == "", "只该看窗口内那一截"
+
+
+def test_成功清零只清连续不清窗口():
+    """连续计数清零是对的，窗口里的历史还得留着——否则永远攒不到。"""
+    eng = _窗口引擎()
+    eng._note_drawer_fail(now=1000.0)
+    eng._note_applied(now=1100.0)
+    assert eng._no_drawer_streak == 0
+    assert len(eng._no_drawer_recent) == 1
+
+
+def test_接线还在同一条失败路径上():
+    """窗口判定必须挂在原来那条计数路径里，别另起一处，不然又是一份没人调的孤本。"""
+    import inspect
+    body = inspect.getsource(GreetEngine._apply_job_inner)
+    assert "_note_drawer_fail(" in body
+    assert "_drawer_quota_hit(" in body
+    send = inspect.getsource(GreetEngine.send_greeting)
+    assert "_note_applied(" in send

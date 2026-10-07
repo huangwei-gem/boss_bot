@@ -141,6 +141,12 @@ DISCONNECTED_REASON = "聊天页与浏览器连接已断开（标签页被关或
 NO_DRAWER_REASON = "点了「立即沟通」但聊天抽屉没在这个标签页里出现（URL 仍停在岗位详情页）"
 NO_DRAWER_STREAK_LIMIT = 3
 NO_DRAWER_COOLDOWN_SEC = 30 * 60
+# 光看"连续"不够：2026-10-07 白天 41 单卡在这条上，却是 失败,成功,失败,成功 交替来的
+# ——每夹一次成功就把连续计数清零，于是永远攒不到 3 次，整晚一单一单白试。
+# 窗口判据补上：这段时间里失败够多、成功又很少，就是账号层面的额度在限流。
+NO_DRAWER_WINDOW_SEC = 30 * 60
+NO_DRAWER_WINDOW_LIMIT = 6
+NO_DRAWER_WINDOW_OK_FLOOR = 10
 
 # JD 正文短到这个字数就当作"没写具体工作内容"。数字是现算的，不是拍的：
 # 日志里 934 个取到过 JD 的岗位，正文中位 316 字、p10 也还有 146 字，
@@ -1374,6 +1380,10 @@ class GreetEngine:
         # 这个失败会一直重复，不停手就是整夜每 7 分钟白跑一趟
         self._no_drawer_streak = 0
         self._greet_cooldown_until = 0.0
+        # 时间窗那两份账：抽屉失败的时刻、投成功的时刻（都只留窗口内）
+        self._no_drawer_recent = []
+        self._applied_recent = []
+        self._greet_cooldown_reason = ""
 
         # 城市字典（从 API 捕获）
         self._city_dict = {}
@@ -1819,7 +1829,7 @@ class GreetEngine:
         try:
             success, fail_reason = self._apply_job(job_info)
             if success:
-                self._no_drawer_streak = 0
+                self._note_applied()
                 self.applied_count += 1
                 self._log("SUCCESS", f"✅ 已投递: {job_name}")
                 # _apply_job_inner 在点发送那一刻已经即时记过，这里再记一次
@@ -2370,6 +2380,36 @@ class GreetEngine:
         """
         return max(0.0, self._greet_cooldown_until - (now or time.time()))
 
+    def _note_drawer_fail(self, now=None) -> int:
+        """记一次"点了沟通没出抽屉"：连续计数和时间窗都要记。"""
+        now = now or time.time()
+        self._no_drawer_streak += 1
+        近 = (self._no_drawer_recent or []) + [now]
+        self._no_drawer_recent = [t for t in 近 if now - t <= NO_DRAWER_WINDOW_SEC]
+        return self._no_drawer_streak
+
+    def _note_applied(self, now=None) -> None:
+        """投成功：连续计数清零，但窗口里的旧账要留着。
+
+        只清连续不清窗口是这次的关键——白天那种 失败,成功,失败,成功 的交替，
+        清窗口的话永远攒不到判据，就会一单一单试到深夜。
+        """
+        now = now or time.time()
+        self._no_drawer_streak = 0
+        近 = (self._applied_recent or []) + [now]
+        self._applied_recent = [t for t in 近 if now - t <= NO_DRAWER_WINDOW_SEC]
+
+    def _drawer_quota_hit(self, now=None) -> str:
+        """窗口里失败够多、成功很少 → 卡在账号层面的额度，不是这个岗位。"""
+        now = now or time.time()
+        败 = [t for t in (self._no_drawer_recent or []) if now - t <= NO_DRAWER_WINDOW_SEC]
+        成 = [t for t in (self._applied_recent or []) if now - t <= NO_DRAWER_WINDOW_SEC]
+        if len(败) >= NO_DRAWER_WINDOW_LIMIT and len(成) < NO_DRAWER_WINDOW_OK_FLOOR:
+            return (f"{NO_DRAWER_WINDOW_SEC // 60} 分钟内 {len(败)} 次点了「立即沟通」"
+                    f"都不出聊天抽屉（这段时间只投进 {len(成)} 单），"
+                    f"疑似本号当日沟通额度已用完")
+        return ""
+
     def _apply_job_inner(self, job: dict, _disconnect_retry: int = 0):
         """实际投递逻辑（内部方法）。
 
@@ -2388,9 +2428,8 @@ class GreetEngine:
         # 说明卡的是账号层面的额度，不是这个岗位
         left = self.greet_cooldown_left()
         if left > 0:
-            return False, (f"打招呼已冷却（连续 {self._no_drawer_streak} 次点了「立即沟通」"
-                           f"没出聊天抽屉，疑似本号当日沟通额度用完），"
-                           f"{int(left // 60) + 1} 分钟后重试")
+            return False, (f"打招呼已冷却（{(self._greet_cooldown_reason or "连续 " + str(self._no_drawer_streak) + " 次点了「立即沟通」没出聊天抽屉，疑似本号当日沟通额度用完")}）"
+                           f"，{int(left // 60) + 1} 分钟后重试")
 
         # 招呼语空缺必须在这里拦住，不能等到输入框那步：BOSS 点「沟通」本身就等于
         # 发起招呼（第二种机制还会立刻自动发平台预设文案），先点再发现没配就晚了。
@@ -2818,12 +2857,15 @@ class GreetEngine:
                 reason = chat_failure_reason(snap)
                 self._log("WARN", f"未找到输入框｜{reason}")
                 if reason.startswith(NO_DRAWER_REASON):
-                    self._no_drawer_streak += 1
-                    if self._no_drawer_streak >= NO_DRAWER_STREAK_LIMIT:
+                    连续 = self._note_drawer_fail()
+                    窗口 = self._drawer_quota_hit()
+                    if 连续 >= NO_DRAWER_STREAK_LIMIT or 窗口:
                         self._greet_cooldown_until = time.time() + NO_DRAWER_COOLDOWN_SEC
+                        self._greet_cooldown_reason = (
+                            窗口 or f"连续 {连续} 次点了「立即沟通」都不出聊天抽屉，"
+                                    f"疑似本号当日沟通额度已用完")
                         self._log("WARN",
-                                  f"连续 {self._no_drawer_streak} 次点了「立即沟通」都不出聊天抽屉，"
-                                  f"疑似本号当日沟通额度已用完 —— 打招呼冷却 "
+                                  f"{self._greet_cooldown_reason} —— 打招呼冷却 "
                                   f"{NO_DRAWER_COOLDOWN_SEC // 60} 分钟，别整夜白试；"
                                   f"想立刻确认就在浏览器窗口里手动点一次「立即沟通」")
                 else:
