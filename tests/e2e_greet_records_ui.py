@@ -110,9 +110,14 @@ def open_browser():
 
 
 def scope_chips(page):
-    """DrissionPage 的 css 选择器在这个页面上取不全元素，用 XPath 拿可点的真元素"""
+    """只要数据范围那一组 chip。
+
+    DrissionPage 的 css 选择器在这个页面上取不全元素，用 XPath 拿可点的真元素；
+    而且必须按 data-scope 过滤——判分复盘那组账号切换按钮同用 .scope-chip 类名，
+    取全集时 `-1` 会点到复盘那组的账号0，dataScope 当然不动（实测把这条测成"红"过）。
+    """
     return page.eles("xpath://button[contains(concat(' ', normalize-space(@class), ' '),"
-                     " ' scope-chip ')]")
+                     " ' scope-chip ')][@data-scope]")
 
 
 def click_until_alive(page, locate, idx=0, tries=6):

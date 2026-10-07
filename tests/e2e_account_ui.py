@@ -91,9 +91,16 @@ def main():
         # 口径改过：用户原话是"点击账号2他切换不了"，所以点行必须真切数据范围；
         # 登录这件事仍然只归行尾那个「登录」按钮，两者不能混
         before = js("return String(dataScope)")
-        assert click_until_alive(page, account_rows, 0), "账号行点不动"
-        time.sleep(0.8)
-        after = js("return String(dataScope)")
+        # 点一次不算数：账号区跟着指标轮询整块重建，句柄会在"取元素→点下去"之间失效，
+        # 那一点就空落在这张已经不在树上的节点上（实测点前 all 点后 all 就是这么来的）。
+        # 所以重试到范围真的变了为止，而不是把"点不动"当通过。
+        after = before
+        for _ in range(6):
+            assert click_until_alive(page, account_rows, 0), "账号行点不动"
+            time.sleep(0.8)
+            after = js("return String(dataScope)")
+            if after != before:
+                break
         check("点账号行就切到该账号的数据范围", after == "0" and before != after,
               f"点前 {before} 点后 {after}")
         check("切过去的账号行有高亮",

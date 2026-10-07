@@ -152,19 +152,33 @@ def main():
                 time.sleep(0.8)
             # dataScope 是 let 声明的，挂在脚本作用域不是 window 上，
             # 所以从表里读"号"那一列，别去读 JS 变量
-            state = js(page, """
-                var rows = document.querySelectorAll('#contactTableBody tr');
-                if (!rows.length) return {want: '', rows: 0, bad: 0};
-                var first = rows[0].cells[1].textContent.trim();
-                var bad = 0;
-                rows.forEach(function(tr){
-                  if (tr.cells[1].textContent.trim() !== first) bad++;
-                });
-                return {want: first, rows: rows.length, bad: bad};""")
-            expect = api(f"?account={int(state['want']) - 1}")["total"]
-            check("切账号后表跟着换", state["rows"] == expect,
-                  f"范围 账号{state['want']} 渲染 {state['rows']} / 接口 {expect}")
-            check("表里没有别的号的数据", state["bad"] == 0, f"串号 {state['bad']} 行")
+            expect = None
+            for _ in range(10):
+                state = js(page, """
+                    var rows = [...document.querySelectorAll('#contactTableBody tr')]
+                        .filter(function(tr){ return tr.cells.length > 1; });
+                    // 只数单元格数够的行：表里有"暂无…"这种 colspan 的单格占位行，
+                    // 直接取 cells[1] 会抛 TypeError，把"读不到数据"变成"页面报错"，
+                    // 分不清是产品问题还是测试问题（实测红过一次）
+                    if (!rows.length) return {want: '', rows: 0, bad: 0};
+                    var first = rows[0].cells[1].textContent.trim();
+                    var bad = 0;
+                    rows.forEach(function(tr){
+                      if (tr.cells[1].textContent.trim() !== first) bad++;
+                    });
+                    return {want: first, rows: rows.length, bad: bad};""")
+                if state["want"]:
+                    break
+                time.sleep(0.8)
+            if not state["want"]:
+                # 一行都没渲染出来：这是产品/数据问题，得说人话，
+                # 不能拿 int('') 崩在这里冒充"测试跑过了"
+                check("切账号后台账表里能读到数据", False, "表里一行都没渲染出来")
+            else:
+                expect = api(f"?account={int(state['want']) - 1}")["total"]
+                check("切账号后表跟着换", state["rows"] == expect,
+                      f"范围 账号{state['want']} 渲染 {state['rows']} / 接口 {expect}")
+                check("表里没有别的号的数据", state["bad"] == 0, f"串号 {state['bad']} 行")
             page.get_screenshot(str(SHOTS / "contact_ledger_one_account.png"))
 
         # 回到打招呼记录：tab 切换不能把别的表弄坏
