@@ -26,9 +26,9 @@ def state_dir() -> Path:
 
 
 FAILURE_CODES = (
-    "sent", "skipped_low_score", "already_chatted", "no_chat_button",
-    "auto_greet_dialog", "jd_unreadable", "not_logged_in", "wind_control",
-    "interval_blocked", "error",
+    "sent", "skipped_hard_veto", "skipped_low_score", "already_chatted",
+    "no_chat_button", "auto_greet_dialog", "jd_unreadable", "not_logged_in",
+    "wind_control", "interval_blocked", "error",
 )
 SENT_CODE = "sent"
 ROUND_KEEP_SECONDS = 3 * 86400      # rounds 文件保留 3 天，够跨会话查"这个岗位投过没"

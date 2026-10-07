@@ -656,3 +656,33 @@ class 台账Test:
         html = (ROOT / "flask-version" / "templates" / "index.html").read_text(
             encoding="utf-8")
         assert "reject_contact" in html, "回复来源里少了这一类，界面会显示成空白"
+
+
+class 销售内置Test:
+    """用户 2026-10-07 点名："有些主播销售，工厂啥的直接拒绝就行。"
+
+    销售以前只活在他自己填的否决词框里——面板上一清空（或被按号覆盖）就全漏，
+    所以这一族要进内置默认表，跟主播/普工同一等待遇。
+    """
+
+    要拒的标题 = [
+        "销售专员4-9K长沙查看职位",
+        "销售工程师8-9K上海查看职位",
+        "无责4K-课程顾问-周内双休12-20K长沙查看职位",
+        "月入2w金融电话销售+60%高提成9-12K长沙查看职位",
+    ]
+
+    def test_销售类标题命中内置表(self):
+        for 标题 in self.要拒的标题:
+            assert title_veto_hit(TITLE_VETO_KEYWORDS_DEFAULT, 标题) != "", 标题
+
+    def test_挂着销售皮的线上岗仍旧放行(self):
+        from boss_bot.intent import title_veto_hit
+        assert title_veto_hit(TITLE_VETO_KEYWORDS_DEFAULT, "电商销售运营（线上）") == ""
+        assert title_veto_hit(TITLE_VETO_KEYWORDS_DEFAULT, "销售数据分析专员") == ""
+
+    def test_空否决词框也拦得住销售(self):
+        """他清空自定义那框，内置表还得生效——这是"直接拒绝"的底线。"""
+        from boss_bot.intent import veto_hit_anywhere
+        for 标题 in self.要拒的标题:
+            assert veto_hit_anywhere(TITLE_VETO_KEYWORDS_DEFAULT, [], title=标题) != "", 标题

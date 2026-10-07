@@ -57,6 +57,13 @@ python scripts/check_env.py --json
 3 登录核对    bsk navigate <BOSS 搜索页> → bsk observe；落登录页就交人工（红线 1）
 4 取列表      每个关键词：滚动 screens_per_keyword 页 → bsk observe 取岗位卡片
 5 逐个岗位    python scripts/state.py seen 判重 → 点卡片开详情 → 读任职要求
+5.5 硬否决    python scripts/veto.py check --title "岗位标题" --jd "任职要求原文"
+              veto=true → 记 skipped_hard_veto，**不发招呼语、不判分**，下一个。
+              有些岗不是分低，是不该主动去沟通（普工/主播/快递/保洁/销售这一类，
+              以及写着坐班、包吃住、到岗的）。判据别自己口算，三条会走样：
+              岗位类型词只查标题且不认否定式（"无需露脸"还是主播）；使用者自己的
+              否决词查标题也查正文、认否定式（"线上不坐班"是他要的）；
+              BOSS 把敏感字拆开写，匹配前脚本会先抹分隔符。
 6 判分        你自己读 JD 与使用者画像打分：score + 一句话理由
               score < match_threshold → record skipped_low_score，下一个
               阈值-15 ≤ score < 阈值 → 追问自己"到底卡在哪一条硬性要求"，把答案记进 detail

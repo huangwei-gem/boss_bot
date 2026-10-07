@@ -6,6 +6,7 @@
 | code | 判据（可观测） | 处置 |
 |------|----------------|------|
 | `sent` | 自己的消息气泡 `.message-item.item-myself` 里出现了本轮招呼语文案 | 记成功，URL 进 `chatted.json` |
+| `skipped_hard_veto` | `python scripts/veto.py check --title ... --jd ...` 返回 `veto=true`（普工/主播/快递/保洁/销售这一类，或写着坐班包吃住到场） | 不发招呼语，不判分，不进去重表；这类不是分低，是压根不该主动沟通 |
 | `skipped_low_score` | agent 判分 `< match_threshold` | 不打招呼，不进去重表（下一轮可再判） |
 | `already_chatted` | URL 命中 `chatted.json`，或按钮文案是「继续沟通」 | 跳过，避免同一 HR 收到两条一样的招呼 |
 | `no_chat_button` | 点开卡片后右侧详情栏取不到「立即沟通」（观察类名 `A.op-btn.op-btn-chat`），老式详情页类名里也没有 `btn-startchat` | 落记录并跳过；连续 3 个都这样就该停下来怀疑页面变了 |
