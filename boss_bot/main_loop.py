@@ -1722,7 +1722,8 @@ class UnifiedBotLoop:
                         self._full_sync_chats()
                     except Exception as e:
                         self._log("WARN", f"启动全量同步失败（不影响后续未读轮次）: {e}")
-                    # 补扫单独一趟：同步炸了不能连累它（19:23 那 11 单就是这么没的）
+                    # 补扫单独一趟，且排在同步之后：它读的就是刚同步完的那份存档，
+                    # 拿旧存档判会把人家已经收到的再发一遍
                     self._run_resume_backfill(force=True)
 
                 self._current_mode = "reply"
