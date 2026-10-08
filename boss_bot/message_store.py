@@ -379,7 +379,10 @@ class MessageStore:
         mid = str(msg.get("mid") or "").strip()
         if mid:
             return f"mid|{mid}"
-        content = (msg.get("content") or msg.get("text") or "").strip()
+        # 卡片正文在 card_text/block 里、content 是空的：不带上它，两张不同的
+        # 卡片键都是 "|”，后一张会在合并时被当成重复丢掉（简历卡片就是这么丢的）
+        content = (msg.get("content") or msg.get("text")
+                   or msg.get("card_text") or msg.get("block") or "").strip()
         t = (msg.get("time") or msg.get("timestamp") or "").strip()
         return f"{content}|{t}"
 

@@ -2523,6 +2523,28 @@ class UnifiedBotLoop:
                           f"但存档里没有简历卡片，按没发过处理")
         return False
 
+    def _persist_resume_card(self, name, job_name="", company=""):
+        """发成功之后当场把页面消息并回存档，让那张卡片留下证据。
+
+        送达是在页面上数出"卡片多出一条"判的，可采集只在会话再次未读时才回读；
+        存档里于是只剩我们自记的 [简历已发送]（实测 2026-10-08 15:56 楚仪可那一单
+        就是这样），下一次去重按证据判就成了"没发过"，同一个 HR 收到两遍简历。
+        不滚历史（max_scroll_rounds=0），卡片就在最底下，已经渲染出来了。
+        """
+        try:
+            live = self._chat_handler.read_all_messages(max_scroll_rounds=0) or []
+        except Exception as e:
+            self._log("DEBUG", f"[{name}] 发送后回读页面失败，卡片证据等下一次采集: {e}")
+            return
+        if not resume_already_sent(live):
+            self._log("DEBUG", f"[{name}] 发送后回读没再看到卡片，证据等下一次采集")
+            return
+        try:
+            self._msg_store.merge_messages(chat_name=name, new_messages=live,
+                                           job_name=job_name, company=company)
+        except Exception as e:
+            self._log("DEBUG", f"[{name}] 卡片落存档失败，证据等下一次采集: {e}")
+
     def _handle_reply_action(self, action, content, meta, name, job_name,
                              latest_other_msg, chat_company="",
                              hr_recent: str = "") -> bool:
@@ -2547,6 +2569,7 @@ class UnifiedBotLoop:
             self._reply_engine.wait_human_delay()
             if self._chat_handler.send_resume():
                 self._state_store.mark_resume_sent(name)
+                self._persist_resume_card(name, job_name, chat_company)
                 self._stats.record_reply(source=meta.get("source", "rule"), action="resume")
                 self._stats_dict["resume_sent"] += 1
                 self._metrics.bump(self.account_index, "resume_sent")

@@ -23,6 +23,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from boss_bot.contact_ledger import contact_rows  # noqa: E402
+from boss_bot.message_store import MessageStore  # noqa: E402
 from boss_bot.pending_resume import resume_already_sent  # noqa: E402
 from boss_bot.state_store import StateStore  # noqa: E402
 
@@ -117,3 +118,76 @@ class 去重要回头看存档Test:
         源 = inspect.getsource(UnifiedBotLoop._backfill_pending_resumes)
         assert "_resume_delivered" in 源
         assert "self._state_store.resume_sent(" not in 源
+
+
+class 发完要把卡片落进存档Test:
+    """送达判据在页面上数到卡片多出一条，可存档里只留下我们自记的那行 ——
+    下一次去重按"存档有没有卡片"判，就会把这一单当成没发过再发一遍。
+
+    线上实例：2026-10-08 15:56 账号2 发给楚仪可的那单，日志
+    「简历送达验证通过（卡片 0 → 1 条）」，可 16:3x 再看存档只有
+    [简历已发送] 那一行 action，卡片根本没进来。
+    """
+
+    def _loop(self, tmp_path):
+        from types import SimpleNamespace
+        from boss_bot.main_loop import UnifiedBotLoop
+        loop = UnifiedBotLoop.__new__(UnifiedBotLoop)
+        loop.account_index = 1
+        loop.logs = []
+        loop._log = lambda level, msg: loop.logs.append(msg)
+        loop._msg_store = MessageStore(base_dir=tmp_path, account_index=1)
+        loop._state_store = StateStore(tmp_path / "bot_state.json")
+        return loop
+
+    def test_发成功后页面那张卡片要并进存档(self, tmp_path):
+        from types import SimpleNamespace
+        loop = self._loop(tmp_path)
+        loop._chat_handler = SimpleNamespace(
+            read_all_messages=lambda **kw: [HR_ASK, BOSS_CARD])
+        loop._persist_resume_card("楚仪可", "兼职·平面设计300-500元/时北京查看职位",
+                                  "北京智能知识数据科技")
+        存档 = loop._msg_store.get_messages(
+            "楚仪可", job_name="兼职·平面设计300-500元/时北京查看职位",
+            company="北京智能知识数据科技")
+        assert resume_already_sent(存档) is True, "卡片没落进存档，下一轮就去重不掉"
+
+    def test_没有mid的两张卡片不许撞成一条(self, tmp_path):
+        """去重键退回 content+time 时，卡片正文在 card_text 里，content 是空的——
+        两张不同的卡片键一样，后一张直接被丢掉，证据就这么没了"""
+        store = MessageStore(base_dir=tmp_path, account_index=1)
+        store.merge_messages(chat_name="楚仪可", new_messages=[HR_ASK, BOSS_CARD],
+                             job_name="平面设计", company="北京智能知识数据科技")
+        存档 = store.get_messages("楚仪可", job_name="平面设计",
+                                  company="北京智能知识数据科技")
+        assert len(存档) == 2, f"两张卡片被并成一张: {存档}"
+        assert resume_already_sent(存档) is True
+
+    def test_落了证据之后这一单就判成已发(self, tmp_path):
+        from types import SimpleNamespace
+        loop = self._loop(tmp_path)
+        loop._chat_handler = SimpleNamespace(
+            read_all_messages=lambda **kw: [HR_ASK, BOSS_CARD])
+        loop._state_store.mark_resume_sent("楚仪可")
+        loop._persist_resume_card("楚仪可", "平面设计", "北京智能知识数据科技")
+        assert loop._resume_delivered("楚仪可", "平面设计",
+                                      "北京智能知识数据科技") is True
+
+    def test_回读失败只留痕不许把发送流程搞停(self, tmp_path):
+        from types import SimpleNamespace
+        loop = self._loop(tmp_path)
+
+        def 炸(**kw):
+            raise RuntimeError("页面读不到")
+        loop._chat_handler = SimpleNamespace(read_all_messages=炸)
+        loop._persist_resume_card("楚仪可", "平面设计", "北京智能知识数据科技")
+        assert any("证据" in m or "读" in m for m in loop.logs), loop.logs
+
+    def test_发送成功那条路真的调了它(self):
+        import inspect
+        from boss_bot.main_loop import UnifiedBotLoop
+        源 = inspect.getsource(UnifiedBotLoop._handle_reply_action)
+        assert "_persist_resume_card" in 源
+        assert 源.index("send_resume()") < 源.index("_persist_resume_card"), \
+            "要在发送成功之后落证据，放前面读到的还是旧页面"
+
