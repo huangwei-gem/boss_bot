@@ -106,14 +106,41 @@ _PROMPT_TELLTALES = (
 )
 _NUMBERED = re.compile(r"^\d+[\.、)]\s*\S")
 
+# ── 事实这一关 ────────────────────────────────────────────────────
+# 上面那几条管的是"像不像一句人话"，下面这几条管的是"这句话是不是真的"。
+# 判据取自盘上真实发出去的：朱鑫磊那一单机器替用户答了「我今年25岁」，
+# 是 HR 翻简历回了一句「不是兄弟，你21」才纠正过来；何女士那一单答的是「23岁」。
+# 年龄、学历阶段、工作年限、电话这类数，对面一查就知道，改也改不回来。
+_AGE_RE = re.compile(r"(\d{1,3})\s*岁")
+_YEARS_RE = re.compile(r"(?:[0-9]+|[一二两三四五六七八九十]+)\s*年(?:的)?"
+                       r"[^\d，。；]{0,4}(?:经验|经历|工作|实习|从业|做过|标注|分析)")
+_PHONE_RE = re.compile(r"1[3-9]\d{9}")
+# 学历阶段词：画像里写了哪个阶段，就只许说哪个阶段（"本科在读"就说本科在读）。
+_STAGE_WORDS = ("大一", "大二", "大三", "大四", "应届", "毕业", "研究生", "硕士", "博士")
 
-def reply_rejection(text: str) -> str:
-    """这条 AI 输出能不能发给 HR；能发返回空串，不能发返回原因。
 
-    不能发的一律抛错走容灾链换下一个接口，绝不"降级发出去"——发出去的话收不回来，
-    而换一个接口再试一次的代价只是几秒钟。
-    """
-    t = (text or "").strip()
+def _fact_leak(text: str, profile: dict) -> str:
+    """这条回复里有没有替用户报画像之外的个人信息；有就返回原因。"""
+    p = profile or {}
+    允许年龄 = str(p.get("age") or "").strip()
+    for 报的 in _AGE_RE.findall(text):
+        if 报的 != 允许年龄:
+            return f"报了年龄「{报的}岁」，画像里的年龄是「{允许年龄 or '没填'}」"
+    学历 = str(p.get("education") or "")
+    撞 = [w for w in _STAGE_WORDS if w in text and w not in 学历]
+    if 撞:
+        return f"报了学历阶段「{撞[0]}」，画像里只写了「{学历 or '没填'}」"
+    m = _YEARS_RE.search(text)
+    if m:
+        return f"报了工作年限「{m.group(0)}」，画像里没这条"
+    for 号 in _PHONE_RE.findall(text):
+        if 号 != str(p.get("contact") or "").strip():
+            return f"报了手机号「{号}」，画像里的联系方式是「{p.get('contact') or '空'}」"
+    return ""
+
+
+def _format_rejection(t: str) -> str:
+    """形式检查：能不能当成聊天正文发出去（长度、思考痕迹、markdown）。"""
     if not t:
         return "空回复"
     if len(t) > _REPLY_MAX_CHARS:
@@ -126,6 +153,23 @@ def reply_rejection(text: str) -> str:
         if s.startswith(("-", "*", "#")) or _NUMBERED.match(s) or "**" in s or "```" in s:
             return "是 markdown/列表结构，不是聊天正文"
     return ""
+
+
+def reply_rejection(text: str, profile: dict = None) -> str:
+    """这条 AI 输出能不能发给 HR；能发返回空串，不能发返回原因。
+
+    不能发的一律抛错走容灾链换下一个接口，绝不"降级发出去"——发出去的话收不回来，
+    而换一个接口再试一次的代价只是几秒钟。
+    profile 不传就现读画像（面板上改了年龄/学历，下一句就得按新的判）。
+    """
+    t = (text or "").strip()
+    bad = _format_rejection(t)
+    if bad:
+        return bad
+    if profile is None:
+        from boss_bot.prompts import current_profile
+        profile = current_profile()
+    return _fact_leak(t, profile)
 
 
 # 自我介绍特征关键词（用于检测重复发送）
@@ -1023,7 +1067,7 @@ class ReplyEngine:
             raise RuntimeError(reason + "，换下一个接口")
         why = reply_rejection(text)
         if why:
-            reason = f"回复内容不像一句回复（{why}）"
+            reason = f"这句不能发给 HR（{why}）"
             self._record_gate_block(reason, text, boss_name=boss_name, job_name=job_name)
             raise RuntimeError(reason + "，换下一个接口")
         # 保存 AI 元信息供回复记录使用

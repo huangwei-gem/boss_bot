@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from boss_bot.reply_engine import ReplyEngine, reply_rejection
+from boss_bot.reply_engine import _format_rejection, ReplyEngine, reply_rejection
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -69,7 +69,11 @@ class GuardTest:
         assert reply_rejection(text) == "", reply_rejection(text)
 
     def test_盘上所有正常长度的AI回复都过得去(self):
-        """校验器最大的风险是把能发的拦下来——拿真实数据全量过一遍。"""
+        """校验器最大的风险是把能发的拦下来——拿真实数据全量过一遍。
+
+        这里只过形式那一段（长度/思考痕迹/markdown）。事实那一段本来就打算拦历史里
+        那些替他说错年龄学历的句子，混在一起测就成了"新闸门误杀"的假红。
+        """
         path = ROOT / "data" / "reply_records.json"
         if not path.exists():
             pytest.skip("没有真实记录")
@@ -80,9 +84,22 @@ class GuardTest:
                 continue
             text = r.get("reply_content") or ""
             if len(text) <= 160:
-                assert reply_rejection(text) == "", f"误杀真实回复：{text[:60]}"
+                assert _format_rejection(text) == "", f"误杀真实回复：{text[:60]}"
             else:
-                assert reply_rejection(text), f"这条异常长却没被拦：{text[:60]}"
+                assert _format_rejection(text), f"这条异常长却没被拦：{text[:60]}"
+
+    def test_历史上替他说错的那几句现在拦得住(self):
+        """防重犯：盘上真发出去过「我今年25岁」（他 21）、「我本科毕业」（本科在读）。
+        事实闸门在真实数据里抓到 0 条，就说明判据是死的。"""
+        path = ROOT / "data" / "reply_records.json"
+        if not path.exists():
+            pytest.skip("没有真实记录")
+        recs = json.loads(path.read_text(encoding="utf-8"))
+        recs = recs if isinstance(recs, list) else recs.get("records") or []
+        拦下来的 = [reply_rejection(r.get("reply_content") or "")
+                    for r in recs if r.get("reply_source") == "ai"]
+        事实类 = [x for x in 拦下来的 if "画像" in x]
+        assert 事实类, "真实记录里那些不实个人信息要能被现读的画像比出来"
 
     def test_markdown结构被拦(self):
         assert reply_rejection("**您好**，我对岗位很感兴趣")
@@ -131,7 +148,9 @@ class CallChatTest:
              patch("boss_bot.reply_engine.build_system_prompt", return_value="sp"):
             with pytest.raises(Exception) as ei:
                 e._call_chat(client, "m", "在吗", "吴先生", "视频剪辑实习生", [])
-        assert "不像" in str(ei.value) or "回复" in str(ei.value)
+        msg = str(ei.value)
+        assert "换下一个接口" in msg, f"不合格必须抛错走容灾链：{msg}"
+        assert "不能发" in msg, f"报错要说清这句发不出去：{msg}"
 
     def test_正常正文照常返回(self):
         from unittest.mock import patch
