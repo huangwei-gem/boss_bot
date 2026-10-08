@@ -483,6 +483,7 @@ a{color:var(--accent);text-decoration:none}
 .boss-chat-item-job{font-size:10px;font-weight:400;color:var(--fg-4th);margin-left:6px}
 /* 「全部账号」下撞车的身份挂的账号标记：不挂的话两行长得完全一样 */
 .boss-chat-item-acc{font-size:9.5px;font-weight:600;color:var(--accent);border:1px solid var(--bd-2);border-radius:5px;padding:0 4px;margin-left:6px;flex-shrink:0}
+.boss-chat-item-pin{font-size:9.5px;font-weight:600;color:var(--warning);border:1px solid var(--bd-2);border-radius:5px;padding:0 4px;margin-left:6px;flex-shrink:0}
 .boss-chat-item-preview{font-size:11.5px;color:var(--fg-3rd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .boss-chat-item-meta{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
 .boss-chat-item-time{font-size:10px;color:var(--fg-4th);white-space:nowrap}
@@ -4406,6 +4407,11 @@ function renderBossChatList(groups) {
       ? '<span class="boss-chat-item-acc">号' + (Number(g.account_index || 0) + 1) + '</span>'
       : '';
     var avatarText = chatName ? chatName.charAt(0) : '?';
+    // 置顶是他在 BOSS 里标的"这一路我单独聊"（2026-10-08）：机器不回复、不跟进、
+    // 不补简历，界面必须说出来，不然他会以为这几路也有人在回
+    var pinTag = g.pinned
+      ? '<span class="boss-chat-item-pin" title="你在 BOSS 里置顶的会话，机器不动，由你自己聊">置顶·你自己聊</span>'
+      : '';
     var preview = g.last_message || g.last_reply || '';
     if (preview.length > 30) preview = preview.substring(0, 30) + '...';
     // 未读只画 BOSS 自己报过的数（回复轮次扫侧栏时记下的）。没观察到过就留空：
@@ -4424,6 +4430,7 @@ function renderBossChatList(groups) {
     html += '    <div class="boss-chat-item-name">'+escHtml(chatName)
          +   (subLine ? '<span class="boss-chat-item-job">'+escHtml(subLine)+'</span>' : '')
          +   acctTag
+         +   pinTag
          +   '</div>';
     html += '    <div class="boss-chat-item-preview">'+escHtml(preview)+'</div>';
     html += '  </div>';
@@ -5484,7 +5491,7 @@ function renderHeadlessReality(data) {
     if (want !== !!b.headless) mismatch = true;
   });
   el.textContent = '实际：' + parts.join('，') + (mismatch ? '（与开关不一致，重启面板才生效）' : '');
-  el.style.color = (mismatch || odd) ? 'var(--warn)' : 'var(--fg-3rd)';
+  el.style.color = (mismatch || odd) ? 'var(--warning)' : 'var(--fg-3rd)';
 }
 
 function applyStatusUpdate(data) {

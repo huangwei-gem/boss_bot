@@ -773,6 +773,7 @@ class MessageStore:
                     "updated_at": data.get("updated_at", ""),
                     "message_count": len(msgs),
                     "unread_count": unread_count,
+                    "pinned": bool(data.get("pinned")),
                     "last_message": last_content,
                     "last_time": last_time,
                     "messages": msgs,
@@ -826,6 +827,32 @@ class MessageStore:
             except Exception as e:
                 import logging
                 logging.getLogger(__name__).error(f"记录线上未读数失败: {e}")
+
+    def set_pinned(self, chat_name: str, pinned: bool, job_name: str = "",
+                   company: str = ""):
+        """记下"这一路在 BOSS 侧栏上是不是置顶的"。
+
+        置顶 = 他标的"这一路我自己聊"（2026-10-08），所以这个标记必须落进存档：
+        欠回复、主动跟进、补发简历和两个批量清剿工具走的都是存档，不看侧栏。
+        只在值真的变了时才写文件——回复轮十秒一轮，没变就不碰磁盘。
+        """
+        cid = self.chat_id(chat_name, company, job_name)
+        lock = self._get_lock(cid)
+        with lock:
+            path = self._read_path(chat_name, company, job_name)
+            if not path.exists():
+                return
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                if bool(data.get("pinned")) == bool(pinned):
+                    return
+                data["pinned"] = bool(pinned)
+                write_json_atomic(path, data)
+                self._cache_put(cid, data)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"记录置顶标记失败: {e}")
 
     def mark_chat_read(self, chat_name: str, job_name: str = "",
                        company: str = ""):

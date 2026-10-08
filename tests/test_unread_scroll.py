@@ -162,7 +162,8 @@ class SyncInterleaveTest:
             read_all_messages=lambda: [{"is_mine": False, "text": "在吗", "mid": "9"}],
             read_selected_row=lambda: {"name": lp.chats_entered[-1], "company": "公司"},
             get_job_name=lambda: "数据分析")
-        lp._msg_store = SimpleNamespace(merge_messages=lambda **kw: 1)
+        lp._msg_store = SimpleNamespace(merge_messages=lambda **kw: 1,
+                                        set_pinned=lambda *a, **k: None)
         lp._run_reply_round = lambda: lp.calls.append("reply_round")
         lp._run_followup_round = lambda: lp.calls.append("followup")
         return lp

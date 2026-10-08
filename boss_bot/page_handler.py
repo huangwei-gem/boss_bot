@@ -126,6 +126,11 @@ def classify_health(url: str, probe) -> str:
     return "ok" if _probe_data(probe) is not None else "unknown"
 
 
+def pinned_key(row: dict):
+    """置顶会话的身份 = 姓名+公司，与侧栏去重、存档合并同一口径。"""
+    return ((row.get("name") or "").strip(), (row.get("company") or "").strip())
+
+
 class BossChatHandler:
     """BOSS 聊天页面操作处理器
 
@@ -373,9 +378,14 @@ class BossChatHandler:
             self.page.run_js(self._SIDEBAR_RESET_JS, as_expr=True)
             time.sleep(0.4)
             merged = {}
+            pinned = set()
             prev_pos = None
             for _ in range(max_rounds):
                 for row in self._sidebar_rows():
+                    # 置顶行常常没有红点（他自己聊过），但每一条都要登记：
+                    # 欠回复、跟进、批量清剿那几条腿只看存档，靠这份集合落盘才知道谁被置顶
+                    if row.get("pinned"):
+                        pinned.add(pinned_key(row))
                     # 只认 BOSS 自己报的红点数，不拿"本地存了几条 HR 消息"去猜
                     if row.get("unread_count"):
                         merged.setdefault((row.get("name", ""), row.get("company", "")), row)
@@ -387,6 +397,9 @@ class BossChatHandler:
                     break                  # 已经到底
                 prev_pos = pos
             unread_chats = list(merged.values())
+            # 置顶永远排在最前面，滚到哪儿都看得见，所以每轮都整份重建：
+            # 他取消置顶后，这一轮就没有这个 key，存档里的标记跟着撤掉、机器重新接手
+            self.pinned_chats = pinned
         except Exception as e:
             logger.error(f"获取未读聊天列表失败: {e}")
 
@@ -419,9 +432,12 @@ class BossChatHandler:
         time.sleep(1)
 
         merged = {}
+        pinned = set()
         prev_pos = None
         for _ in range(max_rounds):
             for row in self._sidebar_rows():
+                if row.get("pinned"):
+                    pinned.add(pinned_key(row))
                 merged.setdefault((row.get("name", ""), row.get("company", "")), row)
             pos = str(self.page.run_js(self._SIDEBAR_SCROLL_JS, as_expr=True))
             time.sleep(0.6)
@@ -431,7 +447,8 @@ class BossChatHandler:
                 break                      # 已经到底
             prev_pos = pos
         all_chats = list(merged.values())
-        logger.debug(f"侧栏收集完成：{len(all_chats)} 个会话")
+        self.pinned_chats = pinned
+        logger.debug(f"侧栏收集完成：{len(all_chats)} 个会话，其中置顶 {len(pinned)} 个")
         return all_chats
 
     # 探针：目标那一行现在渲染出来没有。__WANT__ 由 json 填，
@@ -643,12 +660,15 @@ class BossChatHandler:
                             var bt = badge.textContent.trim();
                             if (bt) unread = parseInt(bt) || 1;
                         }
+                        // 置顶：实测置顶行的 class 是 "friend-content friend-top"，
+                        // 普通行只有 friend-content。他置顶的那几路要自己聊，机器不动。
                         rows.push({
                             index: i,
                             name: name,
                             company: company,
                             preview: preview,
-                            unread_count: unread
+                            unread_count: unread,
+                            pinned: (el.className || "").indexOf("friend-top") >= 0
                         });
                     }
                     return JSON.stringify(rows);

@@ -35,6 +35,7 @@ from boss_bot.intent import (classify_interview_invite, is_contact_exchange_card
                              veto_hit_anywhere)
 from boss_bot.message_store import MessageStore  # noqa: E402
 from boss_bot.page_handler import BossChatHandler  # noqa: E402
+from boss_bot.reply_queue import is_pinned  # noqa: E402
 from boss_bot.reply_engine import (FAMILY_DECLINE_REPLY, REPLY_REFUSAL_MARK,  # noqa: E402
                                    conversation_rejected)
 from boss_bot.unified_config import UnifiedConfig, TITLE_VETO_KEYWORDS_DEFAULT  # noqa: E402
@@ -82,12 +83,19 @@ def hit_of(title_words, body_words, title, msgs):
 
 
 def owed(limit):
-    """存档里命中判据、我们又从没拒过的会话（按账号+姓名+公司去重）。"""
+    """存档里命中判据、我们又从没拒过的会话（按账号+姓名+公司去重）。
+
+    置顶的那几路不进名单：那是他自己标了"这一路我单独聊"的会话（2026-10-08），
+    机器替他说一句"不考虑"等于把他正在谈的线掐了。
+    """
     title_words, body_words = tables()
-    rows, seen = [], set()
+    rows, seen, skipped_pinned = [], set(), 0
     for c in MessageStore().get_all_chats_detail() or []:
         msgs = c.get("messages") or []
         if not msgs:
+            continue
+        if is_pinned(c):
+            skipped_pinned += 1
             continue
         key = (c.get("account_index"), c.get("chat_name"), c.get("company"))
         if key in seen:
@@ -104,6 +112,8 @@ def owed(limit):
                      "name": c.get("chat_name"), "company": c.get("company") or "",
                      "job": c.get("job_name") or "", "hit": hit,
                      "last_hr": (hr_window(msgs, 1) or [""])[0]})
+    if skipped_pinned:
+        print(f"      （{skipped_pinned} 单他置顶了自己聊，按口径不进名单）")
     return rows[:limit], len(rows)
 
 

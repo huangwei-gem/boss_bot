@@ -130,6 +130,15 @@ def chat_state(messages, now=None, fallback_time=""):
     return "idle", {}
 
 
+def is_pinned(chat) -> bool:
+    """这一路是不是他自己在 BOSS 里置顶的会话。用户口径（2026-10-08）：
+    「我置顶的岗位你就不要动了，因为那我打算单独聊。」
+    侧栏行和存档都用 pinned 这一个字段，所以四条会动手的腿（回复、跟进、
+    补发简历、批量清剿工具）能共用这一句判据。
+    """
+    return bool((chat or {}).get("pinned"))
+
+
 def owed_replies(chats, now=None, max_age_hours=72, limit=15):
     """存档里"对方最后说话、我们没接"的会话，按最新优先。
 
@@ -138,6 +147,8 @@ def owed_replies(chats, now=None, max_age_hours=72, limit=15):
     now = now or datetime.now()
     out = []
     for c in chats or []:
+        if is_pinned(c):
+            continue
         kind, info = chat_state(c.get("messages") or [], now, c.get("updated_at") or "")
         if kind != "reply":
             continue
@@ -164,8 +175,11 @@ def worth_following_up(chat, title_keywords=(), body_keywords=()) -> bool:
        再去追一句等于自己打自己脸。判据和回复轮那一层完全同一套（veto_hit_anywhere），
        否则就会出现"文字拒了但还在被追"的自相矛盾（2026-10-07 11:57 那条
        「【白班坐岗】28/H包吃住…」就是这么追出去的）。
+    置顶的那一路是他自己聊的，第三条否决走同一句 is_pinned。
     """
     if not (chat.get("company") or "").strip():
+        return False
+    if is_pinned(chat):
         return False
     bodies = [inbound_body(m) for m in _sorted(chat.get("messages") or [])]
     bodies = [b for b in bodies if b]
@@ -190,6 +204,8 @@ def followup_due(chats, state, now=None, after_hours=8, gap_hours=24,
     now = now or datetime.now()
     out = []
     for c in chats or []:
+        if is_pinned(c):
+            continue
         kind, info = chat_state(c.get("messages") or [], now, c.get("updated_at") or "")
         if kind != "follow":
             continue

@@ -61,6 +61,16 @@ LESSON_RETIRE_NEGATIVE = 2     # 连续 2 次负效果确认 → 自动退役
 LESSON_MAX_ACTIVE = 5          # 提示补充最多带 5 条，别把基础提示词挤没了
 SNAPSHOT_KEEP = 5              # 快照保留份数，错了能退回去
 
+
+def _reason_class(reason: str) -> str:
+    """把闸门原因折成"同一件事"的一类，用来分组沉淀经验。
+
+    原因原文里带着「思考过程写了 2116 字」这种每次都变的数字：按整句分组时，线上
+    累计拦了 169 条却沉淀出 0 条经验——每一条都自成一个模式，永远凑不够证据数，
+    等于自进化从没真正跑过。数字折成 #，同一句话的不同次数就归成同一类。
+    """
+    return re.sub(r"\d+(?:\.\d+)?", "#", (reason or "").strip())[:80]
+
 # 积极反应关键词（HR 继续对话、询问详情、约面试等）
 _POSITIVE_PATTERNS = [
     re.compile(r"(面试|聊聊|沟通|电话|视频|线下|来公司)", re.IGNORECASE),
@@ -1185,20 +1195,21 @@ class SelfEvolveEngine:
                 reason = (r.get("note") or "").strip()
                 if not reason:
                     continue
-                g = groups.setdefault(reason, {"count": 0, "samples": []})
+                g = groups.setdefault(_reason_class(reason),
+                                      {"count": 0, "samples": []})
                 g["count"] += 1
                 if len(g["samples"]) < 3:
                     g["samples"].append((r.get("reply_text") or "")[:100])
             active_texts = {x["text"] for x in self._lessons if x["status"] == "active"}
         # 只读汇总在这里结束；add_lesson 自己会拿锁，在这里持锁调它会死锁
         planned = []
-        for reason, g in groups.items():
+        for pattern, g in groups.items():
             if g["count"] < LESSON_MIN_EVIDENCE:
                 continue
-            text = (f"「{reason[:80]}」已发生 {g['count']} 次：再遇到同类草稿直接换接口"
+            text = (f"「{pattern}」已发生 {g['count']} 次：再遇到同类草稿直接换接口"
                     "重新生成，不要人工放行，也不要把同类内容发出去")
             if text not in active_texts:
-                planned.append((text, reason, g))
+                planned.append((text, pattern, g))
         created = 0
         if planned:
             self.snapshot_evolution_data("refine 沉淀前")

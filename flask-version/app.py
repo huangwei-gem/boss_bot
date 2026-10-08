@@ -2375,6 +2375,7 @@ def api_reply_records_grouped():
                     "job_name": full.get("job_name", ""),
                     "full_message_count": full.get("message_count", 0),
                     "unread_count": full.get("unread_count", 0),
+                    "pinned": bool(full.get("pinned")),
                 }
             d = r.to_dict()
             groups[gkey]["records"].append(d)
@@ -2405,6 +2406,7 @@ def api_reply_records_grouped():
                     "job_name": full.get("job_name", ""),
                     "full_message_count": full.get("message_count", 0),
                     "unread_count": full.get("unread_count", 0),
+                    "pinned": bool(full.get("pinned")),
                 }
                 continue
             g["messages"] = full.get("messages", []) or g["messages"]
@@ -2419,6 +2421,7 @@ def api_reply_records_grouped():
                     g["last_message"] = last_msg
             g["full_message_count"] = full.get("message_count", 0)
             g["unread_count"] = full.get("unread_count", 0)
+            g["pinned"] = bool(full.get("pinned"))
 
         # 转为列表，按最后消息时间倒序排列（统一时间戳格式后排序）
         result = sorted(groups.values(), key=lambda x: _normalize_ts(x.get("last_time", "")), reverse=True)

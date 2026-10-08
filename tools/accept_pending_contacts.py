@@ -28,6 +28,7 @@ from decline_offline_interviews import PANEL, attach  # noqa: E402
 from boss_bot.contact_ledger import contact_rows, extract_contacts, _message_text  # noqa: E402
 from boss_bot.intent import veto_hit_anywhere  # noqa: E402
 from boss_bot.message_store import MessageStore  # noqa: E402
+from boss_bot.reply_queue import is_pinned  # noqa: E402
 from boss_bot.page_handler import BossChatHandler  # noqa: E402
 from boss_bot.unified_config import UnifiedConfig  # noqa: E402
 
@@ -68,7 +69,8 @@ WHY_JS = '''(
 
 
 def pending_rows(limit):
-    chats = MessageStore().get_all_chats_detail()
+    # 置顶的那几路他自己在聊（2026-10-08 口径），卡片点不点同意由他决定
+    chats = [c for c in MessageStore().get_all_chats_detail() if not is_pinned(c)]
     rows = contact_rows(chats)
     todo = [r for r in rows if r["contact_kind"] == "发起交换请求"]
     return todo[:limit], len(todo)

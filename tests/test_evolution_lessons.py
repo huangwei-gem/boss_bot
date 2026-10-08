@@ -112,6 +112,22 @@ class PromptSupplementTest:
 
 
 class RefineTest:
+    def test_只差数字的同一件拦截要算同一类(self, tmp_path):
+        """线上实测：闸门累计拦了 169 条，经验条却是 0 条。
+
+        根因在这里——分组的键是整句原文，而那句里带着「思考过程写了 2116 字」这种
+        每次都不同的数字，于是每一条拦截都是"一个新的模式"，永远凑不够证据数，
+        自进化等于从没跑过。
+        """
+        e = _engine(tmp_path)
+        for n in (2116, 1943, 2030):
+            e.record_gate_block(
+                f"这句不能发给 HR（接口没有回复正文，思考过程写了 {n} 字）", "草稿", {})
+        out = e.refine_lessons()
+        assert out["created"] == 1, f"同一件事被拆成 {out['patterns_seen']} 类：{out}"
+        lesson = [x for x in e._lessons if x["status"] == "active"][0]
+        assert lesson["evidence_count"] == 3, lesson
+        assert "接口没有回复正文" in lesson["text"], lesson["text"]
     def test_同因闸门拦截两次才沉淀(self, tmp_path):
         e = _engine(tmp_path)
         e.record_gate_block("回复内容不像一句回复（像思考过程）", "草稿甲", {})

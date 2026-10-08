@@ -48,7 +48,7 @@ from boss_bot.state_store import StateStore
 from boss_bot.stats import Stats
 from boss_bot.notify import Notifier
 from boss_bot.message_store import MessageStore
-from boss_bot.reply_queue import (chat_state, inbound_body, owed_replies,
+from boss_bot.reply_queue import (chat_state, inbound_body, is_pinned, owed_replies,
                                   followup_due, mark_followed,
                                   worth_following_up)
 from boss_bot.self_evolve import SelfEvolveEngine
@@ -1747,6 +1747,13 @@ class UnifiedBotLoop:
             unread_chats = self._chat_handler.get_unread_chats(max_rounds=30 if deep else 12)
             self._log("DEBUG", f"获取到未读会话数: {len(unread_chats)}")
 
+            # 置顶标记先落盘（他取消置顶的那一路也会跟着清掉）：欠回复、跟进、
+            # 补发简历和两个批量清剿工具读的是存档、不看侧栏，不落盘它们不知道谁被置顶
+            for chat_info in unread_chats:
+                self._msg_store.set_pinned(
+                    chat_info.get("name", ""), bool(chat_info.get("pinned")),
+                    company=chat_info.get("company", ""))
+
             # 红点只是其中一条腿，另外一条腿在本地存档：
             # 启动全量同步把每个会话点开读过一遍，红点是我们自己清掉的，
             # 侧栏又是虚拟列表（一屏只渲染 ~20 行），真提问经常根本进不了候选。
@@ -1755,6 +1762,16 @@ class UnifiedBotLoop:
             if owed_n:
                 self._log("INFO", f"另外从存档补了 {owed_n} 个欠着的会话"
                                   f"（红点已被启动全量同步清掉）")
+
+            # 「我置顶的岗位你就不要动了，因为那我打算单独聊」（2026-10-08）：
+            # 置顶是他亲手标的"这一路我自己谈"，机器连点开都不必
+            pinned_rows = [c for c in candidates if is_pinned(c)]
+            if pinned_rows:
+                candidates = [c for c in candidates if not is_pinned(c)]
+                self._log("INFO", "📌 %d 个置顶会话不动（你自己聊）：%s" % (
+                    len(pinned_rows),
+                    "、".join("%s|%s" % (c.get("name"), c.get("company") or "")
+                             for c in pinned_rows[:6])))
 
             # 先排空"待评估"再处理本轮：要评估的会话多半根本不在这一轮候选里
             # ——HR 回过话之后我们那轮常走跳过分支，就再也不会进 get_reply，
@@ -1940,6 +1957,12 @@ class UnifiedBotLoop:
         convs = [c for c in self._msg_store.get_all_chats_detail()
                  if c.get("account_index") == self.account_index]
 
+        # 置顶的那几路他自己聊（2026-10-08）：机器连"还在招人吗"这一句都不追
+        pinned_n = sum(1 for c in convs if is_pinned(c))
+        if pinned_n:
+            self._log("INFO", f"📌 {pinned_n} 个置顶会话不主动追（你标了自己聊）")
+        convs = [c for c in convs if not is_pinned(c)]
+
         # 只对真聊上过话、而且这一类岗位我们还没判死的会话追：
         # 孤儿存档（没公司名、HR 从没开口）追过去是骚扰；普工/主播那一类
         # 前面刚拒完，后脚问"还在招人吗"就是自己打自己脸。
@@ -2045,6 +2068,11 @@ class UnifiedBotLoop:
                 self._log("WARN", "全量同步途中出现验证页，中止本次同步")
                 break
             name = chat_info.get("name", "未知")
+            # 置顶标记在这一趟全量登记：置顶行常常一条未读都没有（他一直自己聊），
+            # 回复轮根本看不见它；顺便把他取消置顶的会话清回 False
+            self._msg_store.set_pinned(
+                name, bool(chat_info.get("pinned")),
+                company=(chat_info.get("company") or "").strip())
             try:
                 if not self._chat_handler.enter_chat(chat_info):
                     self._log("DEBUG", f"[{name}] 切换校验失败，同步跳过")
@@ -2097,6 +2125,11 @@ class UnifiedBotLoop:
         """
         convs = [c for c in self._msg_store.get_all_chats_detail()
                  if c.get("account_index") == self.account_index]
+        not_pinned = [c for c in convs if not is_pinned(c)]
+        if len(not_pinned) != len(convs):
+            self._log("INFO", f"📌 {len(convs) - len(not_pinned)} 个置顶会话不补发简历"
+                              f"（你标了自己聊）")
+        convs = not_pinned
         # 认账：state 里标了"这个会话已发过简历"的不再进，否则每次重启都会给同一个
         # HR 再发一遍，或者被 resume_send_once 降级成"简历已发您了"那句重复提醒
         pending = [p for p in pending_resume_asks(convs)
@@ -2113,6 +2146,9 @@ class UnifiedBotLoop:
             if row is None:
                 self._log("INFO", f"⏭️ 跳过 [{name}]：侧栏按 姓名+公司 对不上这一行"
                                   f"（存档公司={item.get('company', '')!r}），不猜人")
+                continue
+            if is_pinned(row):
+                self._log("INFO", f"⏭️ 跳过 [{name}]：这一路你置顶了自己聊，机器不动")
                 continue
             if not self._chat_handler.enter_chat(row):
                 self._log("WARN", f"⏭️ 跳过 [{name}]：会话切换校验失败")
