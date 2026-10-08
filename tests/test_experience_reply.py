@@ -31,13 +31,15 @@ class 经验问答Test:
                    "有经验者优先", "没做过也没关系，我们会教"):
             assert classify(句) != "ask_experience", 句
 
-    def test_答话术直接承认有经验(self):
+    def test_答话术直接用他给的那句(self):
+        """他 12:07 原话：「有的 我做过标注，数据处理等项目」——开头就要是这句。"""
         动作, 话术 = INTENT_REPLIES["ask_experience"]
         assert 动作 == "text"
-        assert "有经验" in 话术, 话术
+        assert 话术.startswith("有的"), 话术
+        assert "标注" in 话术 and "数据处理" in 话术, 话术
         assert reply_rejection(话术) == "", 话术
-        for 词 in ("标注", "数据", "AI"):
-            assert 词 in 话术 or 词.lower() in 话术.lower(), 话术
+        for 词 in ("Excel", "SQL", "AI"):
+            assert 词 in 话术, 话术
 
     def test_画像里真的写了经历(self):
         """口径不能只活在话术里：AI 现编的那一路也要看得见这些经历。"""
