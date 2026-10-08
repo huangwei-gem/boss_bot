@@ -263,6 +263,13 @@ class UnifiedBotLoop:
         # 欠简历的补扫：上一趟什么时候跑的、那趟是不是抛异常结束的
         self._resume_backfill_at = None
         self._resume_backfill_failed = False
+        # 运行号：每 start 一次换一个号，线程只认自己开轮时那份。
+        # stop 只 join 10 秒，旧线程常常正卡在逐个点开 254 个会话的全量同步里；
+        # 下一次 start 又把 _running 翻回 True，旧线程就继续活着 → 同一个号两套线程
+        # 一起驱动一个浏览器（2026-10-08 19:25 起账号2 有 12 个同秒并发开轮的时刻，
+        # 面板自己报"另一个线程正在动这个浏览器"，代价是 19:33 该号被判登录失效）。
+        self._run_id = 0
+        self._run_tls = threading.local()
         # 欠简历补扫：上次跑的时刻 + 上一趟是不是抛异常结束的（见 RESUME_BACKFILL_*）
         self._resume_backfill_at = None
         self._resume_backfill_failed = False
@@ -456,6 +463,7 @@ class UnifiedBotLoop:
             self._log("WARN", "主循环已在运行中")
             return
 
+        self._run_id += 1                 # 旧线程从这一刻起算"过期"，到点自己收手
         self._running = True
         self._stop_event.clear()
 
@@ -463,6 +471,19 @@ class UnifiedBotLoop:
         self._init_thread = threading.Thread(target=self._init_and_run, daemon=True)
         self._init_thread.start()
         self._log("INFO", "统一主循环已启动")
+
+    def _run_stale(self, my_id=None) -> bool:
+        """这条线程手上的运行号已经不是当前那份 → 该收手，别再碰浏览器。
+
+        不传参数时读线程本地（循环入口用 set_run_owner 登记过），这样被它调用的
+        长函数（全量同步、补扫）不用把号一层层传下去。
+        """
+        号 = my_id if my_id is not None else getattr(self._run_tls, "run_id", self._run_id)
+        return 号 != self._run_id
+
+    def _claim_run(self):
+        """线程入口登记：这份运行号归我。"""
+        self._run_tls.run_id = self._run_id
 
     def stop(self):
         """停止主循环，关闭浏览器。"""
@@ -779,6 +800,7 @@ class UnifiedBotLoop:
 
     def _init_and_run(self):
         """初始化线程：登录 → 创建标签页 → 启动双线程。"""
+        self._claim_run()
         try:
             self._log("INFO", "=" * 50)
             self._log("INFO", "BOSS 统一机器人启动（双标签页并行架构）")
@@ -1291,6 +1313,7 @@ class UnifiedBotLoop:
 
     def _greet_loop(self):
         """打招呼线程主循环 — 在搜索标签页中执行。"""
+        self._claim_run()
         self._log("INFO", "打招呼线程启动")
 
         if not self.config.greet.enabled:
@@ -1299,7 +1322,7 @@ class UnifiedBotLoop:
 
         consecutive_empty_rounds = 0  # 连续空搜索轮次计数
 
-        while self._running and not self._stop_event.is_set():
+        while self._running and not self._stop_event.is_set() and not self._run_stale():
             try:
                 # 总开关在每轮重新判断（前端可在不重启的情况下启用/停用）
                 if not self._greet_enabled:
@@ -1654,13 +1677,14 @@ class UnifiedBotLoop:
 
     def _reply_loop(self):
         """回复线程主循环 — 在聊天标签页中执行。"""
+        self._claim_run()
         self._log("INFO", "回复线程启动")
 
         if not self.config.reply.enabled:
             self._log("INFO", "回复功能未启用，线程退出")
             return
 
-        while self._running and not self._stop_event.is_set():
+        while self._running and not self._stop_event.is_set() and not self._run_stale():
             try:
                 if not self._reply_enabled:
                     # 停用期间也要刷新配置，否则前端重新勾选后永远读不到
@@ -2022,6 +2046,8 @@ class UnifiedBotLoop:
         self._log("INFO", f"主动跟进：{len(due)} 个会话对方已沉默 —— "
                           + "、".join(f"{d['name']}({d['idle_hours']}h)" for d in due))
         for item in due:
+            if self._run_stale():
+                break        # 已经换了一次启动，别再和新的那套线程抢浏览器
             if not self._running or self._reply_paused or self._state_store.is_paused():
                 break
             # 跟进也吃"每小时最多回复"这个额度：面板上那个框管的是所有主动发送，
@@ -2106,6 +2132,11 @@ class UnifiedBotLoop:
         for chat_info in chats:
             if not self._running:
                 break
+            if self._run_stale():
+                # 这一趟要点 254 个会话（25~50 分钟），期间用户可能已经停过又启动：
+                # 运行号不是自己这份就立刻收手，别再和新一轮的线程抢同一个浏览器
+                self._log("WARN", f"全量同步让位给新一次启动（已同步 {synced} 个），本线程退出")
+                return
             # 验证码判据走会话页自己那份探针：_on_captcha_page 是 GreetEngine 的方法，
             # 在这里调用会 AttributeError 把整轮全量同步打断（2026-10-04 实测）
             if self._chat_handler.check_health() == "captcha":
@@ -2215,6 +2246,9 @@ class UnifiedBotLoop:
                           + "、".join(p["chat_name"] for p in pending))
         rows = self._chat_handler.get_all_chats()
         for item in pending:
+            if self._run_stale():
+                self._log("WARN", "补扫让位给新一次启动，剩下的欠简历下一趟再补")
+                return
             name = item["chat_name"]
             row = self._sidebar_row_for(rows, name, item.get("company", ""))
             if row is None:

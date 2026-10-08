@@ -9,6 +9,7 @@
 """
 import json
 import time
+import threading
 
 import pytest
 
@@ -95,6 +96,8 @@ class StartupOrderTest:
         from boss_bot.unified_config import UnifiedConfig
         from boss_bot.main_loop import UnifiedBotLoop
         lp = UnifiedBotLoop.__new__(UnifiedBotLoop)
+        lp._run_id = 0                          # 运行号：裸实例也得有，_run_stale 要读
+        lp._run_tls = threading.local()
         lp.account_index = 0
         lp.config = UnifiedConfig()
         lp._running = True
@@ -148,6 +151,8 @@ class SyncInterleaveTest:
         from types import SimpleNamespace
         from boss_bot.main_loop import UnifiedBotLoop
         lp = UnifiedBotLoop.__new__(UnifiedBotLoop)
+        lp._run_id = 0                          # 运行号：裸实例也得有，_run_stale 要读
+        lp._run_tls = threading.local()
         lp._running = True
         lp._stop_event = SimpleNamespace(is_set=lambda: False)
         lp.chats_entered = []

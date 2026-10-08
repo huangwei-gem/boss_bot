@@ -13,6 +13,7 @@
 import copy
 import json
 import re
+import threading
 from pathlib import Path
 
 import pytest
@@ -122,6 +123,8 @@ class BackfillWiringTest:
         from types import SimpleNamespace
         from boss_bot.main_loop import UnifiedBotLoop
         lp = UnifiedBotLoop.__new__(UnifiedBotLoop)
+        lp._run_id = 0                          # 运行号：裸实例也得有，_run_stale 要读
+        lp._run_tls = threading.local()
         lp.account_index = 1
         lp._msg_store = self._Store(convs)
         lp._chat_handler = self._Handler(rows)
