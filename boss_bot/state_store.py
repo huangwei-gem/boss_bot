@@ -82,14 +82,24 @@ class StateStore:
 
     def mark_resume_sent(self, chat_name: str):
         with self._lock:
-            self._chat(chat_name)["resume_sent"] = True
+            chat = self._chat(chat_name)
+            chat["resume_sent"] = True
+            # 落时间戳=这条是"点确认前数一遍、点完卡片多出一条"验过的。
+            # 盘上旧标记没有这个键，那是假判据写的，只配按存档证据重判。
+            chat["resume_sent_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self._save()
+
+    def resume_sent_at(self, chat_name: str) -> str:
+        """这一单"已发"标记落下的时间；旧标记没有，返回空串。"""
+        with self._lock:
+            return str(self._chat(chat_name).get("resume_sent_at") or "")
 
     def clear_resume_sent(self, chat_name: str):
         """清掉这一单的"已发"标记。
 
-        这个标记过去是拿假判据写的（存档里 81 个标记只有 39 个真有简历卡片），
-        照着它去重，欠的简历永远补不回来；所以核对不上证据时要能撤回它。
+        2026-10-08 数过：盘上标了已发的会话 81 个，按姓名回存档里查卡片，
+        有 4 个（每号 2 个）压根没有卡片——那是旧假判据（消息里找"简历"两字）
+        写下的，照着它去重，欠的简历就永远补不回来。带时间戳的新标记不走这里。
         """
         with self._lock:
             self._chat(chat_name)["resume_sent"] = False

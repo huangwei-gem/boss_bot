@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 """「这单简历发过了」只认 BOSS 那张卡，不认我们自己写的那行。
 
-2026-10-08 数出来的：`bot_state*.json` 里标了 resume_sent 的会话 **81 个**，
-可 `messages/*.json` 里真有附件简历卡片的只有 **39 个会话**。差的那四十多个
-就是旧送达判据（在消息列表里找"简历"两个字）判成功的——每次成功都
+2026-10-08 现数（同一份存档、同一份口径）：
+- 存档里带附件卡片字样的消息 **157 条**，落在 **88 个会话**；
+- `bot_state*.json` 里标了 resume_sent 的会话 **81 个**，其中 2 个（每号 1 个）
+  存档里压根没有卡片；
+- 台账在同一口径下判「HR 要过简历但没送达」**57 单**（号0 32 / 号1 25）。
+旧送达判据是在消息列表里找"简历"两个字，所以每次"成功"都
 ① 写一行自记的 `[简历已发送]`、② `mark_resume_sent()` 落下状态位、
 ③ `resume_send_once` 从此不再给这一单发。于是用户看到的现象是
 「好多面试官要简历，你没给」，而台账还把它们统计成"已发"。
 
-改三处，都要有证据：
-- `resume_already_sent()` 只认 BOSS 侧的卡片文案；自记那行不算证据
-- 台账的"已发"同一口径，欠的就是欠的
-- 主循环去重读状态位前先对一次存档：没证据就把那位假标记清掉重发；
-  存档读不到时才退回信状态位（宁可少发一次，也不要对着同一个 HR 发两遍）
+标记不能一刀切全不信：新标记是"点确认前数一遍、点完卡片多出一条"验过的，
+存档还没同步到时也得认，否则下一轮就对同一个 HR 再发一遍。所以标记要落时间，
+盘上那些没时间戳的旧标记才按存档重判。
 """
 import json
 import sys
@@ -51,23 +52,44 @@ class 证据口径Test:
 
 
 class 去重要回头看存档Test:
-    def _loop(self, tmp_path, marked=True, messages=None):
+    def _loop(self, tmp_path, marked=True, messages=None, stamped=True):
+        """stamped=False 复刻今天盘上那 81 条旧标记：只写 True，不写时间。"""
         from types import SimpleNamespace
         from boss_bot.main_loop import UnifiedBotLoop
+        path = tmp_path / "bot_state.json"
         loop = UnifiedBotLoop.__new__(UnifiedBotLoop)
         loop.account_index = 0
         loop._log = lambda *a, **k: None
-        loop._state_store = StateStore(tmp_path / "bot_state.json")
+        loop._state_store = StateStore(path)
         if marked:
             loop._state_store.mark_resume_sent("刘女士")
+            if not stamped:
+                data = json.loads(path.read_text(encoding="utf-8"))
+                for chat in data.get("chats", {}).values():
+                    chat.pop("resume_sent_at", None)
+                path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+                loop._state_store = StateStore(path)
         loop._msg_store = SimpleNamespace(
             get_messages=lambda name, job_name="", company="": messages)
         return loop
 
-    def test_标记有但存档没证据要清掉标记(self, tmp_path):
-        loop = self._loop(tmp_path, marked=True, messages=[HR_ASK, OUR_CLAIM])
+    def test_旧标记没落时间才按证据撤回(self, tmp_path):
+        loop = self._loop(tmp_path, marked=True, stamped=False,
+                          messages=[HR_ASK, OUR_CLAIM])
         assert loop._resume_delivered("刘女士") is False
         assert loop._state_store.resume_sent("刘女士") is False, "标记没清，下一轮还是不发"
+
+    def test_验过的标记存档还没同步到也要认(self, tmp_path):
+        """刚发成功、卡片没进存档时清掉标记＝对着同一个 HR 发两遍"""
+        loop = self._loop(tmp_path, marked=True, stamped=True,
+                          messages=[HR_ASK, OUR_CLAIM])
+        assert loop._resume_delivered("刘女士") is True
+        assert loop._state_store.resume_sent("刘女士") is True
+
+    def test_发过一次就落下时间戳(self, tmp_path):
+        store = StateStore(tmp_path / "bot_state.json")
+        store.mark_resume_sent("刘女士")
+        assert store.resume_sent_at("刘女士"), "没时间戳就分不清新验过的和旧假判据"
 
     def test_存档有证据就不重发(self, tmp_path):
         loop = self._loop(tmp_path, marked=True, messages=[HR_ASK, BOSS_CARD])
@@ -82,8 +104,16 @@ class 去重要回头看存档Test:
         loop = self._loop(tmp_path, marked=False, messages=[HR_ASK])
         assert loop._resume_delivered("刘女士") is False
 
-    def test_索要过的会话走的是这条判据(self):
+    def test_回复轮走的是这一条判据(self):
         import inspect
         from boss_bot.main_loop import UnifiedBotLoop
         源 = inspect.getsource(UnifiedBotLoop._handle_reply_action)
         assert "_resume_delivered" in 源, "还在只看那个会自己骗自己的状态位"
+
+    def test_补扫的门槛也是这一条(self):
+        """补扫原来只看状态位：旧假标记挂着，欠的那 57 单连会话都进不去"""
+        import inspect
+        from boss_bot.main_loop import UnifiedBotLoop
+        源 = inspect.getsource(UnifiedBotLoop._backfill_pending_resumes)
+        assert "_resume_delivered" in 源
+        assert "self._state_store.resume_sent(" not in 源

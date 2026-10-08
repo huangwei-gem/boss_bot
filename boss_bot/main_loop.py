@@ -2134,10 +2134,13 @@ class UnifiedBotLoop:
             self._log("INFO", f"📌 {len(convs) - len(not_pinned)} 个置顶会话不补发简历"
                               f"（你标了自己聊）")
         convs = not_pinned
-        # 认账：state 里标了"这个会话已发过简历"的不再进，否则每次重启都会给同一个
-        # HR 再发一遍，或者被 resume_send_once 降级成"简历已发您了"那句重复提醒
+        # 认账：这一单真发出去过的不再进，否则每次重启都会给同一个 HR 再发一遍。
+        # 但认的是"验过的标记"（带时间戳）或存档里的卡片，不是盘上那批旧假判据
+        # 留下的标记——那批挂着，欠简历的会话连会话都进不去（2026-10-08 数到 6 个）。
         pending = [p for p in pending_resume_asks(convs)
-                   if not self._state_store.resume_sent(p["chat_name"])]
+                   if not self._resume_delivered(p["chat_name"],
+                                                 p.get("job_name", ""),
+                                                 p.get("company", ""))]
         if not pending:
             self._log("INFO", "补扫欠简历的会话：没有")
             return
@@ -2495,12 +2498,13 @@ class UnifiedBotLoop:
         return True
 
     def _resume_delivered(self, name, job_name="", company="") -> bool:
-        """这一单的简历到底发没发：先看存档证据，再退到状态位。
+        """这一单的简历到底发没发：先看存档证据，再看状态位是什么时候落的。
 
-        状态位过去是拿假判据写的（81 个标记里只有 39 个会话真有 BOSS 的简历卡片），
-        照着它去重，欠的那四十多单就永远补不回来。但也不能反过来只看存档：
-        刚发成功、卡片还没进存档的那几秒，只看存档会对同一个 HR 发两遍。
-        所以规则是——证据在=发过；证据不在而标记在=撤回标记；存档读不到=信标记。
+        状态位过去是假判据写的（2026-10-08 按号数：标了已发 82 个，同一账号存档里
+        真有卡片的 76 个，剩 6 个查无卡片），照它去重欠的就补不回来。但也不能
+        反过来只看存档——刚发成功、卡片还没进存档那几秒，只看存档会对同一个 HR
+        发两遍。所以按来历分：带时间戳的是"点确认前数一遍、点完卡片多出一条"
+        验过的，信它；没时间戳的旧标记只配按证据重判，证据不在就撤回。
         """
         msgs = []
         try:
@@ -2510,13 +2514,14 @@ class UnifiedBotLoop:
             self._log("DEBUG", f"读会话存档失败，简历去重回落到状态位: {e}")
         if resume_already_sent(msgs):
             return True
-        flagged = self._state_store.resume_sent(name)
-        if flagged and msgs:
-            self._state_store.clear_resume_sent(name)
-            self._log("WARN", f"↩️ [{name}] 状态里写着简历已发，"
-                              f"但存档里没有简历卡片，按没发过处理")
+        if not self._state_store.resume_sent(name):
             return False
-        return bool(flagged)
+        if self._state_store.resume_sent_at(name):
+            return True
+        self._state_store.clear_resume_sent(name)
+        self._log("WARN", f"↩️ [{name}] 状态里写着简历已发（旧判据落的，没留时间），"
+                          f"但存档里没有简历卡片，按没发过处理")
+        return False
 
     def _handle_reply_action(self, action, content, meta, name, job_name,
                              latest_other_msg, chat_company="",

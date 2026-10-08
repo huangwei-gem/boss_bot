@@ -133,7 +133,9 @@ class BackfillWiringTest:
         lp._handle_reply_action = (
             lambda action, content, meta, name, job_name, latest, chat_company="":
             lp.actions.append((action, name, job_name, latest, meta.get("source"))) or True)
-        lp._state_store = SimpleNamespace(resume_sent=lambda name: False)
+        lp._state_store = SimpleNamespace(resume_sent=lambda name: False,
+                                         resume_sent_at=lambda name: "",
+                                         clear_resume_sent=lambda name: None)
         lp.logs = []
         lp._log = lambda level, msg: lp.logs.append(msg)
         return lp
@@ -246,12 +248,27 @@ class BackfillWiringTest:
         lp = self._loop([self._owed()], [row])
         sent = set()
         lp._state_store.resume_sent = lambda name: name in sent
+        # 发出去那一刻落的时间戳：补扫认这个，因为它背后是"点完卡片多出一条"验过的
+        lp._state_store.resume_sent_at = lambda name: (
+            "2026-10-08 15:00:00" if name in sent else "")
         lp._backfill_pending_resumes()
         assert lp.actions and lp.actions[0][0] == "resume"
         sent.add("江女士")                  # 发出去之后 state 会记上
         lp.actions.clear()
         lp._backfill_pending_resumes()
         assert lp.actions == [], "已经发过的不能再进会话"
+
+    def test_旧假判据留的标记拦不住补扫(self):
+        """盘上那批只写 True 不写时间的标记，得按存档卡片重判——不然欠的永远进不来"""
+        row = {"index": 7, "name": "江女士", "company": "孤波", "preview": ""}
+        lp = self._loop([self._owed()], [row])
+        lp._state_store.resume_sent = lambda name: True
+        lp._state_store.resume_sent_at = lambda name: ""
+        cleared = []
+        lp._state_store.clear_resume_sent = lambda name: cleared.append(name)
+        lp._backfill_pending_resumes()
+        assert cleared == ["江女士"], "旧标记没被撤回，下一轮还是不发"
+        assert lp.actions and lp.actions[0][0] == "resume"
 
     def test_没有欠简历的不去翻侧栏(self):
         conv = self._owed()
