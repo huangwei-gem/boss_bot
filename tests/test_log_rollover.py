@@ -62,3 +62,9 @@ class 轮转失败不吞日志Test:
         src = (ROOT / "flask-version" / "app.py").read_text(encoding="utf-8")
         assert "SafeTimedRotatingFileHandler" in src, "还在用会吞日志的那个"
         assert "boss_bot.log" in src
+
+    def test_import顺序不能压过sys_path那行(self):
+        """app.py 是直接在 flask-version/ 下跑的：提前 import boss_bot.* 会 ModuleNotFoundError，
+        面板起都起不来——这行 import 必须在 sys.path.insert 之后。"""
+        src = (ROOT / "flask-version" / "app.py").read_text(encoding="utf-8")
+        assert src.index("from boss_bot.safe_log import") > src.index("sys.path.insert(0, str(PROJECT_ROOT))")

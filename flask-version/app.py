@@ -22,8 +22,6 @@ import tempfile
 import logging
 import warnings
 from logging.handlers import TimedRotatingFileHandler
-
-from boss_bot.safe_log import SafeTimedRotatingFileHandler
 import threading
 
 
@@ -50,6 +48,10 @@ logging.getLogger('werkzeug').setLevel(logging.ERROR)
 # 项目根目录
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+
+# 必须排在 sys.path 那一行后面：app.py 是直接在 flask-version/ 下跑的，
+# 提前 import boss_bot.* 会 ModuleNotFoundError，面板起都起不来（实测踩过）
+from boss_bot.safe_log import SafeTimedRotatingFileHandler
 
 from boss_bot.unified_config import (
     account_file,
