@@ -326,6 +326,7 @@ class GreetRecord:
         ai_duration_ms: int = 0,
         ai_probe: Optional[Dict[str, Any]] = None,
         auto_greet_note: str = "",
+        greeting_source: str = "",
         timestamp: Optional[str] = None,
     ):
         self.timestamp = _normalize_timestamp(timestamp)
@@ -367,6 +368,9 @@ class GreetRecord:
         # 第二种打招呼机制的留痕：平台自动发了、我们没能进会话核对文案时那一句。
         # 以前只写在日志里，界面看不到，于是出现「BOSS 上已投递、记录里对不上」
         self.auto_greet_note = str(auto_greet_note or "")[:MAX_AI_PROBE_LEN]
+        # 这句招呼语是哪来的：AI 按岗位现编 / 岗位手写兜底 / 账号兜底。
+        # 用户 2026-10-08 明确不要固定招呼语，"发的是哪一句"就得逐条查得回来
+        self.greeting_source = str(greeting_source or "")[:40]
         # 状态：pending/applied/skipped/failed
         # 若调用方未提供，则根据 is_greeted/is_skipped 自动推导
         if status:
@@ -416,6 +420,7 @@ class GreetRecord:
             "account_index": self.account_index,
             "status": self.status,
             "greeting_message": self.greeting_message,
+            "greeting_source": self.greeting_source,
             "ai_error": self.ai_error,
             "ai_duration_ms": self.ai_duration_ms,
             "ai_probe": self.ai_probe,

@@ -442,6 +442,8 @@ a{color:var(--accent);text-decoration:none}
 .greet-status-ai_skip{background:rgba(139,92,246,.16);color:#8b5cf6}
 .greet-status-already{background:rgba(107,114,128,.15);color:var(--fg-3rd)}
 .greet-status-error{background:rgba(239,68,68,.15);color:var(--danger)}
+.greet-src{margin-top:3px;font-size:10px;font-weight:600;color:var(--success);white-space:nowrap}
+.greet-src-fallback{color:var(--warning)}
 .greet-ai-badge{font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(34,197,94,.12);color:var(--success)}
 .greet-ai-badge-nomatch{background:rgba(239,68,68,.12);color:var(--danger)}
 
@@ -921,8 +923,8 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
         </div>
         <div id="accGreetingMode" style="font-size:10px;margin-top:2px;line-height:1.5;color:var(--fg-4th)"></div>
         <!-- 取话顺序只留一行，完整规则挂在 title 上：左栏一屏装不下两段说明 -->
-        <div class="side-hint" title="发送时按这个顺序取：岗位里改过的 &gt; AI 按岗位+公司+JD 现编的 &gt; 上面这段账号招呼语。这段空着时系统按本账号的城市/方向/简历画像生成一条默认（就是框里现在这句），改成你的话就以你的为准">
-          取话顺序：岗位改过的 &gt; AI 现编 &gt; 这段招呼语</div>
+        <div class="side-hint" title="发送时按这个顺序取：AI 按岗位+公司+JD 现编的 &gt; 岗位里改过的 &gt; 上面这段账号招呼语。后两段只是兜底——AI 这次没编出来（接口挂了或编的话没过闸门）才轮到它们。这段空着时系统按本账号的城市/方向/简历画像生成一条默认（就是框里现在这句），改成你的话就以你的为准">
+          取话顺序：AI 现编 &gt; 岗位改过的 &gt; 这段招呼语</div>
         <button class="adv-toggle" id="scopeNoteToggle" onclick="toggleBlock('scopeNoteToggle','scopeNoteBox')"><i data-ki="info"></i>按号独立 / 全局共享 <i data-ki="chevron-right" class="arrow"></i></button>
         <div class="adv-section" id="scopeNoteBox">
           <div class="side-hint" style="margin-top:0">
@@ -3284,7 +3286,7 @@ function showJobModal(job) {
       '</select></div>'+
       '<div style="font-size:10px;color:var(--fg-4th);margin:-4px 0 6px;line-height:1.5">选"兼职"就是 BOSS 搜索页的求职类型筛选（jobType=1903），不是只把字塞进关键词；城市选"全国"=city=100010000，结果会跨省</div>'+
       '<div class="modal-field"><label>翻页数</label><input id="modalPages" type="number" value="'+(job.scroll_pages||5)+'" min="1" max="20"></div>'+
-      "<div class=\"modal-field\"><label>打招呼消息（岗位专属，留空则用账号级招呼语）</label>"+"<textarea id=\"modalGreeting\" placeholder=\"留空=用账号级招呼语；两级都空则该岗位不发送\" style=\"min-height:80px\">"+escHtml(job.greeting_message||'')+'</textarea></div>'+
+      "<div class=\"modal-field\"><label>打招呼消息（兜底：只在 AI 这次没现编出来时才用）</label>"+"<textarea id=\"modalGreeting\" placeholder=\"留空=AI 没编出来时用账号级招呼语；两级都空则该岗位不发送\" style=\"min-height:80px\">"+escHtml(job.greeting_message||'')+'</textarea></div>'+
       '<div class="modal-field"><label>作品图片</label>'+
         '<div class="side-btn-row" style="flex-wrap:wrap;margin-bottom:6px">'+
           '<button class="side-btn side-btn-ghost side-btn-sm" onclick="document.getElementById(\'jobImageInput\').click()">上传图片</button>'+
@@ -4117,6 +4119,14 @@ function buildGreetRowHtml(data) {
   const aiScore=data.ai_score||0;
   const aiBadge=aiScore>0?(aiScore>=70?'<span class="greet-ai-badge">'+aiScore+'分</span>':'<span class="greet-ai-badge greet-ai-badge-nomatch">'+aiScore+'分</span>'):'<span style="color:var(--fg-4th)">—</span>';
   var statusHtml = '<span class="greet-status '+st.cls+'">'+st.label+'</span>';
+  // 招呼语来源：这句是 AI 按岗位现编的，还是 AI 这次没编出来时的兜底文案。
+  // 用户要「不要用固定的招呼语」，界面就得逐行看得出来用的是哪一种
+  if (data.greeting_source && data.status === 'success') {
+    var byAi = data.greeting_source.indexOf('AI') >= 0;
+    statusHtml += '<div class="greet-src' + (byAi ? '' : ' greet-src-fallback') + '" title="'
+      + escAttr('这条招呼语的来源：' + data.greeting_source) + '">'
+      + (byAi ? 'AI 现编' : '兜底文案') + '</div>';
+  }
   // 跳过原因列：仅在 skipped/failed 状态显示 skip_reason，其他状态显示 —
   // AI 原因完整显示，不截断（允许换行）
   var skipReasonHtml = '<span style="color:var(--fg-4th)">—</span>';
@@ -4206,6 +4216,9 @@ function toGreetRow(data) {
     ai_probe: data.ai_probe || null,   // 判分复盘：追问到的"到底卡在哪一条"
     auto_greet_note: data.auto_greet_note || '',   // 第二种打招呼机制的留痕
     actual_greeting_sent: data.actual_greeting_sent || data.greeting || '',
+    // 这句是 AI 现编的还是兜底那句固定的：用户 2026-10-08 要「不要用固定的招呼语」，
+    // 所以每一行都要能当场看出来，不能只听日志
+    greeting_source: data.greeting_source || '',
     account_index: Number(data.account_index || 0),
     account_name: data.account_name || ''
   };

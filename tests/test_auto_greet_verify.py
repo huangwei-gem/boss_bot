@@ -54,8 +54,10 @@ def _engine(reads_per_tab, dialog=None):
 def test_会话渲染慢也要等到气泡出来():
     """点「继续沟通」后前两三次读不到气泡是常态，原来只等 2~3 秒就放弃。"""
     eng, tabs, inst = _engine([[{}, {}, {"chat_page": True, "mine": 1,
+                                        "head": "李女士 某某科技 HR 更多",
                                         "text": "您好，看到您的招聘信息，我很感兴趣。"}]])
-    assert eng._auto_greet_followup(inst, "本号招呼语", eng._auto_greet_dialog(inst)) == "sent"
+    assert eng._auto_greet_followup(inst, "本号招呼语", eng._auto_greet_dialog(inst),
+                                    {"company": "某某科技"}) == "sent"
     assert tabs[0].typed == ["本号招呼语"], "进了会话就该把本号那句补上"
 
 

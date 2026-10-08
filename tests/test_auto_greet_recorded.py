@@ -82,7 +82,7 @@ class UnverifiedDialogCountsAsSentTest:
         src = inspect.getsource(
             __import__("boss_bot.greet_engine", fromlist=["GreetEngine"]).GreetEngine
             ._auto_greet_path)
-        i = src.index("job[\"_auto_greet_note\"] = \"平台已自动发出招呼语")
+        i = src.index("job[\"_auto_greet_note\"] = (")
         seg = src[i:i + 260]
         assert "_record_sent_now(job)" in seg, "没当场落库 → 界面就是要慢一拍"
         assert 'return True, ""' in seg, "记成失败就会出现「BOSS 上投了、记录里是红的」"

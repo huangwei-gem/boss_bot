@@ -3,7 +3,8 @@
 
 口径来自用户 2026-10-03 的要求：招呼语不能再"留空就整轮跳过"——每个账号先按
 这个账号自己的信息给一条默认（可改），发送时再由 AI 按岗位+公司+JD 现编一条。
-所以优先级是：岗位手写 > AI 按岗位定制 > 账号默认 > 三条都没有才算没配。
+优先级 2026-10-08 改过一次：用户「不要用固定的招呼语，要用AI生成的」，
+所以现在是 AI 现编 > 岗位手写 > 账号默认 > 三条都没有才算没配。
 """
 import sys
 from pathlib import Path
@@ -159,12 +160,13 @@ class ResolveViaEngineTest:
         assert src == "账号自定义"
         assert "上海" in text
 
-    def test_岗位里手写的仍然最大(self):
+    def test_AI现编压过岗位手写(self):
+        """用户 2026-10-08：「不要用固定的招呼语，要用AI生成的」。"""
         e = self._engine(acc(greeting="账号那句"))
         text, src = e._greeting_for(self._job(
             greeting_message="这个岗位就用这句",
             _ai_suggested_greeting="AI 现编的一句"))
-        assert (text, src) == ("这个岗位就用这句", "岗位配置")
+        assert (text, src) == ("AI 现编的一句", "AI 按岗位定制")
 
 
 class SanitizeAiGreetingTest:
@@ -178,7 +180,8 @@ class SanitizeAiGreetingTest:
     def test_像在复述提示词的不用(self):
         assert sanitize_ai_greeting("用户是求职者，我需要分析这个招聘岗位") == ""
 
-    def test_太长的不用(self):
+    def test_长到裁不出完整句的整条不用(self):
+        """没有一处停顿可依的字符串，裁下去就是半截话——这种才宁可退回兜底。"""
         assert sanitize_ai_greeting("好" * 300) == ""
 
     def test_正常一句话照用(self):
@@ -230,15 +233,20 @@ class SuggestEndpointTest:
 
 
 class ResolveTierTest:
-    """三档优先级：岗位手写 > AI 定制 > 账号默认 > 没配。"""
+    """三档优先级（2026-10-08 起）：AI 现编 > 岗位手写 > 账号默认 > 没配。"""
 
     def _pick(self, *args, **kw):
         from boss_bot.greet_engine import pick_greeting
         return pick_greeting(*args, **kw)
 
-    def test_岗位手写字压过一切(self):
-        text, src = self._pick("岗位里写死的话", "账号默认", DEFAULT_GREETING, ai_text="AI 现编")
+    def test_AI编不出来时岗位手写才兜底(self):
+        text, src = self._pick("岗位里写死的话", "账号默认", DEFAULT_GREETING, ai_text="")
         assert (text, src) == ("岗位里写死的话", "岗位配置")
+
+    def test_岗位手写字不再压过AI(self):
+        """旧口径让两个号的手写句整天盖住 AI 现编，用户看到的就永远是同一句话。"""
+        text, src = self._pick("岗位里写死的话", "账号默认", DEFAULT_GREETING, ai_text="AI 现编")
+        assert (text, src) == ("AI 现编", "AI 按岗位定制")
 
     def test_没有手写用AI现编(self):
         text, src = self._pick("", "账号默认", DEFAULT_GREETING, ai_text="AI 现编的招呼语")

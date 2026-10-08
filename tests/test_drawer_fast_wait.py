@@ -131,6 +131,6 @@ def test_自动发送结算路径与原逻辑同源():
     少一条就会把"平台已替我们发出去"重新记成失败。"""
     src = inspect.getsource(GreetEngine._auto_greet_path)
     assert "self._auto_greet_dialog(instance)" in src
-    assert "self._auto_greet_followup(instance, greeting, dialog)" in src
+    assert "self._auto_greet_followup(instance, greeting, dialog, job)" in src
     assert "self._record_sent_now(job)" in src
     assert "return None" in src, "没有弹窗要交回原路径继续走"

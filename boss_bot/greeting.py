@@ -4,7 +4,8 @@
 口径 2026-10-03：以前"留空即不发送"，结果是两个号都没写那句话时一整轮
 218 条全是「未配置招呼语，跳过」——用户看到的只是"日志一片跳过、记录对不上"。
 现在每个账号先按**它自己的**信息（城市/搜索方向/技能/作品图）给一条能发的默认，
-发送时再由 AI 判分链按岗位名+公司+JD 现编一条更贴的；岗位里手写的仍然最大。
+发送时再由 AI 判分链按岗位名+公司+JD 现编一条更贴的，并用 AI 那一句。
+用户口径（2026-10-08）：「不要用固定的招呼语，要用AI生成的」——手写的只当兜底。
 """
 
 from boss_bot.unified_config import DEFAULT_GREETING, strip_default_greeting
@@ -15,6 +16,8 @@ _PLACEHOLDER_MARKS = ("某某", "示例", "待填", "test", "xxx", "TBD")
 # AI 现编招呼语的长度上限：BOSS 招呼语实测 60~110 字最像人打的，
 # 超过这个线基本是在复述 JD（判据同 reply_engine 的聊天回复上限，这里更紧）
 AI_GREETING_MAX_CHARS = 140
+# 裁到还剩这么点字就当没裁：只留一句"您好"比固定话术更没营养
+AI_GREETING_MIN_CHARS = 30
 
 
 def _g(obj, key, default=None):
@@ -166,16 +169,40 @@ def ensure_account_default(account, resume=None, profile=None) -> bool:
     return True
 
 
-def sanitize_ai_greeting(text) -> str:
-    """AI 现编的招呼语能不能直接发：不能就返回空串，由调用方回落账号默认。
+def trim_ai_greeting(text: str, limit: int = AI_GREETING_MAX_CHARS) -> str:
+    """超长的 AI 现编招呼语裁到能发的长度；裁不出完整一句就返回空串。
 
-    判据取自 reply_engine 那条现成的闸门（空正文/markdown/提示词脚手架/超长），
-    招呼语比聊天更短，所以再压一道长度。发出去的话收不回来，宁可退回默认。
+    2026-10-08 线上那条（万图科技｜高级文本编辑+AI数据加工）AI 编了 172 字，
+    旧判据"太长就不用"把整条丢掉，于是发出去的是账号里那句固定话——用户看到的
+    正是他反复反对的"固定招呼语"。留着前半句比退回模板更接近他要的东西，
+    但只在句末/分句处下刀：半截话比固定话更减分。
+    """
+    raw = (text or "").strip()
+    if len(raw) <= limit:
+        return raw
+    head = raw[:limit]
+    for marks, keep_tail in (("。！？；", True), ("，、", False)):
+        cuts = [i for i, ch in enumerate(head) if ch in marks]
+        if not cuts:
+            continue
+        cut = cuts[-1]
+        piece = head[:cut + 1] if keep_tail else head[:cut] + "。"
+        return piece if len(piece) >= AI_GREETING_MIN_CHARS else ""
+    return ""
+
+
+def sanitize_ai_greeting(text) -> str:
+    """AI 现编的招呼语能不能直接发：不能就返回空串，由调用方回落兜底话术。
+
+    判据取自 reply_engine 那条现成的闸门（空正文/markdown/提示词脚手架），
+    长度超了先按整句裁（见 trim_ai_greeting），裁不出完整一句才整条不用。
+    发出去的话收不回来，所以要发就发读得通的那一句。
     """
     raw = str(text or "").strip()
     if not raw:
         return ""
-    if len(raw) > AI_GREETING_MAX_CHARS:
+    raw = trim_ai_greeting(raw)
+    if not raw:
         return ""
     try:
         from boss_bot.reply_engine import reply_rejection

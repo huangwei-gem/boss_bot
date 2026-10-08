@@ -248,10 +248,12 @@ class AutoGreetFollowupTest(unittest.TestCase):
         inp = FakeEle("input")
         send = FakeEle("send")
         page = FakePage(bubble={"chat_page": True, "total": 2, "mine": 1,
-                                "text": "您好，方便发份简历吗"},
+                                "text": "您好，方便发份简历吗",
+                                "head": "陈女士 朔珩咨询 HR 更多"},
                         elements={"text=继续沟通": btn, "#chat-input": inp,
                                   ".btn-send": send})
-        got = _engine()._auto_greet_followup(page, ours, self._dialog())
+        got = _engine()._auto_greet_followup(page, ours, self._dialog(),
+                                             {"company": "朔珩咨询有限公司"})
         self.assertEqual(got, "sent")
         self.assertEqual(inp.typed, [ours])
         self.assertEqual(send.clicked, 1)
@@ -260,10 +262,12 @@ class AutoGreetFollowupTest(unittest.TestCase):
         """BOSS 弹窗说发了，可读到的我方气泡是 0 条——这段必须补上"""
         ours = "你好，我对这个岗位很感兴趣"
         inp = FakeEle("input")
-        page = FakePage(bubble={"chat_page": True, "total": 3, "mine": 0, "text": ""},
+        page = FakePage(bubble={"chat_page": True, "total": 3, "mine": 0, "text": "",
+                                "head": "陈女士 朔珩咨询 HR 更多"},
                         elements={"text=继续沟通": FakeEle("继续沟通"),
                                   "#chat-input": inp, ".btn-send": FakeEle("send")})
-        got = _engine()._auto_greet_followup(page, ours, self._dialog())
+        got = _engine()._auto_greet_followup(page, ours, self._dialog(),
+                                             {"company": "朔珩咨询"})
         self.assertEqual(got, "sent")
         self.assertEqual(inp.typed, [ours])
 
@@ -322,7 +326,7 @@ class AutoGreetWiringTest(unittest.TestCase):
         from boss_bot.greet_engine import GreetEngine
         inner = inspect.getsource(GreetEngine._apply_job_inner)
         path = inspect.getsource(GreetEngine._auto_greet_path)
-        pos = path.index("self._auto_greet_followup(instance, greeting, dialog)")
+        pos = path.index("self._auto_greet_followup(instance, greeting, dialog, job)")
         self.assertLess(inner.index("self._auto_greet_path(instance, job, greeting)"),
                         inner.index("chat_failure_reason(snap)"),
                         "补发要排在通用归因之前，否则自动发送会被报成未找到输入框")

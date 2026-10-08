@@ -304,9 +304,55 @@ return (function(){
     var t = last.querySelector('.text-content') || last;
     text = (t.innerText || t.textContent || '').trim();
   }
+  // 顶栏与输入框：刚建立的会话里 .message-item 可以是 0（平台自动发的那句算系统条），
+  // 只看气泡会把"进得去会话"误判成"进不去"，本号招呼语就永远补发不出去
+  var sels = ['.top-info-content', '.top-info-box', '.chat-header', '.header-content'];
+  var head = '';
+  for (var i = 0; i < sels.length; i++) {
+    var h = document.querySelector(sels[i]);
+    if (h && (h.innerText || '').trim()) { head = (h.innerText || '').trim(); break; }
+  }
+  var input = !!document.querySelector('#chat-input, .chat-input, [contenteditable="true"]');
   return JSON.stringify({chat_page: all.length > 0, total: all.length,
-                         mine: mine.length, text: text.slice(0, 400)});
+                         items: all.length, mine: mine.length, text: text.slice(0, 400),
+                         head: head.slice(0, 200), input: input});
 })()'''
+
+
+def chat_is_open(read) -> bool:
+    """页面是不是已经进到会话里了。
+
+    旧判据只有 .message-item 一条：线上实测刚建立的会话气泡数可以是 0
+    （平台自动发出去的那句渲染成系统条），于是 427 次「继续沟通」全被判成
+    进不去会话，本号招呼语一次都没补发出去过。输入框 + 顶栏这两样在，
+    就是同一个会话页面，只是消息还没画出来。
+    """
+    read = read or {}
+    if read.get("chat_page") or read.get("items") or read.get("total"):
+        return True
+    return bool(read.get("input")) and bool((read.get("head") or "").strip())
+
+
+_COMPANY_SUFFIXES = ("股份有限公司", "有限责任公司", "有限公司", "分公司", "集团", "（", "(")
+
+
+def header_matches_company(header, company) -> bool:
+    """会话顶栏写的公司是不是这个岗位的公司——对不上就绝不打字。
+
+    补发是把话打进"当前打开的那个会话"，认错人等于把 AI 招呼语发给别家 HR，
+    比发一句固定招呼语严重得多。所以这里只做去后缀后的包含判定，不做模糊匹配：
+    匹配不到就不发，让这一单停在"平台那句已发出"的状态，交给下一轮人工看。
+    """
+    head = " ".join(str(header or "").split())
+    core = str(company or "").strip()
+    if not head or not core:
+        return False
+    for suffix in _COMPANY_SUFFIXES:
+        at = core.find(suffix)
+        if at > 0:
+            core = core[:at]
+    core = core.strip()
+    return bool(core) and core in head
 
 
 def norm_greeting(text) -> str:
@@ -460,23 +506,29 @@ def chat_button_failure_reason(requested_url: str, landed_url: str, snap: dict):
 
 
 def pick_greeting(job_text: str, account_text: str, default_text: str, ai_text: str = ""):
-    """这条招呼语用哪一段：岗位手写 > AI 按岗位定制 > 账号（默认或自写）> 没配置。
+    """这条招呼语用哪一段：AI 按岗位现编 > 岗位手写 > 账号 > 没配置。
+
+    用户口径（2026-10-08，他说了两遍）：「不要用固定的招呼语，要用AI生成的，
+    我看了你之前生成的招呼语，效果挺好的」。以前岗位里手写的压着 AI 那句，
+    两个号的「数据分析 线上」「数据处理 线上」于是整天发同一句话；现在手写只
+    当兜底——AI 这次没编出来（接口挂了、或编出来过不了闸门）才轮到它，
+    总比这一单不打招呼强。
 
     岗位文案只有在被改过（不等于默认串）时才算定制——历史配置里每个岗位的
     greeting 都被填过同一份默认文案，一律优先会让账号级自定义永远不生效。
 
     AI 那一档是判分时按岗位名+公司+JD 现编的 suggested_greeting，调用前必须已经
-    过 sanitize_ai_greeting；没过校验就是空串，落到账号那档，绝不"将就发一条"。
+    过 sanitize_ai_greeting（超长按整句裁短，裁不出完整句才算没过）。
 
     account_text 由 greeting.effective_account_greeting 给出：账号自己没写时它是
     按这个账号的城市/方向/技能生成的默认话术（2026-10-03 口径）。以前"留空即不发"
     让两个号都没写那句话时一整轮 218 条全成「未配置招呼语，跳过」，
     用户看到的是"日志一片跳过、记录对不上"。
     """
-    if job_text and job_text != default_text:
-        return job_text, "岗位配置"
     if (ai_text or "").strip():
         return ai_text.strip(), "AI 按岗位定制"
+    if job_text and job_text != default_text:
+        return job_text, "岗位配置"
     if (account_text or "").strip():
         return account_text.strip(), "账号自定义"
     return "", "未配置"
@@ -1263,6 +1315,10 @@ class AIAnalyzerChain:
             '  "strengths": ["优势1", "优势2"],\n'
             '  "weaknesses": ["劣势1", "劣势2"],\n'
             '  "suggested_greeting": "基于岗位要求生成的个性化打招呼消息"\n}'
+            "\n\nsuggested_greeting 的写法：这是发给 HR 的第一句招呼语，不是匹配分析报告。"
+            "100 字以内（不超过 110 字），一句自报方向 + 一句对上这个岗位的要求，"
+            "以「方便的话我把简历发您细聊」这类收尾。不要复述 JD、不要列编号、"
+            "不要出现 markdown 符号，也不要编造简历里没有的公司名和年限。"
         )
         return [
             {"role": "system", "content": system_msg},
@@ -1615,6 +1671,7 @@ class GreetEngine:
                 "ai_reason": ai_reason,
                 "ai_match": ai.get("is_match", False),
                 "greeting": job.get("_actual_greeting_sent", "")[:60],
+                "greeting_source": job.get("_greeting_source", ""),
                 "url": job.get("url", ""),
                 "skip_reason": skip_reason or job.get("_last_skip_reason", ""),
                 "is_skipped": status in ("skip", "ai_skip", "already", "error"),
@@ -1694,6 +1751,9 @@ class GreetEngine:
                 ai_model=ai_meta.get("model", ""),
                 ai_raw_response=ai_meta.get("raw_response"),
                 actual_greeting_sent=actual_greeting_sent,
+                # 这句是哪来的：AI 按岗位现编 / 岗位手写兜底 / 账号兜底。
+                # 用户要的是"发 AI 现编的"，所以必须能逐条查回来，不能只听我说
+                greeting_source=job.get("_greeting_source", ""),
                 is_greeted=is_greeted,
                 is_skipped=is_skipped,
                 skip_reason=skip_reason,
@@ -2441,6 +2501,8 @@ class GreetEngine:
         greeting, greeting_source = self._greeting_for(job)
         if not (greeting or "").strip():
             return False, GREETING_MISSING_REASON
+        # 来源一取到就记上：抽屉路径和「平台自动发」那条路径都要能说出这句是哪来的
+        job["_greeting_source"] = greeting_source
 
         instance = self.browser_manager.get_instance()
         if instance is None:
@@ -2660,6 +2722,9 @@ class GreetEngine:
             # ── 5. 输入消息 ──
             # 来源在点沟通之前就已经定下来了（空缺根本走不到这里）
             self._greeting_source = greeting_source
+            # 记到这条岗位上：落库和实时推送都要带，否则界面只有句子没有来源，
+            # 用户没法判断这条到底是 AI 现编的还是兜底那句固定话
+            job["_greeting_source"] = greeting_source
             # 保存实际发送的打招呼语供 GreetRecord 记录使用
             job["_actual_greeting_sent"] = greeting
             self._log("INFO", f"打招呼语来源: {self._greeting_source}, 内容: {greeting[:50]}...")
@@ -3177,7 +3242,7 @@ class GreetEngine:
         return snap
 
     def _greeting_for(self, job: dict):
-        """本条岗位要发的招呼语：岗位手写 > AI 按岗位定制 > 账号（自写或自动默认）。"""
+        """本条岗位要发的招呼语：AI 按岗位现编 > 岗位手写 > 账号（自写或自动默认）。"""
         acc = self._account()
         resume = getattr(self.config, "resume", None)
         profile = getattr(self.config, "user_profile", None)
@@ -3234,17 +3299,22 @@ class GreetEngine:
         self._log("WARN", f"BOSS 自动发出招呼语（第二种机制）| 弹窗class="
                           f"{dialog.get('cls', '')} | 按钮={dialog.get('buttons', [])}")
         self._log("WARN", f"  弹窗文本: {str(dialog.get('text', ''))[:120]}")
-        outcome = self._auto_greet_followup(instance, greeting, dialog)
+        outcome = self._auto_greet_followup(instance, greeting, dialog, job)
         if outcome in ("matched", "sent"):
+            # 这两条分支是真的把本号那句话交到了 HR 手里（补发出去 / 平台发的就是这句）。
+            # 以前这里不落 actual_greeting_sent，界面只有一句留痕、看不到发出去的话
+            job["_actual_greeting_sent"] = job.get("_actual_greeting_sent") or greeting
             job["_auto_greet_note"] = (
                 "BOSS 自动发出的即本号招呼语，未重复发送" if outcome == "matched"
                 else "BOSS 自动发的是平台预设文案，已补发本号招呼语")
             self._mark_chatted(job)
             self._record_sent_now(job)
             return True, ""
-        # 弹窗在 = 平台已经把招呼发出去了，只是没能进会话核对文案。留痕，不记失败。
+        # 弹窗在 = 平台已经把招呼发出去了，只是我们没能把本号那句补进去。留痕，不记失败。
         self._mark_chatted(job)
-        job["_auto_greet_note"] = "平台已自动发出招呼语，未能进会话核对文案（建议抽查）"
+        job["_auto_greet_note"] = (
+            "会话顶栏与岗位公司不符，本号招呼语没补发（怕发错人）" if outcome == "mismatch"
+            else "平台已自动发出招呼语，未能进会话核对文案（建议抽查）")
         self._record_sent_now(job)
         return True, ""
 
@@ -3291,11 +3361,14 @@ class GreetEngine:
             cands.append(tab)
         return cands
 
-    def _auto_greet_followup(self, instance, greeting: str, dialog: dict) -> str:
+    def _auto_greet_followup(self, instance, greeting: str, dialog: dict,
+                             job: dict = None) -> str:
         """第二种打招呼机制：BOSS 自己发了一条，我们判断要不要补发本号那句。
 
         matched=BOSS 发的就是本号招呼语（不重复发）；sent=内容不是我们的，已补发；
-        none=进不去会话，什么都没发。盲发会对着搜索页打字，所以读不到列表就收手。
+        none=进不去会话，什么都没发；mismatch=进去了但不是这个公司的会话，不敢发。
+        盲发会对着搜索页打字，所以读不到会话就收手；顶栏对不上公司也收手——
+        把 AI 招呼语发给别家的 HR 比发一句固定招呼语严重得多。
         """
         btn_text = pick_continue_btn(dialog)
         if not btn_text:
@@ -3304,6 +3377,9 @@ class GreetEngine:
 
         try:
             btn = instance.ele(f"text={btn_text}", timeout=3)
+            if not btn:
+                # text= 命中的可能是包着按钮的那层文本，按类名再要一次
+                btn = instance.ele(".btn-sure", timeout=2)
             if not btn:
                 self._log("WARN", f"弹窗里的「{btn_text}」按钮没找到")
                 return "none"
@@ -3314,7 +3390,7 @@ class GreetEngine:
 
         tab, read = self._wait_chat_open(instance)
         if tab is None:
-            self._log("WARN", f"点了「继续沟通」也读不到会话气泡"
+            self._log("WARN", f"点了「继续沟通」也进不去会话"
                               f"（{CHAT_OPEN_POLLS} 次 × {CHAT_OPEN_POLL_SEC:.0f}s），不盲发")
             return "none"
         sent_text = read.get("text", "")
@@ -3324,6 +3400,12 @@ class GreetEngine:
         if not norm_greeting(greeting):
             self._log("WARN", "本号招呼语为空，不补发")
             return "none"
+        head = read.get("head") or ""
+        company = (job or {}).get("company", "") or ""
+        if not header_matches_company(head, company):
+            self._log("WARN", f"会话顶栏对不上这个岗位的公司，不补发"
+                              f"（顶栏: {head[:36] or '空'} | 岗位公司: {company[:24] or '空'}）")
+            return "mismatch"
 
         input_area = None
         for sel in AUTO_GREET_INPUT_SELECTORS:
@@ -3366,7 +3448,7 @@ class GreetEngine:
         for attempt in range(CHAT_OPEN_POLLS):
             for tab in self._greet_tab_candidates(instance):
                 read = self._read_last_outgoing(tab)
-                if read and read.get("chat_page"):
+                if chat_is_open(read):
                     return tab, read
             if attempt + 1 < CHAT_OPEN_POLLS and self.running:
                 self._interruptible_sleep(CHAT_OPEN_POLL_SEC)
