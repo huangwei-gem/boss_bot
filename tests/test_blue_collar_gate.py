@@ -226,7 +226,9 @@ class 回复侧Test:
         action, content, meta = eng.get_reply(
             "你好，有兴趣聊聊吗？", job_name="长白班普工包吃住18元一小时（代招职位）")
         assert action == "text", f"普工岗还走正常回复链：{action} {content}"
-        assert "只找线上" in content, content
+        # 用户 2026-10-08 晚改口径：不要报"只找线上"这种口径，只说别再推荐这一类
+        assert "不用再给我推荐" in content, content
+        assert "只找线上" not in content, content
         assert meta["source"] == "family_filter"
 
     def test_AI不再替我们应下进厂的活(self):

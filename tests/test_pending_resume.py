@@ -278,10 +278,13 @@ class BackfillWiringTest:
         assert lp._chat_handler.listed == 0, "没欠东西就别白走一遍侧栏"
 
     def test_接在启动全量同步之后(self):
-        """补扫读的就是刚同步完的那份存档，挪到别处会拿旧数据判"""
+        """补扫读的就是刚同步完的那份存档，挪到别处会拿旧数据判。
+        但它不能跟同步套在同一个 try 里——19:23 那趟就是被同步的异常带走的。"""
         src = (ROOT / "boss_bot" / "main_loop.py").read_text(encoding="utf-8")
         at = src.index("self._full_sync_chats()")
-        assert "self._backfill_pending_resumes()" in src[at:at + 400]
+        段 = src[at:src.index("check_interval", at)]
+        assert "self._run_resume_backfill(force=True)" in 段
+        assert "self._backfill_pending_resumes()" not in 段
 
 
 class SidebarCoverageTest:

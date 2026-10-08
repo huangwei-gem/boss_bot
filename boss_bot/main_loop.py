@@ -68,6 +68,23 @@ GREET_ROUND_INTERVAL = 30
 # 主动跟进的记账文件：谁追过几次、最后一次什么时候，重启不能重置
 FOLLOWUP_STATE_FILE = BASE_DIR / "data" / "followup_state.json"
 
+# 欠简历的补扫隔多久再跑一趟。以前它只在启动全量同步之后跑那一次，还跟同步套在
+# 同一个 try 里：2026-10-08 19:23:26 账号0 列出「补扫欠简历的会话：11 个 ——
+# 沈女士、喻江南、王女士…」，紧跟一行「启动全量同步失败」——那一刻浏览器正在重建
+# （19:23:49 才"统一主循环已启动"），补扫第一句取会话列表就抛了，11 单一条没发，
+# 而它之后一次都没再试过。用户 19:47 来催的就是这个。
+RESUME_BACKFILL_MINUTES = 30
+# 上一趟是抛异常结束的：那一单都没发出去，隔几分钟就该再来，别等满半小时
+RESUME_BACKFILL_RETRY_MINUTES = 5
+
+# 欠简历的补扫间隔。以前这一趟只在启动全量同步之后跑一次：
+# 2026-10-08 19:23:26 账号0 列出了「补扫欠简历的会话：11 个」，紧跟一行
+# 「启动全量同步失败」——它俩套在同一个 try 里，那一刻浏览器正在重建，
+# 补扫第一句取会话列表就抛了，11 单一条没发；到 19:34 用户来催时也没再试过。
+RESUME_BACKFILL_MINUTES = 30
+# 上一趟是抛异常结束的那次隔几分钟就来——那一趟一单都没发出去
+RESUME_BACKFILL_RETRY_MINUTES = 5
+
 # 追到面试的话术：第 1 次问岗位还在不在并约面试，第 2 次换个说法，别复读。
 # 每条都必须自己把"只找线上"讲明白：2026-10-07 16:59 真发出去的一条写的是
 # "我随时能到岗，想约个时间当面聊聊"——模板不判据，跟进轮就成了另一个漏承诺的口子。
@@ -243,6 +260,12 @@ class UnifiedBotLoop:
         self._probe_used_this_round = 0
         # 采集口径：启动后全量同步一次侧栏，之后回复轮只看未读
         self._full_sync_done = False
+        # 欠简历的补扫：上一趟什么时候跑的、那趟是不是抛异常结束的
+        self._resume_backfill_at = None
+        self._resume_backfill_failed = False
+        # 欠简历补扫：上次跑的时刻 + 上一趟是不是抛异常结束的（见 RESUME_BACKFILL_*）
+        self._resume_backfill_at = None
+        self._resume_backfill_failed = False
         # 存档里欠回复的会话：一条处理失败后多久才再试（侧栏对不上行时会反复空跑）
         self._owed_attempt_at = {}
         self._owed_last_scan = 0.0
@@ -1697,14 +1720,17 @@ class UnifiedBotLoop:
                         self._sync_chat_tab()
                         self._chat_handler.go_to_chat()
                         self._full_sync_chats()
-                        self._backfill_pending_resumes()
                     except Exception as e:
                         self._log("WARN", f"启动全量同步失败（不影响后续未读轮次）: {e}")
+                    # 补扫单独一趟：同步炸了不能连累它（19:23 那 11 单就是这么没的）
+                    self._run_resume_backfill(force=True)
 
                 self._current_mode = "reply"
                 self._run_reply_round()
                 # 追到面试：回复轮只管"对方说了什么"，这一句管"我们说完对方没回"
                 self._run_followup_round()
+                # 欠着的简历每轮照时间窗再补一趟，不然只靠启动那一次
+                self._run_resume_backfill()
 
                 # 回复检查间隔
                 check_interval = self.config.reply.check_interval
@@ -2129,6 +2155,30 @@ class UnifiedBotLoop:
         hits = [r for r in rows or []
                 if r.get("name") == name and (not company or same(r.get("company"), company))]
         return hits[0] if len(hits) == 1 else None
+
+    def _resume_backfill_due(self, now=None) -> bool:
+        """欠简历的补扫这趟该不该跑（没跑过=该跑）。"""
+        上次 = self._resume_backfill_at
+        if not 上次:
+            return True
+        隔 = (RESUME_BACKFILL_RETRY_MINUTES if self._resume_backfill_failed
+              else RESUME_BACKFILL_MINUTES)
+        return (now or datetime.now()) - 上次 >= timedelta(minutes=隔)
+
+    def _run_resume_backfill(self, force: bool = False) -> None:
+        """补发欠着的简历：自己吞异常。
+        跟启动同步套在同一个 try 里时，谁先炸都把对方带走——19:23 那趟
+        就是这样把 11 单一起没了的。"""
+        if not force and not self._resume_backfill_due():
+            return
+        self._resume_backfill_at = datetime.now()
+        try:
+            self._backfill_pending_resumes()
+            self._resume_backfill_failed = False
+        except Exception as e:
+            self._resume_backfill_failed = True
+            self._log("WARN", f"补扫欠简历这一趟没跑成（{e}），"
+                              f"{RESUME_BACKFILL_RETRY_MINUTES} 分钟后再来")
 
     def _backfill_pending_resumes(self):
         """补发"HR 要过简历、但我们没发出去"的会话。

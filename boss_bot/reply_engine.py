@@ -40,11 +40,14 @@ from boss_bot.reply_record import ReplyRecord, ReplyRecordStore, _get_reply_stor
 
 logger = logging.getLogger(__name__)
 
-# 岗位类型命中（普工/主播/快递/保洁）时开口就说的拒绝。和骗子话术同一个口径：
-# 只说"只找线上远程"，不报具体方向——对着标注 HR 报"我是做数据分析的"等于把话聊死。
+# 岗位类型命中（普工/主播/快递/保洁/老师/销售）时开口就说的拒绝。
+# 用户 2026-10-08 晚把口径改了两次：先要"告诉对方不要给我推荐这类岗位"，
+# 再指定「不要再说什么只招线上兼职这种话，你就说不要给我推荐这类岗位就行了」——
+# 报"我只找线上"等于给 HR 递话接着聊（"我们也线上的呀""居家主播就是线上"），
+# 这一句要的是把这一类关上门，不解释方向、不自报口径。
 FAMILY_DECLINE_REPLY = (
-    "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，"
-    "这类岗位不考虑，以后也不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~")
+    "您好，感谢您的介绍。这类岗位我不考虑，"
+    "以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~")
 # 我们自己的话里出现过这一句，说明这一单已经当面拒过了；同一会话再复读一遍就是骚扰
 # （骗子过滤那句也以它收尾，两条链共用这一个标记）
 REPLY_REFUSAL_MARK = "就不耽误您时间了"
@@ -663,7 +666,7 @@ class ReplyEngine:
                         is_skipped=True, skip_reason=reason,
                     )
                     return ("none", None, meta)
-                reason = f"岗位类型命中「{family_hit}」，只找线上兼职"
+                reason = f"岗位类型命中「{family_hit}」，这一类不接也不再收推荐"
                 logger.info(f"[岗位类型过滤] {reason}")
                 meta["source"] = "family_filter"
                 meta["intent"] = meta.get("intent") or "other"
