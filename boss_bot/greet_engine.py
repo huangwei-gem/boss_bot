@@ -147,6 +147,17 @@ NO_DRAWER_COOLDOWN_SEC = 30 * 60
 NO_DRAWER_WINDOW_SEC = 30 * 60
 NO_DRAWER_WINDOW_LIMIT = 6
 NO_DRAWER_WINDOW_OK_FLOOR = 10
+# 账号级额度之外，还有"单个岗位本身点不动"这一类：2026-10-08 今天 34 次抽屉失败
+# 只落在 8 个岗位 URL 上，同一个 URL（65eab266…）从 07:42 到 16:00 连吃 5 次同一条
+# 原因，一条都没投成，而同期账号投进了 178 单——不是额度，是这个岗位 BOSS 压根
+# 没记成沟通。每轮再点一次就是再白烧一趟导航+读 JD+AI 判分+点沟通。
+# 连败到这个次数就先放一放（进程重启会重新给机会，万一是当天临时抽风）。
+NO_DRAWER_GIVE_UP = 2
+
+
+def drawer_give_up_reason(times: int) -> str:
+    return (f"这个岗位连着 {times} 次点了「立即沟通」都不出聊天抽屉，"
+            f"BOSS 没把这次沟通记下来（不是当日额度，同期别的岗位投得出去），先放一放")
 
 # JD 正文短到这个字数就当作"没写具体工作内容"。数字是现算的，不是拍的：
 # 日志里 934 个取到过 JD 的岗位，正文中位 316 字、p10 也还有 146 字，
@@ -1440,6 +1451,9 @@ class GreetEngine:
         self._no_drawer_recent = []
         self._applied_recent = []
         self._greet_cooldown_reason = ""
+        # 按岗位 URL 记的抽屉连败（这一类不是额度，是那个岗位点不动）
+        self._drawer_fails = {}
+        self._drawer_announced = set()
 
         # 城市字典（从 API 捕获）
         self._city_dict = {}
@@ -1893,6 +1907,7 @@ class GreetEngine:
             success, fail_reason = self._apply_job(job_info)
             if success:
                 self._note_applied()
+                self._drawer_fails_ok(job_url)
                 self.applied_count += 1
                 self._log("SUCCESS", f"✅ 已投递: {job_name}")
                 # _apply_job_inner 在点发送那一刻已经即时记过，这里再记一次
@@ -2443,13 +2458,32 @@ class GreetEngine:
         """
         return max(0.0, self._greet_cooldown_until - (now or time.time()))
 
-    def _note_drawer_fail(self, now=None) -> int:
-        """记一次"点了沟通没出抽屉"：连续计数和时间窗都要记。"""
+    def _note_drawer_fail(self, url: str = "", now=None) -> int:
+        """记一次"点了沟通没出抽屉"：连续计数、时间窗、按岗位的连败都要记。"""
         now = now or time.time()
         self._no_drawer_streak += 1
         近 = (self._no_drawer_recent or []) + [now]
         self._no_drawer_recent = [t for t in 近 if now - t <= NO_DRAWER_WINDOW_SEC]
+        if url:
+            self._drawer_fails[url] = self._drawer_fails.get(url, 0) + 1
         return self._no_drawer_streak
+
+    def _drawer_given_up(self, url: str) -> bool:
+        """这个岗位是不是已经连败到该放一放（只认 URL：岗位名会重名）"""
+        return bool(url) and self._drawer_fails.get(url, 0) >= NO_DRAWER_GIVE_UP
+
+    def _drawer_fails_ok(self, url: str) -> None:
+        """投成功了，这个岗位的连败清零"""
+        self._drawer_fails.pop(url, None)
+        self._drawer_announced.discard(url)
+
+    def _announce_giveup(self, url: str) -> bool:
+        """这个岗位的"先放一放"要不要报一声——只报第一次。
+        每轮都念一遍的话，界面里全是同一句重复，反而把有用的行挤掉。"""
+        if not url or url in self._drawer_announced:
+            return False
+        self._drawer_announced.add(url)
+        return True
 
     def _note_applied(self, now=None) -> None:
         """投成功：连续计数清零，但窗口里的旧账要留着。
@@ -2486,6 +2520,12 @@ class GreetEngine:
         url = job.get("url", "")
         if not url:
             return False, "岗位URL为空"
+
+        # 同一个岗位点了两次都不出抽屉，就不要再点第三次：这一类不是额度
+        # （额度另有时间窗那道门），是这个岗位 BOSS 压根没记成沟通，
+        # 每轮再走一遍"导航→读 JD→AI 判分→点沟通"只是白烧时间和判分预算
+        if self._drawer_given_up(url):
+            return False, drawer_give_up_reason(self._drawer_fails.get(url, 0))
 
         # 冷却期内不再跑"搜索→详情→点沟通"这一整套：连着几次都停在同一个地方，
         # 说明卡的是账号层面的额度，不是这个岗位
@@ -2925,7 +2965,7 @@ class GreetEngine:
                 reason = chat_failure_reason(snap)
                 self._log("WARN", f"未找到输入框｜{reason}")
                 if reason.startswith(NO_DRAWER_REASON):
-                    连续 = self._note_drawer_fail()
+                    连续 = self._note_drawer_fail(url)
                     窗口 = self._drawer_quota_hit()
                     if 连续 >= NO_DRAWER_STREAK_LIMIT or 窗口:
                         self._greet_cooldown_until = time.time() + NO_DRAWER_COOLDOWN_SEC
@@ -2947,6 +2987,7 @@ class GreetEngine:
                 hidden = len(raw_inputs) - len(shown)
                 self._log("WARN", f"  现场 url={str(snap.get('url'))[:80]} "
                                   f"抽屉元素={snap.get('chat_elements') or '无'} "
+                                  f"按钮={list(snap.get('buttons') or [])[:4]} "
                                   f"可见输入框={shown[:8]} 隐藏模板输入框={hidden} 个")
                 if reason == CAPTCHA_REASON:
                     # 认出来了就得等人工：60 秒时限、到点算一次、连续三次停轮都在闸门里。

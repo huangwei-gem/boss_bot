@@ -3139,6 +3139,7 @@ class GreetRoundDryRunTest:
         eng.search_jobs.return_value = [{"job_name": "数据分析师", "company": "A",
                                          "url": "https://www.zhipin.com/job_detail/x.html"}]
         eng._is_already_chatted.return_value = False
+        eng._drawer_given_up.return_value = False     # 抽屉连败黑名单：这条测试测的是别的闸门
         eng.send_greeting.return_value = True
         loop._greet_engine = eng
         loop._metrics = MagicMock()

@@ -1508,6 +1508,19 @@ class UnifiedBotLoop:
                         self._record_greet_skip(job, "already", "已沟通过")
                         continue
 
+                    # 点了两次「立即沟通」都不出聊天抽屉的岗位先放一放：这一类不是
+                    # 当日额度（同期别的岗位投得出去），是 BOSS 压根没把这单记成沟通。
+                    # 2026-10-08 今天 34 次抽屉失败只落在 8 个 URL 上，同一个连吃 5 次，
+                    # 每轮再点就是再白烧一趟导航+读 JD+AI 判分。这里不写记录（同
+                    # "冷却期不烧记录"那条），也只报第一次，免得界面全是重复行。
+                    _url = job.get("url", "")
+                    if self._greet_engine._drawer_given_up(_url):
+                        if self._greet_engine._announce_giveup(_url):
+                            self._log("INFO", f"⏭️ 先放一放: {job.get('job_name', '')}"
+                                              f"（{self._greet_engine._drawer_fails.get(_url, 0)} 次点了"
+                                              f"「立即沟通」都不出聊天抽屉，BOSS 没记成沟通）")
+                        continue
+
                     # 已沟通过的岗位由 _is_already_chatted（按岗位 URL 去重）拦下：
                     # 一条 URL 只属于一个 HR 发的一个岗位，这就是"岗位+HR 都是同一个"
                     # 的唯一可靠依据。此处不再按昵称/岗位名扫描其他会话的聊天记录——

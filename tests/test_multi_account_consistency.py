@@ -182,6 +182,7 @@ class TestGreetRoundOrder:
         eng._greeting_for.return_value = (greeting, "岗位配置" if greeting else "未配置")
         eng.search_jobs.return_value = [{"job_name": "岗位A", "url": "u1"}]
         eng._is_already_chatted.return_value = False
+        eng._drawer_given_up.return_value = False     # 抽屉连败黑名单：这条测试测的是别的闸门
         eng._ai_enabled = True
         eng._ai_providers = [{"name": "p"}]
         eng._already_recorded_today.return_value = recorded_today

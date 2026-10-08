@@ -29,6 +29,7 @@ def _engine():
     eng._applied_recent = []
     eng._greet_cooldown_reason = ""
     eng._greet_cooldown_until = 0.0
+    eng._drawer_fails = {}          # 按岗位 URL 的抽屉连败账（这道门排在冷却之前）
     eng.browser_manager = MagicMock()
     # 冷却检查在招呼语检查之前，但 _greeting_for 要读账号配置：
     # 这个裸实例没有，给一条现成的免得别的分支炸在配置上
