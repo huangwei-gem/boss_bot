@@ -131,6 +131,53 @@ def pinned_key(row: dict):
     return ((row.get("name") or "").strip(), (row.get("company") or "").strip())
 
 
+# 简历"真发出去了"的唯一证据：我方气泡里出现附件条目本身。
+# 这些字样必须是附件条目特有的——只写"简历"会把 HR 索要简历的卡片读成送达。
+RESUME_DELIVERY_MARKS = ("点击预览附件简历", "附件简历已发送",
+                         "附件简历请求已发送", "简历请求已发送")
+
+RESUME_SENT_PROBE_JS = '''(function () {
+    // 我方气泡（item-myself）里找附件条目；对侧卡片一律不算证据
+    var mine = document.querySelectorAll('.message-item.item-myself');
+    var card = false;
+    for (var i = Math.max(0, mine.length - 5); i < mine.length; i++) {
+        var t = mine[i].innerText || mine[i].textContent || '';
+        if (/\\.docx|\\.pdf|\\.pptx/.test(t) || t.indexOf('预览附件简历') >= 0
+            || t.indexOf('附件简历已发送') >= 0 || t.indexOf('简历请求已发送') >= 0) {
+            card = true; break;
+        }
+    }
+    var dialogVisible = false;
+    var dialogSels = ['.choose-resume-dialog', '.dialog-wrap.active',
+                      '.panel-resume.sentence-popover', '.panel-resume'];
+    for (var j = 0; j < dialogSels.length; j++) {
+        var p = document.querySelector(dialogSels[j]);
+        if (!p) continue;
+        var cs = window.getComputedStyle(p);
+        if (cs.display !== 'none' && cs.visibility !== 'hidden') { dialogVisible = true; break; }
+    }
+    // BOSS 的拒绝提示是页面上的一句话（实测：发送职位失败，附件简历大小超出限制，
+    // 最多发送2000K的附件）。toast 容器类名版本多，直接扫正文更稳。
+    var body = document.body ? (document.body.innerText || '') : '';
+    var toast = (body.indexOf('超出限制') >= 0 || body.indexOf('最多发送') >= 0)
+        ? '附件简历大小超出限制（BOSS 上限 2000K）' : '';
+    return JSON.stringify({mine_card: card, dialog_visible: dialogVisible, toast: toast});
+})()'''
+
+
+def judge_resume_sent(read):
+    """探针结果 → (是不是送达, 没送达的原因)。判据单点，别在 JS 和 Python 各写一套。"""
+    read = read or {}
+    toast = str(read.get("toast") or "")
+    if toast:
+        return False, toast
+    if read.get("mine_card"):
+        return True, ""
+    if read.get("dialog_visible"):
+        return False, "简历弹层还挂着，没点成发送"
+    return False, "没在我方气泡里看到简历附件条目"
+
+
 class BossChatHandler:
     """BOSS 聊天页面操作处理器
 
@@ -1955,53 +2002,27 @@ class BossChatHandler:
             pass
 
     def _verify_resume_sent(self, timeout: int = 8) -> bool:
-        """验证简历是否发送成功：弹层消失 + 消息列表出现简历项
+        """验证简历是不是真发出去了：只认我方气泡里出现的简历附件条目。
 
         实测送达消息格式: "附件简历请求已发送" + "数据分析简历-黄维.docx点击预览附件简历"
         """
         deadline = time.time() + timeout
         while time.time() < deadline:
             try:
-                result = self.page.run_js('''(
-                    function() {
-                        // 检测简历选择弹层是否仍可见
-                        var dialogSels = [".choose-resume-dialog", ".dialog-wrap.active", ".panel-resume.sentence-popover", ".panel-resume"];
-                        var dialogVisible = false;
-                        for (var i = 0; i < dialogSels.length; i++) {
-                            var panel = document.querySelector(dialogSels[i]);
-                            if (panel) {
-                                var cs = window.getComputedStyle(panel);
-                                if (cs.display !== "none" && cs.visibility !== "hidden") {
-                                    dialogVisible = true;
-                                    break;
-                                }
-                            }
-                        }
-                        // 检测消息列表是否出现简历消息
-                        var items = document.querySelectorAll(".message-item .text-content, [class*='message-item']");
-                        var count = items.length;
-                        // 检查最后几条消息是否含简历相关文本
-                        for (var j = Math.max(0, count - 3); j < count; j++) {
-                            var txt = items[j].textContent || "";
-                            if (txt.indexOf("简历") >= 0 || txt.indexOf("附件简历") >= 0 || txt.indexOf(".docx") >= 0 || txt.indexOf("简历请求已发送") >= 0) {
-                                return "delivered";
-                            }
-                        }
-                        if (dialogVisible) return "dialog visible";
-                        return "pending";
-                    }
-                )()''', as_expr=True)
-                # 只认「消息列表里出现简历条目」这一种证据。
-                # 早先版本把"聊天里有任意消息"也当成功（new_message），于是任何有
-                # 历史消息的会话都会立刻返回 True → mark_resume_sent() 记下已发送 →
-                # resume_send_once 生效，那个会话再也收不到简历，而实际什么都没发出去。
-                if result == "delivered":
-                    logger.info("简历送达验证通过（消息列表出现简历条目）")
+                raw = self.page.run_js(RESUME_SENT_PROBE_JS, as_expr=True)
+                read = json.loads(raw) if isinstance(raw, str) else (raw or {})
+                ok, why = judge_resume_sent(read)
+                if ok:
+                    logger.info("简历送达验证通过（我方气泡出现简历附件条目）")
                     return True
+                if why and "2000K" in why:
+                    # 尺寸超限不会自己好，重试只是白点几次发送
+                    logger.warning(f"简历发送被 BOSS 拒了: {why}")
+                    return False
             except Exception:
                 pass
             time.sleep(1)
-        logger.warning("简历送达验证超时，按失败处理")
+        logger.warning("简历送达验证超时：没看到我方简历条目，按失败处理")
         return False
 
     def check_health(self) -> str:

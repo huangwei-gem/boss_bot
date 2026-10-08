@@ -685,11 +685,23 @@ def api_resume_greet():
 
 # ===================== 回复控制 API =====================
 
+def _audit_toggle(action: str, scope: str):
+    """人工接管这类"会停掉发送"的开关要留一行可查的账。
+
+    2026-10-08 13:15 两个号的回复被同时置成人工接管，日志里查不到是谁点的
+    （面板没开访问日志），只能靠 bot_state 里的时间戳猜。临时面板和线上共用
+    同一份状态文件，一按两边都停，所以这一行必须带上是哪端口按的。
+    """
+    logger.warning("⏸ %s：%s（来自 %s，进程 %s）", action, scope,
+                   request.host, os.getpid())
+
+
 @app.route("/api/pause_reply", methods=["POST"])
 def api_pause_reply():
     """暂停所有账号的回复功能（人工接管模式）。"""
     manager = _ensure_manager()
     manager.pause_reply()
+    _audit_toggle("回复已暂停（人工接管）", "全部账号")
     return jsonify({"status": "ok", "message": "回复已暂停（人工接管模式）"})
 
 
@@ -698,6 +710,7 @@ def api_resume_reply():
     """恢复所有账号的回复功能。"""
     manager = _ensure_manager()
     manager.resume_reply()
+    _audit_toggle("回复已恢复", "全部账号")
     return jsonify({"status": "ok", "message": "回复已恢复"})
 
 
@@ -783,6 +796,7 @@ def api_account_pause_reply(idx: int):
     if error:
         return error
     manager.pause_reply(idx)
+    _audit_toggle("回复已暂停（人工接管）", f"账号{idx}")
     return jsonify({"status": "ok", "message": f"账号 {idx} 回复已暂停（人工接管模式）"})
 
 
@@ -793,6 +807,7 @@ def api_account_resume_reply(idx: int):
     if error:
         return error
     manager.resume_reply(idx)
+    _audit_toggle("回复已恢复", f"账号{idx}")
     return jsonify({"status": "ok", "message": f"账号 {idx} 回复已恢复"})
 
 
