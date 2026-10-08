@@ -131,21 +131,27 @@ def pinned_key(row: dict):
     return ((row.get("name") or "").strip(), (row.get("company") or "").strip())
 
 
-# 简历"真发出去了"的唯一证据：我方气泡里出现附件条目本身。
-# 这些字样必须是附件条目特有的——只写"简历"会把 HR 索要简历的卡片读成送达。
-RESUME_DELIVERY_MARKS = ("点击预览附件简历", "附件简历已发送",
-                         "附件简历请求已发送", "简历请求已发送")
+# 简历"真发出去了"的唯一证据：会话里多出 BOSS 那张附件卡片。
+# 这些字样必须是卡片特有的——只写"简历"会把 HR 索要简历的卡片读成送达。
+# 直接复用台账那份常量：界面统计和发送核对必须是同一口径，否则一边说发了
+# 一边说没发（2026-10-08 就是这么对不上的）。
+from boss_bot.pending_resume import RESUME_SENT_MARKS as RESUME_DELIVERY_MARKS
 
+# 卡片在哪个方向：实测存档里 157 条附件卡片全是 is_system=True、is_mine=False，
+# 采集器按 className 含 item-system 判的——它是居中系统卡片，不是我方气泡。
+# 所以这里扫全部 .message-item，靠"点确认前后卡片条数变多"认这一单。
 RESUME_SENT_PROBE_JS = '''(function () {
-    // 我方气泡（item-myself）里找附件条目；对侧卡片一律不算证据
-    var mine = document.querySelectorAll('.message-item.item-myself');
-    var card = false;
-    for (var i = Math.max(0, mine.length - 5); i < mine.length; i++) {
-        var t = mine[i].innerText || mine[i].textContent || '';
-        if (/\\.docx|\\.pdf|\\.pptx/.test(t) || t.indexOf('预览附件简历') >= 0
-            || t.indexOf('附件简历已发送') >= 0 || t.indexOf('简历请求已发送') >= 0) {
-            card = true; break;
+    var marks = __MARKS__;
+    var items = document.querySelectorAll(".message-item");
+    var cardTotal = 0;
+    for (var i = 0; i < items.length; i++) {
+        var t = items[i].innerText || items[i].textContent || '';
+        var hit = false;
+        for (var k = 0; k < marks.length; k++) {
+            if (t.indexOf(marks[k]) >= 0) { hit = true; break; }
         }
+        if (!hit && /\\.docx|\\.pdf|\\.pptx/.test(t)) hit = true;
+        if (hit) cardTotal++;
     }
     var dialogVisible = false;
     var dialogSels = ['.choose-resume-dialog', '.dialog-wrap.active',
@@ -160,22 +166,37 @@ RESUME_SENT_PROBE_JS = '''(function () {
     // 最多发送2000K的附件）。toast 容器类名版本多，直接扫正文更稳。
     var body = document.body ? (document.body.innerText || '') : '';
     var toast = (body.indexOf('超出限制') >= 0 || body.indexOf('最多发送') >= 0)
-        ? '附件简历大小超出限制（BOSS 上限 2000K）' : '';
-    return JSON.stringify({mine_card: card, dialog_visible: dialogVisible, toast: toast});
-})()'''
+        ? '附件简历大小超出限制' : '';
+    return JSON.stringify({card_total: cardTotal, dialog_visible: dialogVisible, toast: toast});
+})()'''.replace("__MARKS__", json.dumps(list(RESUME_DELIVERY_MARKS), ensure_ascii=False))
+
+# 超限文案在这里归一，别靠 JS 拼句子——_verify_resume_sent 靠"2000K"这个词决定
+# 要不要停止重试，判据只留 judge_resume_sent 一处。
+RESUME_TOO_BIG = "附件简历大小超出限制（BOSS 上限 2000K）"
 
 
-def judge_resume_sent(read):
-    """探针结果 → (是不是送达, 没送达的原因)。判据单点，别在 JS 和 Python 各写一套。"""
+def resume_card_total(read):
+    """探针结果 → 会话里已有的简历附件卡片条数。"""
+    try:
+        return int((read or {}).get("card_total") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def judge_resume_sent(read, baseline: int = 0):
+    """探针结果 + 点确认前的卡片条数 → (是不是送达, 没送达的原因)。
+
+    判据单点，别在 JS 和 Python 各写一套。
+    """
     read = read or {}
     toast = str(read.get("toast") or "")
     if toast:
-        return False, toast
-    if read.get("mine_card"):
+        return False, RESUME_TOO_BIG
+    if resume_card_total(read) > baseline:
         return True, ""
     if read.get("dialog_visible"):
         return False, "简历弹层还挂着，没点成发送"
-    return False, "没在我方气泡里看到简历附件条目"
+    return False, "会话里没多出简历附件卡片"
 
 
 class BossChatHandler:
@@ -1847,6 +1868,9 @@ class BossChatHandler:
                     continue
 
                 # 3. 根据弹层类型执行不同的发送流程
+                # 点确认之前先数一遍会话里已有的附件卡片：这一单到底发没出去，
+                # 看的是"有没有多出一条"，不是"有没有"（上一单的卡片会一直留着）
+                card_baseline = self._resume_card_total()
                 if state == "choose_resume":
                     # 新版流程：选择简历弹层
                     # 3a. 点击简历项选中简历
@@ -1963,8 +1987,8 @@ class BossChatHandler:
                         time.sleep(1)
                         continue
 
-                # 4. 送达验证：弹层消失 + 消息列表出现简历消息
-                return self._verify_resume_sent()
+                # 4. 送达验证：会话里比点确认前多出一条简历附件卡片
+                return self._verify_resume_sent(card_baseline)
 
             except Exception as e:
                 logger.error(f"发送简历失败（尝试 {attempt}/{retries + 1}）: {e}")
@@ -2001,20 +2025,32 @@ class BossChatHandler:
         except Exception:
             pass
 
-    def _verify_resume_sent(self, timeout: int = 8) -> bool:
-        """验证简历是不是真发出去了：只认我方气泡里出现的简历附件条目。
+    def _resume_card_total(self) -> int:
+        """会话里已有的简历附件卡片条数（读不到就按 0，不让探针本身把发送搞停）"""
+        try:
+            raw = self.page.run_js(RESUME_SENT_PROBE_JS, as_expr=True)
+            return resume_card_total(json.loads(raw) if isinstance(raw, str) else raw)
+        except Exception:
+            return 0
 
-        实测送达消息格式: "附件简历请求已发送" + "数据分析简历-黄维.docx点击预览附件简历"
+    def _verify_resume_sent(self, baseline: int = 0, timeout: int = 8) -> bool:
+        """验证简历是不是真发出去了：会话里得比点确认前多出一条附件卡片。
+
+        实测送达卡片长这样（居中系统卡片，不是我方气泡）：
+        "附件简历请求已发送" / "数据分析简历-黄维.docx 点击预览附件简历"
         """
         deadline = time.time() + timeout
+        last_why = ""
         while time.time() < deadline:
             try:
                 raw = self.page.run_js(RESUME_SENT_PROBE_JS, as_expr=True)
                 read = json.loads(raw) if isinstance(raw, str) else (raw or {})
-                ok, why = judge_resume_sent(read)
+                ok, why = judge_resume_sent(read, baseline)
                 if ok:
-                    logger.info("简历送达验证通过（我方气泡出现简历附件条目）")
+                    logger.info(f"简历送达验证通过（卡片 {baseline} → "
+                                f"{resume_card_total(read)} 条）")
                     return True
+                last_why = why
                 if why and "2000K" in why:
                     # 尺寸超限不会自己好，重试只是白点几次发送
                     logger.warning(f"简历发送被 BOSS 拒了: {why}")
@@ -2022,7 +2058,8 @@ class BossChatHandler:
             except Exception:
                 pass
             time.sleep(1)
-        logger.warning("简历送达验证超时：没看到我方简历条目，按失败处理")
+        logger.warning(f"简历送达验证超时：{last_why or '会话里没多出简历附件卡片'}"
+                       f"（点确认前已有 {baseline} 条），按失败处理")
         return False
 
     def check_health(self) -> str:
