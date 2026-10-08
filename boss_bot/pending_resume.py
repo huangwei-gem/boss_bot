@@ -30,7 +30,15 @@ RESUME_SELF_CLAIM = "[简历已发送]"
 
 
 def _body(msg: dict) -> str:
-    return ((msg.get("text") or "") or (msg.get("card_text") or "")).strip()
+    """一条消息的可读正文。
+
+    页面刚读回来的原始形状（read_all_messages）卡片正文在 block、text 是空的；
+    归一化进存档的那份才有 card_text。两边都要认，否则发送成功当场回读会
+    把那张卡片看成"没说话"（18:32、18:48 两单就是这么没落档的），
+    而台账那边 _message_text 一直查 text/card_text/block 三个字段。
+    """
+    return ((msg.get("text") or "") or (msg.get("card_text") or "")
+            or (msg.get("block") or "")).strip()
 
 
 def latest_other_message(messages) -> str:

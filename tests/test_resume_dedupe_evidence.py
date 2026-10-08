@@ -191,3 +191,30 @@ class 发完要把卡片落进存档Test:
         assert 源.index("send_resume()") < 源.index("_persist_resume_card"), \
             "要在发送成功之后落证据，放前面读到的还是旧页面"
 
+
+
+class 页面回读那一遍也认得卡片Test:
+    """_persist_resume_card 发成功当场回读页面，18:32、18:48 两单明明
+    「卡片 0 → 1 条」验证通过，却被"发送后回读没再看到卡片"跳过没落档。
+    根因：read_all_messages 出来的原始消息卡片正文在 block（text 是空的），
+    而 resume_already_sent 只看 text/card_text——和台账那边 _message_text
+    查三个字段的老口径不一致。"""
+
+    def test_页面原始形状里的卡片也算证据(self):
+        原始 = {"text": "", "time": "18:32", "isFriend": False, "is_mine": False,
+                "is_system": True, "mid": "392667908764162",
+                "block": "数据分析简历-黄维.docx 点击预览附件简历"}
+        assert resume_already_sent([原始]) is True
+
+    def test_普通气泡的block不许冒充卡片(self):
+        """补上 block 这一路是把双刃剑：HR 一句"简历我看过了"的 block 里带"简历"
+        不能算送达——用的还是那四个卡片特有字样。"""
+        气泡 = {"text": "简历我这边看过了", "block": "14:02 简历我这边看过了",
+                "isFriend": True, "is_mine": False}
+        assert resume_already_sent([气泡]) is False
+
+    def test_发送成功那条路读的是页面原始形状(self):
+        import inspect
+        from boss_bot.main_loop import UnifiedBotLoop
+        源 = inspect.getsource(UnifiedBotLoop._persist_resume_card)
+        assert "read_all_messages" in 源 and "merge_messages" in 源
