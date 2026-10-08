@@ -154,12 +154,22 @@ def test_台账行带出公司岗位联系方式与原话():
 
 
 def test_简历已发送单独成行():
-    """只发了简历、没拿到联系方式的会话也要进表——用户要看的正是这类后续。"""
+    """只发了简历、没拿到联系方式的会话也要进表——用户要看的正是这类后续。
+
+    但「已发」这一栏必须拿 BOSS 那张卡作证：以前拿我们自记的 [简历已发送] 当证据，
+    旧送达判据（消息里找"简历"两个字）判成功就会写那行，于是 42 单实际没发出去的
+    在表里显示成已发，用户看到的就是「面试官要简历你没给，台账却说发了」。
+    """
     chat = _chat([_hr("简历发我一下"), _ours("[简历已发送]")])
     rows = contact_rows([chat])
     assert len(rows) == 1
-    assert rows[0]["resume_sent"] is True
+    assert rows[0]["resume_sent"] is False, "自记那一行不算送达证据"
+    assert rows[0]["resume_asked"] is True, "没发出去就得留在欠账里"
     assert rows[0]["contact_kind"] == ""
+
+    已送达 = _chat([_hr("简历发我一下"), _ours("[简历已发送]"),
+                    _hr(card="您的附件简历 数据分析简历-黄维.docx 已发送给Boss，请查看")])
+    assert contact_rows([已送达])[0]["resume_sent"] is True
 
 
 def test_对方要了简历但我们没发():
@@ -170,7 +180,8 @@ def test_对方要了简历但我们没发():
 
 
 def test_已发过简历的不算欠简历():
-    rows = contact_rows([_chat([_hr("简历发我"), _ours("[简历已发送]")])])
+    rows = contact_rows([_chat([_hr("简历发我"),
+                                _hr(card="您的附件简历已发送给Boss，请查看")])])
     assert rows[0]["resume_asked"] is False
 
 

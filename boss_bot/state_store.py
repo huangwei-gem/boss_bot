@@ -85,6 +85,16 @@ class StateStore:
             self._chat(chat_name)["resume_sent"] = True
             self._save()
 
+    def clear_resume_sent(self, chat_name: str):
+        """清掉这一单的"已发"标记。
+
+        这个标记过去是拿假判据写的（存档里 81 个标记只有 39 个真有简历卡片），
+        照着它去重，欠的简历永远补不回来；所以核对不上证据时要能撤回它。
+        """
+        with self._lock:
+            self._chat(chat_name)["resume_sent"] = False
+            self._save()
+
     # ---------- 转人工暂停 ----------
 
     def is_paused(self) -> bool:

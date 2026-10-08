@@ -16,6 +16,8 @@
 """
 import re
 
+from boss_bot.pending_resume import RESUME_SENT_MARKS
+
 # 手机号：前后不能再有数字，否则会把"10-14K上海"这类薪资串里的数字吃掉
 PHONE_RE = re.compile(r"(?<!\d)1[3-9]\d{9}(?!\d)")
 # 微信号：只在有明确字样时才认，光靠"字母+数字"会把岗位标题里的 MJ000290 当成微信号
@@ -43,6 +45,8 @@ EXCHANGE_REQUEST_RE = re.compile(
     r"交换(?:微信|联系方式|电话|手机)|互换|电话联系TA"
     r"|我想要[一]?(?:份|个)?您的?(?:电话号码|微信号码)")
 
+# 我们自记的动作行：界面上标"机器动过手"，但**不能**拿来当"简历已送达"的证据
+# （证据口径见 pending_resume.RESUME_SENT_MARKS，只认 BOSS 那张卡）
 RESUME_SENT_MARK = "[简历已发送]"
 CONTACT_AGREED_MARK = "[已同意交换联系方式]"
 # 普工/主播/快递/保洁这一类点的是「拒绝」——那一行不能还算成"发起交换请求"挂着，
@@ -177,7 +181,9 @@ def contact_rows(chats, greet_rows=None) -> list:
             text = _message_text(msg)
             if not text:
                 continue
-            if RESUME_SENT_MARK in text:
+            if any(mark in text for mark in RESUME_SENT_MARKS):
+                # 只认 BOSS 那张卡；自记的 [简历已发送] 是旧假判据写的，
+                # 拿它统计"已发"就会把 42 单没发出去的算成发过了
                 resume_sent = True
                 continue
             if CONTACT_AGREED_MARK in text:

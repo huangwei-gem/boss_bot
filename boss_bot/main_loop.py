@@ -2494,6 +2494,30 @@ class UnifiedBotLoop:
             )
         return True
 
+    def _resume_delivered(self, name, job_name="", company="") -> bool:
+        """这一单的简历到底发没发：先看存档证据，再退到状态位。
+
+        状态位过去是拿假判据写的（81 个标记里只有 39 个会话真有 BOSS 的简历卡片），
+        照着它去重，欠的那四十多单就永远补不回来。但也不能反过来只看存档：
+        刚发成功、卡片还没进存档的那几秒，只看存档会对同一个 HR 发两遍。
+        所以规则是——证据在=发过；证据不在而标记在=撤回标记；存档读不到=信标记。
+        """
+        msgs = []
+        try:
+            msgs = self._msg_store.get_messages(
+                name, job_name=job_name, company=company) or []
+        except Exception as e:
+            self._log("DEBUG", f"读会话存档失败，简历去重回落到状态位: {e}")
+        if resume_already_sent(msgs):
+            return True
+        flagged = self._state_store.resume_sent(name)
+        if flagged and msgs:
+            self._state_store.clear_resume_sent(name)
+            self._log("WARN", f"↩️ [{name}] 状态里写着简历已发，"
+                              f"但存档里没有简历卡片，按没发过处理")
+            return False
+        return bool(flagged)
+
     def _handle_reply_action(self, action, content, meta, name, job_name,
                              latest_other_msg, chat_company="",
                              hr_recent: str = "") -> bool:
@@ -2503,9 +2527,9 @@ class UnifiedBotLoop:
         发送成功与发送失败两条路都要落记录：以前只有 socket 实时推送，刷新一次
         界面那条回复就没了，回复记录和 BOSS 端消息列表对不上。
         """
-        # 简历去重降级
+        # 简历去重降级：判据是"存档里有没有 BOSS 的简历卡片"，不是那个会自己骗自己的标记
         if action == "resume" and self.config.reply.resume_send_once and \
-           self._state_store.resume_sent(name):
+           self._resume_delivered(name, job_name, chat_company):
             from boss_bot.config import RESUME_DUPLICATE_REPLY
             self._log("INFO", "该会话已发送过简历，降级为文字提醒")
             action, content = "text", RESUME_DUPLICATE_REPLY
