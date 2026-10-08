@@ -62,10 +62,21 @@ def resume_reply(client):
 
 
 def attach(account_index):
-    """连回该账号正在用的浏览器，另开一个聊天标签页，返回那个标签页的实例。"""
+    """连回该账号正在用的浏览器，另开一个聊天标签页，返回那个标签页的实例。
+
+    动手前先问一句"这个端口上是不是我们的浏览器"：ChromiumPage 只按端口连，
+    谁在听就连谁。实测 9223 上是另一个项目（boss-auto-apply）的 cloakbrowser，
+    它的 profile 在 Temp/DrissionPage/userData/9223 —— 里面既没有我们那个号的
+    登录态，也不是我们那几个 tab 之一。补拒/清剿这种"真点按钮"的脚本要是连上去，
+    等于在别人的窗口里替我们的号说话，而且一句话就发到了错人的会话里。
+    """
+    from boss_bot.browser_launcher import port_is_ours
+    port = 9222 + account_index
+    if not port_is_ours(port):
+        raise RuntimeError(f"{port} 上坐着的是别的项目的浏览器，拒绝在这个号上动手")
     from DrissionPage import ChromiumOptions, ChromiumPage
     co = ChromiumOptions()
-    co.set_local_port(9222 + account_index)
+    co.set_local_port(port)
     page = ChromiumPage(co)
     tab = page.new_tab(CHAT_URL)
     time.sleep(4)

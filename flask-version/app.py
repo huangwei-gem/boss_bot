@@ -22,6 +22,8 @@ import tempfile
 import logging
 import warnings
 from logging.handlers import TimedRotatingFileHandler
+
+from boss_bot.safe_log import SafeTimedRotatingFileHandler
 import threading
 
 
@@ -101,8 +103,11 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 web_handler = WebLogHandler()
 web_handler.setLevel(logging.INFO)
 
-# 文件日志处理器 — 记录 DEBUG 及以上级别，按日期轮转，保留7天
-file_handler = TimedRotatingFileHandler(
+# 文件日志处理器 — 记录 DEBUG 及以上级别，按日期轮转，保留7天。
+# 用 SafeTimedRotatingFileHandler 而不是标准库那个：Windows 上午夜 rename 撞开着的
+# 文件句柄会失败，标准库打完 traceback 就把流关掉，此后当天日志一个字都不落
+# （2026-10-07 23:59:50 之后 logs/boss_bot.log 停住，两个号却照常投了一夜）。
+file_handler = SafeTimedRotatingFileHandler(
     str(LOG_DIR / "boss_bot.log"),
     when="midnight",
     interval=1,

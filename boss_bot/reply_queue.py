@@ -171,9 +171,13 @@ def worth_following_up(chat, title_keywords=(), body_keywords=()) -> bool:
     bodies = [b for b in bodies if b]
     if not bodies:
         return False
+    # 量整段对方说过的话，不只最后一句：上海仟嘉百供应链那一单第一句就交代了
+    # 「工作内容骑电瓶车配送山姆超市日常用品」，最后一句只是「加个微信吧，我查下
+    # 你离哪个站点近」——只看最后一句，跟进轮 10-07 21:48 替回了
+    # 「之前聊的…我很有兴趣」，等于我们一边拒配送一边追配送。
     return not veto_hit_anywhere(title_keywords, body_keywords,
                                  title=chat.get("job_name") or "",
-                                 text=bodies[-1])
+                                 text="\n".join(bodies))
 
 
 def followup_due(chats, state, now=None, after_hours=8, gap_hours=24,

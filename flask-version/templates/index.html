@@ -5464,10 +5464,17 @@ function renderHeadlessReality(data) {
   if (!el) return;
   var list = (data && data.accounts) || [];
   if (!list.length) { el.textContent = '实际：面板未启动'; return; }
-  var parts = [], mismatch = false;
+  var parts = [], mismatch = false, odd = false;
   list.forEach(function (acc) {
     var b = acc.browser || {};
     var tag = '号' + (acc.index + 1);
+    // 端口答了不等于我们的号在跑：9223 实测被别的项目的 cloakbrowser 占着，
+    // 那一刻这个号是停的，报"未起"又看不出为什么，所以单列一句。
+    if (b.本项目 === false) {
+      parts.push(tag + ' 端口' + b.port + '上是别的项目的浏览器');
+      odd = true;
+      return;
+    }
     if (!b.running) { parts.push(tag + ' 未起'); return; }
     parts.push(tag + (b.headless ? ' 无头' : ' 有头') + ':' + b.port);
     // config 是 let 声明的，不挂在 window 上（和 dataScope 同一个坑），
@@ -5477,7 +5484,7 @@ function renderHeadlessReality(data) {
     if (want !== !!b.headless) mismatch = true;
   });
   el.textContent = '实际：' + parts.join('，') + (mismatch ? '（与开关不一致，重启面板才生效）' : '');
-  el.style.color = mismatch ? 'var(--warn)' : 'var(--fg-3rd)';
+  el.style.color = (mismatch || odd) ? 'var(--warn)' : 'var(--fg-3rd)';
 }
 
 function applyStatusUpdate(data) {

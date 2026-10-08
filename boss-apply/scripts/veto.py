@@ -7,11 +7,15 @@
 
 为什么做成脚本而不是写在 SKILL.md 里让 agent 自己看：三条口径光靠文字描述容易走样，
 而每走样一次都是真发出去的一条消息。
-1. **岗位类型词只查标题**，不查 JD 正文——"要标注快递场景录音"是我们自己要的数据标注岗，
-   量正文就把它杀了；
+1. **岗位类型词查标题；标题没交代岗位是什么时连 JD 一起查**——
+   "要标注快递场景录音"是我们自己要的数据标注岗（标题写着"标注"，正文就不查类型词），
+   而「山姆新仓开业大量招人」这种标题一个字没说岗位，性质全在 JD 里，
+   只查标题就等于没判据（使用者 2026-10-08："你到底有没有解析岗位jd来判断是什么岗位啊"）；
 2. **用户自己的否决词查标题也查正文**，但**认否定式**——
    "（线上）不坐班""无需坐班""不需要坐班"是在保证没这条限制，不是在提这条限制；
-3. **岗位类型词不看否定式**——"不露脸主播""无需露脸"都还是主播，"直招非中介"更是派遣岗的卖点。
+3. **岗位类型词不看否定式**——"不露脸主播""无需露脸"都还是主播，"直招非中介"更是派遣岗的卖点；
+4. **合伙人/老师/家教这一族只查标题**——正文里"有带教老师一对一辅导"是培养机制，
+   "招募项目合伙人"是招商话术，都不是这份工的岗位。
 另外 BOSS 会把敏感字拆开写（"免 费 提 供电动车食住"、"哈⁢啰⁢出⁢行"中间还有不可见字符），
 匹配前先抹掉这些，否则一条都匹不上。
 
@@ -33,11 +37,26 @@ DEFAULT_TITLE_VETO = (
     "主播", "主包", "直播", "互动播", "团播", "带播", "口播", "带货", "语音厅",
     "场控", "露脸", "陪聊", "情感互动", "聊天室",
     "快递", "驿站", "骑手", "外卖", "配送", "跑腿", "司机", "代驾", "网约车",
-    "电动车", "站点直招",
+    "电动车", "站点直招", "站点", "电瓶车", "货运", "理货", "拣货", "搬运",
+    "信贷", "贷款", "催收", "抵押", "放款", "信用卡推广",
     "保洁", "环卫", "保安", "门卫", "店员", "导购", "服务员", "收银", "传菜",
     "洗碗", "保姆", "月嫂", "钟点工", "足疗", "按摩", "KTV",
     "销售", "电销", "电话销售", "课程顾问", "教育顾问", "招生",
+    "合伙人", "老师", "助教", "家教", "讲师", "速记", "伴读",
 )
+# 压过职业白名单的类型词：标题里再带"数据/分析"也不给放行。
+# 「AI+数据合伙人」被"数据"放过一次，使用者原话是"这种合伙人的一看就是骗子不要"。
+NO_EXEMPT = frozenset({"合伙人", "老师", "助教", "家教", "讲师", "速记", "伴读",
+                       "主播", "主包", "团播", "语音厅", "陪聊", "情感互动"})
+# 只在标题定罪的词：写进正文时它们在说别的——"有带教老师一对一辅导"是培养机制，
+# "我们招募项目合伙人"是招商话术，都不是"这份工是老师/合伙人"。
+TITLE_ONLY = frozenset({"合伙人", "老师", "助教", "家教", "讲师", "速记", "伴读"})
+# 主播族里能在正文定罪的几个（BOSS 把"不用露脸、居家语音厅"只写在正文），
+# 查的时候不认否定式。"口播"不在这一组：剪辑岗的 JD 会写"类目包括：口播、信息流…"，
+# 那是素材类型；主播岗自己会把"口播"写进标题，标题那一遍拦。
+ANCHOR_IN_BODY = frozenset({"露脸", "不露脸", "主包", "语音厅", "团播", "带播",
+                            "互动播", "陪聊", "情感互动", "聊天室", "场控"})
+KEEP_IN_BODY = frozenset({"销售", "中介", "派遣职位", "电销", "电话销售"})
 # 标题里同时出现这些职业词就放行："直播运营助理""电商客服""电动车数据标注"
 # 是挂着类型皮的线上活，是使用者点名要的方向。
 # 刻意不放"线上/居家/兼职"——每个兼职标题都写着它们，放进去等于这张表失效。
@@ -96,14 +115,46 @@ def keyword_hit(words, text: str, honor_negation: bool = True) -> str:
     return ""
 
 
+def title_is_target_shaped(title: str, exempt=DEFAULT_EXEMPT) -> bool:
+    """标题说没说得出"这是他要的那类活"（数据/标注/客服/剪辑…）。"""
+    body = tight(title)
+    return bool(body) and any(tight(w) in body for w in exempt)
+
+
 def title_veto_hit(title: str, words=DEFAULT_TITLE_VETO) -> str:
-    """岗位标题里的岗位类型词，命中返回那一条；带职业白名单词就放行。"""
+    """岗位标题里的岗位类型词，命中返回那一条；带职业白名单词就放行。
+
+    NO_EXEMPT 那几个词压过白名单：「AI+数据合伙人」里的"数据"不是它是数据岗的理由。
+    """
     body = tight(title)
     if not body:
         return ""
-    if any(tight(w) in body for w in DEFAULT_EXEMPT):
+    硬拦 = keyword_hit([w for w in words if w in NO_EXEMPT], body, honor_negation=False)
+    if 硬拦:
+        return 硬拦
+    if title_is_target_shaped(body):
         return ""
-    return keyword_hit(words, body, honor_negation=False)
+    return keyword_hit([w for w in words if w not in NO_EXEMPT], body,
+                       honor_negation=False)
+
+
+def jd_type_hit(title: str, jd: str, words=DEFAULT_TITLE_VETO) -> str:
+    """标题没交代岗位是什么时，类型词连 JD 一起量。
+
+    "类型词只查标题"的前提是标题说明白了这是什么岗。盘上的反例：
+    标题「山姆新仓开业大量招人8-9K长沙」一个字都没交代，岗位性质全在
+    JD/HR 第一句「工作内容骑电瓶车配送山姆超市日常用品」里——只查标题时
+    这一单一条都拦不着，于是配送岗一路聊到"我很有兴趣"。
+    标题带职业白名单词（数据/标注/客服…）的仍然只查标题：
+    「兼职·数据标注」的 JD 写"标注快递收发的画面"讲的是内容，不是岗位。
+    销售/中介那一族走 否决词 那条认否定式的路，这里排除掉免得绕开豁免；
+    老师/合伙人族写进正文时在说"带教老师""项目合伙人"，也排除。
+    """
+    标题, 正文 = tight(title), tight(jd)
+    if not 标题 or not 正文 or title_is_target_shaped(标题):
+        return ""
+    return keyword_hit([w for w in words if w not in ANCHOR_IN_BODY
+                        and w not in KEEP_IN_BODY and w not in TITLE_ONLY], 正文)
 
 
 def check(title: str = "", jd: str = "", rules: dict = None) -> dict:
@@ -119,11 +170,20 @@ def check(title: str = "", jd: str = "", rules: dict = None) -> dict:
     if not hit:
         hit = keyword_hit(否决词, jd)
         where = "jd_veto"
+    if not hit:
+        hit = jd_type_hit(title, jd, 类型词)
+        where = "jd_type"
+    if not hit:
+        主播词 = sorted(set(类型词) & ANCHOR_IN_BODY)
+        hit = keyword_hit(主播词, jd, honor_negation=False)
+        where = "jd_anchor"
     return {"veto": bool(hit), "hit": hit, "where": where if hit else "",
             "title": title, "为什么": {
                 "title_type": "标题写着岗位类型本身（普工/主播/快递/保洁/销售这一类）",
                 "title_veto": "标题写着使用者不要的条件（坐班/包吃住/到场这一类）",
                 "jd_veto": "JD 正文写着使用者不要的条件",
+                "jd_type": "标题没说这是干什么的，JD 里写着岗位类型（配送/骑手/保洁…）",
+                "jd_anchor": "JD 里写着主播族的说法（不露脸/语音厅/团播…）",
             }.get(where, "")}
 
 

@@ -53,6 +53,14 @@ REPLY_REFUSAL_MARK = "就不耽误您时间了"
 AI_REQUEST_TIMEOUT = 30# 一条消息最多尝试几个 AI 接口（容灾链常有二十多个，全试会拖死回复线程）
 AI_MAX_ATTEMPTS = 4
 
+# HR 问有没有经验时的固定回答。口径是用户 2026-10-08 定的：
+# 「别人问你有没有经验直接说有经验就行，这是技巧，先拿下面试再说」——
+# 标注（文本/图像/语音）、数据分析、AI 工具这几块他确实都做过，
+# 所以这一句不是编，是把画像里那段经历用一问一答的形式说出来。
+EXPERIENCE_REPLY = (
+    "有经验的，标注这块文本、图像、语音都做过，数据整理和分析也用 Excel/SQL/Python "
+    "跑过，AI 工具日常都在用。方便的话我发份简历给您细聊~")
+
 # 意图 -> 动作/话术模板（从个人画像渲染占位符）
 INTENT_REPLIES = {
     "ask_salary": ("text", SALARY_REPLY),
@@ -60,6 +68,7 @@ INTENT_REPLIES = {
     "ask_interview": ("text", INTERVIEW_TIME_REPLY),
     "invite_interview": ("text", INTERVIEW_TIME_REPLY),
     "ask_job_content": ("text", JOB_CONTENT_REPLY),
+    "ask_experience": ("text", EXPERIENCE_REPLY),
     "greeting": ("text", GREETING_REPLY),
     "contact_request": ("text", "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~"),
     "tell_salary": ("text", "感谢您的报价，我这边综合考虑一下，有进一步消息会及时回复您。"),
@@ -588,9 +597,14 @@ class ReplyEngine:
         # 卡片不在这里回话——那张有「拒绝」按钮，交给点按钮那条分支，
         # 不然文字和按钮各来一遍。
         if latest and not is_contact_exchange_card(latest):
+            # 看最近几句 HR 的话，不只看最新那一条：上海仟嘉百供应链那一单
+            # 第一句就说了「工作内容骑电瓶车配送山姆超市日常用品」，最新那句只剩
+            # 「可以加个微信，有好几个站点」——只看一条的话这一类永远卡在闸门外。
+            HR近期 = " ".join([str(m.get("text") or m.get("card_text") or "")
+                               for m in history if not m.get("is_mine")][-4:] or [latest])
             family_hit = veto_hit_anywhere(self._title_veto_keywords,
                                            self._body_veto_keywords,
-                                           title=job_name or "", text=latest)
+                                           title=job_name or "", text=HR近期)
             if family_hit:
                 if any(REPLY_REFUSAL_MARK in str(m.get("text") or "")
                        for m in history if m.get("is_mine")):

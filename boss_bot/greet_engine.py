@@ -1462,7 +1462,8 @@ class GreetEngine:
         ai = self.config.ai
         sig = (ai.enabled, ai.match_threshold, ai.analyze_max_tokens,
                tuple(ai.custom_filter_keywords or []), ai.custom_scoring_prompt,
-               ai.skip_unhealthy, ai.fail_action, bool(ai.veto_only_match),
+               ai.skip_unhealthy, getattr(ai, "greet_fail_action", "skip"),
+               bool(ai.veto_only_match),
                getattr(ai, "judge_timeout", 0),
                tuple(getattr(ai, "title_veto_keywords", None) or []),
                tuple((p.name, p.model, p.api_base, bool(p.api_key)) for p in ai.providers))
@@ -1480,7 +1481,9 @@ class GreetEngine:
             getattr(ai, "title_veto_keywords", TITLE_VETO_KEYWORDS_DEFAULT))
         self._ai_custom_scoring_prompt = ai.custom_scoring_prompt
         self._ai_skip_unhealthy = ai.skip_unhealthy
-        self._ai_fail_action = ai.fail_action
+        # 投递这一侧读 greet_fail_action：ai.fail_action 管的是回复"要不要发兜底话术"，
+        # 两条链共用一个值时，接口全挂的那一轮会把没判过的岗位投出去（00:42 的盲投单）。
+        self._ai_fail_action = getattr(ai, "greet_fail_action", "skip")
         self._ai_veto_only = bool(ai.veto_only_match)
         self._analyze_max_tokens = ai.analyze_max_tokens
         self._ai_judge_timeout = int(getattr(ai, "judge_timeout", 0) or 0)

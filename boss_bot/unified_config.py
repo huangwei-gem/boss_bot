@@ -430,8 +430,15 @@ TITLE_VETO_KEYWORDS_DEFAULT = [
     "主播", "主包", "直播", "互动播", "口播", "带货", "语音厅", "场控", "露脸",
     "团播", "带播", "陪聊", "情感互动", "聊天室",
     # 跑腿／配送一族（"提供电动车""站点直招"是骑手岗的标准写法）
+    # "站点"单列一条是 2026-10-08 补的：上海仟嘉百供应链那一单标题写
+    # 「山姆新仓开业大量招人」，HR 的原话是「有好几个站点，我查下哪个离你近」——
+    # 只有"站点直招"这一串的话，正文那一遍抓不到（见 intent.body_veto_hit）。
     "快递", "驿站", "骑手", "外卖", "配送", "跑腿", "司机", "代驾", "网约车",
-    "电动车", "站点直招",
+    "电动车", "站点直招", "站点", "电瓶车", "货运", "理货", "拣货", "搬运",
+    # 信贷／贷款一族：用户 2026-10-08「家教也不要，信贷也不要」。
+    # 这几条刻意不进 NO_EXEMPT——「信贷风控数据分析师」是我们要的数据岗，
+    # 信贷在那里是被分析的业务域，跟"销售"在数据岗 JD 里的身份一样。
+    "信贷", "贷款", "催收", "抵押", "放款", "信用卡推广",
     # 保洁／保安／到店服务一族
     "保洁", "环卫", "保安", "门卫", "店员", "导购", "服务员", "收银", "传菜",
     "洗碗", "保姆", "月嫂", "钟点工", "足疗", "按摩", "KTV",
@@ -441,6 +448,11 @@ TITLE_VETO_KEYWORDS_DEFAULT = [
     # 「金融电话销售」「班主任/销售」。"电商销售运营""销售数据分析"这种带着
     # 运营/数据/分析 的仍然放行（职业白名单先判）。
     "销售", "电销", "电话销售", "课程顾问", "教育顾问", "招生",
+    # 用户 2026-10-08 凌晨点名："这种合伙人的一看就是骗子不要，兼职老师这种不要。"
+    # 「AI+数据合伙人」这两天只因为 JD 里恰好出现"销售"才被拦下——那是运气不是判据；
+    # 老师类（英语助教/德语老师/单词速记/伴读）是抽屉失败里分数最高的那几单（95 分），
+    # 方向本身他就不要。只查标题：JD 里提一句"配合老师"不算。
+    "合伙人", "老师", "助教", "家教", "讲师", "速记", "伴读",
 ]
 
 # 标题里同时出现这些职业词时，岗位类型词放行："直播运营助理""电商客服"
@@ -463,6 +475,13 @@ class AIConfig:
     enabled: bool = False
     providers: list = field(default_factory=list)  # AIProvider 列表
     fail_action: str = "default"         # skip | default (default=句句有回应)
+    # 投递那一侧单独一条：AI 判不出来时这一单投不投。
+    # 以前只有 fail_action 一个值同时管两条链——回复侧要"句句有回应"（default），
+    # 投递侧却是"没看过 JD 也别投"。盘上 2026-10-07 00 点那段 167 条记录里
+    # 41 条 ai_error，其中 30 条真的按 score 50 默认通过发出去了；
+    # 2026-10-08 00:42 那条抽屉失败的岗位正是这种盲投单。
+    # 用户 2026-10-08：「为什么现在还是有第一行的那种错误啊，你去找一下是什么原因」。
+    greet_fail_action: str = "skip"      # skip（默认，不盲投）| default（放行）
     max_tokens: int = 1200
     # 回复的输出预算：带 thinking 的接口实测正文被思考吃光（content 为空），
     # 今日 160 次失败里思考字数中位 318、p95 896，200 的预算连思考都不够，
@@ -859,6 +878,8 @@ class UnifiedConfig:
                     0, min(20, int(ai["probe_max_per_round"])))
             if "fail_action" in ai and ai["fail_action"]:
                 self.ai.fail_action = str(ai["fail_action"])
+            if ai.get("greet_fail_action"):
+                self.ai.greet_fail_action = str(ai["greet_fail_action"])
             if "providers" in ai and isinstance(ai["providers"], list):
                 self.ai.providers = [
                     AIProvider(
@@ -1339,6 +1360,7 @@ class UnifiedConfig:
                 "judge_timeout": self.ai.judge_timeout,
                 "probe_max_per_round": self.ai.probe_max_per_round,
                 "fail_action": self.ai.fail_action,
+                "greet_fail_action": self.ai.greet_fail_action,
                 "custom_filter_keywords": list(self.ai.custom_filter_keywords),
                 "title_veto_keywords": list(self.ai.title_veto_keywords),
                 "veto_only_match": bool(self.ai.veto_only_match),

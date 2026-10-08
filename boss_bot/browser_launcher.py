@@ -602,6 +602,57 @@ def _get_ws_url(host: str, port: int, retries: int = 5) -> str:
     return ""
 
 
+def _owner_ttl_sec() -> float:
+    return 60.0
+
+
+_OWNER_CACHE: dict = {}      # port -> (时间戳, 是不是我们的)
+
+
+def port_owner_pid(port: int) -> Optional[int]:
+    """这个调试端口上是哪个进程在听（拿不到返回 None）。"""
+    try:
+        import psutil
+    except ImportError:
+        return None
+    try:
+        for c in psutil.net_connections(kind="tcp"):
+            if (c.status == "LISTEN" and c.laddr and int(c.laddr.port) == int(port)
+                    and c.pid):
+                return int(c.pid)
+    except Exception as e:
+        logger.debug(f"查 {port} 的监听进程失败: {e}")
+    return None
+
+
+def port_is_ours(port: int) -> bool:
+    """端口上的浏览器是不是本项目起的——按进程命令行里的项目路径判。
+
+    为什么要问这个：9223 实测被另一个项目（boss-auto-apply 的 cloakbrowser，
+    profile 在 Temp/DrissionPage/userData/9223）占着，而 /json/version 照样答
+    "Chrome/146 在跑"。只看端点会把"我们的号"报成在跑，而它其实停着；
+    挂浏览器的那点活儿还会做到别人的窗口上。
+    查不到进程就当真是在跑的：拿"我看不清"去定罪，会把好日子说成故障。
+    """
+    import time as _t
+    hit = _OWNER_CACHE.get(int(port))
+    if hit and _t.time() - hit[0] < _owner_ttl_sec():
+        return hit[1]
+    pid = port_owner_pid(port)
+    if pid is None:
+        ours = True
+    else:
+        try:
+            import psutil
+            cmd = " ".join(psutil.Process(pid).cmdline()).lower()
+        except Exception:
+            ours = True
+        else:
+            ours = str(Path(__file__).resolve().parent.parent).lower() in cmd
+    _OWNER_CACHE[int(port)] = (_t.time(), ours)
+    return ours
+
+
 def browser_mode(port: int, host: str = "127.0.0.1") -> dict:
     """这个调试端口上的浏览器：在不在跑、是不是无头、按什么判的。
 
@@ -615,7 +666,7 @@ def browser_mode(port: int, host: str = "127.0.0.1") -> dict:
        启动时记下的那份为准，UA 只用来发现"端口上是别人起的浏览器"。
     """
     out = {"running": False, "headless": None, "port": port,
-           "browser": "", "依据": "", "与启动记录不符": False}
+           "browser": "", "依据": "", "与启动记录不符": False, "本项目": True}
     try:
         with urlopen(f'http://{host}:{port}/json/version', timeout=3) as resp:
             data = json.loads(resp.read())
@@ -627,6 +678,12 @@ def browser_mode(port: int, host: str = "127.0.0.1") -> dict:
     ua = str(data.get("User-Agent") or "")
     browser = str(data.get("Browser") or "")
     launched = LAUNCHED_MODES.get(port)
+    if not port_is_ours(port):
+        out["browser"] = browser
+        out["本项目"] = False
+        out["headless"] = None
+        out["依据"] = "端口上的浏览器不是本项目的（这一号其实没在跑）"
+        return out
     out["running"] = True
     out["browser"] = browser
     if launched is None:

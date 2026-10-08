@@ -694,7 +694,7 @@ class 否决词误杀Test:
     当天 444 条"JD 命中否决词"里，被杀掉的一大把正是用户点名要的方向：
       「数据分析师」← 进阶：中介、调节、稳健性、内生性、分组回归   （统计学里的中介效应）
       「线上运营」   ← 统筹产品、市场、销售、供应链等业务模块       （并列提到的部门名）
-      「线上录题老师」← 无需坐班 / 不承担任何销售压力 / 不涉及课程销售（否定式说法）
+      「兼职·线上录题标注员」← 无需坐班 / 不承担任何销售压力 / 不涉及课程销售（否定式说法）
     组合口径：岗位类型词只在标题定罪（主播族例外，BOSS 把"不用露脸"只写在正文）；
     条件词认小句内的否定式；"中介"后接效应/变量/费、或同句是统计方法列表时不算。
     回放结果：今天放行 290 条、仍拦 170 条，放行的里面没有一条带主播族字样。
@@ -723,8 +723,10 @@ class 否决词误杀Test:
     def test_否定式条件词不算命中(self):
         from boss_bot.intent import veto_hit_anywhere
         from boss_bot.unified_config import TITLE_VETO_KEYWORDS_DEFAULT as T
-        assert veto_hit_anywhere(T, ["坐班"], title="兼职·线上录题老师", text=self.JD["否定坐班"]) == ""
-        assert veto_hit_anywhere(T, ["销售"], title="兼职·线上单词陪练老师", text=self.JD["否定销售"]) == ""
+        # 标题原来写的是「兼职·线上录题老师」——2026-10-08 用户点名"兼职老师这种不要"，
+        # 那个标题现在被内置表定罪是对的，留着会让这条回归测错东西。
+        assert veto_hit_anywhere(T, ["坐班"], title="兼职·线上录题标注员", text=self.JD["否定坐班"]) == ""
+        assert veto_hit_anywhere(T, ["销售"], title="兼职·线上单词陪练", text=self.JD["否定销售"]) == ""
 
     def test_真销售岗照杀(self):
         from boss_bot.intent import veto_hit_anywhere
@@ -750,3 +752,133 @@ class 否决词误杀Test:
                                 title_keywords=T) == "中介"
         assert veto_keyword_hit(["销售"], {"job_name": "销售专员", "jd_description": ""},
                                 title_keywords=T) == "销售"
+
+
+class 合伙人与老师类Test:
+    """用户 2026-10-08 凌晨："这种合伙人的一看就是骗子不要，兼职老师这种不要。"
+
+    「AI+数据合伙人」昨天到今天只因为 JD 里恰好有"销售"才被拦下——那不是判据，
+    是运气；换成不写销售的合伙人岗就会放行。老师类（英语助教/德语老师/单词速记）
+    是这段时间抽屉失败里分数最高（95 分）的那几单，用户明确不要这个方向。
+    """
+
+    def test_合伙人标题直接拦(self):
+        for 标题 in ("AI+数据合伙人", "城市合伙人（数据方向）", "数据标注·合伙人"):
+            assert title_veto_hit(TITLE_VETO_KEYWORDS_DEFAULT, 标题) != "", 标题
+
+    def test_老师类标题直接拦(self):
+        for 标题 in ("线上AI伴读英语助教（无需备课）", "线上德语兼职老师（纯线上+时间自由）",
+                     "1V1线上单词速记/平台大/学生多", "兼职·线上一对一居家办公课程老师编",
+                     "大学生兼职助教(线上）"):
+            assert title_veto_hit(TITLE_VETO_KEYWORDS_DEFAULT, 标题) != "", 标题
+
+    def test_要的方向不受影响(self):
+        for 标题 in ("兼职·数据标注/AI训练师80-100元/天", "兼职·线上数据分析-兼职50-200元/时",
+                     "兼职·抖音线上运营10-35元/时", "兼职·电商客服专员（居家办公 远程）"):
+            assert title_veto_hit(TITLE_VETO_KEYWORDS_DEFAULT, 标题) == "", 标题
+
+
+class 正文判岗Test:
+    """用户 2026-10-08 凌晨：「快递外卖啥的都给我拒绝了啊，现在怎么还这么多的配送员招我啊，
+    比如说上海仟嘉百供应链这个，他不是快递吗？我不要的啊，你到底有没有解析岗位jd来判断
+    是什么岗位啊。家教也不要，信贷也不要。」
+
+    盘上取证 messages/杨先生_上海仟嘉百供应链.json：标题「山姆新仓开业大量招人8-9K长沙查看职位」
+    一个类型词都没有，岗位性质全写在 HR 第一句里——「工作内容骑电瓶车配送山姆超市日常用品
+    固定点取货多点配送 系统派单」。类型词只查标题这一条规矩，碰上这种标题就等于没判据：
+    于是 10-06 用文字拒过之后，10-07 21:48 主动跟进还替他说了一句
+    「之前聊的山姆新仓开业大量招人我很有兴趣」。
+    所以：标题不是目标职业形状时，类型词那一遍必须连正文一起量；
+    标题带数据/标注/客服的仍旧只查标题，「录制快递收发的画面并做文本标注」不误杀。
+    """
+
+    标题 = "山姆新仓开业大量招人8-9K长沙查看职位"
+    HR第一句 = ("你好 我们是山姆超市直招的 工作内容骑电瓶车配送山姆超市日常用品 "
+                "固定点取货多点配送 系统派单 不需要抢单 有兴趣的话可以加个微信了解一下")
+    HR最后一句 = "可以加个微信，有好几个站点，我查下哪个离你近"
+
+    def test_配送只写在正文也要拦(self):
+        from boss_bot.intent import veto_hit_anywhere
+        assert veto_hit_anywhere(TITLE_VETO_KEYWORDS_DEFAULT, [],
+                                 title=self.标题, text=self.HR第一句) == "配送"
+
+    def test_站点这种说法也认(self):
+        from boss_bot.intent import veto_hit_anywhere
+        assert veto_hit_anywhere(TITLE_VETO_KEYWORDS_DEFAULT, [],
+                                 title=self.标题, text=self.HR最后一句) != ""
+
+    def test_投递侧真的解析JD(self):
+        assert veto_keyword_hit([], {"job_name": self.标题, "description": self.HR第一句},
+                                title_keywords=TITLE_VETO_KEYWORDS_DEFAULT) != ""
+
+    def test_目标形状标题的正文不误杀(self):
+        from boss_bot.intent import veto_hit_anywhere
+        正文 = "拍摄并标注超市理货、快递收发、门店打包这些真实场景，按条结算，全程线上提交"
+        for 标题 in ("兼职·数据标注/AI训练师", "线上数据采集（超市场景）", "兼职·电商客服专员"):
+            assert veto_hit_anywhere(TITLE_VETO_KEYWORDS_DEFAULT, [],
+                                     title=标题, text=正文) == "", 标题
+
+    def test_信贷家教标题直接拦(self):
+        for 标题 in ("信贷专员", "贷款顾问（线上）", "信用卡催收", "居家一对一上门家教"):
+            assert title_veto_hit(TITLE_VETO_KEYWORDS_DEFAULT, 标题) != "", 标题
+
+    def test_信贷数据岗不误杀(self):
+        assert title_veto_hit(TITLE_VETO_KEYWORDS_DEFAULT, "信贷风控数据分析师") == ""
+
+    def test_跟进不许对配送会话开口(self):
+        """第一句就说了是配送，最后一句只说"加个微信"——跟进判据只看最后一句就会追。"""
+        from boss_bot.reply_queue import worth_following_up
+        会话 = {"company": "上海仟嘉百供应链", "job_name": self.标题, "messages": [
+            {"content": self.HR第一句, "mid": "1", "time": "20:30"},
+            {"content": self.HR最后一句, "mid": "2", "time": "22:31"},
+        ]}
+        assert worth_following_up(会话, TITLE_VETO_KEYWORDS_DEFAULT, []) is False
+
+    def test_跟进照常追标注会话(self):
+        from boss_bot.reply_queue import worth_following_up
+        会话 = {"company": "某数据服务公司", "job_name": "兼职·数据标注/AI训练师",
+                "messages": [{"content": "我们这边招标注，全程线上", "mid": "1", "time": "10:00"}]}
+        assert worth_following_up(会话, TITLE_VETO_KEYWORDS_DEFAULT, []) is True
+
+    def test_带教老师不说这是老师岗(self):
+        """正文那一遍把"老师"也算上就会杀掉正常实习岗——HR 讲的是培养机制。"""
+        from boss_bot.intent import veto_hit_anywhere
+        assert veto_hit_anywhere(TITLE_VETO_KEYWORDS_DEFAULT, [],
+                                 title="极氪零售实习生180-200元/天上海查看职位",
+                                 text="你好，我们正在招极氪零售实习生，有带教老师一对一辅导，"
+                                      "不需要驾照，感兴趣的话方便发一份简历过来吗") == ""
+
+    def test_剪辑类目里的口播不算主播(self):
+        """「剪辑类目包括：口播、信息流、电商带货」讲的是素材类型，岗位是剪辑师。"""
+        from boss_bot.intent import veto_hit_anywhere
+        for 标题, 正文 in (
+            ("兼职·线上短视频剪辑师1000-10000元/月广州查看职位",
+             "我们是一家商业视频剪辑服务公司，剪辑类目包括：口播、信息流、电商带货、品牌宣传、切片"),
+            ("兼职·线上剪辑师50-100元/时广州查看职位",
+             "你仔细看一下招聘要求，截图以前剪辑过的视频3张图片要口播视频"),
+        ):
+            assert veto_hit_anywhere(TITLE_VETO_KEYWORDS_DEFAULT, [],
+                                     title=标题, text=正文) == "", 标题
+
+    def test_口播写进标题仍旧拦(self):
+        """撤掉的是正文那一路，标题里自己写"口播"的岗性质没变。"""
+        assert title_veto_hit(TITLE_VETO_KEYWORDS_DEFAULT, "居家线上口播主播（日结）") != ""
+
+
+class 每一端都吃到正文判岗Test:
+    """判据改一处、四个发送点各拿各的文本，就会长成"文字拒了卡片却同意"这种自相矛盾。
+
+    10-07 那条「【白班坐岗】28/H包吃住」就是这么被追出去的；这一单（仟嘉百供应链）
+    是另一个方向：10-06 文字拒过、10-07 卡片没点拒绝、同一晚跟进又应了一句"很有兴趣"。
+    """
+
+    def test_回复轮量的是最近几句而不是最新一句(self):
+        src = (ROOT / "boss_bot" / "reply_engine.py").read_text(encoding="utf-8")
+        段 = src[src.index("# ── 0.7. 岗位类型硬否决"):src.index("# ── 0.8") if "# ── 0.8" in src else src.index("family_hit")]
+        assert "HR近期" in 段, 段[:200]
+        assert "text=HR近期" in src, "还在只喂最新那一句"
+
+    def test_卡片闸门拿到整段HR会话(self):
+        src = (ROOT / "boss_bot" / "main_loop.py").read_text(encoding="utf-8")
+        assert "hr_recent or latest_other_msg" in src, "卡片那一遍还在只看最新一条"
+        assert "hr_recent=" in src, "调用点没把窗口传进来，参数就是个死默认值"

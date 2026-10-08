@@ -2357,7 +2357,10 @@ class UnifiedBotLoop:
                     self._log("WARN", "已切换为人工接管模式，自动回复暂停")
 
         return self._handle_reply_action(action, content, meta, name, job_name,
-                                         latest_other_msg, chat_company)
+                                         latest_other_msg, chat_company,
+                                         hr_recent=" ".join(
+                                             inbound_body(m) for m in
+                                             [x for x in messages if inbound_body(x)][-4:]))
 
     def _send_offline_interview_decline(self, name, job_name, chat_company,
                                         latest_other_msg, meta, verdict) -> bool:
@@ -2452,7 +2455,8 @@ class UnifiedBotLoop:
         return True
 
     def _handle_reply_action(self, action, content, meta, name, job_name,
-                             latest_other_msg, chat_company="") -> bool:
+                             latest_other_msg, chat_company="",
+                             hr_recent: str = "") -> bool:
         """执行本次回复并落回复记录。
 
         返回 False = 演练模式提前收工，这条消息没有真被回复，不能标成已处理。
@@ -2554,7 +2558,8 @@ class UnifiedBotLoop:
             # 闸门排在演练判断之前，演练日志才不会报反。
             hit = veto_hit_anywhere(self.config.ai.title_veto_keywords,
                                     self.config.ai.custom_filter_keywords,
-                                    title=job_name, text=latest_other_msg)
+                                    title=job_name,
+                                    text=hr_recent or latest_other_msg)
             if hit:
                 return self._decline_contact_card(name, job_name, chat_company,
                                                   latest_other_msg, meta, hit)

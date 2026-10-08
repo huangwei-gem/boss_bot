@@ -45,6 +45,18 @@ INTENT_PATTERNS = {
         r"(主要|平时|日常|具体)?(做|干|负责)(些什么|什么|啥)",
         r"岗位.{0,3}(介绍|详情|情况)",
     ],
+    # HR 问"有没有经验"。单独一条意图是因为这一问的话术必须固定：
+    # 用户 2026-10-08 的口径是"别人问你有没有经验直接说有经验就行，先拿下面试再说"，
+    # 交给 AI 现编就会编出"我可以学"——画像里经历写得再全，模型看见
+    # "不要编造不存在的工作经历"这条规则仍然往保守里答。
+    # 只认问句形状：「经验不限」「有经验者优先」「没做过也没关系」是 HR 在陈述要求，
+    # 不是提问，不能抢来答"有经验"。
+    "ask_experience": [
+        r"经验.{0,6}(吗|么|没|没有|多少|几年|丰富|如何|怎样|怎么样)",
+        r"(有没有|有无|是否有|有木有).{0,10}经验",
+        r"(?<![没不])(做|干|从事|接触|搞)过.{0,10}(吗|么|没|没有)",
+        r"(之前|以前|过往|以往).{0,10}(经验|做过|从事)",
+    ],
     "contact_request": [
         r"(加|留|交换).{0,4}(微信|vx|wx|v信)",
         r"(微信|电话|手机号?|联系方式).{0,4}(多少|是|吗|留|给|方便)",
@@ -76,6 +88,7 @@ INTENT_PRIORITY = [
     "ask_resume",
     "ask_interview",
     "ask_job_content",
+    "ask_experience",
     "contact_request",
     "tell_salary",
     "greeting",
@@ -240,6 +253,20 @@ def keyword_hit(words, text: str, honor_negation: bool = True) -> str:
     return ""
 
 
+def title_is_target_shaped(title: str) -> bool:
+    """这个标题像不像"他要的那类活"（数据/标注/客服/运营/剪辑…）。
+
+    单独拿出来给正文那一遍用：标题带这些词时，正文里的"快递/打包/直播"多半是
+    内容场景（「标注快递物流场景的录音」），照正文杀就把方向杀掉了；标题里一个
+    职业词都没有时（「山姆新仓开业大量招人」），岗位性质只剩正文一条证据，
+    不查正文就等于没判据。
+    """
+    body = _tight(title)
+    if not body:
+        return False
+    return any(_tight(word) in body for word in TITLE_VETO_EXEMPT_KEYWORDS)
+
+
 def title_veto_hit(title_keywords, title: str) -> str:
     """岗位标题里的岗位类型否决词（普工/主播/快递/保洁这一类），命中返回那一条。
 
@@ -247,25 +274,45 @@ def title_veto_hit(title_keywords, title: str) -> str:
     写在标题里才是这份工本身。标题同时带用户点名要的职业词（"直播运营助理"
     "电商客服"）时放行——那种是挂着类型皮的线上活，见
     unified_config.TITLE_VETO_EXEMPT_KEYWORDS。
+    但 NO_EXEMPT 那几个词压过白名单：「AI+数据合伙人」里的"数据"不是它是数据岗的理由，
+    合伙人本身就是骗局形状（用户 2026-10-08："这种合伙人的一看就是骗子不要"）。
     """
     body = _tight(title)
     if not body or not title_keywords:
         return ""
-    if any(_tight(word) in body for word in TITLE_VETO_EXEMPT_KEYWORDS):
+    硬拦 = keyword_hit([w for w in title_keywords if w in NO_EXEMPT], body,
+                       honor_negation=False)
+    if 硬拦:
+        return 硬拦
+    if title_is_target_shaped(title):
         return ""
-    return keyword_hit(title_keywords, body, honor_negation=False)
+    return keyword_hit([w for w in title_keywords if w not in NO_EXEMPT], body,
+                       honor_negation=False)
 
 
+# 压过职业白名单的类型词：这些词本身就是"这份工是什么"，标题里再带"数据/分析"也不给放行。
+# 「AI+数据合伙人」被"数据"白名单放过一次，就是用户说的"一看就是骗子"那一类。
+NO_EXEMPT = frozenset({"合伙人", "老师", "助教", "家教", "讲师", "速记", "伴读",
+                       "主播", "主包", "团播", "语音厅", "陪聊", "情感互动"})
 # 主播族的词，BOSS 常只写在 JD 正文里（"不用露脸，居家语音厅"），所以正文这一遍要查它们；
 # 而且查的时候不认否定式——"不用露脸"本身就是这一行的名字。
 ANCHOR_FAMILY = frozenset({"主播", "主包", "直播", "互动播", "团播", "带播", "口播", "带货",
                            "语音厅", "场控", "露脸", "不露脸", "陪聊", "情感互动", "聊天室"})
 # 但只有这一小组能在正文里定罪：「数据标注专员」的 JD 写"包含直播间的语音切片"、
 # 「视频剪辑」写"抖音主播素材二次剪辑"，那是内容不是岗位（回归里就锁着这条）。
-ANCHOR_IN_BODY = frozenset({"露脸", "不露脸", "主包", "语音厅", "团播", "带播", "口播",
+# "口播"从这一组里拿掉了：盘上两条正文带它的会话都是他要的剪辑岗——
+# 「兼职·线上短视频剪辑师」写"剪辑类目包括：口播、信息流、电商带货…"、
+# 「兼职·线上剪辑师」要"截图以前剪辑过的视频…要口播视频"。它在讲素材类型，
+# 主播岗自己会把这个字写进标题（「口播主播」「短视频口播」），标题那一遍拦。
+ANCHOR_IN_BODY = frozenset({"露脸", "不露脸", "主包", "语音厅", "团播", "带播",
                             "互动播", "陪聊", "情感互动", "聊天室", "场控"})
 # 既是岗位类型又描述"这份工本身"的词，正文里出现照样算（销售/中介/派遣）。
 KEEP_IN_BODY = frozenset({"销售", "中介", "派遣职位", "电销", "电话销售"})
+# 只在标题定罪的词（老师/助教/合伙人这一族）：用户说的是"兼职老师这种不要"，
+# 讲的是岗位；写进正文时它在说别的——「极氪零售实习生」HR 原话"有带教老师一对一辅导"
+# 是培养机制，「兼职·跨境电商学员」写"我们招募项目合伙人"是招商话术。
+# 这两条 2026-10-08 回放当天会话时都会被正文那一遍杀掉，所以钉死只查标题。
+TITLE_ONLY = frozenset({"合伙人", "老师", "助教", "家教", "讲师", "速记", "伴读"})
 
 
 # 标题已经说明这是数据/分析/标注的活时，正文里的"销售"多半是**被分析的业务域**
@@ -302,12 +349,19 @@ def _word_is_the_job(word: str, body: str) -> bool:
 
 
 def body_veto_hit(body_keywords, title_keywords, title: str = "", text: str = "") -> str:
-    """否决词那一遍：蓝领类型词不在正文定罪。
+    """否决词那一遍：蓝领类型词在标题不是目标职业形状时也要量正文。
 
     普工/分拣/骑手/外卖这些词写进 JD 正文，九成是"内容场景"而不是"这份工的岗位"——
     「兼职数据采集」让人录超市理货视频、「语音标注」要标快递场景录音，都是这种。
     2026-10-07 回放当天 1278 条投递记录：这么一分开放行 290 条（数据标注/线上运营/
     线上老师为主），仍拦 170 条，放行的里面没有一条带主播族字样。
+
+    但"只查标题"有个前提：标题得说明白了这是什么岗。用户 2026-10-08 点名的
+    上海仟嘉百供应链——标题「山姆新仓开业大量招人8-9K长沙」一个字都没交代岗位，
+    岗位性质全在 HR 第一句「工作内容骑电瓶车配送山姆超市日常用品 固定点取货多点配送」
+    里。这种标题下去类型词一条都量不着，于是 10-06 用文字拒过之后，10-07 21:48
+    主动跟进还替他说"我很有兴趣"。所以：标题带职业白名单词（数据/标注/客服…）
+    仍旧只查标题，不带的那一类连正文一起查。
     """
     类型 = set(title_keywords or ())
     # 标题这一遍用全词表：「线上主播助理」被"助理"这张职业白名单放行之后，
@@ -321,6 +375,15 @@ def body_veto_hit(body_keywords, title_keywords, title: str = "", text: str = ""
     标题命中 = keyword_hit(body_keywords, 标题)
     if 标题命中:
         return 标题命中
+    # 类型词的正文这一遍认否定式：HR 说"不需要坐班、无配送费"讲的是条件，
+    # 不是岗位；「系统派单、多点配送」这种没有否定词挡着，照样定罪。
+    # 销售/中介那一族本来就走上面 正文词 那条认否定式的路，这里排除掉免得绕开豁免。
+    if 标题 and not title_is_target_shaped(标题):
+        hit = keyword_hit([w for w in (title_keywords or ())
+                           if w not in ANCHOR_IN_BODY and w not in KEEP_IN_BODY
+                           and w not in TITLE_ONLY], 正文)
+        if hit:
+            return hit
     for word in 正文词:
         hit = keyword_hit([word], 正文)
         if not hit:
