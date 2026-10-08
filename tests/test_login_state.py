@@ -451,3 +451,31 @@ class CookieBackupTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class 空消息异常要看得出类型(unittest.TestCase):
+    """账号2 从 11:52 起每 15 秒打一条「访问会话页异常: 」——冒号后面是空的。
+
+    DrissionPage 有些异常 str() 就是空串，只打 `{e}` 等于什么都没记：看不出是标签页
+    没了、导航超时还是连接断了，只能干看着它把整个号判成"要人工登录"而停住不动。
+    """
+
+    def test_异常消息为空也要带上类型名(self):
+        from boss_bot.main_loop import UnifiedBotLoop
+
+        class _空消息异常(Exception):
+            def __str__(self):
+                return ""
+
+        class _Inst:
+            def get(self, url):
+                raise _空消息异常()
+
+        lp = UnifiedBotLoop.__new__(UnifiedBotLoop)
+        lp._login_state_read = lambda inst: "uncertain"
+        logs = []
+        lp._log = lambda *a, **k: logs.append(a[-1])
+
+        self.assertEqual("uncertain", UnifiedBotLoop._login_state_now(lp, _Inst()))
+        打的 = " ".join(str(x) for x in logs)
+        self.assertIn("_空消息异常", 打的, f"类型名没打出来，等于没有线索：{打的!r}")

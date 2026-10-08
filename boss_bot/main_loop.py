@@ -1100,7 +1100,11 @@ class UnifiedBotLoop:
         try:
             instance.get("https://www.zhipin.com/web/geek/chat")
         except Exception as e:
-            self._log("DEBUG", f"访问会话页异常: {e}")
+            # 有些 DrissionPage 异常 str() 是空串：只打 `{e}` 会留下一条
+            # 「访问会话页异常: 」，看不出是标签页没了还是导航超时，
+            # 而这一句正是"页面与 Cookie 矛盾→判需人工登录"那条链唯一的现场证据。
+            self._log("DEBUG", ("访问会话页异常: %s: %s"
+                                % (type(e).__name__, str(e) or repr(e)))[:200])
         return self._login_state_read(instance)
 
     def _save_cookies_if_logged_in(self, instance=None) -> bool:
