@@ -2137,6 +2137,9 @@ class UnifiedBotLoop:
                     self._log("INFO", f"全量同步已读 {synced}/{len(chats)}，先插一轮回复")
                     self._run_reply_round()
                     self._run_followup_round()
+                    # 补扫也挂在这个插空上：主循环那一趟要等整段同步跑完才轮到，
+                    # 25~50 分钟里欠简历的会话干等着（20:10 启动同步，补扫排在它后面）
+                    self._run_resume_backfill()
             except Exception as e:
                 self._log("WARN", f"[{name}] 全量同步失败（继续下一个）: {e}")
         self._log("INFO", f"启动全量同步完成：{synced}/{len(chats)} 个会话已同步，之后只采未读")

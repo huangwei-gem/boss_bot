@@ -94,6 +94,14 @@ class 不许连累别的链Test:
             "还在同一个 try 里：同步一炸补扫就整趟没了"
         assert "self._run_resume_backfill(force=True)" in 段, "启动时要单独跑一趟补扫"
 
+    def test_同步插空的那几轮也带上补扫(self):
+        """主循环那一趟要等整段同步（254 个会话、25~50 分钟）跑完才轮到，
+        欠简历的会话在这半小时里干等着——同步每 20 个会话插一轮回复，补扫跟着走。"""
+        src = Path(ROOT / "boss_bot" / "main_loop.py").read_text(encoding="utf-8")
+        at = src.index("先插一轮回复")
+        段 = src[at:at + 300]
+        assert "self._run_reply_round()" in 段 and "self._run_resume_backfill()" in 段, 段
+
     def test_每轮回复之后都会照时间窗补(self):
         src = Path(ROOT / "boss_bot" / "main_loop.py").read_text(encoding="utf-8")
         循环 = src[src.index("def _reply_loop"):src.index("def _run_reply_round")]
