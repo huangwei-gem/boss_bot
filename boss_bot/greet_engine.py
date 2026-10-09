@@ -171,6 +171,12 @@ JD_THIN_REASON = "JD 没写具体工作内容（正文太短），按疑似诈�
 VETO_FIELDS = ("job_name", "description", "requirements", "company",
                "jd_description", "jd_requirements")
 
+# 目标方向的另一半：标注类。配置那张 ai.target_job_keywords 是数据分析族，
+# 标注这一半由代码兜住（依据：账号默认招呼语自己写着"数据分析/数据标注方向"）。
+LABELING_DIRECTION = ("数据标注", "标注员", "标注专员")
+# 标题自己写了要来公司的形状，不在这半壁的兜底范围内。
+LABELING_OFFLINE_MARKS = ("到岗", "到场", "线下面试", "驻场", "线下办公")
+
 
 def veto_keyword_hit(keywords, job: dict, title_keywords=None) -> str:
     """在岗位文本里直查自定义否决词，返回命中的那一条（没命中返回空串）。
@@ -198,6 +204,14 @@ def target_job_hit(keywords, job: dict) -> str:
     和否决词是两套判据，不是它的反面：否决词查的是"这活不要"，这一条查的是
     "这活得是他要的那个方向"。BOSS 搜"数据分析"带出来的电商运营、资料录入
     一条否决词都不沾，光做减法拦不住（2026-10-09 用户：「其他的不要」）。
+
+    LABELING_DIRECTION 是代码里补的那半壁：他要的方向本来就有两半
+    （数据分析 + 数据标注，账号默认招呼语就是这么写的），而配置那张表是照着
+    "只投数据分析类"那一句话建的，一个"标注"都没有——10-09 当天标题含"标注"的
+    19 单里新投出去 0 单，6 单被这道闸按"没有数据分析类字样"拦死。
+    补进来的这一半只认标题里不含到岗形状的：「数据标注兼职（可转正-线下面试
+    和到岗）」那种自己写着要来公司的，仍然不给过（否决词表里只有"到岗面试/
+    仅线下"，接不住"线下面试和到岗"这种写法）。
     """
     if not keywords:
         return ""
@@ -206,6 +220,11 @@ def target_job_hit(keywords, job: dict) -> str:
         k = str(kw or "").strip().lower()
         if k and k in 全文:
             return str(kw)
+    标题 = str(job.get("job_name") or "")
+    if not any(m in 标题 for m in LABELING_OFFLINE_MARKS):
+        for word in LABELING_DIRECTION:
+            if word.lower() in 全文:
+                return word
     return ""
 
 

@@ -79,6 +79,76 @@ class TestJdGateCarriesTarget:
         assert "主播" in reason
 
 
+class TestLabelingHalfStillCounts:
+    """目标有两半（数据分析 + 数据标注），词表却是一个"标注"都没有。
+
+    10-09 现读 `ai.target_job_keywords` = 下面 NO_LABEL_TABLE 那份，是照着
+    "只投数据分析类"那句话建的；结果当天标题含"标注"的 19 单里
+    **新投出去 0 单**，6 单被这道闸以"标题和 JD 里都没有数据分析类字样"拦死
+    （视频数据标注/AI训练师 5 单 + 数据标注专员-影视方向 1 单）。
+    账号默认招呼语本身就写着"想找线上兼职（数据分析/数据标注方向）"。
+    """
+
+    NO_LABEL_TABLE = ["数据分析", "数据挖掘", "数据治理", "数据建模", "商业分析",
+                      "经营分析", "数据仓库", "数据清洗", "指标体系", "BI", "SQL"]
+    LABEL_JD = ("【岗位职责】 1. 负责视频通话场景下多模态数据标注与模型评测工作，"
+                "依据评测标准判定模型回复质量，精准识别、定位模型各类问题。"
+                "2. 从多维度开展评测：画面识别、属性细节、空间指代、OCR、时序实时性。"
+                "【岗位要求】 1. 本科及以上学历，专业不限；"
+                "2. 有 1 年及以上数据标注、数据质检、AI 模型评测相关经验优先。")
+
+    def _job(self, title):
+        return {"job_name": title, "jd_description": self.LABEL_JD,
+                "jd_requirements": self.LABEL_JD, "company": "嵩聿奕科技有限公司"}
+
+    def test_词表里没有标注字样时数据标注岗仍算方向(self):
+        assert target_job_hit(self.NO_LABEL_TABLE,
+                              self._job("视频数据标注/AI训练师"))
+
+    def test_标题只写标注员没写数据也算(self):
+        """「兼职·居家2d标注员(接受无经验)」正文常常一句话都没有，判据得认标题"""
+        assert target_job_hit(self.NO_LABEL_TABLE,
+                              {"job_name": "兼职·居家2d标注员(接受无经验)15-20元/时"})
+
+    def test_真实标注岗过闸门不再被拦(self):
+        assert jd_gate([], self._job("数据标注专员-影视方向"),
+                       title_keywords=[], target_keywords=self.NO_LABEL_TABLE) == ""
+
+    def test_标题写着到岗的标注岗仍拦得住(self):
+        """补标注这半壁不能把"线下面试+到岗"那种放出去——否决词表接不住这一写法"""
+        reason = jd_gate([], {"job_name": "数据标注兼职（可转正-线下面试和到岗）",
+                              "jd_description": self.LABEL_JD,
+                              "jd_requirements": self.LABEL_JD},
+                         title_keywords=[], target_keywords=self.NO_LABEL_TABLE)
+        assert reason, "这一单自己写了要来公司，不该投"
+
+    def test_同一份JD去掉到岗字样就该放行(self):
+        """上一条拦的是"到岗"这几个字，不是标注方向本身"""
+        assert jd_gate([], {"job_name": "数据标注兼职（可转正）",
+                            "jd_description": self.LABEL_JD,
+                            "jd_requirements": self.LABEL_JD},
+                       title_keywords=[], target_keywords=self.NO_LABEL_TABLE) == ""
+
+    def test_跑偏的岗照旧拦(self):
+        for title in ("实验室分析员", "电商运营助理", "项目经理（数据采集）"):
+            reason = jd_gate([], {"job_name": title,
+                                  "jd_description": "负责样本检测与原始记录，按规程操作仪器。",
+                                  "jd_requirements": "化学、环境监测相关专业优先。"},
+                             title_keywords=[], target_keywords=self.NO_LABEL_TABLE)
+            assert reason and "方向" in reason, title
+
+    def test_空词表仍然是不做正向过滤(self):
+        assert target_job_hit([], {"job_name": "普工包吃住"}) == ""
+
+    def test_用户配置那张表现读仍不含标注(self):
+        """这条是回归哨兵：他自己补上「数据标注」后本条会红，届时删掉它即可"""
+        cfg = UnifiedConfig.load(str(ROOT / "bot_config.json"),
+                                 overrides_path=str(ROOT / "__none__.json"))
+        if not cfg.ai.target_job_keywords:
+            pytest.skip("配置里没有正向方向词表，无从核对")
+        assert not any("标注" in str(k) for k in cfg.ai.target_job_keywords)
+
+
 class TestConfigWired:
 
     def test_配置字段存在且默认为空(self):
