@@ -455,6 +455,20 @@ TITLE_VETO_KEYWORDS_DEFAULT = [
     "合伙人", "老师", "助教", "家教", "讲师", "速记", "伴读",
 ]
 
+# 只投这些方向（正向门槛）：标题或 JD 里一个都没命中就不点「立即沟通」。
+#
+# 这一侧以前只有否决词——"不是普工/主播/信贷"就当可以投。可 BOSS 的搜索结果
+# 根本不干净：搜"数据分析"会带出"电商运营助理""资料录入文员"，它们一条否决词
+# 都不沾，于是照投。2026-10-09 用户把口径收到最紧：「今天就给我投递数据分析的
+# 兼职，其他的不要」——收到这个程度就必须有正向判据，光靠减法收不住。
+#
+# 刻意不含"数据标注"：那是另一类活（按件打标），他今天说的是数据分析。
+# 想加回来只改这一张表，投递/面板/汇报三端同一份。
+TARGET_JOB_KEYWORDS_DEFAULT = [
+    "数据分析", "数据挖掘", "数据治理", "数据建模", "商业分析", "经营分析",
+    "数据仓库", "数据清洗", "指标体系", "BI", "SQL",
+]
+
 # 标题里同时出现这些职业词时，岗位类型词放行："直播运营助理""电商客服"
 # 是用户点名要的方向，不能被"直播/快递"两个字顺手杀掉。
 # 刻意不放"线上/居家/兼职/可短期"这类修饰词——每个兼职标题都写着它们，
@@ -515,6 +529,9 @@ class AIConfig:
     # 岗位类型否决词（只查标题）：默认表见 TITLE_VETO_KEYWORDS_DEFAULT 上面那段注释
     title_veto_keywords: list = field(
         default_factory=lambda: list(TITLE_VETO_KEYWORDS_DEFAULT))
+    # 只投这些方向（正向门槛）：空表 = 不做正向过滤，沿用"只否决不要求"的旧口径。
+    # 默认给数据分析族那一份的依据见 TARGET_JOB_KEYWORDS_DEFAULT 上面那段。
+    target_job_keywords: list = field(default_factory=list)
     # 只看否决词：AI 的 score/is_match 不再参与放行决定，只有命中自定义筛选词才拦。
     # 用户要"线上兼职先放开量"时用；提示词单独说"别考虑背景"压不住基础提示词那段简历。
     veto_only_match: bool = False
@@ -898,6 +915,9 @@ class UnifiedConfig:
             if "title_veto_keywords" in ai:
                 self.ai.title_veto_keywords = normalize_filter_keywords(
                     ai["title_veto_keywords"])
+            if "target_job_keywords" in ai:
+                self.ai.target_job_keywords = normalize_filter_keywords(
+                    ai["target_job_keywords"])
             if "veto_only_match" in ai:
                 self.ai.veto_only_match = bool(ai["veto_only_match"])
             if "custom_scoring_prompt" in ai:
@@ -1363,6 +1383,7 @@ class UnifiedConfig:
                 "greet_fail_action": self.ai.greet_fail_action,
                 "custom_filter_keywords": list(self.ai.custom_filter_keywords),
                 "title_veto_keywords": list(self.ai.title_veto_keywords),
+                "target_job_keywords": list(self.ai.target_job_keywords),
                 "veto_only_match": bool(self.ai.veto_only_match),
                 "custom_scoring_prompt": self.ai.custom_scoring_prompt,
                 "skip_unhealthy": self.ai.skip_unhealthy,

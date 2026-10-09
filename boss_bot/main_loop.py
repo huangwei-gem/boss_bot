@@ -2980,6 +2980,8 @@ class UnifiedBotLoop:
                 self._greet_engine._ai_custom_filter_keywords = self.config.ai.custom_filter_keywords
                 self._greet_engine._ai_title_veto_keywords = list(
                     self.config.ai.title_veto_keywords)
+                self._greet_engine._ai_target_job_keywords = list(
+                    getattr(self.config.ai, "target_job_keywords", None) or [])
                 self._greet_engine._ai_custom_scoring_prompt = self.config.ai.custom_scoring_prompt
 
             if self._reply_engine:

@@ -192,17 +192,38 @@ def veto_keyword_hit(keywords, job: dict, title_keywords=None) -> str:
     return body_veto_hit(keywords, title_keywords or (), title=标题, text=正文)
 
 
+def target_job_hit(keywords, job: dict) -> str:
+    """只投这些方向：标题或 JD 里命中任意一条就返回命中的那条，否则空串。
+
+    和否决词是两套判据，不是它的反面：否决词查的是"这活不要"，这一条查的是
+    "这活得是他要的那个方向"。BOSS 搜"数据分析"带出来的电商运营、资料录入
+    一条否决词都不沾，光做减法拦不住（2026-10-09 用户：「其他的不要」）。
+    """
+    if not keywords:
+        return ""
+    全文 = "|".join(str(job.get(k) or "") for k in VETO_FIELDS).lower()
+    for kw in keywords:
+        k = str(kw or "").strip().lower()
+        if k and k in 全文:
+            return str(kw)
+    return ""
+
+
 def jd_gate(keywords, job: dict, thin_chars: int = JD_THIN_CHARS,
-            title_keywords=None) -> str:
+            title_keywords=None, target_keywords=None) -> str:
     """详情页的 JD 拿到手之后、点「立即沟通」之前的第二道闸门。
 
-    返回跳过原因，空串=放行。两条判据：
+    返回跳过原因，空串=放行。三条判据按"先定性、再看写得详不详细"排：
     1. 否决词命中 JD 正文（工厂岗、到场岗、引流话术大多只有正文里才写）；
-    2. 正文短到没具体内容——标题能编，"来看看再说"的挂法编不出工作量。
+    2. 方向词一条没命中——不是数据分析这个方向，正文写多长都不投；
+    3. 正文短到没具体内容——标题能编，"来看看再说"的挂法编不出工作量。
     """
     hit = veto_keyword_hit(keywords, job, title_keywords=title_keywords)
     if hit:
         return f"JD 命中否决词「{hit}」"
+    if target_keywords and not target_job_hit(target_keywords, job):
+        return ("不是要投的方向：标题和 JD 里都没有数据分析类字样"
+                f"（只投：{'、'.join(str(k) for k in list(target_keywords)[:4])}…）")
     # 任职要求也算正文：有的岗位把工作内容写在要求那一栏，只量描述会误杀
     body = (str(job.get("jd_description") or "").strip()
             or str(job.get("jd_requirements") or "").strip())
@@ -769,6 +790,7 @@ class AIAnalyzerChain:
         veto_only_match: bool = False,
         judge_timeout: int = 0,
         title_veto_keywords: list = None,
+        target_job_keywords: list = None,
     ):
         self.providers = []
         for p in providers:
@@ -801,6 +823,9 @@ class AIAnalyzerChain:
         self.title_veto_keywords = (list(TITLE_VETO_KEYWORDS_DEFAULT)
                                     if title_veto_keywords is None
                                     else list(title_veto_keywords or []))
+        # 只投这些方向（正向门槛）。默认空 = 不做正向过滤，配置里填了才生效：
+        # 这一条会把投递量砍掉一大截，得由用户点头开，不能塞进代码默认值。
+        self.target_job_keywords = list(target_job_keywords or [])
         self.custom_scoring_prompt = custom_scoring_prompt or ""
         self.analyze_max_tokens = analyze_max_tokens or self.DEFAULT_ANALYZE_MAX_TOKENS
         # AI 全军覆没时的处置：default = 按"默认通过"继续投（盲投），
@@ -1536,6 +1561,7 @@ class GreetEngine:
                bool(ai.veto_only_match),
                getattr(ai, "judge_timeout", 0),
                tuple(getattr(ai, "title_veto_keywords", None) or []),
+               tuple(getattr(ai, "target_job_keywords", None) or []),
                tuple((p.name, p.model, p.api_base, bool(p.api_key)) for p in ai.providers))
         if getattr(self, "_ai_config_sig", None) == sig:
             return
@@ -1549,6 +1575,9 @@ class GreetEngine:
         # 显式的空表是面板上真清空了，那就一条都不拦（改了必须生效）。
         self._ai_title_veto_keywords = list(
             getattr(ai, "title_veto_keywords", TITLE_VETO_KEYWORDS_DEFAULT))
+        # 只投这些方向（正向闸门）：空表 = 面板上没填 = 不做正向要求
+        self._ai_target_job_keywords = list(
+            getattr(ai, "target_job_keywords", None) or [])
         self._ai_custom_scoring_prompt = ai.custom_scoring_prompt
         self._ai_skip_unhealthy = ai.skip_unhealthy
         # 投递这一侧读 greet_fail_action：ai.fail_action 管的是回复"要不要发兜底话术"，
@@ -2311,6 +2340,7 @@ class GreetEngine:
                     veto_only_match=self._ai_veto_only,
                     judge_timeout=self._ai_judge_timeout,
                     title_veto_keywords=self._ai_title_veto_keywords,
+                    target_job_keywords=self._ai_target_job_keywords,
                 )
             else:
                 self._log("WARN", "AI 已启用但未配置任何 provider")
@@ -2651,7 +2681,8 @@ class GreetEngine:
 
             # ── 3.5 JD 到手后再判一次，拦在点「立即沟通」之前 ──
             blocked = jd_gate(self._ai_custom_filter_keywords, job,
-                              title_keywords=self._ai_title_veto_keywords)
+                              title_keywords=self._ai_title_veto_keywords,
+                              target_keywords=self._ai_target_job_keywords)
             if blocked:
                 reason = f"{blocked}｜{job.get('job_name', '')}"
                 self._log("WARN", f"⛔ JD 闸门跳过: {reason}")

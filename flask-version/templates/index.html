@@ -974,6 +974,11 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
           <input class="side-form-input" id="aiTitleVetoKeywords" type="text" placeholder="普工、主播、直播、快递、保洁、骑手" style="width:100%;box-sizing:border-box" onchange="onCustomAiChange()">
           <div class="side-hint" title="只查岗位标题，命中就不投、HR 发来交换微信/电话的卡片也只点「拒绝」。刻意不查 JD 正文：正文里"标注快递场景""直播间语音切片"到处都是，照正文杀会把数据标注、线上运营这些真正要的方向一起杀掉。标题里同时带"客服/运营/标注/剪辑"这类职业词的放行（直播运营助理、电商客服）">命中就不投，交换联系方式的卡片也只点拒绝；标题带客服/运营/标注这类职业词时放行</div>
         </div>
+        <div class="acc-field-row acc-stack" style="margin-top:8px">
+          <label style="font-size:12px;font-weight:600">只投这些方向（标题或 JD 至少要命中一个）</label>
+          <input class="side-form-input" id="aiTargetJobKeywords" type="text" placeholder="数据分析、数据挖掘、商业分析、SQL" style="width:100%;box-sizing:border-box" onchange="onCustomAiChange()">
+          <div class="side-hint" title="投递这一侧以前只有减法（命中否决词就不投），可 BOSS 搜「数据分析」带出来的电商运营、资料录入一条否决词都不沾，照样投出去。这一栏是加法：标题和 JD 里一个都没命中就跳过，压根不点「立即沟通」。清空这一栏＝不做正向要求，回到只按否决词的老口径">一个都没命中就不投；清空＝不做正向要求</div>
+        </div>
         <div class="acc-field-row" style="margin-top:6px">
           <label for="aiVetoOnly" style="font-size:12px;font-weight:600">只看否决词</label>
           <div class="acc-inline">
@@ -1393,6 +1398,7 @@ function renderAiConfig() {
     ? config.ai.probe_max_per_round : 5);
   setVal('customFilterKeywords', (config.ai.custom_filter_keywords || []).join('、'));
   setVal('aiTitleVetoKeywords', (config.ai.title_veto_keywords || []).join('、'));
+  setVal('aiTargetJobKeywords', (config.ai.target_job_keywords || []).join('、'));
   document.getElementById('aiVetoOnly').checked = !!config.ai.veto_only_match;
   setVal('customScoringPrompt', config.ai.custom_scoring_prompt || '');
   const badge = document.getElementById('aiBadge');
@@ -1700,6 +1706,8 @@ function onCustomAiChange() {
   config.ai.custom_filter_keywords = document.getElementById('customFilterKeywords').value
     .split(/[，,、;；\n]+/).map(function(s){return s.trim();}).filter(function(s){return s.length > 0;});
   config.ai.title_veto_keywords = document.getElementById('aiTitleVetoKeywords').value
+    .split(/[，,、;；\n]+/).map(function(s){return s.trim();}).filter(function(s){return s.length > 0;});
+  config.ai.target_job_keywords = document.getElementById('aiTargetJobKeywords').value
     .split(/[，,、;；\n]+/).map(function(s){return s.trim();}).filter(function(s){return s.length > 0;});
   config.ai.custom_scoring_prompt = document.getElementById('customScoringPrompt').value.trim();
   config.ai.veto_only_match = document.getElementById('aiVetoOnly').checked;
