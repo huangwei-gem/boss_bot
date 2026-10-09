@@ -38,6 +38,7 @@ if sys.stderr.encoding != 'utf-8':
 
 from flask import Flask, render_template, jsonify, request, send_file, abort
 from flask_socketio import SocketIO, emit
+from access_guard import COOKIE名 as _COOKIE名, 放行 as _放行
 
 # 抑制警告
 warnings.filterwarnings("ignore", category=UserWarning, module="urllib3")
@@ -183,9 +184,6 @@ for _noisy_logger in ("engineio.server", "socketio.server"):
 
 # ===================== API 认证 =====================
 
-# 允许访问的本地 IP 白名单
-_ALLOWED_LOCAL_IPS = {"127.0.0.1", "::1", "::ffff:127.0.0.1"}
-
 
 def _get_api_token() -> str:
     """从 bot_config.json 读取 api_token（可选字段，默认为空字符串）。
@@ -202,29 +200,30 @@ def _get_api_token() -> str:
 
 @app.before_request
 def _check_api_auth():
-    """API 认证：本地 IP 白名单 + 可选 token。
+    """API 认证：本机直连免凭据，其余来源（隧道、局域网里的别的设备）一律要 token。
 
-    - 首页（/）和静态文件（/static/）不需要认证
-    - 本地 IP（127.0.0.1, ::1, ::ffff:127.0.0.1）直接放行
-    - 非本地 IP：若配置了 api_token，则校验 X-API-Token 头；否则拒绝
+    以前只看 request.remote_addr 是不是回环。可 cloudflared 这类隧道永远从
+    127.0.0.1 连源站，真实访客写在 CF-Connecting-IP 里 —— 于是"把面板上线"这一步
+    会把 /api/stop、/api/cookies/delete 这些控制接口一起敞开（2026-10-09 实测：
+    带 CF-Connecting-IP 的本机请求打 /api/status 直接回 200）。规则挪进
+    access_guard 那里有测试盯着，这里只负责调用。
     """
-    # 首页和静态文件不需要认证
-    if request.path == "/" or request.path.startswith("/static/"):
-        return
+    免鉴权 = request.path == "/" or request.path.startswith("/static/")
+    if not _放行(dict(request.headers), request.remote_addr or "",
+                 token=_get_api_token(), 免鉴权=免鉴权):
+        abort(403, description="认证失败：这个来源需要 X-API-Token —— 手机上可以先开 "
+                               "/?token=…（口令在 bot_config.json 的 api_token，"
+                               "留空则非本机一律拒绝）")
 
-    # 检查请求来源 IP
-    remote_ip = request.remote_addr or ""
-    if remote_ip in _ALLOWED_LOCAL_IPS:
-        return
 
-    # 非本地 IP，检查 token
-    api_token = _get_api_token()
-    if api_token:
-        provided_token = request.headers.get("X-API-Token", "")
-        if provided_token != api_token:
-            abort(403, description="认证失败：无效的 API Token")
-    else:
-        abort(403, description="认证失败：仅限本地访问")
+@app.after_request
+def _记住访客口令(response):
+    """手机浏览器在首页 /?token=… 输一次之后落 cookie，不用改前端那 100 多个 fetch。"""
+    给的 = request.args.get("token") or ""
+    if 给的 and request.path == "/" and 给的 == _get_api_token():
+        response.set_cookie(_COOKIE名, 给的, httponly=True, samesite="Lax",
+                            max_age=30 * 86400)
+    return response
 
 # ===================== 全局状态 =====================
 
