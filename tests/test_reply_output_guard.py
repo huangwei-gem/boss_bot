@@ -90,12 +90,21 @@ class GuardTest:
 
     def test_历史上替他说错的那几句现在拦得住(self):
         """防重犯：盘上真发出去过「我今年25岁」（他 21）、「我本科毕业」（本科在读）。
-        事实闸门在真实数据里抓到 0 条，就说明判据是死的。"""
-        path = ROOT / "data" / "reply_records.json"
-        if not path.exists():
+        事实闸门在真实数据里抓到 0 条，就说明判据是死的。
+
+        00:00 会把当天记录归档进 data/archive/<日期>/，活文件只剩今天，
+        所以这两句要去活文件和归档里一起找（10-10 凌晨归档后就只剩归档有）。
+        """
+        paths = [ROOT / "data" / "reply_records.json"]
+        paths += sorted((ROOT / "data" / "archive").glob("*/reply_records.json"))
+        recs = []
+        for path in paths:
+            if not path.exists():
+                continue
+            data = json.loads(path.read_text(encoding="utf-8"))
+            recs += data if isinstance(data, list) else (data.get("records") or [])
+        if not recs:
             pytest.skip("没有真实记录")
-        recs = json.loads(path.read_text(encoding="utf-8"))
-        recs = recs if isinstance(recs, list) else recs.get("records") or []
         拦下来的 = [reply_rejection(r.get("reply_content") or "")
                     for r in recs if r.get("reply_source") == "ai"]
         事实类 = [x for x in 拦下来的 if "画像" in x]
