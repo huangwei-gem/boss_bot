@@ -225,6 +225,12 @@ def target_job_hit(keywords, job: dict) -> str:
         for word in LABELING_DIRECTION:
             if word.lower() in 全文:
                 return word
+        # "标注"只在这一层认标题：标题写着"在线标注兼职"的就是标注岗
+        # （Centific 那一单 10-10 被拦 15 次，正文只有"完成判别、标注、要点梳理"，
+        # 没有"数据标注"连写）。正文里的"标注"不认——"按要求标注质检标签"
+        # 那种客服/审核岗一认就放错了。
+        if "标注" in 标题:
+            return "标注"
     return ""
 
 

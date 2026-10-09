@@ -140,6 +140,40 @@ class TestLabelingHalfStillCounts:
     def test_空词表仍然是不做正向过滤(self):
         assert target_job_hit([], {"job_name": "普工包吃住"}) == ""
 
+    REAL_ONLINE_LABEL_JD = (
+        "工作周期：6个月 每周工期：5天及以上 工作时间：不限 结算方式：月结\n"
+        "**项目背景** 归属【高价值专家】长期大项目，线上远程长期协作，"
+        "**要求每日稳定在线 4-8 小时，长期参与**\n"
+        "**工作内容** 1. 依据 rubrics 规则，做专业评估、要素提取、内容校验；"
+        "2. 按照 rubrics 标准完成判别、标注、要点梳理工作；"
+        "3. 输出结构化评估结论，配合团队迭代评测标准。")
+
+    def test_标题写在线标注的也算这半壁(self):
+        """10-10 这一天被同一判据拦了 15 次：Centific「医疗合规质量与数据决策专家‑在线标注兼职」
+
+        标题写着"在线标注兼职"，正文只有一句"完成判别、标注、要点梳理"，
+        既没有"数据标注"连写也没有"标注员/标注专员"——现判据回放命中为空，
+        于是这一单在 04:32 等时刻被"不是要投的方向"反复拦掉。
+        """
+        assert not any("标注" in k for k in self.NO_LABEL_TABLE)
+        assert target_job_hit(self.NO_LABEL_TABLE, {
+            "job_name": "医疗合规质量与数据决策专家‑在线标注兼职",
+            "jd_description": self.REAL_ONLINE_LABEL_JD,
+            "description": self.REAL_ONLINE_LABEL_JD,
+            "company": "Centific"},
+        ), "标题写着「在线标注兼职」却按没命中方向拦掉"
+
+    def test_正文里的标注两个字不算方向(self):
+        """方向词只认标题里的"标注"：正文写"按要求标注通话质检标签"的客服岗不是标注岗"""
+        assert not target_job_hit(self.NO_LABEL_TABLE, {
+            "job_name": "电话客服（线上兼职）",
+            "jd_description": "负责接听来电，按要求标注通话场景的质检标签，记录工单。"})
+
+    def test_标题写标注的岗仍不许带到岗(self):
+        assert not target_job_hit(self.NO_LABEL_TABLE, {
+            "job_name": "在线标注专员（需到岗坐班）",
+            "jd_description": self.LABEL_JD})
+
     def test_用户配置那张表现读仍不含标注(self):
         """这条是回归哨兵：他自己补上「数据标注」后本条会红，届时删掉它即可"""
         cfg = UnifiedConfig.load(str(ROOT / "bot_config.json"),
