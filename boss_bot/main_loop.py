@@ -607,6 +607,28 @@ class UnifiedBotLoop:
         # "点了确认登录面板就死了"。等登录的那条线程被上面 _login_event 叫醒后
         # 走到 _handle_login / _finish_manual_login，由它们换回来。
         self._login_window_shown = False
+        # 但窗口要摆：用户点这个按钮是要核对"到底登进去没有"，无头那侧桌面上
+        # 压根没有窗口，这句确认就成了空的（2026-10-09 他原话「记得在点击我已
+        # 登录的时候也要弹窗，无头模式也一样」）。同样不能压在这个请求里做，
+        # 交给一条只摆窗口的线程。
+        self._popup_thread = threading.Thread(
+            target=self._popup_login_window,
+            name=f"boss-popup-{self.account_index}", daemon=True)
+        self._popup_thread.start()
+
+    def _popup_login_window(self):
+        """把这一号的浏览器窗口摆到桌面上；已登录时不把他导航回登录页。"""
+        self._login_window_shown = False
+        self._ensure_login_window("面板", 导航=False)
+
+    def _popup_login_window(self):
+        """把这一号的浏览器窗口摆到桌面上；已登录时不把他导航回登录页。
+
+        无头那侧会走重开成有头那一支（_ensure_login_window 里置
+        _login_headed_temp），登完由 _finish_login_window 换回配置里的形态。
+        """
+        self._login_window_shown = False
+        self._ensure_login_window("面板", 导航=False)
 
     # ─────────────────────────────────────────────
     # 数据按天归档
