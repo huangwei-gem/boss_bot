@@ -34,7 +34,7 @@ JOBS = "https://www.zhipin.com/web/geek/jobs?query=%E7%BA%BF%E4%B8%8A%E5%85%BC%E
 CEILING_MB = 2500
 
 
-def measure(extra_flags, port, label):
+def measure(extra_flags, port, label, headless=True):
     """起实例→开两页→按 profile 精确统计自己那棵进程树→关掉。
 
     只数 cmdline 里带本次临时 profile 的进程，绝不把线上那两个号的浏览器算进来。
@@ -42,7 +42,7 @@ def measure(extra_flags, port, label):
     prof = tempfile.mkdtemp(prefix=f"mem_{label}_")
     inst = None
     try:
-        inst = launch_browser(headless=True, chrome_path="", browser_type="chrome",
+        inst = launch_browser(headless=headless, chrome_path="", browser_type="chrome",
                               user_data_dir=prof, port=port, background=True,
                               extra_args=extra_flags)
         page = inst._get_active()
@@ -87,16 +87,21 @@ def main():
     ap.add_argument("--arg", action="append", default=[],
                     help="在现有参数之上再叠一个 Chrome 启动参数，可重复")
     ap.add_argument("--rounds", type=int, default=2)
+    ap.add_argument("--ab-headed", action="store_true",
+                    help="同一份参数、同一台机器，无头和有头各量一遍做配对对比")
     args = ap.parse_args()
 
-    configs = [("当前参数", [])]
+    configs = [("当前参数", [], True)]
     if args.arg:
-        configs.append(("当前+临时", list(args.arg)))
+        configs.append(("当前+临时", list(args.arg), True))
+    if args.ab_headed:
+        configs.append(("有头同参数", [], False))
     got = {}
     for r in range(args.rounds):
         print(f"第 {r + 1} 轮：")
-        for i, (label, flags) in enumerate(configs):
-            total, webgl = measure(flags, 9650 + r * 10 + i * 2, label)
+        for i, (label, flags, headless) in enumerate(configs):
+            total, webgl = measure(flags, 9650 + r * 10 + i * 2, label,
+                                   headless=headless)
             got.setdefault(label, {"mb": [], "webgl": webgl})["mb"].append(total)
 
     print()

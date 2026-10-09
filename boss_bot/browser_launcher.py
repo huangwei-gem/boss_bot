@@ -1429,6 +1429,35 @@ def _minimize_new_window(page) -> None:
 # BrowserManager 高层管理器
 # ──────────────────────────────────────────────────────────────
 
+def close_stray_tabs(browser, new_ids, keep=None) -> int:
+    """关掉这一次点击甩出来、当前用不上的标签页，返回关掉的张数。
+
+    BOSS 的卡片和"沟通"按钮都带 target=_blank，点下去除了聊天页还可能甩出一张
+    岗位详情页；打招呼引擎只登记聊天页那一张，剩下的没人认领，于是越攒越多：
+    2026-10-09 实测 9222 挂着 3 张 job_detail。一张详情页值多少——隔离实例里
+    开一张再关掉，进程树 2932 → 2533 MB，一进一出 400 MB 不到，三张就是一点几个 G。
+    只动 new_ids 里的那几张——搜索页和回复用的聊天页是长期存在的标签页，
+    差集之外的一张都不能碰。
+    """
+    关掉 = 0
+    for tid in (new_ids or ()):
+        if keep is not None and tid == keep:
+            continue
+        try:
+            tab = browser.get_tab(tid)
+            url = tab.url or ""
+        except Exception:
+            continue
+        if "job_detail" not in url:
+            continue
+        try:
+            tab.close()
+            关掉 += 1
+        except Exception as e:
+            logger.debug(f"甩出来的标签页关不掉（不拦这一轮）: {e}")
+    return 关掉
+
+
 class BrowserManager:
     """浏览器高层管理器
 
@@ -1554,6 +1583,29 @@ class BrowserManager:
             self.load_cookies(self._cookie_file)
 
         return self._instance
+
+    def realign_to_config(self) -> bool:
+        """把浏览器换回配置里那个形态，只在两者不一致时才动手。
+
+        登录那一次为了让人扫码把无头换成了有头，登完不换回来就一直是有头在跑：
+        配置写着无头却跑出有头，等于用户改的东西没生效，桌面上还多摆一个窗口。
+        这一手不省内存——同一台机器、同一份参数配对实测
+        （tools/measure_browser_memory.py --ab-headed，两轮）：无头 2479 MB、
+        有头 2484 MB，差在噪声里。
+        """
+        try:
+            形态 = browser_mode(int(self._debug_port or 0)) or {}
+        except Exception:
+            形态 = {}
+        if not 形态.get("running"):
+            return False
+        if bool(形态.get("headless")) == bool(self._headless):
+            return False
+        self.close()
+        time.sleep(2)
+        self.launch()
+        self.get_search_page()
+        return True
 
     def _window_pid(self) -> int:
         """这个浏览器挂在哪个进程上（窗口归属按进程号认）。"""

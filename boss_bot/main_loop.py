@@ -244,6 +244,10 @@ class UnifiedBotLoop:
         # 这一次掉登录有没有已经把浏览器窗口摆到用户眼前。无头形态下不摆，
         # 用户看到的就是"让我去浏览器登录，可我根本没有浏览器"（2026-10-09 截图）
         self._login_window_shown = False
+        # 这一次登录有没有把浏览器临时换成有头。有头并不比无头贵（配对实测
+        # 2479 vs 2484 MB），但配置写的是无头，登完还挂着有头就是用户改的东西
+        # 没生效，桌面上还多一个窗口——见 _finish_login_window
+        self._login_headed_temp = False
         # 需要登录的原因，供前端状态点说明"为什么是黄的"
         self._login_reason = ""
         self._greet_paused = False
@@ -598,6 +602,10 @@ class UnifiedBotLoop:
         self._needs_login = False
         self._logged_in = True
         self._login_reason = ""
+        # 有头换回无头这件事不在这里做：这个方法是面板的 HTTP 请求直接调进来的，
+        # 外面还套着 manager 的锁，close+launch 十几秒会把状态轮询一起卡住，表现成
+        # "点了确认登录面板就死了"。等登录的那条线程被上面 _login_event 叫醒后
+        # 走到 _handle_login / _finish_manual_login，由它们换回来。
         self._login_window_shown = False
 
     # ─────────────────────────────────────────────
@@ -908,11 +916,32 @@ class UnifiedBotLoop:
             return False
         if 果.get("relaunched"):
             self._init_engines()
+            # 记一笔：这一趟是为了登录才临时换成有头的，登完要换回配置里的形态
+            self._login_headed_temp = True
         self._log("WARN",
                   f"{侧}已把「{self.account_name}」的浏览器窗口放到桌面上"
                   f"（{果.get('windows', 0)} 个窗口）并停在登录页，"
                   f"请扫码或手机号+验证码登录，登进去后这一轮自己继续")
         return True
+
+    def _finish_login_window(self):
+        """登录这件事办完了，把临时借来的有头形态还回去。
+
+        借的时候说好了只是为了扫码：登录窗口是有头跑出来的，登完不还得话，
+        配置里的无头就形同虚设（面板写着无头、桌面上挂着一个窗口，
+        2026-10-09 账号2 就是这么跑了一上午）。
+        这一步不省内存——同一台机器同一份参数配对实测无头 2479 MB、有头 2484 MB，
+        真正的开销在 BOSS 那两个页面的渲染进程上（约 1.3 GB），跟有没有窗口无关。
+        """
+        借过 = self._login_headed_temp
+        self._login_headed_temp = False
+        self._login_window_shown = False
+        if not 借过:
+            return
+        if self.browser_manager.realign_to_config():
+            self._init_engines()
+            self._log("INFO", "登录完成，已把「%s」的浏览器换回配置里的无头模式"
+                              "（桌面上那个登录窗口跟着收掉）" % self.account_name)
 
     def _handle_login(self) -> bool:
         """处理登录流程。先尝试 Cookie 自动登录，失败则等待用户手动登录。"""
@@ -998,7 +1027,7 @@ class UnifiedBotLoop:
         self._logged_in = True
         self._needs_login = False
         self._login_reason = ""
-        self._login_window_shown = False
+        self._finish_login_window()
         return True
 
     def open_login_page(self) -> dict:
@@ -1056,7 +1085,7 @@ class UnifiedBotLoop:
                 self._logged_in = True
                 self._needs_login = False
                 self._login_reason = ""
-                self._login_window_shown = False
+                self._finish_login_window()
                 self._log("SUCCESS", f"账号 {self.account_index} 登录完成")
             else:
                 self._login_reason = "cookie_save_failed"
@@ -1404,6 +1433,7 @@ class UnifiedBotLoop:
                     self._stop_event.wait(timeout=15)
                     continue
 
+                self._finish_login_window()
                 self._current_mode = "greet"
                 round_had_jobs = self._run_greet_round()
 
