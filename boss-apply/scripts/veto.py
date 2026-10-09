@@ -29,6 +29,12 @@ import json
 import re
 import sys
 
+# 输出的 JSON 带中文（ensure_ascii=False），而 Windows 控制台默认 cp936：调用方按
+# UTF-8 解就会炸在 0xc6 这种字节上（tests/test_boss_apply_veto.py::test_命令行能跑通并出JSON
+# 在无 PYTHONUTF8 的环境里就是这么红的）。写 stdout 前先把流钉成 UTF-8，谁都别猜编码。
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 # 岗位类型词（只查标题）。取的是盘上真出现过的标题形状，不是凭空想的分类学。
 DEFAULT_TITLE_VETO = (
     "普工", "操作工", "技工", "焊工", "钳工", "学徒工", "工厂", "进厂", "车间",
