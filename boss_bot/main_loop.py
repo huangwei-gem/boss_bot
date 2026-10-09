@@ -241,6 +241,9 @@ class UnifiedBotLoop:
         self._running = False
         self._logged_in = False
         self._needs_login = False
+        # 这一次掉登录有没有已经把浏览器窗口摆到用户眼前。无头形态下不摆，
+        # 用户看到的就是"让我去浏览器登录，可我根本没有浏览器"（2026-10-09 截图）
+        self._login_window_shown = False
         # 需要登录的原因，供前端状态点说明"为什么是黄的"
         self._login_reason = ""
         self._greet_paused = False
@@ -595,6 +598,7 @@ class UnifiedBotLoop:
         self._needs_login = False
         self._logged_in = True
         self._login_reason = ""
+        self._login_window_shown = False
 
     # ─────────────────────────────────────────────
     # 数据按天归档
@@ -883,6 +887,33 @@ class UnifiedBotLoop:
             if self._stop_event.wait(timeout=min(0.2, deadline - time.time())):
                 break
 
+    def _ensure_login_window(self, 侧: str = "", 导航: bool = True) -> bool:
+        """判定要人工登录之后，把"真能扫码的那个窗口"弄到用户眼前。
+
+        无头形态下这句是空话：面板写着"请在浏览器中登录"，桌面上却没有浏览器
+        （2026-10-09 用户截图，账号2）。窗口该重开还是该从任务栏捞回来由
+        BrowserManager.show_login_window 按真实启动形态决定；重开过就必须重建引擎
+        —— 标签页句柄跟着旧进程一起没了，留着下一轮拿去点会点到空气。
+
+        一次登录只摆一遍：打招呼侧和回复侧会先后判掉登录，反复重开会把自己刚
+        登进去的会话再丢一次。摆失败时把标记放回，下一轮还能再试。
+        """
+        if self._login_window_shown:
+            return False
+        self._login_window_shown = True
+        果 = self.browser_manager.show_login_window(BOSS_LOGIN_URL, navigate=导航)
+        if 果.get("error"):
+            self._login_window_shown = False
+            self._log("ERROR", f"{侧}登录窗口没弄出来：{果['error']}")
+            return False
+        if 果.get("relaunched"):
+            self._init_engines()
+        self._log("WARN",
+                  f"{侧}已把「{self.account_name}」的浏览器窗口放到桌面上"
+                  f"（{果.get('windows', 0)} 个窗口）并停在登录页，"
+                  f"请扫码或手机号+验证码登录，登进去后这一轮自己继续")
+        return True
+
     def _handle_login(self) -> bool:
         """处理登录流程。先尝试 Cookie 自动登录，失败则等待用户手动登录。"""
         instance = self.browser_manager.get_instance()
@@ -943,15 +974,14 @@ class UnifiedBotLoop:
         # 只有确认是登录墙才把页面导航到登录页：本来就登录着的时候跳过去，
         # 会把会话页弄脏，回复侧随后就读到"登录墙"，自己把自己绊停
         self._needs_login = True
-        if self._login_reason == "cookie_expired":
-            self._log("WARN", "需要手动登录，已跳转到登录页面")
-            try:
-                instance.get(BOSS_LOGIN_URL)
-            except Exception:
-                pass
+        是登录墙 = self._login_reason == "cookie_expired"
+        if 是登录墙:
+            self._log("WARN", "需要手动登录，准备把浏览器窗口摆到桌面")
         else:
             self._log("WARN", f"登录态判不准（{self._login_reason}），"
                               f"不去动当前页面，等浏览器里出现登录 Cookie")
+        # 无头起来的话这一步会重开成有头——不然用户看到的只是一句做不到的要求
+        self._ensure_login_window("启动时", 导航=是登录墙)
 
         self._log("INFO", "请在浏览器中登录 BOSS 直聘（扫码或手机号+验证码），登录成功后会自动继续")
 
@@ -968,6 +998,7 @@ class UnifiedBotLoop:
         self._logged_in = True
         self._needs_login = False
         self._login_reason = ""
+        self._login_window_shown = False
         return True
 
     def open_login_page(self) -> dict:
@@ -993,12 +1024,15 @@ class UnifiedBotLoop:
         self._needs_login = True
         self._logged_in = False
         self._login_reason = "manual_login"
-        try:
-            instance.get(BOSS_LOGIN_URL)
-        except Exception as e:
+        # 点这个按钮就是要看窗口，所以哪怕刚摆过一次也再摆一遍（内部会按需重开成有头）
+        self._login_window_shown = False
+        if not self._ensure_login_window("面板"):
             self._needs_login = False
             self._login_reason = ""
-            return {"status": "error", "message": f"打开登录页失败: {e}"}
+            return {"status": "error",
+                    "message": "登录窗口打不开（端口或用户目录被别的 Chrome 占了），详见日志"}
+        # 重开过浏览器，旧句柄已经作废：等登录的线程必须拿新实例
+        instance = self.browser_manager.get_instance() or instance
 
         self._log("INFO", f"账号 {self.account_index}：已打开 BOSS 登录页，"
                           f"请在该账号的浏览器窗口完成登录")
@@ -1022,6 +1056,7 @@ class UnifiedBotLoop:
                 self._logged_in = True
                 self._needs_login = False
                 self._login_reason = ""
+                self._login_window_shown = False
                 self._log("SUCCESS", f"账号 {self.account_index} 登录完成")
             else:
                 self._login_reason = "cookie_save_failed"
@@ -1221,6 +1256,7 @@ class UnifiedBotLoop:
         if self._reply_login_lost_once():
             return "stop"
         self._log("WARN", "回复侧确认登录态失效，等待重新登录...")
+        self._ensure_login_window("回复侧")
         return "waiting"
 
     def _reply_login_lost_once(self) -> bool:
@@ -1354,6 +1390,7 @@ class UnifiedBotLoop:
                     self._needs_login = True
                     self._login_reason = "session_lost"
                     self._discard_stale_cookies("运行中确认登录态失效")
+                    self._ensure_login_window("打招呼侧")
                     self._stop_event.wait(timeout=30)
                     continue
                 elif health == "browser_disconnected":

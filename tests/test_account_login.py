@@ -23,6 +23,16 @@ def make_loop(account_index=1):
     lp._stop_event = threading.Event()
     lp._running = False
     lp._emit_wind = lambda *a, **k: None
+    # 登录窗口这一层现在归 BrowserManager.show_login_window（无头时要重开成有头），
+    # 默认让它报"成功摆出一个窗口"，个别用例再自己改返回值
+    lp.摆窗口 = []
+
+    def _窗口(url, navigate=True):
+        lp.摆窗口.append((url, navigate))
+        return {"relaunched": False, "windows": 1,
+                "url_shown": url if navigate else "", "error": ""}
+
+    lp.browser_manager.show_login_window.side_effect = _窗口
     return lp
 
 
@@ -33,8 +43,14 @@ class OpenLoginPageTest:
         lp.browser_manager.get_instance.return_value = inst
         out = lp.open_login_page()
         assert out["status"] == "ok", out
-        urls = [c.args[0] for c in inst.get.call_args_list]
-        assert any("/web/user" in u for u in urls), f"没打开登录页: {urls}"
+        assert any("/web/user" in u for u, _n in lp.摆窗口), f"没打开登录页: {lp.摆窗口}"
+
+    def test_点登录必须真把窗口摆出来(self):
+        """无头形态下桌面上没有窗口，用户点完登录什么也看不见（2026-10-09）"""
+        lp = make_loop()
+        lp.browser_manager.get_instance.return_value = MagicMock()
+        lp.open_login_page()
+        assert lp.browser_manager.show_login_window.called
 
     def test_不启动投递线程(self):
         """点登录只是登录，不能顺手把打招呼/回复跑起来"""

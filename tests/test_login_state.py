@@ -245,6 +245,16 @@ class UncertainHandlingTest(unittest.TestCase):
         loop._discard_stale_cookies = MagicMock()
         loop._save_cookies_if_logged_in = MagicMock(return_value=True)
         loop._wait_for_login = MagicMock(return_value=False)
+        # 登录窗口这一层现在由 show_login_window 管（无头时要重开成有头），
+        # 这里记成"摆了几次窗口、各自动没动页面"，下面按这个断言
+        loop.摆窗口 = []
+
+        def _窗口(url, navigate=True):
+            loop.摆窗口.append((url, navigate))
+            return {"relaunched": False, "windows": 1,
+                    "url_shown": url if navigate else "", "error": ""}
+
+        loop.browser_manager.show_login_window.side_effect = _窗口
         return loop
 
     def _urls_touched(self, inst):
@@ -268,7 +278,8 @@ class UncertainHandlingTest(unittest.TestCase):
         loop.browser_manager.get_instance.return_value = inst
         loop._login_state_now = lambda i: "uncertain"
         assert loop._handle_login() is False
-        assert not any("/web/user" in u for u in self._urls_touched(inst))
+        assert not any(n for _, n in loop.摆窗口), \
+            "看不准时可以把窗口摆出来让人自己看，但不许把页面导航走"
         loop._discard_stale_cookies.assert_not_called()
         assert loop._login_reason == "login_uncertain"
 
@@ -278,8 +289,17 @@ class UncertainHandlingTest(unittest.TestCase):
         loop.browser_manager.get_instance.return_value = inst
         loop._login_state_now = lambda i: "login_wall"
         assert loop._handle_login() is False
-        assert any("/web/user" in u for u in self._urls_touched(inst))
+        assert any("/web/user" in u and n for u, n in loop.摆窗口), \
+            f"确认是登录墙，却没把登录页摆出来: {loop.摆窗口}"
         loop._discard_stale_cookies.assert_called_once()
+
+    def test_确认登录墙时窗口一定摆出来(self):
+        """面板那句"请在浏览器中登录"在无头形态下做不到——必须先有窗口"""
+        loop = self._loop()
+        loop.browser_manager.get_instance.return_value = MagicMock()
+        loop._login_state_now = lambda i: "login_wall"
+        loop._handle_login()
+        assert loop.browser_manager.show_login_window.called
 
 
 class ReplyLoginGuardTest(unittest.TestCase):

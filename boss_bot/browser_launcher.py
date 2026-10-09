@@ -67,6 +67,8 @@ BACKGROUND_FLAGS = (
 # SW_SHOWMINNOACTIVE：最小化但不把焦点从这个窗口抢走（SW_MINIMIZE 会，
 # 于是"收到后台"变成了"每启动一次就把用户正在打的字打断"）
 SW_SHOWMINNOACTIVE = 7
+# SW_RESTORE：从任务栏/最小化里回到桌面。要人工扫码登录时用它把窗口捞回来。
+SW_RESTORE = 9
 CHROME_WINDOW_CLASS = "Chrome_WidgetWin_1"
 
 
@@ -85,20 +87,25 @@ def current_foreground_window() -> int:
 
 
 def is_browser_window(class_name: str, visible: bool, iconic: bool,
-                      pid: int, owner_pids) -> bool:
-    """这个顶层窗口是不是"还挂在桌面上、属于我们要收起来的浏览器"。
+                      pid: int, owner_pids, include_iconic: bool = False) -> bool:
+    """这个顶层窗口是不是"还挂在桌面上、属于我们这个浏览器"。
 
     Chrome_WidgetWin_1 同时是隐藏的消息窗口和 DevTools 窗口的类名，所以
     必须再要 visible；已经最小化（iconic）的不重复处理。
+
+    include_iconic 是给"把窗口捞回桌面"用的：那条"已经最小化就跳过"是收起
+    动作的省工判断，捞回来时最小化的恰恰就是目标，照它筛会一个都挑不出来
+    （12:26 那次日志里的"0 个窗口"就是这么来的）。
     """
-    return bool(class_name == CHROME_WINDOW_CLASS and visible and not iconic
+    return bool(class_name == CHROME_WINDOW_CLASS and visible
+                and (include_iconic or not iconic)
                 and pid and pid in set(owner_pids or ()))
 
 
-def pick_browser_windows(windows, owner_pids) -> list:
-    """从 [(hwnd, 类名, 可见, 已最小化, pid)] 里挑出要收起来的窗口句柄。"""
+def pick_browser_windows(windows, owner_pids, include_iconic: bool = False) -> list:
+    """从 [(hwnd, 类名, 可见, 已最小化, pid)] 里挑出要收起来/捞回来的窗口句柄。"""
     return [w[0] for w in windows
-            if is_browser_window(w[1], w[2], w[3], w[4], owner_pids)]
+            if is_browser_window(w[1], w[2], w[3], w[4], owner_pids, include_iconic)]
 
 
 def _enumerate_top_windows() -> list:
@@ -159,6 +166,54 @@ def minimize_browser_windows(pid: int, timeout: float = 8.0) -> int:
         if all(user32.IsIconic(ctypes.c_void_p(h)) for h in handles):
             return len(handles)
         time.sleep(0.2)
+    return len(handles)
+
+
+def restore_browser_windows(pid: int, user32=None, timeout: float = 6.0) -> int:
+    """把这个浏览器进程的窗口从任务栏/最小化里捞回桌面并前置。返回处理了几个窗口。
+
+    只治"有窗口但看不见"。无头模式下桌面上压根就没有窗口，这个函数救不了，
+    那种形态要先把浏览器重开成有头 —— 见 BrowserManager.show_login_window。
+
+    跨进程的 ShowWindowAsync 偶尔不生效（投递线程正忙、或者前台权限被系统挡下），
+    所以要回看一眼：还缩着就再补一次同步 ShowWindow，最后统一前置一次。
+    不这么兜的话面板会报"窗口已弹出"，用户桌面上却还是任务栏里那一条。
+    """
+    if not _IS_WINDOWS or not pid:
+        return 0
+    import ctypes
+    真系统调用 = user32 is None
+    user32 = ctypes.windll.user32 if 真系统调用 else user32
+    # 真的时候包成句柄对象（64 位下裸 int 会被截断），测试传假对象时原样给
+    包 = (lambda h: ctypes.c_void_p(h)) if 真系统调用 else (lambda h: h)
+    handles = pick_browser_windows(_enumerate_top_windows(), (pid,),
+                                   include_iconic=True)
+    if not handles:
+        return 0
+
+    def 来一下(名, hwnd, *参数):
+        try:
+            getattr(user32, 名)(包(hwnd), *参数)
+        except Exception:
+            pass
+
+    for hwnd in handles:
+        来一下("ShowWindowAsync", hwnd, SW_RESTORE)
+
+    end = time.time() + timeout
+    while time.time() < end:
+        try:
+            还缩着 = [h for h in handles if user32.IsIconic(包(h))]
+        except Exception:
+            还缩着 = []
+        if not 还缩着:
+            break
+        for hwnd in 还缩着:
+            来一下("ShowWindow", hwnd, SW_RESTORE)
+        time.sleep(0.4)
+
+    for hwnd in handles:
+        来一下("SetForegroundWindow", hwnd)
     return len(handles)
 
 
@@ -1499,6 +1554,74 @@ class BrowserManager:
             self.load_cookies(self._cookie_file)
 
         return self._instance
+
+    def _window_pid(self) -> int:
+        """这个浏览器挂在哪个进程上（窗口归属按进程号认）。"""
+        inst = self._instance
+        for obj in (getattr(inst, "_page", None), getattr(inst, "_chromium", None)):
+            if obj is None:
+                continue
+            for 取法 in (lambda: int(getattr(obj, "browser").process_id or 0),
+                        lambda: int(getattr(obj, "process_id") or 0)):
+                try:
+                    pid = 取法()
+                except Exception:
+                    pid = 0
+                if pid:
+                    return pid
+        return 0
+
+    def show_login_window(self, login_url: str = "", navigate: bool = True) -> dict:
+        """把"真能扫码登录的那个窗口"摆到用户眼前。
+
+        面板上那句「请在浏览器中登录后点击我已登录」在无头形态下是做不到的：
+        桌面上压根没有窗口（2026-10-09 用户截图正是这个）。所以先问这次是不是
+        无头起来的 —— 形态只看 LAUNCHED_MODES，不能拿 UA 判，cloakbrowser 会把
+        UA 里的 HeadlessChrome 抹平。是无头就按同一端口、同一用户目录重开成有头，
+        再把登录页导航上去；本来有头（只是收进了任务栏）就把窗口捞回来。
+
+        重开会把配置里的无头/后台原样还回去：这一次例外是为了登录，
+        不是改用户的常驻形态。
+        """
+        登录页 = login_url or self.BOSS_LOGIN_URL
+        # 形态问端口，别问自己手里那个对象：浏览器半路没了的话，_instance 还留着
+        # 一个连不上的旧句柄，只按 LAUNCHED_MODES 判会以为"有头、不用重开"，
+        # 然后对着死句柄导航，报出来一句空错（12:33 实测就是这样）
+        try:
+            形态 = browser_mode(int(self._debug_port or 0)) or {}
+        except Exception:
+            形态 = {}
+        要重开 = (self._instance is None
+                 or not 形态.get("running")
+                 or 形态.get("headless") is True)
+        结果 = {"relaunched": bool(要重开), "windows": 0, "url_shown": "", "error": ""}
+        try:
+            if 要重开:
+                if self._instance is not None:
+                    self.close()
+                    time.sleep(2)
+                原无头, 原后台 = self._headless, self._background
+                self._headless, self._background = False, False
+                try:
+                    self.launch()
+                finally:
+                    self._headless, self._background = 原无头, 原后台
+                # close() 把 _search_tab 置空了，不重建的话下一轮打招呼拿的是旧句柄
+                # （11:03 重连现场那个"第二个浏览器打开后无内容"就是漏了这一步）
+                self.get_search_page()
+            if self._instance is None:
+                结果["error"] = "浏览器没起来（端口或用户目录被别的 Chrome 占了）"
+                return 结果
+            结果["windows"] = restore_browser_windows(self._window_pid())
+            # "看不准是不是掉登录"那一类不许把会话页导航走：本来就登录着的时候
+            # 跳去登录页，回复侧随后就读到登录墙，自己把自己绊停。
+            # 但重开过就没得选——新浏览器里是空白页，不摆登录页等于没窗口可用。
+            if navigate or 要重开:
+                self._instance.get(登录页)
+                结果["url_shown"] = 登录页
+        except Exception as e:
+            结果["error"] = f"{type(e).__name__}: {e}"
+        return 结果
 
     def get_search_page(self) -> BrowserInstance:
         """获取搜索/打招呼页面 tab（包装为 BrowserInstance）
