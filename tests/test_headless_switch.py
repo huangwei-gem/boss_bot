@@ -70,7 +70,8 @@ class 假循环:
         self.browser_manager.adopt_mode(bool(headless))
 
     def get_status(self):
-        return {"index": self.index, "running": self.running}
+        return {"index": self.index, "running": self.running,
+                "logged_in": self.running, "needs_login": False, "login_reason": ""}
 
     def start(self):
         self.calls.append("start")
@@ -314,6 +315,71 @@ class Test启动要能自己再来一次:
         assert ML.UnifiedBotLoop._init_browser(对象) is False
         assert 对象._login_reason == "browser_failed"
         assert [lvl for lvl, _ in 记 if lvl == "ERROR"] == ["ERROR", "ERROR"]
+
+
+class Test换形态要排队:
+    """start() 是非阻塞的：连着发两次就是两个浏览器同时抢启动。"""
+
+    def _管理器(self, monkeypatch):
+        monkeypatch.setattr(ML.time, "sleep", lambda s: None)
+        mgr = MultiAccountManager(_配置())
+        return mgr
+
+    def _号(self, mgr, idx, **状态):
+        import types
+        底 = {"running": True, "logged_in": False, "needs_login": False, "login_reason": ""}
+        底.update(状态)
+        mgr._loops[idx] = types.SimpleNamespace(get_status=lambda: dict(底))
+
+    def test_号真跑起来了才放行(self, monkeypatch):
+        mgr = self._管理器(monkeypatch)
+        self._号(mgr, 0, logged_in=True)
+        assert mgr._等在跑起来(0) is True
+
+    def test_要人工登录说明浏览器已经起来了(self, monkeypatch):
+        """别把这个当"没起来"干等：扫码那一类号本来就要人管，浏览器是活的。"""
+        mgr = self._管理器(monkeypatch)
+        self._号(mgr, 0, needs_login=True, login_reason="no_cookie")
+        assert mgr._等在跑起来(0) is True
+
+    def test_浏览器起不来就认定没起来(self, monkeypatch):
+        """12:22 那一次：两个号一起停在 stopped，等下去也不会自己好。"""
+        mgr = self._管理器(monkeypatch)
+        self._号(mgr, 0, running=False, login_reason="browser_failed")
+        assert mgr._等在跑起来(0) is False
+
+    def test_还在启动中就轮到超时(self, monkeypatch):
+        mgr = self._管理器(monkeypatch)
+        self._号(mgr, 0)
+        assert mgr._等在跑起来(0, 最长秒=0.01) is False
+
+    def test_排队是一个号一个号起而不是同时抢(self, monkeypatch):
+        """start() 非阻塞，连着发两次就是两个浏览器同时抢启动
+        （12:21–12:22 实测：两个号都停在 stopped，一个都没起来）。"""
+        monkeypatch.setattr(ML, "UnifiedBotLoop", 假循环)
+        monkeypatch.setattr(ML.threading, "Thread", 假线程)
+        mgr = MultiAccountManager(_配置())
+        次序 = []
+        for loop in mgr._loops.values():
+            loop.running = True
+            loop.calls = 次序              # stop/start 都往同一个列表里按顺序记
+        等过 = []
+        mgr._等在跑起来 = lambda idx, **kw: 等过.append(idx) or True
+        mgr.switch_headless(True)
+        assert 次序 == ["stop", "start", "stop", "start"]
+        assert 等过 == [0, 1], "每起一个都要等它跑起来，才轮到下一个"
+
+    def test_一个号没起来也要接着处理另一个(self, monkeypatch):
+        monkeypatch.setattr(ML, "UnifiedBotLoop", 假循环)
+        monkeypatch.setattr(ML.threading, "Thread", 假线程)
+        mgr = MultiAccountManager(_配置())
+        次序 = []
+        for loop in mgr._loops.values():
+            loop.running = True
+            loop.calls = 次序
+        mgr._等在跑起来 = lambda idx, **kw: idx != 0     # 号 0 起不来
+        mgr.switch_headless(True)
+        assert 次序 == ["stop", "start", "stop", "start"], "不能因为一个号卡住就不管另一个"
 
 
 class Test接口:

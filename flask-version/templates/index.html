@@ -1137,7 +1137,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
         <span class="scope-hint" id="actionScopeLabel" title="上方按钮只作用于当前数据范围"></span>
         <button class="btn-run" id="btnStartAll" onclick="startAll()"><span class="run-dot"></span><i data-ki="start"></i>启动</button>
         <button class="btn-run stop" id="btnStopAll" onclick="stopAll()" style="display:none"><span class="run-dot"></span><i data-ki="stop"></i>停止</button>
-        <span class="mode-group" title="无头：桌面上没有窗口，机器人一天挂着不挡事。有头：出窗口，可以自己看一眼页面。点一下就把在跑的号按新形态重开（约 30 秒）；扫码登录要切回有头">
+        <span class="mode-group" title="无头：桌面上没有窗口，机器人一天挂着不挡事。有头：出窗口，可以自己看一眼页面。点一下就把在跑的号按新形态重开（多个号一个一个来，每个约 30 秒）；扫码登录要切回有头">
           <span class="mode-label"><i data-ki="preview"></i>浏览器形态</span>
           <button class="scope-chip" id="modeHeadless" onclick="setBrowserMode(true)">无头</button>
           <button class="scope-chip" id="modeHeaded" onclick="setBrowserMode(false)">有头</button>
@@ -5536,7 +5536,7 @@ function setBrowserMode(v) {
       paintModeChips(v);
       var restarts = d.restarting || [];
       toast(restarts.length
-        ? '已切为' + (v ? '无头' : '有头') + '：' + restarts.length + ' 个号正按新形态重开（约 30 秒）'
+        ? '已切为' + (v ? '无头' : '有头') + '：' + restarts.length + ' 个号正按新形态重开（一个一个来，每个约 30 秒）'
         : '已切为' + (v ? '无头' : '有头') + '：下一次启动浏览器就是它', 'ok', 5000);
       addLog('INFO', '浏览器形态 → ' + (v ? '无头' : '有头') +
         (restarts.length ? '（重开号 ' + restarts.join(',') + '）' : ''));

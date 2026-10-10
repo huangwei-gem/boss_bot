@@ -3480,7 +3480,7 @@ class MultiAccountManager:
                 self.log_cb(f"[{level}] {msg}")
             except Exception:
                 pass
-        getattr(logger, level.lower(), logger.info)(msg)
+        getattr(logger, {"WARN": "warning"}.get(level, level.lower()), logger.info)(msg)
 
     # ─────────────────────────────────────────────
     # 启动/停止
@@ -3562,15 +3562,38 @@ class MultiAccountManager:
         return {"headless": 目标, "restarting": 在跑, "cleared_overlays": 拆了}
 
     def _换形态(self, indices):
-        """后台线程：一个号一个号地停再起，别同时抢两个浏览器的启动。"""
+        """后台线程：一个号一个号地停再起，**等它真跑起来了再动下一个**。
+
+        start() 是非阻塞的（浏览器在初始化线程里起），连着发两次就等于两个浏览器
+        同时抢启动——这台机器上实测两个号都连不上端口，一起停在 stopped
+        （2026-10-10 12:21 那次点"有头"）。一个号起不来也不拦着另一个。
+        """
         for idx in indices:
             try:
                 self._log("INFO", "账号 %s 正按新形态重开浏览器（约 30 秒）" % idx)
                 self.stop_account(idx)
                 time.sleep(1)
                 self.start_account(idx)
+                if not self._等在跑起来(idx):
+                    self._log("WARN", "账号 %s 按新形态没跑起来，接着处理下一个号" % idx)
             except Exception as e:
                 self._log("ERROR", "账号 %s 换形态失败: %s" % (idx, e))
+
+    def _等在跑起来(self, account_index: int, 最长秒: float = 120.0) -> bool:
+        """等这个号的浏览器起来（登录成没成另说），别和下一个号挤同一秒。"""
+        截止 = time.time() + 最长秒
+        while time.time() < 截止:
+            loop = self._loops.get(account_index)
+            if loop is None:
+                return False
+            态 = loop.get_status() or {}
+            # 要人工扫码的号浏览器是活的，只是登不上——那不算"没起来"
+            if 态.get("logged_in") or 态.get("needs_login"):
+                return True
+            if not 态.get("running") and 态.get("login_reason") == "browser_failed":
+                return False
+            time.sleep(2)
+        return False
 
     # ─────────────────────────────────────────────
     # 暂停/恢复
