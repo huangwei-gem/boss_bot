@@ -95,7 +95,7 @@ def test_界面把真实模式贴在开关旁边():
     assert 'id="advHeadlessReal"' in html
     assert "function renderHeadlessReality" in html
     assert "renderHeadlessReality(data);" in html, "状态轮询没喂给它就是死控件"
-    assert "重启面板才生效" in html, "配置与实际不一致必须说人话，不许静默显示配置值"
+    assert "和配置不一致" in html, "配置与实际不一致必须说人话，不许静默显示配置值"
 
 
 def test_真实模式判定不许读window上的config():

@@ -64,7 +64,7 @@ from boss_bot.unified_config import (
 from boss_bot.judgement_review import apply_suggestion, build_review
 from boss_bot.greet_engine import account_greeting_ready, account_greeting_mode
 from boss_bot.greeting import compose_account_default, ensure_account_default
-from boss_bot.main_loop import UnifiedBotLoop, MultiAccountManager
+from boss_bot.main_loop import UnifiedBotLoop, MultiAccountManager, apply_headless_config
 from boss_bot.self_evolve import SelfEvolveEngine
 from boss_bot.browser_launcher import browser_mode, detect_available_browsers
 from boss_bot.reply_record import (
@@ -561,12 +561,15 @@ def _enrich_status(data: dict) -> dict:
     """
     try:
         accounts = _ensure_config().greet.accounts
+        基准端口 = int(_ensure_config().browser.debug_port or 9222)
         for acc in data.get("accounts", []):
             idx = acc.get("index", 0)
             if 0 <= idx < len(accounts):
                 acc["cookie"] = _account_cookie_state(idx, account=accounts[idx])
             try:
-                acc["browser"] = browser_mode(9222 + int(idx))
+                # 端口按配置算，别写死 9222：改过 debug_port 之后形态和端口就都对不上了
+                # （按号覆盖里的 debug_port 是被锁住的，端口只能由基准 + 账号序号算）
+                acc["browser"] = browser_mode(基准端口 + int(idx))
             except Exception as e:
                 logger.debug(f"读账号{idx}浏览器形态失败: {e}")
     except Exception:
@@ -1402,6 +1405,32 @@ def api_browser_set():
     cfg.save()
 
     return jsonify({"status": "ok", "message": f"浏览器已设置为 {browser_type}"})
+
+
+@app.route("/api/browser/headless", methods=["POST"])
+def api_browser_headless():
+    """切浏览器形态：无头 ↔ 有头，并且把在跑的号按新形态重开。
+
+    界面里原来那个开关只写配置，toast 自己都写着"下一次启动才生效"——于是
+    既看不出此刻跑的是哪种形态，也没有"现在就切过去"的入口（2026-10-10 提出）。
+    重启放在管理器里的后台线程做，这个请求不等浏览器（登录那一次已经把
+    "别把 HTTP 挂在浏览器上"踩过一遍）。
+    """
+    data = request.get_json(silent=True) or {}
+    if not isinstance(data.get("headless"), bool):
+        return jsonify({"status": "error", "message": "headless 必须是 true 或 false"}), 400
+
+    目标 = data["headless"]
+    if _multi_manager is not None:
+        结果 = _multi_manager.switch_headless(目标)
+    else:
+        cfg = _ensure_config()
+        结果 = {"headless": 目标, "restarting": [],
+                "cleared_overlays": apply_headless_config(cfg, 目标)}
+    logger.info("浏览器形态切为%s（来源=%s）",
+                "无头" if 目标 else "有头", _control_trace())
+    return jsonify({"status": "ok", "message": "已切为%s" % ("无头" if 目标 else "有头"),
+                    **结果})
 
 
 # ===================== 个人画像 API =====================

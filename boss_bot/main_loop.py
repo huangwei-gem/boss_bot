@@ -518,6 +518,26 @@ class UnifiedBotLoop:
         self._current_mode = "idle"
         self._log("INFO", "主循环已停止")
 
+    def adopt_headless(self, headless: bool):
+        """把这个号自己的配置副本和浏览器管理器都换成新形态。
+
+        两层各抄过一次，谁都不会自己跟上：循环的 config 是 apply_account() 的深拷贝
+        （基准改了它不知道），BrowserManager 又是构造时把 headless 抄成 _headless 字段。
+        漏掉哪一层，切了形态重启回来还是老样子（2026-10-10 第一次真机点就是这样：
+        配置翻成有头、号也重开了，浏览器还是无头起来的）。
+        给管理器的是**这个值本身**而不是配置对象——热重载每轮会换掉 self.config，
+        管理器手里那个引用早就成了孤儿。
+        """
+        目标 = bool(headless)
+        try:
+            self.config.browser.headless = 目标
+        except Exception as e:
+            self._log("WARN", "写本账号形态失败: %s" % e)
+        if self.browser_manager is not None:
+            同步 = getattr(self.browser_manager, "adopt_mode", None)
+            if 同步 is not None:
+                同步(目标)
+
     def pause_greet(self):
         """暂停打招呼功能。回复功能不受影响。
 
@@ -889,23 +909,36 @@ class UnifiedBotLoop:
             self._log("INFO", "初始化线程结束")
 
     def _init_browser(self) -> bool:
-        """启动共享浏览器实例。"""
-        try:
-            self._log("INFO", "正在启动共享浏览器...")
-            self._log("DEBUG", f"浏览器配置: type={self.config.browser.browser_type}, "
-                              f"chrome_path={self.config.browser.chrome_path}, "
-                              f"debug_port={self.config.browser.debug_port}")
-            self.browser_manager.launch()
-            self._log("DEBUG", "浏览器进程已启动，等待连接...")
-            self._log("INFO", "浏览器已启动")
-            return True
-        except Exception as e:
-            self._log("ERROR", f"浏览器启动失败: {e}")
-            self._log("DEBUG", f"浏览器启动异常详情: {e!r}")
-            # 原因要留在状态里：不然界面只剩一个 stopped，
-            # 用户分不清是"没启动"还是"端口/用户目录被占"
-            self._login_reason = "browser_failed"
-            return False
+        """启动共享浏览器实例；连不上端口时再试一次。
+
+        切形态那一下会同时重开两个号的浏览器，负载下 DrissionPage 会连不上端口：
+        11:41:37 那个 /json 还回 200，11:41:39 就抛 BrowserConnectError，号就此停在
+        stopped——用户点的是"换个形态"，代价不该是一个号悄悄下线。
+        """
+        for 第几次 in (1, 2):
+            try:
+                self._log("INFO", "正在启动共享浏览器...")
+                self._log("DEBUG", f"浏览器配置: type={self.config.browser.browser_type}, "
+                                  f"chrome_path={self.config.browser.chrome_path}, "
+                                  f"debug_port={self.config.browser.debug_port}")
+                self.browser_manager.launch()
+                self._log("DEBUG", "浏览器进程已启动，等待连接...")
+                self._log("INFO", "浏览器已启动")
+                return True
+            except Exception as e:
+                self._log("ERROR", f"浏览器启动失败: {e}")
+                self._log("DEBUG", f"浏览器启动异常详情: {e!r}")
+                if 第几次 == 1:
+                    # 半截的句柄先清掉，否则第二次 launch() 会把它当"已有实例"直接返回
+                    try:
+                        self.browser_manager.close()
+                    except Exception:
+                        pass
+                    self._interruptible_sleep(5)
+        # 原因要留在状态里：不然界面只剩一个 stopped，
+        # 用户分不清是"没启动"还是"端口/用户目录被占"
+        self._login_reason = "browser_failed"
+        return False
 
     def _interruptible_sleep(self, seconds: float):
         """可被停止打断的等待：停止请求一到就返回，不等满。
@@ -3380,6 +3413,25 @@ class UnifiedBotLoop:
 # 多账号管理器
 # ─────────────────────────────────────────────────────────
 
+def apply_headless_config(cfg, headless: bool) -> list:
+    """把浏览器形态写进全局基准，并拆掉会悄悄赢过它的按号覆盖。
+
+    accounts[i].settings.browser 里如果钉着 headless，全局改完那个号还是老形态——
+    界面上"点了没反应"就是这么来的。返回被拆掉的账号下标，让界面能说清这次动了谁。
+    """
+    cfg.browser.headless = bool(headless)
+    拆了 = []
+    for i, acc in enumerate(cfg.greet.accounts or []):
+        覆盖 = acc.settings.get("browser") if isinstance(acc.settings, dict) else None
+        if isinstance(覆盖, dict) and "headless" in 覆盖:
+            覆盖.pop("headless")
+            if not 覆盖:
+                acc.settings.pop("browser")
+            拆了.append(i)
+    cfg.save()
+    return 拆了
+
+
 class MultiAccountManager:
     """多账号并行运行管理器
 
@@ -3479,6 +3531,46 @@ class MultiAccountManager:
                 loop.stop()
             except Exception as e:
                 self._log("ERROR", f"账号 {account_index} 停止失败: {e}")
+
+    # ─────────────────────────────────────────────
+    # 浏览器形态（无头/有头）
+    # ─────────────────────────────────────────────
+
+    def switch_headless(self, headless: bool) -> dict:
+        """切换浏览器形态，并把**原本在跑的**号按新形态重开一次。
+
+        只写配置的话，新形态要等下一次启动才出现——界面上那个开关就成了摆设
+        （2026-10-10 用户问"怎么切有头"，就是因为点了之后桌面上始终不出窗口）。
+        重启走 stop_account/start_account 这条现成的路：stop 会先 join 两条轮次
+        线程再关浏览器，比在轮次跑到一半时把浏览器换掉安全。
+        手动停着的号一律不起，否则这次切换替用户做了他没做的决定。
+        """
+        目标 = bool(headless)
+        拆了 = apply_headless_config(self.config, 目标)
+        with self._lock:
+            for loop in self._loops.values():
+                loop.adopt_headless(目标)     # 停着的号也要跟上，它下次启动用得到
+            在跑 = [idx for idx, loop in sorted(self._loops.items())
+                    if (loop.get_status() or {}).get("running")]
+        if 在跑:
+            threading.Thread(target=self._换形态, args=(在跑,), daemon=True).start()
+        话 = "无头（没有窗口）" if 目标 else "有头（桌面出窗口）"
+        if 在跑:
+            self._log("INFO", "浏览器形态已切为%s；在跑的号 %s 正按新形态重开" % (话, 在跑))
+        else:
+            self._log("INFO", "浏览器形态已切为%s（暂时没有在跑的号，下次启动就是它）" % 话)
+        return {"headless": 目标, "restarting": 在跑, "cleared_overlays": 拆了}
+
+    def _换形态(self, indices):
+        """后台线程：一个号一个号地停再起，别同时抢两个浏览器的启动。"""
+        for idx in indices:
+            try:
+                self._log("INFO", "账号 %s 正按新形态重开浏览器（约 30 秒）" % idx)
+                self.stop_account(idx)
+                time.sleep(1)
+                self.start_account(idx)
+            except Exception as e:
+                self._log("ERROR", "账号 %s 换形态失败: %s" % (idx, e))
 
     # ─────────────────────────────────────────────
     # 暂停/恢复

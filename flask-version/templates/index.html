@@ -171,6 +171,13 @@ a{color:var(--accent);text-decoration:none}
 .account-tab .acc-status-dot.paused{background:var(--info)}
 /* 账号条上的今日计数：两个号各跑各的，不看数字就以为只有一个在动 */
 .account-tab .acc-counts{font-size:9.5px;color:var(--fg-3rd);font-weight:500;margin-left:2px;letter-spacing:.02em}
+/* 浏览器形态贴在账号条上：无头压根没有窗口，不写出来就只能靠猜 */
+.account-tab .acc-mode{font-size:9.5px;color:var(--fg-4th);border:1px solid var(--bd-2);border-radius:6px;padding:0 5px;margin-left:2px}
+/* 形态切换和启动/停止并排：藏在高级设置里，等于让人找不到那个开关（2026-10-10） */
+.mode-group{display:inline-flex;align-items:center;gap:6px;padding:2px 4px 2px 9px;border:1px solid var(--bd-2);border-radius:999px;background:var(--surface-soft)}
+.mode-group .mode-label{font-size:11px;color:var(--fg-3rd);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.mode-group .mode-real{font-size:10.5px;color:var(--fg-4th);max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mode-group .scope-chip{padding:2px 9px}
 /* 操作条上的范围提示：让人在点"停止"之前就知道会不会把另一个号也停了 */
 .action-bar .scope-hint{font-size:10.5px;font-weight:600;color:var(--accent);background:var(--accent-light);padding:2px 8px;border-radius:10px}
 
@@ -1130,6 +1137,12 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
         <span class="scope-hint" id="actionScopeLabel" title="上方按钮只作用于当前数据范围"></span>
         <button class="btn-run" id="btnStartAll" onclick="startAll()"><span class="run-dot"></span><i data-ki="start"></i>启动</button>
         <button class="btn-run stop" id="btnStopAll" onclick="stopAll()" style="display:none"><span class="run-dot"></span><i data-ki="stop"></i>停止</button>
+        <span class="mode-group" title="无头：桌面上没有窗口，机器人一天挂着不挡事。有头：出窗口，可以自己看一眼页面。点一下就把在跑的号按新形态重开（约 30 秒）；扫码登录要切回有头">
+          <span class="mode-label"><i data-ki="preview"></i>浏览器形态</span>
+          <button class="scope-chip" id="modeHeadless" onclick="setBrowserMode(true)">无头</button>
+          <button class="scope-chip" id="modeHeaded" onclick="setBrowserMode(false)">有头</button>
+          <span class="mode-real" id="modeReal"></span>
+        </span>
         <button class="btn btn-ghost btn-sm" id="btnSaveConfig" onclick="saveConfigShow()" title="把当前侧边栏里的配置写入 bot_config.json"><i data-ki="save"></i>保存配置</button>
         <button class="btn btn-ghost btn-sm" onclick="showExcelModal()"><i data-ki="export"></i>Excel 导出</button>
         <button class="btn btn-sm btn-tint warn" id="btnPauseGreet" onclick="pauseGreet()" style="display:none"><i data-ki="mute"></i><span class="btn-label">暂停打招呼</span></button>
@@ -2828,6 +2841,7 @@ function renderAccounts() {
       '<span class="acc-name"></span>' +
       '<span class="badge"></span>' +
       '<span class="acc-counts"></span>' +
+      '<span class="acc-mode"></span>' +
       '<span class="cookie-status-dot unknown" onclick="event.stopPropagation();checkAccountCookie(' + i + ')"></span>' +
       '<button class="acc-login-btn" onclick="event.stopPropagation();loginAccount(' + i + ')"' +
       ' title="在该账号自己的浏览器里打开 BOSS 登录页，不影响正在跑的账号">登录</button></div>';
@@ -2868,6 +2882,20 @@ function renderAccounts() {
       ? '投' + (s.greet_applied || 0) + '·回' + (s.reply_sent || 0) : '';
     if (counts.textContent !== countsTxt) counts.textContent = countsTxt;
     counts.style.display = countsTxt ? '' : 'none';
+    // 形态贴在号上：无头压根没有窗口，只报配置不报实际就等于让人猜
+    var mode = row.querySelector('.acc-mode');
+    var br = st.browser || {};
+    var modeTxt = !br.running ? '' : (br.本项目 === false ? '端口被占' : (br.headless ? '无头' : '有头'));
+    if (mode.textContent !== modeTxt) mode.textContent = modeTxt;
+    mode.style.display = modeTxt ? '' : 'none';
+    if (modeTxt) {
+      mode.title = (br.本项目 === false)
+        ? ('端口 ' + br.port + ' 上挂着的是别的项目起的浏览器，这个号没在用')
+        : ((br.headless ? '无头' : '有头') + '跑着，端口 ' + br.port +
+           '；要换成另一种就点操作条上的「浏览器形态」');
+    } else {
+      mode.removeAttribute('title');
+    }
     // Cookie 状态点
     var cookieCls = 'cookie-status-dot unknown';
     var cookieTitle = 'Cookie 状态未知，点击检测';
@@ -2957,7 +2985,7 @@ function setPlh(id, v) { var e = document.getElementById(id); if (e) e.placehold
 // ── 高级设置渲染 ──
 function renderAdvSettings() {
   const b = config.browser || {};
-  setEl('advHeadless', 'toggle-switch' + (b.headless ? ' on' : ''));
+  paintModeChips(!!b.headless);
   setEl('advBackground', 'toggle-switch' + (b.background !== false ? ' on' : ''));
   setVal('advBrowserType', b.browser_type || 'chrome');
   setVal('advViewportW', b.viewport_width != null ? b.viewport_width : 1280);
@@ -3031,12 +3059,9 @@ function toggleBlock(btnId, boxId) {
 
 function toggleAdvBool(key) {
   if (key === "headless") {
-    if (!config.browser) config.browser = {};
-    config.browser.headless = !config.browser.headless;
-    setEl('advHeadless', 'toggle-switch' + (config.browser.headless ? ' on' : ''));
-    toast(config.browser.headless
-      ? '无头已开启：没有窗口，下一次启动浏览器才生效（扫码登录要关掉它）'
-      : '无头已关闭：改回有头窗口');
+    // 和操作条上那颗是同一个动作：点下去就切，不再留"下一次启动才生效"这种尾巴
+    setBrowserMode(!(config.browser && config.browser.headless));
+    return;
   } else if (key === "background") {
     if (!config.browser) config.browser = {};
     config.browser.background = config.browser.background === false;
@@ -5484,14 +5509,52 @@ socket.on('ai_health_done',function(data){
   toast(msg, (data.available||0) > 0 ? 'ok' : 'err', 5000);
   loadAiHealth();
 });
+// 操作条上的两颗 chip 只画"配置要哪种"，实际那种由 renderHeadlessReality 从浏览器本身问回来
+function paintModeChips(headless) {
+  setEl('modeHeadless', 'scope-chip' + (headless ? ' active' : ''));
+  setEl('modeHeaded', 'scope-chip' + (headless ? '' : ' active'));
+  setEl('advHeadless', 'toggle-switch' + (headless ? ' on' : ''));
+}
+
+// 形态切换属于"改了就当真生效"那一类：后端写配置并把在跑的号按新形态重开，
+// 界面这边立刻画成用户点的那颗，真形态随后由状态轮询从浏览器本身读回来。
+function setBrowserMode(v) {
+  v = !!v;
+  fetch('/api/browser/headless', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ headless: v }),
+  }).then(function (r) { return r.json().then(function (d) { return { code: r.status, d: d }; }); })
+    .then(function (res) {
+      var d = res.d || {};
+      if (res.code !== 200 || d.status !== 'ok') {
+        toast('形态切换失败：' + (d.message || ('HTTP ' + res.code)), 'err');
+        return;
+      }
+      if (!config.browser) config.browser = {};
+      config.browser.headless = v;
+      paintModeChips(v);
+      var restarts = d.restarting || [];
+      toast(restarts.length
+        ? '已切为' + (v ? '无头' : '有头') + '：' + restarts.length + ' 个号正按新形态重开（约 30 秒）'
+        : '已切为' + (v ? '无头' : '有头') + '：下一次启动浏览器就是它', 'ok', 5000);
+      addLog('INFO', '浏览器形态 → ' + (v ? '无头' : '有头') +
+        (restarts.length ? '（重开号 ' + restarts.join(',') + '）' : ''));
+      if ((d.cleared_overlays || []).length) {
+        addLog('WARN', '顺手拆掉了这些号上钉死的形态覆盖：' + d.cleared_overlays.join(','));
+      }
+    })
+    .catch(function (e) { toast('形态切换失败：' + e.message, 'err'); });
+}
+
 // 无头开关只说配置，浏览器是启动那一刻定型的：改完没重启、或者那个端口上根本
 // 是别人的浏览器（9223 被别的项目占用过），光看开关会误判。这里把 /api/status
-// 里问浏览器本身拿到的形态贴出来，配置与实际不一致时明说"要重启才生效"。
+// 里问浏览器本身拿到的形态贴出来——不一致时不再甩锅给"重启"，
+// 因为操作条上那颗就是立刻重开的入口。
 function renderHeadlessReality(data) {
-  var el = document.getElementById('advHeadlessReal');
-  if (!el) return;
+  var spots = ['advHeadlessReal', 'modeReal'].map(document.getElementById.bind(document)).filter(Boolean);
   var list = (data && data.accounts) || [];
-  if (!list.length) { el.textContent = '实际：面板未启动'; return; }
+  var text = list.length ? '' : '实际：面板未启动';
   var parts = [], mismatch = false, odd = false;
   list.forEach(function (acc) {
     var b = acc.browser || {};
@@ -5511,8 +5574,14 @@ function renderHeadlessReality(data) {
                   && config.browser.headless);
     if (want !== !!b.headless) mismatch = true;
   });
-  el.textContent = '实际：' + parts.join('，') + (mismatch ? '（与开关不一致，重启面板才生效）' : '');
-  el.style.color = (mismatch || odd) ? 'var(--warning)' : 'var(--fg-3rd)';
+  if (parts.length) {
+    text = '实际：' + parts.join('，') +
+      (mismatch ? '（和配置不一致，点旁边的无头/有头立刻重开）' : '');
+  }
+  spots.forEach(function (el) {
+    if (el.textContent !== text) el.textContent = text;
+    el.style.color = (mismatch || odd) ? 'var(--warning)' : 'var(--fg-3rd)';
+  });
 }
 
 function applyStatusUpdate(data) {

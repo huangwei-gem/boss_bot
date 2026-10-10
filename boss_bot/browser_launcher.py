@@ -1103,6 +1103,7 @@ def launch_browser(
     """
     if port:
         LAUNCHED_MODES[int(port)] = bool(headless)
+    logger.info("以%s形态启动浏览器 (port=%s)", "无头" if headless else "有头", port)
     browser_type = (browser_type or "chrome").lower().strip()
 
     # 如果用户没有手动指定路径，自动查找最佳浏览器
@@ -1299,6 +1300,9 @@ def parse_browser_cmdline(cmdline: str, pid: int = 0) -> dict:
         "port": int(m.group(1)) if m else DEFAULT_DEBUG_PORT,
         "user_data_dir": d.group(1).strip('"') if d else "",
         "exe": exe,
+        # 无头与否只能这样问：cloakbrowser 会把 UA 里的 HeadlessChrome 抹平，
+        # 而 LAUNCHED_MODES 记的是"上一次我们要的形态"，复用旧进程时它就过期了
+        "headless": "--headless" in cmdline,
     }
 
 
@@ -1343,6 +1347,26 @@ def assert_port_is_free_for(port: int, user_data_dir: str, owners=None) -> None:
             f"确认那个浏览器没人在用之后执行："
             f"{platform_compat.终止命令(owner.get('pid'))}"
         )
+
+
+def _端口上的自家浏览器(端口: int, 用户目录: str) -> dict:
+    """这个端口上挂着的那份**本账号**浏览器：{pid, headless}；不是自家的就回 {}。
+
+    形态问的是进程命令行。不能问 LAUNCHED_MODES——那是"上一次我们要的形态"，
+    DrissionPage 见端口有人应答就直接连上去，旧进程什么形态就连成什么形态，
+    记录却早就翻成了新的一页（2026-10-10 11:50 实测：切回无头后 9223 还是那个
+    没带 --headless 的进程，面板写着"无头"）。
+    只认自己 profile 的那份：兄弟项目占端口的事归 assert_port_is_free_for 拒。
+    """
+    if not _is_port_open("127.0.0.1", int(端口)):
+        return {}
+    for owner in _browser_owners():
+        if int(owner.get("port") or 0) != int(端口):
+            continue
+        if not same_profile(owner.get("user_data_dir", ""), 用户目录):
+            return {}
+        return {"pid": int(owner.get("pid") or 0), "headless": owner.get("headless")}
+    return {}
 
 
 def _launch_windows(
@@ -1551,6 +1575,28 @@ class BrowserManager:
             root = root / f"account_{self._account_index}"
         return str(root)
 
+    def _让旧形态让位(self) -> None:
+        """端口上挂着一个形态不对的自家浏览器时，先收掉它再按新形态起。
+
+        DrissionPage 看到端口有人应答就直接连上去，这次要的 --headless 根本没送进
+        进程；界面拿的是启动记录，于是报的形态和真跑着的不是同一个。
+        拿不准的一律不动进程：认不出 pid、或者那不是本账号 profile 的浏览器，
+        都留给端口守卫去拒。
+        """
+        端口 = int(self._debug_port or 0)
+        if 端口 <= 0:
+            return
+        挂着 = _端口上的自家浏览器(端口, self._user_data_dir)
+        pid = int(挂着.get("pid") or 0)
+        if not pid or bool(挂着.get("headless")) == bool(self._headless):
+            return
+        logger.info("端口 %s 上还挂着%s形态的旧浏览器 (PID=%s)，先收掉它，"
+                    "否则这次要的%s形态不会真的起来",
+                    端口, "无头" if 挂着.get("headless") else "有头", pid,
+                    "无头" if self._headless else "有头")
+        platform_compat.终止进程(pid)
+        time.sleep(2)
+
     def launch(self) -> BrowserInstance:
         """启动浏览器并返回浏览器实例
 
@@ -1562,6 +1608,8 @@ class BrowserManager:
         """
         if self._instance is not None:
             return self._instance
+
+        self._让旧形态让位()
 
         self._instance = launch_browser(
             headless=self._headless,
@@ -1604,6 +1652,23 @@ class BrowserManager:
         self.launch()
         self.get_search_page()
         return True
+
+    def adopt_mode(self, headless: bool) -> bool:
+        """把这次要用的形态直接收到自己身上，返回"和原来不一样吗"。
+
+        构造时只抄过一次，之后配置改了对象不会自己知道：面板上从无头切到有头，
+        不补这一手就还是拿旧形态重开，等于开关白点。
+        形态接的是**传进来的值**，不是 self._config——配置热重载每轮会把循环手里
+        那份 config 换成新的深拷贝，而这里的 _config 还指着构造时的孤儿，
+        从它读就等于读一个永远不会被更新的旧对象（2026-10-10 真机切有头没生效）。
+        没放进 launch() 里自动同步是因为登录那一下是**临时**借有头
+        （见 show_login_window：先把 _headless 置 False 再 launch），
+        自动同步会把那个窗口按回无头，桌面上就看不见扫码页了。
+        """
+        新 = bool(headless)
+        变了 = 新 != bool(self._headless)
+        self._headless = 新
+        return 变了
 
     def _window_pid(self) -> int:
         """这个浏览器挂在哪个进程上（窗口归属按进程号认）。"""
