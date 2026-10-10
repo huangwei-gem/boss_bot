@@ -1034,6 +1034,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
             </div>
             <div class="adv-field-row"><label>无头</label><span id="advHeadless" class="toggle-switch" onclick="toggleAdvBool('headless')"></span><span id="advHeadlessReal" style="font-size:11px;color:var(--fg-3rd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="开关说的是配置；这里问的是浏览器本身，启动那一刻就定型了">实际：读取中…</span></div>
             <div class="adv-field-row"><label>后台</label><span id="advBackground" class="toggle-switch" onclick="toggleAdvBool('background')"></span></div>
+            <div class="adv-field-row"><label>回收(MB)</label><input class="side-form-input" id="advMemoryRecycle" type="number" min="0" step="100" placeholder="1600" onchange="onAdvChange()" title="这个号的浏览器整棵树涨到这么多 MB 就在一轮跑完的空档重开一次（挂机一天会从 0.7 GB 涨到 2.5 GB，机器开始换页就卡）；写 0 = 不回收。重开不掉登录。"></div>
             <div class="adv-field-row"><label>宽度</label><input class="side-form-input" id="advViewportW" type="number" placeholder="1280" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label>高度</label><input class="side-form-input" id="advViewportH" type="number" placeholder="800" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label>超时(s)</label><input class="side-form-input" id="advTimeout" type="number" placeholder="30" onchange="onAdvChange()"></div>
@@ -2539,7 +2540,7 @@ function loadConfig() {
     if (!config.login) config.login = {};
     if (!config.rate_limit) config.rate_limit = {};
     if (!config.retry) config.retry = {};
-    config.browser = Object.assign({headless:false,background:true,viewport_width:1280,viewport_height:800,page_load_timeout:30,custom_user_agent:'',proxy:'',browser_type:'chrome'}, config.browser);
+    config.browser = Object.assign({headless:false,background:true,memory_recycle_mb:1600,viewport_width:1280,viewport_height:800,page_load_timeout:30,custom_user_agent:'',proxy:'',browser_type:'chrome'}, config.browser);
     config.login = Object.assign({wait_timeout:300,clear_cookies_on_failure:true}, config.login);
     config.rate_limit = Object.assign({enabled:true,max_per_hour:30,max_per_day:150}, config.rate_limit);
     config.retry = Object.assign({max_attempts:3,base_delay:2,backoff_factor:2}, config.retry);
@@ -2991,6 +2992,7 @@ function renderAdvSettings() {
   setVal('advViewportW', b.viewport_width != null ? b.viewport_width : 1280);
   setVal('advViewportH', b.viewport_height != null ? b.viewport_height : 800);
   setVal('advTimeout', b.page_load_timeout != null ? b.page_load_timeout : 30);
+  setVal('advMemoryRecycle', b.memory_recycle_mb != null ? b.memory_recycle_mb : 1600);
   setVal('advUserAgent', b.custom_user_agent || '');
   setPlh('advUserAgent', '留空自动');
   setVal('advProxy', b.proxy || '');
@@ -3112,6 +3114,9 @@ function onAdvChange() {
   config.browser.viewport_width = parseInt(document.getElementById('advViewportW').value) || 1280;
   config.browser.viewport_height = parseInt(document.getElementById('advViewportH').value) || 800;
   config.browser.page_load_timeout = parseInt(document.getElementById('advTimeout').value) || 30;
+  // 0 是"关掉回收"这个有效值，不能和留空一样当默认处理
+  var 回收MB = parseInt(document.getElementById('advMemoryRecycle').value, 10);
+  config.browser.memory_recycle_mb = isNaN(回收MB) ? 1600 : Math.max(0, 回收MB);
   config.browser.custom_user_agent = document.getElementById('advUserAgent').value;
   config.browser.proxy = document.getElementById('advProxy').value;
 

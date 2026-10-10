@@ -708,6 +708,27 @@ def _owner_ttl_sec() -> float:
 _OWNER_CACHE: dict = {}      # port -> (时间戳, 是不是我们的)
 
 
+def tree_memory_mb(pid: int) -> float:
+    """这个进程连同它全部子孙进程占多少 MB；量不到就回 0.0。
+
+    浏览器的开销大头在渲染进程上，而渲染进程挂在主进程下面 —— 只数主进程会少算
+    一半以上（2026-10-08 量内存时就是拿命令行归类才差得离谱）。这条只给"该不该
+    回收"做判断用，任何失败都不许冒到业务里去。
+    """
+    pid = int(pid or 0)
+    if pid <= 0:
+        return 0.0
+    try:
+        import psutil
+        if psutil is None:
+            return 0.0
+        主 = psutil.Process(pid)
+        树 = [主] + 主.children(recursive=True)
+        return sum(p.memory_info().rss for p in 树) / 1048576.0
+    except Exception:
+        return 0.0
+
+
 def port_owner_pid(port: int) -> Optional[int]:
     """这个调试端口上是哪个进程在听（拿不到返回 None）。"""
     try:
@@ -1652,6 +1673,25 @@ class BrowserManager:
         self.launch()
         self.get_search_page()
         return True
+
+    def memory_mb(self) -> float:
+        """这个号那棵浏览器树占多少 MB（量不到回 0，别把业务顶了）。"""
+        return tree_memory_mb(port_owner_pid(int(self._debug_port or 0)) or 0)
+
+    def recycle(self) -> dict:
+        """原地重开浏览器，把涨上去的内存放掉，返回前后 MB。
+
+        一天挂着不动，两个号的浏览器树会从 0.7 GB 涨到 2.5 GB 左右（15.3 GB 的机器
+        就这样被吃到只剩 0.5 GB 可用）。会话躺在 profile 目录里，重开不掉登录，
+        所以涨过阈值重开一次比一直忍着划算。
+        标签页和引擎由调用方接回去（UnifiedBotLoop._重建浏览器），因为装 Cookie
+        必须排在开页之前，浏览器这一层管不着那个顺序。
+        """
+        前 = self.memory_mb()
+        self.close()
+        time.sleep(2)
+        self.launch()
+        return {"前": 前, "后": self.memory_mb()}
 
     def adopt_mode(self, headless: bool) -> bool:
         """把这次要用的形态直接收到自己身上，返回"和原来不一样吗"。

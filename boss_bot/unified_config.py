@@ -284,6 +284,10 @@ class BrowserConfig:
     # 无头时这个开关没有意义（根本没有窗口），保留是为了"从有头切回无头
     # 再切回来"不至于又变成抢焦点的老行为。
     background: bool = True
+    # 浏览器整棵树涨到这么多 MB 就在轮次空档重开一次；0 = 不回收。
+    # 依据：15.3 GB 的机器上两个号挂机一天涨到 ~2.5 GB，可用只剩 0.5 GB 整机卡死；
+    # 会话在 profile 目录里，重开不掉登录，所以涨过头宁愿重开一次。
+    memory_recycle_mb: int = 1600
     viewport_width: int = 1280
     viewport_height: int = 800
     page_load_timeout: int = 30          # auto_boss: page_load_timeout
@@ -815,6 +819,8 @@ class UnifiedConfig:
                 self.browser.headless = bool(browser["headless"])
             if "background" in browser:
                 self.browser.background = bool(browser["background"])
+            if "memory_recycle_mb" in browser:
+                self.browser.memory_recycle_mb = int(browser["memory_recycle_mb"])
             if "viewport_width" in browser:
                 self.browser.viewport_width = int(browser["viewport_width"])
             if "viewport_height" in browser:
@@ -1342,6 +1348,7 @@ class UnifiedConfig:
             "browser": {
                 "headless": self.browser.headless,
                 "background": self.browser.background,
+                "memory_recycle_mb": self.browser.memory_recycle_mb,
                 "viewport_width": self.browser.viewport_width,
                 "viewport_height": self.browser.viewport_height,
                 "page_load_timeout": self.browser.page_load_timeout,
@@ -1746,6 +1753,7 @@ def _default_config_dict() -> dict:
         "browser": {
             "headless": False,
             "background": True,
+            "memory_recycle_mb": 1600,
             "viewport_width": 1280,
             "viewport_height": 800,
             "page_load_timeout": 30,

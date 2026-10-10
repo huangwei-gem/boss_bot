@@ -55,6 +55,16 @@ def _recording_loop():
         def close(self):
             calls.append("close")
 
+        def memory_mb(self):
+            return 1500.0
+
+        def recycle(self):
+            # 生产代码里 recycle = close → 等一下 → launch，这里照着记账，
+            # 顺序断言（launch 在 search 之前）才有意义
+            calls.append("close")
+            calls.append("launch")
+            return {"前": 1500.0, "后": 400.0}
+
         def launch(self):
             calls.append("launch")
             return self._instance

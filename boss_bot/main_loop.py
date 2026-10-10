@@ -346,6 +346,16 @@ class UnifiedBotLoop:
         # 浏览器重连计数 — 指数退避策略
         self._reconnect_lock = threading.Lock()
         self._reconnect_attempts = 0
+        # 这条线程里套了几层没跑完的活（启动全量同步中间还插着回复轮）。
+        # 回收只能挑"最外层那一趟做完"的那一刻——插在中间会把正在点的会话拦腰砍。
+        self._轮深 = threading.local()
+        self._最后回收 = 0.0
+        self._回收受阻已报 = False
+        # 在方法入口包一层，而不是把那五个调用点各改一遍：那几处的顺序（回复轮排在
+        # 全量同步前面、补扫挂在轮后）都有按源码文本盯的回归，动一处要跟着改一片。
+        for 方法名 in ("_run_greet_round", "_run_reply_round", "_run_followup_round",
+                    "_run_resume_backfill", "_full_sync_chats"):
+            setattr(self, 方法名, self._记着轮次(getattr(self, 方法名)))
         self._max_reconnect_attempts = 10  # 允许更多次重连
         self._reconnect_base_delay = 2.0   # 基础延迟2秒
         self._reconnect_backoff_factor = 2.0  # 退避因子
@@ -939,6 +949,90 @@ class UnifiedBotLoop:
         # 用户分不清是"没启动"还是"端口/用户目录被占"
         self._login_reason = "browser_failed"
         return False
+
+    # 浏览器内存超过这么多 MB 就在轮次空档重开一次（面板上可改，写 0 = 关掉）
+    内存回收冷却秒 = 30 * 60
+
+    def _记着轮次(self, 做: Callable) -> Callable:
+        """把"这趟活在这条线程里还没做完"记在方法入口，回收只挑做完那一刻。"""
+        def 包(*参数, **kwargs):
+            return self._跑一轮(lambda: 做(*参数, **kwargs))
+        return 包
+
+    def _跑一轮(self, 做: Callable):
+        """跑一轮，出来时如果是"最外层那一趟"就试一次内存回收。
+
+        层数记在线程本地而不是全局：两条腿各跑各的线程，互相等就永远等不到
+        （2026-10-10 真机就是这条：要求两条腿都空着，结果打招呼腿整晚都在轮次里，
+        阈值 120、实际 507 MB 盯一小时一次都没回收）。另一条腿正在点卡片被这次
+        重开打断，代价和断线重连一模一样——那条腿本来就按"浏览器没了"处理，
+        引擎随后会被重新初始化；少回收一次才是没法自愈的那头。
+        用 finally 销账：轮次偶尔整轮抛错，层数留在上面就等于再也不回收。
+        """
+        深 = getattr(self._轮深, "n", 0) + 1
+        self._轮深.n = 深
+        try:
+            return 做()
+        finally:
+            self._轮深.n = 深 - 1
+            if 深 == 1:
+                try:
+                    self._内存回收()
+                except Exception as e:
+                    self._log("WARN", "内存回收这一步没做成: %s" % e)
+
+    def _重建浏览器(self) -> dict:
+        """按当前形态重开浏览器，并把 Cookie、搜索标签页和引擎都接回来。
+
+        断线重连和内存回收走的是同一条重建路径 —— 这条原来抄在两处，
+        和形态那次一样迟早对不上。顺序别调：Cookie 要在开页之前装好，
+        先开搜索页会让 BOSS 在未登录的页面上弹登录墙；引擎必须在标签页
+        建回来之后再初始化（见 _try_reconnect_browser 里 2026-09-30 那段取证）。
+        """
+        前后 = self.browser_manager.recycle()
+        cookie_file = self._cookie_file()
+        if cookie_file:
+            try:
+                if not self.browser_manager.load_cookies(cookie_file):
+                    self._log("WARN", "重开浏览器后 Cookie 加载未成功，可能需要重新登录")
+            except Exception as e:
+                self._log("WARN", f"重开浏览器后 Cookie 加载异常: {e}")
+        搜索页 = self.browser_manager.get_search_page()
+        self._log("INFO", "重开后已接回搜索标签页: "
+                          f"{getattr(搜索页, 'url', '') or '（读不到 URL）'}")
+        self._init_engines()
+        return 前后
+
+    def _内存回收(self) -> bool:
+        """浏览器涨过阈值就重开一次，把挂机一天攒下的内存放掉。
+
+        依据：这台 15.3 GB 的机器上两个号刚重开是 404+328 MB，挂机到晚上整棵树
+        接近 2.5 GB，可用只剩 0.5 GB，整机开始换页——比"少重开一次"更贵的是卡。
+        重开不掉登录（会话躺在 profile 目录里），但只挑"这趟活做到底"的那一刻。
+        """
+        阈值 = int(getattr(self.config.browser, "memory_recycle_mb", 0) or 0)
+        if 阈值 <= 0 or self._login_headed_temp:
+            # 扫码登录那一下是临时借的有头，别在回收里把它按回无头
+            return False
+        量的 = self.browser_manager.memory_mb()
+        if 量的 < 阈值:
+            self._回收受阻已报 = False
+            return False
+        if time.time() - float(self._最后回收 or 0.0) < self.内存回收冷却秒:
+            # 超了阈值却因为刚回收过而不动。不记这一句，日志里"内存一直不降"和
+            # "回收根本没开"长得一模一样（2026-10-10 真机第一轮就是这么猜的）。
+            # 每个轮次边界都会走到这里，所以一个回收周期里只说一遍。
+            if not self._回收受阻已报:
+                self._回收受阻已报 = True
+                self._log("DEBUG", "浏览器已占 %.0f MB（阈值 %d MB），但离上次回收不到 %d 分钟，先不回收"
+                                 % (量的, 阈值, self.内存回收冷却秒 // 60))
+            return False
+        结果 = self._重建浏览器()
+        self._最后回收 = time.time()
+        self._回收受阻已报 = False
+        self._log("INFO", "浏览器已占 %.0f MB（阈值 %d MB），在轮次空档重开一次："
+                          "重开后 %.0f MB" % (结果.get("前", 量的), 阈值, 结果.get("后", 0)))
+        return True
 
     def _interruptible_sleep(self, seconds: float):
         """可被停止打断的等待：停止请求一到就返回，不等满。
@@ -3365,31 +3459,8 @@ class UnifiedBotLoop:
             self._log("DEBUG", "正在关闭旧浏览器实例...")
 
             try:
-                self.browser_manager.close()
-                time.sleep(2)
-                self.browser_manager.launch()
+                self._重建浏览器()
                 self._log("INFO", "浏览器重连成功")
-
-                cookie_file = self._cookie_file()
-                if cookie_file:
-                    try:
-                        if not self.browser_manager.load_cookies(cookie_file):
-                            self._log("WARN", "重连后 Cookie 加载未成功，可能需要重新登录")
-                    except Exception as e:
-                        self._log("WARN", f"重连后 Cookie 加载异常: {e}")
-
-                # 搜索标签页必须在 _init_engines() 之前建回来。启动路径里那句
-                # get_search_page()（见 _initialize_and_run）不会再来第二次，而 close()
-                # 已经把 _search_tab 置空；不重建的话打招呼侧就退回浏览器级别名，
-                # 别名此刻绑的是刚起来的空白初始页 —— 用户看到的"第二个浏览器打开
-                # 后无内容"就是这么来的（2026-09-30 真机取证 + 11:03 重连现场）。
-                # 顺序也有讲究：先搜索页再聊天页，new_tab 之后别名才不会被会话页占住。
-                search_page = self.browser_manager.get_search_page()
-                self._log("INFO", f"重连后已重建搜索标签页: "
-                                  f"{getattr(search_page, 'url', '') or '（读不到 URL）'}")
-
-                # 重新初始化所有引擎（回复 + 打招呼）
-                self._init_engines()
                 self._reconnect_attempts = 0
                 self._log("INFO", "引擎重新初始化完成，恢复运行")
 
