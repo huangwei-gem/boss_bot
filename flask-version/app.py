@@ -66,7 +66,7 @@ from boss_bot.greet_engine import account_greeting_ready, account_greeting_mode
 from boss_bot.greeting import compose_account_default, ensure_account_default
 from boss_bot.main_loop import UnifiedBotLoop, MultiAccountManager
 from boss_bot.self_evolve import SelfEvolveEngine
-from boss_bot.browser_launcher import browser_mode
+from boss_bot.browser_launcher import browser_mode, detect_available_browsers
 from boss_bot.reply_record import (
     ReplyRecord, ReplyRecordStore, GreetRecordStore,
     export_reply_records, export_greet_records,
@@ -1375,38 +1375,13 @@ def api_upload_images():
 @app.route("/api/browser/list")
 def api_browser_list():
     """检测可用浏览器。"""
-    browsers = []
-
-    # Windows 常见路径
-    chrome_paths = [
-        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-        os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"),
-    ]
-    edge_paths = [
-        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
-        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
-    ]
-
-    for p in chrome_paths:
-        if os.path.isfile(p):
-            browsers.append({"name": "Chrome", "path": p, "type": "chrome"})
-            break
-
-    for p in edge_paths:
-        if os.path.isfile(p):
-            browsers.append({"name": "Edge", "path": p, "type": "edge"})
-            break
-
-    # 检查 PATH 中的浏览器
-    for name in ["chrome", "chromium", "msedge"]:
-        path = shutil.which(name)
-        if path:
-            browsers.append({
-                "name": name.capitalize(),
-                "path": path,
-                "type": "chrome" if name != "msedge" else "edge",
-            })
+    # 列的是引擎真的会用到的那些：detect_available_browsers 里已经分平台找过一遍
+    # （含项目内置破解版）。原来这里自己抄了一份 Windows 路径清单，于是 mac 上面板
+    # 的"可用浏览器"永远是空的 —— 而引擎在 mac 上明明挑得出 Chrome。
+    显示名 = {"portable": "破解版（项目内置）", "chrome": "Chrome",
+              "edge": "Edge", "chromium": "Chromium"}
+    browsers = [{"name": 显示名.get(类型, 类型), "path": 路径, "type": 类型}
+                for 类型, 路径 in detect_available_browsers().items()]
 
     return jsonify({"status": "ok", "browsers": browsers})
 

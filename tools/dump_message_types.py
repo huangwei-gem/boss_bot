@@ -95,9 +95,10 @@ def main() -> int:
     from DrissionPage import ChromiumPage, ChromiumOptions
     from boss_bot.unified_config import resolve_path
     from boss_bot.browser_launcher import BrowserInstance
+    from boss_bot.platform_compat import 破解版路径
 
     co = ChromiumOptions()
-    co.set_paths(browser_path=str(BASE / "cloakbrowser" / "chrome.exe"),
+    co.set_paths(browser_path=破解版路径(str(BASE)),
                  user_data_path=str(PROFILE))
     co.set_local_port(PORT)
     p = ChromiumPage(co)

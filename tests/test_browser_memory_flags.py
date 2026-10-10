@@ -19,11 +19,19 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from boss_bot.browser_launcher import _launch_windows  # noqa: E402
+from boss_bot import browser_launcher as BL
+from boss_bot.browser_launcher import _launch_macos, _launch_windows  # noqa: E402
 
 
 def _args():
-    return inspect.getsource(_launch_windows)
+    """共用参数表 + 两条启动路径的源码。
+
+    原来这里只读 _launch_windows，于是"mac 分支手抄漏了"这种事故测不出来
+    ——参数搬进 CHROME运行参数 之后，三处一起读，两个平台都跑不掉。
+    """
+    return (repr(BL.CHROME运行参数)
+            + inspect.getsource(_launch_windows)
+            + inspect.getsource(_launch_macos))
 
 
 def test_不留历史岗位页():

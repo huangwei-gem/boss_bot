@@ -11,26 +11,24 @@ import json
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from DrissionPage import ChromiumPage, ChromiumOptions
+from boss_bot.platform_compat import 破解版缺失说明, 破解版路径
+
 
 def find_cloakbrowser():
-    """查找破解浏览器路径"""
-    project_root = os.path.dirname(os.path.abspath(__file__))
-    candidates = [
-        os.path.join(project_root, "cloakbrowser", "chrome.exe"),
-        os.path.join(project_root, "cloakbrowser-windows-x64", "chrome.exe"),
-    ]
-    for p in candidates:
-        if os.path.isfile(p):
-            return p
-    return ""
+    """查找破解浏览器路径（Windows 的 chrome.exe、mac 的 .app/裸二进制都认）。"""
+    return 破解版路径(os.path.dirname(os.path.abspath(__file__)))
+
 
 def main():
     cookie_file = sys.argv[1] if len(sys.argv) > 1 else "zhipin_cookies.json"
     cookie_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), cookie_file)
-    
+
     chrome_path = find_cloakbrowser()
     if not chrome_path:
-        print("❌ 未找到破解浏览器，请确认 cloakbrowser/chrome.exe 存在")
+        print("❌ 未找到破解浏览器，拒绝用系统 Chrome 起会话（BOSS 风控会拦）")
+        说明 = 破解版缺失说明()
+        if 说明:
+            print("   " + 说明)
         return
     
     print(f"✅ 找到破解浏览器: {chrome_path}")

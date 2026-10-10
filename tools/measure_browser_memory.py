@@ -26,6 +26,7 @@ sys.path.insert(0, str(ROOT))
 import psutil  # noqa: E402
 
 from boss_bot.browser_launcher import launch_browser  # noqa: E402
+from boss_bot.platform_compat import 浏览器进程名  # noqa: E402
 
 CHAT = "https://www.zhipin.com/web/geek/chat"
 JOBS = "https://www.zhipin.com/web/geek/jobs?query=%E7%BA%BF%E4%B8%8A%E5%85%BC%E8%81%8C&city=101250100"
@@ -56,7 +57,8 @@ def measure(extra_flags, port, label, headless=True):
                 c = " ".join(p.info['cmdline'] or [])
             except Exception:
                 continue
-            if p.info['name'] != 'chrome.exe' or prof not in c:
+            名字 = (p.info['name'] or "").lower()
+            if 名字 not in 浏览器进程名() or prof not in c:
                 continue
             kind = 'MAIN' if '--type=' not in c else c.split('--type=')[1].split()[0][:12]
             rss = p.info['memory_info'].rss / 1e6

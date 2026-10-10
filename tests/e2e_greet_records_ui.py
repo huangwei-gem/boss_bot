@@ -18,6 +18,8 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+from boss_bot.platform_compat import 终止进程
+
 
 from boss_bot.browser_launcher import _find_best_browser_path, _wait_for_port  # noqa: E402
 
@@ -61,8 +63,7 @@ def close_browser(proc):
     if proc is None:
         return
     try:
-        subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"],
-                       capture_output=True)
+        终止进程(proc.pid)
     except Exception:
         proc.kill()
 

@@ -23,6 +23,8 @@ from pathlib import Path
 BASE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE))
 
+from boss_bot.platform_compat import 浏览器进程名  # noqa: E402
+
 # Windows 控制台默认 GBK，中文输出会乱码
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -50,7 +52,8 @@ def _browser_process(psutil, profile_dir):
     marker = str(profile_dir)
     for proc in psutil.process_iter(["name"]):
         try:
-            if (proc.info["name"] or "").lower() not in ("chrome.exe", "msedge.exe"):
+            名字 = (proc.info["name"] or "").lower()
+            if 名字 not in 浏览器进程名():
                 continue
             cmd = proc.cmdline()
             joined = " ".join(cmd)

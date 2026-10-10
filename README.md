@@ -54,6 +54,26 @@ BOSS 直聘有风控，**必须使用反检测浏览器**：项目内 `cloakbrow
 
 用系统 Chrome/Edge 也能跑，但更容易触发「安全验证」页；触发后机器人会自动暂停并通知，等你手动过一次验证。
 
+### macOS 上要注意的四件事
+
+1. **破解版浏览器要自己放进来**。仓库里的 `cloakbrowser/` 只有 Windows 分发（`chrome.exe` + 一堆 `.dll`，577 MB，本来也不入库）。mac 上要拿到同一套浏览器的 macOS 分发再放，放置位置认这三种形状：
+
+   ```
+   cloakbrowser/Chromium.app/Contents/MacOS/Chromium
+   cloakbrowser/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing
+   cloakbrowser/chrome-mac-arm64/Google Chrome for Testing      # 裸二进制
+   ```
+
+   也可以直接把 `bot_config.json` 的 `browser.chrome_path` 或环境变量 `BOSS_CLOAKBROWSER` 指到那个可执行文件。**没找到破解版时机器人会告警并拒绝静默用系统 Chrome**（BOSS 风控读 `navigator.webdriver`，原版浏览器最容易吃验证页）。
+
+2. **Gatekeeper 放行**。从浏览器下载的未签名分发第一次跑会被拦：`xattr -dr com.apple.quarantine cloakbrowser/`，或者在「系统设置 → 隐私与安全性」里点「仍要打开」。
+
+3. **「辅助功能」授权决定后台化能不能用**。mac 上没有 Windows 那种跨进程 `ShowWindow`，收起/前置浏览器窗口走的是 AppleScript + System Events，需要给跑机器人的那个程序（Terminal / iTerm）在「系统设置 → 隐私与安全性 → 辅助功能」里打勾。没授权也不影响启动和投递——只是窗口会留在桌面上抢焦点。
+
+4. **端口归属守卫在 mac 上靠 `ps`**。Windows 用 PowerShell 查进程命令行，mac/Linux 用 `ps -axo pid=,command=`（不需要 root 就能看到所有用户的命令行）。`psutil` 现在是必需依赖：装不上时守卫退化成"不拦"，就会复现 2026-09-29 那次「连着别人的空壳浏览器跑一整天、0 条投递」。
+
+启动方式在 mac 上是 `./start.sh` 或 `python flask-version/app.py`（`start.bat` 只有 Windows 用）。面板默认绑 `0.0.0.0:5000`，本机直连免口令，局域网里的其它设备（比如手机）要带口令：`http://<本机IP>:5000/?token=<bot_config.json 里的 api_token>`。
+
 ### 首次登录
 
 ```bash

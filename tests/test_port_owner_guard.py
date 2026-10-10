@@ -138,7 +138,7 @@ class PowerShellEncodingTest:
         """真机踩过：PowerShell 按 cp936 输出，subprocess(text=True) 的 utf-8
         解码在读取线程里抛异常，_browser_owners() 只剩空表——守卫看着在跑，
         其实一个都不挡，主号照样连着空壳浏览器跑一整天。"""
-        from boss_bot import browser_launcher as BL
+        from boss_bot import browser_launcher as BL, platform_compat as PC
 
         line = ("42228|" + ORPHAN_CMD.replace("C:\\Users", "C:\\用户") + "\r\n")
         captured = {}
@@ -150,7 +150,7 @@ class PowerShellEncodingTest:
                 return type("R", (), {"stdout": line.encode("cp936"),
                                       "stderr": b"", "returncode": 0})()
 
-        monkeypatch.setattr(BL, "subprocess", _FakeSubprocess())
+        monkeypatch.setattr(PC, "subprocess", _FakeSubprocess())
         owners = BL._browser_owners()
         assert not captured.get("text"), "不许再开 text=True，编码得自己兜"
         assert len(owners) == 1, owners

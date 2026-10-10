@@ -33,6 +33,7 @@ from urllib.error import URLError
 from typing import Optional
 
 from boss_bot.unified_config import resolve_path
+from boss_bot import platform_compat
 
 logger = logging.getLogger("browser_launcher")
 
@@ -63,6 +64,40 @@ BACKGROUND_FLAGS = (
     '--disable-renderer-backgrounding',
     '--disable-background-timer-throttling',
 )
+
+# 两个平台共用的一套 Chrome 参数。以前 mac 分支是手抄的一份，抄掉的正好是
+# 反检测那一条（--disable-blink-features=AutomationControlled）和内存几档，
+# 而回归只读 _launch_windows 的源码，抄漏了也测不出来 —— 收成一个常量之后，
+# 两条启动路径必须都吃它（tests/test_browser_memory_flags.py 盯着）。
+CHROME运行参数 = (
+    '--no-sandbox',
+    '--disable-gpu',
+    # --disable-gpu 在 --headless=new 下并没有真的去掉 GPU 子进程：实测每个号还挂着
+    # 一个 346 MB 的 gpu-process。--in-process-gpu 把它折进浏览器主进程，
+    # tools/measure_browser_memory.py 两轮 A/B：2643 → 2383 MB/实例（两个号合计省 ~520 MB）。
+    # 渲染进程上限保持 2：收到 1 测下来 renderer 总量没降（1251→1300），
+    # 省不到内存反而多一个"一个标签页崩了另一个陪葬"的连坐风险。
+    # 别再顺手关掉软件光栅化（software rasterizer）：它和 --disable-gpu 一起会把 WebGL 打死，
+    # 实测 navigator 报 no-webgl，而 WebGL 串正是 BOSS 风控要读的家底（省的那点不如别暴露自己）。
+    '--in-process-gpu',
+    '--disable-dev-shm-usage',
+    '--no-first-run',
+    '--no-default-browser-check',
+    '--disable-features=DnsOverHttps,BackForwardCache,Translate,MediaRouter,OptimizationHints',
+    '--disable-blink-features=AutomationControlled',
+    # 内存：两个号的 cloakbrowser 实测占 3.0 GB（面板本身只有 90 MB），
+    # 大头都在浏览器进程架构上，所以这里能省的是"别多开进程、别留死页面"。
+    # - BackForwardCache 会把上一页整个留在内存里，而打招呼是同一个标签页
+    #   在几十个 job_detail 之间来回跳，等于攒了一叠再也用不上的岗位页；
+    # - renderer-process-limit 让同站的聊天页和岗位页挤一个渲染进程；
+    # - 后面几个 disable 关掉的是崩溃上报/组件更新/同步这类后台服务进程。
+    '--renderer-process-limit=2',
+    '--disable-breakpad',
+    '--disable-component-update',
+    '--disable-domain-reliability',
+    '--disable-sync',
+    '--metrics-recording-only',
+) + BACKGROUND_FLAGS
 
 # SW_SHOWMINNOACTIVE：最小化但不把焦点从这个窗口抢走（SW_MINIMIZE 会，
 # 于是"收到后台"变成了"每启动一次就把用户正在打的字打断"）
@@ -145,9 +180,34 @@ def _enumerate_top_windows() -> list:
     return out
 
 
+def _苹果窗口操作(动作: str, pids) -> int:
+    """macOS 上按进程把浏览器窗口收起/前置，返回处理了几个进程。
+
+    只有 System Events 这一条路，而它要「辅助功能」授权：没授权时 osascript 回
+    -1719。后台化是加分项，绝不能因为收不了窗口就把浏览器启动本身堵死，
+    所以这里失败只记一条 debug（和 Windows 那套同一个哲学）。
+    """
+    脚本 = platform_compat.构造苹果脚本(动作, pids)
+    try:
+        结果 = subprocess.run(["osascript", "-e", 脚本],
+                              capture_output=True, timeout=10)
+    except Exception as e:
+        logger.debug(f"{动作}窗口失败: {e}")
+        return 0
+    if 结果.returncode != 0:
+        logger.debug(f"{动作}窗口失败（多半是没给「辅助功能」授权）: "
+                     f"{(结果.stderr or b'')[:200]!r}")
+        return 0
+    return len(tuple(pids))
+
+
 def minimize_browser_windows(pid: int, timeout: float = 8.0) -> int:
-    """把这个浏览器的窗口收进任务栏，焦点留在原处不动。返回处理了几个窗口。"""
-    if not _IS_WINDOWS or not pid:
+    """把这个浏览器的窗口收起来，焦点留在原处不动。返回处理了几个窗口（mac 按进程计）。"""
+    if not pid:
+        return 0
+    if _IS_MACOS:
+        return _苹果窗口操作("收起", (pid,))
+    if not _IS_WINDOWS:
         return 0
     import ctypes
     user32 = ctypes.windll.user32
@@ -179,7 +239,11 @@ def restore_browser_windows(pid: int, user32=None, timeout: float = 6.0) -> int:
     所以要回看一眼：还缩着就再补一次同步 ShowWindow，最后统一前置一次。
     不这么兜的话面板会报"窗口已弹出"，用户桌面上却还是任务栏里那一条。
     """
-    if not _IS_WINDOWS or not pid:
+    if not pid:
+        return 0
+    if _IS_MACOS:
+        return _苹果窗口操作("前置", (pid,))
+    if not _IS_WINDOWS:
         return 0
     import ctypes
     真系统调用 = user32 is None
@@ -255,39 +319,18 @@ def backup_cookie_file(path: str, backup_dir: str = None,
 # ──────────────────────────────────────────────────────────────
 
 def _get_portable_browser_path() -> str:
-    """获取项目内置便携浏览器的路径
+    """项目内置破解版浏览器的可执行路径，找不到返回空字符串。
 
-    查找位置（按优先级）：
-    1. 项目根目录下的 cloakbrowser-windows-x64/chrome.exe
-    2. 当前工作目录下的 cloakbrowser-windows-x64/chrome.exe
-    3. browser_launcher.py 同级目录的上级的 cloakbrowser-windows-x64/chrome.exe
-
-    Returns:
-        便携浏览器路径，找不到返回空字符串
+    查找交给 platform_compat：Windows 认 cloakbrowser/chrome.exe，macOS 既认
+    .app 里的 Contents/MacOS/<可执行>，也认 chrome-mac-arm64/ 这类裸二进制形态。
+    原来这个函数在非 Windows 上第一行就 return ""，于是 mac 上"破解版没生效"
+    和"根本没装 mac 版"两种情况看起来一模一样。
     """
-    if not _IS_WINDOWS:
-        return ""
-
-    # 可能的路径列表（cloakbrowser 优先，兼容旧目录名）
-    _project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    possible_paths = [
-        # 项目根目录/cloakbrowser/chrome.exe（新目录名）
-        os.path.join(_project_root, "cloakbrowser", "chrome.exe"),
-        # 项目根目录/cloakbrowser-windows-x64/chrome.exe（旧目录名）
-        os.path.join(_project_root, "cloakbrowser-windows-x64", "chrome.exe"),
-        # 当前工作目录
-        os.path.join(os.getcwd(), "cloakbrowser", "chrome.exe"),
-        os.path.join(os.getcwd(), "cloakbrowser-windows-x64", "chrome.exe"),
-    ]
-
-    for portable_path in possible_paths:
-        portable_path = os.path.normpath(portable_path)
-        if os.path.isfile(portable_path):
-            size = os.path.getsize(portable_path)
-            # 确保是真正的 Chrome（>1MB），不是空文件或占位文件
-            if size > 1_000_000:
-                return portable_path
-
+    项目根 = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for 根 in (项目根, os.getcwd()):
+        找到 = platform_compat.破解版路径(根)
+        if 找到:
+            return 找到
     return ""
 
 
@@ -399,6 +442,12 @@ def detect_available_browsers() -> dict:
     """
     found = {}
 
+    # 破解版排在最前面，且不分平台：BOSS 的风控只认它，mac 上漏登记的话
+    # _find_best_browser_path 只会挑系统 Chrome，然后每次启动都告警"未使用破解版"
+    portable = _get_portable_browser_path()
+    if portable:
+        found["portable"] = portable
+
     if _IS_MACOS:
         checks = {
             "chrome": '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
@@ -416,11 +465,6 @@ def detect_available_browsers() -> dict:
                     found[name] = path
 
     elif _IS_WINDOWS:
-        # 优先检测项目内置便携浏览器
-        portable = _get_portable_browser_path()
-        if portable:
-            found["portable"] = portable
-
         checks = {
             "chrome": [
                 r'C:\Program Files\Google\Chrome\Application\chrome.exe',
@@ -1079,14 +1123,16 @@ def launch_browser(
 
     logger.info(f"浏览器路径 ({browser_type}): {chrome_path}")
     if browser_type != "portable":
+        # mac 上这条最容易命中，而且原因不是"忘了开开关"，是破解版的 mac 分发
+        # 压根没放进目录 —— 不告诉他放哪儿、认哪些形状，这条告警就等于没说。
+        补一句 = platform_compat.破解版缺失说明()
         logger.warning(
             "未使用项目内置破解版浏览器，BOSS 直聘风控可能拦截本次会话；"
             "请将 cloakbrowser/chrome.exe 放到项目根目录，或在配置中指定其路径。"
+            + (("\n" + 补一句) if 补一句 else "")
         )
 
     if _IS_MACOS:
-        if background and not headless:
-            logger.info("macOS 没有不抢焦点的最小化口子，后台开关在这里不生效")
         return _launch_macos(
             chrome_path=chrome_path,
             headless=headless,
@@ -1096,6 +1142,7 @@ def launch_browser(
             viewport_height=viewport_height,
             port=port or _find_free_port(),
             user_data_dir=user_data_dir,
+            background=background,
             extra_args=extra_args,
         )
     else:
@@ -1122,12 +1169,17 @@ def _launch_macos(
     viewport_height: int,
     port: int,
     user_data_dir: str = "",
+    background: bool = True,
     extra_args: tuple = (),
 ) -> BrowserInstance:
     """macOS 启动 Chrome（手动启动 + Chromium 连接）
 
     绕过 DrissionPage 在 macOS arm64 上的 WebSocket bug：
     手动启动 Chrome 子进程，然后通过 WebSocket 地址连接。
+
+    参数集与 Windows 分支共用 CHROME运行参数：这里以前是手抄的一份，缺了
+    --disable-blink-features=AutomationControlled（反检测那条，BOSS 风控读的）
+    和内存/后台节流那几档，而 mac 上没人拿回归去比对，所以一直没被发现。
     """
 
     # 构建启动参数 — 优先使用传入的 user_data_dir，否则使用临时目录
@@ -1137,22 +1189,21 @@ def _launch_macos(
         user_data_dir_path = os.path.join(
             tempfile.gettempdir(), f"boss_bot_chrome_{port}"
         )
+
+    # 先确认端口上没有别人的浏览器，再动本账号的 profile 目录（和 Windows 同一顺序：
+    # 先建目录再判，等于把"我们没在用"的痕迹先留在磁盘上）
+    if port > 0 and _is_port_open('127.0.0.1', port):
+        assert_port_is_free_for(port, user_data_dir_path)
     os.makedirs(user_data_dir_path, exist_ok=True)
 
     args = [
         f'--remote-debugging-port={port}',
-        '--no-sandbox',
-        '--disable-gpu',
-        '--disable-dev-shm-usage',
-        '--disable-extensions',
-        '--disable-background-networking',
-        '--no-first-run',
-        '--no-default-browser-check',
-        '--disable-features=DnsOverHttps',
         f'--user-data-dir={user_data_dir_path}',
-        '--remote-allow-origins=*',  # 允许所有来源（Chrome 111+ 需要）
         f'--window-size={viewport_width},{viewport_height}',
+        '--disable-extensions',
+        '--remote-allow-origins=*',  # 允许所有来源（Chrome 111+ 需要）
     ]
+    args.extend(CHROME运行参数)
 
     if headless:
         args.append('--headless=new')
@@ -1207,6 +1258,13 @@ def _launch_macos(
     # 创建初始 tab
     tab = chromium.new_tab()
 
+    # 无头本来就没有窗口；有头才需要收起来，省得投递把用户的焦点抢走。
+    # mac 上是按进程隐藏（System Events 的 visible），不是按窗口最小化。
+    if background and not headless:
+        n = minimize_browser_windows(proc.pid)
+        logger.info(f"macOS: 浏览器已隐藏 (PID={proc.pid}, {n} 个进程)"
+                    if n else f"macOS: 没能隐藏窗口 (PID={proc.pid})，焦点可能被浏览器抢走")
+
     logger.info(f"macOS: Chrome 连接成功 (PID={proc.pid})")
 
     return BrowserInstance(chromium=chromium, tab=tab, process=proc)
@@ -1246,51 +1304,20 @@ def parse_browser_cmdline(cmdline: str, pid: int = 0) -> dict:
 
 def same_profile(a: str, b: str) -> bool:
     """比较两个 --user-data-dir：Windows 路径大小写不敏感、分隔符混用、尾斜杠随意"""
-    if not a or not b:
-        return False
-    return (os.path.normcase(os.path.normpath(str(a).strip().strip('"')))
-            == os.path.normcase(os.path.normpath(str(b).strip().strip('"'))))
+    键a = platform_compat.归一化路径键(a)
+    return bool(键a) and 键a == platform_compat.归一化路径键(b)
 
 
 def _browser_owners() -> list:
     """机器上所有带调试端口的浏览器进程：[{pid, port, user_data_dir, exe}]。
 
-    只在 Windows 上查（事故环境就是 Windows）。查不到就返回空表：守卫退化成
-    "不拦"，绝不能因为拿不到诊断信息反而把正常启动堵死。
+    查不到就返回空表：守卫退化成"不拦"，绝不能因为拿不到诊断信息反而把正常启动堵死。
+
+    Windows 用 PowerShell 的 Win32_Process，mac/Linux 用 `ps -axo pid=,command=`。
+    后者不需要 root 就能看到所有用户的命令行，而 psutil.net_connections 在 mac 上
+    不提权只看得见自己的进程 —— 拿它做归属判定，别人的浏览器会被看成"没人在用"。
     """
-    if not sys.platform.startswith("win"):
-        return []
-    ps = ("Get-CimInstance Win32_Process -Filter \"Name='chrome.exe' or Name='msedge.exe'\""
-          " | ForEach-Object { if ($_.CommandLine -match 'remote-debugging-port')"
-          " { [string]$_.ProcessId + '|' + $_.CommandLine } }")
-    try:
-        r = subprocess.run(["powershell", "-NoProfile", "-Command", ps],
-                           capture_output=True, timeout=10)
-        raw = r.stdout or b""
-    except Exception:
-        return []
-    # 不能开 text=True：控制台按 cp936 输出时 utf-8 解码会在读取线程里抛，
-    # 结果是"查不到任何浏览器"→ 守卫静默失效（真机踩过一次，主号就是这么
-    # 连着空壳浏览器跑了一整天）。先按 utf-8 严解，不行再退到 GBK/cp936。
-    for enc in ("utf-8", "gbk", "cp936"):
-        try:
-            out = raw.decode(enc)
-            break
-        except UnicodeDecodeError:
-            continue
-    else:
-        out = raw.decode("utf-8", "replace")
-    records = []
-    for line in out.splitlines():
-        pid_text, _, cmdline = line.partition("|")
-        if not cmdline.strip():
-            continue
-        try:
-            rec = parse_browser_cmdline(cmdline, pid=int(pid_text.strip()))
-        except (TypeError, ValueError):
-            continue
-        records.append(rec)
-    return records
+    return platform_compat.解析ps进程表(platform_compat.跑进程表())
 
 
 def assert_port_is_free_for(port: int, user_data_dir: str, owners=None) -> None:
@@ -1313,7 +1340,8 @@ def assert_port_is_free_for(port: int, user_data_dir: str, owners=None) -> None:
             f"PID={owner.get('pid')} profile={found}，而本账号要用 {user_data_dir}。"
             f" DrissionPage 会直接连端口上已有的浏览器，继续下去等于拿一个没登录的"
             f"空壳跑，BOSS 立刻弹登录墙。\n"
-            f"确认那个浏览器没人在用之后执行：taskkill /PID {owner.get('pid')} /T /F"
+            f"确认那个浏览器没人在用之后执行："
+            f"{platform_compat.终止命令(owner.get('pid'))}"
         )
 
 
@@ -1335,39 +1363,9 @@ def _launch_windows(
 
     co = ChromiumOptions()
     co.set_browser_path(chrome_path)
-    co.set_argument('--no-sandbox')
-    co.set_argument('--disable-gpu')
-    # --disable-gpu 在 --headless=new 下并没有真的去掉 GPU 子进程：实测每个号还挂着
-    # 一个 346 MB 的 gpu-process。--in-process-gpu 把它折进浏览器主进程，
-    # tools/measure_browser_memory.py 两轮 A/B：2643 → 2383 MB/实例（两个号合计省 ~520 MB）。
-    # 渲染进程上限保持 2：收到 1 测下来 renderer 总量没降（1251→1300），
-    # 省不到内存反而多一个"一个标签页崩了另一个陪葬"的连坐风险。
-    # 别再顺手关掉软件光栅化（software rasterizer）：它和 --disable-gpu 一起会把 WebGL 打死，
-    # 实测 navigator 报 no-webgl，而 WebGL 串正是 BOSS 风控要读的家底（省的那点不如别暴露自己）。
-    co.set_argument('--in-process-gpu')
-    co.set_argument('--disable-dev-shm-usage')
-    co.set_argument('--no-first-run')
-    co.set_argument('--no-default-browser-check')
-    co.set_argument('--disable-features=DnsOverHttps,BackForwardCache,Translate,MediaRouter,OptimizationHints')
-    co.set_argument('--disable-blink-features=AutomationControlled')
+    for _flag in CHROME运行参数:
+        co.set_argument(_flag)
     co.set_argument(f'--window-size={viewport_width},{viewport_height}')
-    # 内存：两个号的 cloakbrowser 实测占 3.0 GB（面板本身只有 90 MB），
-    # 大头都在浏览器进程架构上，所以这里能省的是"别多开进程、别留死页面"。
-    # - BackForwardCache 会把上一页整个留在内存里，而打招呼是同一个标签页
-    #   在几十个 job_detail 之间来回跳，等于攒了一叠再也用不上的岗位页；
-    # - renderer-process-limit 让同站的聊天页和岗位页挤一个渲染进程；
-    # - 后面几个 disable 关掉的是崩溃上报/组件更新/同步这类后台服务进程。
-    co.set_argument('--renderer-process-limit=2')
-    co.set_argument('--disable-breakpad')
-    co.set_argument('--disable-component-update')
-    co.set_argument('--disable-domain-reliability')
-    co.set_argument('--disable-sync')
-    co.set_argument('--metrics-recording-only')
-    # 后台跑（最小化 / 被别的窗口挡住）时 Chrome 会把这个页面当"看不见的标签页"，
-    # 定时器降到每分钟一次、动画帧直接停；打招呼等的就是页面里的延时渲染，
-    # 所以窗口收起来之前必须先把这三档节流关掉。
-    for _bg_flag in BACKGROUND_FLAGS:
-        co.set_argument(_bg_flag)
     for _flag in extra_args:
         co.set_argument(_flag)
 

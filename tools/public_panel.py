@@ -20,6 +20,7 @@ python tools/public_panel.py --check              # 只起一次，拿到地址�
 import argparse
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -29,7 +30,6 @@ LOG = os.path.join(ROOT, "logs", "public_panel.log")
 URL_FILE = os.path.join(ROOT, "logs", "public_url.txt")
 本地端口 = 5000
 隧道目标 = "nokey@localhost.run"
-cloudflared = r"C:\Program Files (x86)\cloudflared\cloudflared.exe"
 
 # 只认带 scheme 的：localhost.run 的横幅里既有裸域名 f30d...lhr.life，也有它自己的
 # 文档站 https://localhost.run/docs/，后者当成地址给出去就是假链接
@@ -41,9 +41,21 @@ def 挑出地址(文本):
     return 匹.group(0) if 匹 else ""
 
 
+def _cloudflared():
+    """cloudflared 在哪：先问 PATH（mac 上 brew 装的就是裸名字），再退回 Windows 装机路径。"""
+    找到 = shutil.which("cloudflared")
+    if 找到:
+        return 找到
+    win = shutil.which("cloudflared.exe") or r"C:\Program Files (x86)\cloudflared\cloudflared.exe"
+    return win if os.path.isfile(win) else ""
+
+
 def 隧道命令(端口=本地端口, 后端="cloudflared"):
     if 后端 == "cloudflared":
-        return [cloudflared, "tunnel", "--no-autoupdate", "--url", f"http://127.0.0.1:{端口}"]
+        程序 = _cloudflared()
+        if not 程序:
+            raise FileNotFoundError("cloudflared 没装或不在 PATH（mac：brew install cloudflared）")
+        return [程序, "tunnel", "--no-autoupdate", "--url", f"http://127.0.0.1:{端口}"]
     # BatchMode=yes：无人值守的重连循环里一旦弹密码/确认提示就永远起不来
     return ["ssh", "-o", "StrictHostKeyChecking=no", "-o", "BatchMode=yes",
             "-o", "ServerAliveInterval=30", "-o", "ExitOnForwardFailure=yes",

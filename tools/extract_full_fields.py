@@ -18,6 +18,7 @@
 """
 import json
 import os
+import sys
 import time
 import traceback
 from DrissionPage import ChromiumPage, ChromiumOptions
@@ -25,7 +26,9 @@ from DrissionPage import ChromiumPage, ChromiumOptions
 # 路径配置（基于本脚本所在目录）
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
-CLOAK_BROWSER = os.path.join(PROJECT_ROOT, "cloakbrowser", "chrome.exe")
+sys.path.insert(0, PROJECT_ROOT)
+from boss_bot.platform_compat import 破解版路径  # noqa: E402
+CLOAK_BROWSER = 破解版路径(PROJECT_ROOT)
 COOKIE_FILE = os.path.join(PROJECT_ROOT, "zhipin_cookies.json")
 OUTPUT_FILE = os.path.join(BASE_DIR, "css_fields_full.json")
 RESUME_FLOW_FILE = os.path.join(BASE_DIR, "resume_send_flow.json")

@@ -20,9 +20,10 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 from DrissionPage import ChromiumOptions, ChromiumPage
+from boss_bot.platform_compat import 破解版路径
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CLOAK = os.path.join(BASE, "cloakbrowser", "chrome.exe")
+CLOAK = 破解版路径(BASE)
 PORT = 9402
 DASH = os.environ.get("BOSS_PANEL_URL", "http://127.0.0.1:5000")
 # 本脚本会真点「启动/停止/暂停」按钮：对着线上面板点下去就是把投递轮打断

@@ -24,8 +24,15 @@ from datetime import datetime
 from DrissionPage import ChromiumPage, ChromiumOptions
 
 # ===== 路径配置 =====
-PROJECT_ROOT = r"C:\Users\35796\orca\boss_bot"
-CLOAK_BROWSER = os.path.join(PROJECT_ROOT, "cloakbrowser", "chrome.exe")
+# 从脚本自身位置推导：原来写死 C:\Users\...\boss_bot，换机器/换平台就拿到一个不存在
+# 的根，破解版查找返回空串，而 set_browser_path("") 会让 DrissionPage 静默去用系统
+# Chrome —— 那正是 BOSS 风控要拦的形态，而且不报错。
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, PROJECT_ROOT)
+from boss_bot.platform_compat import 破解版路径  # noqa: E402
+CLOAK_BROWSER = 破解版路径(PROJECT_ROOT)
+if not CLOAK_BROWSER:
+    raise SystemExit(f"没找到破解版浏览器（cloakbrowser），拒绝用系统 Chrome 起会话：{PROJECT_ROOT}")
 COOKIE_FILE = os.path.join(PROJECT_ROOT, "zhipin_cookies.json")
 OUTPUT_JSON = os.path.join(PROJECT_ROOT, "tools", "chat_page_structure.json")
 OUTPUT_PNG = os.path.join(PROJECT_ROOT, "logs", "chat_page_structure.png")

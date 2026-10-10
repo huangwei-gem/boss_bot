@@ -21,6 +21,8 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+from boss_bot.platform_compat import 终止进程
+
 sys.path.insert(0, str(PROJECT_ROOT / "tests"))
 
 from e2e_greet_records_ui import (  # noqa: E402
@@ -215,8 +217,7 @@ def main():
         if page is not None:
             close_browser(br)
         if proc is not None:
-            subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"],
-                           capture_output=True)
+            终止进程(proc.pid)
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
     failed = [r for r in results if not r[1]]

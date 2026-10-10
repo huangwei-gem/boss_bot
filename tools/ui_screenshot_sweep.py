@@ -31,8 +31,9 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 from DrissionPage import ChromiumOptions, ChromiumPage  # noqa: E402
+from boss_bot.platform_compat import 破解版路径  # noqa: E402
 
-CLOAK = str(BASE / "cloakbrowser" / "chrome.exe")
+CLOAK = 破解版路径(BASE)
 PORT = 9402
 PANEL_PORT = 5059
 OUT = BASE / "tools" / "e2e" / "shots"

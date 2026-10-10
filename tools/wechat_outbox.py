@@ -45,29 +45,17 @@ def collect(since_hours: float = 6.0):
 def _to_clipboard(text: str) -> bool:
     """走剪贴板而不是逐字符敲：微信里回车就是发送，多行文本只能粘。
 
-    先落一个 UTF-8 临时文件再让 PowerShell 读进去：把文本直接塞进命令行会被
-    引号/换行吃掉，覆盖 env 又会让 powershell 找不到自己的路径。
+    具体怎么落到剪贴板（Windows 的 PowerShell + UTF-8 临时文件、mac 的 pbcopy）
+    收在 platform_compat.写剪贴板 里，那条命令行引号的坑也写在那边的注释里。
+    这条路是备用出口（推送接口挂了才手动粘），失败只报不拦。
     """
-    import os
-    import tempfile
-    fd, tmp = tempfile.mkstemp(suffix=".txt", text=True)
+    from boss_bot.platform_compat import 写剪贴板
     try:
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            f.write(text)
-        subprocess.run(
-            ["powershell", "-NoProfile", "-Command",
-             f"Get-Content -LiteralPath '{tmp}' -Raw -Encoding UTF8 | Set-Clipboard"],
-            check=True, capture_output=True)
-        return True
+        return 写剪贴板(text)
     except Exception as e:
         detail = getattr(e, "stderr", b"") or b""
         print(f"剪贴板写入失败：{e} {detail[:200]!r}", file=sys.stderr)
         return False
-    finally:
-        try:
-            os.unlink(tmp)
-        except OSError:
-            pass
 
 
 def 挑出口(有没有=os.path.exists):

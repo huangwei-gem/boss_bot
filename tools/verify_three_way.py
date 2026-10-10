@@ -27,9 +27,10 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 from DrissionPage import ChromiumOptions, ChromiumPage
+from boss_bot.platform_compat import 破解版路径
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CLOAK = os.path.join(BASE, "cloakbrowser", "chrome.exe")
+CLOAK = 破解版路径(BASE)
 PORT = 9401
 DASH = "http://127.0.0.1:5000"
 CHAT_URL = "https://www.zhipin.com/web/geek/chat"

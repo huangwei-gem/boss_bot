@@ -21,9 +21,10 @@ if hasattr(sys.stdout, "reconfigure"):
 
 from DrissionPage import ChromiumOptions, ChromiumPage
 from unittest.mock import MagicMock
+from boss_bot.platform_compat import 破解版路径
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CLOAK = os.path.join(BASE, "cloakbrowser", "chrome.exe")
+CLOAK = 破解版路径(BASE)
 PORT = 9403
 SHOTS = os.path.join(BASE, "tools", "e2e_live")
 os.makedirs(SHOTS, exist_ok=True)
