@@ -1,0 +1,37 @@
+{
+  "chat_name": "朱洵",
+  "chat_id": "朱洵#启善尚行",
+  "account_index": 0,
+  "job_name": "兼职·线上学科助理老师｜辅导高中生（兼职）40-100元/时长沙查看职位",
+  "company": "启善尚行",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "03:00",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393928731112194",
+      "block": "03:00 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-08 10:11:44",
+      "time": "10:11",
+      "job_name": "兼职·线上学科助理老师｜辅导高中生（兼职）40-100元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "394388732527362"
+    }
+  ],
+  "updated_at": "2026-10-10 07:41:11"
+}

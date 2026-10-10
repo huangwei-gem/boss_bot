@@ -1,0 +1,36 @@
+{
+  "chat_name": "蒋先生",
+  "chat_id": "蒋先生#武汉震烨",
+  "account_index": 1,
+  "job_name": "兼职·线上兼职数据分析师8000-17000元/月南京查看职位",
+  "company": "武汉震烨",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:18",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "392989507469313",
+      "block": "11:18 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，看到贵司在招线上兼职数据分析师，我是统计学本科 background，熟练掌握Excel、SQL、Python，有业务数据报表和分析经验，可远程交付数据整理、报表制作等工作，期待有机会合作！",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "392989700472833",
+      "block": "送达 您好，看到贵司在招线上兼职数据分析师，我是统计学本科 background，熟练掌握Excel、SQL、Python，有业务数据报表和分析经验，可远程交付数据整理、报表制作等工作，期待有机会合作！",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，看到贵司在招线上兼职数据分析师，我是统计学本科 background，熟练掌握Excel、SQL、Python，有业务数据报表和分析经验，可远程交付数据整理、报表制作等工作，期待有机会合作！",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-05 02:01:46"
+}

@@ -1,0 +1,78 @@
+{
+  "chat_name": "孙先生",
+  "chat_id": "孙先生#拼多多集团_PDD",
+  "account_index": 1,
+  "job_name": "[拼多多校招] 数据分析师30-60K·18薪上海查看职位",
+  "company": "拼多多集团-PDD",
+  "messages": [
+    {
+      "text": "",
+      "time": "12:44",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394780103148033",
+      "block": "12:44 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，统计学专业在读生，有数据标注和AI辅助分析经验，熟悉拼多多业务场景的数据处理流程，方便的话我把简历发您细聊",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394780237115907",
+      "block": "已读 您好，统计学专业在读生，有数据标注和AI辅助分析经验，熟悉拼多多业务场景的数据处理流程，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，统计学专业在读生，有数据标注和AI辅助分析经验，熟悉拼多多业务场景的数据处理流程，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "【拼多多集团-PDD校园招聘】内推链接：https://careers.pddglobalhr.com/campus/grad?t=d6gFER0Pqq内推码：d6gFER0Pqq服务端、客户端、前端、数据分析、安全、算法、大模型等 今年HC比较多。通过内推链接投递，投好后跟我说下，别忘填内推码。",
+      "time": "14:05",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394800144257543",
+      "block": "14:05 【拼多多集团-PDD校园招聘】 内推链接：https://careers.pddglobalhr.com/campus/grad?t=d6gFER0Pqq 内推码：d6gFER0Pqq 服务端、客户端、前端、数据分析、安全、算法、大模型等 今年HC比较多。 通过内推链接投递，投好后跟我说下，别忘填内推码。",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "【拼多多集团-PDD校园招聘】内推链接：https://careers.pddglobalhr.com/campus/grad?t=d6gFER0Pqq内推码：d6gFER0Pqq服务端、客户端、前端、数据分析、安全、算法、大模型等 今年HC比较多。通过内推链接投递，投好后跟我说下，别忘填内推码。"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您提供的内推链接和内推码，我会尽快通过链接投递简历，投递后第一时间告知您。",
+      "text": "感谢您提供的内推链接和内推码，我会尽快通过链接投递简历，投递后第一时间告知您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-09 14:27:53",
+      "time": "14:27",
+      "job_name": "[拼多多校招] 数据分析师30-60K·18薪上海查看职位",
+      "isFriend": false,
+      "mid": "394805547102727"
+    },
+    {
+      "sender": "bot",
+      "content": "已通过内推链接投递数据分析师岗，简历匹配度高，请您查收~",
+      "text": "已通过内推链接投递数据分析师岗，简历匹配度高，请您查收~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 03:28:11",
+      "time": "03:28",
+      "job_name": "[拼多多校招] 数据分析师30-60K·18薪上海查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 03:28:11",
+  "unread_on_boss": 0
+}

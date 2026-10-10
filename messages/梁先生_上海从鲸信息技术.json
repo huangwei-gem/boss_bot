@@ -1,0 +1,98 @@
+{
+  "chat_name": "梁先生",
+  "chat_id": "梁先生#上海从鲸信息技术",
+  "account_index": 0,
+  "job_name": "数据分析师（27届提前批）25-40K·16薪上海查看职位",
+  "company": "上海从鲸信息技术",
+  "messages": [
+    {
+      "text": "",
+      "time": "08-28 22:11",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "380056036905472",
+      "block": "08-28 22:11 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "380056057053696",
+      "block": "已读 您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。"
+    },
+    {
+      "text": "方便发一份简历过来吗？",
+      "time": "08-29 08:18",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "380205193359874",
+      "block": "08-29 08:18 方便发一份简历过来吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "方便发一份简历过来吗？"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "380205193720324",
+      "block": "我想要一份您的附件简历，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "380227160007171",
+      "block": "您的附件简历 黄维简历 已发送给Boss点击查看附件",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "您的附件简历 黄维简历 已发送给Boss点击查看附件"
+    },
+    {
+      "text": "对方已查看了您的附件简历",
+      "time": "08-29 19:17",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "380367138353664",
+      "block": "08-29 19:17 对方已查看了您的附件简历",
+      "sender": "hr",
+      "kind": "system",
+      "content": "对方已查看了您的附件简历",
+      "card_text": "对方已查看了您的附件简历"
+    },
+    {
+      "text": "好的，简历已收到，这边会推进后续的招聘流程~请耐心等待（官网可查询进度：https://careers.pddglobalhr.com/campus/grad?t=hZKUHbrz4Q）（流程：简历筛选→北森+牛客笔试→3-4轮面试→offer-签约）（如收到简历完善通知，请及时完成，所有安排通过邮件和电话同步，若未完善将影响流程！！！）（提前批不影响秋招投递，但请认真对待笔试和面试，诚信作答）如果身边同学也有找工作，欢迎拉上ta投递，附上内推码：GjyBAhsfh7",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "380367160336897",
+      "block": "好的，简历已收到，这边会推进后续的招聘流程~请耐心等待 （官网可查询进度：https://careers.pddglobalhr.com/campus/grad?t=hZKUHbrz4Q） （流程：简历筛选→北森+牛客笔试→3-4轮面试→offer-签约） （如收到简历完善通知，请及时完成，所有安排通过邮件和电话同步，若未完善将影响流程！！！） （提前批不影响秋招投递，但请认真对待笔试和面试，诚信作答） 如果身边同学也有找工作，欢迎拉上ta投递，附上内推码：GjyBAhsfh7",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的，简历已收到，这边会推进后续的招聘流程~请耐心等待（官网可查询进度：https://careers.pddglobalhr.com/campus/grad?t=hZKUHbrz4Q）（流程：简历筛选→北森+牛客笔试→3-4轮面试→offer-签约）（如收到简历完善通知，请及时完成，所有安排通过邮件和电话同步，若未完善将影响流程！！！）（提前批不影响秋招投递，但请认真对待笔试和面试，诚信作答）如果身边同学也有找工作，欢迎拉上ta投递，附上内推码：GjyBAhsfh7"
+    }
+  ],
+  "updated_at": "2026-09-28 14:46:03"
+}

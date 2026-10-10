@@ -1,0 +1,93 @@
+{
+  "chat_name": "李妮妮",
+  "chat_id": "李妮妮#快鲜活",
+  "account_index": 0,
+  "job_name": "长沙快递员8-12K长沙查看职位",
+  "company": "快鲜活",
+  "messages": [
+    {
+      "text": "黄维你好，看过你的简历，方便聊聊么",
+      "time": "18:43",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393806657302528",
+      "block": "18:43 黄维你好，看过你的简历，方便聊聊么",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "黄维你好，看过你的简历，方便聊聊么"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393806657302529",
+      "block": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA"
+    },
+    {
+      "text": "你现在是在哪里呀，我看下离我们门店有多远呢",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393806757400577",
+      "block": "你现在是在哪里呀，我看下离我们门店有多远呢",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你现在是在哪里呀，我看下离我们门店有多远呢"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，我目前在长沙，不过我的求职方向是数据分析，跟快递员岗位不太匹配，请问您这边有数据分析相关的岗位吗？",
+      "text": "您好，我目前在长沙，不过我的求职方向是数据分析，跟快递员岗位不太匹配，请问您这边有数据分析相关的岗位吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-06 18:46:01",
+      "time": "18:46",
+      "job_name": "长沙快递员8-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "393807306342400"
+    },
+    {
+      "sender": "bot",
+      "content": "我在长沙岳麓区，不过我的求职方向还是数据分析相关，如果贵司没有这类岗位，可能就不太合适了。",
+      "text": "我在长沙岳麓区，不过我的求职方向还是数据分析相关，如果贵司没有这类岗位，可能就不太合适了。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 01:40:02",
+      "time": "01:40",
+      "job_name": "长沙快递员8-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "393909080158213"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 18:19:07",
+      "time": "18:19",
+      "job_name": "长沙快递员8-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "394154611224579"
+    }
+  ],
+  "updated_at": "2026-10-09 10:55:10",
+  "unread_on_boss": 0
+}

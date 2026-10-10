@@ -1,0 +1,22 @@
+{
+  "chat_name": "肖女士",
+  "chat_id": "肖女士#甲骨易",
+  "account_index": 0,
+  "job_name": "数据标注管理6-8K长沙查看职位",
+  "company": "甲骨易",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 09:49",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "388013252633347",
+      "block": "09-20 09:49 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-04 23:58:39"
+}

@@ -1,0 +1,62 @@
+{
+  "chat_name": "张家强",
+  "chat_id": "张家强#重庆沐晨人工智能科技",
+  "account_index": 1,
+  "job_name": "兼职·方言语音数据采集兼职｜260元/人/场250-270元/天太原查看职位",
+  "company": "重庆沐晨人工智能科技",
+  "messages": [
+    {
+      "text": "您好，我对方言语音数据采集兼职很感兴趣，请问这个工作是否需要线下到场完成？能否介绍具体的工作流程？",
+      "time": "昨天 02:48",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393571966095873",
+      "block": "昨天 02:48 送达 您好，我对方言语音数据采集兼职很感兴趣，请问这个工作是否需要线下到场完成？能否介绍具体的工作流程？",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对方言语音数据采集兼职很感兴趣，请问这个工作是否需要线下到场完成？能否介绍具体的工作流程？"
+    },
+    {
+      "text": "你好啊，可以聊一聊~",
+      "time": "22:44",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394219710554625",
+      "block": "22:44 你好啊，可以聊一聊~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好啊，可以聊一聊~"
+    },
+    {
+      "text": "同学有伙伴一起参与吗，这个需要双人哦~",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394219804008961",
+      "block": "同学有伙伴一起参与吗，这个需要双人哦~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "同学有伙伴一起参与吗，这个需要双人哦~"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-07 22:46:26",
+      "time": "22:46",
+      "job_name": "兼职·方言语音数据采集兼职｜260元/人/场250-270元/天太原查看职位",
+      "isFriend": false,
+      "mid": "394220309152257"
+    }
+  ],
+  "updated_at": "2026-10-09 23:38:38",
+  "unread_on_boss": 0
+}

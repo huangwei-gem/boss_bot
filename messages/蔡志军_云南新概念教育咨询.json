@@ -1,0 +1,35 @@
+{
+  "chat_name": "蔡志军",
+  "chat_id": "蔡志军#云南新概念教育咨询",
+  "account_index": 0,
+  "job_name": "兼职·兼职数据分析师100-260元/天曲靖查看职位",
+  "company": "云南新概念教育咨询",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "13:24",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393020492247810",
+      "block": "13:24 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393020492276481",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-06 23:56:24"
+}

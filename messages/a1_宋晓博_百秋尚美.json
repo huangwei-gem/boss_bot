@@ -1,0 +1,50 @@
+{
+  "chat_name": "宋晓博",
+  "chat_id": "宋晓博#百秋尚美",
+  "account_index": 1,
+  "job_name": "数据分析师（电商）10-15K·14薪上海查看职位",
+  "company": "百秋尚美",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据标注与电商数据分析，曾用Python/SQL完成多模态标注和业务报表分析，支持全程线上协作，方便的话我把简历发您细聊",
+      "time": "04:24",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395011161408000",
+      "block": "04:24 已读 您好，我是统计学专业在读生，擅长数据标注与电商数据分析，曾用Python/SQL完成多模态标注和业务报表分析，支持全程线上协作，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据标注与电商数据分析，曾用Python/SQL完成多模态标注和业务报表分析，支持全程线上协作，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "暂时没有实习生HC哦",
+      "time": "09:07",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395080780567045",
+      "block": "09:07 暂时没有实习生HC哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "暂时没有实习生HC哦"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "text": "感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 09:18:03",
+      "time": "09:18",
+      "job_name": "数据分析师（电商）10-15K·14薪上海查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 09:18:03",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,22 @@
+{
+  "chat_name": "阮先生",
+  "chat_id": "阮先生#小牛好学",
+  "account_index": 0,
+  "job_name": "兼职·居家线上一对一授课50-120元/时长沙查看职位",
+  "company": "小牛好学",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "07:47",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394353346437891",
+      "block": "07:47 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-10 08:06:54"
+}

@@ -1,0 +1,51 @@
+{
+  "chat_name": "李世伟",
+  "chat_id": "李世伟#畅云创客",
+  "account_index": 1,
+  "job_name": "兼职·数据采集标注（早10晚7 不加班）4000-5000元/月湖州查看职位",
+  "company": "畅云创客",
+  "messages": [
+    {
+      "text": "您好，我对数据采集标注岗位很感兴趣，我有统计学背景和数据分析经验，熟悉Excel、SQL和Python，能高效完成数据标注工作。请问该岗位是否支持远程办公？期待您的回复。",
+      "time": "03:49",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393940985692672",
+      "block": "03:49 已读 您好，我对数据采集标注岗位很感兴趣，我有统计学背景和数据分析经验，熟悉Excel、SQL和Python，能高效完成数据标注工作。请问该岗位是否支持远程办公？期待您的回复。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对数据采集标注岗位很感兴趣，我有统计学背景和数据分析经验，熟悉Excel、SQL和Python，能高效完成数据标注工作。请问该岗位是否支持远程办公？期待您的回复。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "11:27",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394053374022145",
+      "block": "11:27 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-07 11:37:13",
+      "time": "11:37",
+      "job_name": "兼职·数据采集标注（早10晚7 不加班）4000-5000元/月湖州查看职位",
+      "isFriend": false,
+      "mid": "394055837299201"
+    }
+  ],
+  "updated_at": "2026-10-09 14:31:05",
+  "unread_on_boss": 0
+}

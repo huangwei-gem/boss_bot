@@ -1,0 +1,63 @@
+{
+  "chat_name": "周先生",
+  "chat_id": "周先生#长沙星城壹驰物流",
+  "account_index": 0,
+  "job_name": "KFC新开驻店：招配送20天80007-9K长沙查看职位",
+  "company": "长沙星城壹驰物流",
+  "messages": [
+    {
+      "text": "你好，刚刚查看了你的简历，方便聊聊吗？",
+      "time": "18:46",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394161378140930",
+      "block": "18:46 你好，刚刚查看了你的简历，方便聊聊吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，刚刚查看了你的简历，方便聊聊吗？"
+    },
+    {
+      "text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394161378149121",
+      "block": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "sender": "hr",
+      "kind": "system",
+      "content": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "card_text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 18:51:51",
+      "time": "18:51",
+      "job_name": "KFC新开驻店：招配送20天80007-9K长沙查看职位",
+      "isFriend": false,
+      "mid": "394162655707905"
+    },
+    {
+      "text": "你好我们这边是kfc配送，感兴趣可以加个微信详聊",
+      "time": "19:06",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394166315660033",
+      "block": "19:06 你好我们这边是kfc配送，感兴趣可以加个微信详聊",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好我们这边是kfc配送，感兴趣可以加个微信详聊"
+    }
+  ],
+  "updated_at": "2026-10-10 01:34:21",
+  "unread_on_boss": 0
+}

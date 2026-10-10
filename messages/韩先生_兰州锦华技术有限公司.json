@@ -1,0 +1,103 @@
+{
+  "chat_name": "韩先生",
+  "chat_id": "韩先生#兰州锦华技术有限公司",
+  "account_index": 0,
+  "job_name": "兼职·数据标注 线上兼职5-50元/时兰州查看职位",
+  "company": "兰州锦华技术有限公司",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "00:25",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393890633822979",
+      "block": "00:25 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393890633855745",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "🌼你好，感兴趣可以发一份简历哦~",
+      "time": "12:37",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394070622847744",
+      "block": "12:37 🌼你好，感兴趣可以发一份简历哦~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "🌼你好，感兴趣可以发一份简历哦~"
+    },
+    {
+      "sender": "bot",
+      "content": "[简历已发送]",
+      "text": "[简历已发送]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "rule",
+      "action": "resume",
+      "timestamp": "2026-10-07 13:05:03",
+      "time": "13:05",
+      "job_name": "兼职·数据标注 线上兼职5-50元/时兰州查看职位",
+      "isFriend": false
+    },
+    {
+      "text": "",
+      "time": "13:05",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394077416477441",
+      "block": "13:05 附件简历请求已发送",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "附件简历请求已发送"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394077416542979",
+      "block": "数据分析简历-黄维.docx 点击预览附件简历",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "数据分析简历-黄维.docx 点击预览附件简历"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您查看我的简历，期待有机会进一步沟通。",
+      "text": "感谢您查看我的简历，期待有机会进一步沟通。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 14:25:56",
+      "time": "14:25",
+      "job_name": "兼职·数据标注 线上兼职5-50元/时兰州查看职位",
+      "isFriend": false,
+      "mid": "394097301623554"
+    }
+  ],
+  "updated_at": "2026-10-09 11:26:18",
+  "unread_on_boss": 0
+}

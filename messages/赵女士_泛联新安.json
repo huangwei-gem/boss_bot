@@ -1,0 +1,22 @@
+{
+  "chat_name": "赵女士",
+  "chat_id": "赵女士#泛联新安",
+  "account_index": 0,
+  "job_name": "AI供应链安全数据构建实习生120-150元/天长沙查看职位",
+  "company": "泛联新安",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "05:08",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395022022578946",
+      "block": "05:08 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-10 09:19:48"
+}

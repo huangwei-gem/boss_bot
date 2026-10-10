@@ -1,0 +1,35 @@
+{
+  "chat_name": "麦女士",
+  "chat_id": "麦女士#云飞网络科技有限公司",
+  "account_index": 0,
+  "job_name": "兼职·无人货柜数据标注（兼职）80-120元/天和田地区查看职位",
+  "company": "云飞网络科技有限公司",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:34",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394261651718914",
+      "block": "01:34 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394261651743489",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-09 13:00:04"
+}

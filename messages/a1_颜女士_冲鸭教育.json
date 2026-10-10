@@ -1,0 +1,68 @@
+{
+  "chat_name": "颜女士",
+  "chat_id": "颜女士#冲鸭教育",
+  "account_index": 1,
+  "job_name": "AI搜索优化师/GEO运营6-10K长沙查看职位",
+  "company": "冲鸭教育",
+  "messages": [
+    {
+      "text": "你好，看了你的在线简历，与我们招聘岗位非常匹配，所以对你也比较感兴趣。请问你现在方便吗？我们可以简单聊下吗？",
+      "time": "16:50",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393778993201664",
+      "block": "16:50 你好，看了你的在线简历，与我们招聘岗位非常匹配，所以对你也比较感兴趣。请问你现在方便吗？我们可以简单聊下吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，看了你的在线简历，与我们招聘岗位非常匹配，所以对你也比较感兴趣。请问你现在方便吗？我们可以简单聊下吗？"
+    },
+    {
+      "sender": "bot",
+      "content": "您好颜女士，感谢您的认可。我现在方便沟通，请问具体是关于哪个岗位的交流呢？",
+      "text": "您好颜女士，感谢您的认可。我现在方便沟通，请问具体是关于哪个岗位的交流呢？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-06 18:59:14",
+      "time": "18:59",
+      "job_name": "AI搜索优化师/GEO运营6-10K长沙查看职位",
+      "isFriend": false,
+      "mid": "393810556916225"
+    },
+    {
+      "sender": "bot",
+      "content": "好的颜女士，我在线的，方便聊聊。我们对岗位具体方向和日常工作内容可以先做个简单沟通。",
+      "text": "好的颜女士，我在线的，方便聊聊。我们对岗位具体方向和日常工作内容可以先做个简单沟通。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 04:54:16",
+      "time": "04:54",
+      "job_name": "AI搜索优化师/GEO运营6-10K长沙查看职位",
+      "isFriend": false,
+      "mid": "393956804071936"
+    },
+    {
+      "sender": "bot",
+      "content": "颜女士您好，之前聊的AI搜索优化师/GEO运营6-10K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "颜女士您好，之前聊的AI搜索优化师/GEO运营6-10K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-07 21:48:58",
+      "time": "21:48",
+      "job_name": "AI搜索优化师/GEO运营6-10K长沙查看职位",
+      "isFriend": false,
+      "mid": "394206187115008"
+    }
+  ],
+  "updated_at": "2026-10-09 23:44:37",
+  "unread_on_boss": 0
+}

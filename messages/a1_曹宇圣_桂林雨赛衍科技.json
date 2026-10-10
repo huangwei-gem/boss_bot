@@ -1,0 +1,77 @@
+{
+  "chat_name": "曹宇圣",
+  "chat_id": "曹宇圣#桂林雨赛衍科技",
+  "account_index": 1,
+  "job_name": "兼职·3d点云数据标注兼职60-100元/时南宁查看职位",
+  "company": "桂林雨赛衍科技",
+  "messages": [
+    {
+      "text": "您好，我对贵司的3D点云数据标注兼职岗位很感兴趣。我具备统计学背景和数据分析技能，熟悉Excel、SQL和Python，能够快速适应数据标注工作，且可长期线上协作。期待您的回复，谢谢！",
+      "time": "昨天 03:02",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393221592092673",
+      "block": "昨天 03:02 送达 您好，我对贵司的3D点云数据标注兼职岗位很感兴趣。我具备统计学背景和数据分析技能，熟悉Excel、SQL和Python，能够快速适应数据标注工作，且可长期线上协作。期待您的回复，谢谢！",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对贵司的3D点云数据标注兼职岗位很感兴趣。我具备统计学背景和数据分析技能，熟悉Excel、SQL和Python，能够快速适应数据标注工作，且可长期线上协作。期待您的回复，谢谢！"
+    },
+    {
+      "text": "3d标注需要有相关工作经历，否则价格会非常低，效率低不予结算，暂时不需要新手，谅解。详细加企业微信，请备注（3d标注）做过的可以加企业微信【腾讯文档】请复制到浏览器打开，扫描二维码添加微信https://docs.qq.com/doc/DZGt1V0NYWmptR1ds",
+      "time": "02:43",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393924599549952",
+      "block": "02:43 3d标注需要有相关工作经历，否则价格会非常低，效率低不予结算，暂时不需要新手，谅解。详细加企业微信，请备注（3d标注） 做过的可以加企业微信【腾讯文档】请复制到浏览器打开，扫描二维码添加微信 https://docs.qq.com/doc/DZGt1V0NYWmptR1ds",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "3d标注需要有相关工作经历，否则价格会非常低，效率低不予结算，暂时不需要新手，谅解。详细加企业微信，请备注（3d标注）做过的可以加企业微信【腾讯文档】请复制到浏览器打开，扫描二维码添加微信https://docs.qq.com/doc/DZGt1V0NYWmptR1ds"
+    },
+    {
+      "sender": "bot",
+      "content": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "text": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-07 02:44:50",
+      "time": "02:44",
+      "job_name": "兼职·3d点云数据标注兼职60-100元/时南宁查看职位",
+      "isFriend": false,
+      "mid": "393924995178497"
+    },
+    {
+      "sender": "bot",
+      "content": "曹宇圣您好，之前聊的兼职·3d点云数据标注兼职60-100元/时南宁查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "text": "曹宇圣您好，之前聊的兼职·3d点云数据标注兼职60-100元/时南宁查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-07 11:15:05",
+      "time": "11:15",
+      "job_name": "兼职·3d点云数据标注兼职60-100元/时南宁查看职位",
+      "isFriend": false,
+      "mid": "394050397573120"
+    },
+    {
+      "text": "加人事微信了吗 和人事发信息备注一下3d点云噢",
+      "time": "16:34",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394482728435722",
+      "block": "16:34 加人事微信了吗 和人事发信息备注一下3d点云噢",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "加人事微信了吗 和人事发信息备注一下3d点云噢"
+    }
+  ],
+  "updated_at": "2026-10-10 01:39:26",
+  "unread_on_boss": 0
+}

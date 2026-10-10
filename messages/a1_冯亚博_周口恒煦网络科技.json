@@ -1,0 +1,23 @@
+{
+  "chat_name": "冯亚博",
+  "chat_id": "冯亚博#周口恒煦网络科技",
+  "account_index": 1,
+  "job_name": "兼职·数据处理100-300元/时周口查看职位",
+  "company": "周口恒煦网络科技",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:22",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "392990444126721",
+      "block": "11:22 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-05 02:01:23"
+}

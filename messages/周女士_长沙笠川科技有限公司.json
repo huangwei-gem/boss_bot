@@ -1,0 +1,60 @@
+{
+  "chat_name": "周女士",
+  "chat_id": "周女士#长沙笠川科技有限公司",
+  "account_index": 0,
+  "job_name": "影视数据标注（可实习）8-10K长沙查看职位",
+  "company": "长沙笠川科技有限公司",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 08:17",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387990567179011",
+      "block": "09-20 08:17 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "387990567236352",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "不好意思，该岗位需要影视方向的专业，感谢您的关注，可以看看其他岗位哦",
+      "time": "09-21 09:27",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388361607705349",
+      "block": "09-21 09:27 不好意思，该岗位需要影视方向的专业，感谢您的关注，可以看看其他岗位哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，该岗位需要影视方向的专业，感谢您的关注，可以看看其他岗位哦"
+    },
+    {
+      "text": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "time": "09-22 07:27",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "388686120825600",
+      "block": "09-22 07:27 已读 好的，谢谢您的回复，祝您找到合适的人才~",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "reply_source": "rejection"
+    }
+  ],
+  "updated_at": "2026-10-06 20:21:45"
+}

@@ -1,0 +1,38 @@
+{
+  "chat_name": "彭琳",
+  "chat_id": "彭琳#蓝桥集团",
+  "account_index": 0,
+  "job_name": "纯手工活包吃包住5千（派遣职位）4000-6000元/月长沙查看职位",
+  "company": "蓝桥集团",
+  "messages": [
+    {
+      "text": "你好，看了你的简历，方便聊聊吗",
+      "time": "13:33",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394084399891201",
+      "block": "13:33 你好，看了你的简历，方便聊聊吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，看了你的简历，方便聊聊吗"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 13:34:48",
+      "time": "13:34",
+      "job_name": "纯手工活包吃包住5千（派遣职位）4000-6000元/月长沙查看职位",
+      "isFriend": false,
+      "mid": "394084737086211"
+    }
+  ],
+  "updated_at": "2026-10-09 11:34:19",
+  "unread_on_boss": 0
+}

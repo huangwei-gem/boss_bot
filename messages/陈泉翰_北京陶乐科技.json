@@ -1,0 +1,63 @@
+{
+  "chat_name": "陈泉翰",
+  "chat_id": "陈泉翰#北京陶乐科技",
+  "account_index": 0,
+  "job_name": "兼职·居家线上/狼人杀兼职10-50元/时长沙查看职位",
+  "company": "北京陶乐科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 00:48",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393542522155267",
+      "block": "昨天 00:48 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393542522216704",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "抱歉，您的简历虽优秀，但与我们当前职位的特定需求不完全匹配。祝您在BOSS直聘找到合适您的机会！",
+      "time": "09:20",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394022231056641",
+      "block": "09:20 抱歉，您的简历虽优秀，但与我们当前职位的特定需求不完全匹配。祝您在BOSS直聘找到合适您的机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "抱歉，您的简历虽优秀，但与我们当前职位的特定需求不完全匹配。祝您在BOSS直聘找到合适您的机会！"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-07 09:25:19",
+      "time": "09:25",
+      "job_name": "兼职·居家线上/狼人杀兼职10-50元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "394023420403968"
+    }
+  ],
+  "updated_at": "2026-10-10 07:52:56",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,22 @@
+{
+  "chat_name": "廖先生",
+  "chat_id": "廖先生#长汀腾惠职业培训",
+  "account_index": 0,
+  "job_name": "兼职·Ai地方方言标注员95-100元/时龙岩查看职位",
+  "company": "长汀腾惠职业培训",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "04:57",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394311520715524",
+      "block": "04:57 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-09 14:02:31"
+}

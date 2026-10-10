@@ -1,0 +1,61 @@
+{
+  "chat_name": "李女士",
+  "chat_id": "李女士#伍爱创意",
+  "account_index": 1,
+  "job_name": "分析专员+双休+五险一金6-10K长沙查看职位",
+  "company": "伍爱创意",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-23 22:00",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "389254533620481",
+      "block": "09-23 22:00 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "389254533649154",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "09-24 09:25",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "389422858294021",
+      "block": "09-24 09:25 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的反馈，祝您招聘顺利~",
+      "text": "理解，感谢您的反馈，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-09-29 07:45:06",
+      "time": "07:45",
+      "job_name": "分析专员+双休+五险一金6-10K长沙查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-09-29 07:45:06"
+}

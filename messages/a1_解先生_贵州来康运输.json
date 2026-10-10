@@ -1,0 +1,22 @@
+{
+  "chat_name": "解先生",
+  "chat_id": "解先生#贵州来康运输",
+  "account_index": 1,
+  "job_name": "兼职·高级python爬虫 数据处理35-40元/时金华查看职位",
+  "company": "贵州来康运输",
+  "messages": [
+    {
+      "text": "您好，看到贵司招聘python爬虫岗位，我在数据分析中曾使用Python进行过数据采集与清洗工作，熟悉相关库如BeautifulSoup和Pandas，希望能进一步沟通合作机会。",
+      "time": "昨天 02:38",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393569639932418",
+      "block": "昨天 02:38 送达 您好，看到贵司招聘python爬虫岗位，我在数据分析中曾使用Python进行过数据采集与清洗工作，熟悉相关库如BeautifulSoup和Pandas，希望能进一步沟通合作机会。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到贵司招聘python爬虫岗位，我在数据分析中曾使用Python进行过数据采集与清洗工作，熟悉相关库如BeautifulSoup和Pandas，希望能进一步沟通合作机会。"
+    }
+  ],
+  "updated_at": "2026-10-08 15:34:49"
+}

@@ -1,0 +1,78 @@
+{
+  "chat_name": "周争光",
+  "chat_id": "周争光#杭州贯博网络科技",
+  "account_index": 0,
+  "job_name": "兼职·一对一线上家教兼职50-100元/时长沙查看职位",
+  "company": "杭州贯博网络科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "12:39",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393009460245248",
+      "block": "12:39 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393009460278016",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "感谢你的关注，您的过往经验暂时与该职位不够匹配，有合适机会之后再沟通，祝您生活愉快～",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393010411873024",
+      "block": "感谢你的关注，您的过往经验暂时与该职位不够匹配，有合适机会之后再沟通，祝您生活愉快～",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢你的关注，您的过往经验暂时与该职位不够匹配，有合适机会之后再沟通，祝您生活愉快～"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，理解您的考虑，祝您招聘顺利～",
+      "text": "感谢您的时间，理解您的考虑，祝您招聘顺利～",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-04 15:26:42",
+      "time": "15:26",
+      "job_name": "兼职·一对一线上家教兼职50-100元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "393050536764160"
+    },
+    {
+      "sender": "bot",
+      "content": "周争光您好，之前聊的兼职·一对一线上家教兼职50-100元/时长沙查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "text": "周争光您好，之前聊的兼职·一对一线上家教兼职50-100元/时长沙查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-06 16:49:10",
+      "time": "16:49",
+      "job_name": "兼职·一对一线上家教兼职50-100元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "393778588881665"
+    }
+  ],
+  "updated_at": "2026-10-08 01:48:34",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,22 @@
+{
+  "chat_name": "王女士",
+  "chat_id": "王女士#合合信息",
+  "account_index": 1,
+  "job_name": "AI数据分析师(J14363)20-35K·16薪上海查看职位",
+  "company": "合合信息",
+  "messages": [
+    {
+      "text": "您好，我有数据分析和AI数据标注经验，熟悉Python/SQL和大模型应用，看到贵司AI数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "time": "昨天 23:11",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394934128288257",
+      "block": "昨天 23:11 送达 您好，我有数据分析和AI数据标注经验，熟悉Python/SQL和大模型应用，看到贵司AI数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我有数据分析和AI数据标注经验，熟悉Python/SQL和大模型应用，看到贵司AI数据分析师岗位很感兴趣，方便的话我把简历发您细聊。"
+    }
+  ],
+  "updated_at": "2026-10-10 09:21:15"
+}

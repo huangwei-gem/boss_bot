@@ -1,0 +1,22 @@
+{
+  "chat_name": "易欣荣",
+  "chat_id": "易欣荣#易能生物",
+  "account_index": 0,
+  "job_name": "临床统计分析师15-20K长沙查看职位",
+  "company": "易能生物",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "05:06",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395021425365762",
+      "block": "05:06 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-10 09:20:14"
+}

@@ -1,0 +1,22 @@
+{
+  "chat_name": "陈先生",
+  "chat_id": "陈先生#Webull微步",
+  "account_index": 0,
+  "job_name": "数据分析师11-20K·15薪长沙查看职位",
+  "company": "Webull微步",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 08:23",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387992122729220",
+      "block": "09-20 08:23 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-05 02:04:22"
+}

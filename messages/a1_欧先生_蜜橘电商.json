@@ -1,0 +1,63 @@
+{
+  "chat_name": "欧先生",
+  "chat_id": "欧先生#蜜橘电商",
+  "account_index": 1,
+  "job_name": "兼职·【异地居家】电商售前客服+长期兼职3000-5000元/月乐山查看职位",
+  "company": "蜜橘电商",
+  "messages": [
+    {
+      "text": "您好～我是统计学本科，想找数据处理 线上的线上兼职机会。看到贵司这个岗位和我的方向挺匹配，方便的话想把简历发您细聊，工作日下午可以面试。",
+      "time": "01:42",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393909732393473",
+      "block": "01:42 已读 您好～我是统计学本科，想找数据处理 线上的线上兼职机会。看到贵司这个岗位和我的方向挺匹配，方便的话想把简历发您细聊，工作日下午可以面试。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好～我是统计学本科，想找数据处理 线上的线上兼职机会。看到贵司这个岗位和我的方向挺匹配，方便的话想把简历发您细聊，工作日下午可以面试。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会，感谢关注，谢谢～",
+      "time": "11:01",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394046990680578",
+      "block": "11:01 对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会，感谢关注，谢谢～",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会，感谢关注，谢谢～"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "text": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-07 11:02:45",
+      "time": "11:02",
+      "job_name": "兼职·【异地居家】电商售前客服+长期兼职3000-5000元/月乐山查看职位",
+      "isFriend": false,
+      "mid": "394047368344065"
+    },
+    {
+      "text": "好咧，感谢",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394047623959040",
+      "block": "好咧，感谢",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好咧，感谢"
+    }
+  ],
+  "updated_at": "2026-10-10 07:08:55",
+  "unread_on_boss": 0
+}

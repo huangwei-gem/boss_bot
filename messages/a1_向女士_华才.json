@@ -1,0 +1,77 @@
+{
+  "chat_name": "向女士",
+  "chat_id": "向女士#华才",
+  "account_index": 1,
+  "job_name": "新厂25/小时长白班包吃住（派遣职位）7000-8000元/月长沙查看职位",
+  "company": "华才",
+  "messages": [
+    {
+      "text": "黄维你好，看过你的简历，方便聊聊么",
+      "time": "15:05",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394106882130692",
+      "block": "15:05 黄维你好，看过你的简历，方便聊聊么",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "黄维你好，看过你的简历，方便聊聊么"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394106882134784",
+      "block": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 15:18:15",
+      "time": "15:18",
+      "job_name": "新厂25/小时长白班包吃住（派遣职位）7000-8000元/月长沙查看职位",
+      "isFriend": false,
+      "mid": "394110161060608"
+    },
+    {
+      "text": "",
+      "time": "15:41",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394115859919616",
+      "block": "15:41 我想要和您交换微信，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换微信，您是否同意 拒绝 同意"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394115866358529",
+      "block": "我想要和您交换联系方式，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换联系方式，您是否同意 拒绝 同意"
+    }
+  ],
+  "updated_at": "2026-10-10 00:20:15",
+  "unread_on_boss": 0
+}

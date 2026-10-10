@@ -1,0 +1,35 @@
+{
+  "chat_name": "董先生",
+  "chat_id": "董先生#吉林垣钧",
+  "account_index": 0,
+  "job_name": "兼职·ai数据标注员10-30元/时四平查看职位",
+  "company": "吉林垣钧",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "00:22",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393889910006530",
+      "block": "00:22 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393889910031104",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-08 01:15:14"
+}

@@ -1,0 +1,77 @@
+{
+  "chat_name": "何鑫",
+  "chat_id": "何鑫#长沙简聘信息科技___",
+  "account_index": 0,
+  "job_name": "数据挖掘与分析岗（猎头职位）15-25K·13薪长沙查看职位",
+  "company": "长沙简聘信息科技...",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "13:26",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394790405120772",
+      "block": "13:26 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394790405161732",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "抱歉，经过认真评估，您过往经历暂时不适合我们项目的当前情况。祝您在BOSS直聘找到您的理想工作！",
+      "time": "13:40",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394793779991297",
+      "block": "13:40 抱歉，经过认真评估，您过往经历暂时不适合我们项目的当前情况。祝您在BOSS直聘找到您的理想工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "抱歉，经过认真评估，您过往经历暂时不适合我们项目的当前情况。祝您在BOSS直聘找到您的理想工作！"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-09 15:10:49",
+      "time": "15:10",
+      "job_name": "数据挖掘与分析岗（猎头职位）15-25K·13薪长沙查看职位",
+      "isFriend": false,
+      "mid": "394816097940229"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间与认真评估，理解您的考虑。祝您招聘顺利，也祝贵团队早日找到合适的人选。",
+      "text": "感谢您的时间与认真评估，理解您的考虑。祝您招聘顺利，也祝贵团队早日找到合适的人选。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 00:39:48",
+      "time": "00:39",
+      "job_name": "数据挖掘与分析岗（猎头职位）15-25K·13薪长沙查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 00:39:48",
+  "unread_on_boss": 0
+}

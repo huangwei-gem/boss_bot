@@ -1,0 +1,22 @@
+{
+  "chat_name": "张雅垒",
+  "chat_id": "张雅垒#邵阳博今网络有限公司",
+  "account_index": 1,
+  "job_name": "兼职·数据专员5-20元/时邵阳查看职位",
+  "company": "邵阳博今网络有限公司",
+  "messages": [
+    {
+      "text": "您好，我对数据专员岗位很感兴趣，具备数据分析相关技能（Excel、SQL、Python），希望能进一步了解岗位详情和线上工作安排。",
+      "time": "昨天 04:06",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393237146632193",
+      "block": "昨天 04:06 送达 您好，我对数据专员岗位很感兴趣，具备数据分析相关技能（Excel、SQL、Python），希望能进一步了解岗位详情和线上工作安排。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对数据专员岗位很感兴趣，具备数据分析相关技能（Excel、SQL、Python），希望能进一步了解岗位详情和线上工作安排。"
+    }
+  ],
+  "updated_at": "2026-10-07 16:23:29"
+}

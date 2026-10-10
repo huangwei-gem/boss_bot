@@ -1,0 +1,24 @@
+{
+  "chat_name": "杨女士",
+  "chat_id": "杨女士#_2027届秋招_数据分析面议上海",
+  "account_index": 1,
+  "company": "",
+  "job_name": "【2027届秋招】数据分析面议上海查看职位",
+  "updated_at": "2026-10-03 13:31:29",
+  "messages": [
+    {
+      "sender": "bot",
+      "content": "[简历已发送]",
+      "text": "[简历已发送]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "backfill",
+      "action": "resume",
+      "timestamp": "2026-10-03 13:31:29",
+      "time": "13:31",
+      "job_name": "【2027届秋招】数据分析面议上海查看职位",
+      "isFriend": false
+    }
+  ]
+}

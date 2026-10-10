@@ -1,0 +1,22 @@
+{
+  "chat_name": "范女士",
+  "chat_id": "范女士#卓越赢方",
+  "account_index": 1,
+  "job_name": "BI数据分析师（抖音本地生活）15-20K上海查看职位",
+  "company": "卓越赢方",
+  "messages": [
+    {
+      "text": "您好，我是统计学本科在读，熟悉Excel/SQL/Python数据分析，也有数据标注和AI训练数据质检经验，对BI数据分析师岗位很感兴趣，方便的话我把简历发您细聊",
+      "time": "昨天 22:57",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394930816946690",
+      "block": "昨天 22:57 送达 您好，我是统计学本科在读，熟悉Excel/SQL/Python数据分析，也有数据标注和AI训练数据质检经验，对BI数据分析师岗位很感兴趣，方便的话我把简历发您细聊",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，熟悉Excel/SQL/Python数据分析，也有数据标注和AI训练数据质检经验，对BI数据分析师岗位很感兴趣，方便的话我把简历发您细聊"
+    }
+  ],
+  "updated_at": "2026-10-10 09:22:01"
+}

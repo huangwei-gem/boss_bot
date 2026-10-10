@@ -1,0 +1,86 @@
+{
+  "chat_name": "贾女士",
+  "chat_id": "贾女士#长沙笠川科技有限公司",
+  "account_index": 0,
+  "job_name": "双休&影视数据标注4-5K长沙查看职位",
+  "company": "长沙笠川科技有限公司",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 11:59",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "388045205144322",
+      "block": "09-20 11:59 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "09-20 18:33",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388142015922946",
+      "block": "09-20 18:33 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "text": "",
+      "time": "09-20 18:56",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "388147620164354",
+      "block": "09-20 18:56 附件简历请求已发送",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "附件简历请求已发送"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "388147620225793",
+      "block": "数据分析简历-黄维.docx 点击预览附件简历",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "数据分析简历-黄维.docx 点击预览附件简历"
+    },
+    {
+      "text": "对方已同意，您的附件简历已发送给对方",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "388367399760642",
+      "block": "对方已同意，您的附件简历已发送给对方",
+      "sender": "hr",
+      "kind": "system",
+      "content": "对方已同意，您的附件简历已发送给对方",
+      "card_text": "对方已同意，您的附件简历已发送给对方"
+    },
+    {
+      "text": "理解，感谢您的反馈，祝您招聘顺利~",
+      "time": "09-22 07:27",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "388686050120449",
+      "block": "09-22 07:27 已读 理解，感谢您的反馈，祝您招聘顺利~",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "理解，感谢您的反馈，祝您招聘顺利~",
+      "reply_source": "rejection"
+    }
+  ],
+  "updated_at": "2026-10-06 20:22:11"
+}

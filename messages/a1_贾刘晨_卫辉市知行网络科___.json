@@ -1,0 +1,23 @@
+{
+  "chat_name": "贾刘晨",
+  "chat_id": "贾刘晨#卫辉市知行网络科___",
+  "account_index": 1,
+  "job_name": "兼职·数据标注专员10-25元/时新乡查看职位",
+  "company": "卫辉市知行网络科...",
+  "messages": [
+    {
+      "text": "您好，我对数据标注专员岗位很感兴趣，具备数据分析基础，能熟练使用Excel、SQL和Python，工作认真细致，希望有机会参与。",
+      "time": "04:26",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393949946647040",
+      "block": "04:26 送达 您好，我对数据标注专员岗位很感兴趣，具备数据分析基础，能熟练使用Excel、SQL和Python，工作认真细致，希望有机会参与。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对数据标注专员岗位很感兴趣，具备数据分析基础，能熟练使用Excel、SQL和Python，工作认真细致，希望有机会参与。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-08 14:43:00"
+}

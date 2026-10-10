@@ -1,0 +1,23 @@
+{
+  "chat_name": "李先生",
+  "chat_id": "李先生#湖南弘亮文化科技",
+  "account_index": 1,
+  "job_name": "兼职·数据标注员15-30元/时湘潭查看职位",
+  "company": "湖南弘亮文化科技",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，拥有AI训练数据质检和多模态标注经验，熟悉Python/SQL数据处理流程，可立即上岗远程数据标注工作",
+      "time": "昨天 12:33",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394423607857668",
+      "block": "昨天 12:33 送达 您好，我是统计学专业在读生，拥有AI训练数据质检和多模态标注经验，熟悉Python/SQL数据处理流程，可立即上岗远程数据标注工作",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，拥有AI训练数据质检和多模态标注经验，熟悉Python/SQL数据处理流程，可立即上岗远程数据标注工作",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-09 22:55:10"
+}

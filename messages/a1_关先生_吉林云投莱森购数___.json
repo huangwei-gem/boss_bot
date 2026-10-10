@@ -1,0 +1,22 @@
+{
+  "chat_name": "关先生",
+  "chat_id": "关先生#吉林云投莱森购数___",
+  "account_index": 1,
+  "job_name": "兼职·线上居家数据采集3000-4500元/月长春查看职位",
+  "company": "吉林云投莱森购数...",
+  "messages": [
+    {
+      "text": "您好，看到贵司线上数据采集岗位要求，我具备Python和SQL数据处理经验，可立即到岗远程工作",
+      "time": "昨天 03:31",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393582631678464",
+      "block": "昨天 03:31 送达 您好，看到贵司线上数据采集岗位要求，我具备Python和SQL数据处理经验，可立即到岗远程工作",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到贵司线上数据采集岗位要求，我具备Python和SQL数据处理经验，可立即到岗远程工作"
+    }
+  ],
+  "updated_at": "2026-10-08 15:27:56"
+}

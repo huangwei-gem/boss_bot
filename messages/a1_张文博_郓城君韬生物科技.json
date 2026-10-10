@@ -1,0 +1,22 @@
+{
+  "chat_name": "张文博",
+  "chat_id": "张文博#郓城君韬生物科技",
+  "account_index": 1,
+  "job_name": "兼职·数据处理专员25-55元/时菏泽查看职位",
+  "company": "郓城君韬生物科技",
+  "messages": [
+    {
+      "text": "您好，我有数据处理经验，熟练使用Excel、SQL和Python，能高效完成数据整理与分析工作，期待进一步沟通岗位详情。",
+      "time": "昨天 02:26",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393212783051008",
+      "block": "昨天 02:26 送达 您好，我有数据处理经验，熟练使用Excel、SQL和Python，能高效完成数据整理与分析工作，期待进一步沟通岗位详情。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我有数据处理经验，熟练使用Excel、SQL和Python，能高效完成数据整理与分析工作，期待进一步沟通岗位详情。"
+    }
+  ],
+  "updated_at": "2026-10-07 16:42:10"
+}

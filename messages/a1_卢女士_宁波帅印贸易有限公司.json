@@ -1,0 +1,36 @@
+{
+  "chat_name": "卢女士",
+  "chat_id": "卢女士#宁波帅印贸易有限公司",
+  "account_index": 1,
+  "job_name": "兼职·兼职数据采集25-35元/时温州查看职位",
+  "company": "宁波帅印贸易有限公司",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 10:40",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394395809075206",
+      "block": "昨天 10:40 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好！看到贵司在招聘兼职数据采集岗位，我有AI训练数据质检和多模态标注经验，曾完成语料清洗与标注规范对齐工作，熟悉Excel/SQL/Python数据分析工具，希望能有机会合作。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394395954216962",
+      "block": "已读 您好！看到贵司在招聘兼职数据采集岗位，我有AI训练数据质检和多模态标注经验，曾完成语料清洗与标注规范对齐工作，熟悉Excel/SQL/Python数据分析工具，希望能有机会合作。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好！看到贵司在招聘兼职数据采集岗位，我有AI训练数据质检和多模态标注经验，曾完成语料清洗与标注规范对齐工作，熟悉Excel/SQL/Python数据分析工具，希望能有机会合作。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-09 23:08:55"
+}

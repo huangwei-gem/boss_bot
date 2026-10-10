@@ -1,0 +1,22 @@
+{
+  "chat_name": "赵滢",
+  "chat_id": "赵滢#辽宁广联恒睿科技",
+  "account_index": 0,
+  "job_name": "兼职·数据标注/AI训练师15-20元/时锦州查看职位",
+  "company": "辽宁广联恒睿科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "04:46",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394308811465475",
+      "block": "04:46 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-09 14:03:14"
+}

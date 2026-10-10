@@ -1,0 +1,36 @@
+{
+  "chat_name": "周文忠",
+  "chat_id": "周文忠#赣州百慕互联网信息",
+  "account_index": 1,
+  "job_name": "兼职·纯线上兼职/引流专员80-160元/天长沙查看职位",
+  "company": "赣州百慕互联网信息",
+  "messages": [
+    {
+      "text": "",
+      "time": "01:42",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393201803236097",
+      "block": "01:42 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我对贵司的纯线上兼职岗位很感兴趣，我有数据分析基础，能熟练使用Excel、SQL和Python，希望有机会参与，谢谢！",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393201991443200",
+      "block": "已读 您好，我对贵司的纯线上兼职岗位很感兴趣，我有数据分析基础，能熟练使用Excel、SQL和Python，希望有机会参与，谢谢！",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对贵司的纯线上兼职岗位很感兴趣，我有数据分析基础，能熟练使用Excel、SQL和Python，希望有机会参与，谢谢！",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-07 04:20:50"
+}

@@ -1,0 +1,22 @@
+{
+  "chat_name": "曹女士",
+  "chat_id": "曹女士#智飞科技",
+  "account_index": 1,
+  "job_name": "兼职·内业数据处理员30-50元/时广州查看职位",
+  "company": "智飞科技",
+  "messages": [
+    {
+      "text": "您好，我有统计学背景和丰富的数据处理经验，熟练使用Excel、SQL、Python，能高效完成内业数据处理工作，期待进一步沟通！",
+      "time": "昨天 01:57",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393559455830528",
+      "block": "昨天 01:57 送达 您好，我有统计学背景和丰富的数据处理经验，熟练使用Excel、SQL、Python，能高效完成内业数据处理工作，期待进一步沟通！",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我有统计学背景和丰富的数据处理经验，熟练使用Excel、SQL、Python，能高效完成内业数据处理工作，期待进一步沟通！"
+    }
+  ],
+  "updated_at": "2026-10-08 15:40:41"
+}

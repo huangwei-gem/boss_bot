@@ -1,0 +1,22 @@
+{
+  "chat_name": "姚女士",
+  "chat_id": "姚女士#同程旅行",
+  "account_index": 0,
+  "job_name": "兼职·抖音内容写帖-AI写帖，线上办公20-25元/时上海查看职位",
+  "company": "同程旅行",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:11",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393902157906690",
+      "block": "01:11 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-08 15:34:38"
+}

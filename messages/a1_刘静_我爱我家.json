@@ -1,0 +1,63 @@
+{
+  "chat_name": "刘静",
+  "chat_id": "刘静#我爱我家",
+  "account_index": 1,
+  "job_name": "房产销售专员7-12K北京查看职位",
+  "company": "我爱我家",
+  "messages": [
+    {
+      "text": "Hello，你好啊，看到你的简历，觉得蛮合适的~要聊一下吗~方便留一下联系方式嘛我和你联系哈☺️",
+      "time": "15:08",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394461670126080",
+      "block": "15:08 Hello，你好啊，看到你的简历，觉得蛮合适的~要聊一下吗~方便留一下联系方式嘛我和你联系哈☺️",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "Hello，你好啊，看到你的简历，觉得蛮合适的~要聊一下吗~方便留一下联系方式嘛我和你联系哈☺️"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394461670126081",
+      "block": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-08 15:09:09",
+      "time": "15:09",
+      "job_name": "房产销售专员7-12K北京查看职位",
+      "isFriend": false,
+      "mid": "394461829526018"
+    },
+    {
+      "text": "方便留个微信嘛，不会打扰您的，交换一下就可以，算我个任务啦~☺️",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394461921759749",
+      "block": "方便留个微信嘛，不会打扰您的，交换一下就可以，算我个任务啦~☺️",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "方便留个微信嘛，不会打扰您的，交换一下就可以，算我个任务啦~☺️"
+    }
+  ],
+  "updated_at": "2026-10-10 08:06:11",
+  "unread_on_boss": 0
+}

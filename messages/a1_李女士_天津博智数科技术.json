@@ -1,0 +1,63 @@
+{
+  "chat_name": "李女士",
+  "chat_id": "李女士#天津博智数科技术",
+  "account_index": 1,
+  "job_name": "兼职·线上兼职-时间自由-数据标注-瑞典语30-50元/时天津查看职位",
+  "company": "天津博智数科技术",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 00:42",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393540999607040",
+      "block": "昨天 00:42 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，看到贵司招聘线上数据标注兼职，这个时间自由的工作模式非常适合我目前的情况，我在数据分析领域的Excel/SQL/Python经验可以帮助快速上手标注工作。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393541234488066",
+      "block": "送达 您好，看到贵司招聘线上数据标注兼职，这个时间自由的工作模式非常适合我目前的情况，我在数据分析领域的Excel/SQL/Python经验可以帮助快速上手标注工作。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到贵司招聘线上数据标注兼职，这个时间自由的工作模式非常适合我目前的情况，我在数据分析领域的Excel/SQL/Python经验可以帮助快速上手标注工作。"
+    },
+    {
+      "text": "您好，感谢认可。很遗憾，您目前与该岗不是很匹配，祝您早日找到满意工作！",
+      "time": "10:55",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394399412773637",
+      "block": "10:55 您好，感谢认可。很遗憾，您目前与该岗不是很匹配，祝您早日找到满意工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好，感谢认可。很遗憾，您目前与该岗不是很匹配，祝您早日找到满意工作！"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，理解您的考虑，祝您招聘顺利。",
+      "text": "感谢您的时间，理解您的考虑，祝您招聘顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-08 13:03:33",
+      "time": "13:03",
+      "job_name": "兼职·线上兼职-时间自由-数据标注-瑞典语30-50元/时天津查看职位",
+      "isFriend": false,
+      "mid": "394430960333571"
+    }
+  ],
+  "updated_at": "2026-10-09 22:49:02",
+  "unread_on_boss": 0
+}

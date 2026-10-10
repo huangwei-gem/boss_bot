@@ -1,0 +1,23 @@
+{
+  "chat_name": "韩女士",
+  "chat_id": "韩女士#哈尔滨市道里区一___",
+  "account_index": 1,
+  "job_name": "兼职·AI数据标注（调研居家）15-20元/时哈尔滨查看职位",
+  "company": "哈尔滨市道里区一...",
+  "messages": [
+    {
+      "text": "您好，我对AI数据标注（调研居家）岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，能高效完成数据标注工作，且可长期居家远程办公，期待您的回复。",
+      "time": "14:13",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393032440803841",
+      "block": "14:13 送达 您好，我对AI数据标注（调研居家）岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，能高效完成数据标注工作，且可长期居家远程办公，期待您的回复。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对AI数据标注（调研居家）岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，能高效完成数据标注工作，且可长期居家远程办公，期待您的回复。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-07 04:43:23"
+}

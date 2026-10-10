@@ -1,0 +1,35 @@
+{
+  "chat_name": "孙玉",
+  "chat_id": "孙玉#辽宁省如愿计算机___",
+  "account_index": 0,
+  "job_name": "兼职·兼职居家数据标注员10-30元/时朝阳查看职位",
+  "company": "辽宁省如愿计算机...",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "00:26",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393891084657154",
+      "block": "00:26 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393891084689921",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-08 15:41:15"
+}

@@ -1,0 +1,36 @@
+{
+  "chat_name": "项女士",
+  "chat_id": "项女士#久点智能",
+  "account_index": 1,
+  "job_name": "兼职·兼职数据处理文员25-30元/时武汉查看职位",
+  "company": "久点智能",
+  "messages": [
+    {
+      "text": "",
+      "time": "10:56",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "392984086450689",
+      "block": "10:56 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我对兼职数据处理文员岗位很感兴趣。我统计学本科背景，熟练使用Excel、SQL和Python进行数据整理与报表分析，有业务数据分析经验，可远程高效完成数据处理任务，期待进一步沟通！",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "392984279548417",
+      "block": "送达 您好，我对兼职数据处理文员岗位很感兴趣。我统计学本科背景，熟练使用Excel、SQL和Python进行数据整理与报表分析，有业务数据分析经验，可远程高效完成数据处理任务，期待进一步沟通！",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对兼职数据处理文员岗位很感兴趣。我统计学本科背景，熟练使用Excel、SQL和Python进行数据整理与报表分析，有业务数据分析经验，可远程高效完成数据处理任务，期待进一步沟通！",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-05 02:04:40"
+}

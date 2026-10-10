@@ -1,0 +1,22 @@
+{
+  "chat_name": "袁珑",
+  "chat_id": "袁珑#正为咨询集团",
+  "account_index": 0,
+  "job_name": "总经理助理（业务）7-11K娄底查看职位",
+  "company": "正为咨询集团",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 22:24",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393153251463938",
+      "block": "昨天 22:24 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-06 23:27:40"
+}

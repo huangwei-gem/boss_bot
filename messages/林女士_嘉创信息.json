@@ -1,0 +1,62 @@
+{
+  "chat_name": "林女士",
+  "chat_id": "林女士#嘉创信息",
+  "account_index": 0,
+  "job_name": "高级需求分析师10-15K长沙查看职位",
+  "company": "嘉创信息",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 09:59",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "388015673635589",
+      "block": "09-20 09:59 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "09-20 10:10",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388018223227653",
+      "block": "09-20 10:10 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "text": "您不太适合我这个职位",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388018227892993",
+      "block": "您不太适合我这个职位",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您不太适合我这个职位"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，祝您招聘顺利~",
+      "text": "好的，感谢您的时间，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-04 16:27:39",
+      "time": "16:27",
+      "job_name": "高级需求分析师10-15K长沙查看职位",
+      "isFriend": false,
+      "mid": "393065514193665"
+    }
+  ],
+  "updated_at": "2026-10-09 15:12:16",
+  "unread_on_boss": 0
+}

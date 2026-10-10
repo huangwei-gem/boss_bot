@@ -1,0 +1,23 @@
+{
+  "chat_name": "强梦雨",
+  "chat_id": "强梦雨#九天之星",
+  "account_index": 1,
+  "job_name": "兼职·数据处理专员4000-4500元/月巴音郭楞蒙古自治州查看职位",
+  "company": "九天之星",
+  "messages": [
+    {
+      "text": "您好，我对数据处理专员岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，并有业务数据报表与洞察分析经验，希望能有机会进一步沟通。",
+      "time": "13:24",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393020394775040",
+      "block": "13:24 送达 您好，我对数据处理专员岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，并有业务数据报表与洞察分析经验，希望能有机会进一步沟通。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对数据处理专员岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，并有业务数据报表与洞察分析经验，希望能有机会进一步沟通。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-05 22:17:25"
+}

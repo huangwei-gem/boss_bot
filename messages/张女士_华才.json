@@ -1,0 +1,76 @@
+{
+  "chat_name": "张女士",
+  "chat_id": "张女士#华才",
+  "account_index": 0,
+  "job_name": "白班/坐岗+28/小时包吃住电子厂（派遣职位）7000-8000元/月长沙查看职位",
+  "company": "华才",
+  "messages": [
+    {
+      "text": "哈喽！你好，还在看工作机会嘛，有时间方便聊聊吗，你这边想找什么样的工作呢",
+      "time": "12:46",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394072774066689",
+      "block": "12:46 哈喽！你好，还在看工作机会嘛，有时间方便聊聊吗，你这边想找什么样的工作呢",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "哈喽！你好，还在看工作机会嘛，有时间方便聊聊吗，你这边想找什么样的工作呢"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 12:48:05",
+      "time": "12:48",
+      "job_name": "白班/坐岗+28/小时包吃住电子厂（派遣职位）7000-8000元/月长沙查看职位",
+      "isFriend": false,
+      "mid": "394073253237249"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394073287991809",
+      "block": "我想要和您交换联系方式，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换联系方式，您是否同意 拒绝 同意"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394073295020546",
+      "block": "我想要和您交换微信，您是否同意 为保障您的安全建议在平台内沟通，微信沟通中需特别保护您的个人信息，谨防受骗。 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换微信，您是否同意 为保障您的安全建议在平台内沟通，微信沟通中需特别保护您的个人信息，谨防受骗。 拒绝 同意"
+    },
+    {
+      "text": "你好，你可以加我一下，备注一下名字",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394073313825283",
+      "block": "你好，你可以加我一下，备注一下名字",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，你可以加我一下，备注一下名字"
+    }
+  ],
+  "updated_at": "2026-10-10 06:52:39",
+  "unread_on_boss": 0
+}

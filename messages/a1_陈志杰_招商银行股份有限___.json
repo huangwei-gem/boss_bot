@@ -1,0 +1,76 @@
+{
+  "chat_name": "陈志杰",
+  "chat_id": "陈志杰#招商银行股份有限___",
+  "account_index": 1,
+  "job_name": "内勤数据分析岗8-13K上海查看职位",
+  "company": "招商银行股份有限...",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据标注与分析，有AI辅助标注流程搭建经验。看到贵司数据分析岗需求，方便的话我把简历发您细聊。",
+      "time": "02:04",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394976804483585",
+      "block": "02:04 已读 您好，我是统计学专业在读生，擅长数据标注与分析，有AI辅助标注流程搭建经验。看到贵司数据分析岗需求，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据标注与分析，有AI辅助标注流程搭建经验。看到贵司数据分析岗需求，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "方便发一份你的简历过来吗？",
+      "time": "08:14",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395067587748352",
+      "block": "08:14 方便发一份你的简历过来吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "方便发一份你的简历过来吗？"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395067599610369",
+      "block": "我想要一份您的附件简历，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "395067688505857",
+      "block": "您的附件简历 AIGC生成师... 已发送给Boss点击查看附件",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "您的附件简历 AIGC生成师... 已发送给Boss点击查看附件"
+    },
+    {
+      "sender": "bot",
+      "content": "[简历已发送]",
+      "text": "[简历已发送]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "rule",
+      "action": "resume",
+      "timestamp": "2026-10-10 08:14:32",
+      "time": "08:14",
+      "job_name": "内勤数据分析岗8-13K上海查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 08:14:32",
+  "unread_on_boss": 0
+}

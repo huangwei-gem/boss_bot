@@ -1,0 +1,34 @@
+{
+  "chat_name": "杨女士",
+  "chat_id": "杨女士#锐仕方达",
+  "account_index": 0,
+  "job_name": "仿真工程师（机械、分析、NVH、电机结构）（猎头职位）18-35K长沙查看职位",
+  "company": "锐仕方达",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "03:23",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394996199334148",
+      "block": "03:23 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "🙏不好意思，不太合适！",
+      "time": "09:00",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395079076090117",
+      "block": "09:00 🙏不好意思，不太合适！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "🙏不好意思，不太合适！"
+    }
+  ],
+  "updated_at": "2026-10-10 09:13:10"
+}

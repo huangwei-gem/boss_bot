@@ -1,0 +1,36 @@
+{
+  "chat_name": "高先生",
+  "chat_id": "高先生#济南阿宝文化传媒",
+  "account_index": 1,
+  "job_name": "兼职·ai数据标注5000-6000元/月济宁查看职位",
+  "company": "济南阿宝文化传媒",
+  "messages": [
+    {
+      "text": "",
+      "time": "00:41",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393894688784896",
+      "block": "00:41 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我有统计学背景，熟练使用Excel/SQL/Python，有业务数据报表与洞察分析经验，对AI数据标注工作认真细致，期待有机会参与！",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393894809268736",
+      "block": "送达 您好，我有统计学背景，熟练使用Excel/SQL/Python，有业务数据报表与洞察分析经验，对AI数据标注工作认真细致，期待有机会参与！",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我有统计学背景，熟练使用Excel/SQL/Python，有业务数据报表与洞察分析经验，对AI数据标注工作认真细致，期待有机会参与！",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-08 15:10:59"
+}

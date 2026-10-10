@@ -1,0 +1,22 @@
+{
+  "chat_name": "李先生",
+  "chat_id": "李先生#小虫科技",
+  "account_index": 0,
+  "job_name": "兼职·python数据分析50-100元/时济南查看职位",
+  "company": "小虫科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "03:02",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393929410110209",
+      "block": "03:02 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-08 15:21:02"
+}

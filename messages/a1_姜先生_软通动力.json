@@ -1,0 +1,64 @@
+{
+  "chat_name": "姜先生",
+  "chat_id": "姜先生#软通动力",
+  "account_index": 1,
+  "job_name": "数据分析师-双休+免费三餐和茶饮-线上面试11-16K上海查看职位",
+  "company": "软通动力",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据标注与分析，已完成多模态标注和业务报表项目，看到贵司数据分析师岗位支持线上面试，方便的话我把简历发您细聊",
+      "time": "昨天 14:53",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394811916419585",
+      "block": "昨天 14:53 已读 您好，我是统计学专业在读生，擅长数据标注与分析，已完成多模态标注和业务报表项目，看到贵司数据分析师岗位支持线上面试，方便的话我把简历发您细聊",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据标注与分析，已完成多模态标注和业务报表项目，看到贵司数据分析师岗位支持线上面试，方便的话我把简历发您细聊"
+    },
+    {
+      "text": "合适的话后面有需要再联系。",
+      "time": "昨天 15:10",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394815924277762",
+      "block": "昨天 15:10 合适的话后面有需要再联系。",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "合适的话后面有需要再联系。"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，那我就不多打扰了，祝您招聘顺利~",
+      "text": "好的，感谢您的时间，那我就不多打扰了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 00:31:22",
+      "time": "00:31",
+      "job_name": "数据分析师-双休+免费三餐和茶饮-线上面试11-16K上海查看职位",
+      "isFriend": false,
+      "mid": "394953866121729"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，有需要随时联系，祝您工作顺利。",
+      "text": "好的，有需要随时联系，祝您工作顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 03:59:47",
+      "time": "03:59",
+      "job_name": "数据分析师-双休+免费三餐和茶饮-线上面试11-16K上海查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 03:59:47",
+  "unread_on_boss": 0
+}

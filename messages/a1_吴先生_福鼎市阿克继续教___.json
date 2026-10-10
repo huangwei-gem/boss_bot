@@ -1,0 +1,23 @@
+{
+  "chat_name": "吴先生",
+  "chat_id": "吴先生#福鼎市阿克继续教___",
+  "account_index": 1,
+  "job_name": "兼职·兼职数据处理员20-25元/时宁德查看职位",
+  "company": "福鼎市阿克继续教...",
+  "messages": [
+    {
+      "text": "您好，我对贵公司的兼职数据处理员岗位很感兴趣。我具备Excel、SQL和Python技能，有业务数据报表与洞察分析经验，希望能有机会参与这份工作。",
+      "time": "12:37",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393008963154433",
+      "block": "12:37 已读 您好，我对贵公司的兼职数据处理员岗位很感兴趣。我具备Excel、SQL和Python技能，有业务数据报表与洞察分析经验，希望能有机会参与这份工作。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对贵公司的兼职数据处理员岗位很感兴趣。我具备Excel、SQL和Python技能，有业务数据报表与洞察分析经验，希望能有机会参与这份工作。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-05 22:24:16"
+}

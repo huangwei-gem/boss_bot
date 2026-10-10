@@ -1,0 +1,53 @@
+{
+  "chat_name": "孙先生",
+  "chat_id": "孙先生#长沙友华驾校",
+  "account_index": 0,
+  "job_name": "大学生兼职代理150-300元/天长沙查看职位",
+  "company": "长沙友华驾校",
+  "messages": [
+    {
+      "text": "你好，有兴趣聊聊吗？",
+      "time": "22:37",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393864282190593",
+      "block": "22:37 你好，有兴趣聊聊吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，有兴趣聊聊吗？"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，孙先生，我对您提到的兼职岗位感兴趣，可以简单了解一下工作内容和要求吗？",
+      "text": "您好，孙先生，我对您提到的兼职岗位感兴趣，可以简单了解一下工作内容和要求吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-06 22:55:39",
+      "time": "22:55",
+      "job_name": "大学生兼职代理150-300元/天长沙查看职位",
+      "isFriend": false,
+      "mid": "393868671324931"
+    },
+    {
+      "sender": "bot",
+      "content": "孙先生您好，之前聊的大学生兼职代理150-300元/天长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "孙先生您好，之前聊的大学生兼职代理150-300元/天长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 07:02:24",
+      "time": "07:02",
+      "job_name": "大学生兼职代理150-300元/天长沙查看职位",
+      "isFriend": false,
+      "mid": "395049965478659"
+    }
+  ],
+  "updated_at": "2026-10-10 09:15:00",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,64 @@
+{
+  "chat_name": "王天天",
+  "chat_id": "王天天#ZL知猎",
+  "account_index": 1,
+  "job_name": "用户增长数据分析师-sh（猎头职位）30-60K·14薪上海查看职位",
+  "company": "ZL知猎",
+  "messages": [
+    {
+      "text": "",
+      "time": "12:55",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394782900498693",
+      "block": "12:55 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据标注和AI辅助分析，曾完成多模态数据标注和业务分析项目，方便的话我把简历发您细聊",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394783017394432",
+      "block": "已读 您好，我是统计学专业在读生，擅长数据标注和AI辅助分析，曾完成多模态数据标注和业务分析项目，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据标注和AI辅助分析，曾完成多模态数据标注和业务分析项目，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "13:25",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394790239506692",
+      "block": "13:25 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的反馈，祝您招聘顺利~",
+      "text": "理解，感谢您的反馈，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-09 13:31:31",
+      "time": "13:31",
+      "job_name": "用户增长数据分析师-sh（猎头职位）30-60K·14薪上海查看职位",
+      "isFriend": false,
+      "mid": "394791694000388"
+    }
+  ],
+  "updated_at": "2026-10-10 03:13:36",
+  "unread_on_boss": 0
+}

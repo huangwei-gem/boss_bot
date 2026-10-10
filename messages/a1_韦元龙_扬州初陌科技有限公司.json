@@ -1,0 +1,22 @@
+{
+  "chat_name": "韦元龙",
+  "chat_id": "韦元龙#扬州初陌科技有限公司",
+  "account_index": 1,
+  "job_name": "兼职·地图数据处理专员100-110元/天扬州查看职位",
+  "company": "扬州初陌科技有限公司",
+  "messages": [
+    {
+      "text": "您好，我有数据处理和数据分析经验，熟练使用Excel、SQL、Python，能快速胜任地图数据处理工作，期待进一步沟通！",
+      "time": "昨天 03:16",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393225088631297",
+      "block": "昨天 03:16 送达 您好，我有数据处理和数据分析经验，熟练使用Excel、SQL、Python，能快速胜任地图数据处理工作，期待进一步沟通！",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我有数据处理和数据分析经验，熟练使用Excel、SQL、Python，能快速胜任地图数据处理工作，期待进一步沟通！"
+    }
+  ],
+  "updated_at": "2026-10-07 16:30:17"
+}

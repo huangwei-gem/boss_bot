@@ -1,0 +1,50 @@
+{
+  "chat_name": "王文菊",
+  "chat_id": "王文菊#宜昌市西陵区博唯___",
+  "account_index": 0,
+  "job_name": "兼职·留学生商科经济金融会计管理数据分析老师150-400元/时宜昌查看职位",
+  "company": "宜昌市西陵区博唯...",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "00:17",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394242769154560",
+      "block": "00:17 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394242769187328",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-08 13:17:24",
+      "time": "13:17",
+      "job_name": "兼职·留学生商科经济金融会计管理数据分析老师150-400元/时宜昌查看职位",
+      "isFriend": false,
+      "mid": "394434367599105"
+    }
+  ],
+  "updated_at": "2026-10-08 13:22:49"
+}

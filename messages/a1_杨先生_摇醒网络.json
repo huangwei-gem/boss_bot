@@ -1,0 +1,103 @@
+{
+  "chat_name": "杨先生",
+  "chat_id": "杨先生#摇醒网络",
+  "account_index": 1,
+  "job_name": "兼职·视频剪辑线上兼职10-500元/时长沙查看职位",
+  "company": "摇醒网络",
+  "messages": [
+    {
+      "text": "您好，我对视频剪辑线上兼职岗位很感兴趣。我具备数据分析背景，学习能力强，能快速上手剪辑工具，希望有机会参与您的项目。",
+      "time": "12:38",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393009245417985",
+      "block": "12:38 送达 您好，我对视频剪辑线上兼职岗位很感兴趣。我具备数据分析背景，学习能力强，能快速上手剪辑工具，希望有机会参与您的项目。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对视频剪辑线上兼职岗位很感兴趣。我具备数据分析背景，学习能力强，能快速上手剪辑工具，希望有机会参与您的项目。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "我们这边需要先试剪30s，合适的话会签订长期兼职协议，到时候微信会给你直接派单，您看这边接受试剪吗",
+      "time": "10:14",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393327576691201",
+      "block": "10:14 我们这边需要先试剪30s，合适的话会签订长期兼职协议，到时候微信会给你直接派单，您看这边接受试剪吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "我们这边需要先试剪30s，合适的话会签订长期兼职协议，到时候微信会给你直接派单，您看这边接受试剪吗"
+    },
+    {
+      "sender": "bot",
+      "content": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "text": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-05 23:49:32",
+      "time": "23:49",
+      "job_name": "兼职·视频剪辑线上兼职10-500元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "393528014811649"
+    },
+    {
+      "text": "杨先生撤回了一条消息",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "393678822318592",
+      "block": "杨先生撤回了一条消息",
+      "sender": "hr",
+      "kind": "system",
+      "content": "杨先生撤回了一条消息",
+      "card_text": "杨先生撤回了一条消息"
+    },
+    {
+      "text": "需要微信联系哈",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393678862541313",
+      "block": "需要微信联系哈",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "需要微信联系哈"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，理解，方便您留一下微信号吗？我稍后添加您，再和您确认试剪的具体要求。",
+      "text": "好的，理解，方便您留一下微信号吗？我稍后添加您，再和您确认试剪的具体要求。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-06 14:38:02",
+      "time": "14:38",
+      "job_name": "兼职·视频剪辑线上兼职10-500元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "393746359996934"
+    },
+    {
+      "text": "我这边的交换微信功能频繁了，受限了。您看看能不能点进这个WPS的链接。https://www.kdocs.cn/l/ck1SHXYOmLV3。里面有我的联系方式",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393746471227904",
+      "block": "我这边的交换微信功能频繁了，受限了。您看看能不能点进这个WPS的链接。https://www.kdocs.cn/l/ck1SHXYOmLV3。里面有我的联系方式",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "我这边的交换微信功能频繁了，受限了。您看看能不能点进这个WPS的链接。https://www.kdocs.cn/l/ck1SHXYOmLV3。里面有我的联系方式"
+    }
+  ],
+  "updated_at": "2026-10-10 06:36:19",
+  "unread_on_boss": 0
+}

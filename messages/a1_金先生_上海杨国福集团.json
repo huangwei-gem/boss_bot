@@ -1,0 +1,64 @@
+{
+  "chat_name": "金先生",
+  "chat_id": "金先生#上海杨国福集团",
+  "account_index": 1,
+  "job_name": "团购数据分析师10-12K上海查看职位",
+  "company": "上海杨国福集团",
+  "messages": [
+    {
+      "text": "",
+      "time": "08:54",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "391184611897859",
+      "block": "08:54 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "391184803303939",
+      "block": "已读 您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "不好意思 可能不太匹配哈",
+      "time": "16:18",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "391293849514498",
+      "block": "16:18 不好意思 可能不太匹配哈",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思 可能不太匹配哈"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-05 01:17:00",
+      "time": "01:17",
+      "job_name": "团购数据分析师10-12K上海查看职位",
+      "isFriend": false,
+      "mid": "393195611918848"
+    }
+  ],
+  "updated_at": "2026-10-10 08:03:41",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,23 @@
+{
+  "chat_name": "吴女士",
+  "chat_id": "吴女士#风火轮萤图",
+  "account_index": 1,
+  "job_name": "兼职·数据标注（线上）15-25元/时上海查看职位",
+  "company": "风火轮萤图",
+  "messages": [
+    {
+      "text": "您好，我对数据标注（线上）岗位很感兴趣。我有数据分析基础，熟悉Excel、SQL和Python，能认真高效完成标注任务，期待进一步沟通。",
+      "time": "13:38",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393023941067266",
+      "block": "13:38 送达 您好，我对数据标注（线上）岗位很感兴趣。我有数据分析基础，熟悉Excel、SQL和Python，能认真高效完成标注任务，期待进一步沟通。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对数据标注（线上）岗位很感兴趣。我有数据分析基础，熟悉Excel、SQL和Python，能认真高效完成标注任务，期待进一步沟通。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-07 04:46:25"
+}

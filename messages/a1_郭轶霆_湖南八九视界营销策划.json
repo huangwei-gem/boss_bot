@@ -1,0 +1,66 @@
+{
+  "chat_name": "郭轶霆",
+  "chat_id": "郭轶霆#湖南八九视界营销策划",
+  "account_index": 1,
+  "job_name": "礼品渠道销售经理3-8K长沙查看职位",
+  "company": "湖南八九视界营销策划",
+  "messages": [
+    {
+      "text": "Hello，看了你的简历挺符合我们公司岗位的，可以聊聊么",
+      "time": "16:37",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393068007502337",
+      "block": "16:37 Hello，看了你的简历挺符合我们公司岗位的，可以聊聊么",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "Hello，看了你的简历挺符合我们公司岗位的，可以聊聊么"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393068007502339",
+      "block": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的认可，不过我的求职方向是数据分析，销售经理这个岗位与我的方向不太匹配。请问贵司是否有数据分析相关的岗位可以沟通呢？",
+      "text": "感谢您的认可，不过我的求职方向是数据分析，销售经理这个岗位与我的方向不太匹配。请问贵司是否有数据分析相关的岗位可以沟通呢？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-04 16:39:38",
+      "time": "16:39",
+      "job_name": "礼品渠道销售经理3-8K长沙查看职位",
+      "isFriend": false,
+      "mid": "393068459876864"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 18:33:15",
+      "time": "18:33",
+      "job_name": "礼品渠道销售经理3-8K长沙查看职位",
+      "isFriend": false,
+      "mid": "394158083826176"
+    }
+  ],
+  "updated_at": "2026-10-09 23:57:42",
+  "unread_on_boss": 0
+}

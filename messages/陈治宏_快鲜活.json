@@ -1,0 +1,75 @@
+{
+  "chat_name": "陈治宏",
+  "chat_id": "陈治宏#快鲜活",
+  "account_index": 0,
+  "job_name": "梅县快递员8-12K梅州查看职位",
+  "company": "快鲜活",
+  "messages": [
+    {
+      "text": "还在找工作不？我们招快递员，保底6000起、综合7000～12000！管车管住还管吃，工作不折腾，用心干就赚得多，来试试？",
+      "time": "12:35",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394070061007361",
+      "block": "12:35 还在找工作不？我们招快递员，保底6000起、综合7000～12000！管车管住还管吃，工作不折腾，用心干就赚得多，来试试？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "还在找工作不？我们招快递员，保底6000起、综合7000～12000！管车管住还管吃，工作不折腾，用心干就赚得多，来试试？"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394070061007362",
+      "block": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA"
+    },
+    {
+      "text": "您现在是居住哪里呢？连锁超市门店，可根据您住所，就近分配门店。",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394070153982465",
+      "block": "您现在是居住哪里呢？连锁超市门店，可根据您住所，就近分配门店。",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您现在是居住哪里呢？连锁超市门店，可根据您住所，就近分配门店。"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 13:18:54",
+      "time": "13:18",
+      "job_name": "梅县快递员8-12K梅州查看职位",
+      "isFriend": false,
+      "mid": "394080828948993"
+    },
+    {
+      "text": "好的没关系。如果你后面想换个活干，或者有朋友在找工作，随时找我。祝顺利。",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394080999776771",
+      "block": "好的没关系。如果你后面想换个活干，或者有朋友在找工作，随时找我。祝顺利。",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的没关系。如果你后面想换个活干，或者有朋友在找工作，随时找我。祝顺利。"
+    }
+  ],
+  "updated_at": "2026-10-10 06:43:44",
+  "unread_on_boss": 0
+}

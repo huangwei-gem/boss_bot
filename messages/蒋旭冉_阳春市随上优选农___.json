@@ -1,0 +1,64 @@
+{
+  "chat_name": "蒋旭冉",
+  "chat_id": "蒋旭冉#阳春市随上优选农___",
+  "account_index": 0,
+  "job_name": "兼职·居家电商客服70-100元/时南宁查看职位",
+  "company": "阳春市随上优选农...",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:07",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394254971044355",
+      "block": "01:07 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "-7770007",
+      "time": "09:33",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394379265155585",
+      "block": "09:33 -7770007",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "-7770007"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，请问这个号码是微信吗？方便的话我稍后添加。另外我想先确认下，岗位是否更偏电商客服接待；我主要想找数据标注、数据分析或线上运营助理类兼职。",
+      "text": "您好，请问这个号码是微信吗？方便的话我稍后添加。另外我想先确认下，岗位是否更偏电商客服接待；我主要想找数据标注、数据分析或线上运营助理类兼职。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-08 14:00:18",
+      "time": "14:00",
+      "job_name": "兼职·居家电商客服70-100元/时南宁查看职位",
+      "isFriend": false,
+      "mid": "394444905009665"
+    },
+    {
+      "sender": "bot",
+      "content": "蒋旭冉您好，之前聊的兼职·居家电商客服70-100元/时南宁查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "蒋旭冉您好，之前聊的兼职·居家电商客服70-100元/时南宁查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-09 13:51:08",
+      "time": "13:51",
+      "job_name": "兼职·居家电商客服70-100元/时南宁查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-09 13:51:08",
+  "unread_on_boss": 0
+}

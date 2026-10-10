@@ -1,0 +1,92 @@
+{
+  "chat_name": "王先生",
+  "chat_id": "王先生#海南青娱星航文化传媒",
+  "account_index": 1,
+  "job_name": "【直播间弹幕回复员】￥&￥&6-12K长沙查看职位",
+  "company": "海南青娱星航文化传媒",
+  "messages": [
+    {
+      "text": "你好，我们公司正在招聘【直播间弹幕回复员】￥&￥&，请问考虑吗",
+      "time": "13:12",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393017601188610",
+      "block": "13:12 你好，我们公司正在招聘【直播间弹幕回复员】￥&￥&，请问考虑吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，我们公司正在招聘【直播间弹幕回复员】￥&￥&，请问考虑吗"
+    },
+    {
+      "text": "哈喽宝子，我们是做语音主播的，兼职全职都可以。每天日结，不会有任何收费情况出现。感兴趣，我们加个微信，详细了解一下呢?",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393017741873921",
+      "block": "哈喽宝子，我们是做语音主播的，兼职全职都可以。每天日结，不会有任何收费情况出现。感兴趣，我们加个微信，详细了解一下呢?",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "哈喽宝子，我们是做语音主播的，兼职全职都可以。每天日结，不会有任何收费情况出现。感兴趣，我们加个微信，详细了解一下呢?"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。不过我的求职方向是数据分析岗位，跟这个岗位不太匹配，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。不过我的求职方向是数据分析岗位，跟这个岗位不太匹配，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "scam_filter",
+      "action": "text",
+      "timestamp": "2026-10-05 02:25:27",
+      "time": "02:25",
+      "job_name": "【直播间弹幕回复员】￥&￥&6-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "393212432470785"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。不过我的求职方向是数据分析岗位，跟这个岗位不太匹配，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。不过我的求职方向是数据分析岗位，跟这个岗位不太匹配，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "scam_filter",
+      "action": "text",
+      "timestamp": "2026-10-05 04:12:38",
+      "time": "04:12",
+      "job_name": "【直播间弹幕回复员】￥&￥&6-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "393238775804673"
+    },
+    {
+      "text": "好的，祝你在boss上找到满意的工作~",
+      "time": "08:01",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393295022035712",
+      "block": "08:01 好的，祝你在boss上找到满意的工作~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的，祝你在boss上找到满意的工作~"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的祝福，也希望您招聘顺利~",
+      "text": "感谢您的祝福，也希望您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-05 08:04:18",
+      "time": "08:04",
+      "job_name": "【直播间弹幕回复员】￥&￥&6-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "393295711904512"
+    }
+  ],
+  "updated_at": "2026-10-07 16:14:17",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,101 @@
+{
+  "chat_name": "蒋玉萍",
+  "chat_id": "蒋玉萍#龟仙屋互娱",
+  "account_index": 1,
+  "job_name": "AI抽卡师5-7K长沙查看职位",
+  "company": "龟仙屋互娱",
+  "messages": [
+    {
+      "text": "此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+      "time": "12:56",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394783035977987",
+      "block": "12:56 此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+      "sender": "hr",
+      "kind": "system",
+      "content": "此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+      "card_text": "此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递"
+    },
+    {
+      "text": "您好，看您这边条件挺好的，我们刚好有个可能适合您的岗位在招，有兴趣沟通一下吗？",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394783035977989",
+      "block": "您好，看您这边条件挺好的，我们刚好有个可能适合您的岗位在招，有兴趣沟通一下吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好，看您这边条件挺好的，我们刚好有个可能适合您的岗位在招，有兴趣沟通一下吗？"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394783036027136",
+      "block": "我想要一个您的电话号码，您是否同意 拒绝 同意 或者发送 微信号码 附件简历",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要一个您的电话号码，您是否同意 拒绝 同意 或者发送 微信号码 附件简历"
+    },
+    {
+      "text": "这是我的简历，您看看",
+      "time": "13:04",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394784933224704",
+      "block": "13:04 送达 这是我的简历，您看看",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "这是我的简历，您看看"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394784933228803",
+      "block": "附件简历请求已发送",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "附件简历请求已发送"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394784933499138",
+      "block": "AIGC生成师个人简历.docx 点击预览附件简历",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "AIGC生成师个人简历.docx 点击预览附件简历"
+    },
+    {
+      "sender": "bot",
+      "content": "[简历已发送]",
+      "text": "[简历已发送]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "rule",
+      "action": "resume",
+      "timestamp": "2026-10-09 13:04:01",
+      "time": "13:04",
+      "job_name": "AI抽卡师5-7K长沙查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-09 13:04:01",
+  "unread_on_boss": 0
+}

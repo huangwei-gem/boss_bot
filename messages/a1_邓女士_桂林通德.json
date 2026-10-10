@@ -1,0 +1,23 @@
+{
+  "chat_name": "邓女士",
+  "chat_id": "邓女士#桂林通德",
+  "account_index": 1,
+  "job_name": "兼职·游戏代练100-300元/天桂林查看职位",
+  "company": "桂林通德",
+  "messages": [
+    {
+      "text": "您好，我对游戏代练岗位很感兴趣，我有充足的时间且能线上完成，期待与您进一步沟通。",
+      "time": "03:41",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393938990314240",
+      "block": "03:41 送达 您好，我对游戏代练岗位很感兴趣，我有充足的时间且能线上完成，期待与您进一步沟通。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对游戏代练岗位很感兴趣，我有充足的时间且能线上完成，期待与您进一步沟通。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-08 14:51:02"
+}

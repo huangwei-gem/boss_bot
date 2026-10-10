@@ -1,0 +1,48 @@
+{
+  "chat_name": "林女士",
+  "chat_id": "林女士#雨林数据科技有限公司",
+  "account_index": 1,
+  "job_name": "兼职·excel数据处理专员100-200元/天乐山查看职位",
+  "company": "雨林数据科技有限公司",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:53",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "392998038495744",
+      "block": "11:53 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我具备扎实的Excel数据处理能力，并有数据分析实战经验，能高效完成数据整理与报表工作。期待有机会加入贵公司，谢谢！",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "392998229127680",
+      "block": "送达 您好，我具备扎实的Excel数据处理能力，并有数据分析实战经验，能高效完成数据整理与报表工作。期待有机会加入贵公司，谢谢！",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我具备扎实的Excel数据处理能力，并有数据分析实战经验，能高效完成数据整理与报表工作。期待有机会加入贵公司，谢谢！",
+      "reply_source": "greet"
+    },
+    {
+      "text": "有的",
+      "time": "12:27",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393006510293505",
+      "block": "12:27 送达 有的",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "有的"
+    }
+  ],
+  "updated_at": "2026-10-05 22:25:28"
+}

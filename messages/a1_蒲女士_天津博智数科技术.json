@@ -1,0 +1,23 @@
+{
+  "chat_name": "蒲女士",
+  "chat_id": "蒲女士#天津博智数科技术",
+  "account_index": 1,
+  "job_name": "兼职·线上兼职-居家办公-数据标注-瑞典语30-35元/时天津查看职位",
+  "company": "天津博智数科技术",
+  "messages": [
+    {
+      "text": "您好，我对这个线上数据标注岗位很感兴趣。我有数据分析基础，熟悉Excel、SQL和Python，做事认真细致，愿意学习瑞典语标注规则，期待进一步沟通。",
+      "time": "13:39",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393024233243142",
+      "block": "13:39 送达 您好，我对这个线上数据标注岗位很感兴趣。我有数据分析基础，熟悉Excel、SQL和Python，做事认真细致，愿意学习瑞典语标注规则，期待进一步沟通。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对这个线上数据标注岗位很感兴趣。我有数据分析基础，熟悉Excel、SQL和Python，做事认真细致，愿意学习瑞典语标注规则，期待进一步沟通。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-07 04:46:01"
+}

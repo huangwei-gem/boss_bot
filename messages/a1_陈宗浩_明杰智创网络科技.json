@@ -1,0 +1,65 @@
+{
+  "chat_name": "陈宗浩",
+  "chat_id": "陈宗浩#明杰智创网络科技",
+  "account_index": 1,
+  "job_name": "兼职·数据标注兼职70-200元/天金华查看职位",
+  "company": "明杰智创网络科技",
+  "messages": [
+    {
+      "text": "您好，看到贵司招聘数据标注兼职，我在文本/图像/语音标注和AI训练数据质检方面有完整项目经验，能熟练使用Python进行数据处理，期待有机会合作！",
+      "time": "昨天 12:41",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394425546248706",
+      "block": "昨天 12:41 已读 您好，看到贵司招聘数据标注兼职，我在文本/图像/语音标注和AI训练数据质检方面有完整项目经验，能熟练使用Python进行数据处理，期待有机会合作！",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，看到贵司招聘数据标注兼职，我在文本/图像/语音标注和AI训练数据质检方面有完整项目经验，能熟练使用Python进行数据处理，期待有机会合作！",
+      "reply_source": "greet"
+    },
+    {
+      "text": "你自己是团队吗",
+      "time": "07:55",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394709180400128",
+      "block": "07:55 你自己是团队吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你自己是团队吗"
+    },
+    {
+      "sender": "bot",
+      "content": "不是团队，我有独立完成多模态标注和数据质检的经验，能按规范高效交付任务。",
+      "text": "不是团队，我有独立完成多模态标注和数据质检的经验，能按规范高效交付任务。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-09 13:22:47",
+      "time": "13:22",
+      "job_name": "兼职·数据标注兼职70-200元/天金华查看职位",
+      "isFriend": false,
+      "mid": "394789548249601"
+    },
+    {
+      "sender": "bot",
+      "content": "我是个人，非团队。能独立高效完成标注和质检任务，按规范交付。",
+      "text": "我是个人，非团队。能独立高效完成标注和质检任务，按规范交付。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 02:37:11",
+      "time": "02:37",
+      "job_name": "兼职·数据标注兼职70-200元/天金华查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 02:37:11",
+  "unread_on_boss": 0
+}

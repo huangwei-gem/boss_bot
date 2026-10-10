@@ -1,0 +1,65 @@
+{
+  "chat_name": "丁琼",
+  "chat_id": "丁琼#上海恬媛服饰有限公司",
+  "account_index": 0,
+  "job_name": "兼职·女装线上短视频运营20-35元/时上海查看职位",
+  "company": "上海恬媛服饰有限公司",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "03:34",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393937124647683",
+      "block": "03:34 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "你好啊，可以聊一聊~",
+      "time": "05:24",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393964223927040",
+      "block": "05:24 你好啊，可以聊一聊~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好啊，可以聊一聊~"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢回复。我对女装线上短视频运营的岗位很感兴趣，想进一步了解具体的工作内容和要求，方便介绍一下吗？",
+      "text": "您好，感谢回复。我对女装线上短视频运营的岗位很感兴趣，想进一步了解具体的工作内容和要求，方便介绍一下吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 05:25:41",
+      "time": "05:25",
+      "job_name": "兼职·女装线上短视频运营20-35元/时上海查看职位",
+      "isFriend": false,
+      "mid": "393964527354624"
+    },
+    {
+      "sender": "bot",
+      "content": "丁琼您好，之前聊的兼职·女装线上短视频运营20-35元/时上海查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "text": "丁琼您好，之前聊的兼职·女装线上短视频运营20-35元/时上海查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-07 17:15:58",
+      "time": "17:15",
+      "job_name": "兼职·女装线上短视频运营20-35元/时上海查看职位",
+      "isFriend": false,
+      "mid": "394139092648705"
+    }
+  ],
+  "updated_at": "2026-10-09 11:09:01",
+  "unread_on_boss": 0
+}

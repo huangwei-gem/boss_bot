@@ -1,0 +1,50 @@
+{
+  "chat_name": "乔一然",
+  "chat_id": "乔一然#北京一览科技有限公司",
+  "account_index": 1,
+  "job_name": "兼职·数据标注（线上兼职）1000-6500元/月北京查看职位",
+  "company": "北京一览科技有限公司",
+  "messages": [
+    {
+      "text": "您好，我对贵司的数据标注线上兼职岗位很感兴趣。我具备统计学背景和数据分析技能，熟悉Excel、SQL、Python，能高效完成数据标注任务，期待与您进一步沟通。",
+      "time": "昨天 02:25",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393212511568384",
+      "block": "昨天 02:25 送达 您好，我对贵司的数据标注线上兼职岗位很感兴趣。我具备统计学背景和数据分析技能，熟悉Excel、SQL、Python，能高效完成数据标注任务，期待与您进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对贵司的数据标注线上兼职岗位很感兴趣。我具备统计学背景和数据分析技能，熟悉Excel、SQL、Python，能高效完成数据标注任务，期待与您进一步沟通。"
+    },
+    {
+      "text": "感谢您的关注，很遗憾不能与您共事。祝您在BOSS直聘上找到更匹配的工作机会",
+      "time": "17:59",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394503578259971",
+      "block": "17:59 感谢您的关注，很遗憾不能与您共事。祝您在BOSS直聘上找到更匹配的工作机会",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢您的关注，很遗憾不能与您共事。祝您在BOSS直聘上找到更匹配的工作机会"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-08 18:15:34",
+      "time": "18:15",
+      "job_name": "兼职·数据标注（线上兼职）1000-6500元/月北京查看职位",
+      "isFriend": false,
+      "mid": "394507641233920"
+    }
+  ],
+  "updated_at": "2026-10-10 01:58:55",
+  "unread_on_boss": 0
+}

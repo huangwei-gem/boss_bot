@@ -1,0 +1,65 @@
+{
+  "chat_name": "王女士",
+  "chat_id": "王女士#西安超算力教育科技",
+  "account_index": 1,
+  "job_name": "兼职·高中数学兼职老师3000-4000元/月西安查看职位",
+  "company": "西安超算力教育科技",
+  "messages": [
+    {
+      "text": "你好，还考虑新的机会吗？",
+      "time": "21:50",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393144863539712",
+      "block": "21:50 你好，还考虑新的机会吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，还考虑新的机会吗？"
+    },
+    {
+      "sender": "bot",
+      "content": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+      "text": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rule",
+      "action": "text",
+      "timestamp": "2026-10-04 21:52:23",
+      "time": "21:52",
+      "job_name": "兼职·高中数学兼职老师3000-4000元/月西安查看职位",
+      "isFriend": false,
+      "mid": "393145321509378"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-08 10:27:57",
+      "time": "10:27",
+      "job_name": "兼职·高中数学兼职老师3000-4000元/月西安查看职位",
+      "isFriend": false,
+      "mid": "394392720867842"
+    },
+    {
+      "text": "我们就是线上的啊.",
+      "time": "11:05",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394401888489986",
+      "block": "11:05 我们就是线上的啊.",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "我们就是线上的啊."
+    }
+  ],
+  "updated_at": "2026-10-10 02:43:50",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,64 @@
+{
+  "chat_name": "范先生",
+  "chat_id": "范先生#晋城市壹羽文化传媒",
+  "account_index": 0,
+  "job_name": "网络客服5-6K晋城查看职位",
+  "company": "晋城市壹羽文化传媒",
+  "messages": [
+    {
+      "text": "请问对我们的网络客服岗位感兴趣吗？",
+      "time": "23:51",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394944058749184",
+      "block": "23:51 请问对我们的网络客服岗位感兴趣吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "请问对我们的网络客服岗位感兴趣吗？"
+    },
+    {
+      "text": "您好，今年在校吗？我们这边需要校园代理哦，全职兼职都可以的",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394944064422144",
+      "block": "您好，今年在校吗？我们这边需要校园代理哦，全职兼职都可以的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好，今年在校吗？我们这边需要校园代理哦，全职兼职都可以的"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，我目前本科在读。不过我的求职方向是数据标注、数据分析类线上兼职，校园代理岗位和我的方向不太匹配，请问您这边有相关岗位吗？",
+      "text": "您好，我目前本科在读。不过我的求职方向是数据标注、数据分析类线上兼职，校园代理岗位和我的方向不太匹配，请问您这边有相关岗位吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-09 23:53:09",
+      "time": "23:53",
+      "job_name": "网络客服5-6K晋城查看职位",
+      "isFriend": false,
+      "mid": "394944471191809"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，我今年在校的。不过校园代理与我的求职方向确实不太匹配，我更想做数据标注、数据分析类的线上兼职，您这边如有相关岗位欢迎推荐给我~",
+      "text": "您好，我今年在校的。不过校园代理与我的求职方向确实不太匹配，我更想做数据标注、数据分析类的线上兼职，您这边如有相关岗位欢迎推荐给我~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 02:00:59",
+      "time": "02:00",
+      "job_name": "网络客服5-6K晋城查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 02:00:59",
+  "unread_on_boss": 0
+}

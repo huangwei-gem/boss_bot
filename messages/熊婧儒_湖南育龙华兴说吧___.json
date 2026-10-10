@@ -1,0 +1,50 @@
+{
+  "chat_name": "熊婧儒",
+  "chat_id": "熊婧儒#湖南育龙华兴说吧___",
+  "account_index": 0,
+  "job_name": "兼职·线上英语助教40-50元/时长沙查看职位",
+  "company": "湖南育龙华兴说吧...",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:12",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393902339547139",
+      "block": "01:12 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-08 10:09:34",
+      "time": "10:09",
+      "job_name": "兼职·线上英语助教40-50元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "394388201594882"
+    },
+    {
+      "text": "这个就是线上远程教学",
+      "time": "14:44",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394809727766531",
+      "block": "14:44 这个就是线上远程教学",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "这个就是线上远程教学"
+    }
+  ],
+  "updated_at": "2026-10-10 01:13:56",
+  "unread_on_boss": 0
+}

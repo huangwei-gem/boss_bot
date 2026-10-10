@@ -1,0 +1,50 @@
+{
+  "chat_name": "杩女士",
+  "chat_id": "杩女士#北京人和创建",
+  "account_index": 0,
+  "job_name": "GaussDB数据库运维-国网/电力9-11K长沙查看职位",
+  "company": "北京人和创建",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 08:27",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387992907727618",
+      "block": "09-20 08:27 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "387993320305409",
+      "block": "不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，祝您招聘顺利~",
+      "text": "好的，感谢您的时间，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-05 01:10:38",
+      "time": "01:10",
+      "job_name": "GaussDB数据库运维-国网/电力9-11K长沙查看职位",
+      "isFriend": false,
+      "mid": "393194047800064"
+    }
+  ],
+  "updated_at": "2026-10-10 07:03:49",
+  "unread_on_boss": 0
+}

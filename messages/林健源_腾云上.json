@@ -1,0 +1,22 @@
+{
+  "chat_name": "林健源",
+  "chat_id": "林健源#腾云上",
+  "account_index": 0,
+  "job_name": "兼职·AI生成数据专家-金融方向1000-4000元/时深圳查看职位",
+  "company": "腾云上",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "03:02",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393929243554562",
+      "block": "03:02 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-08 15:21:27"
+}

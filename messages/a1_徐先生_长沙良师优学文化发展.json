@@ -1,0 +1,36 @@
+{
+  "chat_name": "徐先生",
+  "chat_id": "徐先生#长沙良师优学文化发展",
+  "account_index": 1,
+  "job_name": "兼职·小红书线上兼职100-200元/周长沙查看职位",
+  "company": "长沙良师优学文化发展",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:55",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "392998593929728",
+      "block": "11:55 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我对小红书线上兼职岗位很感兴趣，我有数据分析基础，熟悉Excel、SQL和Python，能胜任线上工作，期待与您进一步沟通。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "392998781927936",
+      "block": "送达 您好，我对小红书线上兼职岗位很感兴趣，我有数据分析基础，熟悉Excel、SQL和Python，能胜任线上工作，期待与您进一步沟通。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对小红书线上兼职岗位很感兴趣，我有数据分析基础，熟悉Excel、SQL和Python，能胜任线上工作，期待与您进一步沟通。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-05 21:08:43"
+}

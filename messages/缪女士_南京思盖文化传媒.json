@@ -1,0 +1,35 @@
+{
+  "chat_name": "缪女士",
+  "chat_id": "缪女士#南京思盖文化传媒",
+  "account_index": 0,
+  "job_name": "客服专员4-8K长沙查看职位",
+  "company": "南京思盖文化传媒",
+  "messages": [
+    {
+      "text": "你好，留意到你有相关工作经验，咱们这边岗位很适合你 ，方便简单沟通一下吗！",
+      "time": "09-22 15:05",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388798603830018",
+      "block": "09-22 15:05 你好，留意到你有相关工作经验，咱们这边岗位很适合你 ，方便简单沟通一下吗！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，留意到你有相关工作经验，咱们这边岗位很适合你 ，方便简单沟通一下吗！"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388798603883265",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-06 20:18:15"
+}

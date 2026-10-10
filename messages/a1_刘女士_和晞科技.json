@@ -1,0 +1,36 @@
+{
+  "chat_name": "刘女士",
+  "chat_id": "刘女士#和晞科技",
+  "account_index": 1,
+  "job_name": "兼职·数据标注兼职100-150元/天大同查看职位",
+  "company": "和晞科技",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:19",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "392989817508353",
+      "block": "11:19 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学本科，熟悉Excel、SQL和Python，有数据报表与分析经验。看到贵司数据标注兼职岗位，相关工作内容我可以远程完成，期望能有机会合作，期待您的回复！",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "392990001971712",
+      "block": "送达 您好，我是统计学本科，熟悉Excel、SQL和Python，有数据报表与分析经验。看到贵司数据标注兼职岗位，相关工作内容我可以远程完成，期望能有机会合作，期待您的回复！",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科，熟悉Excel、SQL和Python，有数据报表与分析经验。看到贵司数据标注兼职岗位，相关工作内容我可以远程完成，期望能有机会合作，期待您的回复！",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-05 02:01:39"
+}

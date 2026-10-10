@@ -1,0 +1,23 @@
+{
+  "chat_name": "于先生",
+  "chat_id": "于先生#山东紫藤苑生态科技",
+  "account_index": 1,
+  "job_name": "兼职·数据标注专员20-25元/时聊城查看职位",
+  "company": "山东紫藤苑生态科技",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 00:27",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393537423602432",
+      "block": "昨天 00:27 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-07 21:09:25"
+}

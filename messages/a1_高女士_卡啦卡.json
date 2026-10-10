@@ -1,0 +1,91 @@
+{
+  "chat_name": "高女士",
+  "chat_id": "高女士#卡啦卡",
+  "account_index": 1,
+  "job_name": "数据分析师（商户线索挖掘）8-10K上海查看职位",
+  "company": "卡啦卡",
+  "messages": [
+    {
+      "text": "",
+      "time": "08:44",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "391182174540288",
+      "block": "08:44 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "391182364398084",
+      "block": "已读 您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "暂时不招收实习生，需要至少一年的数分工作经验",
+      "time": "17:38",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "391313384559107",
+      "block": "17:38 暂时不招收实习生，需要至少一年的数分工作经验",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "暂时不招收实习生，需要至少一年的数分工作经验"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的说明，理解岗位要求，祝您招聘顺利~",
+      "text": "感谢您的说明，理解岗位要求，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-05 01:18:30",
+      "time": "01:18",
+      "job_name": "数据分析师（商户线索挖掘）8-10K上海查看职位",
+      "isFriend": false,
+      "mid": "393195979411968"
+    },
+    {
+      "sender": "bot",
+      "content": "高女士您好，之前聊的数据分析师（商户线索挖掘）8-10K上海查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "text": "高女士您好，之前聊的数据分析师（商户线索挖掘）8-10K上海查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-06 17:35:17",
+      "time": "17:35",
+      "job_name": "数据分析师（商户线索挖掘）8-10K上海查看职位",
+      "isFriend": false,
+      "mid": "393789919339009"
+    },
+    {
+      "text": "目前在招的是全职，不招实习生呢",
+      "time": "10:16",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394389787062786",
+      "block": "10:16 目前在招的是全职，不招实习生呢",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "目前在招的是全职，不招实习生呢"
+    }
+  ],
+  "updated_at": "2026-10-10 02:39:16",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,22 @@
+{
+  "chat_name": "蒋思嘉",
+  "chat_id": "蒋思嘉#极兔速递",
+  "account_index": 0,
+  "job_name": "数据分析师6-9K长沙查看职位",
+  "company": "极兔速递",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 09:44",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "388011827761921",
+      "block": "09-20 09:44 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-04 23:59:51"
+}

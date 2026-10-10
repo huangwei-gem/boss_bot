@@ -1,0 +1,65 @@
+{
+  "chat_name": "魏先生",
+  "chat_id": "魏先生#新音梦文化传播",
+  "account_index": 1,
+  "job_name": "消息秒回师8-12K长沙查看职位",
+  "company": "新音梦文化传播",
+  "messages": [
+    {
+      "text": "你好哦，招聘一个不用抛头露面的副业，语音厅线上主播，只出声就行，时间段随便安排，接受小白哈，兼职全职都可 可不可以跟你聊下呀～",
+      "time": "18:56",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394163742372354",
+      "block": "18:56 你好哦，招聘一个不用抛头露面的副业，语音厅线上主播，只出声就行，时间段随便安排，接受小白哈，兼职全职都可 可不可以跟你聊下呀～",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好哦，招聘一个不用抛头露面的副业，语音厅线上主播，只出声就行，时间段随便安排，接受小白哈，兼职全职都可 可不可以跟你聊下呀～"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 18:56:42",
+      "time": "18:56",
+      "job_name": "消息秒回师8-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "394163847438850"
+    },
+    {
+      "text": "我们认真审阅了您的简历，但暂不完全匹配岗位情况。祝您在BOSS直聘找到更合适的机会！",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394164343222785",
+      "block": "我们认真审阅了您的简历，但暂不完全匹配岗位情况。祝您在BOSS直聘找到更合适的机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "我们认真审阅了您的简历，但暂不完全匹配岗位情况。祝您在BOSS直聘找到更合适的机会！"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-07 18:59:03",
+      "time": "18:59",
+      "job_name": "消息秒回师8-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "394164423561728"
+    }
+  ],
+  "updated_at": "2026-10-09 13:03:13",
+  "unread_on_boss": 0
+}

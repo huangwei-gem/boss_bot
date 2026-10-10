@@ -1,0 +1,74 @@
+{
+  "chat_name": "张女士",
+  "chat_id": "张女士#长沙优小优网络科技",
+  "account_index": 0,
+  "job_name": "兼职·线上兼职英语口语老师80-100元/时长沙查看职位",
+  "company": "长沙优小优网络科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "06:13",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394330237874946",
+      "block": "06:13 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "你好啊，可以聊一聊~",
+      "time": "09:38",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394380571591427",
+      "block": "09:38 你好啊，可以聊一聊~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好啊，可以聊一聊~"
+    },
+    {
+      "text": "您好 此岗位需要一个1-3min的英语自我介绍视频 请问方便发我吗~",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394380583633666",
+      "block": "您好 此岗位需要一个1-3min的英语自我介绍视频 请问方便发我吗~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好 此岗位需要一个1-3min的英语自我介绍视频 请问方便发我吗~"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-08 13:03:29",
+      "time": "13:03",
+      "job_name": "兼职·线上兼职英语口语老师80-100元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "394430942745346"
+    },
+    {
+      "text": "您好 我们这个就是线上兼职哦~",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394431790519043",
+      "block": "您好 我们这个就是线上兼职哦~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好 我们这个就是线上兼职哦~"
+    }
+  ],
+  "updated_at": "2026-10-10 07:23:39",
+  "unread_on_boss": 0
+}

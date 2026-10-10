@@ -1,0 +1,91 @@
+{
+  "chat_name": "赵春",
+  "chat_id": "赵春#南阳市卧龙区云启___",
+  "account_index": 1,
+  "job_name": "兼职·数据标注员10-30元/时南阳查看职位",
+  "company": "南阳市卧龙区云启...",
+  "messages": [
+    {
+      "text": "",
+      "time": "12:24",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394421322752770",
+      "block": "12:24 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学专业在读生，有丰富的文本/图像/语音标注经验，熟悉AI训练数据全流程质检，能快速上手标注任务，期待合作机会",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394421439517442",
+      "block": "已读 您好，我是统计学专业在读生，有丰富的文本/图像/语音标注经验，熟悉AI训练数据全流程质检，能快速上手标注任务，期待合作机会",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，有丰富的文本/图像/语音标注经验，熟悉AI训练数据全流程质检，能快速上手标注任务，期待合作机会",
+      "reply_source": "greet"
+    },
+    {
+      "text": "点云做过吗",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394421622473473",
+      "block": "点云做过吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "点云做过吗"
+    },
+    {
+      "sender": "bot",
+      "content": "有经验的，标注这块文本、图像、语音都做过，数据整理和分析也用 Excel/SQL/Python 跑过，AI 工具日常都在用。方便的话我发份简历给您细聊~",
+      "text": "有经验的，标注这块文本、图像、语音都做过，数据整理和分析也用 Excel/SQL/Python 跑过，AI 工具日常都在用。方便的话我发份简历给您细聊~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-08 12:33:46",
+      "time": "12:33",
+      "job_name": "兼职·数据标注员10-30元/时南阳查看职位",
+      "isFriend": false,
+      "mid": "394423650644737"
+    },
+    {
+      "text": "点云做过吗",
+      "time": "昨天 12:40",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394425230525189",
+      "block": "昨天 12:40 点云做过吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "点云做过吗"
+    },
+    {
+      "sender": "bot",
+      "content": "有的，我做过标注、数据处理这类项目：文本/图像/语音标注都做过，数据整理和分析也用 Excel/SQL/Python 跑过，AI 工具日常都在用。方便的话我发份简历给您细聊~",
+      "text": "有的，我做过标注、数据处理这类项目：文本/图像/语音标注都做过，数据整理和分析也用 Excel/SQL/Python 跑过，AI 工具日常都在用。方便的话我发份简历给您细聊~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-10 02:46:06",
+      "time": "02:46",
+      "job_name": "兼职·数据标注员10-30元/时南阳查看职位",
+      "isFriend": false,
+      "mid": "394986975253248"
+    }
+  ],
+  "updated_at": "2026-10-10 03:05:39",
+  "unread_on_boss": 0
+}

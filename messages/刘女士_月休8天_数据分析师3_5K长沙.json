@@ -1,0 +1,24 @@
+{
+  "chat_name": "刘女士",
+  "chat_id": "刘女士#月休8天_数据分析师3_5K长沙",
+  "account_index": 0,
+  "company": "",
+  "job_name": "月休8天-数据分析师3-5K长沙查看职位",
+  "updated_at": "2026-10-04 22:08:19",
+  "messages": [
+    {
+      "sender": "bot",
+      "content": "[简历已发送]",
+      "text": "[简历已发送]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "backfill",
+      "action": "resume",
+      "timestamp": "2026-10-04 14:00:19",
+      "time": "14:00",
+      "job_name": "月休8天-数据分析师3-5K长沙查看职位",
+      "isFriend": false
+    }
+  ]
+}

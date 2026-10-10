@@ -1,0 +1,22 @@
+{
+  "chat_name": "李先生",
+  "chat_id": "李先生#东平全星数字科技",
+  "account_index": 1,
+  "job_name": "兼职·数据采集10-30元/时泰安查看职位",
+  "company": "东平全星数字科技",
+  "messages": [
+    {
+      "text": "您好，我有数据分析基础，熟悉Excel、SQL和Python，对数据采集工作很感兴趣，希望能进一步沟通。",
+      "time": "昨天 03:30",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393228525228800",
+      "block": "昨天 03:30 送达 您好，我有数据分析基础，熟悉Excel、SQL和Python，对数据采集工作很感兴趣，希望能进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我有数据分析基础，熟悉Excel、SQL和Python，对数据采集工作很感兴趣，希望能进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-07 16:25:16"
+}

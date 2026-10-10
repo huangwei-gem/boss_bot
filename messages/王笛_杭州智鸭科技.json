@@ -1,0 +1,22 @@
+{
+  "chat_name": "王笛",
+  "chat_id": "王笛#杭州智鸭科技",
+  "account_index": 0,
+  "job_name": "兼职·ai数据标注员20-25元/时舟山查看职位",
+  "company": "杭州智鸭科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "05:04",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394313274237697",
+      "block": "05:04 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-09 14:02:25"
+}

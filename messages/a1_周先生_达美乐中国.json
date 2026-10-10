@@ -1,0 +1,36 @@
+{
+  "chat_name": "周先生",
+  "chat_id": "周先生#达美乐中国",
+  "account_index": 1,
+  "job_name": "商业数据分析师10-15K上海查看职位",
+  "company": "达美乐中国",
+  "messages": [
+    {
+      "text": "",
+      "time": "00:21",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394951539806977",
+      "block": "00:21 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学本科在读，具备数据分析与数据标注经验，熟练使用Excel/SQL/Python进行数据整理和可视化分析。看到贵司在招商业数据分析师，非常感兴趣，方便的话我把简历发您细聊",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394951674577664",
+      "block": "送达 您好，我是统计学本科在读，具备数据分析与数据标注经验，熟练使用Excel/SQL/Python进行数据整理和可视化分析。看到贵司在招商业数据分析师，非常感兴趣，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，具备数据分析与数据标注经验，熟练使用Excel/SQL/Python进行数据整理和可视化分析。看到贵司在招商业数据分析师，非常感兴趣，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-10 09:15:41"
+}

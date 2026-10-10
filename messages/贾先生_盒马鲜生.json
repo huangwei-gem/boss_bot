@@ -1,0 +1,51 @@
+{
+  "chat_name": "贾先生",
+  "chat_id": "贾先生#盒马鲜生",
+  "account_index": 0,
+  "job_name": "长沙急招年轻人！欢迎新手小白加入！6-8K长沙查看职位",
+  "company": "盒马鲜生",
+  "messages": [
+    {
+      "text": "想与你沟通下我们在招的这个职位，现在方便吗？",
+      "time": "17:24",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394141197492483",
+      "block": "17:24 想与你沟通下我们在招的这个职位，现在方便吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "想与你沟通下我们在招的这个职位，现在方便吗？"
+    },
+    {
+      "text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394141197500677",
+      "block": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "sender": "hr",
+      "kind": "system",
+      "content": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "card_text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址"
+    },
+    {
+      "sender": "bot",
+      "content": "方便的。不过我目前主要看线上兼职方向（数据标注、线上运营助理类），想先确认下这个岗位是否有线上或兼职的形式？",
+      "text": "方便的。不过我目前主要看线上兼职方向（数据标注、线上运营助理类），想先确认下这个岗位是否有线上或兼职的形式？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 17:25:42",
+      "time": "17:25",
+      "job_name": "长沙急招年轻人！欢迎新手小白加入！6-8K长沙查看职位",
+      "isFriend": false,
+      "mid": "394141483217156"
+    }
+  ],
+  "updated_at": "2026-10-09 11:03:55",
+  "unread_on_boss": 0
+}

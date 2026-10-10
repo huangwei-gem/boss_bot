@@ -1,0 +1,80 @@
+{
+  "chat_name": "蒋先生",
+  "chat_id": "蒋先生#上海从鲸信息技术",
+  "account_index": 1,
+  "job_name": "数据分析师20-40K·18薪上海查看职位",
+  "company": "上海从鲸信息技术",
+  "messages": [
+    {
+      "text": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "time": "10:58",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "391215068803588",
+      "block": "10:58 已读 您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "【拼多多27届校招正式批】官方内推链接： https://careers.pddglobalhr.com/campus/grad?t=fAKRo7zS43   内推码：fAKRo7zS43同学，请使用上面内推链接注册，简历优先筛选！同批次可投多个岗位，需要你登录链接注册才能投递至公司人才库，也欢迎转发分享给你的同学们～⚠️注意：仅限毕业时间在2026年9月～2027年8月的同学。不符者请投递社招岗位：https://careers.pddglobalhr.com/jobs期待你的加入！",
+      "time": "19:30",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "391341000139266",
+      "block": "19:30 【拼多多27届校招正式批】官方内推链接： https://careers.pddglobalhr.com/campus/grad?t=fAKRo7zS43 内推码：fAKRo7zS43 同学，请使用上面内推链接注册，简历优先筛选！同批次可投多个岗位，需要你登录链接注册才能投递至公司人才库，也欢迎转发分享给你的同学们～ ⚠️注意：仅限毕业时间在2026年9月～2027年8月的同学。不符者请投递社招岗位：https://careers.pddglobalhr.com/jobs 期待你的加入！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "【拼多多27届校招正式批】官方内推链接： https://careers.pddglobalhr.com/campus/grad?t=fAKRo7zS43   内推码：fAKRo7zS43同学，请使用上面内推链接注册，简历优先筛选！同批次可投多个岗位，需要你登录链接注册才能投递至公司人才库，也欢迎转发分享给你的同学们～⚠️注意：仅限毕业时间在2026年9月～2027年8月的同学。不符者请投递社招岗位：https://careers.pddglobalhr.com/jobs期待你的加入！"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-05 01:25:00",
+      "time": "01:25",
+      "job_name": "数据分析师20-40K·18薪上海查看职位",
+      "isFriend": false,
+      "mid": "393197579760129"
+    },
+    {
+      "sender": "bot",
+      "content": "蒋先生您好，之前聊的数据分析师20-40K·18薪上海查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "text": "蒋先生您好，之前聊的数据分析师20-40K·18薪上海查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-06 17:35:51",
+      "time": "17:35",
+      "job_name": "数据分析师20-40K·18薪上海查看职位",
+      "isFriend": false,
+      "mid": "393790061916673"
+    },
+    {
+      "sender": "bot",
+      "content": "蒋先生您好，上海从鲸信息技术这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "蒋先生您好，上海从鲸信息技术这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 07:32:13",
+      "time": "07:32",
+      "job_name": "数据分析师20-40K·18薪上海查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 07:32:13",
+  "unread_on_boss": 0
+}

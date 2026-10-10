@@ -1,0 +1,77 @@
+{
+  "chat_name": "王女士",
+  "chat_id": "王女士#金华见山观溪健康科技",
+  "account_index": 1,
+  "job_name": "兼职·短视频运营专员（远程线上，每月四条）1000-2000元/月金华查看职位",
+  "company": "金华见山观溪健康科技",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业学生，有数据标注和AI训练数据质检经验，看到贵司招聘远程短视频运营岗位，方便的话我把简历发您细聊？",
+      "time": "10-08 15:23",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394465321922817",
+      "block": "10-08 15:23 已读 您好，我是统计学专业学生，有数据标注和AI训练数据质检经验，看到贵司招聘远程短视频运营岗位，方便的话我把简历发您细聊？",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业学生，有数据标注和AI训练数据质检经验，看到贵司招聘远程短视频运营岗位，方便的话我把简历发您细聊？"
+    },
+    {
+      "text": "你好啊，可以聊一聊~",
+      "time": "10-08 21:09",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394550469255425",
+      "block": "10-08 21:09 你好啊，可以聊一聊~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好啊，可以聊一聊~"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394550477361409",
+      "block": "我想要一份您的附件简历，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，简历刚刚已经发您了，您看一下，有任何问题随时沟通~",
+      "text": "您好，简历刚刚已经发您了，您看一下，有任何问题随时沟通~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-10 00:58:11",
+      "time": "00:58",
+      "job_name": "兼职·短视频运营专员（远程线上，每月四条）1000-2000元/月金华查看职位",
+      "isFriend": false,
+      "mid": "394960455065857"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，简历刚刚已经发您了，您看一下，有任何问题随时沟通~",
+      "text": "您好，简历刚刚已经发您了，您看一下，有任何问题随时沟通~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-10 04:30:29",
+      "time": "04:30",
+      "job_name": "兼职·短视频运营专员（远程线上，每月四条）1000-2000元/月金华查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 04:30:29",
+  "unread_on_boss": 0
+}

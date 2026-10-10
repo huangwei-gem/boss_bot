@@ -1,0 +1,36 @@
+{
+  "chat_name": "鞠博文",
+  "chat_id": "鞠博文#翼城县三合科技服___",
+  "account_index": 1,
+  "job_name": "兼职·数据标注专员/兼职10-20元/时临汾查看职位",
+  "company": "翼城县三合科技服...",
+  "messages": [
+    {
+      "text": "",
+      "time": "00:42",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393894940324609",
+      "block": "00:42 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我对数据标注专员/兼职岗位很感兴趣。我有统计学背景，熟练使用Excel、SQL和Python，具备数据分析基础，做事认真细致，能快速理解标注规则，希望有机会参与这份兼职工作。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393895049880321",
+      "block": "送达 您好，我对数据标注专员/兼职岗位很感兴趣。我有统计学背景，熟练使用Excel、SQL和Python，具备数据分析基础，做事认真细致，能快速理解标注规则，希望有机会参与这份兼职工作。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对数据标注专员/兼职岗位很感兴趣。我有统计学背景，熟练使用Excel、SQL和Python，具备数据分析基础，做事认真细致，能快速理解标注规则，希望有机会参与这份兼职工作。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-08 15:10:34"
+}

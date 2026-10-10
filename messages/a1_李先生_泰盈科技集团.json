@@ -1,0 +1,80 @@
+{
+  "chat_name": "李先生",
+  "chat_id": "李先生#泰盈科技集团",
+  "account_index": 1,
+  "job_name": "兼职·数据采集专员35-95元/时泰安查看职位",
+  "company": "泰盈科技集团",
+  "messages": [
+    {
+      "text": "您好，我对数据采集专员岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，有业务数据报表与洞察分析经验，能够高效完成数据采集与整理工作。请问该岗位是否支持远程办公？期待您的回复。",
+      "time": "12:25",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393006090706945",
+      "block": "12:25 送达 您好，我对数据采集专员岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，有业务数据报表与洞察分析经验，能够高效完成数据采集与整理工作。请问该岗位是否支持远程办公？期待您的回复。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对数据采集专员岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，有业务数据报表与洞察分析经验，能够高效完成数据采集与整理工作。请问该岗位是否支持远程办公？期待您的回复。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "方便说一下您的年龄和学历？",
+      "time": "15:07",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393045889323011",
+      "block": "15:07 方便说一下您的年龄和学历？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "方便说一下您的年龄和学历？"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，我是本科学历，年龄方面方便的话可以在面试时再详细沟通。另外也想了解一下这个岗位是否支持远程办公，方便您回复一下吗？",
+      "text": "您好，我是本科学历，年龄方面方便的话可以在面试时再详细沟通。另外也想了解一下这个岗位是否支持远程办公，方便您回复一下吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-04 23:14:16",
+      "time": "23:14",
+      "job_name": "兼职·数据采集专员35-95元/时泰安查看职位",
+      "isFriend": false,
+      "mid": "393165445844994"
+    },
+    {
+      "sender": "bot",
+      "content": "李先生您好，之前聊的兼职·数据采集专员35-95元/时泰安查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "李先生您好，之前聊的兼职·数据采集专员35-95元/时泰安查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-08 18:43:24",
+      "time": "18:43",
+      "job_name": "兼职·数据采集专员35-95元/时泰安查看职位",
+      "isFriend": false,
+      "mid": "394514485616641"
+    },
+    {
+      "sender": "bot",
+      "content": "李先生您好，泰盈科技集团这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "李先生您好，泰盈科技集团这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 08:02:50",
+      "time": "08:02",
+      "job_name": "兼职·数据采集专员35-95元/时泰安查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 08:02:50",
+  "unread_on_boss": 0
+}

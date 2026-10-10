@@ -1,0 +1,87 @@
+{
+  "chat_name": "许先生",
+  "chat_id": "许先生#泰盈科技集团",
+  "account_index": 1,
+  "job_name": "兼职·爱琴海老街  兼职兼职AI数据标注 时间自选20-30元/时泰安查看职位",
+  "company": "泰盈科技集团",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 02:01",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393206603616768",
+      "block": "昨天 02:01 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我对贵司的兼职AI数据标注岗位很感兴趣。我具备统计学背景和数据分析技能，能快速理解标注规则并保证质量。时间自选也很适合我，期待有机会合作。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393206794342912",
+      "block": "已读 您好，我对贵司的兼职AI数据标注岗位很感兴趣。我具备统计学背景和数据分析技能，能快速理解标注规则并保证质量。时间自选也很适合我，期待有机会合作。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对贵司的兼职AI数据标注岗位很感兴趣。我具备统计学背景和数据分析技能，能快速理解标注规则并保证质量。时间自选也很适合我，期待有机会合作。"
+    },
+    {
+      "text": "你好啊，可以聊一聊~",
+      "time": "昨天 08:41",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393304863908352",
+      "block": "昨天 08:41 你好啊，可以聊一聊~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好啊，可以聊一聊~"
+    },
+    {
+      "text": "不好意思目前不支持线上的兼职呢",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393304948138497",
+      "block": "不好意思目前不支持线上的兼职呢",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思目前不支持线上的兼职呢"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-07 05:51:10",
+      "time": "05:51",
+      "job_name": "兼职·爱琴海老街  兼职兼职AI数据标注 时间自选20-30元/时泰安查看职位",
+      "isFriend": false,
+      "mid": "393970789978625"
+    },
+    {
+      "text": "祝你早日找到合适的工作",
+      "time": "09:27",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394023854072323",
+      "block": "09:27 祝你早日找到合适的工作",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "祝你早日找到合适的工作"
+    }
+  ],
+  "updated_at": "2026-10-10 00:45:24",
+  "unread_on_boss": 0
+}

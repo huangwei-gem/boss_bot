@@ -1,0 +1,92 @@
+{
+  "chat_name": "潘女士",
+  "chat_id": "潘女士#湖南永盛精密科技",
+  "account_index": 0,
+  "job_name": "普工/操作工5000-6000元/月长沙查看职位",
+  "company": "湖南永盛精密科技",
+  "messages": [
+    {
+      "text": "你好，看了你的简历，不知道可否深入聊聊",
+      "time": "10:16",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394035998581505",
+      "block": "10:16 你好，看了你的简历，不知道可否深入聊聊",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，看了你的简历，不知道可否深入聊聊"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，潘女士，感谢您的关注。不过我目前求职方向主要是线上兼职（数据标注、线上运营助理、数据分析），不太符合普工/操作工岗位，请问贵司有其他匹配的岗位吗？",
+      "text": "您好，潘女士，感谢您的关注。不过我目前求职方向主要是线上兼职（数据标注、线上运营助理、数据分析），不太符合普工/操作工岗位，请问贵司有其他匹配的岗位吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 10:17:33",
+      "time": "10:17",
+      "job_name": "普工/操作工5000-6000元/月长沙查看职位",
+      "isFriend": false,
+      "mid": "394036258996994"
+    },
+    {
+      "text": "祝你早日找到合适的工作",
+      "time": "10:23",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394037643051776",
+      "block": "10:23 祝你早日找到合适的工作",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "祝你早日找到合适的工作"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的理解，祝您招聘顺利~",
+      "text": "感谢您的理解，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 10:25:29",
+      "time": "10:25",
+      "job_name": "普工/操作工5000-6000元/月长沙查看职位",
+      "isFriend": false,
+      "mid": "394038210810624"
+    },
+    {
+      "text": "祝你早日找到合适的工作",
+      "time": "10:36",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394040785502976",
+      "block": "10:36 祝你早日找到合适的工作",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "祝你早日找到合适的工作"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 13:11:07",
+      "time": "13:11",
+      "job_name": "普工/操作工5000-6000元/月长沙查看职位",
+      "isFriend": false,
+      "mid": "394078912987904"
+    }
+  ],
+  "updated_at": "2026-10-09 11:36:11",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,24 @@
+{
+  "chat_name": "孙先生",
+  "chat_id": "孙先生#数据分析师150_200元_天上海",
+  "account_index": 1,
+  "company": "",
+  "job_name": "数据分析师150-200元/天上海查看职位",
+  "updated_at": "2026-10-03 13:29:25",
+  "messages": [
+    {
+      "sender": "bot",
+      "content": "[简历已发送]",
+      "text": "[简历已发送]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "backfill",
+      "action": "resume",
+      "timestamp": "2026-10-03 13:29:25",
+      "time": "13:29",
+      "job_name": "数据分析师150-200元/天上海查看职位",
+      "isFriend": false
+    }
+  ]
+}

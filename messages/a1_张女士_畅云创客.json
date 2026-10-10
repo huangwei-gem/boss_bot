@@ -1,0 +1,78 @@
+{
+  "chat_name": "张女士",
+  "chat_id": "张女士#畅云创客",
+  "account_index": 1,
+  "job_name": "兼职·数据采集标注员（长期兼职）4000-5000元/月湖州查看职位",
+  "company": "畅云创客",
+  "messages": [
+    {
+      "text": "",
+      "time": "12:38",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394424839176705",
+      "block": "12:38 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我对贵司数据采集标注员岗位很感兴趣。作为统计学专业学生，我已完成多个AI训练数据标注项目，熟悉标注规范制定与质检流程，可立即开展线上工作。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394424952386052",
+      "block": "已读 您好，我对贵司数据采集标注员岗位很感兴趣。作为统计学专业学生，我已完成多个AI训练数据标注项目，熟悉标注规范制定与质检流程，可立即开展线上工作。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对贵司数据采集标注员岗位很感兴趣。作为统计学专业学生，我已完成多个AI训练数据标注项目，熟悉标注规范制定与质检流程，可立即开展线上工作。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "抱歉 过往工作经历不太匹配哈",
+      "time": "14:07",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394446588215808",
+      "block": "14:07 抱歉 过往工作经历不太匹配哈",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "抱歉 过往工作经历不太匹配哈"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "text": "感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-08 14:08:49",
+      "time": "14:08",
+      "job_name": "兼职·数据采集标注员（长期兼职）4000-5000元/月湖州查看职位",
+      "isFriend": false,
+      "mid": "394447001383424"
+    },
+    {
+      "sender": "bot",
+      "content": "收到，谢谢张女士告知，祝工作顺利。",
+      "text": "收到，谢谢张女士告知，祝工作顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 01:18:47",
+      "time": "01:18",
+      "job_name": "兼职·数据采集标注员（长期兼职）4000-5000元/月湖州查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 01:18:47",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,64 @@
+{
+  "chat_name": "吴女士",
+  "chat_id": "吴女士#万图科技",
+  "account_index": 1,
+  "job_name": "兼职·高级文本编辑+AI数据加工（线上兼职）150-200元/时北京查看职位",
+  "company": "万图科技",
+  "messages": [
+    {
+      "text": "",
+      "time": "12:20",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394420277535234",
+      "block": "12:20 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是双一流的本科，想找数据分析/数据标注方向的线上兼职。有经验的：文本/图像/语音标注都做过，也用 Excel、SQL、Python 跑数据整理和报表分析，AI 工具日常都在用。看到贵司这个岗位和我的方向挺匹配，方便的话想把简历发您细聊，工作日下午可以面试。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394420449522176",
+      "block": "已读 您好，我是双一流的本科，想找数据分析/数据标注方向的线上兼职。有经验的：文本/图像/语音标注都做过，也用 Excel、SQL、Python 跑数据整理和报表分析，AI 工具日常都在用。看到贵司这个岗位和我的方向挺匹配，方便的话想把简历发您细聊，工作日下午可以面试。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是双一流的本科，想找数据分析/数据标注方向的线上兼职。有经验的：文本/图像/语音标注都做过，也用 Excel、SQL、Python 跑数据整理和报表分析，AI 工具日常都在用。看到贵司这个岗位和我的方向挺匹配，方便的话想把简历发您细聊，工作日下午可以面试。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "13:05",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394431408628227",
+      "block": "13:05 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "text": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-08 13:11:47",
+      "time": "13:11",
+      "job_name": "兼职·高级文本编辑+AI数据加工（线上兼职）150-200元/时北京查看职位",
+      "isFriend": false,
+      "mid": "394432983990790"
+    }
+  ],
+  "updated_at": "2026-10-09 22:46:44",
+  "unread_on_boss": 0
+}

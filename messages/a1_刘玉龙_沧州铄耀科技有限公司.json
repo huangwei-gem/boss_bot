@@ -1,0 +1,22 @@
+{
+  "chat_name": "刘玉龙",
+  "chat_id": "刘玉龙#沧州铄耀科技有限公司",
+  "account_index": 1,
+  "job_name": "兼职·ai数据标注50-60元/天沧州查看职位",
+  "company": "沧州铄耀科技有限公司",
+  "messages": [
+    {
+      "text": "您好，我对AI数据标注岗位感兴趣，具备统计学专业背景和Python/SQL技能，能快速理解数据标注标准并完成高质量标注任务。",
+      "time": "昨天 01:42",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393555875106816",
+      "block": "昨天 01:42 送达 您好，我对AI数据标注岗位感兴趣，具备统计学专业背景和Python/SQL技能，能快速理解数据标注标准并完成高质量标注任务。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对AI数据标注岗位感兴趣，具备统计学专业背景和Python/SQL技能，能快速理解数据标注标准并完成高质量标注任务。"
+    }
+  ],
+  "updated_at": "2026-10-07 20:55:04"
+}

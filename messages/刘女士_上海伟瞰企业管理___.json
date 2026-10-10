@@ -1,0 +1,92 @@
+{
+  "chat_name": "刘女士",
+  "chat_id": "刘女士#上海伟瞰企业管理___",
+  "account_index": 0,
+  "job_name": "猎头顾问160-200元/天长沙查看职位",
+  "company": "上海伟瞰企业管理...",
+  "messages": [
+    {
+      "text": "嗨～你好呀！看到你的简历，感觉你和我们猎头顾问岗位特别有缘分～我们公司专注人力资源招聘，团队超赞，每周下午茶，还有提成奖励！有兴趣的话，欢迎发简历给我，或者咱们先聊聊你对岗位的看法～期待认识你！",
+      "time": "11:26",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394760890511617",
+      "block": "11:26 嗨～你好呀！ 看到你的简历，感觉你和我们猎头顾问岗位特别有缘分～ 我们公司专注人力资源招聘，团队超赞，每周下午茶，还有提成奖励！ 有兴趣的话，欢迎发简历给我，或者咱们先聊聊你对岗位的看法～期待认识你！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "嗨～你好呀！看到你的简历，感觉你和我们猎头顾问岗位特别有缘分～我们公司专注人力资源招聘，团队超赞，每周下午茶，还有提成奖励！有兴趣的话，欢迎发简历给我，或者咱们先聊聊你对岗位的看法～期待认识你！"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394760890581251",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的邀请，不过我的求职方向主要是数据标注、AI训练数据质检和数据分析相关的线上兼职，想请问贵司是否有这类岗位？",
+      "text": "感谢您的邀请，不过我的求职方向主要是数据标注、AI训练数据质检和数据分析相关的线上兼职，想请问贵司是否有这类岗位？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-09 11:32:06",
+      "time": "11:32",
+      "job_name": "猎头顾问160-200元/天长沙查看职位",
+      "isFriend": false,
+      "mid": "394762347606278"
+    },
+    {
+      "text": "没有哦",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394762402361600",
+      "block": "没有哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "没有哦"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的告知，那我就不打扰了。祝您招聘顺利！",
+      "text": "好的，谢谢您的告知，那我就不打扰了。祝您招聘顺利！",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-09 11:43:35",
+      "time": "11:43",
+      "job_name": "猎头顾问160-200元/天长沙查看职位",
+      "isFriend": false,
+      "mid": "394765171183875"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，祝您招聘顺利。",
+      "text": "好的，谢谢您的回复，祝您招聘顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 01:06:08",
+      "time": "01:06",
+      "job_name": "猎头顾问160-200元/天长沙查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 01:06:08",
+  "unread_on_boss": 0
+}

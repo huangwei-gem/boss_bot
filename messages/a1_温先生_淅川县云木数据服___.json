@@ -1,0 +1,35 @@
+{
+  "chat_name": "温先生",
+  "chat_id": "温先生#淅川县云木数据服___",
+  "account_index": 1,
+  "job_name": "兼职·ai数据标注50-60元/天南阳查看职位",
+  "company": "淅川县云木数据服...",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 00:52",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393543414706432",
+      "block": "昨天 00:52 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学专业学生，熟练使用Python和SQL处理数据，对AI数据标注工作有基础理解，希望能了解具体标注工具和流程要求。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393543541420289",
+      "block": "送达 您好，我是统计学专业学生，熟练使用Python和SQL处理数据，对AI数据标注工作有基础理解，希望能了解具体标注工具和流程要求。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业学生，熟练使用Python和SQL处理数据，对AI数据标注工作有基础理解，希望能了解具体标注工具和流程要求。"
+    }
+  ],
+  "updated_at": "2026-10-07 21:05:04"
+}

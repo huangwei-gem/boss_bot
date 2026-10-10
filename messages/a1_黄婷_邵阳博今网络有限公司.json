@@ -1,0 +1,22 @@
+{
+  "chat_name": "黄婷",
+  "chat_id": "黄婷#邵阳博今网络有限公司",
+  "account_index": 1,
+  "job_name": "兼职·数据标注5-20元/时邵阳查看职位",
+  "company": "邵阳博今网络有限公司",
+  "messages": [
+    {
+      "text": "您好，我有数据分析基础，熟悉Excel和Python，做事细致耐心，能胜任数据标注工作，期待进一步沟通。",
+      "time": "昨天 03:15",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393224821326336",
+      "block": "昨天 03:15 送达 您好，我有数据分析基础，熟悉Excel和Python，做事细致耐心，能胜任数据标注工作，期待进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我有数据分析基础，熟悉Excel和Python，做事细致耐心，能胜任数据标注工作，期待进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-07 16:30:43"
+}

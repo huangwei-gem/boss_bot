@@ -1,0 +1,35 @@
+{
+  "chat_name": "吴女士",
+  "chat_id": "吴女士#吉林市_桃子口腔",
+  "account_index": 0,
+  "job_name": "兼职·线上运营合作50-55元/时吉林查看职位",
+  "company": "吉林市-桃子口腔",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "00:36",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393539642344194",
+      "block": "00:36 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "你好",
+      "time": "13:53",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393735403254530",
+      "block": "13:53 你好",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好"
+    }
+  ],
+  "updated_at": "2026-10-10 01:06:45",
+  "unread_on_boss": 0
+}

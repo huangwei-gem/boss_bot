@@ -1,0 +1,50 @@
+{
+  "chat_name": "徐浩",
+  "chat_id": "徐浩#号百大数据",
+  "account_index": 1,
+  "job_name": "兼职·数据采集500-600元/天黄冈查看职位",
+  "company": "号百大数据",
+  "messages": [
+    {
+      "text": "您好～我是统计学本科，想找数据处理 线上的线上兼职机会。看到贵司这个岗位和我的方向挺匹配，方便的话想把简历发您细聊，工作日下午可以面试。",
+      "time": "01:10",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393901844476420",
+      "block": "01:10 送达 您好～我是统计学本科，想找数据处理 线上的线上兼职机会。看到贵司这个岗位和我的方向挺匹配，方便的话想把简历发您细聊，工作日下午可以面试。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好～我是统计学本科，想找数据处理 线上的线上兼职机会。看到贵司这个岗位和我的方向挺匹配，方便的话想把简历发您细聊，工作日下午可以面试。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "你好！先换电话加微信，简明沟通后再约面洽直接上岗哈！",
+      "time": "09:50",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394383379915269",
+      "block": "09:50 你好！先换电话加微信，简明沟通后再约面洽直接上岗哈！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好！先换电话加微信，简明沟通后再约面洽直接上岗哈！"
+    },
+    {
+      "sender": "bot",
+      "content": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "text": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-10 02:31:23",
+      "time": "02:31",
+      "job_name": "兼职·数据采集500-600元/天黄冈查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 02:31:23",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,22 @@
+{
+  "chat_name": "张鑫",
+  "chat_id": "张鑫#宽睿科技",
+  "account_index": 0,
+  "job_name": "数字化业务分析师8-13K长沙查看职位",
+  "company": "宽睿科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "04:22",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395010566648578",
+      "block": "04:22 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-10 09:21:29"
+}

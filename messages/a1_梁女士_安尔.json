@@ -1,0 +1,23 @@
+{
+  "chat_name": "梁女士",
+  "chat_id": "梁女士#安尔",
+  "account_index": 1,
+  "job_name": "兼职·数据标注（兼职）15-40元/时惠州查看职位",
+  "company": "安尔",
+  "messages": [
+    {
+      "text": "您好，我对数据标注兼职岗位很感兴趣。我有数据分析基础，熟悉Excel和Python，能高效准确地完成标注任务，并且可远程在线工作，期待与您沟通！",
+      "time": "12:58",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393013986935296",
+      "block": "12:58 送达 您好，我对数据标注兼职岗位很感兴趣。我有数据分析基础，熟悉Excel和Python，能高效准确地完成标注任务，并且可远程在线工作，期待与您沟通！",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对数据标注兼职岗位很感兴趣。我有数据分析基础，熟悉Excel和Python，能高效准确地完成标注任务，并且可远程在线工作，期待与您沟通！",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-05 22:18:15"
+}

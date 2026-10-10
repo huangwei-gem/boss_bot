@@ -1,0 +1,89 @@
+{
+  "chat_name": "徐先生",
+  "chat_id": "徐先生#九江市相威贸易",
+  "account_index": 1,
+  "job_name": "兼职·亚马逊店铺运营｜可全职可兼职 线上居家8000-15000元/月南昌查看职位",
+  "company": "九江市相威贸易",
+  "messages": [
+    {
+      "text": "您好，看到贵司招聘线上亚马逊店铺运营岗位，我具备统计学专业背景和数据分析经验，尤其擅长Excel/SQL/Python数据处理，希望有机会远程协作。",
+      "time": "昨天 01:49",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393557413032448",
+      "block": "昨天 01:49 送达 您好，看到贵司招聘线上亚马逊店铺运营岗位，我具备统计学专业背景和数据分析经验，尤其擅长Excel/SQL/Python数据处理，希望有机会远程协作。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到贵司招聘线上亚马逊店铺运营岗位，我具备统计学专业背景和数据分析经验，尤其擅长Excel/SQL/Python数据处理，希望有机会远程协作。"
+    },
+    {
+      "text": "你好，在南昌么？在的话方便发一份你的简历过来吗？",
+      "time": "10:51",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394752310309378",
+      "block": "10:51 你好，在南昌么？在的话方便发一份你的简历过来吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，在南昌么？在的话方便发一份你的简历过来吗？"
+    },
+    {
+      "text": "",
+      "time": "12:52",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394782006047234",
+      "block": "12:52 附件简历请求已发送",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "附件简历请求已发送"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394782006104577",
+      "block": "AIGC生成师个人简历.docx 点击预览附件简历",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "AIGC生成师个人简历.docx 点击预览附件简历"
+    },
+    {
+      "sender": "bot",
+      "content": "[简历已发送]",
+      "text": "[简历已发送]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "rule",
+      "action": "resume",
+      "timestamp": "2026-10-09 12:52:07",
+      "time": "12:52",
+      "job_name": "兼职·亚马逊店铺运营｜可全职可兼职 线上居家8000-15000元/月南昌查看职位",
+      "isFriend": false
+    },
+    {
+      "sender": "bot",
+      "content": "简历已发送，请您方便时查看。我工作日下午时间灵活，可随时线上面试，期待您的反馈。",
+      "text": "简历已发送，请您方便时查看。我工作日下午时间灵活，可随时线上面试，期待您的反馈。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 02:43:26",
+      "time": "02:43",
+      "job_name": "兼职·亚马逊店铺运营｜可全职可兼职 线上居家8000-15000元/月南昌查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 02:43:26",
+  "unread_on_boss": 0
+}

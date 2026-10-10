@@ -1,0 +1,88 @@
+{
+  "chat_name": "陈女士",
+  "chat_id": "陈女士#象达鲜",
+  "account_index": 0,
+  "job_name": "岳麓区靳江路快递员8-12K长沙查看职位",
+  "company": "象达鲜",
+  "messages": [
+    {
+      "text": "黄维，你好，在吗？",
+      "time": "昨天 22:41",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394219074695170",
+      "block": "昨天 22:41 黄维，你好，在吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "黄维，你好，在吗？"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394219074695171",
+      "block": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA"
+    },
+    {
+      "text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394219074707459",
+      "block": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "sender": "hr",
+      "kind": "system",
+      "content": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "card_text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址"
+    },
+    {
+      "text": "་帅哥你住在哪里呀，我看离我་们门店​多远呢，给你安排个近一点的店呢",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394219098464256",
+      "block": "་帅哥你住在哪里呀，我看离我་们门店​多远呢，给你安排个近一点的店呢",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "་帅哥你住在哪里呀，我看离我་们门店​多远呢，给你安排个近一点的店呢"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-08 13:16:24",
+      "time": "13:16",
+      "job_name": "岳麓区靳江路快递员8-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "394434117533700"
+    },
+    {
+      "text": "可以交换下给你详细介绍下工作哦祝您早日找到满意的工作",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394434185498625",
+      "block": "可以交换下给你详细介绍下工作哦 祝您早日找到满意的工作",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "可以交换下给你详细介绍下工作哦祝您早日找到满意的工作"
+    }
+  ],
+  "updated_at": "2026-10-10 06:54:00",
+  "unread_on_boss": 0
+}

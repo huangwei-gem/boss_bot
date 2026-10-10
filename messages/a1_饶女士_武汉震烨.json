@@ -1,0 +1,22 @@
+{
+  "chat_name": "饶女士",
+  "chat_id": "饶女士#武汉震烨",
+  "account_index": 1,
+  "job_name": "兼职·兼职数据分析师8000-13000元/月武汉查看职位",
+  "company": "武汉震烨",
+  "messages": [
+    {
+      "text": "您好，我对兼职数据分析师职位很感兴趣，具备Excel、SQL、Python和数据分析经验，能够远程协作，期待进一步沟通！",
+      "time": "昨天 01:38",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393554840224257",
+      "block": "昨天 01:38 送达 您好，我对兼职数据分析师职位很感兴趣，具备Excel、SQL、Python和数据分析经验，能够远程协作，期待进一步沟通！",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对兼职数据分析师职位很感兴趣，具备Excel、SQL、Python和数据分析经验，能够远程协作，期待进一步沟通！"
+    }
+  ],
+  "updated_at": "2026-10-07 20:56:52"
+}

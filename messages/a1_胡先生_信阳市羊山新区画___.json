@@ -1,0 +1,36 @@
+{
+  "chat_name": "胡先生",
+  "chat_id": "胡先生#信阳市羊山新区画___",
+  "account_index": 1,
+  "job_name": "兼职·PS数据标注员100-150元/天信阳查看职位",
+  "company": "信阳市羊山新区画...",
+  "messages": [
+    {
+      "text": "",
+      "time": "00:11",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393179534815744",
+      "block": "00:11 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我对PS数据标注员岗位很感兴趣，具备数据分析基础，能熟练使用Excel等工具，希望有机会参与线上兼职工作。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393179732910592",
+      "block": "送达 您好，我对PS数据标注员岗位很感兴趣，具备数据分析基础，能熟练使用Excel等工具，希望有机会参与线上兼职工作。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对PS数据标注员岗位很感兴趣，具备数据分析基础，能熟练使用Excel等工具，希望有机会参与线上兼职工作。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-07 04:24:53"
+}

@@ -1,0 +1,50 @@
+{
+  "chat_name": "彭先生",
+  "chat_id": "彭先生#睿思众达",
+  "account_index": 0,
+  "job_name": "兼职·spss数据分析师-异地-兼职60-65元/时济南查看职位",
+  "company": "睿思众达",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "15:10",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393046628864773",
+      "block": "15:10 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "我们深感荣幸收到您的简历，但您的经验与我们当前项目的需求并不完全吻合。祝您在BOSS直聘找到更好的机会！",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393047811674880",
+      "block": "我们深感荣幸收到您的简历，但您的经验与我们当前项目的需求并不完全吻合。祝您在BOSS直聘找到更好的机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "我们深感荣幸收到您的简历，但您的经验与我们当前项目的需求并不完全吻合。祝您在BOSS直聘找到更好的机会！"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，祝您招聘顺利~",
+      "text": "好的，感谢您的时间，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-04 15:37:48",
+      "time": "15:37",
+      "job_name": "兼职·spss数据分析师-异地-兼职60-65元/时济南查看职位",
+      "isFriend": false,
+      "mid": "393053265797888"
+    }
+  ],
+  "updated_at": "2026-10-09 14:20:43",
+  "unread_on_boss": 0
+}

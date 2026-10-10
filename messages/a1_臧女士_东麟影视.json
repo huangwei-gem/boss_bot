@@ -1,0 +1,35 @@
+{
+  "chat_name": "臧女士",
+  "chat_id": "臧女士#东麟影视",
+  "account_index": 1,
+  "job_name": "兼职·数据上传80-120元/天长沙查看职位",
+  "company": "东麟影视",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 02:21",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393211513688321",
+      "block": "昨天 02:21 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我对数据上传岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，能高效完成数据上传工作，且可线上远程完成。期待与您进一步沟通！",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393211711602944",
+      "block": "送达 您好，我对数据上传岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，能高效完成数据上传工作，且可线上远程完成。期待与您进一步沟通！",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对数据上传岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，能高效完成数据上传工作，且可线上远程完成。期待与您进一步沟通！"
+    }
+  ],
+  "updated_at": "2026-10-07 16:43:57"
+}

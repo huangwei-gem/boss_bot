@@ -1,0 +1,91 @@
+{
+  "chat_name": "沈女士",
+  "chat_id": "沈女士#上海能良",
+  "account_index": 0,
+  "job_name": "电商经营数据分析师（毕业两年内可投）8-13K上海查看职位",
+  "company": "上海能良",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-28 08:45",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "390828517085956",
+      "block": "09-28 08:45 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "390828517122818",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "is_read": true
+    },
+    {
+      "text": "",
+      "time": "08:32",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "391179173024256",
+      "block": "08:32 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "is_read": true
+    },
+    {
+      "text": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "391179366171137",
+      "block": "已读 您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "27届暂未开放，可以先发我一份简历~",
+      "time": "09:15",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "391189807366658",
+      "block": "09:15 27届暂未开放，可以先发我一份简历~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "27届暂未开放，可以先发我一份简历~",
+      "is_read": true
+    },
+    {
+      "sender": "bot",
+      "content": "[简历已发送]",
+      "text": "[简历已发送]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "rule",
+      "action": "resume",
+      "timestamp": "2026-09-29 09:15:49",
+      "time": "09:15",
+      "job_name": "电商经营数据分析师（毕业两年内可投）8-13K上海查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 00:19:31",
+  "unread_on_boss": 0
+}

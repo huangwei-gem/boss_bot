@@ -1,0 +1,35 @@
+{
+  "chat_name": "李女士",
+  "chat_id": "李女士#晋中齐云科技有限公司",
+  "account_index": 1,
+  "job_name": "兼职·数据标注20-25元/时晋中查看职位",
+  "company": "晋中齐云科技有限公司",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 01:48",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393203365478912",
+      "block": "昨天 01:48 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我对数据标注岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，有数据分析经验，能高效完成标注任务。请问该岗位是否支持远程办公？期待您的回复。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393203546509825",
+      "block": "送达 您好，我对数据标注岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，有数据分析经验，能高效完成标注任务。请问该岗位是否支持远程办公？期待您的回复。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对数据标注岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，有数据分析经验，能高效完成标注任务。请问该岗位是否支持远程办公？期待您的回复。"
+    }
+  ],
+  "updated_at": "2026-10-07 16:52:52"
+}

@@ -1,0 +1,51 @@
+{
+  "chat_name": "叶明轩",
+  "chat_id": "叶明轩#长沙顺安无忧驾培管理",
+  "account_index": 0,
+  "job_name": "汽车陪练6-9K长沙查看职位",
+  "company": "长沙顺安无忧驾培管理",
+  "messages": [
+    {
+      "text": "Hello，看了你的简历挺符合我们公司岗位的，可以聊聊么",
+      "time": "13:54",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394089661174276",
+      "block": "13:54 Hello，看了你的简历挺符合我们公司岗位的，可以聊聊么",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "Hello，看了你的简历挺符合我们公司岗位的，可以聊聊么"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394089661174277",
+      "block": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的认可，不过我目前求职方向是线上兼职，比如数据标注、线上运营助理或数据分析类岗位，陪练岗位与我的方向不太匹配，请问贵公司有相关的线上职位吗？",
+      "text": "感谢您的认可，不过我目前求职方向是线上兼职，比如数据标注、线上运营助理或数据分析类岗位，陪练岗位与我的方向不太匹配，请问贵公司有相关的线上职位吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 13:58:38",
+      "time": "13:58",
+      "job_name": "汽车陪练6-9K长沙查看职位",
+      "isFriend": false,
+      "mid": "394090593722880"
+    }
+  ],
+  "updated_at": "2026-10-09 11:33:50",
+  "unread_on_boss": 0
+}

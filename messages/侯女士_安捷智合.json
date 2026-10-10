@@ -1,0 +1,22 @@
+{
+  "chat_name": "侯女士",
+  "chat_id": "侯女士#安捷智合",
+  "account_index": 0,
+  "job_name": "兼职·AI视觉美学标注员-线上居家办公20-40元/时深圳查看职位",
+  "company": "安捷智合",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "06:28",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394333813796866",
+      "block": "06:28 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-09 23:00:08"
+}

@@ -1,0 +1,73 @@
+{
+  "chat_name": "蒋欢",
+  "chat_id": "蒋欢#果伊人果业",
+  "account_index": 0,
+  "job_name": "财务分析+五险7-8K长沙查看职位",
+  "company": "果伊人果业",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 07:54",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387984965751556",
+      "block": "09-20 07:54 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "387984965780225",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "我们已经认真审阅了您的简历，但很遗憾，您的经验并不完全符合我们当前项目的需求。祝您在BOSS直聘找到更好的机会！",
+      "time": "09-21 11:34",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388392800383746",
+      "block": "09-21 11:34 我们已经认真审阅了您的简历，但很遗憾，您的经验并不完全符合我们当前项目的需求。祝您在BOSS直聘找到更好的机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "我们已经认真审阅了您的简历，但很遗憾，您的经验并不完全符合我们当前项目的需求。祝您在BOSS直聘找到更好的机会！"
+    },
+    {
+      "text": "",
+      "time": "09-22 07:26",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "388685849793281",
+      "block": "09-22 07:26 附件简历请求已发送",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "附件简历请求已发送"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "388685849854721",
+      "block": "数据分析简历-黄维.docx 点击预览附件简历",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "数据分析简历-黄维.docx 点击预览附件简历"
+    }
+  ],
+  "updated_at": "2026-10-06 20:23:31"
+}

@@ -1,0 +1,50 @@
+{
+  "chat_name": "李凤",
+  "chat_id": "李凤#安尔",
+  "account_index": 1,
+  "job_name": "兼职·数据标注员（兼职）15-40元/时惠州查看职位",
+  "company": "安尔",
+  "messages": [
+    {
+      "text": "您好，我有数据分析基础，做事细致耐心，能高效完成数据标注任务，期待有机会合作！",
+      "time": "13:34",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393022968128000",
+      "block": "13:34 送达 您好，我有数据分析基础，做事细致耐心，能高效完成数据标注任务，期待有机会合作！",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我有数据分析基础，做事细致耐心，能高效完成数据标注任务，期待有机会合作！",
+      "reply_source": "greet"
+    },
+    {
+      "text": "请问是咨询居家办公岗位嘛，是的话请认真看一下招募要求，符合且都能接受可以交换V安排",
+      "time": "10:01",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394386301903361",
+      "block": "10:01 请问是咨询居家办公岗位嘛，是的话请认真看一下招募要求，符合且都能接受可以交换V安排",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "请问是咨询居家办公岗位嘛，是的话请认真看一下招募要求，符合且都能接受可以交换V安排"
+    },
+    {
+      "sender": "bot",
+      "content": "是的，想咨询居家办公的数据标注兼职，招募要求我都符合也都能接受，方便的话可以交换联系方式进一步沟通。",
+      "text": "是的，想咨询居家办公的数据标注兼职，招募要求我都符合也都能接受，方便的话可以交换联系方式进一步沟通。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 03:19:02",
+      "time": "03:19",
+      "job_name": "兼职·数据标注员（兼职）15-40元/时惠州查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 03:19:02",
+  "unread_on_boss": 0
+}

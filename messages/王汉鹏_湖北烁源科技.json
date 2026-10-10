@@ -1,0 +1,22 @@
+{
+  "chat_name": "王汉鹏",
+  "chat_id": "王汉鹏#湖北烁源科技",
+  "account_index": 0,
+  "job_name": "兼职·ai数据标注100-110元/天十堰查看职位",
+  "company": "湖北烁源科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "08:21",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394361573569284",
+      "block": "08:21 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-10 08:01:56"
+}

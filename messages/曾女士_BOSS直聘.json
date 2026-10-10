@@ -1,0 +1,35 @@
+{
+  "chat_name": "曾女士",
+  "chat_id": "曾女士#BOSS直聘",
+  "account_index": 0,
+  "job_name": "BOSS直聘-数据运营岗7-8K·14薪长沙查看职位",
+  "company": "BOSS直聘",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-19 21:29",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387831164715778",
+      "block": "09-19 21:29 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "387831164740354",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-04 19:36:23"
+}

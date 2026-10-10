@@ -1,0 +1,50 @@
+{
+  "chat_name": "吴先生",
+  "chat_id": "吴先生#潮州市鑫永汇陶瓷",
+  "account_index": 0,
+  "job_name": "兼职·AI场景替换师100-200元/周潮州查看职位",
+  "company": "潮州市鑫永汇陶瓷",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "04:56",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394311226356480",
+      "block": "04:56 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "请问有作品吗",
+      "time": "17:51",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394501764100866",
+      "block": "17:51 请问有作品吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "请问有作品吗"
+    },
+    {
+      "sender": "bot",
+      "content": "有的，我做过数据标注和数据分析相关的作品，比如数据看板、标注案例和质检流程等，需要的话可以发给您看看。",
+      "text": "有的，我做过数据标注和数据分析相关的作品，比如数据看板、标注案例和质检流程等，需要的话可以发给您看看。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-08 18:14:47",
+      "time": "18:14",
+      "job_name": "兼职·AI场景替换师100-200元/周潮州查看职位",
+      "isFriend": false,
+      "mid": "394507449774849"
+    }
+  ],
+  "updated_at": "2026-10-09 15:04:40",
+  "unread_on_boss": 0
+}

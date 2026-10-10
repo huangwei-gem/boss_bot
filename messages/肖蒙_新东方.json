@@ -1,0 +1,103 @@
+{
+  "chat_name": "肖蒙",
+  "chat_id": "肖蒙#新东方",
+  "account_index": 0,
+  "job_name": "无责4K-课程顾问-周内双休12-20K长沙查看职位",
+  "company": "新东方",
+  "messages": [
+    {
+      "text": "你好，这个岗位是课程顾问销售岗，主要是销售方式是门店面销，公司提供客户资源，业绩导向的，您这边是否考虑~",
+      "time": "09-19 21:54",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "387837403099137",
+      "block": "09-19 21:54 你好，这个岗位是课程顾问销售岗，主要是销售方式是门店面销，公司提供客户资源，业绩导向的，您这边是否考虑~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，这个岗位是课程顾问销售岗，主要是销售方式是门店面销，公司提供客户资源，业绩导向的，您这边是否考虑~"
+    },
+    {
+      "text": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387838038663169",
+      "block": "已读 您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+      "reply_source": "rule"
+    },
+    {
+      "text": "",
+      "time": "09-19 22:50",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "387851278049280",
+      "block": "09-19 22:50 我想要一份您的附件简历，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意"
+    },
+    {
+      "text": "你好，这个岗位是课程顾问销售岗，主要是销售方式是门店面销，公司提供客户资源，业绩导向的，您这边是否考虑~",
+      "time": "12:00",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "392999862308866",
+      "block": "12:00 你好，这个岗位是课程顾问销售岗，主要是销售方式是门店面销，公司提供客户资源，业绩导向的，您这边是否考虑~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，这个岗位是课程顾问销售岗，主要是销售方式是门店面销，公司提供客户资源，业绩导向的，您这边是否考虑~"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。不过我目前主要寻找线上兼职方向的工作，课程顾问销售岗与我求职方向不太匹配，请问贵司是否有线上运营或数据标注相关岗位呢？",
+      "text": "您好，感谢您的介绍。不过我目前主要寻找线上兼职方向的工作，课程顾问销售岗与我求职方向不太匹配，请问贵司是否有线上运营或数据标注相关岗位呢？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 00:55:11",
+      "time": "00:55",
+      "job_name": "无责4K-课程顾问-周内双休12-20K长沙查看职位",
+      "isFriend": false,
+      "mid": "393898049245185"
+    },
+    {
+      "text": "暂无哈",
+      "time": "17:34",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394143664988163",
+      "block": "17:34 暂无哈",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "暂无哈"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，理解。感谢您的时间，祝您招聘顺利，后续如有线上兼职相关岗位也欢迎随时联系我~",
+      "text": "好的，理解。感谢您的时间，祝您招聘顺利，后续如有线上兼职相关岗位也欢迎随时联系我~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 17:39:10",
+      "time": "17:39",
+      "job_name": "无责4K-课程顾问-周内双休12-20K长沙查看职位",
+      "isFriend": false,
+      "mid": "394144793608193"
+    }
+  ],
+  "updated_at": "2026-10-09 11:03:22",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,59 @@
+{
+  "chat_name": "刘女士",
+  "chat_id": "刘女士#微算互联",
+  "account_index": 1,
+  "job_name": "品牌投放/运营助理120-150元/天长沙查看职位",
+  "company": "微算互联",
+  "messages": [
+    {
+      "text": "你好，看了您的在线简历觉得很合适，方便发一份简历过来吗？",
+      "time": "09-07 11:19",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "383434536505861",
+      "block": "09-07 11:19 你好，看了您的在线简历觉得很合适，方便发一份简历过来吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，看了您的在线简历觉得很合适，方便发一份简历过来吗？"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "383434536555010",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "你好，我是来应聘的，请问这个岗位还在招人吗？",
+      "time": "09-09 22:51",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "384312537907713",
+      "block": "09-09 22:51 已读 你好，我是来应聘的，请问这个岗位还在招人吗？",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "你好，我是来应聘的，请问这个岗位还在招人吗？"
+    },
+    {
+      "text": "您好，方便发一份简历过来吗？",
+      "time": "09-10 10:32",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "384484825637377",
+      "block": "09-10 10:32 您好，方便发一份简历过来吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好，方便发一份简历过来吗？"
+    }
+  ],
+  "updated_at": "2026-10-04 13:57:50"
+}

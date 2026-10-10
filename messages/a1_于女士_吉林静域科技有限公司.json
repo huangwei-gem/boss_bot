@@ -1,0 +1,23 @@
+{
+  "chat_name": "于女士",
+  "chat_id": "于女士#吉林静域科技有限公司",
+  "account_index": 1,
+  "job_name": "兼职·ai数据标注员3000-5000元/月吉林查看职位",
+  "company": "吉林静域科技有限公司",
+  "messages": [
+    {
+      "text": "您好，我有统计学背景，熟悉Excel、SQL和Python，对数据敏感，能高效完成数据标注任务，期待进一步沟通。",
+      "time": "04:33",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393951726100737",
+      "block": "04:33 送达 您好，我有统计学背景，熟悉Excel、SQL和Python，对数据敏感，能高效完成数据标注任务，期待进一步沟通。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我有统计学背景，熟悉Excel、SQL和Python，对数据敏感，能高效完成数据标注任务，期待进一步沟通。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-08 14:40:31"
+}

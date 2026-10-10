@@ -1,0 +1,78 @@
+{
+  "chat_name": "冯女士",
+  "chat_id": "冯女士#河南省位证车位数___",
+  "account_index": 1,
+  "job_name": "兼职·数据采集150-200元/天郑州查看职位",
+  "company": "河南省位证车位数...",
+  "messages": [
+    {
+      "text": "您好～我是统计学本科，想找数据处理 线上的线上兼职机会。看到贵司这个岗位和我的方向挺匹配，方便的话想把简历发您细聊，工作日下午可以面试。",
+      "time": "01:19",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393904123318784",
+      "block": "01:19 送达 您好～我是统计学本科，想找数据处理 线上的线上兼职机会。看到贵司这个岗位和我的方向挺匹配，方便的话想把简历发您细聊，工作日下午可以面试。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好～我是统计学本科，想找数据处理 线上的线上兼职机会。看到贵司这个岗位和我的方向挺匹配，方便的话想把简历发您细聊，工作日下午可以面试。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "我们工作在郑州",
+      "time": "20:37",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394188593099265",
+      "block": "20:37 我们工作在郑州",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "我们工作在郑州"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您告知工作地点。我主要关注线上兼职机会，不知道贵司是否有线上数据处理或类似岗位？",
+      "text": "感谢您告知工作地点。我主要关注线上兼职机会，不知道贵司是否有线上数据处理或类似岗位？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 20:47:31",
+      "time": "20:47",
+      "job_name": "兼职·数据采集150-200元/天郑州查看职位",
+      "isFriend": false,
+      "mid": "394191096087040"
+    },
+    {
+      "text": "线上的目前没有都在做线下",
+      "time": "22:03",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394209649680901",
+      "block": "22:03 线上的目前没有都在做线下",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "线上的目前没有都在做线下"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，明白了，感谢您告知。那我就不打扰了，祝您招聘顺利~",
+      "text": "好的，明白了，感谢您告知。那我就不打扰了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 22:05:47",
+      "time": "22:05",
+      "job_name": "兼职·数据采集150-200元/天郑州查看职位",
+      "isFriend": false,
+      "mid": "394210319663617"
+    }
+  ],
+  "updated_at": "2026-10-09 23:42:33",
+  "unread_on_boss": 0
+}

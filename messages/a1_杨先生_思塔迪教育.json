@@ -1,0 +1,52 @@
+{
+  "chat_name": "杨先生",
+  "chat_id": "杨先生#思塔迪教育",
+  "account_index": 1,
+  "job_name": "兼职·小红书运营（留学方向）-居家兼职25-30元/时长沙查看职位",
+  "company": "思塔迪教育",
+  "messages": [
+    {
+      "text": "你好，我们正在诚聘小红书运营（留学方向）-居家兼职，有兴趣聊聊吗",
+      "time": "16:07",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394476160709125",
+      "block": "16:07 你好，我们正在诚聘小红书运营（留学方向）-居家兼职，有兴趣聊聊吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，我们正在诚聘小红书运营（留学方向）-居家兼职，有兴趣聊聊吗"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，我的求职方向主要是数据标注、数据分析和线上运营助理这类岗位，您这边有相关方向的兼职机会吗",
+      "text": "您好，我的求职方向主要是数据标注、数据分析和线上运营助理这类岗位，您这边有相关方向的兼职机会吗",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-08 16:09:39",
+      "time": "16:09",
+      "job_name": "兼职·小红书运营（留学方向）-居家兼职25-30元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "394476698579461"
+    },
+    {
+      "sender": "bot",
+      "content": "有兴趣的，方便详细了解一下岗位内容和要求吗？",
+      "text": "有兴趣的，方便详细了解一下岗位内容和要求吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 01:34:28",
+      "time": "01:34",
+      "job_name": "兼职·小红书运营（留学方向）-居家兼职25-30元/时长沙查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 01:34:28",
+  "unread_on_boss": 0
+}

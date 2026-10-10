@@ -1,0 +1,35 @@
+{
+  "chat_name": "梅女士",
+  "chat_id": "梅女士#芒市神秘果服务管___",
+  "account_index": 0,
+  "job_name": "兼职·线上推广专员50-10000元/天德宏傣族景颇族自治州查看职位",
+  "company": "芒市神秘果服务管...",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:01",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393899646890755",
+      "block": "01:01 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393899646919424",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-08 15:37:39"
+}

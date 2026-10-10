@@ -1,0 +1,80 @@
+{
+  "chat_name": "魏女士",
+  "chat_id": "魏女士#中广资本",
+  "account_index": 1,
+  "job_name": "数据分析师15-25K·13薪上海查看职位",
+  "company": "中广资本",
+  "messages": [
+    {
+      "text": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "time": "10:53",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "391213982208514",
+      "block": "10:53 已读 您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "你好啊，可以聊一聊~",
+      "time": "11:42",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "391226006098434",
+      "block": "11:42 你好啊，可以聊一聊~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好啊，可以聊一聊~"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，可以的，感谢您回复。请问您想具体了解哪些方面？我可以详细介绍一下。",
+      "text": "您好，可以的，感谢您回复。请问您想具体了解哪些方面？我可以详细介绍一下。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 02:44:08",
+      "time": "02:44",
+      "job_name": "数据分析师15-25K·13薪上海查看职位",
+      "isFriend": false,
+      "mid": "393924823208448"
+    },
+    {
+      "sender": "bot",
+      "content": "魏女士您好，之前聊的数据分析师15-25K·13薪上海查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "text": "魏女士您好，之前聊的数据分析师15-25K·13薪上海查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-07 13:13:52",
+      "time": "13:13",
+      "job_name": "数据分析师15-25K·13薪上海查看职位",
+      "isFriend": false,
+      "mid": "394079590183431"
+    },
+    {
+      "sender": "bot",
+      "content": "魏女士您好，中广资本这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "魏女士您好，中广资本这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-09 14:56:06",
+      "time": "14:56",
+      "job_name": "数据分析师15-25K·13薪上海查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-09 14:56:06",
+  "unread_on_boss": 0
+}

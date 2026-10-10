@@ -1,0 +1,64 @@
+{
+  "chat_name": "陈先生",
+  "chat_id": "陈先生#神策数据",
+  "account_index": 1,
+  "job_name": "数据分析师-上海(J11358)15-20K上海查看职位",
+  "company": "神策数据",
+  "messages": [
+    {
+      "text": "",
+      "time": "12:48",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394781121085953",
+      "block": "12:48 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据标注与AI辅助分析，看到贵司数据分析师岗位有线上办公的可能性，方便的话我把简历发您细聊",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394781243818506",
+      "block": "已读 您好，我是统计学专业在读生，擅长数据标注与AI辅助分析，看到贵司数据分析师岗位有线上办公的可能性，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据标注与AI辅助分析，看到贵司数据分析师岗位有线上办公的可能性，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "感谢您的关注和投递，但当前职位需要与您背景不太相符的资质。祝您在BOSS直聘找到更合适的工作！",
+      "time": "12:57",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394783244755456",
+      "block": "12:57 感谢您的关注和投递，但当前职位需要与您背景不太相符的资质。祝您在BOSS直聘找到更合适的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢您的关注和投递，但当前职位需要与您背景不太相符的资质。祝您在BOSS直聘找到更合适的工作！"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-09 13:04:38",
+      "time": "13:04",
+      "job_name": "数据分析师-上海(J11358)15-20K上海查看职位",
+      "isFriend": false,
+      "mid": "394785088365057"
+    }
+  ],
+  "updated_at": "2026-10-10 02:46:59",
+  "unread_on_boss": 0
+}

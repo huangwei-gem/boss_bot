@@ -1,0 +1,89 @@
+{
+  "chat_name": "俞女士",
+  "chat_id": "俞女士#泰便利",
+  "account_index": 0,
+  "job_name": "我是站长在线寻找城市 “外卖侠”！6-9K长沙查看职位",
+  "company": "泰便利",
+  "messages": [
+    {
+      "text": "薪资7K~9k左右提供车子和装备，工作自由轻松上手，入职还有现金补贴，长沙市内就近分配或者可以安排宿舍，感兴趣可以聊聊的，想去工作站点看看扣1",
+      "time": "14:36",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394099877106435",
+      "block": "14:36 薪资7K~9k左右提供车子和装备，工作自由轻松上手，入职还有现金补贴，长沙市内就近分配或者可以安排宿舍，感兴趣可以聊聊的，想去工作站点看看扣1",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "薪资7K~9k左右提供车子和装备，工作自由轻松上手，入职还有现金补贴，长沙市内就近分配或者可以安排宿舍，感兴趣可以聊聊的，想去工作站点看看扣1"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394099877106436",
+      "block": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA"
+    },
+    {
+      "text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394099877118721",
+      "block": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "sender": "hr",
+      "kind": "system",
+      "content": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "card_text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 14:40:16",
+      "time": "14:40",
+      "job_name": "我是站长在线寻找城市 “外卖侠”！6-9K长沙查看职位",
+      "isFriend": false,
+      "mid": "394100823397121"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394100883993345",
+      "block": "我想要和您交换联系方式，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换联系方式，您是否同意 拒绝 同意"
+    },
+    {
+      "text": "你是白天有其他工作嘛？还是什么",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394100932190977",
+      "block": "你是白天有其他工作嘛？还是什么",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你是白天有其他工作嘛？还是什么"
+    }
+  ],
+  "updated_at": "2026-10-10 07:09:01",
+  "unread_on_boss": 0
+}

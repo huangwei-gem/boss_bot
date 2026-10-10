@@ -1,0 +1,63 @@
+{
+  "chat_name": "周女士",
+  "chat_id": "周女士#青色柠檬",
+  "account_index": 0,
+  "job_name": "数据分析师|电商增长方向|参与核心决策10-15K长沙查看职位",
+  "company": "青色柠檬",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-23 13:58",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "389136103088645",
+      "block": "09-23 13:58 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "389136103117314",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "不好意思我们暂时只招全职",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "389136273441282",
+      "block": "不好意思我们暂时只招全职",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思我们暂时只招全职"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-05 03:25:52",
+      "time": "03:25",
+      "job_name": "数据分析师|电商增长方向|参与核心决策10-15K长沙查看职位",
+      "isFriend": false,
+      "mid": "393227282764288"
+    }
+  ],
+  "updated_at": "2026-10-10 07:29:31",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,50 @@
+{
+  "chat_name": "王子奕",
+  "chat_id": "王子奕#北京陶乐科技有限公司",
+  "account_index": 0,
+  "job_name": "兼职·线上小游戏兼职1000-3000元/周长沙查看职位",
+  "company": "北京陶乐科技有限公司",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:19",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393904082264835",
+      "block": "01:19 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "不好意思，男生满了~",
+      "time": "11:12",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394403543094018",
+      "block": "11:12 不好意思，男生满了~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，男生满了~"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "text": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-08 11:52:15",
+      "time": "11:52",
+      "job_name": "兼职·线上小游戏兼职1000-3000元/周长沙查看职位",
+      "isFriend": false,
+      "mid": "394413437317889"
+    }
+  ],
+  "updated_at": "2026-10-10 07:31:39",
+  "unread_on_boss": 0
+}

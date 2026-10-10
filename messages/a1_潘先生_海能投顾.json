@@ -1,0 +1,36 @@
+{
+  "chat_name": "潘先生",
+  "chat_id": "潘先生#海能投顾",
+  "account_index": 1,
+  "job_name": "数据分析师15-30K上海查看职位",
+  "company": "海能投顾",
+  "messages": [
+    {
+      "text": "",
+      "time": "00:23",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394952037028352",
+      "block": "00:23 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我有数据标注和数据分析经验，熟悉SQL/Python，能胜任数据分析工作，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394952163136000",
+      "block": "送达 您好，我有数据标注和数据分析经验，熟悉SQL/Python，能胜任数据分析工作，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我有数据标注和数据分析经验，熟悉SQL/Python，能胜任数据分析工作，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-10 09:15:26"
+}

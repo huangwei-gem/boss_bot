@@ -1,0 +1,49 @@
+{
+  "chat_name": "王晨迪",
+  "chat_id": "王晨迪#成都爱智未来科技",
+  "account_index": 1,
+  "job_name": "兼职·大模型数据标注与代码评测专员（远程兼职）200-1000元/时成都查看职位",
+  "company": "成都爱智未来科技",
+  "messages": [
+    {
+      "text": "您好，我对大模型数据标注与代码评测专员（远程兼职）岗位很感兴趣。我有数据分析背景，熟悉Python和SQL，能胜任数据标注与评测工作，期待进一步沟通！",
+      "time": "10-05 20:45",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393482803249664",
+      "block": "10-05 20:45 送达 您好，我对大模型数据标注与代码评测专员（远程兼职）岗位很感兴趣。我有数据分析背景，熟悉Python和SQL，能胜任数据标注与评测工作，期待进一步沟通！",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对大模型数据标注与代码评测专员（远程兼职）岗位很感兴趣。我有数据分析背景，熟悉Python和SQL，能胜任数据标注与评测工作，期待进一步沟通！"
+    },
+    {
+      "text": "对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会",
+      "time": "10:06",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394387347513858",
+      "block": "10:06 对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的反馈，祝您招聘顺利~",
+      "text": "理解，感谢您的反馈，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-10 02:38:33",
+      "time": "02:38",
+      "job_name": "兼职·大模型数据标注与代码评测专员（远程兼职）200-1000元/时成都查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 02:38:33",
+  "unread_on_boss": 0
+}

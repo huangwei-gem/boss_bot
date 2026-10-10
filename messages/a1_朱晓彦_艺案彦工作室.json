@@ -1,0 +1,36 @@
+{
+  "chat_name": "朱晓彦",
+  "chat_id": "朱晓彦#艺案彦工作室",
+  "account_index": 1,
+  "job_name": "兼职·Excel线上设计兼职20-50元/时大连查看职位",
+  "company": "艺案彦工作室",
+  "messages": [
+    {
+      "text": "",
+      "time": "10:53",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "392983454822914",
+      "block": "10:53 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我看到贵司正在招聘Excel线上设计兼职。我是统计学本科背景，熟练掌握Excel、SQL和Python，有业务数据报表和分析的实战经验，可以独立完成数据整理和处理工作。工作时间灵活，期待您的回复！",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "392983636566531",
+      "block": "送达 您好，我看到贵司正在招聘Excel线上设计兼职。我是统计学本科背景，熟练掌握Excel、SQL和Python，有业务数据报表和分析的实战经验，可以独立完成数据整理和处理工作。工作时间灵活，期待您的回复！",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我看到贵司正在招聘Excel线上设计兼职。我是统计学本科背景，熟练掌握Excel、SQL和Python，有业务数据报表和分析的实战经验，可以独立完成数据整理和处理工作。工作时间灵活，期待您的回复！",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-05 02:04:56"
+}

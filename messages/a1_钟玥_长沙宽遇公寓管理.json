@@ -1,0 +1,68 @@
+{
+  "chat_name": "钟玥",
+  "chat_id": "钟玥#长沙宽遇公寓管理",
+  "account_index": 1,
+  "job_name": "青年公寓专员5-10K长沙查看职位",
+  "company": "长沙宽遇公寓管理",
+  "messages": [
+    {
+      "text": "黄维，方便聊聊吗？",
+      "time": "昨天 22:12",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393150327960064",
+      "block": "昨天 22:12 黄维，方便聊聊吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "黄维，方便聊聊吗？"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢联系。我目前主要求职方向是数据分析相关岗位，青年公寓专员与我的职业规划不太匹配，请问贵司是否有数据分析类的岗位在招聘呢？",
+      "text": "您好，感谢联系。我目前主要求职方向是数据分析相关岗位，青年公寓专员与我的职业规划不太匹配，请问贵司是否有数据分析类的岗位在招聘呢？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-05 01:34:50",
+      "time": "01:34",
+      "job_name": "青年公寓专员5-10K长沙查看职位",
+      "isFriend": false,
+      "mid": "393199994778113"
+    },
+    {
+      "sender": "bot",
+      "content": "钟玥您好，之前聊的青年公寓专员5-10K长沙查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "text": "钟玥您好，之前聊的青年公寓专员5-10K长沙查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-07 10:12:02",
+      "time": "10:12",
+      "job_name": "青年公寓专员5-10K长沙查看职位",
+      "isFriend": false,
+      "mid": "394034903904769"
+    },
+    {
+      "sender": "bot",
+      "content": "钟玥您好，长沙宽遇公寓管理这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "钟玥您好，长沙宽遇公寓管理这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-08 10:16:04",
+      "time": "10:16",
+      "job_name": "青年公寓专员5-10K长沙查看职位",
+      "isFriend": false,
+      "mid": "394389786776064"
+    }
+  ],
+  "updated_at": "2026-10-09 23:23:01",
+  "unread_on_boss": 0
+}

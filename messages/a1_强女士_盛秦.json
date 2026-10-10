@@ -1,0 +1,51 @@
+{
+  "chat_name": "强女士",
+  "chat_id": "强女士#盛秦",
+  "account_index": 1,
+  "job_name": "上海数据分析师7-12K·13薪上海查看职位",
+  "company": "盛秦",
+  "messages": [
+    {
+      "text": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "time": "10:59",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "391215510790659",
+      "block": "10:59 已读 您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "15:21",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "391279707574785",
+      "block": "15:21 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-04 23:20:40",
+      "time": "23:20",
+      "job_name": "上海数据分析师7-12K·13薪上海查看职位",
+      "isFriend": false,
+      "mid": "393167019393539"
+    }
+  ],
+  "updated_at": "2026-10-10 08:03:17",
+  "unread_on_boss": 0
+}

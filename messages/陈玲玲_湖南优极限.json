@@ -1,0 +1,22 @@
+{
+  "chat_name": "陈玲玲",
+  "chat_id": "陈玲玲#湖南优极限",
+  "account_index": 0,
+  "job_name": "大数据教培工程师9-14K长沙查看职位",
+  "company": "湖南优极限",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-19 21:59",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387838673785603",
+      "block": "09-19 21:59 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-04 21:51:26"
+}

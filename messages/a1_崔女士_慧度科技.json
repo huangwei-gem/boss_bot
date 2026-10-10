@@ -1,0 +1,23 @@
+{
+  "chat_name": "崔女士",
+  "chat_id": "崔女士#慧度科技",
+  "account_index": 1,
+  "job_name": "兼职·居家数据反解5-30元/时西安查看职位",
+  "company": "慧度科技",
+  "messages": [
+    {
+      "text": "您好，我对贵司的居家数据反解岗位很感兴趣。我具备统计学背景和数据分析技能，熟悉Excel、SQL和Python，能够胜任数据反解相关工作。希望有机会进一步沟通岗位细节，谢谢！",
+      "time": "13:16",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393018427359745",
+      "block": "13:16 送达 您好，我对贵司的居家数据反解岗位很感兴趣。我具备统计学背景和数据分析技能，熟悉Excel、SQL和Python，能够胜任数据反解相关工作。希望有机会进一步沟通岗位细节，谢谢！",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对贵司的居家数据反解岗位很感兴趣。我具备统计学背景和数据分析技能，熟悉Excel、SQL和Python，能够胜任数据反解相关工作。希望有机会进一步沟通岗位细节，谢谢！",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-05 22:18:03"
+}

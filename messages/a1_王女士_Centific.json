@@ -1,0 +1,51 @@
+{
+  "chat_name": "王女士",
+  "chat_id": "王女士#Centific",
+  "account_index": 1,
+  "job_name": "兼职·中文标注（线上）20-25元/时无锡查看职位",
+  "company": "Centific",
+  "messages": [
+    {
+      "text": "您好，我对中文标注（线上）岗位很感兴趣，我有统计学背景和数据分析经验，熟练使用Excel、SQL、Python，能高效完成标注任务，期待您的回复。",
+      "time": "03:52",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393941487366656",
+      "block": "03:52 送达 您好，我对中文标注（线上）岗位很感兴趣，我有统计学背景和数据分析经验，熟练使用Excel、SQL、Python，能高效完成标注任务，期待您的回复。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对中文标注（线上）岗位很感兴趣，我有统计学背景和数据分析经验，熟练使用Excel、SQL、Python，能高效完成标注任务，期待您的回复。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "你好 在哪座城市呢",
+      "time": "10:24",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394391906898437",
+      "block": "10:24 你好 在哪座城市呢",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好 在哪座城市呢"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，这个岗位是线上兼职，我可以全程远程协作，时间也灵活，工作日下午可配合面试。城市情况具体可以面试时详细沟通，期待您的回复。",
+      "text": "您好，这个岗位是线上兼职，我可以全程远程协作，时间也灵活，工作日下午可配合面试。城市情况具体可以面试时详细沟通，期待您的回复。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-08 11:16:47",
+      "time": "11:16",
+      "job_name": "兼职·中文标注（线上）20-25元/时无锡查看职位",
+      "isFriend": false,
+      "mid": "394404719383045"
+    }
+  ],
+  "updated_at": "2026-10-09 23:04:00",
+  "unread_on_boss": 0
+}

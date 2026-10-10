@@ -1,0 +1,22 @@
+{
+  "chat_name": "康女士",
+  "chat_id": "康女士#BOSS直聘",
+  "account_index": 0,
+  "job_name": "数据运营8-10K长沙查看职位",
+  "company": "BOSS直聘",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 08:28",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387993173623553",
+      "block": "09-20 08:28 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-05 02:04:00"
+}

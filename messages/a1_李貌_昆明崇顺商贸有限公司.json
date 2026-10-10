@@ -1,0 +1,35 @@
+{
+  "chat_name": "李貌",
+  "chat_id": "李貌#昆明崇顺商贸有限公司",
+  "account_index": 1,
+  "job_name": "兼职·数据采集员15-20元/时昆明查看职位",
+  "company": "昆明崇顺商贸有限公司",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 02:18",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393210703340033",
+      "block": "昨天 02:18 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我对数据采集员岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，并有业务数据报表与分析经验，能够高效完成数据采集与整理工作。期待与您进一步沟通！",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393210899296769",
+      "block": "送达 您好，我对数据采集员岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，并有业务数据报表与分析经验，能够高效完成数据采集与整理工作。期待与您进一步沟通！",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对数据采集员岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，并有业务数据报表与分析经验，能够高效完成数据采集与整理工作。期待与您进一步沟通！"
+    }
+  ],
+  "updated_at": "2026-10-07 16:44:50"
+}

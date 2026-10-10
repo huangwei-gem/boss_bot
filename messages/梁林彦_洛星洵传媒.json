@@ -1,0 +1,99 @@
+{
+  "chat_name": "梁林彦",
+  "chat_id": "梁林彦#洛星洵传媒",
+  "account_index": 0,
+  "job_name": "兼职·读文打字日结110+45-60元/时长沙查看职位",
+  "company": "洛星洵传媒",
+  "messages": [
+    {
+      "text": "此boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+      "time": "07:22",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "395054783988484",
+      "block": "07:22 此boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+      "sender": "hr",
+      "kind": "system",
+      "content": "此boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+      "card_text": "此boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递"
+    },
+    {
+      "text": "黄维,我看了您的相关经历，想和您聊聊，是否方便呢？",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395054783988485",
+      "block": "黄维,我看了您的相关经历，想和您聊聊，是否方便呢？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "黄维,我看了您的相关经历，想和您聊聊，是否方便呢？"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395054783988486",
+      "block": "",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": ""
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395054784652033",
+      "block": "我想要一份您的附件简历，您是否同意 拒绝 同意 或者发送 电话号码 微信号码",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意 或者发送 电话号码 微信号码"
+    },
+    {
+      "text": "您好，我已投递简历",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395083434775298",
+      "block": "送达 您好，我已投递简历",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我已投递简历"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "395083434861313",
+      "block": "您的附件简历 数据分析简... 已发送给Boss点击查看附件",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "您的附件简历 数据分析简... 已发送给Boss点击查看附件"
+    },
+    {
+      "sender": "bot",
+      "content": "[简历已发送]",
+      "text": "[简历已发送]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "backfill",
+      "action": "resume",
+      "timestamp": "2026-10-10 09:18:36",
+      "time": "09:18",
+      "job_name": "兼职·读文打字日结110+45-60元/时长沙查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 09:18:36"
+}

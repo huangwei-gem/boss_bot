@@ -1,0 +1,35 @@
+{
+  "chat_name": "覃瑜",
+  "chat_id": "覃瑜#佛山市旭兴仟商贸",
+  "account_index": 0,
+  "job_name": "兼职·远程报告写作（商业/英文/PPT/数据/剧本）50-150元/时佛山查看职位",
+  "company": "佛山市旭兴仟商贸",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 00:47",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393542146765572",
+      "block": "昨天 00:47 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393542146794240",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-08 02:50:03"
+}

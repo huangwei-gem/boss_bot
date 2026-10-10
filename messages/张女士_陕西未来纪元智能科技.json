@@ -1,0 +1,47 @@
+{
+  "chat_name": "张女士",
+  "chat_id": "张女士#陕西未来纪元智能科技",
+  "account_index": 0,
+  "job_name": "兼职·线上理工科录题兼职，时间地点自由，日结算200-400元/天长沙查看职位",
+  "company": "陕西未来纪元智能科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 23:10",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393164467314949",
+      "block": "昨天 23:10 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "10-08 09:54",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394384356978947",
+      "block": "10-08 09:54",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": ""
+    },
+    {
+      "text": "这是平台最新岗位要求，满足学历背景和学科成绩其中两项就行，老师可以看一下,有符合给我说一下",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394384465744129",
+      "block": "这是平台最新岗位要求，满足学历背景和学科成绩其中两项就行，老师可以看一下,有符合给我说一下",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "这是平台最新岗位要求，满足学历背景和学科成绩其中两项就行，老师可以看一下,有符合给我说一下"
+    }
+  ],
+  "updated_at": "2026-10-10 07:43:13"
+}

@@ -1,0 +1,34 @@
+{
+  "chat_name": "王女士",
+  "chat_id": "王女士#南京迈特望",
+  "account_index": 0,
+  "job_name": "数据库运维（瑞中长沙3-12）10-12K长沙查看职位",
+  "company": "南京迈特望",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 16:09",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "388106515104515",
+      "block": "09-20 16:09 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "09-20 16:18",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388108679299841",
+      "block": "09-20 16:18 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    }
+  ],
+  "updated_at": "2026-10-05 22:00:55"
+}

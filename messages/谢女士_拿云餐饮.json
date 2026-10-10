@@ -1,0 +1,22 @@
+{
+  "chat_name": "谢女士",
+  "chat_id": "谢女士#拿云餐饮",
+  "account_index": 0,
+  "job_name": "BI 产品与数据分析工程师12-15K长沙查看职位",
+  "company": "拿云餐饮",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 13:37",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "388069096223489",
+      "block": "09-20 13:37 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-05 01:28:42"
+}

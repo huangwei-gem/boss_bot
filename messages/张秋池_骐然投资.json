@@ -1,0 +1,22 @@
+{
+  "chat_name": "张秋池",
+  "chat_id": "张秋池#骐然投资",
+  "account_index": 0,
+  "job_name": "兼职·助理数据分析员3000-6000元/月太原查看职位",
+  "company": "骐然投资",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "02:59",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393928580047618",
+      "block": "02:59 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-08 15:21:50"
+}

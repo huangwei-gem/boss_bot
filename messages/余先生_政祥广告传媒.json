@@ -1,0 +1,35 @@
+{
+  "chat_name": "余先生",
+  "chat_id": "余先生#政祥广告传媒",
+  "account_index": 0,
+  "job_name": "电商网络运营专员10-15K娄底查看职位",
+  "company": "政祥广告传媒",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 23:02",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393162474795522",
+      "block": "昨天 23:02 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "你好",
+      "time": "18:35",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393450932359680",
+      "block": "18:35 你好",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好"
+    }
+  ],
+  "updated_at": "2026-10-10 01:32:38",
+  "unread_on_boss": 0
+}

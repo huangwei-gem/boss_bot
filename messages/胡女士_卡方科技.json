@@ -1,0 +1,35 @@
+{
+  "chat_name": "胡女士",
+  "chat_id": "胡女士#卡方科技",
+  "account_index": 0,
+  "job_name": "数据分析实习生（实习6个月）200-400元/天上海查看职位",
+  "company": "卡方科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-29 08:16",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "391175367672578",
+      "block": "09-29 08:16 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "391175367697153",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-07 00:05:23"
+}

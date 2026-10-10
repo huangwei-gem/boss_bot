@@ -1,0 +1,67 @@
+{
+  "reply_stats": {
+    "total_replies": 3,
+    "positive": 0,
+    "neutral": 0,
+    "negative": 0,
+    "ignored": 3
+  },
+  "template_effectiveness": {
+    "ai": {
+      "used": 2,
+      "positive": 0,
+      "neutral": 0,
+      "negative": 0,
+      "ignored": 2
+    },
+    "rejection": {
+      "used": 1,
+      "positive": 0,
+      "neutral": 0,
+      "negative": 0,
+      "ignored": 1
+    }
+  },
+  "strategy_adjustments": [],
+  "reply_records": [
+    {
+      "id": 1,
+      "reply_text": "首先，分析对话上下文：\n- 招聘方称呼：贾先生\n- 招聘岗位：新手可做 美团骑手 老骑手一对一带教5-7元/单长沙查看职位\n- 最近对话记录：\n  - 对方: 此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递\n  - 对方: 您好，看您这边条件挺好的，我们刚好有个可能适合您的岗位在招，有兴趣沟通一下吗？\n- 对方最新消息：该消息暂不支持\n\n对方最新消息是“该消息暂不支持”，",
+      "chat_name": "贾先生",
+      "job_name": "新手可做 美团骑手 老骑手一对一带教5-7元/单长沙查看职位",
+      "source": "ai",
+      "intent": "other",
+      "timestamp": "2026-09-29T23:31:58.613783",
+      "effect": "ignored",
+      "hr_response": null,
+      "evaluated": true
+    },
+    {
+      "id": 2,
+      "reply_text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "chat_name": "李女士",
+      "job_name": "质数据分析专员（产品开发储备方向）4-6K长沙查看职位",
+      "source": "rejection",
+      "intent": "rejection",
+      "timestamp": "2026-09-29T23:32:08.815964",
+      "effect": "ignored",
+      "hr_response": null,
+      "evaluated": true
+    },
+    {
+      "id": 3,
+      "reply_text": "您好，感谢您的认可。不过我的求职方向是数据分析，与SaaS销售专员的岗位不太吻合，请问贵司是否有数据分析相关的岗位空缺？",
+      "chat_name": "郑女士",
+      "job_name": "SaaS销售专员｜无责3K+提成5-10K长沙查看职位",
+      "source": "ai",
+      "intent": "",
+      "timestamp": "2026-09-29T23:32:28.361573",
+      "effect": "ignored",
+      "hr_response": null,
+      "evaluated": true
+    }
+  ],
+  "gate_blocks": 0,
+  "lessons": [],
+  "last_saved": "2026-10-02T14:12:32.959169"
+}

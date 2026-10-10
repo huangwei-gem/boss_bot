@@ -1,0 +1,50 @@
+{
+  "chat_name": "陈先生",
+  "chat_id": "陈先生#成都邸家文化传媒",
+  "account_index": 0,
+  "job_name": "日结 无责 可预支1W工资 可在家直播8-13K在家办公查看职位",
+  "company": "成都邸家文化传媒",
+  "messages": [
+    {
+      "text": "请问，有没有兴趣加入我们的团队呢？",
+      "time": "17:19",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394139958874880",
+      "block": "17:19 请问，有没有兴趣加入我们的团队呢？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "请问，有没有兴趣加入我们的团队呢？"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 17:20:41",
+      "time": "17:20",
+      "job_name": "日结 无责 可预支1W工资 可在家直播8-13K在家办公查看职位",
+      "isFriend": false,
+      "mid": "394140251833092"
+    },
+    {
+      "text": "好的，理解您的想法。祝您早日找到合适的工作！",
+      "time": "18:00",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394150121370369",
+      "block": "18:00 好的，理解您的想法。祝您早日找到合适的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的，理解您的想法。祝您早日找到合适的工作！"
+    }
+  ],
+  "updated_at": "2026-10-10 01:32:12",
+  "unread_on_boss": 0
+}

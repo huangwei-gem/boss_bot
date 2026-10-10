@@ -1,0 +1,37 @@
+{
+  "chat_name": "高先生",
+  "chat_id": "高先生#湖南慧链教育科技",
+  "account_index": 0,
+  "job_name": "兼职·线上录题老师60-80元/时长沙查看职位",
+  "company": "湖南慧链教育科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 00:57",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393544598897410",
+      "block": "昨天 00:57 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-08 09:45:24",
+      "time": "09:45",
+      "job_name": "兼职·线上录题老师60-80元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "394382262113030"
+    }
+  ],
+  "updated_at": "2026-10-10 07:47:52"
+}

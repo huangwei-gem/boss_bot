@@ -1,0 +1,89 @@
+{
+  "chat_name": "李骄",
+  "chat_id": "李骄#张家口鸿檀企业管理",
+  "account_index": 1,
+  "job_name": "兼职·数据采集兼职60-80元/天张家口查看职位",
+  "company": "张家口鸿檀企业管理",
+  "messages": [
+    {
+      "text": "您好，看到贵司数据采集兼职岗位需求，我具备统计学专业背景和Python数据处理经验，能高效完成数据采集与清洗工作，期待有机会合作。",
+      "time": "昨天 03:29",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393582165746176",
+      "block": "昨天 03:29 送达 您好，看到贵司数据采集兼职岗位需求，我具备统计学专业背景和Python数据处理经验，能高效完成数据采集与清洗工作，期待有机会合作。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到贵司数据采集兼职岗位需求，我具备统计学专业背景和Python数据处理经验，能高效完成数据采集与清洗工作，期待有机会合作。"
+    },
+    {
+      "text": "七十一天，两天试岗，一周一结",
+      "time": "16:51",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394487000392195",
+      "block": "16:51 七十一天，两天试岗，一周一结",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "七十一天，两天试岗，一周一结"
+    },
+    {
+      "text": "采集员主要负责健康数据采集市场调研，我们有数据采集的设备，只需要在旁边操作一下，",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394487040799237",
+      "block": "采集员主要负责健康数据采集市场调研，我们有数据采集的设备，只需要在旁边操作一下，",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "采集员主要负责健康数据采集市场调研，我们有数据采集的设备，只需要在旁边操作一下，"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394487045943813",
+      "block": "您是否接受此工作地点? 我店科技张家口桥东区服务中心(张家口桥东区我店科技张家口桥东区服务中心五一大街86号（比那多鲜果二楼）) 暂不考虑可以接受",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "您是否接受此工作地点? 我店科技张家口桥东区服务中心(张家口桥东区我店科技张家口桥东区服务中心五一大街86号（比那多鲜果二楼）) 暂不考虑可以接受"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，祝您招聘顺利~",
+      "text": "好的，感谢您的时间，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-08 16:52:27",
+      "time": "16:52",
+      "job_name": "兼职·数据采集兼职60-80元/天张家口查看职位",
+      "isFriend": false,
+      "mid": "394487213883905"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的反馈，祝您招聘顺利~",
+      "text": "理解，感谢您的反馈，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-10 01:45:52",
+      "time": "01:45",
+      "job_name": "兼职·数据采集兼职60-80元/天张家口查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 01:45:52",
+  "unread_on_boss": 0
+}

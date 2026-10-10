@@ -1,0 +1,63 @@
+{
+  "chat_name": "黎女士",
+  "chat_id": "黎女士#咪咪兔科技",
+  "account_index": 0,
+  "job_name": "跨境电商数据分析师7-12K长沙查看职位",
+  "company": "咪咪兔科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "13:25",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394790167962372",
+      "block": "13:25 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394790167991044",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "不好意思，用人部门要求暂时不招聘实习生，我们会将您的信息存档，等您毕业后欢迎您随时投递",
+      "time": "13:43",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394794572776192",
+      "block": "13:43 不好意思，用人部门要求暂时不招聘实习生，我们会将您的信息存档，等您毕业后欢迎您随时投递",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，用人部门要求暂时不招聘实习生，我们会将您的信息存档，等您毕业后欢迎您随时投递"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-09 14:28:38",
+      "time": "14:28",
+      "job_name": "跨境电商数据分析师7-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "394805732733699"
+    }
+  ],
+  "updated_at": "2026-10-10 01:01:32",
+  "unread_on_boss": 0
+}

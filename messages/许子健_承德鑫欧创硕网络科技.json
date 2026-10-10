@@ -1,0 +1,90 @@
+{
+  "chat_name": "许子健",
+  "chat_id": "许子健#承德鑫欧创硕网络科技",
+  "account_index": 0,
+  "job_name": "兼职·数据标注员15-20元/时承德查看职位",
+  "company": "承德鑫欧创硕网络科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "06:27",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394333565018883",
+      "block": "06:27 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "需要的加我吧",
+      "time": "08:33",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394364544320256",
+      "block": "08:33 需要的加我吧",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "需要的加我吧"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394364553368323",
+      "block": "我想要和您交换微信，您是否同意 为保障您的安全建议在平台内沟通，微信沟通中需特别保护您的个人信息，谨防受骗。 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换微信，您是否同意 为保障您的安全建议在平台内沟通，微信沟通中需特别保护您的个人信息，谨防受骗。 拒绝 同意"
+    },
+    {
+      "sender": "bot",
+      "content": "[已同意交换联系方式]",
+      "text": "[已同意交换联系方式]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "contact",
+      "timestamp": "2026-10-08 08:34:06",
+      "time": "08:34",
+      "job_name": "兼职·数据标注员15-20元/时承德查看职位",
+      "isFriend": false
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394364741808896",
+      "block": "xxaa95927 许子健的微信号 xxaa95927 复制微信号",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "xxaa95927 许子健的微信号 xxaa95927 复制微信号"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，我这就添加您的微信，稍后通过~",
+      "text": "好的，我这就添加您的微信，稍后通过~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-08 16:45:27",
+      "time": "16:45",
+      "job_name": "兼职·数据标注员15-20元/时承德查看职位",
+      "isFriend": false,
+      "mid": "394485493633794"
+    }
+  ],
+  "updated_at": "2026-10-10 07:14:12",
+  "unread_on_boss": 0
+}

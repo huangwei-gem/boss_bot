@@ -1,0 +1,64 @@
+{
+  "chat_name": "苟女士",
+  "chat_id": "苟女士#南昌星彩梦科技",
+  "account_index": 1,
+  "job_name": "兼职·娱乐营销号线上商单兼职（国庆200-240）750-900元/天深圳查看职位",
+  "company": "南昌星彩梦科技",
+  "messages": [
+    {
+      "text": "您好，看到贵司线上商单兼职岗位，我的统计学背景和Python数据分析经验应该能快速胜任远程工作要求，国庆期间可随时接单。",
+      "time": "昨天 02:34",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393568619508224",
+      "block": "昨天 02:34 送达 您好，看到贵司线上商单兼职岗位，我的统计学背景和Python数据分析经验应该能快速胜任远程工作要求，国庆期间可随时接单。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到贵司线上商单兼职岗位，我的统计学背景和Python数据分析经验应该能快速胜任远程工作要求，国庆期间可随时接单。"
+    },
+    {
+      "text": "下次有合适机会之后再和您沟通～",
+      "time": "11:17",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394758652781059",
+      "block": "11:17 下次有合适机会之后再和您沟通～",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "下次有合适机会之后再和您沟通～"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，祝您招聘顺利~",
+      "text": "好的，感谢您的时间，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-09 12:44:56",
+      "time": "12:44",
+      "job_name": "兼职·娱乐营销号线上商单兼职（国庆200-240）750-900元/天深圳查看职位",
+      "isFriend": false,
+      "mid": "394780247552515"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，麻烦苟女士了，有合适岗位随时联系我，祝您工作顺利~",
+      "text": "好的，麻烦苟女士了，有合适岗位随时联系我，祝您工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 03:25:17",
+      "time": "03:25",
+      "job_name": "兼职·娱乐营销号线上商单兼职（国庆200-240）750-900元/天深圳查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 03:25:17",
+  "unread_on_boss": 0
+}

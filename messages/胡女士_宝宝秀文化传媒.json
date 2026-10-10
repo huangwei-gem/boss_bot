@@ -1,0 +1,92 @@
+{
+  "chat_name": "胡女士",
+  "chat_id": "胡女士#宝宝秀文化传媒",
+  "account_index": 0,
+  "job_name": "宝宝秀永久保底7-10k单身公寓+服化道全包7-12K长沙查看职位",
+  "company": "宝宝秀文化传媒",
+  "messages": [
+    {
+      "text": "想找安全无坑的直播公司嘛?可以看看我们~华中第一公会7k-1w保底提供住宿不卡合同!",
+      "time": "18:52",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394162779054849",
+      "block": "18:52 想找安全无坑的直播公司嘛?可以看看我们~华中第一公会7k-1w保底提供住宿不卡合同!",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "想找安全无坑的直播公司嘛?可以看看我们~华中第一公会7k-1w保底提供住宿不卡合同!"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。不过我这边只找线上远程就能做的兼职，这个岗位不太合适，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。不过我这边只找线上远程就能做的兼职，这个岗位不太合适，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "scam_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 18:56:18",
+      "time": "18:56",
+      "job_name": "宝宝秀永久保底7-10k单身公寓+服化道全包7-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "394163750810368"
+    },
+    {
+      "text": "好的",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394163958133505",
+      "block": "好的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您，祝您工作顺利~",
+      "text": "好的，谢谢您，祝您工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 18:59:37",
+      "time": "18:59",
+      "job_name": "宝宝秀永久保底7-10k单身公寓+服化道全包7-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "394164565586688"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394164592919300",
+      "block": "",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": ""
+    },
+    {
+      "sender": "bot",
+      "content": "好的，再见。",
+      "text": "好的，再见。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-08 01:39:41",
+      "time": "01:39",
+      "job_name": "宝宝秀永久保底7-10k单身公寓+服化道全包7-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "394262888706817"
+    }
+  ],
+  "updated_at": "2026-10-09 13:45:22",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,22 @@
+{
+  "chat_name": "刘先生",
+  "chat_id": "刘先生#美程陶瓷",
+  "account_index": 0,
+  "job_name": "信息部经理15-25K娄底查看职位",
+  "company": "美程陶瓷",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-19 22:22",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387844293985026",
+      "block": "09-19 22:22 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-05 01:27:14"
+}

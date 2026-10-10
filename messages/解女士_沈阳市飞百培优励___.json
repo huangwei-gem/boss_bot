@@ -1,0 +1,78 @@
+{
+  "chat_name": "解女士",
+  "chat_id": "解女士#沈阳市飞百培优励___",
+  "account_index": 0,
+  "job_name": "兼职·兼职线上1v1高中物理老师（课量足不坐班）80-100元/时长沙查看职位",
+  "company": "沈阳市飞百培优励...",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 00:40",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393540482310913",
+      "block": "昨天 00:40 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393540482335488",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-08 09:43:53",
+      "time": "09:43",
+      "job_name": "兼职·兼职线上1v1高中物理老师（课量足不坐班）80-100元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "394381889319681"
+    },
+    {
+      "text": "尽管我们对您的简历印象深刻，但是您的简历与我们当前的职位要求并不完全匹配。祝您在BOSS直聘找到更好的机会！",
+      "time": "11:11",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394757295014658",
+      "block": "11:11 尽管我们对您的简历印象深刻，但是您的简历与我们当前的职位要求并不完全匹配。祝您在BOSS直聘找到更好的机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "尽管我们对您的简历印象深刻，但是您的简历与我们当前的职位要求并不完全匹配。祝您在BOSS直聘找到更好的机会！"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-09 11:17:32",
+      "time": "11:17",
+      "job_name": "兼职·兼职线上1v1高中物理老师（课量足不坐班）80-100元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "394758768952073"
+    }
+  ],
+  "updated_at": "2026-10-10 00:12:44",
+  "unread_on_boss": 0
+}

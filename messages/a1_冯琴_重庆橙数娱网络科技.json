@@ -1,0 +1,90 @@
+{
+  "chat_name": "冯琴",
+  "chat_id": "冯琴#重庆橙数娱网络科技",
+  "account_index": 1,
+  "job_name": "兼职·云南话数据标注2000-2500元/月宜宾查看职位",
+  "company": "重庆橙数娱网络科技",
+  "messages": [
+    {
+      "text": "您好，我对云南话数据标注岗位很感兴趣。我具备数据分析基础，熟悉Excel、SQL和Python，能高效完成数据标注工作，期待与您进一步沟通。",
+      "time": "13:12",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393017444348161",
+      "block": "13:12 送达 您好，我对云南话数据标注岗位很感兴趣。我具备数据分析基础，熟悉Excel、SQL和Python，能高效完成数据标注工作，期待与您进一步沟通。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对云南话数据标注岗位很感兴趣。我具备数据分析基础，熟悉Excel、SQL和Python，能高效完成数据标注工作，期待与您进一步沟通。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "您好！还在招的，请问招聘要求都是符合的对吗?",
+      "time": "14:38",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393038799855873",
+      "block": "14:38 您好！还在招的，请问招聘要求都是符合的对吗?",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好！还在招的，请问招聘要求都是符合的对吗?"
+    },
+    {
+      "sender": "bot",
+      "content": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+      "text": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rule",
+      "action": "text",
+      "timestamp": "2026-10-04 20:21:24",
+      "time": "20:21",
+      "job_name": "兼职·云南话数据标注2000-2500元/月宜宾查看职位",
+      "isFriend": false,
+      "mid": "393122964594945"
+    },
+    {
+      "text": "计件多劳多得，由于每个项目不同，薪资会有项目部统一通知",
+      "time": "09:15",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394374960713985",
+      "block": "09:15 计件多劳多得，由于每个项目不同，薪资会有项目部统一通知",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "计件多劳多得，由于每个项目不同，薪资会有项目部统一通知"
+    },
+    {
+      "sender": "bot",
+      "content": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+      "text": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rule",
+      "action": "text",
+      "timestamp": "2026-10-10 02:20:22",
+      "time": "02:20",
+      "job_name": "兼职·云南话数据标注2000-2500元/月宜宾查看职位",
+      "isFriend": false,
+      "mid": "394980650828032"
+    },
+    {
+      "text": "正式的项目飞书会写明单价和操作明细",
+      "time": "09:05",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395080116470018",
+      "block": "09:05 正式的项目飞书会写明单价和操作明细",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "正式的项目飞书会写明单价和操作明细"
+    }
+  ],
+  "updated_at": "2026-10-10 09:18:18",
+  "unread_on_boss": 0
+}

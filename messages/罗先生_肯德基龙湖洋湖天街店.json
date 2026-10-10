@@ -1,0 +1,81 @@
+{
+  "chat_name": "罗先生",
+  "chat_id": "罗先生#肯德基龙湖洋湖天街店",
+  "account_index": 0,
+  "job_name": "肯德基服务员待遇好可周结5-6K长沙查看职位",
+  "company": "肯德基龙湖洋湖天街店",
+  "messages": [
+    {
+      "text": "你好，我们正在诚聘肯德基服务员待遇好可周结，有兴趣聊聊吗",
+      "time": "23:43",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393172541005824",
+      "block": "23:43 你好，我们正在诚聘肯德基服务员待遇好可周结，有兴趣聊聊吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，我们正在诚聘肯德基服务员待遇好可周结，有兴趣聊聊吗"
+    },
+    {
+      "text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "393172541018113",
+      "block": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "sender": "hr",
+      "kind": "system",
+      "content": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "card_text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的邀请。不过我的求职方向是数据分析类岗位，与这个职位不太匹配，请问贵司是否有数据分析相关的岗位呢？",
+      "text": "您好，感谢您的邀请。不过我的求职方向是数据分析类岗位，与这个职位不太匹配，请问贵司是否有数据分析相关的岗位呢？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-04 23:48:41",
+      "time": "23:48",
+      "job_name": "肯德基服务员待遇好可周结5-6K长沙查看职位",
+      "isFriend": false,
+      "mid": "393173908140032"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的回复，不过这个岗位与我的求职方向（数据分析）确实不太相符，就不占用您时间了。祝您招聘顺利。",
+      "text": "感谢您的回复，不过这个岗位与我的求职方向（数据分析）确实不太相符，就不占用您时间了。祝您招聘顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-05 01:45:08",
+      "time": "01:45",
+      "job_name": "肯德基服务员待遇好可周结5-6K长沙查看职位",
+      "isFriend": false,
+      "mid": "393202525806593"
+    },
+    {
+      "sender": "bot",
+      "content": "罗先生您好，之前聊的肯德基服务员待遇好可周结5-6K长沙查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "text": "罗先生您好，之前聊的肯德基服务员待遇好可周结5-6K长沙查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-05 22:29:54",
+      "time": "22:29",
+      "job_name": "肯德基服务员待遇好可周结5-6K长沙查看职位",
+      "isFriend": false,
+      "mid": "393508446744577"
+    }
+  ],
+  "updated_at": "2026-10-07 16:28:33",
+  "unread_on_boss": 0
+}

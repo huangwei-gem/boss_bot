@@ -1,0 +1,107 @@
+面板已起在 http://127.0.0.1:5059 配置副本: C:\Users\35796\AppData\Local\Temp\boss_panel_c4_7le82
+== 等面板就绪 ==
+== 起破解版浏览器 ==
+  [PASS] 加载 / 标题正确
+  [PASS] 加载 / 主标题在页面上
+  [PASS] 加载 / WebSocket 已连上
+  [PASS] 指标 / 4 张卡
+  [PASS] 指标 / 累计投递与后端一致
+  [PASS] 指标 / 每日上限取自配置
+  [PASS] 指标 / 今日已投递不会超过标签上写的上限
+  [PASS] 指标 / 账号范围切换可用
+  [PASS] 指标 / 切到账号2 后数值随之变化
+  [PASS] 记录 / 投递记录有数据
+  [PASS] 记录 / 状态筛选控件可定位
+  [PASS] 记录 / 状态筛选生效（行数变少且都是跳过）
+  [PASS] 聊天 / 会话列表渲染
+  [PASS] 聊天 / 回复记录页签切得过去
+  [PASS] 聊天(账号1) / 前端行数 = 后端消息数
+  [PASS] 聊天(账号1) / 逐条文本与线上存储一致
+  [PASS] 聊天(账号1) / 顺序一致（不重排）
+  [PASS] 聊天(账号1) / 时间标签照搬线上
+  [PASS] 聊天(账号1) / 我方/对方方向正确
+  [PASS] 聊天(账号1) / 我方气泡贴着右边画（像素级）
+  [PASS] 聊天(账号1) / 对方气泡贴着左边画（像素级）
+  [PASS] 聊天(账号2) / 前端行数 = 后端消息数
+  [PASS] 聊天(账号2) / 逐条文本与线上存储一致
+  [PASS] 聊天(账号2) / 顺序一致（不重排）
+  [PASS] 聊天(账号2) / 时间标签照搬线上
+  [PASS] 聊天(账号2) / 我方/对方方向正确
+  [PASS] 聊天(账号2) / 我方气泡贴着右边画（像素级）
+  [PASS] 聊天(账号2) / 对方气泡贴着左边画（像素级）
+  [PASS] 聊天 / 来源标签都是中文，不直出内部键
+  [PASS] 会话身份 / 同昵称 陆女士×2 各自显示自己那一路
+  [PASS] 会话身份 / 同昵称 陆女士×2 的 data-mid 互不重叠
+  [PASS] 会话身份 / 列表把身份显示出来（姓名+公司）
+  [PASS] 会话身份 / 全部账号下撞车的身份挂了账号标记
+  [PASS] AI / 每个接口都有状态点
+  [PASS] AI / 体检结果已落盘并显示
+  [PASS] AI / 单个重测后状态更新
+  [PASS] AI / 判分预算输入框已按配置回填
+  [PASS] AI / 预算已存进后端配置
+  [PASS] AI / 判分质量行有统计
+  [PASS] AI / 判分质量接口给出兜底率
+  [PASS] AI / 前端不再自带默认规则抄本
+  [PASS] AI / 恢复默认拿到的是引擎默认规则
+  [PASS] 配置 / 改动能存进后端
+  [FAIL] 配置 / 保存有轻提示反馈
+  [PASS] 演练 / 开关改动存得进后端
+  [PASS] 配置 / 前端整体回写不抹掉 theme
+  [PASS] 演练 / 演练模式已落盘为 true
+  [PASS] 开关 / advSkipUnhealthy 改动存得进后端
+  [PASS] 开关 / advSelfEvolve 改动存得进后端
+  [PASS] 演练 / 再点一次能关回 false
+  [PASS] 跟进配置 / 6 个数字框都按配置回填了
+  [PASS] 跟进配置 / 改次数存得进后端
+  [PASS] 跟进配置 / 主动跟进开关存得进后端
+  [PASS] 跟进配置 / 再点一次能关回原值
+  [PASS] 交互 / 编辑模板弹窗能打开
+  [PASS] 交互 / Esc 能关弹窗
+  [PASS] 交互 / 主题切换生效
+  [PASS] 交互 / 断线横幅出现/消失
+  [PASS] 布局 / 宽屏 4 列
+  [PASS] 可达性 / 无文字按钮都有 title/aria-label
+  [PASS] 多账号 / 打招呼记录接口按账号分
+  [PASS] 多账号 / 记录里的账号字段正确
+  [PASS] 多账号 / 不再有 cookie 文件名当账号名
+  [PASS] 多账号 / 切到账号2 后打招呼记录只剩该账号
+  [PASS] 多账号 / 操作条标明当前范围
+Traceback (most recent call last):
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_elements\chromium_element.py", line 1222, in run_js
+    res = page._run_cdp('Runtime.evaluate', expression=script, returnByValue=False,
+                        awaitPromise=True, userGesture=True, _timeout=timeout, _ignore=AlertExistsError)
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_pages\chromium_base.py", line 389, in _run_cdp
+    return r if __ERROR__ not in r else raise_error(r, self.browser, ignore)
+                                        ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_functions\tools.py", line 199, in raise_error
+    raise r
+TimeoutError: 
+超时，可能是浏览器卡了。
+详情: timeout
+方法: Runtime.evaluate
+参数: {'expression': '(function(){var r=[],b=["btnPauseGreet","btnPauseReply"];\n      for(var i=0;i<b.length;i++){var e=document.getElementById(b[i]);\n      r.push(e?e.textContent:"");} return JSON.stringify(r);})()', 'returnByValue': False, 'awaitPromise': True, 'userGesture': True, '_timeout': 30}
+版本: 4.1.1.4
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\35796\orca\boss_bot\tools\e2e_dashboard.py", line 858, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\35796\orca\boss_bot\tools\e2e_dashboard.py", line 589, in main
+    labels = js(page, '''(function(){var r=[],b=["btnPauseGreet","btnPauseReply"];
+      for(var i=0;i<b.length;i++){var e=document.getElementById(b[i]);
+      r.push(e?e.textContent:"");} return JSON.stringify(r);})()''')
+  File "C:\Users\35796\orca\boss_bot\tools\e2e_dashboard.py", line 50, in js
+    raw = tab.run_js(code, as_expr=True)
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_pages\chromium_base.py", line 396, in run_js
+    return self._run_js(script, *args, as_expr=as_expr, timeout=timeout)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_pages\chromium_base.py", line 403, in _run_js
+    return run_js(self, script, as_expr, self.timeouts.script if timeout is None else timeout, args)
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_elements\chromium_element.py", line 1233, in run_js
+    raise TimeoutError(_S._lang.join(_S._lang.TIMEOUT_, _S._lang.RUN_JS, timeout))
+TimeoutError: 
+执行js超时（等待30秒）
+版本: 4.1.1.4
+dashboard 退出码: 1

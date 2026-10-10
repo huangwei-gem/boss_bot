@@ -1,0 +1,50 @@
+{
+  "chat_name": "苗女士",
+  "chat_id": "苗女士#上海拓宸文化传媒",
+  "account_index": 1,
+  "job_name": "短视频运营(J21679)6-8K上海查看职位",
+  "company": "上海拓宸文化传媒",
+  "messages": [
+    {
+      "text": "想与你沟通下我们在招的这个职位，现在方便吗？",
+      "time": "09:44",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "391197035467267",
+      "block": "09:44 想与你沟通下我们在招的这个职位，现在方便吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "想与你沟通下我们在招的这个职位，现在方便吗？",
+      "is_read": true
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的关注。我的求职方向是数据分析，这个岗位可能不太匹配。请问贵公司是否有数据分析相关的职位在招聘？",
+      "text": "您好，感谢您的关注。我的求职方向是数据分析，这个岗位可能不太匹配。请问贵公司是否有数据分析相关的职位在招聘？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-09-29 09:45:10",
+      "time": "09:45",
+      "job_name": "短视频运营(J21679)6-8K上海查看职位",
+      "isFriend": false,
+      "mid": "391197123191300"
+    },
+    {
+      "text": "不好意思，目前没有，祝您早日找到合适的工作！",
+      "time": "09-29 11:38",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "391224869827072",
+      "block": "09-29 11:38 不好意思，目前没有，祝您早日找到合适的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，目前没有，祝您早日找到合适的工作！"
+    }
+  ],
+  "updated_at": "2026-10-05 02:14:29"
+}

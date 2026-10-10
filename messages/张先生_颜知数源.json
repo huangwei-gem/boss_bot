@@ -1,0 +1,65 @@
+{
+  "chat_name": "张先生",
+  "chat_id": "张先生#颜知数源",
+  "account_index": 0,
+  "job_name": "兼职·【远程兼职】各科医生专家+医疗AI数据标注60-200元/时上海查看职位",
+  "company": "颜知数源",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "08:21",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394361723282178",
+      "block": "08:21 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "祝您工作顺利",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394362318615296",
+      "block": "祝您工作顺利",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "祝您工作顺利"
+    },
+    {
+      "sender": "bot",
+      "content": "谢谢您，也祝您招聘顺利，工作愉快。",
+      "text": "谢谢您，也祝您招聘顺利，工作愉快。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-08 08:27:43",
+      "time": "08:27",
+      "job_name": "兼职·【远程兼职】各科医生专家+医疗AI数据标注60-200元/时上海查看职位",
+      "isFriend": false,
+      "mid": "394363170857729"
+    },
+    {
+      "sender": "bot",
+      "content": "张先生您好，之前聊的兼职·【远程兼职】各科医生专家+医疗AI数据标注60-200元/时上海查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "张先生您好，之前聊的兼职·【远程兼职】各科医生专家+医疗AI数据标注60-200元/时上海查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-09 10:52:04",
+      "time": "10:52",
+      "job_name": "兼职·【远程兼职】各科医生专家+医疗AI数据标注60-200元/时上海查看职位",
+      "isFriend": false,
+      "mid": "394752507761410"
+    }
+  ],
+  "updated_at": "2026-10-10 07:05:38",
+  "unread_on_boss": 0
+}

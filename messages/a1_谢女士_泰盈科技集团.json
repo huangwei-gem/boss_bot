@@ -1,0 +1,64 @@
+{
+  "chat_name": "谢女士",
+  "chat_id": "谢女士#泰盈科技集团",
+  "account_index": 1,
+  "job_name": "兼职·兼职！宝 妈班 时间灵活 数据采集35-55元/时泰安查看职位",
+  "company": "泰盈科技集团",
+  "messages": [
+    {
+      "text": "",
+      "time": "01:50",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393203715084801",
+      "block": "01:50 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我对贵司的数据采集兼职岗位很感兴趣。我有统计学背景，熟练使用Excel、SQL和Python，有数据分析经验，能高效完成数据采集工作。时间灵活，可随时上岗，期待您的回复。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393203894084096",
+      "block": "已读 您好，我对贵司的数据采集兼职岗位很感兴趣。我有统计学背景，熟练使用Excel、SQL和Python，有数据分析经验，能高效完成数据采集工作。时间灵活，可随时上岗，期待您的回复。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对贵司的数据采集兼职岗位很感兴趣。我有统计学背景，熟练使用Excel、SQL和Python，有数据分析经验，能高效完成数据采集工作。时间灵活，可随时上岗，期待您的回复。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "很抱歉，经过我们的评估，您的技能和经验与我们当前的职位要求不完全匹配。祝您在BOSS直聘找到满意的工作！",
+      "time": "07:25",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393286082138625",
+      "block": "07:25 很抱歉，经过我们的评估，您的技能和经验与我们当前的职位要求不完全匹配。祝您在BOSS直聘找到满意的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "很抱歉，经过我们的评估，您的技能和经验与我们当前的职位要求不完全匹配。祝您在BOSS直聘找到满意的工作！"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-05 07:25:27",
+      "time": "07:25",
+      "job_name": "兼职·兼职！宝 妈班 时间灵活 数据采集35-55元/时泰安查看职位",
+      "isFriend": false,
+      "mid": "393286162645504"
+    }
+  ],
+  "updated_at": "2026-10-10 09:11:42",
+  "unread_on_boss": 0
+}

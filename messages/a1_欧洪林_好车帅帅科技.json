@@ -1,0 +1,35 @@
+{
+  "chat_name": "欧洪林",
+  "chat_id": "欧洪林#好车帅帅科技",
+  "account_index": 1,
+  "job_name": "兼职·整理数据1000-1500元/月泉州查看职位",
+  "company": "好车帅帅科技",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 01:44",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393202247291393",
+      "block": "昨天 01:44 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我有数据整理与分析经验，熟练使用Excel、SQL和Python，能高效完成数据整理工作，期待进一步沟通。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393202427781633",
+      "block": "送达 您好，我有数据整理与分析经验，熟练使用Excel、SQL和Python，能高效完成数据整理工作，期待进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我有数据整理与分析经验，熟练使用Excel、SQL和Python，能高效完成数据整理工作，期待进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-07 04:19:55"
+}

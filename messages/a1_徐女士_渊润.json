@@ -1,0 +1,22 @@
+{
+  "chat_name": "徐女士",
+  "chat_id": "徐女士#渊润",
+  "account_index": 1,
+  "job_name": "兼职·数据标注40-45元/时蚌埠查看职位",
+  "company": "渊润",
+  "messages": [
+    {
+      "text": "您好，我对数据标注岗位很感兴趣。我有统计学背景，熟练使用Excel、SQL和Python，能快速理解标注规范并保证准确率，期待与您进一步沟通。",
+      "time": "昨天 04:09",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393237940699649",
+      "block": "昨天 04:09 送达 您好，我对数据标注岗位很感兴趣。我有统计学背景，熟练使用Excel、SQL和Python，能快速理解标注规范并保证准确率，期待与您进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对数据标注岗位很感兴趣。我有统计学背景，熟练使用Excel、SQL和Python，能快速理解标注规范并保证准确率，期待与您进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-07 16:22:05"
+}

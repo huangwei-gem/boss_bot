@@ -1,0 +1,35 @@
+{
+  "chat_name": "潘惠",
+  "chat_id": "潘惠#铭豫云创",
+  "account_index": 0,
+  "job_name": "兼职·数据标注（居家办公）20-25元/时广州查看职位",
+  "company": "铭豫云创",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:36",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394262081172227",
+      "block": "01:36 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394262081209088",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-09 12:59:57"
+}

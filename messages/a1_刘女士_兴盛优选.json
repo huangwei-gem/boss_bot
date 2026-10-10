@@ -1,0 +1,38 @@
+{
+  "chat_name": "刘女士",
+  "chat_id": "刘女士#兴盛优选",
+  "account_index": 1,
+  "job_name": "客服实习生（非电销）3-6K长沙查看职位",
+  "company": "兴盛优选",
+  "messages": [
+    {
+      "text": "你好，我们正在诚聘客服实习生（非电销），有兴趣聊聊吗",
+      "time": "18:02",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394150609785345",
+      "block": "18:02 你好，我们正在诚聘客服实习生（非电销），有兴趣聊聊吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，我们正在诚聘客服实习生（非电销），有兴趣聊聊吗"
+    },
+    {
+      "sender": "bot",
+      "content": "您好刘女士，谢谢您的消息。我的求职方向主要是线上兼职，如数据标注或数据分析，可能与客服实习生岗位不完全匹配。不知道贵公司是否有相关方向的岗位？",
+      "text": "您好刘女士，谢谢您的消息。我的求职方向主要是线上兼职，如数据标注或数据分析，可能与客服实习生岗位不完全匹配。不知道贵公司是否有相关方向的岗位？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 18:03:30",
+      "time": "18:03",
+      "job_name": "客服实习生（非电销）3-6K长沙查看职位",
+      "isFriend": false,
+      "mid": "394150772003330"
+    }
+  ],
+  "updated_at": "2026-10-10 00:09:39",
+  "unread_on_boss": 0
+}

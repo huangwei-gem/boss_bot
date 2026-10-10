@@ -1,0 +1,74 @@
+{
+  "chat_name": "韦云飞",
+  "chat_id": "韦云飞#成都邸家文化传媒",
+  "account_index": 0,
+  "job_name": "签约金1-3w先打钱给你后直播，无流水要求8-13K在家办公查看职位",
+  "company": "成都邸家文化传媒",
+  "messages": [
+    {
+      "text": "你好，有兴趣聊聊吗？",
+      "time": "12:39",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394071027008258",
+      "block": "12:39 你好，有兴趣聊聊吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，有兴趣聊聊吗？"
+    },
+    {
+      "text": "不知道您目前有没有找到合适的主播工作？我们男女都可应聘，无经验也有专人带，想试试直播可以聊聊呢",
+      "time": "12:48",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394073369285379",
+      "block": "12:48 不知道您目前有没有找到合适的主播工作？我们男女都可应聘，无经验也有专人带，想试试直播可以聊聊呢",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不知道您目前有没有找到合适的主播工作？我们男女都可应聘，无经验也有专人带，想试试直播可以聊聊呢"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。不过我这边只找线上远程就能做的兼职，这个岗位不太合适，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。不过我这边只找线上远程就能做的兼职，这个岗位不太合适，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "scam_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 12:49:15",
+      "time": "12:49",
+      "job_name": "签约金1-3w先打钱给你后直播，无流水要求8-13K在家办公查看职位",
+      "isFriend": false,
+      "mid": "394073540219651"
+    },
+    {
+      "text": "好的，理解。祝您早日找到合适的工作！",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394074155787011",
+      "block": "好的，理解。祝您早日找到合适的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的，理解。祝您早日找到合适的工作！"
+    },
+    {
+      "text": "不考虑了吗 亲 这种机会不多了哟",
+      "time": "14:14",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394094486213378",
+      "block": "14:14 不考虑了吗 亲 这种机会不多了哟",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不考虑了吗 亲 这种机会不多了哟"
+    }
+  ],
+  "updated_at": "2026-10-10 00:50:16",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,22 @@
+{
+  "chat_name": "李女士",
+  "chat_id": "李女士#商涌科技",
+  "account_index": 1,
+  "job_name": "数据分析师9-14K·14薪上海查看职位",
+  "company": "商涌科技",
+  "messages": [
+    {
+      "text": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel/SQL/Python，看到贵司数据分析师岗位，方便的话我把简历发您细聊。",
+      "time": "昨天 23:07",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394933342712321",
+      "block": "昨天 23:07 送达 您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel/SQL/Python，看到贵司数据分析师岗位，方便的话我把简历发您细聊。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel/SQL/Python，看到贵司数据分析师岗位，方便的话我把简历发您细聊。"
+    }
+  ],
+  "updated_at": "2026-10-10 09:21:32"
+}

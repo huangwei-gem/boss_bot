@@ -1,0 +1,51 @@
+{
+  "chat_name": "张先生",
+  "chat_id": "张先生#天津新时间教育科技",
+  "account_index": 1,
+  "job_name": "兼职·线上兼职（视频号运营类 小白均可）50-100元/时天津查看职位",
+  "company": "天津新时间教育科技",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业学生，擅长数据标注和分析，对视频号运营类线上兼职很感兴趣，能快速上手基础工作，方便的话我把简历发您细聊",
+      "time": "15:04",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394460595458056",
+      "block": "15:04 已读 您好，我是统计学专业学生，擅长数据标注和分析，对视频号运营类线上兼职很感兴趣，能快速上手基础工作，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业学生，擅长数据标注和分析，对视频号运营类线上兼职很感兴趣，能快速上手基础工作，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "您好 该岗位为线上兼职 具体薪资及工作内容可复制链接到网站查看 boss限制 无法直接发出内容 底薪每月50元 腾讯文档链接 https://docs.qq.com/doc/p/1bba2b7c7eaac6ea8c448361156f70d4d5a167b7",
+      "time": "15:33",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394467852251143",
+      "block": "15:33 您好 该岗位为线上兼职 具体薪资及工作内容可复制链接到网站查看 boss限制 无法直接发出内容 底薪每月50元 腾讯文档链接 https://docs.qq.com/doc/p/1bba2b7c7eaac6ea8c448361156f70d4d5a167b7",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好 该岗位为线上兼职 具体薪资及工作内容可复制链接到网站查看 boss限制 无法直接发出内容 底薪每月50元 腾讯文档链接 https://docs.qq.com/doc/p/1bba2b7c7eaac6ea8c448361156f70d4d5a167b7"
+    },
+    {
+      "sender": "bot",
+      "content": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+      "text": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rule",
+      "action": "text",
+      "timestamp": "2026-10-08 17:09:51",
+      "time": "17:09",
+      "job_name": "兼职·线上兼职（视频号运营类 小白均可）50-100元/时天津查看职位",
+      "isFriend": false,
+      "mid": "394491493445633"
+    }
+  ],
+  "updated_at": "2026-10-10 01:33:21",
+  "unread_on_boss": 0
+}

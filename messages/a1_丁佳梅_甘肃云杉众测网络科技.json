@@ -1,0 +1,23 @@
+{
+  "chat_name": "丁佳梅",
+  "chat_id": "丁佳梅#甘肃云杉众测网络科技",
+  "account_index": 1,
+  "job_name": "兼职·数据标注专员（居家办公）20-25元/时武威查看职位",
+  "company": "甘肃云杉众测网络科技",
+  "messages": [
+    {
+      "text": "您好，我对贵司的数据标注专员（居家办公）岗位很感兴趣。我具备统计学背景和数据分析技能，能熟练使用Excel、SQL、Python，做事细致认真，希望有机会参与。",
+      "time": "04:25",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393949674934784",
+      "block": "04:25 送达 您好，我对贵司的数据标注专员（居家办公）岗位很感兴趣。我具备统计学背景和数据分析技能，能熟练使用Excel、SQL、Python，做事细致认真，希望有机会参与。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对贵司的数据标注专员（居家办公）岗位很感兴趣。我具备统计学背景和数据分析技能，能熟练使用Excel、SQL、Python，做事细致认真，希望有机会参与。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-08 14:43:24"
+}

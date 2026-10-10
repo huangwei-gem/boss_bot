@@ -1,0 +1,92 @@
+{
+  "chat_name": "孙玉镜",
+  "chat_id": "孙玉镜#路米科技",
+  "account_index": 1,
+  "job_name": "兼职·数据标注/AI训练师500-3000元/月淄博查看职位",
+  "company": "路米科技",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业的数据标注/AI训练师兼职求职者，有丰富的文本/图像/语音标注及AI辅助流程搭建经验。方便的话我把简历发您细聊。",
+      "time": "14:16",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394448810201601",
+      "block": "14:16 已读 您好，我是统计学专业的数据标注/AI训练师兼职求职者，有丰富的文本/图像/语音标注及AI辅助流程搭建经验。方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业的数据标注/AI训练师兼职求职者，有丰富的文本/图像/语音标注及AI辅助流程搭建经验。方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "您好  你是有数据标注的经验吗",
+      "time": "14:26",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394451352654339",
+      "block": "14:26 您好 你是有数据标注的经验吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好  你是有数据标注的经验吗"
+    },
+    {
+      "sender": "bot",
+      "content": "有的，我做过标注、数据处理这类项目：文本/图像/语音标注都做过，数据整理和分析也用 Excel/SQL/Python 跑过，AI 工具日常都在用。方便的话我发份简历给您细聊~",
+      "text": "有的，我做过标注、数据处理这类项目：文本/图像/语音标注都做过，数据整理和分析也用 Excel/SQL/Python 跑过，AI 工具日常都在用。方便的话我发份简历给您细聊~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-08 18:35:13",
+      "time": "18:35",
+      "job_name": "兼职·数据标注/AI训练师500-3000元/月淄博查看职位",
+      "isFriend": false,
+      "mid": "394512471945728"
+    },
+    {
+      "text": "你每天有固定时间作业吗",
+      "time": "昨天 14:32",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394806800757254",
+      "block": "昨天 14:32 你每天有固定时间作业吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你每天有固定时间作业吗"
+    },
+    {
+      "sender": "bot",
+      "content": "有的，我每天下午时间比较固定，可以安排固定作业；其他时段也能灵活协调，保证按时交付。",
+      "text": "有的，我每天下午时间比较固定，可以安排固定作业；其他时段也能灵活协调，保证按时交付。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 00:49:02",
+      "time": "00:49",
+      "job_name": "兼职·数据标注/AI训练师500-3000元/月淄博查看职位",
+      "isFriend": false,
+      "mid": "394958205993472"
+    },
+    {
+      "sender": "bot",
+      "content": "是的，我工作日下午基本都在线，每天能保证固定的作业时长；如果任务量有波动，其他时段也可以协调支持。",
+      "text": "是的，我工作日下午基本都在线，每天能保证固定的作业时长；如果任务量有波动，其他时段也可以协调支持。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 03:30:58",
+      "time": "03:30",
+      "job_name": "兼职·数据标注/AI训练师500-3000元/月淄博查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 03:30:58",
+  "unread_on_boss": 0
+}

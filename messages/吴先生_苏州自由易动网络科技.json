@@ -1,0 +1,35 @@
+{
+  "chat_name": "吴先生",
+  "chat_id": "吴先生#苏州自由易动网络科技",
+  "account_index": 0,
+  "job_name": "兼职·葡萄牙语翻译—AI标注业务-居家办公25-30元/时上海查看职位",
+  "company": "苏州自由易动网络科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "00:55",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394251970548483",
+      "block": "00:55 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394251970577152",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-09 13:02:22"
+}

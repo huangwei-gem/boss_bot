@@ -1,0 +1,75 @@
+{
+  "chat_name": "张女士",
+  "chat_id": "张女士#秦九",
+  "account_index": 0,
+  "job_name": "数据分析师【短剧大平台+地铁口五险一金】5-10K长沙查看职位",
+  "company": "秦九",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-19 21:28",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387831062672131",
+      "block": "09-19 21:28 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "387831062704897",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "387831211946753",
+      "block": "不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "text": "感谢您对秦九的关注与肯定，非常高兴能收到您的投递， 阅览了您的资料，可能现阶段与我们的岗位需求方向暂不匹配，很遗憾不能与您共事。期待之后有机会合作，也祝您早日找到满意的工作。",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "387831219962624",
+      "block": "感谢您对秦九的关注与肯定，非常高兴能收到您的投递， 阅览了您的资料，可能现阶段与我们的岗位需求方向暂不匹配，很遗憾不能与您共事。 期待之后有机会合作，也祝您早日找到满意的工作。",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢您对秦九的关注与肯定，非常高兴能收到您的投递， 阅览了您的资料，可能现阶段与我们的岗位需求方向暂不匹配，很遗憾不能与您共事。期待之后有机会合作，也祝您早日找到满意的工作。"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的反馈，祝您招聘顺利~",
+      "text": "理解，感谢您的反馈，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-06 15:53:36",
+      "time": "15:53",
+      "job_name": "数据分析师【短剧大平台+地铁口五险一金】5-10K长沙查看职位",
+      "isFriend": false,
+      "mid": "393764932383493"
+    }
+  ],
+  "updated_at": "2026-10-09 14:21:11",
+  "unread_on_boss": 0
+}

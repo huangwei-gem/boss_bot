@@ -1,0 +1,22 @@
+{
+  "chat_name": "赵女士",
+  "chat_id": "赵女士#芒果tv",
+  "account_index": 0,
+  "job_name": "数据分析师150-200元/天长沙查看职位",
+  "company": "芒果tv",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-21 18:14",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "388491025769224",
+      "block": "09-21 18:14 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-05 21:43:08"
+}

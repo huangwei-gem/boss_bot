@@ -1,0 +1,52 @@
+{
+  "chat_name": "叶先生",
+  "chat_id": "叶先生#红精灵网络科技有公司",
+  "account_index": 0,
+  "job_name": "兼职·兼职游戏客服30-50元/时广州查看职位",
+  "company": "红精灵网络科技有公司",
+  "messages": [
+    {
+      "text": "Hello，你好啊，看到你的简历，觉得蛮合适的~要聊一下吗~",
+      "time": "14:31",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393744771011332",
+      "block": "14:31 Hello，你好啊，看到你的简历，觉得蛮合适的~要聊一下吗~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "Hello，你好啊，看到你的简历，觉得蛮合适的~要聊一下吗~"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-06 14:43:21",
+      "time": "14:43",
+      "job_name": "兼职·兼职游戏客服30-50元/时广州查看职位",
+      "isFriend": false,
+      "mid": "393747665027841"
+    },
+    {
+      "sender": "bot",
+      "content": "叶先生您好，之前聊的兼职·兼职游戏客服30-50元/时广州查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "叶先生您好，之前聊的兼职·兼职游戏客服30-50元/时广州查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-09 13:52:14",
+      "time": "13:52",
+      "job_name": "兼职·兼职游戏客服30-50元/时广州查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-09 13:52:14",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,65 @@
+{
+  "chat_name": "卿女士",
+  "chat_id": "卿女士#宝宝秀文化传媒",
+  "account_index": 0,
+  "job_name": "沉浸式国风主播/今天面试明天上岗20-30K长沙查看职位",
+  "company": "宝宝秀文化传媒",
+  "messages": [
+    {
+      "text": "黄维，你好",
+      "time": "10:45",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394043107009282",
+      "block": "10:45 黄维，你好",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "黄维，你好"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，卿女士。感谢您的联系，不过我目前求职的方向是线上兼职类岗位，比如数据标注、运营助理或数据分析方向，主播岗位可能不太符合我的规划。请问贵公司有相关的线上岗位吗？",
+      "text": "您好，卿女士。感谢您的联系，不过我目前求职的方向是线上兼职类岗位，比如数据标注、运营助理或数据分析方向，主播岗位可能不太符合我的规划。请问贵公司有相关的线上岗位吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 10:47:41",
+      "time": "10:47",
+      "job_name": "沉浸式国风主播/今天面试明天上岗20-30K长沙查看职位",
+      "isFriend": false,
+      "mid": "394043663557378"
+    },
+    {
+      "text": "好滴",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394043715261185",
+      "block": "好滴",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好滴"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 14:07:34",
+      "time": "14:07",
+      "job_name": "沉浸式国风主播/今天面试明天上岗20-30K长沙查看职位",
+      "isFriend": false,
+      "mid": "394092789228291"
+    }
+  ],
+  "updated_at": "2026-10-09 11:30:05",
+  "unread_on_boss": 0
+}

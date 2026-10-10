@@ -1,0 +1,90 @@
+{
+  "chat_name": "李佳嫡",
+  "chat_id": "李佳嫡#陕西佳佑嫡星影业",
+  "account_index": 0,
+  "job_name": "兼职·数据标注兼职60-120元/天西安查看职位",
+  "company": "陕西佳佑嫡星影业",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "00:20",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393889384157954",
+      "block": "00:20 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393889384186624",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "工资月结，每天需至少工作三小时，有岗前培训，但不收费。看完接受请回复我同意。",
+      "time": "10:29",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394039184691968",
+      "block": "10:29 工资月结，每天需至少工作三小时，有岗前培训，但不收费。看完接受请回复我同意。",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "工资月结，每天需至少工作三小时，有岗前培训，但不收费。看完接受请回复我同意。"
+    },
+    {
+      "sender": "bot",
+      "content": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+      "text": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rule",
+      "action": "text",
+      "timestamp": "2026-10-07 10:36:48",
+      "time": "10:36",
+      "job_name": "兼职·数据标注兼职60-120元/天西安查看职位",
+      "isFriend": false,
+      "mid": "394040987423490"
+    },
+    {
+      "sender": "bot",
+      "content": "李佳嫡您好，之前聊的兼职·数据标注兼职60-120元/天西安查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "李佳嫡您好，之前聊的兼职·数据标注兼职60-120元/天西安查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-08 08:40:16",
+      "time": "08:40",
+      "job_name": "兼职·数据标注兼职60-120元/天西安查看职位",
+      "isFriend": false,
+      "mid": "394366254977793"
+    },
+    {
+      "text": "工资月结，每天需至少工作三小时，有岗前培训，但不收费。看完接受请回复我同意。",
+      "time": "11:35",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394409251066632",
+      "block": "11:35 工资月结，每天需至少工作三小时，有岗前培训，但不收费。看完接受请回复我同意。",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "工资月结，每天需至少工作三小时，有岗前培训，但不收费。看完接受请回复我同意。"
+    }
+  ],
+  "updated_at": "2026-10-10 07:32:03",
+  "unread_on_boss": 0
+}

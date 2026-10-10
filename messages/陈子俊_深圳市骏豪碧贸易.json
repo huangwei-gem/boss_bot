@@ -1,0 +1,47 @@
+{
+  "chat_name": "陈子俊",
+  "chat_id": "陈子俊#深圳市骏豪碧贸易",
+  "account_index": 0,
+  "job_name": "商业产品分析(周末双休）5-9K长沙查看职位",
+  "company": "深圳市骏豪碧贸易",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 08:18",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387990841258754",
+      "block": "09-20 08:18 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "387990841283329",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "你好啊，可以聊一聊~",
+      "time": "09-20 11:19",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388035197035265",
+      "block": "09-20 11:19 你好啊，可以聊一聊~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好啊，可以聊一聊~"
+    }
+  ],
+  "updated_at": "2026-10-04 23:55:54"
+}

@@ -1,0 +1,65 @@
+{
+  "chat_name": "滕云飞",
+  "chat_id": "滕云飞#天津屿朵朵生物科技",
+  "account_index": 1,
+  "job_name": "兼职·线上运营专员5-30元/时天津查看职位",
+  "company": "天津屿朵朵生物科技",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据标注和分析，看到贵司线上运营岗位觉得方向匹配，方便的话我把简历发您细聊",
+      "time": "15:11",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394462281982466",
+      "block": "15:11 已读 您好，我是统计学专业在读生，擅长数据标注和分析，看到贵司线上运营岗位觉得方向匹配，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据标注和分析，看到贵司线上运营岗位觉得方向匹配，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "文案我们给，3元一次，每周可以发一次。如果有人咨询的话，给微信号了10元一个微信。需要北京，天津，河北的ip，其他地方的就不用回复了",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394462454911492",
+      "block": "文案我们给，3元一次，每周可以发一次。如果有人咨询的话，给微信号了10元一个微信。需要北京，天津，河北的ip，其他地方的就不用回复了",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "文案我们给，3元一次，每周可以发一次。如果有人咨询的话，给微信号了10元一个微信。需要北京，天津，河北的ip，其他地方的就不用回复了"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-08 16:45:25",
+      "time": "16:45",
+      "job_name": "兼职·线上运营专员5-30元/时天津查看职位",
+      "isFriend": false,
+      "mid": "394485487165956"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-10 01:44:40",
+      "time": "01:44",
+      "job_name": "兼职·线上运营专员5-30元/时天津查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 01:44:40",
+  "unread_on_boss": 0
+}

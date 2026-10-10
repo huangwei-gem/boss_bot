@@ -1,0 +1,65 @@
+{
+  "chat_name": "许波波",
+  "chat_id": "许波波#盒马鲜生",
+  "account_index": 1,
+  "job_name": "app推广专员10-15K北京查看职位",
+  "company": "盒马鲜生",
+  "messages": [
+    {
+      "text": "你好，黄维，很高兴认识你，请问是有换一个工作环境的打算吗？可以就你的简历详细说说么？",
+      "time": "18:11",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394152604995842",
+      "block": "18:11 你好，黄维，很高兴认识你，请问是有换一个工作环境的打算吗？可以就你的简历详细说说么？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，黄维，很高兴认识你，请问是有换一个工作环境的打算吗？可以就你的简历详细说说么？"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的关注。我目前主要在看线上兼职方向的机会，比如数据标注或线上运营助理，App推广专员这个岗位和我的求职方向不太一致，不知您这边是否有相关的兼职岗位？",
+      "text": "您好，感谢您的关注。我目前主要在看线上兼职方向的机会，比如数据标注或线上运营助理，App推广专员这个岗位和我的求职方向不太一致，不知您这边是否有相关的兼职岗位？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 18:48:38",
+      "time": "18:48",
+      "job_name": "app推广专员10-15K北京查看职位",
+      "isFriend": false,
+      "mid": "394161866473730"
+    },
+    {
+      "text": "",
+      "time": "19:01",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394165117202689",
+      "block": "19:01 我想要和您交换微信，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换微信，您是否同意 拒绝 同意"
+    },
+    {
+      "sender": "bot",
+      "content": "[已同意交换联系方式]",
+      "text": "[已同意交换联系方式]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "contact",
+      "timestamp": "2026-10-10 03:51:52",
+      "time": "03:51",
+      "job_name": "app推广专员10-15K北京查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 03:51:52",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,51 @@
+{
+  "chat_name": "付广宇",
+  "chat_id": "付广宇#辽宁甲乙丙建筑设计",
+  "account_index": 1,
+  "job_name": "兼职·兼职新媒体运营（远程居家办公）1000-5000元/月朝阳查看职位",
+  "company": "辽宁甲乙丙建筑设计",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据标注和AI辅助分析，看到贵司有远程新媒体运营兼职机会，方便的话我把简历发您细聊",
+      "time": "昨天 15:05",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394460849119748",
+      "block": "昨天 15:05 已读 您好，我是统计学专业在读生，擅长数据标注和AI辅助分析，看到贵司有远程新媒体运营兼职机会，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据标注和AI辅助分析，看到贵司有远程新媒体运营兼职机会，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "感谢您的关注，但是很遗憾不能与你共事。祝您在BOSS直聘上找到更匹配的工作机会",
+      "time": "10:19",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394744477704713",
+      "block": "10:19 感谢您的关注，但是很遗憾不能与你共事。祝您在BOSS直聘上找到更匹配的工作机会",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢您的关注，但是很遗憾不能与你共事。祝您在BOSS直聘上找到更匹配的工作机会"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-09 13:48:12",
+      "time": "13:48",
+      "job_name": "兼职·兼职新媒体运营（远程居家办公）1000-5000元/月朝阳查看职位",
+      "isFriend": false,
+      "mid": "394795794571776"
+    }
+  ],
+  "updated_at": "2026-10-10 02:39:40",
+  "unread_on_boss": 0
+}

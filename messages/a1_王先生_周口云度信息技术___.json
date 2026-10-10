@@ -1,0 +1,37 @@
+{
+  "chat_name": "王先生",
+  "chat_id": "王先生#周口云度信息技术___",
+  "account_index": 1,
+  "job_name": "兼职·数据采集25-30元/时周口查看职位",
+  "company": "周口云度信息技术...",
+  "messages": [
+    {
+      "text": "您好，我有统计学专业背景和Python数据处理经验，看到贵司数据采集岗位支持线上工作，希望能进一步了解具体工作内容。",
+      "time": "03:37",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393583993356800",
+      "block": "03:37 已读 您好，我有统计学专业背景和Python数据处理经验，看到贵司数据采集岗位支持线上工作，希望能进一步了解具体工作内容。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我有统计学专业背景和Python数据处理经验，看到贵司数据采集岗位支持线上工作，希望能进一步了解具体工作内容。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "",
+      "time": "09:40",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393673189216769",
+      "block": "09:40 您是否接受此工作地点? 周口青网科技园(周口川汇区周口青网科技园6号楼206室) 暂不考虑可以接受",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "您是否接受此工作地点? 周口青网科技园(周口川汇区周口青网科技园6号楼206室) 暂不考虑可以接受"
+    }
+  ],
+  "updated_at": "2026-10-10 01:29:01",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,22 @@
+{
+  "chat_name": "林先生",
+  "chat_id": "林先生#深圳鼎驰科技",
+  "account_index": 0,
+  "job_name": "数据开发（ai经验，双休，社保公积金全额）11-12K长沙查看职位",
+  "company": "深圳鼎驰科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "04:25",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395011334775555",
+      "block": "04:25 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-10 09:20:56"
+}

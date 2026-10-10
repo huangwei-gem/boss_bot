@@ -1,0 +1,76 @@
+{
+  "chat_name": "陈女士",
+  "chat_id": "陈女士#雁联技术",
+  "account_index": 0,
+  "job_name": "数据分析12-15K长沙查看职位",
+  "company": "雁联技术",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 16:44",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "388115034944264",
+      "block": "09-20 16:44 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388115508151044",
+      "block": "不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦",
+      "is_read": true
+    },
+    {
+      "text": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "388115601699586",
+      "block": "已读 您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "",
+      "time": "09-20 19:08",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "388150425256706",
+      "block": "09-20 19:08 附件简历请求已发送",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "附件简历请求已发送",
+      "is_read": true
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "388150425314050",
+      "block": "数据分析简历-黄维.docx 点击预览附件简历",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "数据分析简历-黄维.docx 点击预览附件简历",
+      "is_read": true
+    }
+  ],
+  "updated_at": "2026-10-09 14:53:50"
+}

@@ -1,0 +1,75 @@
+{
+  "chat_name": "王先生",
+  "chat_id": "王先生#沐程教育",
+  "account_index": 0,
+  "job_name": "兼职·线上兼职英语老师/排课稳定/居家办公/月结70-120元/时长沙查看职位",
+  "company": "沐程教育",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 22:29",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393508348068609",
+      "block": "昨天 22:29 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "你好啊，可以聊一聊~",
+      "time": "21:41",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393850341389057",
+      "block": "21:41 你好啊，可以聊一聊~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好啊，可以聊一聊~"
+    },
+    {
+      "text": "不好意思，该岗位暂时不招在校生",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393850407203588",
+      "block": "不好意思，该岗位暂时不招在校生",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，该岗位暂时不招在校生"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-06 21:50:30",
+      "time": "21:50",
+      "job_name": "兼职·线上兼职英语老师/排课稳定/居家办公/月结70-120元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "393852644487938"
+    },
+    {
+      "text": "",
+      "time": "21:55",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393853967700736",
+      "block": "21:55",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": ""
+    }
+  ],
+  "updated_at": "2026-10-08 01:34:08",
+  "unread_on_boss": 0
+}

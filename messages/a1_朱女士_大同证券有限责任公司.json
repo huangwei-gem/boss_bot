@@ -1,0 +1,64 @@
+{
+  "chat_name": "朱女士",
+  "chat_id": "朱女士#大同证券有限责任公司",
+  "account_index": 1,
+  "job_name": "券商数据分析18-35K上海查看职位",
+  "company": "大同证券有限责任公司",
+  "messages": [
+    {
+      "text": "",
+      "time": "09-29 08:52",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "391184253911554",
+      "block": "09-29 08:52 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "391184438592004",
+      "block": "送达 您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会",
+      "time": "19:44",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393467664900608",
+      "block": "19:44 对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，祝您招聘顺利~",
+      "text": "好的，感谢您的时间，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-05 20:16:55",
+      "time": "20:16",
+      "job_name": "券商数据分析18-35K上海查看职位",
+      "isFriend": false,
+      "mid": "393475760632321"
+    }
+  ],
+  "updated_at": "2026-10-10 07:47:40",
+  "unread_on_boss": 0
+}

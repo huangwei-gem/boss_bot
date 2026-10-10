@@ -1,0 +1,111 @@
+{
+  "chat_name": "王女士",
+  "chat_id": "王女士#甘肃省沧澜互娱网___",
+  "account_index": 0,
+  "job_name": "兼职·王者荣耀游戏代练员50-60元/时张掖查看职位",
+  "company": "甘肃省沧澜互娱网...",
+  "messages": [
+    {
+      "text": "山姆超市直招配送员，一个站点取货，配送周边三公里以内，日300",
+      "time": "昨天 20:04",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394180411802369",
+      "block": "昨天 20:04 山姆超市直招配送员，一个站点取货，配送周边三公里以内，日300",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "山姆超市直招配送员，一个站点取货，配送周边三公里以内，日300"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394180411806465",
+      "block": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA"
+    },
+    {
+      "text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394180411814657",
+      "block": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "sender": "hr",
+      "kind": "system",
+      "content": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "card_text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址"
+    },
+    {
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394180541039360",
+      "block": "已读 您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "reply_source": "family_filter"
+    },
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:15",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394256896835843",
+      "block": "01:15 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394256896868608",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "抱歉，尽管我们对您的背景印象深刻，但该职位需要一些其他的技能和经验。祝您在BOSS直聘找到满意的工作！",
+      "time": "09:04",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394372174816003",
+      "block": "09:04 抱歉，尽管我们对您的背景印象深刻，但该职位需要一些其他的技能和经验。祝您在BOSS直聘找到满意的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "抱歉，尽管我们对您的背景印象深刻，但该职位需要一些其他的技能和经验。祝您在BOSS直聘找到满意的工作！"
+    },
+    {
+      "text": "你好",
+      "time": "10:17",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394390022672640",
+      "block": "10:17 你好",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好"
+    }
+  ],
+  "updated_at": "2026-10-10 07:35:23",
+  "unread_on_boss": 0
+}

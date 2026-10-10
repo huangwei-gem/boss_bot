@@ -1,0 +1,23 @@
+{
+  "chat_name": "张先生",
+  "chat_id": "张先生#福州海狮视媒文化科技",
+  "account_index": 1,
+  "job_name": "兼职·暑期工AI训练数据处理员（短期）4000-4500元/月福州查看职位",
+  "company": "福州海狮视媒文化科技",
+  "messages": [
+    {
+      "text": "您好，我对贵司的暑期工AI训练数据处理员岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，能胜任数据标注与整理工作，希望能有机会参与。",
+      "time": "13:45",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393025738777088",
+      "block": "13:45 送达 您好，我对贵司的暑期工AI训练数据处理员岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，能胜任数据标注与整理工作，希望能有机会参与。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对贵司的暑期工AI训练数据处理员岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，能胜任数据标注与整理工作，希望能有机会参与。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-07 04:44:17"
+}

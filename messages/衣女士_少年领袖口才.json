@@ -1,0 +1,63 @@
+{
+  "chat_name": "衣女士",
+  "chat_id": "衣女士#少年领袖口才",
+  "account_index": 0,
+  "job_name": "兼职·兼职少儿口才老师（线上居家办公）60-100元/时长沙查看职位",
+  "company": "少年领袖口才",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "00:06",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394239900406528",
+      "block": "00:06 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394239900463874",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "11:44",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394411581596421",
+      "block": "11:44 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的反馈，祝您招聘顺利~",
+      "text": "理解，感谢您的反馈，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-08 12:20:43",
+      "time": "12:20",
+      "job_name": "兼职·兼职少儿口才老师（线上居家办公）60-100元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "394420430873348"
+    }
+  ],
+  "updated_at": "2026-10-10 07:24:56",
+  "unread_on_boss": 0
+}

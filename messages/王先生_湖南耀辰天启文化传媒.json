@@ -1,0 +1,66 @@
+{
+  "chat_name": "王先生",
+  "chat_id": "王先生#湖南耀辰天启文化传媒",
+  "account_index": 0,
+  "job_name": "招俩个穿搭博主（需直播）单间包住可实习!!6-10K长沙查看职位",
+  "company": "湖南耀辰天启文化传媒",
+  "messages": [
+    {
+      "text": "此boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+      "time": "09-23 09:33",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "389070910018306",
+      "block": "09-23 09:33 此boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+      "sender": "hr",
+      "kind": "system",
+      "content": "此boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+      "card_text": "此boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+      "is_read": true
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "389070910092035",
+      "block": "我想要一份您的附件简历，您是否同意 拒绝 同意 或者发送 电话号码 微信号码",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意 或者发送 电话号码 微信号码",
+      "is_read": true
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 18:13:35",
+      "time": "18:13",
+      "job_name": "招俩个穿搭博主（需直播）单间包住可实习!!6-10K长沙查看职位",
+      "isFriend": false,
+      "mid": "394153252156171"
+    },
+    {
+      "text": "感谢您的投递，但是很抱歉我们正在寻找其他背景的候选人。祝您在BOSS直聘找到完美的工作机会！",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394153377166080",
+      "block": "感谢您的投递，但是很抱歉我们正在寻找其他背景的候选人。祝您在BOSS直聘找到完美的工作机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢您的投递，但是很抱歉我们正在寻找其他背景的候选人。祝您在BOSS直聘找到完美的工作机会！"
+    }
+  ],
+  "updated_at": "2026-10-10 06:53:36",
+  "unread_on_boss": 0
+}

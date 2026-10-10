@@ -1,0 +1,24 @@
+{
+  "chat_name": "谭明亮",
+  "chat_id": "谭明亮#数据分析师7_12K长沙",
+  "account_index": 1,
+  "company": "",
+  "job_name": "数据分析师7-12K长沙查看职位",
+  "updated_at": "2026-10-04 13:58:15",
+  "messages": [
+    {
+      "sender": "bot",
+      "content": "[简历已发送]",
+      "text": "[简历已发送]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "backfill",
+      "action": "resume",
+      "timestamp": "2026-10-04 13:58:15",
+      "time": "13:58",
+      "job_name": "数据分析师7-12K长沙查看职位",
+      "isFriend": false
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "chat_name": "张女士",
+  "chat_id": "张女士#北京软通动力云计___",
+  "account_index": 1,
+  "job_name": "上海数据与经营分析（三餐/双休）10-15K上海查看职位",
+  "company": "北京软通动力云计...",
+  "messages": [
+    {
+      "text": "祝您在BOSS直聘上找到更匹配的工作机会",
+      "time": "09:55",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "391199647146499",
+      "block": "09:55 祝您在BOSS直聘上找到更匹配的工作机会",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "祝您在BOSS直聘上找到更匹配的工作机会"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，理解您的考虑，祝您招聘顺利！",
+      "text": "感谢您的时间，理解您的考虑，祝您招聘顺利！",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-09-29 09:55:49",
+      "time": "09:55",
+      "job_name": "上海数据与经营分析（三餐/双休）8-13K上海查看职位",
+      "isFriend": false,
+      "mid": "391199741989378"
+    },
+    {
+      "text": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "391199762178561",
+      "block": "已读 您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "reply_source": "greet"
+    },
+    {
+      "sender": "bot",
+      "content": "张女士您好，之前聊的上海数据与经营分析（三餐/双休）8-13K上海查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "text": "张女士您好，之前聊的上海数据与经营分析（三餐/双休）8-13K上海查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-06 16:10:41",
+      "time": "16:10",
+      "job_name": "上海数据与经营分析（三餐/双休）8-13K上海查看职位",
+      "isFriend": false
+    },
+    {
+      "sender": "bot",
+      "content": "张女士您好，北京软通动力云计...这个岗位还在招吗？我随时能到岗，想约个时间当面聊聊。",
+      "text": "张女士您好，北京软通动力云计...这个岗位还在招吗？我随时能到岗，想约个时间当面聊聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-07 16:34:22",
+      "time": "16:34",
+      "job_name": "上海数据与经营分析（三餐/双休）8-13K上海查看职位",
+      "isFriend": false,
+      "mid": "394128866189828"
+    }
+  ],
+  "updated_at": "2026-10-10 00:17:31"
+}

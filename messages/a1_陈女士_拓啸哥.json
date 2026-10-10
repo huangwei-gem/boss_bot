@@ -1,0 +1,51 @@
+{
+  "chat_name": "陈女士",
+  "chat_id": "陈女士#拓啸哥",
+  "account_index": 1,
+  "job_name": "日结 山姆配送零食饮料优选驻店包住8-9K长沙查看职位",
+  "company": "拓啸哥",
+  "messages": [
+    {
+      "text": "你好 ，还在招人，日结周结都可以，兼职全职都在招人，加微信了解一下吗",
+      "time": "昨天 15:20",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394818449326596",
+      "block": "昨天 15:20 你好 ，还在招人，日结周结都可以，兼职全职都在招人，加微信了解一下吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好 ，还在招人，日结周结都可以，兼职全职都在招人，加微信了解一下吗"
+    },
+    {
+      "text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394818449338881",
+      "block": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "sender": "hr",
+      "kind": "system",
+      "content": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "card_text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-10 07:13:43",
+      "time": "07:13",
+      "job_name": "日结 山姆配送零食饮料优选驻店包住8-9K长沙查看职位",
+      "isFriend": false,
+      "mid": "395052747842048"
+    }
+  ],
+  "updated_at": "2026-10-10 07:35:19",
+  "unread_on_boss": 0
+}

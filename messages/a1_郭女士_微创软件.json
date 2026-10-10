@@ -1,0 +1,91 @@
+{
+  "chat_name": "郭女士",
+  "chat_id": "郭女士#微创软件",
+  "account_index": 1,
+  "job_name": "数据分析师（金融/电商方向）9-12K上海查看职位",
+  "company": "微创软件",
+  "messages": [
+    {
+      "text": "",
+      "time": "12:46",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394780604867072",
+      "block": "12:46 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据标注和AI辅助分析，有金融/电商方向数据分析经验，方便的话我把简历发您细聊",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394780725723648",
+      "block": "已读 您好，我是统计学专业在读生，擅长数据标注和AI辅助分析，有金融/电商方向数据分析经验，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据标注和AI辅助分析，有金融/电商方向数据分析经验，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "13:00",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394784102801921",
+      "block": "13:00 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的反馈，祝您招聘顺利~",
+      "text": "理解，感谢您的反馈，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-09 13:04:50",
+      "time": "13:04",
+      "job_name": "数据分析师（金融/电商方向）9-12K上海查看职位",
+      "isFriend": false,
+      "mid": "394785136235009"
+    },
+    {
+      "text": "祝您找到心仪工作！",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394785495151104",
+      "block": "祝您找到心仪工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "祝您找到心仪工作！"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-09 13:42:14",
+      "time": "13:42",
+      "job_name": "数据分析师（金融/电商方向）9-12K上海查看职位",
+      "isFriend": false,
+      "mid": "394794327953925"
+    }
+  ],
+  "updated_at": "2026-10-10 03:16:02",
+  "unread_on_boss": 0
+}

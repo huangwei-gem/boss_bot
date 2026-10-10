@@ -1,0 +1,22 @@
+{
+  "chat_name": "陈女士",
+  "chat_id": "陈女士#迪诺制药",
+  "account_index": 0,
+  "job_name": "分析研究员10-12K长沙查看职位",
+  "company": "迪诺制药",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 11:42",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "388040860459778",
+      "block": "09-20 11:42 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-04 23:55:43"
+}

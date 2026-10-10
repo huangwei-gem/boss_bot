@@ -1,0 +1,36 @@
+{
+  "chat_name": "葛生网",
+  "chat_id": "葛生网#点睿科技",
+  "account_index": 1,
+  "job_name": "兼职·AI数据标注25-30元/时淮安查看职位",
+  "company": "点睿科技",
+  "messages": [
+    {
+      "text": "",
+      "time": "00:40",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393894420279809",
+      "block": "00:40 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我对AI数据标注岗位很感兴趣。我有统计学背景和数据处理经验，熟练使用Excel、SQL、Python，能高效准确地完成数据标注任务，期待您的回复。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393894555140610",
+      "block": "送达 您好，我对AI数据标注岗位很感兴趣。我有统计学背景和数据处理经验，熟练使用Excel、SQL、Python，能高效准确地完成数据标注任务，期待您的回复。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对AI数据标注岗位很感兴趣。我有统计学背景和数据处理经验，熟练使用Excel、SQL、Python，能高效准确地完成数据标注任务，期待您的回复。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-08 15:11:23"
+}

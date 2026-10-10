@@ -1,0 +1,1252 @@
+2026-10-03 00:16:42,446 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 00:16:42,552 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 00:17:13,834 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-ce4e7d28-8574-4563-86fc-8d6b0b07eebb', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'agnes-2.5-flash', 'max_tokens': 200}}
+2026-10-03 00:17:13,895 [DEBUG] openai._base_client: Sending HTTP Request: POST https://apihub.agnes-ai.com/v1/chat/completions
+2026-10-03 00:17:13,895 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:17:13,897 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BC0FA10>
+2026-10-03 00:17:13,897 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:13,898 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:17:13,898 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:13,898 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:17:13,898 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:13,898 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:17:13,899 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000B339E20> server_hostname='apihub.agnes-ai.com' timeout=30
+2026-10-03 00:17:14,063 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD3C2D0>
+2026-10-03 00:17:14,063 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:17:14,063 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:17:14,063 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:17:14,064 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:17:14,064 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:17:14,920 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 02 Oct 2026 16:17:17 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'X-Litellm-Response-Cost-Tool-Usage', b'0.0'), (b'Content-Security-Policy', b"frame-ancestors 'none'"), (b'set-cookie', b'__cf_bm=M0ya555gUJnizKeyVajmY89axN4gItLW8BV2vt.sl6o-1790957836.5129669-1.0.1.1-1IHhs7W8j_xJejgc3PNgnDP2KpGh7yq8EUqMde.4ftHwyqfmuJvrrhkUYTdm94jRzLn94v45s_LlB6spYo29DG6KQtdtEDJuu_h.7jpTTacd7XX7bPs3mn7BcJKvRoQu; HttpOnly; SameSite=None; Secure; Path=/; Domain=agnes-ai.com; Expires=Fri, 02 Oct 2026 16:47:17 GMT'), (b'cf-cache-status', b'DYNAMIC'), (b'X-Trace-Id', b'8042fe68bd7e9b2fb8d66fe8ae7a33c9'), (b'X-Request-Id', b'8042fe68bd7e9b2fb8d66fe8ae7a33c9'), (b'X-Litellm-Response-Cost-Output', b'0.0'), (b'X-New-Api-Version', b'master-5f7df83b4a09762a9f9dc5ce7eda1589cb777b82'), (b'X-Content-Type-Options', b'nosniff'), (b'X-Frame-Options', b'DENY'), (b'X-Litellm-Model-Name', b'agnes-2.5-flash'), (b'X-Litellm-Response-Cost-Input', b'0.0'), (b'Content-Encoding', b'gzip'), (b'Server', b'cloudflare'), (b'CF-RAY', b'a445042e3edd1a03-NRT')])
+2026-10-03 00:17:14,921 [INFO] httpx: HTTP Request: POST https://apihub.agnes-ai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:17:14,921 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:17:14,944 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:17:14,945 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:17:14,945 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:17:14,945 [DEBUG] openai._base_client: HTTP Response: POST https://apihub.agnes-ai.com/v1/chat/completions "200 OK" Headers({'date': 'Fri, 02 Oct 2026 16:17:17 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'x-litellm-response-cost-tool-usage': '0.0', 'content-security-policy': "frame-ancestors 'none'", 'set-cookie': '__cf_bm=M0ya555gUJnizKeyVajmY89axN4gItLW8BV2vt.sl6o-1790957836.5129669-1.0.1.1-1IHhs7W8j_xJejgc3PNgnDP2KpGh7yq8EUqMde.4ftHwyqfmuJvrrhkUYTdm94jRzLn94v45s_LlB6spYo29DG6KQtdtEDJuu_h.7jpTTacd7XX7bPs3mn7BcJKvRoQu; HttpOnly; SameSite=None; Secure; Path=/; Domain=agnes-ai.com; Expires=Fri, 02 Oct 2026 16:47:17 GMT', 'cf-cache-status': 'DYNAMIC', 'x-trace-id': '8042fe68bd7e9b2fb8d66fe8ae7a33c9', 'x-request-id': '8042fe68bd7e9b2fb8d66fe8ae7a33c9', 'x-litellm-response-cost-output': '0.0', 'x-new-api-version': 'master-5f7df83b4a09762a9f9dc5ce7eda1589cb777b82', 'x-content-type-options': 'nosniff', 'x-frame-options': 'DENY', 'x-litellm-model-name': 'agnes-2.5-flash', 'x-litellm-response-cost-input': '0.0', 'content-encoding': 'gzip', 'server': 'cloudflare', 'cf-ray': 'a445042e3edd1a03-NRT'})
+2026-10-03 00:17:14,946 [DEBUG] openai._base_client: request_id: 8042fe68bd7e9b2fb8d66fe8ae7a33c9
+2026-10-03 00:17:16,904 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-8632174f-d3af-4eb4-ac55-d5c8763b903b', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'agnes-2.5-flash', 'max_tokens': 200}}
+2026-10-03 00:17:16,904 [DEBUG] openai._base_client: Sending HTTP Request: POST https://apihub.agnes-ai.com/v1/chat/completions
+2026-10-03 00:17:16,905 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:17:16,906 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD3DD10>
+2026-10-03 00:17:16,906 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:16,906 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:17:16,906 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:16,906 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:17:16,906 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:16,907 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:17:16,907 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000BC76570> server_hostname='apihub.agnes-ai.com' timeout=30
+2026-10-03 00:17:17,094 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BC1A780>
+2026-10-03 00:17:17,094 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:17:17,094 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:17:17,095 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:17:17,095 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:17:17,095 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:17:18,291 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 02 Oct 2026 16:17:20 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'X-Litellm-Response-Cost-Tool-Usage', b'0.0'), (b'Content-Security-Policy', b"frame-ancestors 'none'"), (b'set-cookie', b'__cf_bm=gcxk174FL1HZOP4V0RLrxmp8_5432wqBRuL9Pn3BDfo-1790957839.5336037-1.0.1.1-b9u5uMRlluhA0.dFVDGt6lpHEzN5CMDT_iVTOwAJ9C375IThdOSVzP3fTUID2ytefJBmdHPBx1OvADqZ3sp5xAloe0Pcq7GH1RVsIdmwRu1bB3tR3D_ujBcO9pV_XFMe; HttpOnly; SameSite=None; Secure; Path=/; Domain=agnes-ai.com; Expires=Fri, 02 Oct 2026 16:47:20 GMT'), (b'cf-cache-status', b'DYNAMIC'), (b'X-Trace-Id', b'9bc9f0258627be338730659e28e2ba10'), (b'X-Request-Id', b'9bc9f0258627be338730659e28e2ba10'), (b'X-Litellm-Response-Cost-Output', b'0.0'), (b'X-New-Api-Version', b'master-5f7df83b4a09762a9f9dc5ce7eda1589cb777b82'), (b'X-Content-Type-Options', b'nosniff'), (b'X-Frame-Options', b'DENY'), (b'X-Litellm-Model-Name', b'agnes-2.5-flash'), (b'X-Litellm-Response-Cost-Input', b'0.0'), (b'Content-Encoding', b'gzip'), (b'Server', b'cloudflare'), (b'CF-RAY', b'a44504411b1a8eb8-NRT')])
+2026-10-03 00:17:18,293 [INFO] httpx: HTTP Request: POST https://apihub.agnes-ai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:17:18,293 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:17:18,294 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:17:18,294 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:17:18,294 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:17:18,295 [DEBUG] openai._base_client: HTTP Response: POST https://apihub.agnes-ai.com/v1/chat/completions "200 OK" Headers({'date': 'Fri, 02 Oct 2026 16:17:20 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'x-litellm-response-cost-tool-usage': '0.0', 'content-security-policy': "frame-ancestors 'none'", 'set-cookie': '__cf_bm=gcxk174FL1HZOP4V0RLrxmp8_5432wqBRuL9Pn3BDfo-1790957839.5336037-1.0.1.1-b9u5uMRlluhA0.dFVDGt6lpHEzN5CMDT_iVTOwAJ9C375IThdOSVzP3fTUID2ytefJBmdHPBx1OvADqZ3sp5xAloe0Pcq7GH1RVsIdmwRu1bB3tR3D_ujBcO9pV_XFMe; HttpOnly; SameSite=None; Secure; Path=/; Domain=agnes-ai.com; Expires=Fri, 02 Oct 2026 16:47:20 GMT', 'cf-cache-status': 'DYNAMIC', 'x-trace-id': '9bc9f0258627be338730659e28e2ba10', 'x-request-id': '9bc9f0258627be338730659e28e2ba10', 'x-litellm-response-cost-output': '0.0', 'x-new-api-version': 'master-5f7df83b4a09762a9f9dc5ce7eda1589cb777b82', 'x-content-type-options': 'nosniff', 'x-frame-options': 'DENY', 'x-litellm-model-name': 'agnes-2.5-flash', 'x-litellm-response-cost-input': '0.0', 'content-encoding': 'gzip', 'server': 'cloudflare', 'cf-ray': 'a44504411b1a8eb8-NRT'})
+2026-10-03 00:17:18,295 [DEBUG] openai._base_client: request_id: 9bc9f0258627be338730659e28e2ba10
+2026-10-03 00:17:19,727 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-888642e3-7e0d-4833-a507-f87a929d2174', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'deepseek-v4-flash', 'max_tokens': 200}}
+2026-10-03 00:17:19,728 [DEBUG] openai._base_client: Sending HTTP Request: POST https://token.sensenova.cn/v1/chat/completions
+2026-10-03 00:17:19,728 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:17:19,730 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BC1A2C0>
+2026-10-03 00:17:19,730 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:19,731 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:17:19,731 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:19,731 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:17:19,731 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:19,731 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:17:19,731 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000BC76840> server_hostname='token.sensenova.cn' timeout=30
+2026-10-03 00:17:19,873 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BC2ED50>
+2026-10-03 00:17:19,873 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:17:19,873 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:17:19,873 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:17:19,873 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:17:19,873 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:17:21,129 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=utf-8'), (b'Content-Length', b'506'), (b'Connection', b'keep-alive'), (b'Date', b'Fri, 02 Oct 2026 16:17:23 GMT'), (b'Access-Control-Allow-Origin', b'*'), (b'Access-Control-Expose-Headers', b'Content-Disposition,Content-Transfer-Encoding,Content-Type'), (b'X-Request-Id', b'f2e7c5a8e6c14782b33f634021897dd8')])
+2026-10-03 00:17:21,129 [INFO] httpx: HTTP Request: POST https://token.sensenova.cn/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:17:21,129 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:17:21,129 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:17:21,129 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:17:21,129 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:17:21,130 [DEBUG] openai._base_client: HTTP Response: POST https://token.sensenova.cn/v1/chat/completions "200 OK" Headers({'content-type': 'application/json; charset=utf-8', 'content-length': '506', 'connection': 'keep-alive', 'date': 'Fri, 02 Oct 2026 16:17:23 GMT', 'access-control-allow-origin': '*', 'access-control-expose-headers': 'Content-Disposition,Content-Transfer-Encoding,Content-Type', 'x-request-id': 'f2e7c5a8e6c14782b33f634021897dd8'})
+2026-10-03 00:17:21,130 [DEBUG] openai._base_client: request_id: f2e7c5a8e6c14782b33f634021897dd8
+2026-10-03 00:17:22,821 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-10f079e7-1619-4480-b704-64c9a244d5fc', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'deepseek-v4-flash', 'max_tokens': 200}}
+2026-10-03 00:17:22,821 [DEBUG] openai._base_client: Sending HTTP Request: POST https://token.sensenova.cn/v1/chat/completions
+2026-10-03 00:17:22,821 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:17:22,822 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BCEFDF0>
+2026-10-03 00:17:22,822 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:22,823 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:17:22,823 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:22,823 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:17:22,823 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:22,823 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:17:22,823 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000BC76A80> server_hostname='token.sensenova.cn' timeout=30
+2026-10-03 00:17:22,962 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD70490>
+2026-10-03 00:17:22,962 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:17:22,962 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:17:22,962 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:17:22,963 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:17:22,963 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:17:24,454 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=utf-8'), (b'Content-Length', b'489'), (b'Connection', b'keep-alive'), (b'Date', b'Fri, 02 Oct 2026 16:17:26 GMT'), (b'Access-Control-Allow-Origin', b'*'), (b'Access-Control-Expose-Headers', b'Content-Disposition,Content-Transfer-Encoding,Content-Type'), (b'X-Request-Id', b'308b6d13dbfb470aa0a9ea2650106333')])
+2026-10-03 00:17:24,455 [INFO] httpx: HTTP Request: POST https://token.sensenova.cn/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:17:24,455 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:17:24,455 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:17:24,455 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:17:24,455 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:17:24,455 [DEBUG] openai._base_client: HTTP Response: POST https://token.sensenova.cn/v1/chat/completions "200 OK" Headers({'content-type': 'application/json; charset=utf-8', 'content-length': '489', 'connection': 'keep-alive', 'date': 'Fri, 02 Oct 2026 16:17:26 GMT', 'access-control-allow-origin': '*', 'access-control-expose-headers': 'Content-Disposition,Content-Transfer-Encoding,Content-Type', 'x-request-id': '308b6d13dbfb470aa0a9ea2650106333'})
+2026-10-03 00:17:24,455 [DEBUG] openai._base_client: request_id: 308b6d13dbfb470aa0a9ea2650106333
+2026-10-03 00:17:25,908 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-5a1907f4-0fb7-44ab-9e3d-6e2e9ca7f5c6', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'dots3-note-prev', 'max_tokens': 200}}
+2026-10-03 00:17:25,908 [DEBUG] openai._base_client: Sending HTTP Request: POST https://note3-prev-api.askdiandian.com/v1/chat/completions
+2026-10-03 00:17:25,908 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:17:25,910 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD39850>
+2026-10-03 00:17:25,910 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:25,910 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:17:25,910 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:25,910 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:17:25,910 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:25,911 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:17:25,911 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000BC76BA0> server_hostname='note3-prev-api.askdiandian.com' timeout=30
+2026-10-03 00:17:26,118 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD39E50>
+2026-10-03 00:17:26,118 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:17:26,118 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:17:26,118 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:17:26,118 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:17:26,119 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:17:27,205 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 02 Oct 2026 16:17:29 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Set-Cookie', b'acw_tc=0a9387e617909578485157317e6c484df26341bef35edb930d62631dd452e3;path=/;HttpOnly;Max-Age=1800'), (b'Access-Control-Allow-Headers', b'Content-Type, Authorization, X-Requested-With, X-Stainless-Timeout, X-Api-Key, X-OpenAI-Agents-SDK, X-Operation-ID, X-Request-ID, traceparent, tracestate, x-xray-traceid'), (b'Access-Control-Allow-Methods', b'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD'), (b'Access-Control-Allow-Origin', b''), (b'Access-Control-Expose-Headers', b'X-Request-ID, X-Trace-ID'), (b'Access-Control-Max-Age', b'86400'), (b'Cache-Control', b'no-cache'), (b'Content-Security-Policy', b"frame-ancestors 'none'"), (b'Permissions-Policy', b'camera=(), microphone=(), geolocation=()'), (b'Referrer-Policy', b'strict-origin-when-cross-origin'), (b'Vary', b'Origin'), (b'X-Content-Type-Options', b'nosniff'), (b'X-Frame-Options', b'DENY'), (b'X-Request-Id', b'92231234b9374ec6a70de159ba65196f'), (b'X-Trace-Id', b'fda0decfa3490c02eca57261a1a75af5'), (b'Content-Encoding', b'gzip'), (b'xhs-real-ip', b'116.162.1.61')])
+2026-10-03 00:17:27,206 [INFO] httpx: HTTP Request: POST https://note3-prev-api.askdiandian.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:17:27,206 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:17:27,206 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:17:27,206 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:17:27,206 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:17:27,206 [DEBUG] openai._base_client: HTTP Response: POST https://note3-prev-api.askdiandian.com/v1/chat/completions "200 OK" Headers({'date': 'Fri, 02 Oct 2026 16:17:29 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'set-cookie': 'acw_tc=0a9387e617909578485157317e6c484df26341bef35edb930d62631dd452e3;path=/;HttpOnly;Max-Age=1800', 'access-control-allow-headers': 'Content-Type, Authorization, X-Requested-With, X-Stainless-Timeout, X-Api-Key, X-OpenAI-Agents-SDK, X-Operation-ID, X-Request-ID, traceparent, tracestate, x-xray-traceid', 'access-control-allow-methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD', 'access-control-allow-origin': '', 'access-control-expose-headers': 'X-Request-ID, X-Trace-ID', 'access-control-max-age': '86400', 'cache-control': 'no-cache', 'content-security-policy': "frame-ancestors 'none'", 'permissions-policy': 'camera=(), microphone=(), geolocation=()', 'referrer-policy': 'strict-origin-when-cross-origin', 'vary': 'Origin', 'x-content-type-options': 'nosniff', 'x-frame-options': 'DENY', 'x-request-id': '92231234b9374ec6a70de159ba65196f', 'x-trace-id': 'fda0decfa3490c02eca57261a1a75af5', 'content-encoding': 'gzip', 'xhs-real-ip': '116.162.1.61'})
+2026-10-03 00:17:27,206 [DEBUG] openai._base_client: request_id: 92231234b9374ec6a70de159ba65196f
+2026-10-03 00:17:28,630 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-ae2b8c0e-be93-4195-842d-6907474f248c', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'DeepSeek-V4.1-Flash', 'max_tokens': 200}}
+2026-10-03 00:17:28,631 [DEBUG] openai._base_client: Sending HTTP Request: POST https://developer.amd.com.cn/radeon/api/v1/chat/completions
+2026-10-03 00:17:28,631 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:17:28,632 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD848C0>
+2026-10-03 00:17:28,633 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:28,633 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:17:28,633 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:28,633 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:17:28,633 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:28,633 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:17:28,633 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000BC76F00> server_hostname='developer.amd.com.cn' timeout=30
+2026-10-03 00:17:28,835 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD84E60>
+2026-10-03 00:17:28,835 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:17:28,836 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:17:28,836 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:17:28,836 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:17:28,836 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:17:29,785 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 02 Oct 2026 16:17:32 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'nginx'), (b'x-ratelimit-limit-user-daily-usd', b'1'), (b'x-ratelimit-limit-user-rpm', b'20'), (b'x-ratelimit-remaining-user-daily-usd', b'1.00000000'), (b'x-ratelimit-remaining-user-rpm', b'19'), (b'x-ratelimit-reset-user-daily-usd', b'1791044251'), (b'x-ratelimit-used-user-daily-usd', b'0.00000000'), (b'vary', b'Cookie, Accept-Encoding'), (b'content-encoding', b'gzip')])
+2026-10-03 00:17:29,786 [INFO] httpx: HTTP Request: POST https://developer.amd.com.cn/radeon/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:17:29,786 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:17:29,786 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:17:29,786 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:17:29,786 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:17:29,787 [DEBUG] openai._base_client: HTTP Response: POST https://developer.amd.com.cn/radeon/api/v1/chat/completions "200 OK" Headers({'date': 'Fri, 02 Oct 2026 16:17:32 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'nginx', 'x-ratelimit-limit-user-daily-usd': '1', 'x-ratelimit-limit-user-rpm': '20', 'x-ratelimit-remaining-user-daily-usd': '1.00000000', 'x-ratelimit-remaining-user-rpm': '19', 'x-ratelimit-reset-user-daily-usd': '1791044251', 'x-ratelimit-used-user-daily-usd': '0.00000000', 'vary': 'Cookie, Accept-Encoding', 'content-encoding': 'gzip'})
+2026-10-03 00:17:29,787 [DEBUG] openai._base_client: request_id: None
+2026-10-03 00:17:31,276 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-1b238567-879f-4c1b-8dac-4b4d93783327', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'GLM-5.3-Flash', 'max_tokens': 200}}
+2026-10-03 00:17:31,276 [DEBUG] openai._base_client: Sending HTTP Request: POST https://developer.amd.com.cn/radeon/api/v1/chat/completions
+2026-10-03 00:17:31,277 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:17:31,278 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD802F0>
+2026-10-03 00:17:31,279 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:31,279 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:17:31,279 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:31,279 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:17:31,279 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:17:31,279 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:17:31,279 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000BC77260> server_hostname='developer.amd.com.cn' timeout=30
+2026-10-03 00:17:31,421 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD81390>
+2026-10-03 00:17:31,421 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:17:31,422 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:17:31,422 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:17:31,422 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:17:31,422 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:18:01,434 [DEBUG] httpcore.http11: receive_response_headers.failed exception=ReadTimeout(TimeoutError('The read operation timed out'))
+2026-10-03 00:18:01,434 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:18:01,434 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:18:01,434 [DEBUG] openai._base_client: Encountered a timeout exception
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+        pool_request.request
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http_proxy.py", line 343, in handle_request
+    return self._connection.handle_request(request)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 136, in handle_request
+    raise exc
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 106, in handle_request
+    ) = self._receive_response_headers(**kwargs)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 177, in _receive_response_headers
+    event = self._receive_event(timeout=timeout)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 217, in _receive_event
+    data = self._network_stream.read(
+        self.READ_NUM_BYTES, timeout=timeout
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_backends\sync.py", line 126, in read
+    with map_exceptions(exc_map):
+         ~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ReadTimeout: The read operation timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_base_client.py", line 1080, in request
+    response = self._send_request(
+        request,
+        stream=stream or self._should_stream_response_body(request=request),
+        **kwargs,
+    )
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_client.py", line 491, in _send_request
+    response = self._send_with_auth_retry(request, stream=stream, **kwargs)
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_client.py", line 469, in _send_with_auth_retry
+    response = super()._send_request(request, stream=stream, **kwargs)
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_base_client.py", line 1005, in _send_request
+    return self._client.send(request, stream=stream, **kwargs)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+        request,
+    ...<2 lines>...
+        history=[],
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+        request,
+        follow_redirects=follow_redirects,
+        history=history,
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+         ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\ProgramData\anaconda3\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ReadTimeout: The read operation timed out
+2026-10-03 00:18:01,483 [DEBUG] openai._base_client: Raising timeout error
+2026-10-03 00:18:01,483 [DEBUG] boss_bot.ai_health: AI 体检失败 [AMD-GLM-5.3] 第 1 次: Request timed out.
+2026-10-03 00:18:04,343 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-4c20cdca-be0a-4acf-80d3-4f04800cfd42', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'GLM-5.3-Flash', 'max_tokens': 200}}
+2026-10-03 00:18:04,343 [DEBUG] openai._base_client: Sending HTTP Request: POST https://developer.amd.com.cn/radeon/api/v1/chat/completions
+2026-10-03 00:18:04,343 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:18:04,345 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD520D0>
+2026-10-03 00:18:04,345 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:18:04,345 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:18:04,345 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:18:04,345 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:18:04,346 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:18:04,346 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:18:04,346 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000BC76D50> server_hostname='developer.amd.com.cn' timeout=30
+2026-10-03 00:18:04,560 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BCCE990>
+2026-10-03 00:18:04,560 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:18:04,561 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:18:04,561 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:18:04,561 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:18:04,561 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:18:07,156 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 02 Oct 2026 16:18:09 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'nginx'), (b'x-ratelimit-limit-user-daily-usd', b'1'), (b'x-ratelimit-limit-user-rpm', b'20'), (b'x-ratelimit-remaining-user-daily-usd', b'1.00000000'), (b'x-ratelimit-remaining-user-rpm', b'17'), (b'x-ratelimit-reset-user-daily-usd', b'1791044287'), (b'x-ratelimit-used-user-daily-usd', b'0.00000000'), (b'vary', b'Cookie, Accept-Encoding'), (b'content-encoding', b'gzip')])
+2026-10-03 00:18:07,156 [INFO] httpx: HTTP Request: POST https://developer.amd.com.cn/radeon/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:18:07,156 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:18:07,156 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:18:07,156 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:18:07,156 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:18:07,156 [DEBUG] openai._base_client: HTTP Response: POST https://developer.amd.com.cn/radeon/api/v1/chat/completions "200 OK" Headers({'date': 'Fri, 02 Oct 2026 16:18:09 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'nginx', 'x-ratelimit-limit-user-daily-usd': '1', 'x-ratelimit-limit-user-rpm': '20', 'x-ratelimit-remaining-user-daily-usd': '1.00000000', 'x-ratelimit-remaining-user-rpm': '17', 'x-ratelimit-reset-user-daily-usd': '1791044287', 'x-ratelimit-used-user-daily-usd': '0.00000000', 'vary': 'Cookie, Accept-Encoding', 'content-encoding': 'gzip'})
+2026-10-03 00:18:07,157 [DEBUG] openai._base_client: request_id: None
+2026-10-03 00:18:08,526 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-62389a74-4798-4537-abd1-25afc1b5d249', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'Qwen3.8-Flash-Next', 'max_tokens': 200}}
+2026-10-03 00:18:08,526 [DEBUG] openai._base_client: Sending HTTP Request: POST https://developer.amd.com.cn/radeon/api/v1/chat/completions
+2026-10-03 00:18:08,526 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:18:08,528 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BCCEBD0>
+2026-10-03 00:18:08,529 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:18:08,529 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:18:08,529 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:18:08,529 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:18:08,529 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:18:08,529 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:18:08,530 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000BC76C30> server_hostname='developer.amd.com.cn' timeout=30
+2026-10-03 00:18:08,658 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD91020>
+2026-10-03 00:18:08,658 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:18:08,659 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:18:08,659 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:18:08,659 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:18:08,659 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:18:10,422 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 02 Oct 2026 16:18:12 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Server', b'nginx'), (b'x-ratelimit-limit-user-daily-usd', b'1'), (b'x-ratelimit-limit-user-rpm', b'20'), (b'x-ratelimit-remaining-user-daily-usd', b'1.00000000'), (b'x-ratelimit-remaining-user-rpm', b'16'), (b'x-ratelimit-reset-user-daily-usd', b'1791044291'), (b'x-ratelimit-used-user-daily-usd', b'0.00000000'), (b'vary', b'Cookie, Accept-Encoding'), (b'content-encoding', b'gzip')])
+2026-10-03 00:18:10,423 [INFO] httpx: HTTP Request: POST https://developer.amd.com.cn/radeon/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:18:10,423 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:18:10,423 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:18:10,423 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:18:10,423 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:18:10,423 [DEBUG] openai._base_client: HTTP Response: POST https://developer.amd.com.cn/radeon/api/v1/chat/completions "200 OK" Headers({'date': 'Fri, 02 Oct 2026 16:18:12 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'server': 'nginx', 'x-ratelimit-limit-user-daily-usd': '1', 'x-ratelimit-limit-user-rpm': '20', 'x-ratelimit-remaining-user-daily-usd': '1.00000000', 'x-ratelimit-remaining-user-rpm': '16', 'x-ratelimit-reset-user-daily-usd': '1791044291', 'x-ratelimit-used-user-daily-usd': '0.00000000', 'vary': 'Cookie, Accept-Encoding', 'content-encoding': 'gzip'})
+2026-10-03 00:18:10,424 [DEBUG] openai._base_client: request_id: None
+2026-10-03 00:18:12,085 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-9a958882-3c3b-4ddc-8353-e5b1e9ad01a5', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'z-ai/glm-5.3-flash', 'max_tokens': 200}}
+2026-10-03 00:18:12,086 [DEBUG] openai._base_client: Sending HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions
+2026-10-03 00:18:12,087 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=90 socket_options=None
+2026-10-03 00:18:12,088 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD91180>
+2026-10-03 00:18:12,089 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:18:12,089 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:18:12,089 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:18:12,089 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:18:12,089 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:18:12,089 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:18:12,089 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000BC76960> server_hostname='integrate.api.nvidia.com' timeout=90
+2026-10-03 00:18:12,404 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000753CEB0>
+2026-10-03 00:18:12,405 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:18:12,405 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:18:12,406 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:18:12,406 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:18:12,406 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:18:16,109 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 02 Oct 2026 16:18:18 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Access-Control-Expose-Headers', b'nvcf-reqid'), (b'Nvcf-Reqid', b'd575e040-d669-4178-bee4-4810910d26a6'), (b'Nvcf-Status', b'fulfilled'), (b'Vary', b'Origin')])
+2026-10-03 00:18:16,110 [INFO] httpx: HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:18:16,110 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:18:16,110 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:18:16,110 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:18:16,110 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:18:16,110 [DEBUG] openai._base_client: HTTP Response: POST https://integrate.api.nvidia.com/v1/chat/completions "200 OK" Headers({'date': 'Fri, 02 Oct 2026 16:18:18 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'access-control-expose-headers': 'nvcf-reqid', 'nvcf-reqid': 'd575e040-d669-4178-bee4-4810910d26a6', 'nvcf-status': 'fulfilled', 'vary': 'Origin'})
+2026-10-03 00:18:16,110 [DEBUG] openai._base_client: request_id: None
+2026-10-03 00:18:17,568 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-bac42c4c-5148-4316-b4f8-95f244607b5c', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'z-ai/glm-5.3', 'max_tokens': 200}}
+2026-10-03 00:18:17,568 [DEBUG] openai._base_client: Sending HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions
+2026-10-03 00:18:17,569 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=90 socket_options=None
+2026-10-03 00:18:17,570 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000969B750>
+2026-10-03 00:18:17,570 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:18:17,570 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:18:17,570 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:18:17,570 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:18:17,570 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:18:17,570 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:18:17,570 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000BC76600> server_hostname='integrate.api.nvidia.com' timeout=90
+2026-10-03 00:18:17,726 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BC75C70>
+2026-10-03 00:18:17,726 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:18:17,727 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:18:17,727 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:18:17,727 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:18:17,727 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:19:47,733 [DEBUG] httpcore.http11: receive_response_headers.failed exception=ReadTimeout(TimeoutError('The read operation timed out'))
+2026-10-03 00:19:47,733 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:19:47,733 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:19:47,734 [DEBUG] openai._base_client: Encountered a timeout exception
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+        pool_request.request
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http_proxy.py", line 343, in handle_request
+    return self._connection.handle_request(request)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 136, in handle_request
+    raise exc
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 106, in handle_request
+    ) = self._receive_response_headers(**kwargs)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 177, in _receive_response_headers
+    event = self._receive_event(timeout=timeout)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 217, in _receive_event
+    data = self._network_stream.read(
+        self.READ_NUM_BYTES, timeout=timeout
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_backends\sync.py", line 126, in read
+    with map_exceptions(exc_map):
+         ~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ReadTimeout: The read operation timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_base_client.py", line 1080, in request
+    response = self._send_request(
+        request,
+        stream=stream or self._should_stream_response_body(request=request),
+        **kwargs,
+    )
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_client.py", line 491, in _send_request
+    response = self._send_with_auth_retry(request, stream=stream, **kwargs)
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_client.py", line 469, in _send_with_auth_retry
+    response = super()._send_request(request, stream=stream, **kwargs)
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_base_client.py", line 1005, in _send_request
+    return self._client.send(request, stream=stream, **kwargs)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+        request,
+    ...<2 lines>...
+        history=[],
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+        request,
+        follow_redirects=follow_redirects,
+        history=history,
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+         ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\ProgramData\anaconda3\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ReadTimeout: The read operation timed out
+2026-10-03 00:19:47,804 [DEBUG] openai._base_client: Raising timeout error
+2026-10-03 00:19:47,805 [DEBUG] boss_bot.ai_health: AI 体检失败 [NVIDIA-GLM-5.3] 第 1 次: Request timed out.
+2026-10-03 00:19:50,832 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-608b0821-4527-4404-8190-6b7a1666c165', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'z-ai/glm-5.3', 'max_tokens': 200}}
+2026-10-03 00:19:50,833 [DEBUG] openai._base_client: Sending HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions
+2026-10-03 00:19:50,833 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=90 socket_options=None
+2026-10-03 00:19:50,835 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000CFF99D0>
+2026-10-03 00:19:50,835 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:19:50,836 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:19:50,836 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:19:50,836 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:19:50,836 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:19:50,837 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:19:50,837 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000CFEC7A0> server_hostname='integrate.api.nvidia.com' timeout=90
+2026-10-03 00:19:50,991 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000CFFA7D0>
+2026-10-03 00:19:50,991 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:19:50,992 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:19:50,992 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:19:50,992 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:19:50,992 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:21:21,008 [DEBUG] httpcore.http11: receive_response_headers.failed exception=ReadTimeout(TimeoutError('The read operation timed out'))
+2026-10-03 00:21:21,009 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:21:21,011 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:21:21,016 [DEBUG] openai._base_client: Encountered a timeout exception
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+        pool_request.request
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http_proxy.py", line 343, in handle_request
+    return self._connection.handle_request(request)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 136, in handle_request
+    raise exc
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 106, in handle_request
+    ) = self._receive_response_headers(**kwargs)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 177, in _receive_response_headers
+    event = self._receive_event(timeout=timeout)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 217, in _receive_event
+    data = self._network_stream.read(
+        self.READ_NUM_BYTES, timeout=timeout
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_backends\sync.py", line 126, in read
+    with map_exceptions(exc_map):
+         ~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ReadTimeout: The read operation timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_base_client.py", line 1080, in request
+    response = self._send_request(
+        request,
+        stream=stream or self._should_stream_response_body(request=request),
+        **kwargs,
+    )
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_client.py", line 491, in _send_request
+    response = self._send_with_auth_retry(request, stream=stream, **kwargs)
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_client.py", line 469, in _send_with_auth_retry
+    response = super()._send_request(request, stream=stream, **kwargs)
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_base_client.py", line 1005, in _send_request
+    return self._client.send(request, stream=stream, **kwargs)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+        request,
+    ...<2 lines>...
+        history=[],
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+        request,
+        follow_redirects=follow_redirects,
+        history=history,
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+         ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\ProgramData\anaconda3\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ReadTimeout: The read operation timed out
+2026-10-03 00:21:21,024 [DEBUG] openai._base_client: Raising timeout error
+2026-10-03 00:21:21,025 [DEBUG] boss_bot.ai_health: AI 体检失败 [NVIDIA-GLM-5.3] 第 2 次: Request timed out.
+2026-10-03 00:21:23,160 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-6779abd4-3e40-40fa-93d2-334a60870aa3', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'moonshotai/kimi-k3', 'max_tokens': 200}}
+2026-10-03 00:21:23,162 [DEBUG] openai._base_client: Sending HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions
+2026-10-03 00:21:23,164 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=90 socket_options=None
+2026-10-03 00:21:23,166 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000CFA27B0>
+2026-10-03 00:21:23,167 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:21:23,168 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:21:23,168 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:21:23,168 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:21:23,169 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:21:23,169 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:21:23,170 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000BC764E0> server_hostname='integrate.api.nvidia.com' timeout=90
+2026-10-03 00:21:23,335 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000CFD2C10>
+2026-10-03 00:21:23,336 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:21:23,336 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:21:23,336 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:21:23,336 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:21:23,336 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:22:53,350 [DEBUG] httpcore.http11: receive_response_headers.failed exception=ReadTimeout(TimeoutError('The read operation timed out'))
+2026-10-03 00:22:53,350 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:22:53,350 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:22:53,350 [DEBUG] openai._base_client: Encountered a timeout exception
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+        pool_request.request
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http_proxy.py", line 343, in handle_request
+    return self._connection.handle_request(request)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 136, in handle_request
+    raise exc
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 106, in handle_request
+    ) = self._receive_response_headers(**kwargs)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 177, in _receive_response_headers
+    event = self._receive_event(timeout=timeout)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 217, in _receive_event
+    data = self._network_stream.read(
+        self.READ_NUM_BYTES, timeout=timeout
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_backends\sync.py", line 126, in read
+    with map_exceptions(exc_map):
+         ~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ReadTimeout: The read operation timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_base_client.py", line 1080, in request
+    response = self._send_request(
+        request,
+        stream=stream or self._should_stream_response_body(request=request),
+        **kwargs,
+    )
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_client.py", line 491, in _send_request
+    response = self._send_with_auth_retry(request, stream=stream, **kwargs)
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_client.py", line 469, in _send_with_auth_retry
+    response = super()._send_request(request, stream=stream, **kwargs)
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_base_client.py", line 1005, in _send_request
+    return self._client.send(request, stream=stream, **kwargs)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+        request,
+    ...<2 lines>...
+        history=[],
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+        request,
+        follow_redirects=follow_redirects,
+        history=history,
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+         ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\ProgramData\anaconda3\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ReadTimeout: The read operation timed out
+2026-10-03 00:22:53,355 [DEBUG] openai._base_client: Raising timeout error
+2026-10-03 00:22:53,355 [DEBUG] boss_bot.ai_health: AI 体检失败 [NVIDIA-Kimi-K3] 第 1 次: Request timed out.
+2026-10-03 00:22:56,140 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-dc56d4a9-b594-4452-a90d-062228544180', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'moonshotai/kimi-k3', 'max_tokens': 200}}
+2026-10-03 00:22:56,141 [DEBUG] openai._base_client: Sending HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions
+2026-10-03 00:22:56,141 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=90 socket_options=None
+2026-10-03 00:22:56,142 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BCD76B0>
+2026-10-03 00:22:56,142 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:22:56,143 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:22:56,143 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:22:56,143 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:22:56,143 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:22:56,143 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:22:56,143 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000BC76A80> server_hostname='integrate.api.nvidia.com' timeout=90
+2026-10-03 00:22:56,290 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BCD7710>
+2026-10-03 00:22:56,290 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:22:56,290 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:22:56,291 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:22:56,291 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:22:56,291 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:24:26,304 [DEBUG] httpcore.http11: receive_response_headers.failed exception=ReadTimeout(TimeoutError('The read operation timed out'))
+2026-10-03 00:24:26,304 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:24:26,304 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:24:26,304 [DEBUG] openai._base_client: Encountered a timeout exception
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 101, in map_httpcore_exceptions
+    yield
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+        pool_request.request
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http_proxy.py", line 343, in handle_request
+    return self._connection.handle_request(request)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 136, in handle_request
+    raise exc
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 106, in handle_request
+    ) = self._receive_response_headers(**kwargs)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 177, in _receive_response_headers
+    event = self._receive_event(timeout=timeout)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_sync\http11.py", line 217, in _receive_event
+    data = self._network_stream.read(
+        self.READ_NUM_BYTES, timeout=timeout
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_backends\sync.py", line 126, in read
+    with map_exceptions(exc_map):
+         ~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ReadTimeout: The read operation timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_base_client.py", line 1080, in request
+    response = self._send_request(
+        request,
+        stream=stream or self._should_stream_response_body(request=request),
+        **kwargs,
+    )
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_client.py", line 491, in _send_request
+    response = self._send_with_auth_retry(request, stream=stream, **kwargs)
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_client.py", line 469, in _send_with_auth_retry
+    response = super()._send_request(request, stream=stream, **kwargs)
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\openai\_base_client.py", line 1005, in _send_request
+    return self._client.send(request, stream=stream, **kwargs)
+           ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 914, in send
+    response = self._send_handling_auth(
+        request,
+    ...<2 lines>...
+        history=[],
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+        request,
+        follow_redirects=follow_redirects,
+        history=history,
+    )
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 249, in handle_request
+    with map_httpcore_exceptions():
+         ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\ProgramData\anaconda3\Lib\contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\site-packages\httpx\_transports\default.py", line 118, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ReadTimeout: The read operation timed out
+2026-10-03 00:24:26,316 [DEBUG] openai._base_client: Raising timeout error
+2026-10-03 00:24:26,316 [DEBUG] boss_bot.ai_health: AI 体检失败 [NVIDIA-Kimi-K3] 第 2 次: Request timed out.
+2026-10-03 00:24:28,180 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-bd33632a-98d5-477f-ac2b-2c67b45b74bb', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'deepseek-ai/deepseek-v4.1-flash', 'max_tokens': 200}}
+2026-10-03 00:24:28,180 [DEBUG] openai._base_client: Sending HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions
+2026-10-03 00:24:28,181 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=90 socket_options=None
+2026-10-03 00:24:28,182 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8D9F0>
+2026-10-03 00:24:28,182 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:24:28,183 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:24:28,183 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:24:28,183 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:24:28,183 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:24:28,183 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:24:28,183 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000CFEC7A0> server_hostname='integrate.api.nvidia.com' timeout=90
+2026-10-03 00:24:28,334 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8DF40>
+2026-10-03 00:24:28,335 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:24:28,335 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:24:28,335 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:24:28,335 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:24:28,335 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:24:53,819 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 02 Oct 2026 16:24:56 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Access-Control-Expose-Headers', b'nvcf-reqid'), (b'Nvcf-Reqid', b'3eb5618d-493b-4940-8957-5f742f1e4dd9'), (b'Nvcf-Status', b'fulfilled'), (b'Vary', b'Origin')])
+2026-10-03 00:24:53,828 [INFO] httpx: HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:24:53,831 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:24:53,832 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:24:53,833 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:24:53,833 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:24:53,835 [DEBUG] openai._base_client: HTTP Response: POST https://integrate.api.nvidia.com/v1/chat/completions "200 OK" Headers({'date': 'Fri, 02 Oct 2026 16:24:56 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'access-control-expose-headers': 'nvcf-reqid', 'nvcf-reqid': '3eb5618d-493b-4940-8957-5f742f1e4dd9', 'nvcf-status': 'fulfilled', 'vary': 'Origin'})
+2026-10-03 00:24:53,835 [DEBUG] openai._base_client: request_id: None
+2026-10-03 00:24:55,813 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-76026ab0-a112-4c74-86db-50317ded54d1', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'agnes-3.0-flash', 'max_tokens': 200}}
+2026-10-03 00:24:55,814 [DEBUG] openai._base_client: Sending HTTP Request: POST https://api.agnes-ai.cn/v1/chat/completions
+2026-10-03 00:24:55,816 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:24:55,817 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8DDB0>
+2026-10-03 00:24:55,817 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:24:55,817 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:24:55,818 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:24:55,818 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:24:55,818 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:24:55,819 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:24:55,819 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000CFEC5F0> server_hostname='api.agnes-ai.cn' timeout=30
+2026-10-03 00:24:55,938 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8CA00>
+2026-10-03 00:24:55,938 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:24:55,938 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:24:55,938 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:24:55,939 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:24:55,939 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:24:56,342 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 02 Oct 2026 16:24:58 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'content-security-policy', b"frame-ancestors 'none'"), (b'set-cookie', b'__cf_bm=nJ6QizbBBRU7CJgJGc6IDH07BjSFhlfTuPLDblFYttg-1790958298.3330712-1.0.1.1-Unbugq0cGgsJz1l6P_AZDRGkK27WLFqoU0jQLwRMyNHopTRJTFXdK5wVYbQuwkuLgZCzyh7w1iU0qnD1RGFtLsQtnzKTAXngiG4LsLDzFCLkYWAa4TUTl1X7EbS3aANk; HttpOnly; SameSite=None; Secure; Path=/; Domain=agnes-ai.cn; Expires=Fri, 02 Oct 2026 16:54:58 GMT'), (b'x-litellm-response-cost-tool-usage', b'0.0'), (b'cf-cache-status', b'DYNAMIC'), (b'x-trace-id', b'df893e1d97c64533a53aed6aeaed2ed2'), (b'x-request-id', b'df893e1d97c64533a53aed6aeaed2ed2'), (b'x-litellm-response-cost-output', b'0.0'), (b'x-content-type-options', b'nosniff'), (b'x-frame-options', b'DENY'), (b'x-new-api-version', b'master-cn-17358a4e1e47d1d222d1bd4ac5041ba8406f7d09'), (b'x-litellm-response-cost-input', b'0.0'), (b'x-litellm-model-name', b'agnes-3.0-flash'), (b'Content-Encoding', b'gzip'), (b'Server', b'cloudflare'), (b'CF-RAY', b'a4450f749f0b4d77-CGD')])
+2026-10-03 00:24:56,353 [INFO] httpx: HTTP Request: POST https://api.agnes-ai.cn/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:24:56,353 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:24:56,354 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:24:56,354 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:24:56,354 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:24:56,354 [DEBUG] openai._base_client: HTTP Response: POST https://api.agnes-ai.cn/v1/chat/completions "200 OK" Headers({'date': 'Fri, 02 Oct 2026 16:24:58 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'content-security-policy': "frame-ancestors 'none'", 'set-cookie': '__cf_bm=nJ6QizbBBRU7CJgJGc6IDH07BjSFhlfTuPLDblFYttg-1790958298.3330712-1.0.1.1-Unbugq0cGgsJz1l6P_AZDRGkK27WLFqoU0jQLwRMyNHopTRJTFXdK5wVYbQuwkuLgZCzyh7w1iU0qnD1RGFtLsQtnzKTAXngiG4LsLDzFCLkYWAa4TUTl1X7EbS3aANk; HttpOnly; SameSite=None; Secure; Path=/; Domain=agnes-ai.cn; Expires=Fri, 02 Oct 2026 16:54:58 GMT', 'x-litellm-response-cost-tool-usage': '0.0', 'cf-cache-status': 'DYNAMIC', 'x-trace-id': 'df893e1d97c64533a53aed6aeaed2ed2', 'x-request-id': 'df893e1d97c64533a53aed6aeaed2ed2', 'x-litellm-response-cost-output': '0.0', 'x-content-type-options': 'nosniff', 'x-frame-options': 'DENY', 'x-new-api-version': 'master-cn-17358a4e1e47d1d222d1bd4ac5041ba8406f7d09', 'x-litellm-response-cost-input': '0.0', 'x-litellm-model-name': 'agnes-3.0-flash', 'content-encoding': 'gzip', 'server': 'cloudflare', 'cf-ray': 'a4450f749f0b4d77-CGD'})
+2026-10-03 00:24:56,354 [DEBUG] openai._base_client: request_id: df893e1d97c64533a53aed6aeaed2ed2
+2026-10-03 00:24:58,354 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-8adb9d75-caed-45ee-bcad-2260716a9c43', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'agnes-2.5-flash', 'max_tokens': 200}}
+2026-10-03 00:24:58,355 [DEBUG] openai._base_client: Sending HTTP Request: POST https://api.agnes-ai.cn/v1/chat/completions
+2026-10-03 00:24:58,355 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:24:58,357 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8C730>
+2026-10-03 00:24:58,357 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:24:58,357 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:24:58,357 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:24:58,358 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:24:58,358 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:24:58,358 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:24:58,358 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000CFEC9E0> server_hostname='api.agnes-ai.cn' timeout=30
+2026-10-03 00:24:58,439 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8C050>
+2026-10-03 00:24:58,439 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:24:58,451 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:24:58,451 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:24:58,451 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:24:58,451 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:24:58,779 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 02 Oct 2026 16:25:01 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'content-security-policy', b"frame-ancestors 'none'"), (b'set-cookie', b'__cf_bm=MTwUmSDIARIqOPX3tKb2vTx5jpyfYQqKJd2zOXyIslc-1790958300.8368545-1.0.1.1-TstokhKfe_.yP5qhOEWnd70Unwv5jt_yDvpvHH05UAesscsxQWf167EsQ71cTz7Eydj.GjJwql03F4nuMVlOUBeDDAceyxLitbXGUZ2Vb3To_S24hNHL34zc.q.6Q3Dp; HttpOnly; SameSite=None; Secure; Path=/; Domain=agnes-ai.cn; Expires=Fri, 02 Oct 2026 16:55:01 GMT'), (b'x-litellm-response-cost-tool-usage', b'0.0'), (b'cf-cache-status', b'DYNAMIC'), (b'x-trace-id', b'eaaf2a392f036482f25849bc100058ba'), (b'x-request-id', b'eaaf2a392f036482f25849bc100058ba'), (b'x-litellm-response-cost-output', b'0.0'), (b'x-content-type-options', b'nosniff'), (b'x-frame-options', b'DENY'), (b'x-new-api-version', b'master-cn-17358a4e1e47d1d222d1bd4ac5041ba8406f7d09'), (b'x-litellm-response-cost-input', b'0.0'), (b'x-litellm-model-name', b'agnes-2.5-flash'), (b'Content-Encoding', b'gzip'), (b'Server', b'cloudflare'), (b'CF-RAY', b'a4450f84389d4d71-CGD')])
+2026-10-03 00:24:58,779 [INFO] httpx: HTTP Request: POST https://api.agnes-ai.cn/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:24:58,780 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:24:58,780 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:24:58,780 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:24:58,780 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:24:58,780 [DEBUG] openai._base_client: HTTP Response: POST https://api.agnes-ai.cn/v1/chat/completions "200 OK" Headers({'date': 'Fri, 02 Oct 2026 16:25:01 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'content-security-policy': "frame-ancestors 'none'", 'set-cookie': '__cf_bm=MTwUmSDIARIqOPX3tKb2vTx5jpyfYQqKJd2zOXyIslc-1790958300.8368545-1.0.1.1-TstokhKfe_.yP5qhOEWnd70Unwv5jt_yDvpvHH05UAesscsxQWf167EsQ71cTz7Eydj.GjJwql03F4nuMVlOUBeDDAceyxLitbXGUZ2Vb3To_S24hNHL34zc.q.6Q3Dp; HttpOnly; SameSite=None; Secure; Path=/; Domain=agnes-ai.cn; Expires=Fri, 02 Oct 2026 16:55:01 GMT', 'x-litellm-response-cost-tool-usage': '0.0', 'cf-cache-status': 'DYNAMIC', 'x-trace-id': 'eaaf2a392f036482f25849bc100058ba', 'x-request-id': 'eaaf2a392f036482f25849bc100058ba', 'x-litellm-response-cost-output': '0.0', 'x-content-type-options': 'nosniff', 'x-frame-options': 'DENY', 'x-new-api-version': 'master-cn-17358a4e1e47d1d222d1bd4ac5041ba8406f7d09', 'x-litellm-response-cost-input': '0.0', 'x-litellm-model-name': 'agnes-2.5-flash', 'content-encoding': 'gzip', 'server': 'cloudflare', 'cf-ray': 'a4450f84389d4d71-CGD'})
+2026-10-03 00:24:58,780 [DEBUG] openai._base_client: request_id: eaaf2a392f036482f25849bc100058ba
+2026-10-03 00:25:00,725 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-d9cc73c9-b746-4ba2-b999-937d351646c0', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'agnes-2.0-flash', 'max_tokens': 200}}
+2026-10-03 00:25:00,726 [DEBUG] openai._base_client: Sending HTTP Request: POST https://api.agnes-ai.cn/v1/chat/completions
+2026-10-03 00:25:00,727 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:25:00,729 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8DAE0>
+2026-10-03 00:25:00,729 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:00,729 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:25:00,729 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:00,729 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:25:00,729 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:00,729 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:25:00,729 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000CFECE60> server_hostname='api.agnes-ai.cn' timeout=30
+2026-10-03 00:25:00,799 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8E440>
+2026-10-03 00:25:00,799 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:25:00,800 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:25:00,800 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:25:00,800 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:25:00,801 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:25:01,156 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 02 Oct 2026 16:25:03 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'content-security-policy', b"frame-ancestors 'none'"), (b'set-cookie', b'__cf_bm=Ci4uuti5dPDPmXOnKtNYbbxAZbT56JEBH5x3Ewh32bw-1790958303.2008746-1.0.1.1-UNZjo7_ng.Gpc2oOROY7ceBB6jAhJxaHd7.OJxtpmqYH.p1JcZkr1cMxGHk_KRc02hzP8WMblpmnlp4Vukwx_Wqr7hmj6N0FBq2XKNeYEawnYeiZvPmsBV8skBRQGolI; HttpOnly; SameSite=None; Secure; Path=/; Domain=agnes-ai.cn; Expires=Fri, 02 Oct 2026 16:55:03 GMT'), (b'x-litellm-response-cost-tool-usage', b'0.0'), (b'cf-cache-status', b'DYNAMIC'), (b'x-trace-id', b'e11dbeb7e1c0101f6b5dc1047c3c2f37'), (b'x-request-id', b'e11dbeb7e1c0101f6b5dc1047c3c2f37'), (b'x-litellm-response-cost-output', b'0.0'), (b'x-content-type-options', b'nosniff'), (b'x-frame-options', b'DENY'), (b'x-new-api-version', b'master-cn-17358a4e1e47d1d222d1bd4ac5041ba8406f7d09'), (b'x-litellm-response-cost-input', b'0.0'), (b'x-litellm-model-name', b'agnes-2.5-flash'), (b'Content-Encoding', b'gzip'), (b'Server', b'cloudflare'), (b'CF-RAY', b'a4450f930be44d7e-CGD')])
+2026-10-03 00:25:01,157 [INFO] httpx: HTTP Request: POST https://api.agnes-ai.cn/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:25:01,158 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:25:01,158 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:25:01,158 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:25:01,158 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:25:01,159 [DEBUG] openai._base_client: HTTP Response: POST https://api.agnes-ai.cn/v1/chat/completions "200 OK" Headers({'date': 'Fri, 02 Oct 2026 16:25:03 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'content-security-policy': "frame-ancestors 'none'", 'set-cookie': '__cf_bm=Ci4uuti5dPDPmXOnKtNYbbxAZbT56JEBH5x3Ewh32bw-1790958303.2008746-1.0.1.1-UNZjo7_ng.Gpc2oOROY7ceBB6jAhJxaHd7.OJxtpmqYH.p1JcZkr1cMxGHk_KRc02hzP8WMblpmnlp4Vukwx_Wqr7hmj6N0FBq2XKNeYEawnYeiZvPmsBV8skBRQGolI; HttpOnly; SameSite=None; Secure; Path=/; Domain=agnes-ai.cn; Expires=Fri, 02 Oct 2026 16:55:03 GMT', 'x-litellm-response-cost-tool-usage': '0.0', 'cf-cache-status': 'DYNAMIC', 'x-trace-id': 'e11dbeb7e1c0101f6b5dc1047c3c2f37', 'x-request-id': 'e11dbeb7e1c0101f6b5dc1047c3c2f37', 'x-litellm-response-cost-output': '0.0', 'x-content-type-options': 'nosniff', 'x-frame-options': 'DENY', 'x-new-api-version': 'master-cn-17358a4e1e47d1d222d1bd4ac5041ba8406f7d09', 'x-litellm-response-cost-input': '0.0', 'x-litellm-model-name': 'agnes-2.5-flash', 'content-encoding': 'gzip', 'server': 'cloudflare', 'cf-ray': 'a4450f930be44d7e-CGD'})
+2026-10-03 00:25:01,159 [DEBUG] openai._base_client: request_id: e11dbeb7e1c0101f6b5dc1047c3c2f37
+2026-10-03 00:25:03,124 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-0502b43d-2764-40f7-9c39-1bf284ac601d', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'agnes-2.5-pro', 'max_tokens': 200}}
+2026-10-03 00:25:03,135 [DEBUG] openai._base_client: Sending HTTP Request: POST https://api.agnes-ai.cn/v1/chat/completions
+2026-10-03 00:25:03,135 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:25:03,137 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8E990>
+2026-10-03 00:25:03,137 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:03,137 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:25:03,137 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:03,137 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:25:03,137 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:03,138 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:25:03,138 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000CFED130> server_hostname='api.agnes-ai.cn' timeout=30
+2026-10-03 00:25:03,215 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8EB70>
+2026-10-03 00:25:03,215 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:25:03,216 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:25:03,216 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:25:03,216 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:25:03,216 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:25:03,917 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 02 Oct 2026 16:25:06 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'content-security-policy', b"frame-ancestors 'none'"), (b'set-cookie', b'__cf_bm=v_hpyB2kT_norzujlcT5j.W4ZNxUOuoc0qWAQVQZgYs-1790958305.606767-1.0.1.1-dAzTrIlrs.aBj_vi_RoFGYw4YGr4ctZxGeQjOlav.g73qDA3AlQP_ZeqnFucofSdU._8HQAhHVeYS6RPGn_S7N.6WZBY07V8ieYohfUnVGvyU93tyfpjEP9LFy4veMCS; HttpOnly; SameSite=None; Secure; Path=/; Domain=agnes-ai.cn; Expires=Fri, 02 Oct 2026 16:55:06 GMT'), (b'x-litellm-response-cost-tool-usage', b'0.0'), (b'cf-cache-status', b'DYNAMIC'), (b'x-trace-id', b'f4aad0647afb1c87519ec2f99a1869c1'), (b'x-request-id', b'f4aad0647afb1c87519ec2f99a1869c1'), (b'x-content-type-options', b'nosniff'), (b'x-frame-options', b'DENY'), (b'x-litellm-response-cost-output', b'0.0'), (b'x-new-api-version', b'master-cn-17358a4e1e47d1d222d1bd4ac5041ba8406f7d09'), (b'x-litellm-model-name', b'openai/agnes-2.5-pro'), (b'x-litellm-response-cost-input', b'0.0'), (b'Content-Encoding', b'gzip'), (b'Server', b'cloudflare'), (b'CF-RAY', b'a4450fa20aec4d71-CGD')])
+2026-10-03 00:25:03,919 [INFO] httpx: HTTP Request: POST https://api.agnes-ai.cn/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:25:03,919 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:25:03,920 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:25:03,920 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:25:03,920 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:25:03,921 [DEBUG] openai._base_client: HTTP Response: POST https://api.agnes-ai.cn/v1/chat/completions "200 OK" Headers({'date': 'Fri, 02 Oct 2026 16:25:06 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'content-security-policy': "frame-ancestors 'none'", 'set-cookie': '__cf_bm=v_hpyB2kT_norzujlcT5j.W4ZNxUOuoc0qWAQVQZgYs-1790958305.606767-1.0.1.1-dAzTrIlrs.aBj_vi_RoFGYw4YGr4ctZxGeQjOlav.g73qDA3AlQP_ZeqnFucofSdU._8HQAhHVeYS6RPGn_S7N.6WZBY07V8ieYohfUnVGvyU93tyfpjEP9LFy4veMCS; HttpOnly; SameSite=None; Secure; Path=/; Domain=agnes-ai.cn; Expires=Fri, 02 Oct 2026 16:55:06 GMT', 'x-litellm-response-cost-tool-usage': '0.0', 'cf-cache-status': 'DYNAMIC', 'x-trace-id': 'f4aad0647afb1c87519ec2f99a1869c1', 'x-request-id': 'f4aad0647afb1c87519ec2f99a1869c1', 'x-content-type-options': 'nosniff', 'x-frame-options': 'DENY', 'x-litellm-response-cost-output': '0.0', 'x-new-api-version': 'master-cn-17358a4e1e47d1d222d1bd4ac5041ba8406f7d09', 'x-litellm-model-name': 'openai/agnes-2.5-pro', 'x-litellm-response-cost-input': '0.0', 'content-encoding': 'gzip', 'server': 'cloudflare', 'cf-ray': 'a4450fa20aec4d71-CGD'})
+2026-10-03 00:25:03,921 [DEBUG] openai._base_client: request_id: f4aad0647afb1c87519ec2f99a1869c1
+2026-10-03 00:25:05,830 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-98c1d4d0-7208-4a7e-bb74-97b1c9559475', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'sensenova-6.8-flash-lite', 'max_tokens': 200}}
+2026-10-03 00:25:05,831 [DEBUG] openai._base_client: Sending HTTP Request: POST https://token.sensenova.cn/v1/chat/completions
+2026-10-03 00:25:05,831 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=45 socket_options=None
+2026-10-03 00:25:05,833 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8F110>
+2026-10-03 00:25:05,833 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:05,834 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:25:05,834 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:05,834 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:25:05,834 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:05,834 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:25:05,834 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000CFED400> server_hostname='token.sensenova.cn' timeout=45
+2026-10-03 00:25:05,960 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8F2F0>
+2026-10-03 00:25:05,960 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:25:05,960 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:25:05,961 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:25:05,961 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:25:05,961 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:25:35,885 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=utf-8'), (b'Content-Length', b'766'), (b'Connection', b'keep-alive'), (b'Date', b'Fri, 02 Oct 2026 16:25:38 GMT'), (b'Access-Control-Allow-Origin', b'*'), (b'Access-Control-Expose-Headers', b'Content-Disposition,Content-Transfer-Encoding,Content-Type'), (b'X-Request-Id', b'1abf38b78e9443b4a4934d9395f53fe9')])
+2026-10-03 00:25:35,886 [INFO] httpx: HTTP Request: POST https://token.sensenova.cn/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:25:35,886 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:25:35,887 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:25:35,887 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:25:35,887 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:25:35,887 [DEBUG] openai._base_client: HTTP Response: POST https://token.sensenova.cn/v1/chat/completions "200 OK" Headers({'content-type': 'application/json; charset=utf-8', 'content-length': '766', 'connection': 'keep-alive', 'date': 'Fri, 02 Oct 2026 16:25:38 GMT', 'access-control-allow-origin': '*', 'access-control-expose-headers': 'Content-Disposition,Content-Transfer-Encoding,Content-Type', 'x-request-id': '1abf38b78e9443b4a4934d9395f53fe9'})
+2026-10-03 00:25:35,887 [DEBUG] openai._base_client: request_id: 1abf38b78e9443b4a4934d9395f53fe9
+2026-10-03 00:25:37,771 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-d1ab1f94-1868-49e9-aa2b-7b07897fbce4', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'glm-5.2', 'max_tokens': 200}}
+2026-10-03 00:25:37,772 [DEBUG] openai._base_client: Sending HTTP Request: POST https://token.sensenova.cn/v1/chat/completions
+2026-10-03 00:25:37,772 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=60 socket_options=None
+2026-10-03 00:25:37,774 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD354F0>
+2026-10-03 00:25:37,774 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:37,774 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:25:37,774 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:37,774 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:25:37,774 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:37,775 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:25:37,775 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000BC76A80> server_hostname='token.sensenova.cn' timeout=60
+2026-10-03 00:25:37,903 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD34690>
+2026-10-03 00:25:37,903 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:25:37,903 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:25:37,903 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:25:37,904 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:25:37,904 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:25:40,118 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=utf-8'), (b'Content-Length', b'1054'), (b'Connection', b'keep-alive'), (b'Date', b'Fri, 02 Oct 2026 16:25:42 GMT'), (b'Access-Control-Allow-Origin', b'*'), (b'Access-Control-Expose-Headers', b'Content-Disposition,Content-Transfer-Encoding,Content-Type'), (b'X-Request-Id', b'790dee47afe24d9eab44b7113653ee9d')])
+2026-10-03 00:25:40,119 [INFO] httpx: HTTP Request: POST https://token.sensenova.cn/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:25:40,119 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:25:40,119 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:25:40,119 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:25:40,119 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:25:40,120 [DEBUG] openai._base_client: HTTP Response: POST https://token.sensenova.cn/v1/chat/completions "200 OK" Headers({'content-type': 'application/json; charset=utf-8', 'content-length': '1054', 'connection': 'keep-alive', 'date': 'Fri, 02 Oct 2026 16:25:42 GMT', 'access-control-allow-origin': '*', 'access-control-expose-headers': 'Content-Disposition,Content-Transfer-Encoding,Content-Type', 'x-request-id': '790dee47afe24d9eab44b7113653ee9d'})
+2026-10-03 00:25:40,120 [DEBUG] openai._base_client: request_id: 790dee47afe24d9eab44b7113653ee9d
+2026-10-03 00:25:42,138 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-a9d59fc3-8443-483f-9fb0-fcfa827535c2', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'deepseek/deepseek-v4-flash-free', 'max_tokens': 200}}
+2026-10-03 00:25:42,138 [DEBUG] openai._base_client: Sending HTTP Request: POST https://api.orcarouter.ai/v1/chat/completions
+2026-10-03 00:25:42,139 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:25:42,140 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000000075327B0>
+2026-10-03 00:25:42,140 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:42,141 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:25:42,141 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:42,141 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:25:42,141 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:42,142 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:25:42,142 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000BC76840> server_hostname='api.orcarouter.ai' timeout=30
+2026-10-03 00:25:42,760 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000CFF79D0>
+2026-10-03 00:25:42,760 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:25:42,761 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:25:42,761 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:25:42,761 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:25:42,761 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:25:44,602 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=utf-8'), (b'X-Credits-Low', b'true'), (b'X-Credits-Top-Up-Url', b'https://www.orcarouter.ai/console/billing?ref=warn_low_balance#add-credits'), (b'X-Orca-Request-Id', b'202610021625453416608148268d9d67JiIb0CD'), (b'X-Orca-Route', b'model=deepseek/deepseek-v4-flash-free; fallback=0'), (b'X-Orca-Version', b'a567477'), (b'X-Robots-Tag', b'noindex, nofollow'), (b'Server', b'TencentEdgeOne'), (b'Content-Length', b'571'), (b'Connection', b'keep-alive'), (b'Date', b'Fri, 02 Oct 2026 16:25:45 GMT'), (b'EO-LOG-UUID', b'14384028391741650100'), (b'EO-Cache-Status', b'MISS')])
+2026-10-03 00:25:44,603 [INFO] httpx: HTTP Request: POST https://api.orcarouter.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:25:44,603 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:25:44,603 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:25:44,604 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:25:44,604 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:25:44,604 [DEBUG] openai._base_client: HTTP Response: POST https://api.orcarouter.ai/v1/chat/completions "200 OK" Headers({'content-type': 'application/json; charset=utf-8', 'x-credits-low': 'true', 'x-credits-top-up-url': 'https://www.orcarouter.ai/console/billing?ref=warn_low_balance#add-credits', 'x-orca-request-id': '202610021625453416608148268d9d67JiIb0CD', 'x-orca-route': 'model=deepseek/deepseek-v4-flash-free; fallback=0', 'x-orca-version': 'a567477', 'x-robots-tag': 'noindex, nofollow', 'server': 'TencentEdgeOne', 'content-length': '571', 'connection': 'keep-alive', 'date': 'Fri, 02 Oct 2026 16:25:45 GMT', 'eo-log-uuid': '14384028391741650100', 'eo-cache-status': 'MISS'})
+2026-10-03 00:25:44,604 [DEBUG] openai._base_client: request_id: None
+2026-10-03 00:25:46,574 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-d24e6d48-0bd9-40ba-b92c-02d7ae5fabed', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'orcarouter/free', 'max_tokens': 200}}
+2026-10-03 00:25:46,575 [DEBUG] openai._base_client: Sending HTTP Request: POST https://api.orcarouter.ai/v1/chat/completions
+2026-10-03 00:25:46,575 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:25:46,577 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000CFF7A70>
+2026-10-03 00:25:46,577 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:46,578 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:25:46,578 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:46,578 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:25:46,578 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:46,579 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:25:46,579 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000CFED2E0> server_hostname='api.orcarouter.ai' timeout=30
+2026-10-03 00:25:47,169 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8EEE0>
+2026-10-03 00:25:47,170 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:25:47,170 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:25:47,170 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:25:47,170 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:25:47,170 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:25:48,899 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=utf-8'), (b'X-Credits-Low', b'true'), (b'X-Credits-Top-Up-Url', b'https://www.orcarouter.ai/console/billing?ref=warn_low_balance#add-credits'), (b'X-Orca-Request-Id', b'202610021625497602068048268d9d6wOZ3P0C5'), (b'X-Orca-Resolved-Model', b'deepseek/deepseek-v4-flash-free'), (b'X-Orca-Route', b'model=deepseek/deepseek-v4-flash-free; by=balanced; class=chat; fallback=0'), (b'X-Orca-Router', b'free'), (b'X-Orca-Version', b'a567477'), (b'X-Robots-Tag', b'noindex, nofollow'), (b'Server', b'TencentEdgeOne'), (b'Content-Length', b'587'), (b'Connection', b'keep-alive'), (b'Date', b'Fri, 02 Oct 2026 16:25:49 GMT'), (b'EO-LOG-UUID', b'13209959780383033763'), (b'EO-Cache-Status', b'MISS')])
+2026-10-03 00:25:48,900 [INFO] httpx: HTTP Request: POST https://api.orcarouter.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:25:48,901 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:25:48,901 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:25:48,901 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:25:48,901 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:25:48,901 [DEBUG] openai._base_client: HTTP Response: POST https://api.orcarouter.ai/v1/chat/completions "200 OK" Headers({'content-type': 'application/json; charset=utf-8', 'x-credits-low': 'true', 'x-credits-top-up-url': 'https://www.orcarouter.ai/console/billing?ref=warn_low_balance#add-credits', 'x-orca-request-id': '202610021625497602068048268d9d6wOZ3P0C5', 'x-orca-resolved-model': 'deepseek/deepseek-v4-flash-free', 'x-orca-route': 'model=deepseek/deepseek-v4-flash-free; by=balanced; class=chat; fallback=0', 'x-orca-router': 'free', 'x-orca-version': 'a567477', 'x-robots-tag': 'noindex, nofollow', 'server': 'TencentEdgeOne', 'content-length': '587', 'connection': 'keep-alive', 'date': 'Fri, 02 Oct 2026 16:25:49 GMT', 'eo-log-uuid': '13209959780383033763', 'eo-cache-status': 'MISS'})
+2026-10-03 00:25:48,901 [DEBUG] openai._base_client: request_id: None
+2026-10-03 00:25:50,787 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-f4ffed10-42ec-4725-a352-33fd81d8943e', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'tencent/hy3-free', 'max_tokens': 200}}
+2026-10-03 00:25:50,788 [DEBUG] openai._base_client: Sending HTTP Request: POST https://api.orcarouter.ai/v1/chat/completions
+2026-10-03 00:25:50,789 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=45 socket_options=None
+2026-10-03 00:25:50,791 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8E210>
+2026-10-03 00:25:50,791 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:50,791 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:25:50,791 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:50,792 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:25:50,792 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:50,792 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:25:50,792 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000CFECC20> server_hostname='api.orcarouter.ai' timeout=45
+2026-10-03 00:25:51,497 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8F980>
+2026-10-03 00:25:51,498 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:25:51,498 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:25:51,498 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:25:51,498 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:25:51,498 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:25:54,886 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json'), (b'X-Credits-Low', b'true'), (b'X-Credits-Top-Up-Url', b'https://www.orcarouter.ai/console/billing?ref=warn_low_balance#add-credits'), (b'X-Orca-Request-Id', b'202610021625541953493568268d9d68rxN1Inu'), (b'X-Orca-Route', b'model=tencent/hy3-free; fallback=0'), (b'X-Orca-Version', b'a567477'), (b'X-Robots-Tag', b'noindex, nofollow'), (b'Server', b'TencentEdgeOne'), (b'Content-Length', b'573'), (b'Connection', b'keep-alive'), (b'Date', b'Fri, 02 Oct 2026 16:25:54 GMT'), (b'EO-LOG-UUID', b'18214975959726009150'), (b'EO-Cache-Status', b'MISS')])
+2026-10-03 00:25:54,887 [INFO] httpx: HTTP Request: POST https://api.orcarouter.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:25:54,887 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:25:54,887 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:25:54,887 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:25:54,887 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:25:54,887 [DEBUG] openai._base_client: HTTP Response: POST https://api.orcarouter.ai/v1/chat/completions "200 OK" Headers({'content-type': 'application/json', 'x-credits-low': 'true', 'x-credits-top-up-url': 'https://www.orcarouter.ai/console/billing?ref=warn_low_balance#add-credits', 'x-orca-request-id': '202610021625541953493568268d9d68rxN1Inu', 'x-orca-route': 'model=tencent/hy3-free; fallback=0', 'x-orca-version': 'a567477', 'x-robots-tag': 'noindex, nofollow', 'server': 'TencentEdgeOne', 'content-length': '573', 'connection': 'keep-alive', 'date': 'Fri, 02 Oct 2026 16:25:54 GMT', 'eo-log-uuid': '18214975959726009150', 'eo-cache-status': 'MISS'})
+2026-10-03 00:25:54,887 [DEBUG] openai._base_client: request_id: None
+2026-10-03 00:25:56,777 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-8c32e717-18ae-4b16-a761-09c12bf2c9e4', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'z-ai/glm-5.3-flash-free', 'max_tokens': 200}}
+2026-10-03 00:25:56,778 [DEBUG] openai._base_client: Sending HTTP Request: POST https://api.orcarouter.ai/v1/chat/completions
+2026-10-03 00:25:56,779 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=45 socket_options=None
+2026-10-03 00:25:56,780 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8EC60>
+2026-10-03 00:25:56,780 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:56,780 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:25:56,781 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:56,781 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:25:56,781 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:25:56,781 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:25:56,781 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000CFEC710> server_hostname='api.orcarouter.ai' timeout=45
+2026-10-03 00:25:58,013 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8CFF0>
+2026-10-03 00:25:58,014 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:25:58,014 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:25:58,014 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:25:58,014 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:25:58,014 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:26:01,222 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json'), (b'X-Credits-Low', b'true'), (b'X-Credits-Top-Up-Url', b'https://www.orcarouter.ai/console/billing?ref=warn_low_balance#add-credits'), (b'X-Orca-Request-Id', b'202610021626006011947718268d9d6agEUOOW6'), (b'X-Orca-Route', b'model=z-ai/glm-5.3-flash-free; fallback=0'), (b'X-Orca-Version', b'a567477'), (b'X-Robots-Tag', b'noindex, nofollow'), (b'Server', b'TencentEdgeOne'), (b'Content-Length', b'820'), (b'Connection', b'keep-alive'), (b'Date', b'Fri, 02 Oct 2026 16:26:00 GMT'), (b'EO-LOG-UUID', b'7804656394217488113'), (b'EO-Cache-Status', b'MISS')])
+2026-10-03 00:26:01,223 [INFO] httpx: HTTP Request: POST https://api.orcarouter.ai/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:26:01,223 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:26:01,223 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:26:01,223 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:26:01,223 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:26:01,223 [DEBUG] openai._base_client: HTTP Response: POST https://api.orcarouter.ai/v1/chat/completions "200 OK" Headers({'content-type': 'application/json', 'x-credits-low': 'true', 'x-credits-top-up-url': 'https://www.orcarouter.ai/console/billing?ref=warn_low_balance#add-credits', 'x-orca-request-id': '202610021626006011947718268d9d6agEUOOW6', 'x-orca-route': 'model=z-ai/glm-5.3-flash-free; fallback=0', 'x-orca-version': 'a567477', 'x-robots-tag': 'noindex, nofollow', 'server': 'TencentEdgeOne', 'content-length': '820', 'connection': 'keep-alive', 'date': 'Fri, 02 Oct 2026 16:26:00 GMT', 'eo-log-uuid': '7804656394217488113', 'eo-cache-status': 'MISS'})
+2026-10-03 00:26:01,224 [DEBUG] openai._base_client: request_id: None
+2026-10-03 00:26:03,182 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-0e1540ee-b75c-42f2-8907-553fcfefd62e', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'google/gemma-4-26b-a4b-it:free', 'max_tokens': 200}}
+2026-10-03 00:26:03,185 [DEBUG] openai._base_client: Sending HTTP Request: POST https://openrouter.ai/api/v1/chat/completions
+2026-10-03 00:26:03,186 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:26:03,187 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8D540>
+2026-10-03 00:26:03,188 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:26:03,188 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:26:03,188 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:26:03,188 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:26:03,189 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:26:03,189 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:26:03,189 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000CFEC8C0> server_hostname='openrouter.ai' timeout=30
+2026-10-03 00:26:03,332 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8CAF0>
+2026-10-03 00:26:03,332 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:26:03,333 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:26:03,333 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:26:03,333 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:26:03,333 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:26:04,315 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 02 Oct 2026 16:26:06 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Access-Control-Allow-Origin', b'*'), (b'X-Generation-Id', b'gen-1790958365-QrVJR1YGBIyaEUVmOdd6'), (b'access-control-expose-headers', b'X-Generation-Id,X-Provider-Name,request-id,cf-ray'), (b'set-cookie', b'__cf_bm=eNU.Gk8sRYcg5_eUL3SCRrIZYx9SffUSceZDi82IkCs-1790958365.7831638-1.0.1.1-Rxr0KyGL1_KWRW_VaRCHuxm_erAoT_cW0YjaVhQJvuZns_PvSQSMtITWncvflXZ55TTH8NRZNuQT1Dx7u7_9.7HKWESJuiHr90ZScpjswAjux39N.2EJwvRnNn9s2WeT; HttpOnly; SameSite=None; Secure; Path=/; Domain=openrouter.ai; Expires=Fri, 02 Oct 2026 16:56:06 GMT'), (b'Permissions-Policy', b'payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com" "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")'), (b'Referrer-Policy', b'no-referrer, strict-origin-when-cross-origin'), (b'X-Content-Type-Options', b'nosniff'), (b'Content-Encoding', b'gzip'), (b'Server', b'cloudflare'), (b'CF-RAY', b'a445111a2c7facf2-NRT')])
+2026-10-03 00:26:04,317 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:26:04,328 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:26:04,481 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:26:04,481 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:26:04,481 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:26:04,481 [DEBUG] openai._base_client: HTTP Response: POST https://openrouter.ai/api/v1/chat/completions "200 OK" Headers({'date': 'Fri, 02 Oct 2026 16:26:06 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'access-control-allow-origin': '*', 'x-generation-id': 'gen-1790958365-QrVJR1YGBIyaEUVmOdd6', 'access-control-expose-headers': 'X-Generation-Id,X-Provider-Name,request-id,cf-ray', 'set-cookie': '__cf_bm=eNU.Gk8sRYcg5_eUL3SCRrIZYx9SffUSceZDi82IkCs-1790958365.7831638-1.0.1.1-Rxr0KyGL1_KWRW_VaRCHuxm_erAoT_cW0YjaVhQJvuZns_PvSQSMtITWncvflXZ55TTH8NRZNuQT1Dx7u7_9.7HKWESJuiHr90ZScpjswAjux39N.2EJwvRnNn9s2WeT; HttpOnly; SameSite=None; Secure; Path=/; Domain=openrouter.ai; Expires=Fri, 02 Oct 2026 16:56:06 GMT', 'permissions-policy': 'payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com" "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")', 'referrer-policy': 'no-referrer, strict-origin-when-cross-origin', 'x-content-type-options': 'nosniff', 'content-encoding': 'gzip', 'server': 'cloudflare', 'cf-ray': 'a445111a2c7facf2-NRT'})
+2026-10-03 00:26:04,481 [DEBUG] openai._base_client: request_id: None
+2026-10-03 00:26:06,569 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-22d7b308-f4e8-4b4d-96d9-ecbe64ae5316', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'liquid/lfm-2.5-2.6b:free', 'max_tokens': 200}}
+2026-10-03 00:26:06,571 [DEBUG] openai._base_client: Sending HTTP Request: POST https://openrouter.ai/api/v1/chat/completions
+2026-10-03 00:26:06,572 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:26:06,573 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8D450>
+2026-10-03 00:26:06,573 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:26:06,574 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:26:06,574 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:26:06,574 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:26:06,574 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:26:06,574 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:26:06,574 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000CFED7F0> server_hostname='openrouter.ai' timeout=30
+2026-10-03 00:26:06,716 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8D1D0>
+2026-10-03 00:26:06,716 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:26:06,716 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:26:06,716 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:26:06,717 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:26:06,717 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:26:07,340 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 02 Oct 2026 16:26:09 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Access-Control-Allow-Origin', b'*'), (b'X-Generation-Id', b'gen-1790958369-5jeYdVKW6jp8I1vWB7CA'), (b'access-control-expose-headers', b'X-Generation-Id,X-Provider-Name,request-id,cf-ray'), (b'set-cookie', b'__cf_bm=h2_Eow3UXg6sAcHPj_xguEIut99dWyihIKOaItiFvdk-1790958369.1758034-1.0.1.1-QreT9vTMkouu4fnme_bpQkCTDFU_ZjehY5gljsv8hWbsK8Tmbw9yqHuRnvtmosdWDEtiqtoFICdbP0S.Erc9oR_G6uEYKQ9PombNjcK1kniLa7ULFX7Ybmd40wFJOKWv; HttpOnly; SameSite=None; Secure; Path=/; Domain=openrouter.ai; Expires=Fri, 02 Oct 2026 16:56:09 GMT'), (b'Permissions-Policy', b'payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com" "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")'), (b'Referrer-Policy', b'no-referrer, strict-origin-when-cross-origin'), (b'X-Content-Type-Options', b'nosniff'), (b'Content-Encoding', b'gzip'), (b'Server', b'cloudflare'), (b'CF-RAY', b'a445112f5a61e39c-NRT')])
+2026-10-03 00:26:07,347 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:26:07,348 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:26:07,724 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:26:07,725 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:26:07,725 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:26:07,725 [DEBUG] openai._base_client: HTTP Response: POST https://openrouter.ai/api/v1/chat/completions "200 OK" Headers({'date': 'Fri, 02 Oct 2026 16:26:09 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'access-control-allow-origin': '*', 'x-generation-id': 'gen-1790958369-5jeYdVKW6jp8I1vWB7CA', 'access-control-expose-headers': 'X-Generation-Id,X-Provider-Name,request-id,cf-ray', 'set-cookie': '__cf_bm=h2_Eow3UXg6sAcHPj_xguEIut99dWyihIKOaItiFvdk-1790958369.1758034-1.0.1.1-QreT9vTMkouu4fnme_bpQkCTDFU_ZjehY5gljsv8hWbsK8Tmbw9yqHuRnvtmosdWDEtiqtoFICdbP0S.Erc9oR_G6uEYKQ9PombNjcK1kniLa7ULFX7Ybmd40wFJOKWv; HttpOnly; SameSite=None; Secure; Path=/; Domain=openrouter.ai; Expires=Fri, 02 Oct 2026 16:56:09 GMT', 'permissions-policy': 'payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com" "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")', 'referrer-policy': 'no-referrer, strict-origin-when-cross-origin', 'x-content-type-options': 'nosniff', 'content-encoding': 'gzip', 'server': 'cloudflare', 'cf-ray': 'a445112f5a61e39c-NRT'})
+2026-10-03 00:26:07,725 [DEBUG] openai._base_client: request_id: None
+2026-10-03 00:26:09,838 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-576b2be2-b2fe-48e7-942c-823030c0a821', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'cohere/north-mini-code:free', 'max_tokens': 200}}
+2026-10-03 00:26:09,839 [DEBUG] openai._base_client: Sending HTTP Request: POST https://openrouter.ai/api/v1/chat/completions
+2026-10-03 00:26:09,839 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:26:09,840 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8CDC0>
+2026-10-03 00:26:09,841 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:26:09,841 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:26:09,841 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:26:09,841 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:26:09,842 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:26:09,842 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:26:09,842 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000CFEDD00> server_hostname='openrouter.ai' timeout=30
+2026-10-03 00:26:10,118 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8DA90>
+2026-10-03 00:26:10,118 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:26:10,119 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:26:10,119 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:26:10,119 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:26:10,119 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:26:10,530 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 02 Oct 2026 16:26:12 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Access-Control-Allow-Origin', b'*'), (b'X-Generation-Id', b'gen-1790958372-XPspTFa2ZZ0j92eqIN30'), (b'access-control-expose-headers', b'X-Generation-Id,X-Provider-Name,request-id,cf-ray'), (b'set-cookie', b'__cf_bm=M1gdBrlrz.g6YJzNUJnrfJ6dlfL0DqY7dISNmWTk4kI-1790958372.5728643-1.0.1.1-am6iI9zkUuqvE99H38ukZotOmhByzPYaWs2st08XyKZDxN22Ss2YHuU1bAqhw31j09V0rMTXZfuFAz41gJl9SBMFFkXh39K5Wzcf4hVCbMEOupeeTglbslPrKFViqJR.; HttpOnly; SameSite=None; Secure; Path=/; Domain=openrouter.ai; Expires=Fri, 02 Oct 2026 16:56:12 GMT'), (b'Permissions-Policy', b'payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com" "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")'), (b'Referrer-Policy', b'no-referrer, strict-origin-when-cross-origin'), (b'X-Content-Type-Options', b'nosniff'), (b'Content-Encoding', b'gzip'), (b'Server', b'cloudflare'), (b'CF-RAY', b'a44511449d89e373-NRT')])
+2026-10-03 00:26:10,531 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:26:10,531 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:26:15,467 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:26:15,467 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:26:15,467 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:26:15,467 [DEBUG] openai._base_client: HTTP Response: POST https://openrouter.ai/api/v1/chat/completions "200 OK" Headers({'date': 'Fri, 02 Oct 2026 16:26:12 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'access-control-allow-origin': '*', 'x-generation-id': 'gen-1790958372-XPspTFa2ZZ0j92eqIN30', 'access-control-expose-headers': 'X-Generation-Id,X-Provider-Name,request-id,cf-ray', 'set-cookie': '__cf_bm=M1gdBrlrz.g6YJzNUJnrfJ6dlfL0DqY7dISNmWTk4kI-1790958372.5728643-1.0.1.1-am6iI9zkUuqvE99H38ukZotOmhByzPYaWs2st08XyKZDxN22Ss2YHuU1bAqhw31j09V0rMTXZfuFAz41gJl9SBMFFkXh39K5Wzcf4hVCbMEOupeeTglbslPrKFViqJR.; HttpOnly; SameSite=None; Secure; Path=/; Domain=openrouter.ai; Expires=Fri, 02 Oct 2026 16:56:12 GMT', 'permissions-policy': 'payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com" "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")', 'referrer-policy': 'no-referrer, strict-origin-when-cross-origin', 'x-content-type-options': 'nosniff', 'content-encoding': 'gzip', 'server': 'cloudflare', 'cf-ray': 'a44511449d89e373-NRT'})
+2026-10-03 00:26:15,467 [DEBUG] openai._base_client: request_id: None
+2026-10-03 00:26:17,765 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-c7beef64-37b3-4762-a017-f343332eb32f', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'dots-studio/dots-3-note-preview:free', 'max_tokens': 200}}
+2026-10-03 00:26:17,766 [DEBUG] openai._base_client: Sending HTTP Request: POST https://openrouter.ai/api/v1/chat/completions
+2026-10-03 00:26:17,766 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:26:17,767 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8FA70>
+2026-10-03 00:26:17,768 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:26:17,768 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:26:17,768 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:26:17,768 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:26:17,768 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:26:17,769 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:26:17,769 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000CFEE060> server_hostname='openrouter.ai' timeout=30
+2026-10-03 00:26:17,914 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD8EA30>
+2026-10-03 00:26:17,914 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:26:17,914 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:26:17,914 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:26:17,914 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:26:17,914 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:26:18,699 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 02 Oct 2026 16:26:21 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'Access-Control-Allow-Origin', b'*'), (b'X-Generation-Id', b'gen-1790958380-UzpRoB2LFqXAgy95DdFP'), (b'access-control-expose-headers', b'X-Generation-Id,X-Provider-Name,request-id,cf-ray'), (b'set-cookie', b'__cf_bm=EKOrCZhuG3b2xziS6E0LLWki2T9Jpc3rvXdFHm.UUaI-1790958380.3670137-1.0.1.1-tZ_rb3_YNAqTIavhDk5vwMV8eEr8sJmF47A7TtRkCTdkL7lsJUh6LkTnB4sERz5mJEyB_V_ovCgNWWz2a23gpxgNPc7aD6fjysL7iVloB8TR44sBx5HLqYmbJe9qaWzZ; HttpOnly; SameSite=None; Secure; Path=/; Domain=openrouter.ai; Expires=Fri, 02 Oct 2026 16:56:21 GMT'), (b'Permissions-Policy', b'payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com" "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")'), (b'Referrer-Policy', b'no-referrer, strict-origin-when-cross-origin'), (b'X-Content-Type-Options', b'nosniff'), (b'Content-Encoding', b'gzip'), (b'Server', b'cloudflare'), (b'CF-RAY', b'a445117548a6d75f-NRT')])
+2026-10-03 00:26:18,728 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:26:18,728 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:26:20,326 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:26:20,327 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:26:20,327 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:26:20,327 [DEBUG] openai._base_client: HTTP Response: POST https://openrouter.ai/api/v1/chat/completions "200 OK" Headers({'date': 'Fri, 02 Oct 2026 16:26:21 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'access-control-allow-origin': '*', 'x-generation-id': 'gen-1790958380-UzpRoB2LFqXAgy95DdFP', 'access-control-expose-headers': 'X-Generation-Id,X-Provider-Name,request-id,cf-ray', 'set-cookie': '__cf_bm=EKOrCZhuG3b2xziS6E0LLWki2T9Jpc3rvXdFHm.UUaI-1790958380.3670137-1.0.1.1-tZ_rb3_YNAqTIavhDk5vwMV8eEr8sJmF47A7TtRkCTdkL7lsJUh6LkTnB4sERz5mJEyB_V_ovCgNWWz2a23gpxgNPc7aD6fjysL7iVloB8TR44sBx5HLqYmbJe9qaWzZ; HttpOnly; SameSite=None; Secure; Path=/; Domain=openrouter.ai; Expires=Fri, 02 Oct 2026 16:56:21 GMT', 'permissions-policy': 'payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com" "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")', 'referrer-policy': 'no-referrer, strict-origin-when-cross-origin', 'x-content-type-options': 'nosniff', 'content-encoding': 'gzip', 'server': 'cloudflare', 'cf-ray': 'a445117548a6d75f-NRT'})
+2026-10-03 00:26:20,327 [DEBUG] openai._base_client: request_id: None
+2026-10-03 00:26:22,448 [DEBUG] openai._base_client: Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-83ead5af-9ddb-426b-af78-a42fe055af1a', 'security': {'bearer_auth': True}, 'content': None, 'json_data': {'messages': [{'role': 'user', 'content': '只回复四个字：连接成功'}], 'model': 'space-bunny-free', 'max_tokens': 200}}
+2026-10-03 00:26:22,489 [DEBUG] openai._base_client: Sending HTTP Request: POST https://opencode.ai/zen/v1/chat/completions
+2026-10-03 00:26:22,490 [DEBUG] httpcore.connection: connect_tcp.started host='127.0.0.1' port=7897 local_address=None timeout=30 socket_options=None
+2026-10-03 00:26:22,492 [DEBUG] httpcore.connection: connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD34320>
+2026-10-03 00:26:22,492 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:26:22,493 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:26:22,493 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'CONNECT']>
+2026-10-03 00:26:22,493 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:26:22,493 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'CONNECT']>
+2026-10-03 00:26:22,494 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2026-10-03 00:26:22,495 [DEBUG] httpcore.proxy: start_tls.started ssl_context=<ssl.SSLContext object at 0x000000000BC76450> server_hostname='opencode.ai' timeout=30
+2026-10-03 00:26:22,830 [DEBUG] httpcore.proxy: start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x000000000BD34B40>
+2026-10-03 00:26:22,830 [DEBUG] httpcore.http11: send_request_headers.started request=<Request [b'POST']>
+2026-10-03 00:26:22,831 [DEBUG] httpcore.http11: send_request_headers.complete
+2026-10-03 00:26:22,831 [DEBUG] httpcore.http11: send_request_body.started request=<Request [b'POST']>
+2026-10-03 00:26:22,831 [DEBUG] httpcore.http11: send_request_body.complete
+2026-10-03 00:26:22,831 [DEBUG] httpcore.http11: receive_response_headers.started request=<Request [b'POST']>
+2026-10-03 00:26:26,999 [DEBUG] httpcore.http11: receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 02 Oct 2026 16:26:29 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'CF-Ray', b'a44511946fb7ed00-SEA'), (b'Server', b'cloudflare'), (b'cf-placement', b'remote-ORD'), (b'x-opencode-endpoint-id', b'space-bunny.oai'), (b'x-opencode-log-id', b'e6aa9c8d-5cb5-4b6d-be53-2470e9ea53b5'), (b'x-opencode-upstream-model-id', b'space-bunny'), (b'x-zen-model', b'space-bunny-free'), (b'Content-Encoding', b'br')])
+2026-10-03 00:26:27,000 [INFO] httpx: HTTP Request: POST https://opencode.ai/zen/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-03 00:26:27,003 [DEBUG] httpcore.http11: receive_response_body.started request=<Request [b'POST']>
+2026-10-03 00:26:27,005 [DEBUG] httpcore.http11: receive_response_body.complete
+2026-10-03 00:26:27,005 [DEBUG] httpcore.http11: response_closed.started
+2026-10-03 00:26:27,005 [DEBUG] httpcore.http11: response_closed.complete
+2026-10-03 00:26:27,005 [DEBUG] openai._base_client: HTTP Response: POST https://opencode.ai/zen/v1/chat/completions "200 OK" Headers({'date': 'Fri, 02 Oct 2026 16:26:29 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'cf-ray': 'a44511946fb7ed00-SEA', 'server': 'cloudflare', 'cf-placement': 'remote-ORD', 'x-opencode-endpoint-id': 'space-bunny.oai', 'x-opencode-log-id': 'e6aa9c8d-5cb5-4b6d-be53-2470e9ea53b5', 'x-opencode-upstream-model-id': 'space-bunny', 'x-zen-model': 'space-bunny-free', 'content-encoding': 'br'})
+2026-10-03 00:26:27,005 [DEBUG] openai._base_client: request_id: None
+2026-10-03 00:50:09,104 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 00:50:09,168 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 00:50:09,222 [ERROR] engineio.server: Invalid transport for session vbG2hj3qzKNpa_c2AAAC (further occurrences of this error will be logged with level INFO)
+2026-10-03 02:41:02,468 [ERROR] engineio.server: Invalid transport for session LV-iZA1SorZXK4zrAAAA (further occurrences of this error will be logged with level INFO)
+2026-10-03 02:41:02,536 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 02:41:05,870 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 02:56:51,170 [ERROR] engineio.server: Invalid transport for session 1STAq-riZUxatrI4AAAA (further occurrences of this error will be logged with level INFO)
+2026-10-03 02:56:51,246 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 02:56:54,166 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 03:02:06,771 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 03:02:06,831 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 03:34:14,093 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 03:34:18,494 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 03:38:47,529 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 03:38:47,587 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 03:43:13,327 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 03:43:13,380 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 03:49:00,783 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 03:49:00,848 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 03:52:15,636 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 03:52:15,701 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 03:57:08,549 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 03:57:08,592 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 04:01:09,799 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 04:01:09,865 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 04:02:55,327 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 04:02:55,371 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 04:04:41,498 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 04:04:41,567 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 04:06:21,756 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 04:06:21,818 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 04:09:43,919 [INFO] boss_bot.main_loop: [账号2] 正在启动共享浏览器...
+2026-10-03 04:09:43,926 [DEBUG] boss_bot.main_loop: [账号2] 浏览器配置: type=chrome, chrome_path=None, debug_port=9222
+2026-10-03 04:09:43,931 [INFO] browser_launcher: 浏览器路径 (portable): C:\Users\35796\orca\boss_bot\cloakbrowser\chrome.exe
+2026-10-03 04:09:45,111 [DEBUG] urllib3.util.retry: Converted retries value: 0 -> Retry(total=0, connect=None, read=None, redirect=None, status=None)
+2026-10-03 04:09:45,113 [DEBUG] urllib3.util.retry: Converted retries value: 0 -> Retry(total=0, connect=None, read=None, redirect=None, status=None)
+2026-10-03 04:09:45,151 [DEBUG] urllib3.connectionpool: Starting new HTTP connection (1): 127.0.0.1:9223
+2026-10-03 04:09:46,034 [DEBUG] urllib3.connectionpool: http://127.0.0.1:9223 "GET /json HTTP/1.1" 200 466
+2026-10-03 04:09:46,045 [DEBUG] urllib3.util.retry: Converted retries value: 0 -> Retry(total=0, connect=None, read=None, redirect=None, status=None)
+2026-10-03 04:09:46,045 [DEBUG] urllib3.util.retry: Converted retries value: 0 -> Retry(total=0, connect=None, read=None, redirect=None, status=None)
+2026-10-03 04:09:46,046 [DEBUG] urllib3.connectionpool: Starting new HTTP connection (1): 127.0.0.1:9223
+2026-10-03 04:09:46,084 [DEBUG] urllib3.connectionpool: http://127.0.0.1:9223 "GET /json/version HTTP/1.1" 200 423
+2026-10-03 04:09:46,156 [DEBUG] urllib3.util.retry: Converted retries value: 0 -> Retry(total=0, connect=None, read=None, redirect=None, status=None)
+2026-10-03 04:09:46,157 [DEBUG] urllib3.util.retry: Converted retries value: 0 -> Retry(total=0, connect=None, read=None, redirect=None, status=None)
+2026-10-03 04:09:46,158 [DEBUG] urllib3.connectionpool: Starting new HTTP connection (1): 127.0.0.1:9223
+2026-10-03 04:09:46,164 [DEBUG] urllib3.connectionpool: http://127.0.0.1:9223 "GET /json HTTP/1.1" 200 1056
+2026-10-03 04:09:46,333 [INFO] browser_launcher: Windows: ChromiumPage 启动成功 (port=9223)
+2026-10-03 04:09:46,333 [DEBUG] boss_bot.main_loop: [账号2] 浏览器进程已启动，等待连接...
+2026-10-03 04:09:46,334 [INFO] boss_bot.main_loop: [账号2] 浏览器已启动
+2026-10-03 04:09:46,578 [INFO] boss_bot.main_loop: [账号2] 账号 1：已打开 BOSS 登录页，请在该账号的浏览器窗口完成登录
+2026-10-03 04:09:53,005 [INFO] boss_bot.main_loop: [账号2] 检测到登录成功，自动继续（无需手动点击）
+2026-10-03 04:09:53,025 [INFO] browser_launcher: 覆盖前已备份旧 Cookie 到 zhipin_cookies_1_20261003_040953_0000.json
+2026-10-03 04:09:53,027 [INFO] browser_launcher: 已保存 16 个 Cookie 到 C:\Users\35796\orca\boss_bot\zhipin_cookies_1.json
+2026-10-03 04:09:53,028 [INFO] boss_bot.main_loop: [账号2] Cookie 已保存到 zhipin_cookies_1.json
+2026-10-03 04:09:53,028 [INFO] boss_bot.main_loop: [账号2] 账号 1 登录完成
+2026-10-03 04:11:17,188 [INFO] boss_bot.main_loop: [账号2] 账号 1：已打开 BOSS 登录页，请在该账号的浏览器窗口完成登录
+2026-10-03 04:11:23,151 [INFO] boss_bot.main_loop: [账号2] 检测到登录成功，自动继续（无需手动点击）
+2026-10-03 04:11:23,161 [INFO] browser_launcher: 覆盖前已备份旧 Cookie 到 zhipin_cookies_1_20261003_041123_0001.json
+2026-10-03 04:11:23,163 [INFO] browser_launcher: 已保存 16 个 Cookie 到 C:\Users\35796\orca\boss_bot\zhipin_cookies_1.json
+2026-10-03 04:11:23,163 [INFO] boss_bot.main_loop: [账号2] Cookie 已保存到 zhipin_cookies_1.json
+2026-10-03 04:11:23,163 [INFO] boss_bot.main_loop: [账号2] 账号 1 登录完成
+2026-10-03 04:13:28,270 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 04:13:28,691 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 04:14:25,548 [INFO] boss_bot.main_loop: [账号2] 正在启动共享浏览器...
+2026-10-03 04:14:25,552 [DEBUG] boss_bot.main_loop: [账号2] 浏览器配置: type=chrome, chrome_path=None, debug_port=9222
+2026-10-03 04:14:25,554 [INFO] browser_launcher: 浏览器路径 (portable): C:\Users\35796\orca\boss_bot\cloakbrowser\chrome.exe
+2026-10-03 04:14:26,724 [DEBUG] urllib3.util.retry: Converted retries value: 0 -> Retry(total=0, connect=None, read=None, redirect=None, status=None)
+2026-10-03 04:14:26,726 [DEBUG] urllib3.util.retry: Converted retries value: 0 -> Retry(total=0, connect=None, read=None, redirect=None, status=None)
+2026-10-03 04:14:26,735 [DEBUG] urllib3.connectionpool: Starting new HTTP connection (1): 127.0.0.1:9223
+2026-10-03 04:14:27,859 [DEBUG] urllib3.connectionpool: http://127.0.0.1:9223 "GET /json HTTP/1.1" 200 1056
+2026-10-03 04:14:27,866 [DEBUG] urllib3.util.retry: Converted retries value: 0 -> Retry(total=0, connect=None, read=None, redirect=None, status=None)
+2026-10-03 04:14:27,867 [DEBUG] urllib3.util.retry: Converted retries value: 0 -> Retry(total=0, connect=None, read=None, redirect=None, status=None)
+2026-10-03 04:14:27,868 [DEBUG] urllib3.connectionpool: Starting new HTTP connection (1): 127.0.0.1:9223
+2026-10-03 04:14:27,914 [DEBUG] urllib3.connectionpool: http://127.0.0.1:9223 "GET /json/version HTTP/1.1" 200 423
+2026-10-03 04:14:27,939 [DEBUG] urllib3.util.retry: Converted retries value: 0 -> Retry(total=0, connect=None, read=None, redirect=None, status=None)
+2026-10-03 04:14:27,940 [DEBUG] urllib3.util.retry: Converted retries value: 0 -> Retry(total=0, connect=None, read=None, redirect=None, status=None)
+2026-10-03 04:14:27,940 [DEBUG] urllib3.connectionpool: Starting new HTTP connection (1): 127.0.0.1:9223
+2026-10-03 04:14:27,947 [DEBUG] urllib3.connectionpool: http://127.0.0.1:9223 "GET /json HTTP/1.1" 200 1056
+2026-10-03 04:14:28,074 [INFO] browser_launcher: Windows: ChromiumPage 启动成功 (port=9223)
+2026-10-03 04:14:28,074 [DEBUG] boss_bot.main_loop: [账号2] 浏览器进程已启动，等待连接...
+2026-10-03 04:14:28,075 [INFO] boss_bot.main_loop: [账号2] 浏览器已启动
+2026-10-03 04:14:29,207 [INFO] boss_bot.main_loop: [账号2] 账号 1：已打开 BOSS 登录页，请在该账号的浏览器窗口完成登录
+2026-10-03 04:14:35,844 [INFO] boss_bot.main_loop: [账号2] 检测到登录成功，自动继续（无需手动点击）
+2026-10-03 04:14:35,861 [INFO] browser_launcher: 覆盖前已备份旧 Cookie 到 zhipin_cookies_1_20261003_041435_0002.json
+2026-10-03 04:14:35,863 [INFO] browser_launcher: 已保存 16 个 Cookie 到 C:\Users\35796\orca\boss_bot\zhipin_cookies_1.json
+2026-10-03 04:14:35,863 [INFO] boss_bot.main_loop: [账号2] Cookie 已保存到 zhipin_cookies_1.json
+2026-10-03 04:14:35,864 [INFO] boss_bot.main_loop: [账号2] 账号 1 登录完成
+2026-10-03 10:05:46,792 [ERROR] engineio.server: Invalid transport for session jzyfG85PY7Sz4YVvAAAA (further occurrences of this error will be logged with level INFO)
+2026-10-03 10:05:46,959 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 10:05:48,623 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 10:23:23,426 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 10:23:23,484 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 10:23:36,966 [ERROR] app: Exception on /api/config [GET]
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\ProgramData\anaconda3\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\ProgramData\anaconda3\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\ProgramData\anaconda3\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\35796\orca\boss_bot\flask-version\app.py", line 994, in api_get_config
+    cfg = _ensure_config()
+  File "C:\Users\35796\orca\boss_bot\flask-version\app.py", line 347, in _ensure_config
+    if _ensure_greeting_defaults(_config):
+       ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\35796\orca\boss_bot\flask-version\app.py", line 366, in _ensure_greeting_defaults
+    cfg.save()
+    ~~~~~~~~^^
+  File "C:\Users\35796\orca\boss_bot\boss_bot\unified_config.py", line 1102, in save
+    write_json_atomic(path, data)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\35796\orca\boss_bot\boss_bot\unified_config.py", line 52, in write_json_atomic
+    os.replace(tmp, target)
+    ~~~~~~~~~~^^^^^^^^^^^^^
+PermissionError: [WinError 5] 拒绝访问。: 'C:\\Users\\35796\\AppData\\Local\\Temp\\boss_account_scope_527pe_9k\\bot_config.json.tmp' -> 'C:\\Users\\35796\\AppData\\Local\\Temp\\boss_account_scope_527pe_9k\\bot_config.json'
+2026-10-03 10:28:48,354 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 10:28:48,464 [ERROR] engineio.server: Invalid transport for session vVoYXoARw_mSgslIAAAA (further occurrences of this error will be logged with level INFO)
+2026-10-03 10:28:53,431 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 10:31:58,002 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 10:31:58,066 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 10:43:20,155 [ERROR] engineio.server: Invalid transport for session DHFoMXl-WaDGlIBhAAAA (further occurrences of this error will be logged with level INFO)
+2026-10-03 10:43:20,207 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 10:43:24,740 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 11:19:56,914 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 11:19:56,980 [DEBUG] boss_bot.reply_record: 加载回复记录: 801 条
+2026-10-03 13:36:27,774 [DEBUG] boss_bot.reply_record: 加载打招呼记录: 762 条
+2026-10-03 13:36:27,841 [DEBUG] boss_bot.reply_record: 加载回复记录: 833 条

@@ -1,0 +1,86 @@
+{
+  "chat_name": "雷先生",
+  "chat_id": "雷先生#深圳市晴耀轩科技",
+  "account_index": 0,
+  "job_name": "兼职·小红书抖音运营（线上兼职）100-400元/周深圳查看职位",
+  "company": "深圳市晴耀轩科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:33",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393553619510019",
+      "block": "01:33 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "你好呀 想了解兼职嘛",
+      "time": "11:11",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393695489598210",
+      "block": "11:11 你好呀 想了解兼职嘛",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好呀 想了解兼职嘛"
+    },
+    {
+      "text": "主要的工作内容就是在小红书和抖音发布笔记 我们会提供素材和文案 按发布数量获得报酬 5r/条",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393695504642820",
+      "block": "主要的工作内容就是在小红书和抖音发布笔记 我们会提供素材和文案 按发布数量获得报酬 5r/条",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "主要的工作内容就是在小红书和抖音发布笔记 我们会提供素材和文案 按发布数量获得报酬 5r/条"
+    },
+    {
+      "sender": "bot",
+      "content": "我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。",
+      "text": "我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rule",
+      "action": "text",
+      "timestamp": "2026-10-06 11:16:12",
+      "time": "11:16",
+      "job_name": "兼职·小红书抖音运营（线上兼职）100-400元/周深圳查看职位",
+      "isFriend": false,
+      "mid": "393696756589316"
+    },
+    {
+      "text": "其实没有什么数据分析 主要就是发帖",
+      "time": "11:25",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393699160404739",
+      "block": "11:25 其实没有什么数据分析 主要就是发帖",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "其实没有什么数据分析 主要就是发帖"
+    },
+    {
+      "text": "主要的工作内容就是在小红书和抖音发布笔记 我们会提供素材和文案 按发布数量获得报酬 5r/条",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393699191919362",
+      "block": "主要的工作内容就是在小红书和抖音发布笔记 我们会提供素材和文案 按发布数量获得报酬 5r/条",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "主要的工作内容就是在小红书和抖音发布笔记 我们会提供素材和文案 按发布数量获得报酬 5r/条"
+    }
+  ],
+  "updated_at": "2026-10-10 08:03:21",
+  "unread_on_boss": 0
+}

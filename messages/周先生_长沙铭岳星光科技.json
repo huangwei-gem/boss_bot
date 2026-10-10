@@ -1,0 +1,50 @@
+{
+  "chat_name": "周先生",
+  "chat_id": "周先生#长沙铭岳星光科技",
+  "account_index": 0,
+  "job_name": "才艺团播/包服装+酒店住宿+小白均可12-20K长沙查看职位",
+  "company": "长沙铭岳星光科技",
+  "messages": [
+    {
+      "text": "hello，是有在看机会吗？我们这边的才艺团播/包服装+酒店住宿+小白均可岗位，不知道有没有兴趣了解一下~",
+      "time": "09-22 13:12",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388770784547584",
+      "block": "09-22 13:12 hello，是有在看机会吗？我们这边的才艺团播/包服装+酒店住宿+小白均可岗位，不知道有没有兴趣了解一下~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "hello，是有在看机会吗？我们这边的才艺团播/包服装+酒店住宿+小白均可岗位，不知道有没有兴趣了解一下~"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388770784604929",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 18:36:41",
+      "time": "18:36",
+      "job_name": "才艺团播/包服装+酒店住宿+小白均可12-20K长沙查看职位",
+      "isFriend": false,
+      "mid": "394158929687298"
+    }
+  ],
+  "updated_at": "2026-10-09 10:41:54"
+}

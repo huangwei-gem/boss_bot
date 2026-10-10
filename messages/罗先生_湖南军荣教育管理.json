@@ -1,0 +1,77 @@
+{
+  "chat_name": "罗先生",
+  "chat_id": "罗先生#湖南军荣教育管理",
+  "account_index": 0,
+  "job_name": "兼职·线上兼职一对一小初高学科40-120元/时长沙查看职位",
+  "company": "湖南军荣教育管理",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "03:30",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393582265996034",
+      "block": "03:30 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "之前有过小初高学科教学经验吗？教学多长时间呢？",
+      "time": "09:27",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393670015369986",
+      "block": "09:27 之前有过小初高学科教学经验吗？教学多长时间呢？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "之前有过小初高学科教学经验吗？教学多长时间呢？"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，我的求职方向是数据分析，之前没有小初高学科教学经验。请问贵公司是否有数据分析相关的岗位呢？",
+      "text": "您好，我的求职方向是数据分析，之前没有小初高学科教学经验。请问贵公司是否有数据分析相关的岗位呢？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-06 12:56:58",
+      "time": "12:56",
+      "job_name": "兼职·线上兼职一对一小初高学科40-120元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "393721522721537"
+    },
+    {
+      "text": "很高兴收到您的应聘，但您的技能组合和我们目前项目的需求不完全吻合。祝您在BOSS直聘找到更好的机会！",
+      "time": "13:37",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393731446776578",
+      "block": "13:37 很高兴收到您的应聘，但您的技能组合和我们目前项目的需求不完全吻合。祝您在BOSS直聘找到更好的机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "很高兴收到您的应聘，但您的技能组合和我们目前项目的需求不完全吻合。祝您在BOSS直聘找到更好的机会！"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-06 13:45:36",
+      "time": "13:45",
+      "job_name": "兼职·线上兼职一对一小初高学科40-120元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "393733470921475"
+    }
+  ],
+  "updated_at": "2026-10-09 13:50:43",
+  "unread_on_boss": 0
+}

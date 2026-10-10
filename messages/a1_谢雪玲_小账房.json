@@ -1,0 +1,36 @@
+{
+  "chat_name": "谢雪玲",
+  "chat_id": "谢雪玲#小账房",
+  "account_index": 1,
+  "job_name": "兼职·数据处理专员(兼职）5-20元/时惠州查看职位",
+  "company": "小账房",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:04",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "392986193355264",
+      "block": "11:04 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，看到贵司在招数据处理专员（兼职），我是统计学本科，熟练掌握Excel、SQL和Python，有业务数据报表分析经验，可以远程完成数据整理和报表制作，期待进一步沟通！",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "392986378174977",
+      "block": "送达 您好，看到贵司在招数据处理专员（兼职），我是统计学本科，熟练掌握Excel、SQL和Python，有业务数据报表分析经验，可以远程完成数据整理和报表制作，期待进一步沟通！",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，看到贵司在招数据处理专员（兼职），我是统计学本科，熟练掌握Excel、SQL和Python，有业务数据报表分析经验，可以远程完成数据整理和报表制作，期待进一步沟通！",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-05 02:03:52"
+}

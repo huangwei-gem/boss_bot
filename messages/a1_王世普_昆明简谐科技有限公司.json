@@ -1,0 +1,22 @@
+{
+  "chat_name": "王世普",
+  "chat_id": "王世普#昆明简谐科技有限公司",
+  "account_index": 1,
+  "job_name": "兼职·数据采集3000-5000元/月昆明查看职位",
+  "company": "昆明简谐科技有限公司",
+  "messages": [
+    {
+      "text": "您好，我有统计学背景，熟悉Excel、SQL、Python，并负责过业务数据报表与洞察分析，对数据采集工作很感兴趣，希望能进一步沟通。",
+      "time": "昨天 03:26",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393227468874240",
+      "block": "昨天 03:26 送达 您好，我有统计学背景，熟悉Excel、SQL、Python，并负责过业务数据报表与洞察分析，对数据采集工作很感兴趣，希望能进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我有统计学背景，熟悉Excel、SQL、Python，并负责过业务数据报表与洞察分析，对数据采集工作很感兴趣，希望能进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-07 16:27:05"
+}

@@ -1,0 +1,63 @@
+{
+  "chat_name": "刁小帅",
+  "chat_id": "刁小帅#我爱我家",
+  "account_index": 1,
+  "job_name": "我爱我家房地产销售（租赁 买卖 新房皆可）9-14K北京查看职位",
+  "company": "我爱我家",
+  "messages": [
+    {
+      "text": "黄维，方便聊聊吗？",
+      "time": "15:19",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394464243175945",
+      "block": "15:19 黄维，方便聊聊吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "黄维，方便聊聊吗？"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394464243180032",
+      "block": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-08 16:43:02",
+      "time": "16:43",
+      "job_name": "我爱我家房地产销售（租赁 买卖 新房皆可）9-14K北京查看职位",
+      "isFriend": false,
+      "mid": "394484900811265"
+    },
+    {
+      "text": "好的，",
+      "time": "18:21",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394509000557057",
+      "block": "18:21 好的，",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的，"
+    }
+  ],
+  "updated_at": "2026-10-10 01:59:41",
+  "unread_on_boss": 0
+}

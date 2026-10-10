@@ -1,0 +1,23 @@
+{
+  "chat_name": "徐先生",
+  "chat_id": "徐先生#SHEIN",
+  "account_index": 1,
+  "job_name": "数据分析师-营销归因/评估25-45K上海查看职位",
+  "company": "SHEIN",
+  "messages": [
+    {
+      "text": "",
+      "time": "00:30",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394953732407809",
+      "block": "00:30 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-10 09:14:34"
+}

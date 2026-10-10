@@ -1,0 +1,65 @@
+{
+  "chat_name": "张小东",
+  "chat_id": "张小东#杭州快准云信息技术",
+  "account_index": 1,
+  "job_name": "兼职·【急聘】抖音线上兼职（在家办公）8000-20000元/月杭州查看职位",
+  "company": "杭州快准云信息技术",
+  "messages": [
+    {
+      "text": "您好，我对这个线上兼职岗位很感兴趣，我有数据分析基础，擅长Excel/SQL/Python，能胜任线上远程工作，希望进一步了解岗位详情。",
+      "time": "14:11",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393032139706881",
+      "block": "14:11 已读 您好，我对这个线上兼职岗位很感兴趣，我有数据分析基础，擅长Excel/SQL/Python，能胜任线上远程工作，希望进一步了解岗位详情。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对这个线上兼职岗位很感兴趣，我有数据分析基础，擅长Excel/SQL/Python，能胜任线上远程工作，希望进一步了解岗位详情。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "我们是要做AI应用在自媒体平台推广，每天做一两条视频，或者直播的形式  这个能做吗？",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393032978801154",
+      "block": "我们是要做AI应用在自媒体平台推广，每天做一两条视频，或者直播的形式 这个能做吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "我们是要做AI应用在自媒体平台推广，每天做一两条视频，或者直播的形式  这个能做吗？"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。不过我的求职方向是数据分析岗位，跟这个岗位不太匹配，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。不过我的求职方向是数据分析岗位，跟这个岗位不太匹配，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "scam_filter",
+      "action": "text",
+      "timestamp": "2026-10-05 00:46:47",
+      "time": "00:46",
+      "job_name": "兼职·【急聘】抖音线上兼职（在家办公）8000-20000元/月杭州查看职位",
+      "isFriend": false,
+      "mid": "393188175630849"
+    },
+    {
+      "sender": "bot",
+      "content": "张小东您好，之前聊的兼职·【急聘】抖音线上兼职（在家办公）8000-20000元/月杭州查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "text": "张小东您好，之前聊的兼职·【急聘】抖音线上兼职（在家办公）8000-20000元/月杭州查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-06 16:11:58",
+      "time": "16:11",
+      "job_name": "兼职·【急聘】抖音线上兼职（在家办公）8000-20000元/月杭州查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-07 04:24:00",
+  "unread_on_boss": 0
+}

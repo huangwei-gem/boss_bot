@@ -1,0 +1,37 @@
+{
+  "chat_name": "岳珍华",
+  "chat_id": "岳珍华#黎铭传媒",
+  "account_index": 0,
+  "job_name": "兼职·线上4小时聊天直播4000-6000元/月在家办公查看职位",
+  "company": "黎铭传媒",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:03",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393900130435843",
+      "block": "01:03 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 18:18:11",
+      "time": "18:18",
+      "job_name": "兼职·线上4小时聊天直播4000-6000元/月在家办公查看职位",
+      "isFriend": false,
+      "mid": "394154381394690"
+    }
+  ],
+  "updated_at": "2026-10-09 10:56:12"
+}

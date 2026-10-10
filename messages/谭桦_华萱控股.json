@@ -1,0 +1,22 @@
+{
+  "chat_name": "谭桦",
+  "chat_id": "谭桦#华萱控股",
+  "account_index": 0,
+  "job_name": "兼职·兼职婚礼线上运营2000-3000元/月湖州查看职位",
+  "company": "华萱控股",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:09",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393901622203139",
+      "block": "01:09 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-08 15:35:55"
+}

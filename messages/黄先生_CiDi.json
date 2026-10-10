@@ -1,0 +1,22 @@
+{
+  "chat_name": "黄先生",
+  "chat_id": "黄先生#CiDi",
+  "account_index": 0,
+  "job_name": "数据分析工程师15-20K长沙查看职位",
+  "company": "CiDi",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "04:23",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395010850575107",
+      "block": "04:23 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-10 09:21:21"
+}

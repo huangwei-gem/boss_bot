@@ -1,0 +1,51 @@
+{
+  "chat_name": "张先生",
+  "chat_id": "张先生#鸣鸣很忙集团",
+  "account_index": 0,
+  "job_name": "数据分析专家12-16K·13薪长沙查看职位",
+  "company": "鸣鸣很忙集团",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 13:39",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "388069599900417",
+      "block": "09-20 13:39 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388070807769857",
+      "block": "不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦",
+      "is_read": true
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "text": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-05 03:26:57",
+      "time": "03:26",
+      "job_name": "数据分析专家12-16K·13薪长沙查看职位",
+      "isFriend": false,
+      "mid": "393227549397761"
+    }
+  ],
+  "updated_at": "2026-10-10 07:29:58",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,36 @@
+{
+  "chat_name": "肖素",
+  "chat_id": "肖素#北京栖云知网络信息",
+  "account_index": 1,
+  "job_name": "兼职·数据采集专员5000-10000元/月廊坊查看职位",
+  "company": "北京栖云知网络信息",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 10:36",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394394729747201",
+      "block": "昨天 10:36 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学专业学生，有丰富的数据标注和AI训练语料清洗经验，熟练使用Python和SQL进行数据处理，适合贵司数据采集专员岗位要求，可远程高效完成任务",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394394958603012",
+      "block": "送达 您好，我是统计学专业学生，有丰富的数据标注和AI训练语料清洗经验，熟练使用Python和SQL进行数据处理，适合贵司数据采集专员岗位要求，可远程高效完成任务",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业学生，有丰富的数据标注和AI训练语料清洗经验，熟练使用Python和SQL进行数据处理，适合贵司数据采集专员岗位要求，可远程高效完成任务",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-09 23:09:33"
+}

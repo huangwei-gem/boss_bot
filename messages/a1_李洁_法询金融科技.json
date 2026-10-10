@@ -1,0 +1,23 @@
+{
+  "chat_name": "李洁",
+  "chat_id": "李洁#法询金融科技",
+  "account_index": 1,
+  "job_name": "兼职·银行数据员（远程兼职，长期需求）20-40元/时上海查看职位",
+  "company": "法询金融科技",
+  "messages": [
+    {
+      "text": "您好，我对银行数据员远程兼职岗位很感兴趣。我具备统计学背景，熟练使用Excel、SQL和Python，有业务数据报表与洞察分析经验，希望能有机会参与这个项目。",
+      "time": "12:56",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393013689983489",
+      "block": "12:56 送达 您好，我对银行数据员远程兼职岗位很感兴趣。我具备统计学背景，熟练使用Excel、SQL和Python，有业务数据报表与洞察分析经验，希望能有机会参与这个项目。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对银行数据员远程兼职岗位很感兴趣。我具备统计学背景，熟练使用Excel、SQL和Python，有业务数据报表与洞察分析经验，希望能有机会参与这个项目。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-05 22:18:22"
+}

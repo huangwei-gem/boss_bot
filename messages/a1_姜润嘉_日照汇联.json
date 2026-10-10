@@ -1,0 +1,23 @@
+{
+  "chat_name": "姜润嘉",
+  "chat_id": "姜润嘉#日照汇联",
+  "account_index": 1,
+  "job_name": "兼职·数据标注3000-4000元/月日照查看职位",
+  "company": "日照汇联",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，有文本/图像/语音标注及AI辅助标注流程搭建经验，熟悉Excel/SQL/Python数据分析工具，方便的话我把简历发您细聊",
+      "time": "昨天 13:15",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394433881674240",
+      "block": "昨天 13:15 送达 您好，我是统计学专业在读生，有文本/图像/语音标注及AI辅助标注流程搭建经验，熟悉Excel/SQL/Python数据分析工具，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，有文本/图像/语音标注及AI辅助标注流程搭建经验，熟悉Excel/SQL/Python数据分析工具，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-09 22:45:37"
+}

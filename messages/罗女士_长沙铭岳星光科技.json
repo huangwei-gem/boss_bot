@@ -1,0 +1,46 @@
+{
+  "chat_name": "罗女士",
+  "chat_id": "罗女士#长沙铭岳星光科技",
+  "account_index": 0,
+  "job_name": "有才艺的帅哥美女滴滴 永久无责保底7-15k7-12K长沙查看职位",
+  "company": "长沙铭岳星光科技",
+  "messages": [
+    {
+      "text": "你好，请问在么？方便沟通一下吗？",
+      "time": "09-20 19:21",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388153632772865",
+      "block": "09-20 19:21 你好，请问在么？方便沟通一下吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，请问在么？方便沟通一下吗？"
+    },
+    {
+      "text": "hi 长的帅 待遇开的高 薪资真实",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388153640133377",
+      "block": "hi 长的帅 待遇开的高 薪资真实",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "hi 长的帅 待遇开的高 薪资真实"
+    },
+    {
+      "text": "你好",
+      "time": "09-20 20:26",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388169578058496",
+      "block": "09-20 20:26 你好",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好"
+    }
+  ],
+  "updated_at": "2026-10-05 21:59:21"
+}

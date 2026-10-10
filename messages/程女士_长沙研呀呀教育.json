@@ -1,0 +1,63 @@
+{
+  "chat_name": "程女士",
+  "chat_id": "程女士#长沙研呀呀教育",
+  "account_index": 0,
+  "job_name": "兼职·新媒体运营专员（兼职）线上办公100-150元/天长沙查看职位",
+  "company": "长沙研呀呀教育",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 01:28",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393552308216578",
+      "block": "昨天 01:28 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393552308249345",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会",
+      "time": "21:15",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394198010323713",
+      "block": "21:15 对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-07 21:21:19",
+      "time": "21:21",
+      "job_name": "兼职·新媒体运营专员（兼职）线上办公100-150元/天长沙查看职位",
+      "isFriend": false,
+      "mid": "394199391462144"
+    }
+  ],
+  "updated_at": "2026-10-09 13:14:21",
+  "unread_on_boss": 0
+}

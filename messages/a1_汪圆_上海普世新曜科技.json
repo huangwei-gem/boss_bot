@@ -1,0 +1,61 @@
+{
+  "chat_name": "汪圆",
+  "chat_id": "汪圆#上海普世新曜科技",
+  "account_index": 1,
+  "job_name": "兼职·临床数据分析65-70元/时上海查看职位",
+  "company": "上海普世新曜科技",
+  "messages": [
+    {
+      "text": "",
+      "time": "13:13",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394787382358786",
+      "block": "13:13 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据标注与分析，曾用Python/SQL完成多模态标注和可视化看板搭建，看到贵司临床数据分析岗位觉得能力匹配，方便的话我把简历发您细聊",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394787511210753",
+      "block": "已读 您好，我是统计学专业在读生，擅长数据标注与分析，曾用Python/SQL完成多模态标注和可视化看板搭建，看到贵司临床数据分析岗位觉得能力匹配，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据标注与分析，曾用Python/SQL完成多模态标注和可视化看板搭建，看到贵司临床数据分析岗位觉得能力匹配，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "14:43",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394809419911943",
+      "block": "14:43 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "text": "我们是做患者招募的哈",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394809437504259",
+      "block": "我们是做患者招募的哈",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "我们是做患者招募的哈"
+    }
+  ],
+  "updated_at": "2026-10-10 06:44:00",
+  "unread_on_boss": 0
+}

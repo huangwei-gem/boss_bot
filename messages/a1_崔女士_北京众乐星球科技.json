@@ -1,0 +1,51 @@
+{
+  "chat_name": "崔女士",
+  "chat_id": "崔女士#北京众乐星球科技",
+  "account_index": 1,
+  "job_name": "兼职·金铲铲&三角洲&王者（居家线上接受小白）500-1500元/周在家办公查看职位",
+  "company": "北京众乐星球科技",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 00:16",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393534607049217",
+      "block": "昨天 00:16 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好呀！会玩金铲铲或者LOL手游 永劫 瓦 三角洲之类的吗？",
+      "time": "11:40",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394410410844673",
+      "block": "11:40 您好呀！会玩金铲铲或者LOL手游 永劫 瓦 三角洲之类的吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好呀！会玩金铲铲或者LOL手游 永劫 瓦 三角洲之类的吗？"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，我目前主要寻找数据标注、数据分析或线上运营助理方向的兼职机会，不太匹配这个岗位。请问贵司有相关领域的职位吗？感谢~",
+      "text": "您好，我目前主要寻找数据标注、数据分析或线上运营助理方向的兼职机会，不太匹配这个岗位。请问贵司有相关领域的职位吗？感谢~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-08 11:44:06",
+      "time": "11:44",
+      "job_name": "兼职·金铲铲&三角洲&王者（居家线上接受小白）500-1500元/周在家办公查看职位",
+      "isFriend": false,
+      "mid": "394411430740484"
+    }
+  ],
+  "updated_at": "2026-10-09 22:59:33",
+  "unread_on_boss": 0
+}

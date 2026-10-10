@@ -1,0 +1,49 @@
+{
+  "chat_name": "李女士",
+  "chat_id": "李女士#长沙烁金文化科技",
+  "account_index": 1,
+  "job_name": "6k游戏推广+好氛围+包吃住3-8K·13薪长沙查看职位",
+  "company": "长沙烁金文化科技",
+  "messages": [
+    {
+      "text": "你好呀，我们这边最近在招6k游戏推广+好氛围+包吃住，觉得还蛮适合的，可否聊一聊哈",
+      "time": "09-22 13:00",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388767910232834",
+      "block": "09-22 13:00 你好呀，我们这边最近在招6k游戏推广+好氛围+包吃住，觉得还蛮适合的，可否聊一聊哈",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好呀，我们这边最近在招6k游戏推广+好氛围+包吃住，觉得还蛮适合的，可否聊一聊哈"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388767910290177",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的邀请！我目前的求职方向是数据分析相关岗位，请问贵公司是否有这类机会呢？",
+      "text": "您好，感谢您的邀请！我目前的求职方向是数据分析相关岗位，请问贵公司是否有这类机会呢？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-09-29 07:45:25",
+      "time": "07:45",
+      "job_name": "6k游戏推广+好氛围+包吃住3-8K·13薪长沙查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-09-29 07:45:25"
+}

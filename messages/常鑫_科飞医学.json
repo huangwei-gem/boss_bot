@@ -1,0 +1,22 @@
+{
+  "chat_name": "常鑫",
+  "chat_id": "常鑫#科飞医学",
+  "account_index": 0,
+  "job_name": "兼职·ukb数据分析8000-10000元/月大连查看职位",
+  "company": "科飞医学",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "10-05 23:30",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393523401122561",
+      "block": "10-05 23:30 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-08 02:58:17"
+}

@@ -1,0 +1,49 @@
+{
+  "chat_name": "易女士",
+  "chat_id": "易女士#拼多多集团_PDD",
+  "account_index": 0,
+  "job_name": "数据分析师【27届校招】20-40K·18薪上海查看职位",
+  "company": "拼多多集团-PDD",
+  "messages": [
+    {
+      "text": "",
+      "time": "08-28 22:05",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "380054324396545",
+      "block": "08-28 22:05 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "is_read": true
+    },
+    {
+      "text": "你好啊，可以聊一聊~",
+      "time": "08-28 22:18",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "380057589883397",
+      "block": "08-28 22:18 你好啊，可以聊一聊~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好啊，可以聊一聊~",
+      "is_read": true
+    },
+    {
+      "text": "您好，我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+      "time": "08-29 10:05",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "380231431496199",
+      "block": "08-29 10:05 已读 您好，我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对这个岗位很感兴趣，方便了解一下具体情况吗？"
+    }
+  ],
+  "updated_at": "2026-09-28 14:56:54"
+}

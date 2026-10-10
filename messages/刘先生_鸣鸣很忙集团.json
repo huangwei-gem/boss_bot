@@ -1,0 +1,49 @@
+{
+  "chat_name": "刘先生",
+  "chat_id": "刘先生#鸣鸣很忙集团",
+  "account_index": 0,
+  "job_name": "商业数据分析10-14K·13薪长沙查看职位",
+  "company": "鸣鸣很忙集团",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 08:06",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387987848901378",
+      "block": "09-20 08:06 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "387987848966913",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "is_read": true
+    },
+    {
+      "text": "感谢你的关注，暂时与该职位不够匹配，有合适机会之后再沟通～",
+      "time": "09-20 09:56",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388014958109443",
+      "block": "09-20 09:56 感谢你的关注，暂时与该职位不够匹配，有合适机会之后再沟通～",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢你的关注，暂时与该职位不够匹配，有合适机会之后再沟通～",
+      "is_read": true
+    }
+  ],
+  "updated_at": "2026-10-05 01:27:11"
+}

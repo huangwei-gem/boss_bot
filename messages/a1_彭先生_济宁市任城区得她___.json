@@ -1,0 +1,23 @@
+{
+  "chat_name": "彭先生",
+  "chat_id": "彭先生#济宁市任城区得她___",
+  "account_index": 1,
+  "job_name": "兼职·线上兼职--数据标注5-50元/时济宁查看职位",
+  "company": "济宁市任城区得她...",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:58",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "392999428809222",
+      "block": "11:58 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-05 22:02:24"
+}

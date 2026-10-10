@@ -1,0 +1,89 @@
+{
+  "chat_name": "熊先生",
+  "chat_id": "熊先生#言臻教育",
+  "account_index": 1,
+  "job_name": "兼职·微课制作线上兼职100-300元/时南昌查看职位",
+  "company": "言臻教育",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据标注与分析，看到贵司微课制作兼职岗位对线上协作的要求，方便的话我把简历发您细聊",
+      "time": "13:53",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394443170288129",
+      "block": "13:53 已读 您好，我是统计学专业在读生，擅长数据标注与分析，看到贵司微课制作兼职岗位对线上协作的要求，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据标注与分析，看到贵司微课制作兼职岗位对线上协作的要求，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "你好啊，可以聊一聊~",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394444186890753",
+      "block": "你好啊，可以聊一聊~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好啊，可以聊一聊~"
+    },
+    {
+      "text": "我们是做微课精品课相关的",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394444269302273",
+      "block": "我们是做微课精品课相关的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "我们是做微课精品课相关的"
+    },
+    {
+      "text": "您这边有过往接单案例吗",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394444339560965",
+      "block": "您这边有过往接单案例吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您这边有过往接单案例吗"
+    },
+    {
+      "sender": "bot",
+      "content": "有过按平台要求交付的数据标注和分析批次案例，微课制作暂未有过往接单案例，可以按样片要求先做一段测试给您评估。",
+      "text": "有过按平台要求交付的数据标注和分析批次案例，微课制作暂未有过往接单案例，可以按样片要求先做一段测试给您评估。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-08 19:05:50",
+      "time": "19:05",
+      "job_name": "兼职·微课制作线上兼职100-300元/时南昌查看职位",
+      "isFriend": false,
+      "mid": "394519997432321"
+    },
+    {
+      "sender": "bot",
+      "content": "微课制作这块确实没有过往接单案例，不过数据处理和AI工具我都比较熟，也习惯按规范交付；如果方便，可以先给我一段样片要求，我做一小段测试供您评估。",
+      "text": "微课制作这块确实没有过往接单案例，不过数据处理和AI工具我都比较熟，也习惯按规范交付；如果方便，可以先给我一段样片要求，我做一小段测试供您评估。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 02:04:00",
+      "time": "02:04",
+      "job_name": "兼职·微课制作线上兼职100-300元/时南昌查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 02:04:00",
+  "unread_on_boss": 0
+}

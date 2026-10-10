@@ -1,0 +1,49 @@
+{
+  "chat_name": "孙亚楠",
+  "chat_id": "孙亚楠#中国电信数据发展中心",
+  "account_index": 1,
+  "job_name": "数据分析岗-财务部 (MJ001605)15-25K上海查看职位",
+  "company": "中国电信数据发展中心",
+  "messages": [
+    {
+      "text": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel/SQL/Python做数据整理与可视化看板，看到贵司数据分析岗很感兴趣，方便的话我把简历发您细聊",
+      "time": "昨天 13:53",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394797190398470",
+      "block": "昨天 13:53 已读 您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel/SQL/Python做数据整理与可视化看板，看到贵司数据分析岗很感兴趣，方便的话我把简历发您细聊",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel/SQL/Python做数据整理与可视化看板，看到贵司数据分析岗很感兴趣，方便的话我把简历发您细聊"
+    },
+    {
+      "text": "您不太适合我这个职位，谢谢~后续有合适岗位可再联系",
+      "time": "09:22",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395084296544770",
+      "block": "09:22 您不太适合我这个职位，谢谢~后续有合适岗位可再联系",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您不太适合我这个职位，谢谢~后续有合适岗位可再联系"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，祝您招聘顺利~",
+      "text": "好的，感谢您的时间，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-10 09:23:10",
+      "time": "09:23",
+      "job_name": "数据分析岗-财务部 (MJ001605)15-25K上海查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 09:23:10",
+  "unread_on_boss": 0
+}

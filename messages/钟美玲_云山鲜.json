@@ -1,0 +1,91 @@
+{
+  "chat_name": "钟美玲",
+  "chat_id": "钟美玲#云山鲜",
+  "account_index": 0,
+  "job_name": "长沙市岳麓区快递员7-12K长沙查看职位",
+  "company": "云山鲜",
+  "messages": [
+    {
+      "text": "黄维，你好，有意向换份工作吗",
+      "time": "13:33",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393730403463428",
+      "block": "13:33 黄维，你好，有意向换份工作吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "黄维，你好，有意向换份工作吗"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393730403467521",
+      "block": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA"
+    },
+    {
+      "text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "393730403475716",
+      "block": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "sender": "hr",
+      "kind": "system",
+      "content": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "card_text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址"
+    },
+    {
+      "text": "您目前是在哪里呀？我看下哪个门店离你更近点呢",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393730512982273",
+      "block": "您目前是在哪里呀？我看下哪个门店离你更近点呢",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您目前是在哪里呀？我看下哪个门店离你更近点呢"
+    },
+    {
+      "sender": "bot",
+      "content": "钟女士您好，我目前求职方向是数据分析，快递员岗位和我方向不太匹配，请问贵司是否有数据分析相关的岗位呢？",
+      "text": "钟女士您好，我目前求职方向是数据分析，快递员岗位和我方向不太匹配，请问贵司是否有数据分析相关的岗位呢？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-06 13:34:54",
+      "time": "13:34",
+      "job_name": "长沙市岳麓区快递员7-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "393730845061376"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 18:17:23",
+      "time": "18:17",
+      "job_name": "长沙市岳麓区快递员7-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "394154184069377"
+    }
+  ],
+  "updated_at": "2026-10-09 10:56:41",
+  "unread_on_boss": 0
+}

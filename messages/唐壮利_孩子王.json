@@ -1,0 +1,51 @@
+{
+  "chat_name": "唐壮利",
+  "chat_id": "唐壮利#孩子王",
+  "account_index": 0,
+  "job_name": "市场营销策划3-5K长沙查看职位",
+  "company": "孩子王",
+  "messages": [
+    {
+      "text": "你好，看过你的简历，觉得蛮合适的，期待和你聊一下",
+      "time": "09:43",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "390842824872448",
+      "block": "09:43 你好，看过你的简历，觉得蛮合适的，期待和你聊一下",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，看过你的简历，觉得蛮合适的，期待和你聊一下",
+      "is_read": true
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "390842824872450",
+      "block": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA",
+      "is_read": true
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "390842824925700",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "is_read": true
+    }
+  ],
+  "updated_at": "2026-09-28 15:10:55"
+}

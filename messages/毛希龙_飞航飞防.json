@@ -1,0 +1,22 @@
+{
+  "chat_name": "毛希龙",
+  "chat_id": "毛希龙#飞航飞防",
+  "account_index": 0,
+  "job_name": "兼职·数据标注100-200元/天长沙查看职位",
+  "company": "飞航飞防",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 02:30",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393567668417283",
+      "block": "昨天 02:30 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-08 02:27:15"
+}

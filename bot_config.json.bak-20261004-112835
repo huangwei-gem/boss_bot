@@ -1,0 +1,276 @@
+{
+  "accounts": [
+    {
+      "cookie_file": "zhipin_cookies.json",
+      "enabled": true,
+      "greeting_message": "您好～我是统计学本科，想找数据分析 线上的线上兼职机会。平时用Excel、SQL、Python、数据分析做数据整理和分析，负责业务数据报表与洞察分析。看到贵司这个岗位和我的方向挺匹配，方便的话想把简历发您细聊，工作日下午可以面试。",
+      "image_files": [],
+      "jobs": [
+        {
+          "city": "全国",
+          "enabled": true,
+          "greeting_message": "您好，我是双一流的本科，想找数据分析方向的线上兼职。在校系统学过数据分析，掌握 Excel、基础 SQL 和数据整理，能按约定时间线上交付、不用坐班。做事严谨细心、交付准时，方便的话想把简历发您细聊。",
+          "image_files": [
+            "dashboard/d7ca4e20_看板1.png",
+            "dashboard/452a1b69_看板2.png",
+            "dashboard/d258c537_看板3.png"
+          ],
+          "job_type": "兼职",
+          "query": "数据分析 线上",
+          "scroll_pages": 5
+        }
+      ],
+      "message_interval_max": 8,
+      "message_interval_min": 3,
+      "name": "主账号",
+      "settings": {}
+    },
+    {
+      "cookie_file": "zhipin_cookies_1.json",
+      "enabled": true,
+      "greeting_message": "您好～我是统计学本科，想找数据处理 线上的线上兼职机会。看到贵司这个岗位和我的方向挺匹配，方便的话想把简历发您细聊，工作日下午可以面试。",
+      "image_files": [],
+      "jobs": [
+        {
+          "city": "全国",
+          "enabled": true,
+          "greeting_message": "您好，我是双一流的本科，想找数据分析方向的线上兼职。在校系统学过数据分析，掌握 Excel、基础 SQL 和数据整理，能按约定时间线上交付、不用坐班。做事严谨细心、交付准时，方便的话想把简历发您细聊。",
+          "image_files": [],
+          "job_type": "兼职",
+          "query": "数据处理 线上",
+          "scroll_pages": 5
+        }
+      ],
+      "message_interval_max": 8,
+      "message_interval_min": 3,
+      "name": "账号2",
+      "settings": {}
+    }
+  ],
+  "ai": {
+    "enabled": true,
+    "api_key": "sk-P5tZ5ljBOWyNi85fVzabu633Vp88cmP78d4G7279f6k9KNQj",
+    "api_base": "https://apihub.agnes-ai.com/v1",
+    "model": "agnes-2.5-flash",
+    "match_threshold": 70,
+    "analyze_max_tokens": 1600,
+    "providers": [
+      {
+        "api_base": "https://apihub.agnes-ai.com/v1",
+        "api_key": "sk-P5tZ5ljBOWyNi85fVzabu633Vp88cmP78d4G7279f6k9KNQj",
+        "model": "agnes-2.5-flash",
+        "name": "Agnes-2.5-Flash",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://apihub.agnes-ai.com/v1",
+        "api_key": "sk-9oqBiyfO2pR3caC5gZ1gqCx5rOhCFZRjRsnNkPxCXlw9BpF0",
+        "model": "agnes-2.5-flash",
+        "name": "Agnes-2",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://token.sensenova.cn/v1",
+        "api_key": "sk-F3WGt9cnsCrduZMyhyTYMEEKYJWE1Mzn",
+        "model": "deepseek-v4-flash",
+        "name": "SenseNova-DeepSeek-1",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://token.sensenova.cn/v1",
+        "api_key": "sk-Pw4XHALKoM3MYleuICN6F2vfp2GP1QUl",
+        "model": "deepseek-v4-flash",
+        "name": "SenseNova-DeepSeek-2",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://note3-prev-api.askdiandian.com/v1",
+        "api_key": "ak_iGxurHneP9HveEQ5cJRuAvZQDJeDI",
+        "model": "dots3-note-prev",
+        "name": "AskDiandian-Dots3",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://developer.amd.com.cn/radeon/api/v1",
+        "api_key": "rc-ee98411a4be1ae0e3522888415af21cad30c3940981af7fa",
+        "model": "DeepSeek-V4.1-Flash",
+        "name": "AMD-DeepSeek-V4.1",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://developer.amd.com.cn/radeon/api/v1",
+        "api_key": "rc-ee98411a4be1ae0e3522888415af21cad30c3940981af7fa",
+        "model": "GLM-5.3-Flash",
+        "name": "AMD-GLM-5.3",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://developer.amd.com.cn/radeon/api/v1",
+        "api_key": "rc-ee98411a4be1ae0e3522888415af21cad30c3940981af7fa",
+        "model": "Qwen3.8-Flash-Next",
+        "name": "AMD-Qwen3.8",
+        "timeout": 30
+      },
+      {
+        "api_base": "https://integrate.api.nvidia.com/v1",
+        "api_key": "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",
+        "model": "z-ai/glm-5.3-flash",
+        "name": "NVIDIA-GLM-5.3-Flash",
+        "timeout": 90
+      },
+      {
+        "api_base": "https://integrate.api.nvidia.com/v1",
+        "api_key": "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",
+        "model": "z-ai/glm-5.3",
+        "name": "NVIDIA-GLM-5.3",
+        "timeout": 90
+      },
+      {
+        "api_base": "https://integrate.api.nvidia.com/v1",
+        "api_key": "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",
+        "model": "moonshotai/kimi-k3",
+        "name": "NVIDIA-Kimi-K3",
+        "timeout": 90
+      },
+      {
+        "api_base": "https://integrate.api.nvidia.com/v1",
+        "api_key": "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",
+        "model": "deepseek-ai/deepseek-v4.1-flash",
+        "name": "NVIDIA-DeepSeek-V4.1-Flash",
+        "timeout": 90
+      }
+    ],
+    "probe_max_per_round": 5,
+    "custom_filter_keywords": [
+      "主播，地推，销售"
+    ],
+    "custom_scoring_prompt": "猎头/人力资源公司代招的岗位（职位标注「猎头职位」、或公司为人力资源服务/招聘服务类）在边界分上从严：除非薪资、方向、经验要求都明显匹配，否则降低评分并倾向不投；但中软国际、微创软件等正规外包的真实技术/数据岗不算此类，按正常标准判。\n本轮只投线上可完成的兼职/远程岗：JD 要求固定坐班、每天到岗、线下驻场、周末现场支援的判低分并不投；工作内容是数据整理、数据标注、报表制作、SQL/Excel 处理、问卷或爬虫数据清洗等可远程交付的兼职，薪资不高也可以投；标着「兼职」实际是地推/客服/主播/骑手的按硬否决处理。",
+    "fail_action": "default",
+    "skip_unhealthy": true
+  },
+  "browser": {
+    "headless": false,
+    "viewport_width": 1280,
+    "viewport_height": 800,
+    "page_load_timeout": 30,
+    "custom_user_agent": "",
+    "proxy": "",
+    "browser_type": "chrome",
+    "browser_path": "",
+    "debug_port": 9222,
+    "user_data_dir": ""
+  },
+  "dry_run": false,
+  "greet": {
+    "enabled": true,
+    "rate_limit": {
+      "enabled": true,
+      "max_per_day": 150,
+      "max_per_hour": 30
+    }
+  },
+  "importance_keywords": [
+    "offer",
+    "确认入职",
+    "入职通知",
+    "办理入职",
+    "录取",
+    "录用",
+    "欢迎加入",
+    "报到",
+    "面试邀请",
+    "邀约",
+    "来公司",
+    "到岗"
+  ],
+  "log": {
+    "event_log_enabled": true,
+    "log_level": "INFO",
+    "log_retention_days": 14
+  },
+  "login": {
+    "wait_timeout": 300,
+    "clear_cookies_on_failure": true,
+    "cookie_file": "zhipin_cookies.json"
+  },
+  "notify": {
+    "enabled": true,
+    "webhook_url": ""
+  },
+  "rate_limit": {
+    "enabled": true,
+    "max_per_hour": 30,
+    "max_per_day": 150
+  },
+  "reply": {
+    "chat_url": "https://www.zhipin.com/web/geek/chat",
+    "check_interval": 8,
+    "context_message_count": 10,
+    "enabled": true,
+    "max_delay": 5,
+    "max_replies_per_hour": 30,
+    "min_delay": 2,
+    "pause_on_important": true,
+    "resume_send_once": true
+  },
+  "reply_rules": {
+    "你好": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+    "做什么": "我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。",
+    "发简历": "send_resume",
+    "在不在": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+    "在吗": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+    "多少钱": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+    "岗位职责": "我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。",
+    "工作内容": "我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。",
+    "工资": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+    "待遇": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+    "您好": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+    "时间安排": "工作日下午都可以安排面试，您看哪个时间段方便？",
+    "看看简历": "send_resume",
+    "简历": "send_resume",
+    "约面试": "工作日下午都可以安排面试，您看哪个时间段方便？",
+    "薪资": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+    "面试": "工作日下午都可以安排面试，您看哪个时间段方便？"
+  },
+  "resume": {
+    "school": "某某大学",
+    "major": "统计学",
+    "degree": "本科",
+    "skills": [
+      "Excel",
+      "SQL",
+      "Python",
+      "数据分析"
+    ],
+    "experience": "负责业务数据报表与洞察分析",
+    "target_position": "数据分析师",
+    "self_intro": "做事严谨细心，学习能力强"
+  },
+  "retry": {
+    "max_attempts": 3,
+    "base_delay": 2,
+    "backoff_factor": 2
+  },
+  "self_evolve_enabled": true,
+  "templates": {
+    "default_reply": "好的，感谢您的消息，我会尽快回复您。",
+    "greeting_reply": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+    "interview_time_reply": "工作日下午都可以安排面试，您看哪个时间段方便？",
+    "job_content_reply": "我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。",
+    "resume_duplicate_reply": "您好，简历刚刚已经发您了，您看一下，有任何问题随时沟通~",
+    "resume_unavailable_reply": "不好意思，简历文件暂时不在我这边，稍后我补发给您，可以先看看我主页的在线简历~",
+    "salary_reply": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。"
+  },
+  "user_profile": {
+    "available_interview_time": "工作日下午",
+    "contact": "",
+    "education": "本科学历",
+    "experience": "",
+    "highlights": [],
+    "name": "求职者",
+    "position": "数据分析",
+    "salary_expectation": "面议",
+    "skills": []
+  },
+  "theme": "dark"
+}

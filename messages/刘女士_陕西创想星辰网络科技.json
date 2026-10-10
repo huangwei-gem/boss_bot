@@ -1,0 +1,90 @@
+{
+  "chat_name": "刘女士",
+  "chat_id": "刘女士#陕西创想星辰网络科技",
+  "account_index": 0,
+  "job_name": "兼职·智能体研发工程师（线上）6000-6500元/月淮南查看职位",
+  "company": "陕西创想星辰网络科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 20:15",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393121608090374",
+      "block": "昨天 20:15 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "方便发一份简历过来吗？",
+      "time": "11:57",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394414687830785",
+      "block": "11:57 方便发一份简历过来吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "方便发一份简历过来吗？"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394414688150276",
+      "block": "我想要一份您的附件简历，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，简历刚刚已经发您了，您看一下，有任何问题随时沟通~",
+      "text": "您好，简历刚刚已经发您了，您看一下，有任何问题随时沟通~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-08 12:02:59",
+      "time": "12:02",
+      "job_name": "兼职·智能体研发工程师（线上）6000-6500元/月淮南查看职位",
+      "isFriend": false,
+      "mid": "394416072794881"
+    },
+    {
+      "text": "我们认真审阅了您的简历，但暂不完全匹配岗位情况。祝您在BOSS直聘找到更合适的机会！",
+      "time": "16:04",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394475502707458",
+      "block": "16:04 我们认真审阅了您的简历，但暂不完全匹配岗位情况。祝您在BOSS直聘找到更合适的机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "我们认真审阅了您的简历，但暂不完全匹配岗位情况。祝您在BOSS直聘找到更合适的机会！"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-08 16:18:29",
+      "time": "16:18",
+      "job_name": "兼职·智能体研发工程师（线上）6000-6500元/月淮南查看职位",
+      "isFriend": false,
+      "mid": "394478869488385"
+    }
+  ],
+  "updated_at": "2026-10-10 07:15:29",
+  "unread_on_boss": 0
+}

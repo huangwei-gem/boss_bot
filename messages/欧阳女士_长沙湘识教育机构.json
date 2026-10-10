@@ -1,0 +1,49 @@
+{
+  "chat_name": "欧阳女士",
+  "chat_id": "欧阳女士#长沙湘识教育机构",
+  "account_index": 0,
+  "job_name": "兼职·大学生线上兼职（活动执行）100-200元/天长沙查看职位",
+  "company": "长沙湘识教育机构",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 02:27",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393566945325056",
+      "block": "昨天 02:27 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "你好 ，这个是大学生兼职岗位 。请问就读于哪个学校 ？离这里多远呢？",
+      "time": "14:42",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394455344242690",
+      "block": "14:42 你好 ，这个是大学生兼职岗位 。请问就读于哪个学校 ？离这里多远呢？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好 ，这个是大学生兼职岗位 。请问就读于哪个学校 ？离这里多远呢？"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-10 00:55:49",
+      "time": "00:55",
+      "job_name": "兼职·大学生线上兼职（活动执行）100-200元/天长沙查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 00:55:49",
+  "unread_on_boss": 0
+}

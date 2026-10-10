@@ -1,0 +1,64 @@
+{
+  "chat_name": "张女士",
+  "chat_id": "张女士#河南微航联云大数___",
+  "account_index": 1,
+  "job_name": "兼职·普通话线上语音标注15-30元/时商丘查看职位",
+  "company": "河南微航联云大数...",
+  "messages": [
+    {
+      "text": "您好，我对普通话线上语音标注岗位很感兴趣，能接受线上远程工作，具备良好的普通话表达能力和细致耐心，期待进一步沟通。",
+      "time": "昨天 03:23",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393226669531648",
+      "block": "昨天 03:23 已读 您好，我对普通话线上语音标注岗位很感兴趣，能接受线上远程工作，具备良好的普通话表达能力和细致耐心，期待进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对普通话线上语音标注岗位很感兴趣，能接受线上远程工作，具备良好的普通话表达能力和细致耐心，期待进一步沟通。"
+    },
+    {
+      "text": "招满了",
+      "time": "13:41",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394794234294787",
+      "block": "13:41 招满了",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "招满了"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您告知，祝您招聘顺利！",
+      "text": "好的，感谢您告知，祝您招聘顺利！",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-09 13:58:43",
+      "time": "13:58",
+      "job_name": "兼职·普通话线上语音标注15-30元/时商丘查看职位",
+      "isFriend": false,
+      "mid": "394798378426886"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，理解，感谢您的时间，祝您招聘顺利。",
+      "text": "好的，理解，感谢您的时间，祝您招聘顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 03:25:54",
+      "time": "03:25",
+      "job_name": "兼职·普通话线上语音标注15-30元/时商丘查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 03:25:54",
+  "unread_on_boss": 0
+}

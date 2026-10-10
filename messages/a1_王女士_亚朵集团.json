@@ -1,0 +1,36 @@
+{
+  "chat_name": "王女士",
+  "chat_id": "王女士#亚朵集团",
+  "account_index": 1,
+  "job_name": "数据分析15-25K·14薪上海查看职位",
+  "company": "亚朵集团",
+  "messages": [
+    {
+      "text": "",
+      "time": "00:21",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394951337882114",
+      "block": "00:21 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据标注与分析，曾用AI工具完成多模态标注和业务报表分析，方便的话我把简历发您细聊",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394951462982144",
+      "block": "送达 您好，我是统计学专业在读生，擅长数据标注与分析，曾用AI工具完成多模态标注和业务报表分析，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据标注与分析，曾用AI工具完成多模态标注和业务报表分析，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-10 09:15:50"
+}

@@ -21,34 +21,27 @@ env/
 .env
 *.env
 
-# 运行时数据
-data/
-logs/
-messages/
+# 运行时数据（全部入库：这个项目要能在别的机器上原样复原，记录本身就是资料）
 bot_state.json
 bot_state_*.json
 bot_stats_*.json
 notifications.json
+reply_records_export.json
+
+# 本地临时排查文件（一次性产物，不是资料）
+_tmp_*
+flask_server.log
+
+# 浏览器运行数据：396MB Chrome profile，里面有 >100MB 的 Cache_Data/data_3，
+# GitHub 单文件 100MB 是硬墙，物理传不上去；登录态另有 zhipin_cookies*.json 承载
 flask-version/browser_data/
+browser_data/
+browser_data_*/
 
-# 配置文件中的敏感数据
-bot_config.json
-# 每次保存自动留的 .bak-<时间> 和坏掉那份都在下面这条里，里面是 AI key，绝不入库
-bot_config.json.*
-user_profile.json
-config_overrides.json
-zhipin_cookies.json
-flask-version/zhipin_cookies.json
-
-# 导出的数据文件
-*.xlsx
-
-# 便携浏览器
+# 破解版浏览器：577MB，其中 chrome.dll 单文件 281MB，同样超 100MB 硬墙；
+# 而且它是再分发的 Chrome 二进制，不该由这个仓库转卖
 cloakbrowser/
 cloakbrowser-windows-x64/
-
-# 浏览器运行数据
-browser_data/
 
 # Windows保留名误创建
 nul
@@ -82,16 +75,14 @@ tests/screenshots/
 .codeartsdoer/
 .arts/bot_stats.json
 bot_stats.json
-reply_records_export.json
-zhipin_cookies_ref.json
 .arts/
 
-# 按账号生成的登录 Cookie（含真实会话，绝不能进版本库）
-zhipin_cookies_*.json
-browser_data_*/
+# 破解版浏览器解包时掉在仓库根的 DLL 副作用文件（不是项目资料）
+@AutomationLog.txt
+language.txt
+winmm.dll
 
-# 服务与测试日志
-*.log
+# 服务与测试日志：现在要一起留，日志是这套东西跑过什么的唯一旁证
 flask-version/*.log
 
 # 真机测试产物（截图与报告，本地生成）
@@ -107,7 +98,8 @@ tools/full_test_report.md
 
 # 本地临时目录
 .scratch/
-# 网页抓取/供应商体检产物（含从外部导出库复制的 API Key，绝不能进版本库）
+# 网页抓取/供应商体检产物：里面的 API Key 是从第三方 cc-switch 导出库复制来的，
+# 不是这个项目的 key，用户免掉的不是别人的凭据，所以这条留着
 .firecrawl/
 
 # 页面抓取与探测产物（脚本本地生成）
@@ -121,15 +113,7 @@ tools/message_types.json
 tools/ai_provider_diagnosis.json
 tools/*_probe.json
 
-# 本地备份（含 Key 与 HR 对话，绝不能进版本库）
-*.bak
-*.bak-*
-*.json.bak*
-bot_config.json.bak*
-*.backup
-
-# 第三方 skill 安装目录、图标中间缓存与临时排查文件（都不该进版本库）
+# 第三方 skill 安装目录、图标中间缓存（都不该进版本库）
 .qoder/
 .kb/
 flask-version/static/icons/src/
-_tmp_*

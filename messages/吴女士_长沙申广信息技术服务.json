@@ -1,0 +1,91 @@
+{
+  "chat_name": "吴女士",
+  "chat_id": "吴女士#长沙申广信息技术服务",
+  "account_index": 0,
+  "job_name": "月入2w金融电话销售+60%高提成9-12K长沙查看职位",
+  "company": "长沙申广信息技术服务",
+  "messages": [
+    {
+      "text": "你好！周末双休60%高提成销售招聘啦，欢迎来公司挑战月薪15万+有意向方便发一份简历吗~",
+      "time": "09-19 21:41",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "387834185978626",
+      "block": "09-19 21:41 你好！周末双休60%高提成销售招聘啦，欢迎来公司挑战月薪15万+有意向方便发一份简历吗~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好！周末双休60%高提成销售招聘啦，欢迎来公司挑战月薪15万+有意向方便发一份简历吗~",
+      "is_read": true
+    },
+    {
+      "text": "不好意思，简历文件暂时不在我这边，稍后我补发给您，可以先看看我主页的在线简历~",
+      "time": "09-19 21:57",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387838177252097",
+      "block": "09-19 21:57 已读 不好意思，简历文件暂时不在我这边，稍后我补发给您，可以先看看我主页的在线简历~",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "不好意思，简历文件暂时不在我这边，稍后我补发给您，可以先看看我主页的在线简历~",
+      "reply_source": "backfill"
+    },
+    {
+      "sender": "bot",
+      "content": "[简历已发送]",
+      "text": "[简历已发送]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "backfill",
+      "action": "resume",
+      "timestamp": "2026-10-04 19:59:51",
+      "time": "19:59",
+      "job_name": "月入2w金融电话销售+60%高提成9-12K长沙查看职位",
+      "isFriend": false
+    },
+    {
+      "text": "",
+      "time": "10-04 19:59",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "393117659808513",
+      "block": "10-04 19:59 附件简历请求已发送",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "附件简历请求已发送"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "393117659874050",
+      "block": "数据分析简历-黄维.docx 点击预览附件简历",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "数据分析简历-黄维.docx 点击预览附件简历"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 18:42:55",
+      "time": "18:42",
+      "job_name": "月入2w金融电话销售+60%高提成9-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "394160460022529"
+    }
+  ],
+  "updated_at": "2026-10-09 10:38:06"
+}

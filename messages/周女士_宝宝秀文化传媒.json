@@ -1,0 +1,77 @@
+{
+  "chat_name": "周女士",
+  "chat_id": "周女士#宝宝秀文化传媒",
+  "account_index": 0,
+  "job_name": "服装模特/综合7k/接受无经验7-10K长沙查看职位",
+  "company": "宝宝秀文化传媒",
+  "messages": [
+    {
+      "text": "你好～我们这边招全职模特！上班时间早十晚七，薪资7000，公司提供住宿，长沙市内过来面试路程远可以报销车费，感兴趣可以详细跟你介绍工作内容～",
+      "time": "15:09",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394108106129665",
+      "block": "15:09 你好～我们这边招全职模特！上班时间早十晚七，薪资7000，公司提供住宿，长沙市内过来面试路程远可以报销车费，感兴趣可以详细跟你介绍工作内容～",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好～我们这边招全职模特！上班时间早十晚七，薪资7000，公司提供住宿，长沙市内过来面试路程远可以报销车费，感兴趣可以详细跟你介绍工作内容～"
+    },
+    {
+      "text": "你好，有兴趣来了解一下吗，过来面试来回包打车费，可以来试个妆造感受一下，你觉得ok就留下，不行也没关系",
+      "time": "15:23",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394111482253570",
+      "block": "15:23 你好，有兴趣来了解一下吗，过来面试来回包打车费，可以来试个妆造感受一下，你觉得ok就留下，不行也没关系",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，有兴趣来了解一下吗，过来面试来回包打车费，可以来试个妆造感受一下，你觉得ok就留下，不行也没关系"
+    },
+    {
+      "sender": "bot",
+      "content": "不好意思，我这边只找线上远程就能完成的兼职，线下面试就不占用您的时间了，这个岗位我先放弃，感谢您的邀请。",
+      "text": "不好意思，我这边只找线上远程就能完成的兼职，线下面试就不占用您的时间了，这个岗位我先放弃，感谢您的邀请。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "policy",
+      "action": "text",
+      "timestamp": "2026-10-07 15:36:07",
+      "time": "15:36",
+      "job_name": "服装模特/综合7k/接受无经验7-10K长沙查看职位",
+      "isFriend": false,
+      "mid": "394114552836353"
+    },
+    {
+      "text": "好的",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394114580201733",
+      "block": "好的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的理解，祝您招聘顺利。",
+      "text": "好的，感谢您的理解，祝您招聘顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 15:46:49",
+      "time": "15:46",
+      "job_name": "服装模特/综合7k/接受无经验7-10K长沙查看职位",
+      "isFriend": false,
+      "mid": "394117182140673"
+    }
+  ],
+  "updated_at": "2026-10-09 11:13:38",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,77 @@
+{
+  "chat_name": "刘女士",
+  "chat_id": "刘女士#博加皓",
+  "account_index": 0,
+  "job_name": "电商数据专员4-5K长沙查看职位",
+  "company": "博加皓",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "11:06",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394756096639748",
+      "block": "11:06 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394756096672519",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "很抱歉不能和您共事，祝您早日找到合适的工作",
+      "time": "11:17",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394758836040453",
+      "block": "11:17 很抱歉不能和您共事，祝您早日找到合适的工作",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "很抱歉不能和您共事，祝您早日找到合适的工作"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "text": "感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-09 11:33:22",
+      "time": "11:33",
+      "job_name": "电商数据专员4-5K长沙查看职位",
+      "isFriend": false,
+      "mid": "394762659947266"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，也祝您工作顺利。",
+      "text": "好的，谢谢您的回复，也祝您工作顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 00:14:49",
+      "time": "00:14",
+      "job_name": "电商数据专员4-5K长沙查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 00:14:49",
+  "unread_on_boss": 0
+}

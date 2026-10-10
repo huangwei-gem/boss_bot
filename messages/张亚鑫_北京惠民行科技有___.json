@@ -1,0 +1,102 @@
+{
+  "chat_name": "张亚鑫",
+  "chat_id": "张亚鑫#北京惠民行科技有___",
+  "account_index": 0,
+  "job_name": "山姆超市驻店配送 提供车住新人包教会8-9K长沙查看职位",
+  "company": "北京惠民行科技有...",
+  "messages": [
+    {
+      "text": "您好，招聘驻店配送员 固定门店上班，不用跨区域乱跑，日300-400可就近分配，感兴趣沟通下.",
+      "time": "20:12",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394182430027777",
+      "block": "20:12 您好，招聘驻店配送员 固定门店上班，不用跨区域乱跑，日300-400可就近分配，感兴趣沟通下.",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好，招聘驻店配送员 固定门店上班，不用跨区域乱跑，日300-400可就近分配，感兴趣沟通下."
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394182430027781",
+      "block": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA"
+    },
+    {
+      "text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394182430035970",
+      "block": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "sender": "hr",
+      "kind": "system",
+      "content": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "card_text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 20:16:34",
+      "time": "20:16",
+      "job_name": "山姆超市驻店配送 提供车住新人包教会8-9K长沙查看职位",
+      "isFriend": false,
+      "mid": "394183474634755"
+    },
+    {
+      "text": "你好",
+      "time": "09:03",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394371830153219",
+      "block": "09:03 你好",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394371837435908",
+      "block": "我想要和您交换微信，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换微信，您是否同意 拒绝 同意"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394371842584576",
+      "block": "我想要和您交换联系方式，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换联系方式，您是否同意 拒绝 同意"
+    }
+  ],
+  "updated_at": "2026-10-10 07:59:21",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,77 @@
+{
+  "chat_name": "刘女士",
+  "chat_id": "刘女士#创响教育",
+  "account_index": 0,
+  "job_name": "兼职·线上兼职—视频剪辑100-200元/天长沙查看职位",
+  "company": "创响教育",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:00",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393545479512832",
+      "block": "01:00 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393545479537409",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "感谢你的回复~期待您找到满意的工作",
+      "time": "14:44",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393748023919362",
+      "block": "14:44 感谢你的回复~期待您找到满意的工作",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢你的回复~期待您找到满意的工作"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "text": "感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-06 15:21:12",
+      "time": "15:21",
+      "job_name": "兼职·线上兼职—视频剪辑100-200元/天长沙查看职位",
+      "isFriend": false,
+      "mid": "393756968633093"
+    },
+    {
+      "sender": "bot",
+      "content": "刘女士您好，之前聊的兼职·线上兼职—视频剪辑100-200元/天长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "刘女士您好，之前聊的兼职·线上兼职—视频剪辑100-200元/天长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-09 14:53:14",
+      "time": "14:53",
+      "job_name": "兼职·线上兼职—视频剪辑100-200元/天长沙查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-09 14:53:14",
+  "unread_on_boss": 0
+}

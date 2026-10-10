@@ -1,0 +1,53 @@
+{
+  "chat_name": "周韬",
+  "chat_id": "周韬#合肥市洲瑞电子科技",
+  "account_index": 0,
+  "job_name": "管培生（提供住宿）3-5K合肥查看职位",
+  "company": "合肥市洲瑞电子科技",
+  "messages": [
+    {
+      "text": "黄维，你好",
+      "time": "11:08",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394048843129345",
+      "block": "11:08 黄维，你好",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "黄维，你好"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，我是黄维。目前我在找线上兼职方向的工作，比如数据标注或运营助理类，请问贵司有相关岗位吗？",
+      "text": "您好，我是黄维。目前我在找线上兼职方向的工作，比如数据标注或运营助理类，请问贵司有相关岗位吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 11:09:31",
+      "time": "11:09",
+      "job_name": "管培生（提供住宿）3-5K合肥查看职位",
+      "isFriend": false,
+      "mid": "394049028428291"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 18:23:18",
+      "time": "18:23",
+      "job_name": "管培生（提供住宿）3-5K合肥查看职位",
+      "isFriend": false,
+      "mid": "394155640955392"
+    }
+  ],
+  "updated_at": "2026-10-09 10:46:47",
+  "unread_on_boss": 0
+}

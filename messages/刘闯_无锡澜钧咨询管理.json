@@ -1,0 +1,50 @@
+{
+  "chat_name": "刘闯",
+  "chat_id": "刘闯#无锡澜钧咨询管理",
+  "account_index": 0,
+  "job_name": "兼职·线上推广合伙人20-25元/时海东查看职位",
+  "company": "无锡澜钧咨询管理",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:16",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393903384174849",
+      "block": "01:16 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-08 10:10:38",
+      "time": "10:10",
+      "job_name": "兼职·线上推广合伙人20-25元/时海东查看职位",
+      "isFriend": false,
+      "mid": "394388464939266"
+    },
+    {
+      "text": "这个线上后期也招，正在策划，落定了联系你",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394389446287621",
+      "block": "这个线上后期也招，正在策划，落定了联系你",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "这个线上后期也招，正在策划，落定了联系你"
+    }
+  ],
+  "updated_at": "2026-10-10 07:37:29",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,226 @@
+{
+  "analysis": {
+    "summary": {
+      "total_chats_analyzed": 32,
+      "issues_by_type": {
+        "A_hr_rejected_but_greet": 2,
+        "B_duplicate_self_intro": 7,
+        "C_rejected_but_send_resume": 4,
+        "D_duplicate_messages": 8,
+        "E_irrelevant_reply": 0
+      },
+      "total_issues": 21
+    },
+    "issues": {
+      "A_hr_rejected_but_greet": [
+        {
+          "chat_name": "李女士",
+          "job_name": "质数据分析专员（产品开发储备方向）4-6K长沙查看职位",
+          "hr_rejection": "不好意思，不太合适哦",
+          "bot_greeting": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+          "detail": "HR拒绝后bot还发打招呼语"
+        },
+        {
+          "chat_name": "陈女士",
+          "job_name": "AI数据大模型训练师200-250元/天长沙查看职位",
+          "hr_rejection": "不好意思，不太合适哦",
+          "bot_greeting": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+          "detail": "HR拒绝后bot还发打招呼语"
+        }
+      ],
+      "B_duplicate_self_intro": [
+        {
+          "chat_name": "刘先生",
+          "job_name": "驻唱电台歌手 流行/说唱/摇滚5-8K长沙查看职位",
+          "self_intro_count": 7,
+          "detail": "重复发送自我介绍 7 次"
+        },
+        {
+          "chat_name": "刘女士",
+          "job_name": "月休8天-数据分析师3-5K长沙查看职位",
+          "self_intro_count": 2,
+          "detail": "重复发送自我介绍 2 次"
+        },
+        {
+          "chat_name": "邓女士",
+          "job_name": "数据分析师13-18K·13薪长沙查看职位",
+          "self_intro_count": 2,
+          "detail": "重复发送自我介绍 2 次"
+        },
+        {
+          "chat_name": "邵语桐",
+          "job_name": "语音厅音频主播！聊天唠嗑直播！可日结（代招职位）8-15K长沙查看职位",
+          "self_intro_count": 2,
+          "detail": "重复发送自我介绍 2 次"
+        },
+        {
+          "chat_name": "郭先生",
+          "job_name": "行业分析师5-8K·13薪长沙查看职位",
+          "self_intro_count": 2,
+          "detail": "重复发送自我介绍 2 次"
+        },
+        {
+          "chat_name": "陈女士",
+          "job_name": "AI数据大模型训练师200-250元/天长沙查看职位",
+          "self_intro_count": 2,
+          "detail": "重复发送自我介绍 2 次"
+        },
+        {
+          "chat_name": "高女士",
+          "job_name": "兼职·AI多模态标注+双休不加班+不限制经验220-230元/天长沙查看职位",
+          "self_intro_count": 2,
+          "detail": "重复发送自我介绍 2 次"
+        }
+      ],
+      "C_rejected_but_send_resume": [
+        {
+          "chat_name": "杨女士",
+          "job_name": "长沙靠谱的数据运营岗位（氛围轻松、双休）8-13K长沙查看职位",
+          "hr_rejection": "感谢您对我们的关注，但是您的简历与我们当前的职位要求并不完全匹配。祝您在BOSS直聘找到更合适的职位！",
+          "bot_resume_reply": "不好意思，简历文件暂时不在我这边，稍后我补发给您，可以先看看我主页的在线简历~",
+          "detail": "HR拒绝后bot还回复简历相关内容"
+        },
+        {
+          "chat_name": "邓女士",
+          "job_name": "数据分析师13-18K·13薪长沙查看职位",
+          "hr_rejection": "您好，从在线简历看来暂时不太合适，感谢您的关注。希望您能尽快找到其他合适的工作机会",
+          "bot_resume_reply": "不好意思，简历文件暂时不在我这边，稍后我补发给您，可以先看看我主页的在线简历~",
+          "detail": "HR拒绝后bot还回复简历相关内容"
+        },
+        {
+          "chat_name": "陈女士",
+          "job_name": "AI数据大模型训练师200-250元/天长沙查看职位",
+          "hr_rejection": "不好意思，不太合适哦",
+          "bot_resume_reply": "[简历已发送]",
+          "detail": "HR拒绝后bot还回复简历相关内容"
+        },
+        {
+          "chat_name": "黎女士",
+          "job_name": "数据分析专员（连锁服装行业）4-6K长沙查看职位",
+          "hr_rejection": "抱歉，您的简历虽优秀，但与我们当前职位的特定需求不完全匹配。祝您在BOSS直聘找到合适您的机会！",
+          "bot_resume_reply": "不好意思，简历文件暂时不在我这边，稍后我补发给您，可以先看看我主页的在线简历~",
+          "detail": "HR拒绝后bot还回复简历相关内容"
+        }
+      ],
+      "D_duplicate_messages": [
+        {
+          "chat_name": "刘先生",
+          "job_name": "驻唱电台歌手 流行/说唱/摇滚5-8K长沙查看职位",
+          "duplicate_text": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏",
+          "detail": "连续发送相同消息"
+        },
+        {
+          "chat_name": "刘先生",
+          "job_name": "驻唱电台歌手 流行/说唱/摇滚5-8K长沙查看职位",
+          "duplicate_text": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏",
+          "detail": "连续发送相同消息"
+        },
+        {
+          "chat_name": "刘先生",
+          "job_name": "驻唱电台歌手 流行/说唱/摇滚5-8K长沙查看职位",
+          "duplicate_text": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏",
+          "detail": "连续发送相同消息"
+        },
+        {
+          "chat_name": "刘先生",
+          "job_name": "驻唱电台歌手 流行/说唱/摇滚5-8K长沙查看职位",
+          "duplicate_text": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏",
+          "detail": "连续发送相同消息"
+        },
+        {
+          "chat_name": "刘先生",
+          "job_name": "驻唱电台歌手 流行/说唱/摇滚5-8K长沙查看职位",
+          "duplicate_text": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏",
+          "detail": "连续发送相同消息"
+        },
+        {
+          "chat_name": "刘先生",
+          "job_name": "驻唱电台歌手 流行/说唱/摇滚5-8K长沙查看职位",
+          "duplicate_text": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏",
+          "detail": "连续发送相同消息"
+        },
+        {
+          "chat_name": "邵语桐",
+          "job_name": "语音厅音频主播！聊天唠嗑直播！可日结（代招职位）8-15K长沙查看职位",
+          "duplicate_text": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+          "detail": "连续发送相同消息"
+        },
+        {
+          "chat_name": "陈女士",
+          "job_name": "AI数据大模型训练师200-250元/天长沙查看职位",
+          "duplicate_text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+          "detail": "连续发送相同消息"
+        }
+      ],
+      "E_irrelevant_reply": []
+    },
+    "timestamp": "2026-09-21T18:38:03.355556"
+  },
+  "rule_adjustments": [
+    {
+      "rule_key": "rejection_detection",
+      "old_value": "无拒绝检测",
+      "new_value": "检测到HR拒绝时礼貌接受，不再发打招呼语",
+      "reason": "发现 2 例HR拒绝后bot仍发打招呼语，已添加拒绝检测逻辑",
+      "auto_applied": true,
+      "timestamp": "2026-09-21T18:38:03.355582"
+    },
+    {
+      "rule_key": "self_intro_dedup",
+      "old_value": "无自我介绍去重",
+      "new_value": "检测到已发过自我介绍时不再重复发送",
+      "reason": "发现 7 例重复发送自我介绍，已添加去重逻辑",
+      "auto_applied": true,
+      "timestamp": "2026-09-21T18:38:03.355582"
+    },
+    {
+      "rule_key": "no_resume_after_rejection",
+      "old_value": "无拒绝后简历检测",
+      "new_value": "HR拒绝后不再发送简历相关内容",
+      "reason": "发现 4 例HR拒绝后bot仍回复简历相关内容，已添加拒绝后不发简历逻辑",
+      "auto_applied": true,
+      "timestamp": "2026-09-21T18:38:03.355582"
+    },
+    {
+      "rule_key": "duplicate_message_detection",
+      "old_value": "无重复消息检测",
+      "new_value": "检测到即将发送的消息与历史重复时跳过",
+      "reason": "发现 8 例连续发送相同消息，已添加重复消息检测逻辑",
+      "auto_applied": true,
+      "timestamp": "2026-09-21T18:38:03.355582"
+    }
+  ],
+  "template_optimizations": [
+    {
+      "template_key": "greeting_reply",
+      "current_template": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "suggested_template": "您好，看到您的招聘信息，对这个岗位很感兴趣，希望可以进一步沟通~",
+      "reason": "优化打招呼语气，增加口语化表达，更像真人聊天",
+      "timestamp": "2026-09-21T18:38:03.355590",
+      "applied": false
+    },
+    {
+      "template_key": "self_intro",
+      "current_template": "您好，我是双一流的本科，应聘数据分析岗位...",
+      "suggested_template": "您好，我对这个岗位很感兴趣，希望可以进一步沟通~",
+      "reason": "精简自我介绍，避免长篇大论，增加自然度",
+      "timestamp": "2026-09-21T18:38:03.355590",
+      "applied": false
+    },
+    {
+      "template_key": "rejection_reply",
+      "current_template": "简历文件暂时不在我这边",
+      "suggested_template": "好的，感谢您的时间，祝您招聘顺利~",
+      "reason": "HR拒绝后应礼貌接受，而非继续推简历",
+      "timestamp": "2026-09-21T18:38:03.355590",
+      "applied": true
+    }
+  ],
+  "timestamp": "2026-09-21T18:38:03.348306",
+  "summary": {
+    "total_chats": 32,
+    "total_issues": 21,
+    "rule_adjustments_count": 4,
+    "template_optimizations_count": 3
+  }
+}

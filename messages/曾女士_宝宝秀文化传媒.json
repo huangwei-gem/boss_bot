@@ -1,0 +1,75 @@
+{
+  "chat_name": "曾女士",
+  "chat_id": "曾女士#宝宝秀文化传媒",
+  "account_index": 0,
+  "job_name": "娱乐主播/华中头部/抱团开播轻松赚7-10K长沙查看职位",
+  "company": "宝宝秀文化传媒",
+  "messages": [
+    {
+      "text": "黄维，你好",
+      "time": "09-21 18:17",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388491890344706",
+      "block": "09-21 18:17 黄维，你好",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "黄维，你好"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388491890418434",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "嘿，我刚刚看完你的简历，就迫不及待地想联系你了!我们团队期待你的加入，一起创造更多可能!",
+      "time": "09-22 10:27",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388730186015498",
+      "block": "09-22 10:27 嘿，我刚刚看完你的简历，就迫不及待地想联系你了!我们团队期待你的加入，一起创造更多可能!",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "嘿，我刚刚看完你的简历，就迫不及待地想联系你了!我们团队期待你的加入，一起创造更多可能!"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 18:36:07",
+      "time": "18:36",
+      "job_name": "娱乐主播/华中头部/抱团开播轻松赚7-10K长沙查看职位",
+      "isFriend": false,
+      "mid": "394158787298049"
+    },
+    {
+      "text": "好的",
+      "time": "19:25",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394171003851522",
+      "block": "19:25 好的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的"
+    }
+  ],
+  "updated_at": "2026-10-10 01:35:29",
+  "unread_on_boss": 0
+}

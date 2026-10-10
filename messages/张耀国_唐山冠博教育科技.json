@@ -1,0 +1,92 @@
+{
+  "chat_name": "张耀国",
+  "chat_id": "张耀国#唐山冠博教育科技",
+  "account_index": 0,
+  "job_name": "兼职·兼职化/学老/师（线上授课）60-80元/时保定查看职位",
+  "company": "唐山冠博教育科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:19",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393550220120834",
+      "block": "01:19 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "你好啊，可以聊一聊~",
+      "time": "08:16",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393652600079104",
+      "block": "08:16 你好啊，可以聊一聊~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好啊，可以聊一聊~"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的回复。不过我目前求职方向是数据分析，想确认一下贵司是否有相关岗位？",
+      "text": "感谢您的回复。不过我目前求职方向是数据分析，想确认一下贵司是否有相关岗位？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-06 22:05:15",
+      "time": "22:05",
+      "job_name": "兼职·兼职化/学老/师（线上授课）60-80元/时保定查看职位",
+      "isFriend": false,
+      "mid": "393856270304001"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，方便先了解一下目前是否有数据分析相关岗位吗？",
+      "text": "好的，方便先了解一下目前是否有数据分析相关岗位吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-06 22:44:33",
+      "time": "22:44",
+      "job_name": "兼职·兼职化/学老/师（线上授课）60-80元/时保定查看职位",
+      "isFriend": false,
+      "mid": "393865932731136"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，以后也不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，以后也不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-08 19:30:54",
+      "time": "19:30",
+      "job_name": "兼职·兼职化/学老/师（线上授课）60-80元/时保定查看职位",
+      "isFriend": false,
+      "mid": "394526123234049"
+    },
+    {
+      "text": "谢谢您的投递，经过评估，我们发现您的技能组合与我们项目的具体需求不完全符合。祝您在BOSS直聘找到合适的职位！",
+      "time": "昨天 20:36",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394542235665153",
+      "block": "昨天 20:36 谢谢您的投递，经过评估，我们发现您的技能组合与我们项目的具体需求不完全符合。祝您在BOSS直聘找到合适的职位！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "谢谢您的投递，经过评估，我们发现您的技能组合与我们项目的具体需求不完全符合。祝您在BOSS直聘找到合适的职位！"
+    }
+  ],
+  "updated_at": "2026-10-10 09:09:33",
+  "unread_on_boss": 0
+}

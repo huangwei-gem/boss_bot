@@ -1,0 +1,36 @@
+{
+  "chat_name": "任女士",
+  "chat_id": "任女士#科锐国际",
+  "account_index": 1,
+  "job_name": "数据分析（接受无经验）（代招职位）15-30K上海查看职位",
+  "company": "科锐国际",
+  "messages": [
+    {
+      "text": "",
+      "time": "00:24",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394952250442240",
+      "block": "00:24 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是在读统计学本科生，有数据分析和数据标注经验，熟练使用SQL/Python，看到贵司数据分析岗位，想进一步了解工作方式和内容，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394952494113280",
+      "block": "送达 您好，我是在读统计学本科生，有数据分析和数据标注经验，熟练使用SQL/Python，看到贵司数据分析岗位，想进一步了解工作方式和内容，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是在读统计学本科生，有数据分析和数据标注经验，熟练使用SQL/Python，看到贵司数据分析岗位，想进一步了解工作方式和内容，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-10 09:15:16"
+}

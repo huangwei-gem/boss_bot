@@ -1,0 +1,50 @@
+{
+  "chat_name": "张祎蒙",
+  "chat_id": "张祎蒙#北京泽乐科技有限公司",
+  "account_index": 1,
+  "job_name": "兼职·线上小游戏兼职400-2100元/周长沙查看职位",
+  "company": "北京泽乐科技有限公司",
+  "messages": [
+    {
+      "text": "您好，我对贵公司的线上小游戏兼职岗位很感兴趣，我有数据分析背景，能快速上手线上任务，期待与您进一步沟通。",
+      "time": "昨天 03:18",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393225359102464",
+      "block": "昨天 03:18 已读 您好，我对贵公司的线上小游戏兼职岗位很感兴趣，我有数据分析背景，能快速上手线上任务，期待与您进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对贵公司的线上小游戏兼职岗位很感兴趣，我有数据分析背景，能快速上手线上任务，期待与您进一步沟通。"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "昨天 13:34",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393376920285698",
+      "block": "昨天 13:34 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的反馈，祝您招聘顺利~",
+      "text": "理解，感谢您的反馈，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-07 03:26:47",
+      "time": "03:26",
+      "job_name": "兼职·线上小游戏兼职400-2100元/周长沙查看职位",
+      "isFriend": false,
+      "mid": "393935304344065"
+    }
+  ],
+  "updated_at": "2026-10-10 08:04:33",
+  "unread_on_boss": 0
+}

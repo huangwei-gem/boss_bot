@@ -1,0 +1,22 @@
+{
+  "chat_name": "王树能",
+  "chat_id": "王树能#爱媛大数据",
+  "account_index": 0,
+  "job_name": "兼职·数据标注15-25元/时眉山查看职位",
+  "company": "爱媛大数据",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "07:58",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394355935036161",
+      "block": "07:58 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-09 22:50:40"
+}

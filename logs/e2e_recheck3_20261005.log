@@ -1,0 +1,32 @@
+面板已起在 http://127.0.0.1:5059 配置副本: C:\Users\35796\AppData\Local\Temp\boss_panel_22z77wbx
+== 等面板就绪 ==
+== 起破解版浏览器 ==
+Traceback (most recent call last):
+  File "C:\Users\35796\orca\boss_bot\tools\e2e_dashboard.py", line 874, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\35796\orca\boss_bot\tools\e2e_dashboard.py", line 124, in main
+    page = launch()
+  File "C:\Users\35796\orca\boss_bot\tools\e2e_dashboard.py", line 100, in launch
+    raise last_err
+  File "C:\Users\35796\orca\boss_bot\tools\e2e_dashboard.py", line 94, in launch
+    page = ChromiumPage(co)
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_pages\chromium_page.py", line 23, in __new__
+    browser = Chromium(addr_or_opts=addr_or_opts)
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_base\chromium.py", line 41, in __new__
+    is_headless, browser_id, is_exists, ws_only = run_browser(opt)
+                                                  ~~~~~~~~~~~^^^^^
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_base\chromium.py", line 501, in run_browser
+    is_exists = connect_browser(chromium_options)
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_functions\browser.py", line 58, in connect_browser
+    raise BrowserConnectError(ADDRESS=address, TIP=_S._lang.BROWSER_CONNECT_ERR_INFO)
+DrissionPage.errors.BrowserConnectError: 
+浏览器连接失败。
+地址: 127.0.0.1:9402
+提示: 
+1、用户文件夹没有和已打开的浏览器冲突
+2、如为无界面系统，请添加'--headless=new'启动参数
+3、如果是Linux系统，尝试添加'--no-sandbox'启动参数
+可使用ChromiumOptions设置端口和用户文件夹路径。
+版本: 4.1.1.4
+dashboard 退出码: 1

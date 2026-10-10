@@ -1,0 +1,35 @@
+{
+  "chat_name": "孙国庆",
+  "chat_id": "孙国庆#广东新裕",
+  "account_index": 1,
+  "job_name": "兼职·线上兼职数据标注质检员10-20元/时江门查看职位",
+  "company": "广东新裕",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 00:56",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393544532910593",
+      "block": "昨天 00:56 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，看到贵司线上数据标注质检岗位需求，我具备统计学专业背景和数据分析经验，熟悉Excel/SQL/Python工具，希望了解具体工作内容和时间要求。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393544652669440",
+      "block": "送达 您好，看到贵司线上数据标注质检岗位需求，我具备统计学专业背景和数据分析经验，熟悉Excel/SQL/Python工具，希望了解具体工作内容和时间要求。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到贵司线上数据标注质检岗位需求，我具备统计学专业背景和数据分析经验，熟悉Excel/SQL/Python工具，希望了解具体工作内容和时间要求。"
+    }
+  ],
+  "updated_at": "2026-10-07 21:04:15"
+}

@@ -1,0 +1,35 @@
+{
+  "chat_name": "孙宇波",
+  "chat_id": "孙宇波#乐德信息技术有限公司",
+  "account_index": 0,
+  "job_name": "兼职·大学生兼职远程在线10-50元/时伊犁哈萨克自治州查看职位",
+  "company": "乐德信息技术有限公司",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "11:54",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "392998373864196",
+      "block": "11:54 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "392998373896961",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-06 23:58:30"
+}

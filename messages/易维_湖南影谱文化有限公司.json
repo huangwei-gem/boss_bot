@@ -1,0 +1,77 @@
+{
+  "chat_name": "易维",
+  "chat_id": "易维#湖南影谱文化有限公司",
+  "account_index": 0,
+  "job_name": "兼职·预算造价工程师（线上兼职）200-500元/时长沙查看职位",
+  "company": "湖南影谱文化有限公司",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 02:25",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393566278635521",
+      "block": "昨天 02:25 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "你好，您擅长做哪些类别的造价，土建、安装、装修、水利水电、市政等？",
+      "time": "08:47",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394014152658947",
+      "block": "08:47 你好，您擅长做哪些类别的造价，土建、安装、装修、水利水电、市政等？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，您擅长做哪些类别的造价，土建、安装、装修、水利水电、市政等？"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的提问，我目前主要专注于数据标注和线上运营助理方向的兼职机会，请问是否有相关岗位可以沟通呢？",
+      "text": "感谢您的提问，我目前主要专注于数据标注和线上运营助理方向的兼职机会，请问是否有相关岗位可以沟通呢？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 08:50:29",
+      "time": "08:50",
+      "job_name": "兼职·预算造价工程师（线上兼职）200-500元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "394014861234177"
+    },
+    {
+      "text": "不好意思",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394015460732929",
+      "block": "不好意思",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "text": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-07 08:54:00",
+      "time": "08:54",
+      "job_name": "兼职·预算造价工程师（线上兼职）200-500元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "394015722864640"
+    }
+  ],
+  "updated_at": "2026-10-10 07:52:31",
+  "unread_on_boss": 0
+}

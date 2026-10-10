@@ -1,0 +1,35 @@
+{
+  "chat_name": "唐先生",
+  "chat_id": "唐先生#瑞合吧科技",
+  "account_index": 0,
+  "job_name": "推广专员5-10K长沙查看职位",
+  "company": "瑞合吧科技",
+  "messages": [
+    {
+      "text": "你好，请问你最近在看机会吗？我们正在招聘推广专员，觉得你还蛮合适的",
+      "time": "09-22 16:23",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388817690141444",
+      "block": "09-22 16:23 你好，请问你最近在看机会吗？我们正在招聘推广专员，觉得你还蛮合适的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，请问你最近在看机会吗？我们正在招聘推广专员，觉得你还蛮合适的"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388817690194690",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-06 20:17:22"
+}

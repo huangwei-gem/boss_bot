@@ -1,0 +1,47 @@
+{
+  "chat_name": "潘女士",
+  "chat_id": "潘女士#先马电商",
+  "account_index": 0,
+  "job_name": "预算分析BP(MJ000290)10-13K长沙查看职位",
+  "company": "先马电商",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 08:33",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387994478355202",
+      "block": "09-20 08:33 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "很遗憾，您虽然非常优秀，但我们目前在找与当前项目周期更匹配的候选人。祝您在BOSS直聘找到合适的工作！",
+      "time": "09-21 09:26",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388361318859526",
+      "block": "09-21 09:26 很遗憾，您虽然非常优秀，但我们目前在找与当前项目周期更匹配的候选人。祝您在BOSS直聘找到合适的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "很遗憾，您虽然非常优秀，但我们目前在找与当前项目周期更匹配的候选人。祝您在BOSS直聘找到合适的工作！"
+    },
+    {
+      "text": "感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "time": "09-22 07:28",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "388686232638209",
+      "block": "09-22 07:28 送达 感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "reply_source": "ai"
+    }
+  ],
+  "updated_at": "2026-10-06 20:21:20"
+}

@@ -1,0 +1,154 @@
+{
+  "browser": {
+    "headless": false,
+    "viewport_width": 1280,
+    "viewport_height": 800,
+    "page_load_timeout": 30,
+    "custom_user_agent": "",
+    "proxy": "",
+    "browser_type": "chrome",
+    "browser_path": "",
+    "user_data_dir": "",
+    "debug_port": 9222
+  },
+  "login": {
+    "wait_timeout": 300,
+    "clear_cookies_on_failure": true,
+    "cookie_file": "zhipin_cookies.json"
+  },
+  "rate_limit": {
+    "enabled": true,
+    "max_per_hour": 30,
+    "max_per_day": 100
+  },
+  "retry": {
+    "max_attempts": 3,
+    "base_delay": 2.0,
+    "backoff_factor": 2.0
+  },
+  "ai": {
+    "enabled": false,
+    "api_key": "",
+    "api_base": "https://apihub.agnes-ai.com/v1",
+    "model": "agnes-2.5-flash",
+    "match_threshold": 70,
+    "analyze_max_tokens": 1600,
+    "probe_max_per_round": 5,
+    "fail_action": "default",
+    "custom_filter_keywords": [],
+    "custom_scoring_prompt": "",
+    "skip_unhealthy": true,
+    "providers": []
+  },
+  "resume": {
+    "school": "",
+    "major": "",
+    "degree": "",
+    "skills": [],
+    "experience": "",
+    "target_position": "",
+    "self_intro": ""
+  },
+  "accounts": [
+    {
+      "name": "主账号",
+      "enabled": true,
+      "cookie_file": "zhipin_cookies.json",
+      "image_files": [],
+      "message_interval_min": 3,
+      "message_interval_max": 8,
+      "greeting_message": "您好～想找数据分析 线上的线上兼职机会。看到贵司这个岗位和我的方向挺匹配，方便的话想把简历发您细聊，工作日下午可以面试。",
+      "settings": {},
+      "jobs": [
+        {
+          "enabled": true,
+          "city": "全国",
+          "query": "数据分析 线上",
+          "job_type": "兼职",
+          "scroll_pages": 5,
+          "greeting_message": "",
+          "image_files": []
+        }
+      ]
+    }
+  ],
+  "greet": {
+    "enabled": true
+  },
+  "reply": {
+    "enabled": true,
+    "check_interval": 8,
+    "context_message_count": 10,
+    "max_replies_per_hour": 30,
+    "min_delay": 2,
+    "max_delay": 5,
+    "pause_on_important": true,
+    "resume_send_once": true,
+    "chat_url": "https://www.zhipin.com/web/geek/chat"
+  },
+  "notify": {
+    "enabled": true,
+    "webhook_url": ""
+  },
+  "log": {
+    "log_level": "INFO",
+    "log_retention_days": 14,
+    "event_log_enabled": true
+  },
+  "reply_rules": {
+    "简历": "send_resume",
+    "发简历": "send_resume",
+    "看看简历": "send_resume",
+    "面试": "工作日下午都可以安排面试，您看哪个时间段方便？",
+    "约面试": "工作日下午都可以安排面试，您看哪个时间段方便？",
+    "时间安排": "工作日下午都可以安排面试，您看哪个时间段方便？",
+    "薪资": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+    "待遇": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+    "工资": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+    "多少钱": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+    "您好": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+    "你好": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+    "在吗": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+    "在不在": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+    "工作内容": "我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。",
+    "岗位职责": "我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。",
+    "做什么": "我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。"
+  },
+  "importance_keywords": [
+    "offer",
+    "确认入职",
+    "入职通知",
+    "办理入职",
+    "录取",
+    "录用",
+    "欢迎加入",
+    "报到",
+    "面试邀请",
+    "邀约",
+    "来公司",
+    "到岗"
+  ],
+  "templates": {
+    "salary_reply": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+    "interview_time_reply": "工作日下午都可以安排面试，您看哪个时间段方便？",
+    "job_content_reply": "我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。",
+    "greeting_reply": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",
+    "default_reply": "好的，感谢您的消息，我会尽快回复您。",
+    "resume_duplicate_reply": "您好，简历刚刚已经发您了，您看一下，有任何问题随时沟通~",
+    "resume_unavailable_reply": "不好意思，简历文件暂时不在我这边，稍后我补发给您，可以先看看我主页的在线简历~"
+  },
+  "user_profile": {
+    "name": "求职者",
+    "education": "本科学历",
+    "position": "数据分析",
+    "skills": [],
+    "experience": "",
+    "salary_expectation": "面议",
+    "available_interview_time": "工作日下午",
+    "contact": "",
+    "highlights": []
+  },
+  "dry_run": false,
+  "self_evolve_enabled": true,
+  "theme": "dark"
+}

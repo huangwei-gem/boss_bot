@@ -1,0 +1,36 @@
+{
+  "chat_name": "赵先生",
+  "chat_id": "赵先生#河南扬亿科技有限公司",
+  "account_index": 1,
+  "job_name": "兼职·线上兼职日薪平均100-20015-20元/时漯河查看职位",
+  "company": "河南扬亿科技有限公司",
+  "messages": [
+    {
+      "text": "",
+      "time": "01:35",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393200134095361",
+      "block": "01:35 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我对贵司的线上兼职岗位很感兴趣。我具备数据分析技能，熟练使用Excel、SQL和Python，能高效完成线上任务。期待与您进一步沟通！",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393200320524801",
+      "block": "已读 您好，我对贵司的线上兼职岗位很感兴趣。我具备数据分析技能，熟练使用Excel、SQL和Python，能高效完成线上任务。期待与您进一步沟通！",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对贵司的线上兼职岗位很感兴趣。我具备数据分析技能，熟练使用Excel、SQL和Python，能高效完成线上任务。期待与您进一步沟通！",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-07 04:21:43"
+}

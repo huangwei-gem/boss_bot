@@ -1,0 +1,24 @@
+{
+  "chat_name": "康女士",
+  "chat_id": "康女士#数据分析师_影刀方向_11_16K上海",
+  "account_index": 1,
+  "company": "",
+  "job_name": "数据分析师（影刀方向）11-16K上海查看职位",
+  "updated_at": "2026-10-03 13:29:07",
+  "messages": [
+    {
+      "sender": "bot",
+      "content": "[简历已发送]",
+      "text": "[简历已发送]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "backfill",
+      "action": "resume",
+      "timestamp": "2026-10-03 13:29:07",
+      "time": "13:29",
+      "job_name": "数据分析师（影刀方向）11-16K上海查看职位",
+      "isFriend": false
+    }
+  ]
+}

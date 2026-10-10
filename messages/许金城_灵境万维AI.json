@@ -1,0 +1,35 @@
+{
+  "chat_name": "许金城",
+  "chat_id": "许金城#灵境万维AI",
+  "account_index": 0,
+  "job_name": "兼职·AI短剧剪辑（接受线上）6000-8000元/月杭州查看职位",
+  "company": "灵境万维AI",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "00:59",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393899167576833",
+      "block": "00:59 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393899167601408",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-08 15:38:58"
+}

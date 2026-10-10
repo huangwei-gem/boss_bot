@@ -1,0 +1,36 @@
+{
+  "chat_name": "潘先生",
+  "chat_id": "潘先生#猩云科技",
+  "account_index": 1,
+  "job_name": "兼职·Python自动化数据处理专员250-300元/天天津查看职位",
+  "company": "猩云科技",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 12:10",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394417982624260",
+      "block": "昨天 12:10 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，看到贵司招聘Python自动化数据处理专员，我在数据标注、AI训练数据质检和Python自动化处理方面有实践经验，尤其擅长用Python进行数据清洗和可视化看板搭建，希望能了解具体工作要求",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394418099790336",
+      "block": "送达 您好，看到贵司招聘Python自动化数据处理专员，我在数据标注、AI训练数据质检和Python自动化处理方面有实践经验，尤其擅长用Python进行数据清洗和可视化看板搭建，希望能了解具体工作要求",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，看到贵司招聘Python自动化数据处理专员，我在数据标注、AI训练数据质检和Python自动化处理方面有实践经验，尤其擅长用Python进行数据清洗和可视化看板搭建，希望能了解具体工作要求",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-09 22:57:38"
+}

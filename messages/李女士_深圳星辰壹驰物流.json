@@ -1,0 +1,91 @@
+{
+  "chat_name": "李女士",
+  "chat_id": "李女士#深圳星辰壹驰物流",
+  "account_index": 0,
+  "job_name": "长沙外卖骑手就近分配有师傅带4-5元/单长沙查看职位",
+  "company": "深圳星辰壹驰物流",
+  "messages": [
+    {
+      "text": "诚邀你了解下我们公司和团队，期待你的回复。",
+      "time": "22:52",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394221892149762",
+      "block": "22:52 诚邀你了解下我们公司和团队，期待你的回复。",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "诚邀你了解下我们公司和团队，期待你的回复。"
+    },
+    {
+      "text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394221892157955",
+      "block": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "sender": "hr",
+      "kind": "system",
+      "content": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "card_text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 23:03:16",
+      "time": "23:03",
+      "job_name": "长沙外卖骑手就近分配有师傅带4-5元/单长沙查看职位",
+      "isFriend": false,
+      "mid": "394224444748290"
+    },
+    {
+      "text": "",
+      "time": "昨天 23:15",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394227510145537",
+      "block": "昨天 23:15 我想要和您交换微信，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换微信，您是否同意 拒绝 同意"
+    },
+    {
+      "sender": "bot",
+      "content": "[已拒绝交换联系方式]",
+      "text": "[已拒绝交换联系方式]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "reject_contact",
+      "action": "reject_contact",
+      "timestamp": "2026-10-08 03:02:28",
+      "time": "03:02",
+      "job_name": "长沙外卖骑手就近分配有师傅带4-5元/单长沙查看职位",
+      "isFriend": false
+    },
+    {
+      "text": "您已经成功拒绝了对方交换微信请求",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394283237200385",
+      "block": "您已经成功拒绝了对方交换微信请求",
+      "sender": "hr",
+      "kind": "system",
+      "content": "您已经成功拒绝了对方交换微信请求",
+      "card_text": "您已经成功拒绝了对方交换微信请求"
+    }
+  ],
+  "updated_at": "2026-10-10 09:09:58",
+  "unread_on_boss": 0
+}

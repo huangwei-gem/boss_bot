@@ -1,0 +1,23 @@
+{
+  "chat_name": "董子尧",
+  "chat_id": "董子尧#蚌埠恒立企业管理___",
+  "account_index": 1,
+  "job_name": "兼职·AI数据标注20-50元/时淮北查看职位",
+  "company": "蚌埠恒立企业管理...",
+  "messages": [
+    {
+      "text": "您好，我看到贵司在招AI数据标注兼职。我有统计学背景，熟练使用Excel/SQL/Python，做事细致耐心，能快速理解标注规则并保证质量，期待有机会参与！",
+      "time": "05:19",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393962946032128",
+      "block": "05:19 送达 您好，我看到贵司在招AI数据标注兼职。我有统计学背景，熟练使用Excel/SQL/Python，做事细致耐心，能快速理解标注规则并保证质量，期待有机会参与！",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我看到贵司在招AI数据标注兼职。我有统计学背景，熟练使用Excel/SQL/Python，做事细致耐心，能快速理解标注规则并保证质量，期待有机会参与！",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-08 14:39:14"
+}

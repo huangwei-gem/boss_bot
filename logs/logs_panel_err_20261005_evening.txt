@@ -1,0 +1,27 @@
+Exception in thread Thread-591 (_handle_event_loop):
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\ProgramData\anaconda3\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_base\driver.py", line 121, in _handle_event_loop
+    function(**event['params'])
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_pages\chromium_base.py", line 202, in _onDomContentEventFired
+    if self._get_document(self._load_end_time - perf_counter() - .1):
+       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_pages\chromium_base.py", line 165, in _get_document
+    r = self._run_cdp('Page.getFrameTree', _ignore=PageDisconnectedError)
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_pages\chromium_base.py", line 389, in _run_cdp
+    return r if __ERROR__ not in r else raise_error(r, self.browser, ignore)
+                                        ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_functions\tools.py", line 199, in raise_error
+    raise r
+TimeoutError: 
+超时，可能是浏览器卡了。
+详情: timeout
+方法: Page.getFrameTree
+参数: {'_timeout': 30}
+版本: 4.1.1.4

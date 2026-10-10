@@ -1,0 +1,22 @@
+{
+  "chat_name": "黄鑫",
+  "chat_id": "黄鑫#六安景瓷兴商贸",
+  "account_index": 1,
+  "job_name": "兼职·数据处理专员2000-10000元/月六安查看职位",
+  "company": "六安景瓷兴商贸",
+  "messages": [
+    {
+      "text": "您好，我对数据处理专员岗位很感兴趣，具备Excel、SQL、Python和数据分析经验，希望能进一步了解岗位详情。",
+      "time": "昨天 02:31",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393213979091456",
+      "block": "昨天 02:31 送达 您好，我对数据处理专员岗位很感兴趣，具备Excel、SQL、Python和数据分析经验，希望能进一步了解岗位详情。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对数据处理专员岗位很感兴趣，具备Excel、SQL、Python和数据分析经验，希望能进一步了解岗位详情。"
+    }
+  ],
+  "updated_at": "2026-10-07 16:40:20"
+}

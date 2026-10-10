@@ -1,0 +1,37 @@
+{
+  "chat_name": "李女士",
+  "chat_id": "李女士#成都飞驰教育咨询",
+  "account_index": 0,
+  "job_name": "兼职·线上一对一家/教50-200元/时成都查看职位",
+  "company": "成都飞驰教育咨询",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 03:31",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393582557700098",
+      "block": "昨天 03:31 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-09 10:31:22",
+      "time": "10:31",
+      "job_name": "兼职·线上一对一家/教50-200元/时成都查看职位",
+      "isFriend": false,
+      "mid": "394747421437954"
+    }
+  ],
+  "updated_at": "2026-10-10 07:10:12"
+}

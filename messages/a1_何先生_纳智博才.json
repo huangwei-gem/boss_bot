@@ -1,0 +1,81 @@
+{
+  "chat_name": "何先生",
+  "chat_id": "何先生#纳智博才",
+  "account_index": 1,
+  "job_name": "岳麓区坐班临时工/包住宿/可周结（派遣职位）5000-6000元/月长沙查看职位",
+  "company": "纳智博才",
+  "messages": [
+    {
+      "text": "你好，我们正在诚聘岳麓区坐班临时工/包住宿/可周结，有兴趣聊聊吗",
+      "time": "16:40",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393776340803585",
+      "block": "16:40 你好，我们正在诚聘岳麓区坐班临时工/包住宿/可周结，有兴趣聊聊吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，我们正在诚聘岳麓区坐班临时工/包住宿/可周结，有兴趣聊聊吗"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393776340803586",
+      "block": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的认可。我的求职方向是数据分析，这个临时工",
+      "text": "您好，感谢您的认可。我的求职方向是数据分析，这个临时工",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-06 16:42:48",
+      "time": "16:42",
+      "job_name": "岳麓区坐班临时工/包住宿/可周结（派遣职位）5000-6000元/月长沙查看职位",
+      "isFriend": false,
+      "mid": "393777027547137"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的认可，不过我目前主要寻找数据分析相关的线上兼职，不知贵司是否有相关岗位？",
+      "text": "感谢您的认可，不过我目前主要寻找数据分析相关的线上兼职，不知贵司是否有相关岗位？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 04:53:15",
+      "time": "04:53",
+      "job_name": "岳麓区坐班临时工/包住宿/可周结（派遣职位）5000-6000元/月长沙查看职位",
+      "isFriend": false,
+      "mid": "393956556681217"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 18:32:41",
+      "time": "18:32",
+      "job_name": "岳麓区坐班临时工/包住宿/可周结（派遣职位）5000-6000元/月长沙查看职位",
+      "isFriend": false,
+      "mid": "394157945344000"
+    }
+  ],
+  "updated_at": "2026-10-09 23:58:09",
+  "unread_on_boss": 0
+}

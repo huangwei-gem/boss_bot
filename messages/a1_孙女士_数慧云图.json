@@ -1,0 +1,91 @@
+{
+  "chat_name": "孙女士",
+  "chat_id": "孙女士#数慧云图",
+  "account_index": 1,
+  "job_name": "兼职·数据标注专员20-30元/时廊坊查看职位",
+  "company": "数慧云图",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 00:02",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393531283726848",
+      "block": "昨天 00:02 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我对数据标注专员岗位很感兴趣，具备数据分析基础，能高效完成标注任务，期待进一步沟通。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393531431866880",
+      "block": "送达 您好，我对数据标注专员岗位很感兴趣，具备数据分析基础，能高效完成标注任务，期待进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对数据标注专员岗位很感兴趣，具备数据分析基础，能高效完成标注任务，期待进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "09:44",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394382057705986",
+      "block": "09:44 您是否接受此工作地点? 燕郊创业中心数字科创园-1号楼(廊坊三河市燕郊创业中心数字科创园-1号楼3A楼层3A09室) 暂不考虑可以接受",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "您是否接受此工作地点? 燕郊创业中心数字科创园-1号楼(廊坊三河市燕郊创业中心数字科创园-1号楼3A楼层3A09室) 暂不考虑可以接受"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-08 12:09:17",
+      "time": "12:09",
+      "job_name": "兼职·数据标注专员20-30元/时廊坊查看职位",
+      "isFriend": false,
+      "mid": "394417623294465"
+    },
+    {
+      "text": "感谢您的关注和投递，但当前职位需要与您背景不太相符的资质。祝您在BOSS直聘找到更合适的工作！",
+      "time": "13:36",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394439119901189",
+      "block": "13:36 感谢您的关注和投递，但当前职位需要与您背景不太相符的资质。祝您在BOSS直聘找到更合适的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢您的关注和投递，但当前职位需要与您背景不太相符的资质。祝您在BOSS直聘找到更合适的工作！"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-08 13:37:49",
+      "time": "13:37",
+      "job_name": "兼职·数据标注专员20-30元/时廊坊查看职位",
+      "isFriend": false,
+      "mid": "394439383224832"
+    }
+  ],
+  "updated_at": "2026-10-10 01:31:52",
+  "unread_on_boss": 0
+}

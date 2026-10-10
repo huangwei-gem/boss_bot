@@ -1,0 +1,80 @@
+{
+  "chat_name": "程女士",
+  "chat_id": "程女士#广州碧空文化传媒服务",
+  "account_index": 0,
+  "job_name": "兼职·主播居家打字回复员50-100元/时平凉查看职位",
+  "company": "广州碧空文化传媒服务",
+  "messages": [
+    {
+      "text": "你好 请问方便聊聊吗？",
+      "time": "20:30",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393832876749312",
+      "block": "20:30 你好 请问方便聊聊吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好 请问方便聊聊吗？"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。不过我的求职方向是数据分析岗位，跟这个岗位不太匹配，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。不过我的求职方向是数据分析岗位，跟这个岗位不太匹配，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "scam_filter",
+      "action": "text",
+      "timestamp": "2026-10-06 20:49:52",
+      "time": "20:49",
+      "job_name": "兼职·主播居家打字回复员50-100元/时平凉查看职位",
+      "isFriend": false,
+      "mid": "393837743776257"
+    },
+    {
+      "text": "你好，查看了您的简历觉得您与我们岗位现在的需求并不符合，如果后续有需要的话我们会第一时间联系您的！",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393837791769088",
+      "block": "你好，查看了您的简历觉得您与我们岗位现在的需求并不符合，如果后续有需要的话我们会第一时间联系您的！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，查看了您的简历觉得您与我们岗位现在的需求并不符合，如果后续有需要的话我们会第一时间联系您的！"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。不过我的求职方向是数据分析岗位，跟这个岗位不太匹配，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。不过我的求职方向是数据分析岗位，跟这个岗位不太匹配，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "scam_filter",
+      "action": "text",
+      "timestamp": "2026-10-06 21:05:29",
+      "time": "21:05",
+      "job_name": "兼职·主播居家打字回复员50-100元/时平凉查看职位",
+      "isFriend": false,
+      "mid": "393841581130242"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "text": "好的，感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 02:32:00",
+      "time": "02:32",
+      "job_name": "兼职·主播居家打字回复员50-100元/时平凉查看职位",
+      "isFriend": false,
+      "mid": "393921840292352"
+    }
+  ],
+  "updated_at": "2026-10-08 15:26:51",
+  "unread_on_boss": 0
+}

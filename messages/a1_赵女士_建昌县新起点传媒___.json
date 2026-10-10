@@ -1,0 +1,22 @@
+{
+  "chat_name": "赵女士",
+  "chat_id": "赵女士#建昌县新起点传媒___",
+  "account_index": 1,
+  "job_name": "兼职·ai数据标注师4000-7000元/月葫芦岛查看职位",
+  "company": "建昌县新起点传媒...",
+  "messages": [
+    {
+      "text": "您好，我有数据分析基础，熟练使用Excel、SQL和Python，对数据敏感，能高效完成数据标注工作，期待进一步沟通。",
+      "time": "昨天 03:27",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393227723837953",
+      "block": "昨天 03:27 送达 您好，我有数据分析基础，熟练使用Excel、SQL和Python，对数据敏感，能高效完成数据标注工作，期待进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我有数据分析基础，熟练使用Excel、SQL和Python，对数据敏感，能高效完成数据标注工作，期待进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-07 16:26:39"
+}

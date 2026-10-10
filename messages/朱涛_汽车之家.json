@@ -1,0 +1,22 @@
+{
+  "chat_name": "朱涛",
+  "chat_id": "朱涛#汽车之家",
+  "account_index": 0,
+  "job_name": "经销商顾问10-15K娄底查看职位",
+  "company": "汽车之家",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-19 22:24",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387844688364290",
+      "block": "09-19 22:24 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-04 21:50:08"
+}

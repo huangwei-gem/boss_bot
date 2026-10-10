@@ -1,0 +1,22 @@
+{
+  "chat_name": "闫先生",
+  "chat_id": "闫先生#山西捷行智旅科技",
+  "account_index": 1,
+  "job_name": "兼职·数据处理500-2000元/月太原查看职位",
+  "company": "山西捷行智旅科技",
+  "messages": [
+    {
+      "text": "您好，我有统计学背景，熟练使用Excel、SQL和Python，有数据处理与分析经验，能高效完成数据整理和报表工作，期待进一步沟通。",
+      "time": "昨天 03:13",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393224291287553",
+      "block": "昨天 03:13 送达 您好，我有统计学背景，熟练使用Excel、SQL和Python，有数据处理与分析经验，能高效完成数据整理和报表工作，期待进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我有统计学背景，熟练使用Excel、SQL和Python，有数据处理与分析经验，能高效完成数据整理和报表工作，期待进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-07 16:36:19"
+}

@@ -1,0 +1,64 @@
+{
+  "chat_name": "孙先生",
+  "chat_id": "孙先生#上海仁联集团",
+  "account_index": 0,
+  "job_name": "做五休二+金融SQL运营分析+14薪+五险一金（派遣职位）5-7K长沙查看职位",
+  "company": "上海仁联集团",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "13:30",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394791482385154",
+      "block": "13:30 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "认真看了您的简历，抱歉，我们希望寻找与当前项目周期更匹配的候选人。祝您在BOSS直聘找到更好的机会！",
+      "time": "13:50",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394796362580746",
+      "block": "13:50 认真看了您的简历，抱歉，我们希望寻找与当前项目周期更匹配的候选人。祝您在BOSS直聘找到更好的机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "认真看了您的简历，抱歉，我们希望寻找与当前项目周期更匹配的候选人。祝您在BOSS直聘找到更好的机会！"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，理解您的考虑，祝您招聘顺利。",
+      "text": "感谢您的时间，理解您的考虑，祝您招聘顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-09 13:59:02",
+      "time": "13:59",
+      "job_name": "做五休二+金融SQL运营分析+14薪+五险一金（派遣职位）5-7K长沙查看职位",
+      "isFriend": false,
+      "mid": "394798457578241"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，明白，谢谢您的回复，祝项目顺利推进。",
+      "text": "好的，明白，谢谢您的回复，祝项目顺利推进。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 00:43:55",
+      "time": "00:43",
+      "job_name": "做五休二+金融SQL运营分析+14薪+五险一金（派遣职位）5-7K长沙查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 00:43:55",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,50 @@
+{
+  "chat_name": "张先生",
+  "chat_id": "张先生#千方源",
+  "account_index": 0,
+  "job_name": "兼职·一对一线上家教（兼职）40-80元/时长沙查看职位",
+  "company": "千方源",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "04:27",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394304022097922",
+      "block": "04:27 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394304022159360",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-08 13:18:01",
+      "time": "13:18",
+      "job_name": "兼职·一对一线上家教（兼职）40-80元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "394434516533253"
+    }
+  ],
+  "updated_at": "2026-10-08 13:18:11"
+}

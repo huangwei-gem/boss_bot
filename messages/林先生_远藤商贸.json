@@ -1,0 +1,22 @@
+{
+  "chat_name": "林先生",
+  "chat_id": "林先生#远藤商贸",
+  "account_index": 0,
+  "job_name": "兼职·兼职-线上推广员100-150元/时福州查看职位",
+  "company": "远藤商贸",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:15",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393902985650945",
+      "block": "01:15 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-08 15:32:17"
+}

@@ -1,0 +1,89 @@
+{
+  "chat_name": "李斌",
+  "chat_id": "李斌#睿盛达网络服务中心",
+  "account_index": 0,
+  "job_name": "兼职·居家游戏代练50-300元/天焦作查看职位",
+  "company": "睿盛达网络服务中心",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:16",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394257179709955",
+      "block": "01:16 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394257179738625",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "你好，您平时都玩什么游戏？",
+      "time": "14:39",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394454411674114",
+      "block": "14:39 你好，您平时都玩什么游戏？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，您平时都玩什么游戏？"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，我目前的求职方向是数据标注、数据分析或线上运营助理相关岗位，与游戏代练不太匹配。想请问贵司是否有其他符合我方向的兼职机会？",
+      "text": "您好，我目前的求职方向是数据标注、数据分析或线上运营助理相关岗位，与游戏代练不太匹配。想请问贵司是否有其他符合我方向的兼职机会？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-08 14:58:23",
+      "time": "14:58",
+      "job_name": "兼职·居家游戏代练50-300元/天焦作查看职位",
+      "isFriend": false,
+      "mid": "394459179549185"
+    },
+    {
+      "text": "你好，您平时都玩什么游戏？",
+      "time": "15:42",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394469976920577",
+      "block": "15:42 你好，您平时都玩什么游戏？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，您平时都玩什么游戏？"
+    },
+    {
+      "sender": "bot",
+      "content": "我之前回复过，我的求职方向是数据标注、数据分析或线上运营助理，与游戏代练不太匹配。请问贵司有这类兼职岗位吗？",
+      "text": "我之前回复过，我的求职方向是数据标注、数据分析或线上运营助理，与游戏代练不太匹配。请问贵司有这类兼职岗位吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 01:28:37",
+      "time": "01:28",
+      "job_name": "兼职·居家游戏代练50-300元/天焦作查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 01:28:37",
+  "unread_on_boss": 0
+}

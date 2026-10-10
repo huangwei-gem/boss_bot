@@ -1,0 +1,36 @@
+{
+  "chat_name": "易先生",
+  "chat_id": "易先生#鸣鸣很忙集团",
+  "account_index": 0,
+  "job_name": "数据分析主管10-15K·14薪长沙查看职位",
+  "company": "鸣鸣很忙集团",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 08:00",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387986317157121",
+      "block": "09-20 08:00 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "387986317185792",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "is_read": true
+    }
+  ],
+  "updated_at": "2026-10-05 02:10:20"
+}

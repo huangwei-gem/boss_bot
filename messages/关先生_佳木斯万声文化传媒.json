@@ -1,0 +1,62 @@
+{
+  "chat_name": "关先生",
+  "chat_id": "关先生#佳木斯万声文化传媒",
+  "account_index": 0,
+  "job_name": "海外唱歌聊天不露脸3-4K佳木斯查看职位",
+  "company": "佳木斯万声文化传媒",
+  "messages": [
+    {
+      "text": "不露脸语音主播考虑么？可兼职可全职语音个播厅，小白也可以播。感兴趣可以留下联系方式。",
+      "time": "14:22",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394096342536961",
+      "block": "14:22 不露脸语音主播考虑么？ 可兼职可全职 语音个播厅，小白也可以播。 感兴趣可以留下联系方式。",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不露脸语音主播考虑么？可兼职可全职语音个播厅，小白也可以播。感兴趣可以留下联系方式。"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 14:22:43",
+      "time": "14:22",
+      "job_name": "海外唱歌聊天不露脸3-4K佳木斯查看职位",
+      "isFriend": false,
+      "mid": "394096511955714"
+    },
+    {
+      "text": "这就是线上的主播行业啊",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394096589542148",
+      "block": "这就是线上的主播行业啊",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "这就是线上的主播行业啊"
+    },
+    {
+      "text": "远程就可以做的",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394096623256320",
+      "block": "远程就可以做的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "远程就可以做的"
+    }
+  ],
+  "updated_at": "2026-10-10 06:45:27",
+  "unread_on_boss": 0
+}

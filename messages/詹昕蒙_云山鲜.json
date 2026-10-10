@@ -1,0 +1,80 @@
+{
+  "chat_name": "詹昕蒙",
+  "chat_id": "詹昕蒙#云山鲜",
+  "account_index": 0,
+  "job_name": "长沙市岳麓区快递员7-12K长沙查看职位",
+  "company": "云山鲜",
+  "messages": [
+    {
+      "text": "想与你沟通下我们在招的这个职位，现在方便吗？",
+      "time": "18:46",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393807390322689",
+      "block": "18:46 想与你沟通下我们在招的这个职位，现在方便吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "想与你沟通下我们在招的这个职位，现在方便吗？"
+    },
+    {
+      "text": "你现在是在哪里呀，我看下离我们门店有多远呢",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393807481028609",
+      "block": "你现在是在哪里呀，我看下离我们门店有多远呢",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你现在是在哪里呀，我看下离我们门店有多远呢"
+    },
+    {
+      "sender": "bot",
+      "content": "我目前在长沙，不过这个岗位和我的数据分析方向不太匹配，请问咱们这边有数据分析相关岗位吗？",
+      "text": "我目前在长沙，不过这个岗位和我的数据分析方向不太匹配，请问咱们这边有数据分析相关岗位吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-06 19:11:25",
+      "time": "19:11",
+      "job_name": "长沙市岳麓区快递员7-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "393813554241538"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-07 01:54:18",
+      "time": "01:54",
+      "job_name": "长沙市岳麓区快递员7-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "393912574377984"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 18:19:35",
+      "time": "18:19",
+      "job_name": "长沙市岳麓区快递员7-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "394154724155392"
+    }
+  ],
+  "updated_at": "2026-10-09 10:54:39",
+  "unread_on_boss": 0
+}

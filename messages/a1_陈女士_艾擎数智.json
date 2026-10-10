@@ -1,0 +1,36 @@
+{
+  "chat_name": "陈女士",
+  "chat_id": "陈女士#艾擎数智",
+  "account_index": 1,
+  "job_name": "兼职·数据标注（居家兼职）20-25元/时南昌查看职位",
+  "company": "艾擎数智",
+  "messages": [
+    {
+      "text": "",
+      "time": "00:23",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393890156331520",
+      "block": "00:23 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好！我看到贵司正在招聘数据标注居家兼职，我有统计学背景和相关数据分析技能（Excel/SQL/Python），熟悉数据处理工作，对这份居家兼职很感兴趣，请问目前还在招人吗？",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393890277261825",
+      "block": "送达 您好！我看到贵司正在招聘数据标注居家兼职，我有统计学背景和相关数据分析技能（Excel/SQL/Python），熟悉数据处理工作，对这份居家兼职很感兴趣，请问目前还在招人吗？",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好！我看到贵司正在招聘数据标注居家兼职，我有统计学背景和相关数据分析技能（Excel/SQL/Python），熟悉数据处理工作，对这份居家兼职很感兴趣，请问目前还在招人吗？",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-08 15:15:09"
+}

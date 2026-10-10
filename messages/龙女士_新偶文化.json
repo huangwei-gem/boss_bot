@@ -1,0 +1,50 @@
+{
+  "chat_name": "龙女士",
+  "chat_id": "龙女士#新偶文化",
+  "account_index": 0,
+  "job_name": "兼职·营销号剪辑-线上兼职50-70元/时长沙查看职位",
+  "company": "新偶文化",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "10-05 23:38",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393525343125505",
+      "block": "10-05 23:38 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "感谢问询您的简历很优秀，但和该岗位暂不匹配，不好意思，祝您一切顺利",
+      "time": "10:35",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394394626797571",
+      "block": "10:35 感谢问询您的简历很优秀，但和该岗位暂不匹配，不好意思，祝您一切顺利",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢问询您的简历很优秀，但和该岗位暂不匹配，不好意思，祝您一切顺利"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-08 12:43:14",
+      "time": "12:43",
+      "job_name": "兼职·营销号剪辑-线上兼职50-70元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "394425964187649"
+    }
+  ],
+  "updated_at": "2026-10-10 07:24:31",
+  "unread_on_boss": 0
+}

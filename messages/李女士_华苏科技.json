@@ -1,0 +1,52 @@
+{
+  "chat_name": "李女士",
+  "chat_id": "李女士#华苏科技",
+  "account_index": 0,
+  "job_name": "724机房值守实习生（驾照、倒班）3-4K长沙查看职位",
+  "company": "华苏科技",
+  "messages": [
+    {
+      "text": "hello，是有在看机会吗？我们这边的724机房值守实习生（驾照、倒班）岗位，不知道有没有兴趣了解一下~",
+      "time": "09-19 14:16",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "387724883481344",
+      "block": "09-19 14:16 hello，是有在看机会吗？我们这边的724机房值守实习生（驾照、倒班）岗位，不知道有没有兴趣了解一下~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "hello，是有在看机会吗？我们这边的724机房值守实习生（驾照、倒班）岗位，不知道有没有兴趣了解一下~",
+      "is_read": true
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "387724883530498",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "is_read": true
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 18:43:29",
+      "time": "18:43",
+      "job_name": "724机房值守实习生（驾照、倒班）3-4K长沙查看职位",
+      "isFriend": false,
+      "mid": "394160598061825"
+    }
+  ],
+  "updated_at": "2026-10-08 20:40:41"
+}

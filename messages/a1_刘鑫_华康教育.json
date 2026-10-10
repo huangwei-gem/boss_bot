@@ -1,0 +1,23 @@
+{
+  "chat_name": "刘鑫",
+  "chat_id": "刘鑫#华康教育",
+  "account_index": 1,
+  "job_name": "兼职·数据采集200-220元/天张掖查看职位",
+  "company": "华康教育",
+  "messages": [
+    {
+      "text": "您好，我对贵司的数据采集岗位很感兴趣。我具备统计学背景，熟练使用Excel、SQL和Python，有数据分析经验，能高效完成数据采集工作。期待与您进一步沟通。",
+      "time": "12:11",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393002561782273",
+      "block": "12:11 送达 您好，我对贵司的数据采集岗位很感兴趣。我具备统计学背景，熟练使用Excel、SQL和Python，有数据分析经验，能高效完成数据采集工作。期待与您进一步沟通。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对贵司的数据采集岗位很感兴趣。我具备统计学背景，熟练使用Excel、SQL和Python，有数据分析经验，能高效完成数据采集工作。期待与您进一步沟通。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-05 22:01:43"
+}

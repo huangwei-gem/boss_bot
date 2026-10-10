@@ -1,0 +1,38 @@
+{
+  "chat_name": "张女士",
+  "chat_id": "张女士#山东誉伟电子商务",
+  "account_index": 1,
+  "job_name": "跨境电商产品开发专员5-8K滨州查看职位",
+  "company": "山东誉伟电子商务",
+  "messages": [
+    {
+      "text": "你好，我们正在诚聘跨境电商产品开发专员，有兴趣聊聊吗",
+      "time": "18:34",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394158265303552",
+      "block": "18:34 你好，我们正在诚聘跨境电商产品开发专员，有兴趣聊聊吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，我们正在诚聘跨境电商产品开发专员，有兴趣聊聊吗"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢邀请。我目前主要寻求线上兼职机会，例如数据标注或运营助理类工作，不知是否有相关岗位可以沟通？",
+      "text": "您好，感谢邀请。我目前主要寻求线上兼职机会，例如数据标注或运营助理类工作，不知是否有相关岗位可以沟通？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 18:47:05",
+      "time": "18:47",
+      "job_name": "跨境电商产品开发专员5-8K滨州查看职位",
+      "isFriend": false,
+      "mid": "394161484878337"
+    }
+  ],
+  "updated_at": "2026-10-09 23:55:53",
+  "unread_on_boss": 0
+}

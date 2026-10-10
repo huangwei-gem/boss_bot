@@ -1,0 +1,102 @@
+{
+  "chat_name": "李先生",
+  "chat_id": "李先生#湖北智海升学教育",
+  "account_index": 0,
+  "job_name": "兼职·人工智能训练师70-100元/天荆州查看职位",
+  "company": "湖北智海升学教育",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "00:50",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394250872222467",
+      "block": "00:50 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394250872255234",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "你好",
+      "time": "09:21",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394730135462666",
+      "block": "09:21 你好",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394730148709121",
+      "block": "我想要和您交换联系方式，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换联系方式，您是否同意 拒绝 同意"
+    },
+    {
+      "sender": "bot",
+      "content": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "text": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-09 10:28:49",
+      "time": "10:28",
+      "job_name": "兼职·人工智能训练师70-100元/天荆州查看职位",
+      "isFriend": false,
+      "mid": "394746794689280"
+    },
+    {
+      "text": "你是应届生吗",
+      "time": "11:23",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394760278754051",
+      "block": "11:23 你是应届生吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你是应届生吗"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-10 00:18:38",
+      "time": "00:18",
+      "job_name": "兼职·人工智能训练师70-100元/天荆州查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 00:18:38",
+  "unread_on_boss": 0
+}

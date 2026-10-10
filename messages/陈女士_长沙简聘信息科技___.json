@@ -1,0 +1,50 @@
+{
+  "chat_name": "陈女士",
+  "chat_id": "陈女士#长沙简聘信息科技___",
+  "account_index": 0,
+  "job_name": "数据挖掘与分析工程师（猎头职位）22-28K长沙查看职位",
+  "company": "长沙简聘信息科技...",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "14:26",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394805129016066",
+      "block": "14:26 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394805310763777",
+      "block": "不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-09 15:07:29",
+      "time": "15:07",
+      "job_name": "数据挖掘与分析工程师（猎头职位）22-28K长沙查看职位",
+      "isFriend": false,
+      "mid": "394815280689922"
+    }
+  ],
+  "updated_at": "2026-10-10 01:37:14",
+  "unread_on_boss": 0
+}

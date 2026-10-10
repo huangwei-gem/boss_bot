@@ -1,0 +1,73 @@
+{
+  "chat_name": "任女士",
+  "chat_id": "任女士#科锐国际",
+  "account_index": 0,
+  "job_name": "数据分析（接受无经验）（猎头职位）15-30K上海查看职位",
+  "company": "科锐国际",
+  "messages": [
+    {
+      "text": "",
+      "time": "08-28 22:20",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "380058084327937",
+      "block": "08-28 22:20 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "380058105078272",
+      "block": "已读 您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。"
+    },
+    {
+      "text": "方便发一份简历过来吗？",
+      "time": "08-30 09:59",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "380583754740226",
+      "block": "08-30 09:59 方便发一份简历过来吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "方便发一份简历过来吗？"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "380583755039232",
+      "block": "我想要一份您的附件简历，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "380595327652357",
+      "block": "您的附件简历 黄维简历 已发送给Boss点击查看附件",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "您的附件简历 黄维简历 已发送给Boss点击查看附件"
+    }
+  ],
+  "updated_at": "2026-09-28 14:45:56"
+}

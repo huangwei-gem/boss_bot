@@ -1,0 +1,51 @@
+{
+  "chat_name": "周女士",
+  "chat_id": "周女士#晔忆",
+  "account_index": 0,
+  "job_name": "兼职·晚班兼职四小时，工资日结25-35元/时长沙查看职位",
+  "company": "晔忆",
+  "messages": [
+    {
+      "text": "咱们在招日结兼职 ，工作轻松，市区跑单就行。一天200+可以兼职可以全职，有兴趣可以给你介绍一下",
+      "time": "16:41",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393776590811394",
+      "block": "16:41 咱们在招日结兼职 ，工作轻松，市区跑单就行。一天200+可以兼职可以全职，有兴趣可以给你介绍一下",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "咱们在招日结兼职 ，工作轻松，市区跑单就行。一天200+可以兼职可以全职，有兴趣可以给你介绍一下"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393776590811396",
+      "block": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。不过我的求职方向是数据分析岗位，跟这个岗位不太匹配，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。不过我的求职方向是数据分析岗位，跟这个岗位不太匹配，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "scam_filter",
+      "action": "text",
+      "timestamp": "2026-10-06 17:33:49",
+      "time": "17:33",
+      "job_name": "兼职·晚班兼职四小时，工资日结25-35元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "393789560279299"
+    }
+  ],
+  "updated_at": "2026-10-08 01:48:07",
+  "unread_on_boss": 0
+}

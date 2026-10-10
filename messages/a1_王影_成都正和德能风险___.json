@@ -1,0 +1,36 @@
+{
+  "chat_name": "王影",
+  "chat_id": "王影#成都正和德能风险___",
+  "account_index": 1,
+  "job_name": "兼职·内业数据处理员GIS150-200元/天成都查看职位",
+  "company": "成都正和德能风险...",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 12:08",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394417427780353",
+      "block": "昨天 12:08 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好！我是统计学本科在读，有数据标注、AI训练数据质检及数据分析经验，熟悉Excel/SQL/Python，看到贵司在招内业数据处理员，我的技能背景与岗位方向匹配度高，期待进一步沟通，谢谢！",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394417554035456",
+      "block": "送达 您好！我是统计学本科在读，有数据标注、AI训练数据质检及数据分析经验，熟悉Excel/SQL/Python，看到贵司在招内业数据处理员，我的技能背景与岗位方向匹配度高，期待进一步沟通，谢谢！",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好！我是统计学本科在读，有数据标注、AI训练数据质检及数据分析经验，熟悉Excel/SQL/Python，看到贵司在招内业数据处理员，我的技能背景与岗位方向匹配度高，期待进一步沟通，谢谢！",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-09 22:58:55"
+}

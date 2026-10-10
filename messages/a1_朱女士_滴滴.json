@@ -1,0 +1,36 @@
+{
+  "chat_name": "朱女士",
+  "chat_id": "朱女士#滴滴",
+  "account_index": 1,
+  "job_name": "数据分析-上海40-60K·15薪上海查看职位",
+  "company": "滴滴",
+  "messages": [
+    {
+      "text": "",
+      "time": "00:29",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394953336603137",
+      "block": "00:29 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学本科在读，有数据标注和数据分析的经验，熟悉Python、SQL和Excel，也做过AI训练数据的清洗与质检。看到咱们这个数据分析岗位很感兴趣，方便的话我把简历发您细聊",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394953592242689",
+      "block": "送达 您好，我是统计学本科在读，有数据标注和数据分析的经验，熟悉Python、SQL和Excel，也做过AI训练数据的清洗与质检。看到咱们这个数据分析岗位很感兴趣，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据标注和数据分析的经验，熟悉Python、SQL和Excel，也做过AI训练数据的清洗与质检。看到咱们这个数据分析岗位很感兴趣，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-10 09:14:42"
+}

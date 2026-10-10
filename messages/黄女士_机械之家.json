@@ -1,0 +1,35 @@
+{
+  "chat_name": "黄女士",
+  "chat_id": "黄女士#机械之家",
+  "account_index": 0,
+  "job_name": "财务分析/BP10-13K·13薪长沙查看职位",
+  "company": "机械之家",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 12:01",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "388045629113093",
+      "block": "09-20 12:01 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "09-20 14:06",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388076391498499",
+      "block": "09-20 14:06 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦",
+      "is_read": true
+    }
+  ],
+  "updated_at": "2026-10-05 22:04:35"
+}

@@ -1,0 +1,23 @@
+{
+  "chat_name": "单显扬",
+  "chat_id": "单显扬#盛矜智能",
+  "account_index": 1,
+  "job_name": "兼职·ai数据标注15-20元/时湘潭查看职位",
+  "company": "盛矜智能",
+  "messages": [
+    {
+      "text": "您好，我对AI数据标注岗位很感兴趣。我熟悉Python和SQL，具备数据处理和分析经验，学习能力强，能快速上手标注工作，期待进一步沟通。",
+      "time": "04:32",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393951522263553",
+      "block": "04:32 送达 您好，我对AI数据标注岗位很感兴趣。我熟悉Python和SQL，具备数据处理和分析经验，学习能力强，能快速上手标注工作，期待进一步沟通。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对AI数据标注岗位很感兴趣。我熟悉Python和SQL，具备数据处理和分析经验，学习能力强，能快速上手标注工作，期待进一步沟通。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-08 14:40:55"
+}

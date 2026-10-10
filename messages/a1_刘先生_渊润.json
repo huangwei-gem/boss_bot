@@ -1,0 +1,63 @@
+{
+  "chat_name": "刘先生",
+  "chat_id": "刘先生#渊润",
+  "account_index": 1,
+  "job_name": "兼职·客家话AI方言标注/AI训练师30-35元/时蚌埠查看职位",
+  "company": "渊润",
+  "messages": [
+    {
+      "text": "",
+      "time": "00:38",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393893942542848",
+      "block": "00:38 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我对客家话AI方言标注岗位很感兴趣。我具备数据分析技能，能熟练使用Excel/SQL/Python，学习能力强，能快速掌握标注规则，希望有机会参与这份线上兼职工作。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393894058471937",
+      "block": "送达 您好，我对客家话AI方言标注岗位很感兴趣。我具备数据分析技能，能熟练使用Excel/SQL/Python，学习能力强，能快速掌握标注规则，希望有机会参与这份线上兼职工作。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对客家话AI方言标注岗位很感兴趣。我具备数据分析技能，能熟练使用Excel/SQL/Python，学习能力强，能快速掌握标注规则，希望有机会参与这份线上兼职工作。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "您好，请问可以听得懂客家话吗？",
+      "time": "09:08",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394373281825281",
+      "block": "09:08 您好，请问可以听得懂客家话吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好，请问可以听得懂客家话吗？"
+    },
+    {
+      "sender": "bot",
+      "content": "抱歉，我不会客家话。我熟悉数据标注流程和AI工具，如果后续有其他方言类或通用标注岗位，也希望能考虑我。",
+      "text": "抱歉，我不会客家话。我熟悉数据标注流程和AI工具，如果后续有其他方言类或通用标注岗位，也希望能考虑我。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 02:19:02",
+      "time": "02:19",
+      "job_name": "兼职·客家话AI方言标注/AI训练师30-35元/时蚌埠查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 02:19:02",
+  "unread_on_boss": 0
+}

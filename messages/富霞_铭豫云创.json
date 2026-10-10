@@ -1,0 +1,22 @@
+{
+  "chat_name": "富霞",
+  "chat_id": "富霞#铭豫云创",
+  "account_index": 0,
+  "job_name": "兼职·ai数据标注（居家兼职）20-25元/时武威查看职位",
+  "company": "铭豫云创",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "02:46",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393925361296130",
+      "block": "02:46 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-08 15:25:38"
+}

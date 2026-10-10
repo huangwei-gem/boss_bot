@@ -1,0 +1,47 @@
+{
+  "chat_name": "罗女士",
+  "chat_id": "罗女士#天河国云",
+  "account_index": 0,
+  "job_name": "产品经理（大数据方向）14-25K长沙查看职位",
+  "company": "天河国云",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 08:19",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387991097508611",
+      "block": "09-20 08:19 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "387991097541379",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "你那边接受实习转正的模式吗",
+      "time": "09-20 09:38",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388010376430341",
+      "block": "09-20 09:38 你那边接受实习转正的模式吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你那边接受实习转正的模式吗"
+    }
+  ],
+  "updated_at": "2026-10-05 00:00:03"
+}

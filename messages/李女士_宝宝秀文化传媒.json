@@ -1,0 +1,78 @@
+{
+  "chat_name": "李女士",
+  "chat_id": "李女士#宝宝秀文化传媒",
+  "account_index": 0,
+  "job_name": "团播艺人 全程带播 高提成 上不封顶7-10K长沙查看职位",
+  "company": "宝宝秀文化传媒",
+  "messages": [
+    {
+      "text": "哈喽，我们老板无意中看到了你的简历，瘫痪了30多年的老植物人啪的一下坐起来了，嘱咐我一定要把你招入公司，方便探讨探讨嘛",
+      "time": "09-21 21:29",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388539116478721",
+      "block": "09-21 21:29 哈喽，我们老板无意中看到了你的简历，瘫痪了30多年的老植物人啪的一下坐起来了，嘱咐我一定要把你招入公司，方便探讨探讨嘛",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "哈喽，我们老板无意中看到了你的简历，瘫痪了30多年的老植物人啪的一下坐起来了，嘱咐我一定要把你招入公司，方便探讨探讨嘛",
+      "is_read": true
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388539116527872",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "is_read": true
+    },
+    {
+      "text": "是帅哥美女就回我",
+      "time": "09-21 22:09",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388548862050561",
+      "block": "09-21 22:09 是帅哥美女就回我",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "是帅哥美女就回我",
+      "is_read": true
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 18:40:05",
+      "time": "18:40",
+      "job_name": "团播艺人 全程带播 高提成 上不封顶7-10K长沙查看职位",
+      "isFriend": false,
+      "mid": "394159765713152"
+    },
+    {
+      "text": "好吧",
+      "time": "18:46",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394161261732098",
+      "block": "18:46 好吧",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好吧"
+    }
+  ],
+  "updated_at": "2026-10-10 01:33:02",
+  "unread_on_boss": 0
+}

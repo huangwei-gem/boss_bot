@@ -1,0 +1,80 @@
+{
+  "chat_name": "付女士",
+  "chat_id": "付女士#字节跳动",
+  "account_index": 0,
+  "job_name": "商家BD-万葭灯火（抖音生活服务旗下品牌）190-200元/天长沙查看职位",
+  "company": "字节跳动",
+  "messages": [
+    {
+      "text": "你好，请问你最近在看机会吗？我们正在招聘商家BD-万葭灯火（抖音生活服务旗下品牌），觉得你还蛮合适的",
+      "time": "21:36",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393849262514433",
+      "block": "21:36 你好，请问你最近在看机会吗？我们正在招聘商家BD-万葭灯火（抖音生活服务旗下品牌），觉得你还蛮合适的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，请问你最近在看机会吗？我们正在招聘商家BD-万葭灯火（抖音生活服务旗下品牌），觉得你还蛮合适的"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，付女士，感谢您的关注。我目前在看数据分析方向的机会，商家BD的岗位和我求职方向有一定差异，想请问贵司是否有数据分析相关的岗位呢？",
+      "text": "您好，付女士，感谢您的关注。我目前在看数据分析方向的机会，商家BD的岗位和我求职方向有一定差异，想请问贵司是否有数据分析相关的岗位呢？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-06 21:51:59",
+      "time": "21:51",
+      "job_name": "商家BD-万葭灯火（抖音生活服务旗下品牌）190-200元/天长沙查看职位",
+      "isFriend": false,
+      "mid": "393853008007425"
+    },
+    {
+      "text": "可以在boss上投递一下",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393853197832449",
+      "block": "可以在boss上投递一下",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "可以在boss上投递一下"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，我稍后去BOSS直聘上看看贵司的数据分析相关岗位并投递，感谢您的指引。",
+      "text": "好的，我稍后去BOSS直聘上看看贵司的数据分析相关岗位并投递，感谢您的指引。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-06 22:03:13",
+      "time": "22:03",
+      "job_name": "商家BD-万葭灯火（抖音生活服务旗下品牌）190-200元/天长沙查看职位",
+      "isFriend": false,
+      "mid": "393855769755905"
+    },
+    {
+      "sender": "bot",
+      "content": "付女士您好，之前聊的商家BD-万葭灯火（抖音生活服务旗下品牌）190-200元/天长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "付女士您好，之前聊的商家BD-万葭灯火（抖音生活服务旗下品牌）190-200元/天长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 07:01:53",
+      "time": "07:01",
+      "job_name": "商家BD-万葭灯火（抖音生活服务旗下品牌）190-200元/天长沙查看职位",
+      "isFriend": false,
+      "mid": "395049838473473"
+    }
+  ],
+  "updated_at": "2026-10-10 09:15:07",
+  "unread_on_boss": 0
+}

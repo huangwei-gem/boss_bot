@@ -1,0 +1,92 @@
+{
+  "chat_name": "李天舒",
+  "chat_id": "李天舒#长沙楚灿企业咨询",
+  "account_index": 0,
+  "job_name": "课程顾问10-15K长沙查看职位",
+  "company": "长沙楚灿企业咨询",
+  "messages": [
+    {
+      "text": "你好，我司正在诚招课程顾问，不知道你是否感兴趣",
+      "time": "14:46",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394102253097729",
+      "block": "14:46 你好，我司正在诚招课程顾问，不知道你是否感兴趣",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，我司正在诚招课程顾问，不知道你是否感兴趣"
+    },
+    {
+      "sender": "bot",
+      "content": "您好李老师，感谢您的关注，不过我目前主要找线上兼职方向，比如数据标注、线上运营或数据分析类岗位，这个课程顾问岗位可能不太符合我的求职方向，请问贵司有相关的线上岗位吗？",
+      "text": "您好李老师，感谢您的关注，不过我目前主要找线上兼职方向，比如数据标注、线上运营或数据分析类岗位，这个课程顾问岗位可能不太符合我的求职方向，请问贵司有相关的线上岗位吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 14:55:31",
+      "time": "14:55",
+      "job_name": "课程顾问10-15K长沙查看职位",
+      "isFriend": false,
+      "mid": "394104572949249"
+    },
+    {
+      "text": "目前没有",
+      "time": "16:14",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394124065977089",
+      "block": "16:14 目前没有",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "目前没有"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，没关系，祝您招聘顺利~",
+      "text": "感谢您的时间，没关系，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 16:44:11",
+      "time": "16:44",
+      "job_name": "课程顾问10-15K长沙查看职位",
+      "isFriend": false,
+      "mid": "394131278582529"
+    },
+    {
+      "text": "谢谢您",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394131341210369",
+      "block": "谢谢您",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "谢谢您"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-08 02:06:50",
+      "time": "02:06",
+      "job_name": "课程顾问10-15K长沙查看职位",
+      "isFriend": false,
+      "mid": "394269561733889"
+    }
+  ],
+  "updated_at": "2026-10-09 13:44:49",
+  "unread_on_boss": 0
+}

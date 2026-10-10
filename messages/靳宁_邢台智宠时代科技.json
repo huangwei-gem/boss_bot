@@ -1,0 +1,22 @@
+{
+  "chat_name": "靳宁",
+  "chat_id": "靳宁#邢台智宠时代科技",
+  "account_index": 0,
+  "job_name": "兼职·ai数据标注居家兼职15-20元/时邢台查看职位",
+  "company": "邢台智宠时代科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "04:45",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394308422136576",
+      "block": "04:45 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-09 13:34:51"
+}

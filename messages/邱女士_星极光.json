@@ -1,0 +1,76 @@
+{
+  "chat_name": "邱女士",
+  "chat_id": "邱女士#星极光",
+  "account_index": 0,
+  "job_name": "兼职·数据标注专员50-60元/天徐州查看职位",
+  "company": "星极光",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "07:51",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394354300920577",
+      "block": "07:51 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "您的简历发来一份",
+      "time": "10:27",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394392494609158",
+      "block": "10:27 您的简历发来一份",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您的简历发来一份"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，我马上把简历发给您；我做过文本、图像、语音多模态标注和语料质检，时间灵活、全程可线上协作，方便的话也可以先简单聊聊岗位要求。",
+      "text": "好的，我马上把简历发给您；我做过文本、图像、语音多模态标注和语料质检，时间灵活、全程可线上协作，方便的话也可以先简单聊聊岗位要求。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-08 13:31:48",
+      "time": "13:31",
+      "job_name": "兼职·数据标注专员50-60元/天徐州查看职位",
+      "isFriend": false,
+      "mid": "394437902729985"
+    },
+    {
+      "text": "您的简历发来一份",
+      "time": "14:02",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394445460738820",
+      "block": "14:02 您的简历发来一份",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您的简历发来一份"
+    },
+    {
+      "sender": "bot",
+      "content": "收到，我现在整理一下简历发给您，您稍等。",
+      "text": "收到，我现在整理一下简历发给您，您稍等。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 00:47:53",
+      "time": "00:47",
+      "job_name": "兼职·数据标注专员50-60元/天徐州查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 00:47:53",
+  "unread_on_boss": 0
+}

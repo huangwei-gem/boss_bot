@@ -1,0 +1,22 @@
+{
+  "chat_name": "田伟",
+  "chat_id": "田伟#星晗",
+  "account_index": 0,
+  "job_name": "兼职·数据分析师100-200元/时贵阳查看职位",
+  "company": "星晗",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 22:52",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393513928978432",
+      "block": "昨天 22:52 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-07 16:25:25"
+}

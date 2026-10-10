@@ -1,0 +1,93 @@
+{
+  "chat_name": "徐骜",
+  "chat_id": "徐骜#笑纳科技",
+  "account_index": 0,
+  "job_name": "兼职·医学数据标注500-6000元/月苏州查看职位",
+  "company": "笑纳科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "00:07",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393886260278019",
+      "block": "00:07 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393886260318977",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "感谢你的关注，暂时与该职位不够匹配，有合适机会之后再沟通～",
+      "time": "10:38",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394041350791936",
+      "block": "10:38 感谢你的关注，暂时与该职位不够匹配，有合适机会之后再沟通～",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢你的关注，暂时与该职位不够匹配，有合适机会之后再沟通～"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，理解您的考虑，祝您招聘顺利。",
+      "text": "感谢您的时间，理解您的考虑，祝您招聘顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 10:40:26",
+      "time": "10:40",
+      "job_name": "兼职·医学数据标注500-6000元/月苏州查看职位",
+      "isFriend": false,
+      "mid": "394041881993986"
+    },
+    {
+      "sender": "bot",
+      "content": "徐骜您好，之前聊的兼职·医学数据标注500-6000元/月苏州查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "徐骜您好，之前聊的兼职·医学数据标注500-6000元/月苏州查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-08 08:41:16",
+      "time": "08:41",
+      "job_name": "兼职·医学数据标注500-6000元/月苏州查看职位",
+      "isFriend": false,
+      "mid": "394366499435266"
+    },
+    {
+      "sender": "bot",
+      "content": "徐骜您好，笑纳科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "徐骜您好，笑纳科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-09 10:52:36",
+      "time": "10:52",
+      "job_name": "兼职·医学数据标注500-6000元/月苏州查看职位",
+      "isFriend": false,
+      "mid": "394752637379329"
+    }
+  ],
+  "updated_at": "2026-10-10 07:05:14",
+  "unread_on_boss": 0
+}

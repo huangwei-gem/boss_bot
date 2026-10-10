@@ -1,0 +1,51 @@
+{
+  "chat_name": "王雨斐",
+  "chat_id": "王雨斐#华秉物流",
+  "account_index": 1,
+  "job_name": "兼职·晚班小时工兼职可日结35-55元/时长沙查看职位",
+  "company": "华秉物流",
+  "messages": [
+    {
+      "text": "你好，有兴趣聊聊吗？",
+      "time": "20:50",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394191739752961",
+      "block": "20:50 你好，有兴趣聊聊吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，有兴趣聊聊吗？"
+    },
+    {
+      "text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394191739761154",
+      "block": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "sender": "hr",
+      "kind": "system",
+      "content": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址",
+      "card_text": "该职位有多个职位地址可供选择，您可以在职位详情中查看全部地址"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 20:59:38",
+      "time": "20:59",
+      "job_name": "兼职·晚班小时工兼职可日结35-55元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "394194061259265"
+    }
+  ],
+  "updated_at": "2026-10-09 23:47:02",
+  "unread_on_boss": 0
+}

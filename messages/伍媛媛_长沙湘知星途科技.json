@@ -1,0 +1,50 @@
+{
+  "chat_name": "伍媛媛",
+  "chat_id": "伍媛媛#长沙湘知星途科技",
+  "account_index": 0,
+  "job_name": "兼职·网络客服专员（线上兼职  接受无经验）100-150元/天长沙查看职位",
+  "company": "长沙湘知星途科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "02:15",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393563982303233",
+      "block": "02:15 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "10:49",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393690279460869",
+      "block": "10:49 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-06 11:16:49",
+      "time": "11:16",
+      "job_name": "兼职·网络客服专员（线上兼职  接受无经验）100-150元/天长沙查看职位",
+      "isFriend": false,
+      "mid": "393696898359296"
+    }
+  ],
+  "updated_at": "2026-10-10 07:53:48",
+  "unread_on_boss": 0
+}

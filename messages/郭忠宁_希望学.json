@@ -1,0 +1,22 @@
+{
+  "chat_name": "郭忠宁",
+  "chat_id": "郭忠宁#希望学",
+  "account_index": 0,
+  "job_name": "兼职·数据分析师120-130元/天长春查看职位",
+  "company": "希望学",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "04:30",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394304767582978",
+      "block": "04:30 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-09 13:36:22"
+}

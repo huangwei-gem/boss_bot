@@ -1,0 +1,48 @@
+{
+  "chat_name": "高女士",
+  "chat_id": "高女士#悦锦数字科技",
+  "account_index": 0,
+  "job_name": "数据分析10-15K长沙查看职位",
+  "company": "悦锦数字科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-20 08:50",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387998743659268",
+      "block": "09-20 08:50 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "感谢您的关注，很遗憾不能与您共事。祝您找到更匹配的工作机会！",
+      "time": "09-22 15:17",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388801633440514",
+      "block": "09-22 15:17 感谢您的关注，很遗憾不能与您共事。祝您找到更匹配的工作机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢您的关注，很遗憾不能与您共事。祝您找到更匹配的工作机会！",
+      "is_read": true
+    },
+    {
+      "text": "感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "388801973424898",
+      "block": "已读 感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "reply_source": "ai"
+    }
+  ],
+  "updated_at": "2026-10-09 15:11:48"
+}

@@ -1,0 +1,65 @@
+{
+  "chat_name": "张秋廷",
+  "chat_id": "张秋廷#新音梦文化传播",
+  "account_index": 0,
+  "job_name": "消息秒回师8-12K长沙查看职位",
+  "company": "新音梦文化传播",
+  "messages": [
+    {
+      "text": "你好，我们这边是语音厅，不用露脸，时间地点都自由，一天累积三小时就行哈，要不要考虑一下呢？很轻松的 薪资自提。综合薪资3-5k+，可以居家兼职，无需露脸哈",
+      "time": "14:56",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393043194032129",
+      "block": "14:56 你好，我们这边是语音厅，不用露脸，时间地点都自由，一天累积三小时就行哈，要不要考虑一下呢？很轻松的 薪资自提。综合薪资3-5k+，可以居家兼职，无需露脸哈",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，我们这边是语音厅，不用露脸，时间地点都自由，一天累积三小时就行哈，要不要考虑一下呢？很轻松的 薪资自提。综合薪资3-5k+，可以居家兼职，无需露脸哈"
+    },
+    {
+      "sender": "bot",
+      "content": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+      "text": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rule",
+      "action": "text",
+      "timestamp": "2026-10-04 15:28:37",
+      "time": "15:28",
+      "job_name": "消息秒回师8-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "393051008729089"
+    },
+    {
+      "text": "尽管我们对您的简历印象深刻，但是您的简历与我们当前的职位要求并不完全匹配。祝您在BOSS直聘找到更好的机会！",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393051577712641",
+      "block": "尽管我们对您的简历印象深刻，但是您的简历与我们当前的职位要求并不完全匹配。祝您在BOSS直聘找到更好的机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "尽管我们对您的简历印象深刻，但是您的简历与我们当前的职位要求并不完全匹配。祝您在BOSS直聘找到更好的机会！"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "text": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-04 20:06:31",
+      "time": "20:06",
+      "job_name": "消息秒回师8-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "393119304658946"
+    }
+  ],
+  "updated_at": "2026-10-07 08:18:45",
+  "unread_on_boss": 0
+}

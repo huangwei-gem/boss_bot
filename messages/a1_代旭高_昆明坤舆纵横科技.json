@@ -1,0 +1,35 @@
+{
+  "chat_name": "代旭高",
+  "chat_id": "代旭高#昆明坤舆纵横科技",
+  "account_index": 1,
+  "job_name": "兼职·数据标注专员15-20元/时昆明查看职位",
+  "company": "昆明坤舆纵横科技",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 02:06",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393207688847872",
+      "block": "昨天 02:06 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我对数据标注专员岗位很感兴趣。我具备Excel、SQL和Python等数据处理技能，能高效完成标注工作，且可线上远程协作。期待与您进一步沟通！",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393207882478080",
+      "block": "送达 您好，我对数据标注专员岗位很感兴趣。我具备Excel、SQL和Python等数据处理技能，能高效完成标注工作，且可线上远程协作。期待与您进一步沟通！",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对数据标注专员岗位很感兴趣。我具备Excel、SQL和Python等数据处理技能，能高效完成标注工作，且可线上远程协作。期待与您进一步沟通！"
+    }
+  ],
+  "updated_at": "2026-10-07 16:50:09"
+}

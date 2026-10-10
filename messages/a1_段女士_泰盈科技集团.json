@@ -1,0 +1,37 @@
+{
+  "chat_name": "段女士",
+  "chat_id": "段女士#泰盈科技集团",
+  "account_index": 1,
+  "job_name": "兼职·数据采集居家，可接受实习生35-55元/时日照查看职位",
+  "company": "泰盈科技集团",
+  "messages": [
+    {
+      "text": "您好，我对这个数据采集居家岗位很感兴趣。我具备Excel、SQL和Python技能，有数据分析经验，能高效完成数据采集与整理工作。希望有机会进一步沟通，谢谢！",
+      "time": "12:04",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393000816054784",
+      "block": "12:04 送达 您好，我对这个数据采集居家岗位很感兴趣。我具备Excel、SQL和Python技能，有数据分析经验，能高效完成数据采集与整理工作。希望有机会进一步沟通，谢谢！",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对这个数据采集居家岗位很感兴趣。我具备Excel、SQL和Python技能，有数据分析经验，能高效完成数据采集与整理工作。希望有机会进一步沟通，谢谢！",
+      "reply_source": "greet"
+    },
+    {
+      "text": "",
+      "time": "昨天 09:22",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393314983809536",
+      "block": "昨天 09:22 您是否接受此工作地点? 黄海数字智谷产业园(日照东港区黄海数字智谷产业园五号楼一楼) 暂不考虑可以接受",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "您是否接受此工作地点? 黄海数字智谷产业园(日照东港区黄海数字智谷产业园五号楼一楼) 暂不考虑可以接受"
+    }
+  ],
+  "updated_at": "2026-10-10 09:09:51",
+  "unread_on_boss": 0
+}

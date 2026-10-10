@@ -1,0 +1,90 @@
+{
+  "chat_name": "王诗琪",
+  "chat_id": "王诗琪#杭州富足到家健康管理",
+  "account_index": 1,
+  "job_name": "兼职·线上新媒体运营专员(居家办公/时间自由)50-200元/天杭州查看职位",
+  "company": "杭州富足到家健康管理",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据标注与AI辅助分析，看到贵司居家办公的新媒体岗位觉得有适配点，方便的话我把简历发您细聊",
+      "time": "15:06",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394461089419272",
+      "block": "15:06 已读 您好，我是统计学专业在读生，擅长数据标注与AI辅助分析，看到贵司居家办公的新媒体岗位觉得有适配点，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据标注与AI辅助分析，看到贵司居家办公的新媒体岗位觉得有适配点，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "你好啊，可以聊一聊~",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394461231214593",
+      "block": "你好啊，可以聊一聊~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好啊，可以聊一聊~"
+    },
+    {
+      "sender": "bot",
+      "content": "谢谢您回复。我可以先发一份简历给您参考，另外想了解一下这个岗位日常主要侧重内容编辑还是多平台发布？我在数据分析方面的能力可以做选题和复盘支持。",
+      "text": "谢谢您回复。我可以先发一份简历给您参考，另外想了解一下这个岗位日常主要侧重内容编辑还是多平台发布？我在数据分析方面的能力可以做选题和复盘支持。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-08 17:24:18",
+      "time": "17:24",
+      "job_name": "兼职·线上新媒体运营专员(居家办公/时间自由)50-200元/天杭州查看职位",
+      "isFriend": false,
+      "mid": "394495044411394"
+    },
+    {
+      "text": "多平台",
+      "time": "昨天 22:58",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394577252515841",
+      "block": "昨天 22:58 多平台",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "多平台"
+    },
+    {
+      "text": "麻烦您加一下我 微信同号",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394577265672192",
+      "block": "麻烦您加一下我 微信同号",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "麻烦您加一下我 微信同号"
+    },
+    {
+      "sender": "bot",
+      "content": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "text": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-09 14:12:32",
+      "time": "14:12",
+      "job_name": "兼职·线上新媒体运营专员(居家办公/时间自由)50-200元/天杭州查看职位",
+      "isFriend": false,
+      "mid": "394801775656966"
+    }
+  ],
+  "updated_at": "2026-10-10 03:29:50",
+  "unread_on_boss": 0
+}

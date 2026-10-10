@@ -1,0 +1,23 @@
+{
+  "chat_name": "冯丽",
+  "chat_id": "冯丽#比格测绘",
+  "account_index": 1,
+  "job_name": "兼职·数据处理专员3000-5000元/月重庆查看职位",
+  "company": "比格测绘",
+  "messages": [
+    {
+      "text": "您好，我对数据处理专员岗位很感兴趣，具备Excel、SQL、Python等数据处理技能，并有业务数据报表分析经验，期待进一步沟通。",
+      "time": "13:33",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393022652481792",
+      "block": "13:33 送达 您好，我对数据处理专员岗位很感兴趣，具备Excel、SQL、Python等数据处理技能，并有业务数据报表分析经验，期待进一步沟通。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对数据处理专员岗位很感兴趣，具备Excel、SQL、Python等数据处理技能，并有业务数据报表分析经验，期待进一步沟通。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-07 04:47:42"
+}

@@ -1,0 +1,52 @@
+{
+  "chat_name": "张女士",
+  "chat_id": "张女士#北京宇松盛年养老服务",
+  "account_index": 0,
+  "job_name": "电话客服专员12-15K北京查看职位",
+  "company": "北京宇松盛年养老服务",
+  "messages": [
+    {
+      "text": "请问在考虑新的工作机会吗？",
+      "time": "12:29",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394422591283971",
+      "block": "12:29 请问在考虑新的工作机会吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "请问在考虑新的工作机会吗？"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，我目前在找线上兼职的数据标注或数据分析类岗位，电话客服和我的求职方向不太一致，请问您这边有相关岗位吗？",
+      "text": "您好，我目前在找线上兼职的数据标注或数据分析类岗位，电话客服和我的求职方向不太一致，请问您这边有相关岗位吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-08 12:37:47",
+      "time": "12:37",
+      "job_name": "电话客服专员12-15K北京查看职位",
+      "isFriend": false,
+      "mid": "394424625984259"
+    },
+    {
+      "sender": "bot",
+      "content": "是的，我正在寻找线上兼职方向，比如数据标注、数据分析或线上运营助理类岗位，不知道您这边是否有相关的职位开放？",
+      "text": "是的，我正在寻找线上兼职方向，比如数据标注、数据分析或线上运营助理类岗位，不知道您这边是否有相关的职位开放？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-09 12:44:53",
+      "time": "12:44",
+      "job_name": "电话客服专员12-15K北京查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-09 12:44:53",
+  "unread_on_boss": 0
+}

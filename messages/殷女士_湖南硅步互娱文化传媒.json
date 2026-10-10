@@ -1,0 +1,50 @@
+{
+  "chat_name": "殷女士",
+  "chat_id": "殷女士#湖南硅步互娱文化传媒",
+  "account_index": 0,
+  "job_name": "提成周结~免费提供声卡~不露脸直播6-10K长沙查看职位",
+  "company": "湖南硅步互娱文化传媒",
+  "messages": [
+    {
+      "text": "你骑车会拐弯吗？",
+      "time": "17:52",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394147928089089",
+      "block": "17:52 你骑车会拐弯吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你骑车会拐弯吗？"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 17:52:25",
+      "time": "17:52",
+      "job_name": "提成周结~免费提供声卡~不露脸直播6-10K长沙查看职位",
+      "isFriend": false,
+      "mid": "394148051104258"
+    },
+    {
+      "text": "好的",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394148421317121",
+      "block": "好的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的"
+    }
+  ],
+  "updated_at": "2026-10-10 06:50:21",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,77 @@
+{
+  "chat_name": "张女士",
+  "chat_id": "张女士#尚星网络",
+  "account_index": 0,
+  "job_name": "电商数据专员4-6K长沙查看职位",
+  "company": "尚星网络",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "11:03",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394755287274241",
+      "block": "11:03 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394755287307009",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好  ，您可能和我们的人员需求不太相符，谢谢！祝您早日找到满意的工作！",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394755495817994",
+      "block": "您好 ，您可能和我们的人员需求不太相符，谢谢！祝您早日找到满意的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好  ，您可能和我们的人员需求不太相符，谢谢！祝您早日找到满意的工作！"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，理解您的考虑，祝您招聘顺利！",
+      "text": "感谢您的时间，理解您的考虑，祝您招聘顺利！",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-09 11:19:01",
+      "time": "11:19",
+      "job_name": "电商数据专员4-6K长沙查看职位",
+      "isFriend": false,
+      "mid": "394759132394244"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，祝您招聘顺利！",
+      "text": "感谢您的时间，祝您招聘顺利！",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 00:37:06",
+      "time": "00:37",
+      "job_name": "电商数据专员4-6K长沙查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 00:37:06",
+  "unread_on_boss": 0
+}

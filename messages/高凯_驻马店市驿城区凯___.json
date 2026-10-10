@@ -1,0 +1,62 @@
+{
+  "chat_name": "高凯",
+  "chat_id": "高凯#驻马店市驿城区凯___",
+  "account_index": 0,
+  "job_name": "兼职·电商运营助理1000-1500元/月驻马店查看职位",
+  "company": "驻马店市驿城区凯...",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "03:25",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393934930809603",
+      "block": "03:25 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "不好意思 你没有经验呀",
+      "time": "15:29",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394112785167117",
+      "block": "15:29 不好意思 你没有经验呀",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思 你没有经验呀"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-07 15:35:35",
+      "time": "15:35",
+      "job_name": "兼职·电商运营助理1000-1500元/月驻马店查看职位",
+      "isFriend": false,
+      "mid": "394114421338881"
+    },
+    {
+      "text": "有礼貌。祝你找工作顺利，人品好的人哪个公司都稀罕。",
+      "time": "16:14",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394123949355778",
+      "block": "16:14 有礼貌。祝你找工作顺利，人品好的人哪个公司都稀罕。",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "有礼貌。祝你找工作顺利，人品好的人哪个公司都稀罕。"
+    }
+  ],
+  "updated_at": "2026-10-10 01:29:46",
+  "unread_on_boss": 0
+}

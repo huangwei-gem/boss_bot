@@ -1,0 +1,50 @@
+{
+  "chat_name": "张卓阳",
+  "chat_id": "张卓阳#迁西智爱教育咨询___",
+  "account_index": 0,
+  "job_name": "兼职·线上教务老师50-300元/天唐山查看职位",
+  "company": "迁西智爱教育咨询...",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 21:32",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393494397259782",
+      "block": "昨天 21:32 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393494397284353",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-08 10:15:38",
+      "time": "10:15",
+      "job_name": "兼职·线上教务老师50-300元/天唐山查看职位",
+      "isFriend": false,
+      "mid": "394389692080134"
+    }
+  ],
+  "updated_at": "2026-10-10 07:36:40"
+}

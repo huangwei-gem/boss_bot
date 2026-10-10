@@ -1,0 +1,50 @@
+{
+  "chat_name": "隋金秋",
+  "chat_id": "隋金秋#武汉佰钧成技术",
+  "account_index": 1,
+  "job_name": "电商数据分析师|左上角福袋大家点一点6-8K上海查看职位",
+  "company": "武汉佰钧成技术",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，擅长用Python和SQL做数据清洗与可视化分析，曾独立完成多模态数据标注项目，方便的话我把简历发您细聊",
+      "time": "02:06",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394977244647937",
+      "block": "02:06 已读 您好，我是统计学专业在读生，擅长用Python和SQL做数据清洗与可视化分析，曾独立完成多模态数据标注项目，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长用Python和SQL做数据清洗与可视化分析，曾独立完成多模态数据标注项目，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "没毕业不可以的",
+      "time": "09:17",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395083213455875",
+      "block": "09:17 没毕业不可以的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "没毕业不可以的"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的回复，理解您的考虑，祝您招聘顺利。",
+      "text": "好的，感谢您的回复，理解您的考虑，祝您招聘顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 09:24:08",
+      "time": "09:24",
+      "job_name": "电商数据分析师|左上角福袋大家点一点6-8K上海查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 09:24:08",
+  "unread_on_boss": 0
+}

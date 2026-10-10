@@ -1,0 +1,23 @@
+{
+  "chat_name": "何女士",
+  "chat_id": "何女士#四会市优采信息科___",
+  "account_index": 1,
+  "job_name": "兼职·标注15-35元/时肇庆查看职位",
+  "company": "四会市优采信息科...",
+  "messages": [
+    {
+      "text": "您好，我对贵司的标注岗位很感兴趣，我有数据分析和处理经验，熟练使用Excel和Python，能高效完成标注任务，期待有机会合作。",
+      "time": "04:06",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393945135194624",
+      "block": "04:06 送达 您好，我对贵司的标注岗位很感兴趣，我有数据分析和处理经验，熟练使用Excel和Python，能高效完成标注任务，期待有机会合作。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对贵司的标注岗位很感兴趣，我有数据分析和处理经验，熟练使用Excel和Python，能高效完成标注任务，期待有机会合作。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-08 14:45:03"
+}

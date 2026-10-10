@@ -1,0 +1,23 @@
+{
+  "chat_name": "冯女士",
+  "chat_id": "冯女士#杭州百博电商",
+  "account_index": 1,
+  "job_name": "兼职·数据审核（兼职！在校大学生！）500-3000元/月杭州查看职位",
+  "company": "杭州百博电商",
+  "messages": [
+    {
+      "text": "您好，我对数据审核兼职岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，有业务数据报表与洞察分析经验，能够胜任数据审核工作。期待您的回复！",
+      "time": "13:17",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393018713170433",
+      "block": "13:17 送达 您好，我对数据审核兼职岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，有业务数据报表与洞察分析经验，能够胜任数据审核工作。期待您的回复！",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对数据审核兼职岗位很感兴趣。我具备Excel、SQL、Python等数据处理技能，有业务数据报表与洞察分析经验，能够胜任数据审核工作。期待您的回复！",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-05 22:17:55"
+}

@@ -1,0 +1,66 @@
+{
+  "chat_name": "王先生",
+  "chat_id": "王先生#长沙聚朋信息技术",
+  "account_index": 0,
+  "job_name": "包吃住 无经验+游戏客服+ 不打电话4-9K长沙查看职位",
+  "company": "长沙聚朋信息技术",
+  "messages": [
+    {
+      "text": "你好，有兴趣聊聊吗？",
+      "time": "09-20 21:39",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "388187734852352",
+      "block": "09-20 21:39 你好，有兴趣聊聊吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，有兴趣聊聊吗？",
+      "is_read": true
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 18:38:58",
+      "time": "18:38",
+      "job_name": "包吃住 无经验+游戏客服+ 不打电话4-9K长沙查看职位",
+      "isFriend": false,
+      "mid": "394159488168706"
+    },
+    {
+      "text": "不好意思不太合适哦🙏",
+      "time": "22:32",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394216741503744",
+      "block": "22:32 不好意思不太合适哦🙏",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思不太合适哦🙏"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，祝您招聘顺利~",
+      "text": "好的，感谢您的时间，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-07 22:36:38",
+      "time": "22:36",
+      "job_name": "包吃住 无经验+游戏客服+ 不打电话4-9K长沙查看职位",
+      "isFriend": false,
+      "mid": "394217902052099"
+    }
+  ],
+  "updated_at": "2026-10-09 13:12:06",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,50 @@
+{
+  "chat_name": "纪女士",
+  "chat_id": "纪女士#湖南黑谷科技",
+  "account_index": 0,
+  "job_name": "SaaS销售专员｜无责3K+提成5-10K长沙查看职位",
+  "company": "湖南黑谷科技",
+  "messages": [
+    {
+      "text": "你好，我们正在招聘SaaS销售专员｜无责3K+提成，看了你的简历，觉得与我们的岗位要求非常匹配～盼进一步沟通～",
+      "time": "09-29 10:31",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "391208500273157",
+      "block": "09-29 10:31 你好，我们正在招聘SaaS销售专员｜无责3K+提成，看了你的简历，觉得与我们的岗位要求非常匹配～盼进一步沟通～",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，我们正在招聘SaaS销售专员｜无责3K+提成，看了你的简历，觉得与我们的岗位要求非常匹配～盼进一步沟通～"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "391208500318216",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 18:35:31",
+      "time": "18:35",
+      "job_name": "SaaS销售专员｜无责3K+提成5-10K长沙查看职位",
+      "isFriend": false,
+      "mid": "394158643601409"
+    }
+  ],
+  "updated_at": "2026-10-09 10:42:31"
+}

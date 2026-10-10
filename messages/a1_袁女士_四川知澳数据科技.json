@@ -1,0 +1,35 @@
+{
+  "chat_name": "袁女士",
+  "chat_id": "袁女士#四川知澳数据科技",
+  "account_index": 1,
+  "job_name": "兼职·兼职数据标注100-300元/时镇江查看职位",
+  "company": "四川知澳数据科技",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 00:49",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393542695281153",
+      "block": "昨天 00:49 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我对数据标注兼职很感兴趣，请问这个岗位是否需要远程办公？",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393542822359554",
+      "block": "已读 您好，我对数据标注兼职很感兴趣，请问这个岗位是否需要远程办公？",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对数据标注兼职很感兴趣，请问这个岗位是否需要远程办公？"
+    }
+  ],
+  "updated_at": "2026-10-07 21:05:29"
+}

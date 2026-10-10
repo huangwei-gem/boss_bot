@@ -1,0 +1,22 @@
+{
+  "chat_name": "魏先生",
+  "chat_id": "魏先生#南梵格",
+  "account_index": 0,
+  "job_name": "兼职·数据标注-金融行业400-800元/天南昌查看职位",
+  "company": "南梵格",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "00:04",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394239572124420",
+      "block": "00:04 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-09 13:05:26"
+}

@@ -1,0 +1,93 @@
+{
+  "chat_name": "韩先生",
+  "chat_id": "韩先生#天盛传媒",
+  "account_index": 0,
+  "job_name": "兼职·线上视频剪辑100-300元/时长沙查看职位",
+  "company": "天盛传媒",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "12:32",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393007654236929",
+      "block": "12:32 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393007654269696",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好,可以的,有剪辑基础吗？",
+      "time": "14:18",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393033688978176",
+      "block": "14:18 您好,可以的,有剪辑基础吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好,可以的,有剪辑基础吗？"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，我的求职方向主要是数据标注和线上运营类岗位，目前没有剪辑基础。请问贵方是否有相关岗位呢？",
+      "text": "您好，我的求职方向主要是数据标注和线上运营类岗位，目前没有剪辑基础。请问贵方是否有相关岗位呢？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-07 01:35:45",
+      "time": "01:35",
+      "job_name": "兼职·线上视频剪辑100-300元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "393908016419585"
+    },
+    {
+      "sender": "bot",
+      "content": "韩先生您好，之前聊的兼职·线上视频剪辑100-300元/时长沙查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "text": "韩先生您好，之前聊的兼职·线上视频剪辑100-300元/时长沙查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-07 14:02:11",
+      "time": "14:02",
+      "job_name": "兼职·线上视频剪辑100-300元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "394091469783808"
+    },
+    {
+      "sender": "bot",
+      "content": "韩先生您好，之前聊的兼职·线上视频剪辑100-300元/时长沙查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "text": "韩先生您好，之前聊的兼职·线上视频剪辑100-300元/时长沙查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-07 14:56:42",
+      "time": "14:56",
+      "job_name": "兼职·线上视频剪辑100-300元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "394104864654080"
+    }
+  ],
+  "updated_at": "2026-10-09 11:23:01",
+  "unread_on_boss": 0
+}

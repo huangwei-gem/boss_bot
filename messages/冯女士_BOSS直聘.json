@@ -1,0 +1,22 @@
+{
+  "chat_name": "冯女士",
+  "chat_id": "冯女士#BOSS直聘",
+  "account_index": 0,
+  "job_name": "【BOSS直聘】数据运营-双休9-12K长沙查看职位",
+  "company": "BOSS直聘",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-19 21:57",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387838194148096",
+      "block": "09-19 21:57 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-04 21:51:46"
+}

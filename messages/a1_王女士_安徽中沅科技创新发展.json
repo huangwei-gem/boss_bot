@@ -1,0 +1,50 @@
+{
+  "chat_name": "王女士",
+  "chat_id": "王女士#安徽中沅科技创新发展",
+  "account_index": 1,
+  "job_name": "兼职·数据标注专员-图文类20-25元/时淮北查看职位",
+  "company": "安徽中沅科技创新发展",
+  "messages": [
+    {
+      "text": "您好，我是统计学本科在读，有丰富的文本和图像多模态标注经验，也有AI语料清洗和质检经历，对图文标注类兼职很感兴趣，方便的话我把简历发您细聊。",
+      "time": "01:57",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394975026077952",
+      "block": "01:57 已读 您好，我是统计学本科在读，有丰富的文本和图像多模态标注经验，也有AI语料清洗和质检经历，对图文标注类兼职很感兴趣，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有丰富的文本和图像多模态标注经验，也有AI语料清洗和质检经历，对图文标注类兼职很感兴趣，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "你好啊，可以聊一聊~",
+      "time": "09:12",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395081822945537",
+      "block": "09:12 你好啊，可以聊一聊~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好啊，可以聊一聊~"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢回复！请问这个岗位目前还招人吗？我可以先把简历发您看看。",
+      "text": "您好，感谢回复！请问这个岗位目前还招人吗？我可以先把简历发您看看。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 09:17:42",
+      "time": "09:17",
+      "job_name": "兼职·数据标注专员-图文类20-25元/时淮北查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 09:17:42",
+  "unread_on_boss": 0
+}

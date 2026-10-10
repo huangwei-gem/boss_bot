@@ -1,0 +1,50 @@
+{
+  "chat_name": "何女士",
+  "chat_id": "何女士#长沙三果文化有限公司",
+  "account_index": 0,
+  "job_name": "团播艺人 保底8k +带薪培训 接受小白8-13K长沙查看职位",
+  "company": "长沙三果文化有限公司",
+  "messages": [
+    {
+      "text": "你好，最近有找到心仪工作不，我们正在招团播艺人 保底8k +带薪培训 接受小白，感兴趣的话可以详细聊一下哈",
+      "time": "18:47",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394161498616578",
+      "block": "18:47 你好，最近有找到心仪工作不，我们正在招团播艺人 保底8k +带薪培训 接受小白，感兴趣的话可以详细聊一下哈",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，最近有找到心仪工作不，我们正在招团播艺人 保底8k +带薪培训 接受小白，感兴趣的话可以详细聊一下哈"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-07 18:51:38",
+      "time": "18:51",
+      "job_name": "团播艺人 保底8k +带薪培训 接受小白8-13K长沙查看职位",
+      "isFriend": false,
+      "mid": "394162601132801"
+    },
+    {
+      "text": "好滴",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394163493303042",
+      "block": "好滴",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好滴"
+    }
+  ],
+  "updated_at": "2026-10-10 06:45:01",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,89 @@
+{
+  "chat_name": "周先生",
+  "chat_id": "周先生#枫烨教育",
+  "account_index": 0,
+  "job_name": "兼职·线上微信运营助理80-120元/天赣州查看职位",
+  "company": "枫烨教育",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "05:16",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394316160791299",
+      "block": "05:16 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "岗位主要负责微信用户获客运营 工作内容轻松简单 有兴趣吗",
+      "time": "16:13",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394477635908360",
+      "block": "16:13 岗位主要负责微信用户获客运营 工作内容轻松简单 有兴趣吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "岗位主要负责微信用户获客运营 工作内容轻松简单 有兴趣吗"
+    },
+    {
+      "sender": "bot",
+      "content": "我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。",
+      "text": "我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rule",
+      "action": "text",
+      "timestamp": "2026-10-08 16:17:35",
+      "time": "16:17",
+      "job_name": "兼职·线上微信运营助理80-120元/天赣州查看职位",
+      "isFriend": false,
+      "mid": "394478650368771"
+    },
+    {
+      "text": "没那么复杂",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394478965732098",
+      "block": "没那么复杂",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "没那么复杂"
+    },
+    {
+      "text": "你可以加我微信给你详细介绍一下 觉得合适再做就行",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394479020647170",
+      "block": "你可以加我微信给你详细介绍一下 觉得合适再做就行",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你可以加我微信给你详细介绍一下 觉得合适再做就行"
+    },
+    {
+      "sender": "bot",
+      "content": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "text": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-08 16:31:34",
+      "time": "16:31",
+      "job_name": "兼职·线上微信运营助理80-120元/天赣州查看职位",
+      "isFriend": false,
+      "mid": "394482083492610"
+    }
+  ],
+  "updated_at": "2026-10-10 07:14:38",
+  "unread_on_boss": 0
+}

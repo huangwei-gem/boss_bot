@@ -1,0 +1,22 @@
+{
+  "chat_name": "连楠楠",
+  "chat_id": "连楠楠#威海恒羽贸易有限公司",
+  "account_index": 1,
+  "job_name": "兼职·数据采集70-80元/天威海查看职位",
+  "company": "威海恒羽贸易有限公司",
+  "messages": [
+    {
+      "text": "您好，我对数据采集岗位感兴趣，具备Python和SQL数据处理经验，可立即到岗远程工作。",
+      "time": "昨天 03:30",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393582397755904",
+      "block": "昨天 03:30 已读 您好，我对数据采集岗位感兴趣，具备Python和SQL数据处理经验，可立即到岗远程工作。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对数据采集岗位感兴趣，具备Python和SQL数据处理经验，可立即到岗远程工作。"
+    }
+  ],
+  "updated_at": "2026-10-08 15:28:20"
+}

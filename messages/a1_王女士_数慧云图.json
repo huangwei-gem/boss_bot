@@ -1,0 +1,23 @@
+{
+  "chat_name": "王女士",
+  "chat_id": "王女士#数慧云图",
+  "account_index": 1,
+  "job_name": "兼职·数据处理专员-兼职15-30元/时廊坊查看职位",
+  "company": "数慧云图",
+  "messages": [
+    {
+      "text": "您好，我对数据处理专员兼职岗位很感兴趣，我有统计学背景和数据分析经验，熟练使用Excel、SQL、Python，希望有机会进一步沟通。",
+      "time": "13:19",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393019275588104",
+      "block": "13:19 送达 您好，我对数据处理专员兼职岗位很感兴趣，我有统计学背景和数据分析经验，熟练使用Excel、SQL、Python，希望有机会进一步沟通。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对数据处理专员兼职岗位很感兴趣，我有统计学背景和数据分析经验，熟练使用Excel、SQL、Python，希望有机会进一步沟通。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-05 22:17:40"
+}

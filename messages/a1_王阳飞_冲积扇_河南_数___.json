@@ -1,0 +1,23 @@
+{
+  "chat_name": "王阳飞",
+  "chat_id": "王阳飞#冲积扇_河南_数___",
+  "account_index": 1,
+  "job_name": "兼职·数据标注10-20元/时开封查看职位",
+  "company": "冲积扇(河南)数...",
+  "messages": [
+    {
+      "text": "您好，我对数据标注岗位很感兴趣，我有统计学背景和数据分析经验，熟练使用Excel、SQL、Python，能高效完成数据标注工作，期待与您进一步沟通。",
+      "time": "05:21",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393963520897793",
+      "block": "05:21 送达 您好，我对数据标注岗位很感兴趣，我有统计学背景和数据分析经验，熟练使用Excel、SQL、Python，能高效完成数据标注工作，期待与您进一步沟通。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我对数据标注岗位很感兴趣，我有统计学背景和数据分析经验，熟练使用Excel、SQL、Python，能高效完成数据标注工作，期待与您进一步沟通。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-08 14:38:20"
+}

@@ -1,0 +1,35 @@
+{
+  "chat_name": "卜女士",
+  "chat_id": "卜女士#大连空青创意设计",
+  "account_index": 1,
+  "job_name": "兼职·线上兼职ppt制作专员300-2100元/周大连查看职位",
+  "company": "大连空青创意设计",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 01:01",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393545653740032",
+      "block": "昨天 01:01 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我看到贵司正在招聘线上兼职PPT制作专员，我具备Excel等Office技能，熟悉数据处理与文档制作，对这类线上兼职工作非常感兴趣，希望能有机会合作。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393545767363072",
+      "block": "送达 您好，我看到贵司正在招聘线上兼职PPT制作专员，我具备Excel等Office技能，熟悉数据处理与文档制作，对这类线上兼职工作非常感兴趣，希望能有机会合作。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我看到贵司正在招聘线上兼职PPT制作专员，我具备Excel等Office技能，熟悉数据处理与文档制作，对这类线上兼职工作非常感兴趣，希望能有机会合作。"
+    }
+  ],
+  "updated_at": "2026-10-07 15:29:20"
+}

@@ -1,0 +1,22 @@
+{
+  "chat_name": "李丽丽",
+  "chat_id": "李丽丽#惠尚教育",
+  "account_index": 0,
+  "job_name": "兼职·数据分析3000-5000元/月温州查看职位",
+  "company": "惠尚教育",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "02:55",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393927518364418",
+      "block": "02:55 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-08 15:23:54"
+}

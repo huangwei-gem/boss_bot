@@ -1,0 +1,63 @@
+{
+  "chat_name": "王琳",
+  "chat_id": "王琳#途聚人力",
+  "account_index": 1,
+  "job_name": "数据分析师（预算规划方向）（猎头职位）20-21K上海查看职位",
+  "company": "途聚人力",
+  "messages": [
+    {
+      "text": "",
+      "time": "08:34",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "391179769241860",
+      "block": "08:34 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "391179966755076",
+      "block": "已读 您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "09:26",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "391192574873862",
+      "block": "09:26 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-09-29 09:26:57",
+      "time": "09:26",
+      "job_name": "数据分析师（预算规划方向）（猎头职位）20-21K上海查看职位",
+      "isFriend": false,
+      "mid": "391192646832385"
+    }
+  ],
+  "updated_at": "2026-10-10 09:12:33"
+}

@@ -1,0 +1,51 @@
+{
+  "chat_name": "王雪",
+  "chat_id": "王雪#唐山小豆",
+  "account_index": 1,
+  "job_name": "兼职·数据标注员【早九晚六】双休4500-5000元/月北京查看职位",
+  "company": "唐山小豆",
+  "messages": [
+    {
+      "text": "您好，看到贵司数据标注岗位需求，我有文本/图像/语音多模态标注经验，熟悉AI训练数据质检流程，可立即上岗远程协作。",
+      "time": "昨天 12:43",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394426069524994",
+      "block": "昨天 12:43 已读 您好，看到贵司数据标注岗位需求，我有文本/图像/语音多模态标注经验，熟悉AI训练数据质检流程，可立即上岗远程协作。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，看到贵司数据标注岗位需求，我有文本/图像/语音多模态标注经验，熟悉AI训练数据质检流程，可立即上岗远程协作。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "您好，咱们这边有标注经验吗~",
+      "time": "昨天 12:57",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394429404992000",
+      "block": "昨天 12:57 您好，咱们这边有标注经验吗~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好，咱们这边有标注经验吗~"
+    },
+    {
+      "sender": "bot",
+      "content": "有的，我做过标注、数据处理这类项目：文本/图像/语音标注都做过，数据整理和分析也用 Excel/SQL/Python 跑过，AI 工具日常都在用。方便的话我发份简历给您细聊~",
+      "text": "有的，我做过标注、数据处理这类项目：文本/图像/语音标注都做过，数据整理和分析也用 Excel/SQL/Python 跑过，AI 工具日常都在用。方便的话我发份简历给您细聊~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-10 02:46:52",
+      "time": "02:46",
+      "job_name": "兼职·数据标注员【早九晚六】双休4500-5000元/月北京查看职位",
+      "isFriend": false,
+      "mid": "394987165934081"
+    }
+  ],
+  "updated_at": "2026-10-10 03:27:13",
+  "unread_on_boss": 1
+}

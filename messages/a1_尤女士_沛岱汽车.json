@@ -1,0 +1,51 @@
+{
+  "chat_name": "尤女士",
+  "chat_id": "尤女士#沛岱汽车",
+  "account_index": 1,
+  "job_name": "兼职·数据标注/AI训练师6000-13000元/月昆明查看职位",
+  "company": "沛岱汽车",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，具备数据标注和AI训练数据质检经验，熟悉多模态标注和AI辅助流程搭建，方便的话我把简历发您细聊",
+      "time": "13:12",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394433101135875",
+      "block": "13:12 已读 您好，我是统计学专业在读生，具备数据标注和AI训练数据质检经验，熟悉多模态标注和AI辅助流程搭建，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，具备数据标注和AI训练数据质检经验，熟悉多模态标注和AI辅助流程搭建，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "13:20",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394435067109379",
+      "block": "13:20 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-08 13:28:13",
+      "time": "13:28",
+      "job_name": "兼职·数据标注/AI训练师6000-13000元/月昆明查看职位",
+      "isFriend": false,
+      "mid": "394437023019015"
+    }
+  ],
+  "updated_at": "2026-10-10 01:30:14",
+  "unread_on_boss": 0
+}

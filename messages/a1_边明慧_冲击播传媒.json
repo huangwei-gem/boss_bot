@@ -1,0 +1,67 @@
+{
+  "chat_name": "边明慧",
+  "chat_id": "边明慧#冲击播传媒",
+  "account_index": 1,
+  "job_name": "演员（404）8-13K长沙查看职位",
+  "company": "冲击播传媒",
+  "messages": [
+    {
+      "text": "你好，我认真看了你的简历，觉得非常适合我们这边的演员（404）这个岗位，希望能和你进一步沟通一下，不知道你是否有兴趣",
+      "time": "16:25",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393064903000578",
+      "block": "16:25 你好，我认真看了你的简历，觉得非常适合我们这边的演员（404）这个岗位，希望能和你进一步沟通一下，不知道你是否有兴趣",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，我认真看了你的简历，觉得非常适合我们这边的演员（404）这个岗位，希望能和你进一步沟通一下，不知道你是否有兴趣"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-04 16:33:44",
+      "time": "16:33",
+      "job_name": "演员（404）8-13K长沙查看职位",
+      "isFriend": false,
+      "mid": "393067012047360"
+    },
+    {
+      "sender": "bot",
+      "content": "边明慧您好，之前聊的演员（404）8-13K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "边明慧您好，之前聊的演员（404）8-13K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-08 15:59:24",
+      "time": "15:59",
+      "job_name": "演员（404）8-13K长沙查看职位",
+      "isFriend": false,
+      "mid": "394474177884673"
+    },
+    {
+      "sender": "bot",
+      "content": "边明慧您好，冲击播传媒这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "边明慧您好，冲击播传媒这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 07:03:16",
+      "time": "07:03",
+      "job_name": "演员（404）8-13K长沙查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 07:03:16",
+  "unread_on_boss": 0
+}

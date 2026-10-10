@@ -1,0 +1,63 @@
+{
+  "chat_name": "于松",
+  "chat_id": "于松#山东桓昇信息科技",
+  "account_index": 0,
+  "job_name": "兼职·数据标注/AI训练师10-400元/时济南查看职位",
+  "company": "山东桓昇信息科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "00:20",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394243455402754",
+      "block": "00:20 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394243455439616",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "你好，我们主要招聘兼职标注人员，很多类型，您有空余时间可以加微信",
+      "time": "13:16",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394434219393793",
+      "block": "13:16 你好，我们主要招聘兼职标注人员，很多类型，您有空余时间可以加微信",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，我们主要招聘兼职标注人员，很多类型，您有空余时间可以加微信"
+    },
+    {
+      "sender": "bot",
+      "content": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "text": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-09 14:51:13",
+      "time": "14:51",
+      "job_name": "兼职·数据标注/AI训练师10-400元/时济南查看职位",
+      "isFriend": false,
+      "mid": "394811281040130"
+    }
+  ],
+  "updated_at": "2026-10-10 00:37:54",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,50 @@
+{
+  "chat_name": "宋女士",
+  "chat_id": "宋女士#上海汉尧汽车",
+  "account_index": 1,
+  "job_name": "数据分析师6-8K上海查看职位",
+  "company": "上海汉尧汽车",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据标注与分析，曾用Python/SQL完成多模态数据处理与可视化项目，方便的话我把简历发您细聊",
+      "time": "昨天 14:24",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394804834140680",
+      "block": "昨天 14:24 已读 您好，我是统计学专业在读生，擅长数据标注与分析，曾用Python/SQL完成多模态数据处理与可视化项目，方便的话我把简历发您细聊",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据标注与分析，曾用Python/SQL完成多模态数据处理与可视化项目，方便的话我把简历发您细聊"
+    },
+    {
+      "text": "方便简单说下之前的工作经历吗，涉及的工作内容有哪些",
+      "time": "昨天 15:07",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394815250117123",
+      "block": "昨天 15:07 方便简单说下之前的工作经历吗，涉及的工作内容有哪些",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "方便简单说下之前的工作经历吗，涉及的工作内容有哪些"
+    },
+    {
+      "sender": "bot",
+      "content": "我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。",
+      "text": "我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rule",
+      "action": "text",
+      "timestamp": "2026-10-10 00:47:18",
+      "time": "00:47",
+      "job_name": "数据分析师6-8K上海查看职位",
+      "isFriend": false,
+      "mid": "394957782209024"
+    }
+  ],
+  "updated_at": "2026-10-10 09:13:27",
+  "unread_on_boss": 0
+}

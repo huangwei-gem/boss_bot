@@ -1,0 +1,75 @@
+{
+  "chat_name": "翟馨月",
+  "chat_id": "翟馨月#易点云",
+  "account_index": 1,
+  "job_name": "【上市公司】产品培训（B端产品）+总监直带9-13K·13薪成都查看职位",
+  "company": "易点云",
+  "messages": [
+    {
+      "text": "同学您好，我是北京易点云招聘负责人。我们是港股上市 ToB 企业，主营企业 IT 办公服务。现招产品 BP，作为业务与产品桥梁，可深度落地业务，积累实战经验。看您经历丰富、学习能力强，岗位匹配，方便发简历沟通吗？",
+      "time": "昨天 18:24",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394863636037633",
+      "block": "昨天 18:24 同学您好，我是北京易点云招聘负责人。我们是港股上市 ToB 企业，主营企业 IT 办公服务。现招产品 BP，作为业务与产品桥梁，可深度落地业务，积累实战经验。看您经历丰富、学习能力强，岗位匹配，方便发简历沟通吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "同学您好，我是北京易点云招聘负责人。我们是港股上市 ToB 企业，主营企业 IT 办公服务。现招产品 BP，作为业务与产品桥梁，可深度落地业务，积累实战经验。看您经历丰富、学习能力强，岗位匹配，方便发简历沟通吗？"
+    },
+    {
+      "text": "您好，这是我的简历",
+      "time": "00:00",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394946355474433",
+      "block": "00:00 送达 您好，这是我的简历",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，这是我的简历"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394946355478529",
+      "block": "附件简历请求已发送",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "附件简历请求已发送"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394946355720192",
+      "block": "AIGC生成师个人简历.docx 点击预览附件简历",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "AIGC生成师个人简历.docx 点击预览附件简历"
+    },
+    {
+      "sender": "bot",
+      "content": "[简历已发送]",
+      "text": "[简历已发送]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "rule",
+      "action": "resume",
+      "timestamp": "2026-10-10 00:00:50",
+      "time": "00:00",
+      "job_name": "【上市公司】产品培训（B端产品）+总监直带9-13K·13薪成都查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-10 09:16:12",
+  "unread_on_boss": 0
+}
