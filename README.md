@@ -74,6 +74,12 @@ BOSS 直聘有风控，**必须使用反检测浏览器**：项目内 `cloakbrow
 
 启动方式在 mac 上是 `./start.sh` 或 `python flask-version/app.py`（`start.bat` 只有 Windows 用）。面板默认绑 `0.0.0.0:5000`，本机直连免口令，局域网里的其它设备（比如手机）要带口令：`http://<本机IP>:5000/?token=<bot_config.json 里的 api_token>`。
 
+### 仓库里有什么、缺什么
+
+`bot_config.json`（含 AI key 与面板 `api_token`）、`user_profile.json`、`config_overrides.json`、`zhipin_cookies*.json`、`data/`（投递与回复记录、自进化快照）、`messages/`（每个 HR 一个会话文件）、`logs/` 都在版本库里 —— 换机器 `git clone` 就是一套完整的现状，不用重新攒数据。登录态也靠 `zhipin_cookies*.json` 恢复（启动时经 CDP `Storage.setCookies` 注进浏览器），所以新机器上不必再扫一次码。
+
+只有两个目录不在库里，原因不是保密而是传不上去：GitHub 对单文件有 100 MB 硬限，而 `cloakbrowser/chrome.dll` 是 281 MB、`browser_data/*/Default/Cache/Cache_Data/data_3` 也超 100 MB。前者就是上面第 1 条要你自备的浏览器，后者是 Chrome 的用户资料缓存，删了会自动重建，不含登录态。
+
 ### 首次登录
 
 ```bash
