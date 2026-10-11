@@ -47,6 +47,55 @@ logging.FileHandler.__init__ = _file_init
 logging.handlers.TimedRotatingFileHandler.__init__ = _timed_init
 
 
+# ─────────────────────────────────────────────
+# 配置文件重定向：测试一律不许写用户那份 bot_config.json
+# ─────────────────────────────────────────────
+# 2026-10-10 一天里这份配置被跑测试盖掉了三次（18:00、19:53、22:25 的
+# bot_config.json.bak-* 成对出现，一对就是一次 pytest）。写盘的不是某个
+# 粗心脚本，而是两条看起来人畜无害的回归：
+#   tests/test_headless_switch.py:368/381 → mgr.switch_headless() →
+#     apply_headless_config() → cfg.save()，而那个 cfg 是测试自己造的，
+#     ai.providers 是空的；
+#   面板 GET /api/config → _ensure_greeting_defaults() → cfg.save()，
+#     用 TestClient 打这个接口同样落到仓库根目录。
+# UnifiedConfig.save() 的路径取的是模块级 BOT_CONFIG_FILE，所以在 import
+# 期就把这三个全局改指向临时目录，比在 fixture 里换更早——app.py / config.py
+# 是 `from ... import BOT_CONFIG_FILE`，等 fixture 跑起来它们已经把真路径
+# 抄进自己的全局了。内容先拷一份真的过去，测试读到的和以前一模一样，
+# 只是写不再回仓库。
+REPO_DIR = Path(__file__).resolve().parent.parent
+TEST_CONFIG_DIR = Path(tempfile.mkdtemp(prefix="boss_test_config_"))
+for _名字 in ("bot_config.json", "config_overrides.json", "user_profile.json"):
+    _真的 = REPO_DIR / _名字
+    if _真的.exists():
+        (TEST_CONFIG_DIR / _名字).write_bytes(_真的.read_bytes())
+
+
+def _isolate_config_paths():
+    import boss_bot.unified_config as UC
+
+    UC.BOT_CONFIG_FILE = TEST_CONFIG_DIR / "bot_config.json"
+    UC.OVERRIDES_FILE = TEST_CONFIG_DIR / "config_overrides.json"
+    UC.USER_PROFILE_FILE = TEST_CONFIG_DIR / "user_profile.json"
+    try:
+        import boss_bot.config as CFG
+        CFG.CONFIG_FILE = str(UC.BOT_CONFIG_FILE)
+    except Exception:
+        pass
+    # app.py 可能已经被先跑的测试 import 过了，它自己那份全局也要换
+    import sys
+    for 模块 in (sys.modules.get("app"), sys.modules.get("flask_app")):
+        if not 模块:
+            continue
+        for 属性 in ("BOT_CONFIG_FILE", "USER_PROFILE_FILE"):
+            现值 = getattr(模块, 属性, None)
+            if 现值 is not None:
+                setattr(模块, 属性, TEST_CONFIG_DIR / Path(str(现值)).name)
+
+
+_isolate_config_paths()
+
+
 @pytest.fixture(autouse=True, scope="session")
 def isolate_runtime_records(tmp_path_factory):
     """把记录存储的全局单例指向临时目录。"""

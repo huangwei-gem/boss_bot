@@ -425,7 +425,7 @@ TITLE_VETO_KEYWORDS_DEFAULT = [
     # 末尾这几个是 2026-10-07 从盘上补的：当时拦不住的「【白班坐岗】28/H包吃住」
     # 「免体检小时工…汽配厂」「岳麓区坐班临时工/包住宿」「7000+包吃住（派遣职位）」
     # 全在这一类里，而带这些字样的线上岗一条都没有（"线上/居家"不会写成"坐岗"）。
-    "普工", "操作工", "技工", "焊工", "钳工", "学徒工", "工厂", "进厂", "车间",
+    "普工", "操作工", "技工", "焊工", "钳工", "学徒工", "学徒", "工厂", "进厂", "车间",
     "流水线", "电子厂", "分拣", "打包", "装卸", "贴标", "仓管", "倒班", "两班倒",
     "白班", "夜班", "坐岗", "小时工", "临时工", "汽配厂", "派遣职位",
     # 主播一族（含规避写法：主包、互动播、团播、露脸、语音厅、陪聊）
@@ -433,6 +433,12 @@ TITLE_VETO_KEYWORDS_DEFAULT = [
     # 否定式在这张表里不改变岗位性质（见 intent.title_veto_hit 上面那段）。
     "主播", "主包", "直播", "互动播", "口播", "带货", "语音厅", "场控", "露脸",
     "团播", "带播", "陪聊", "情感互动", "聊天室",
+    # 2026-10-10 晚上跟进腿真追出去的两单补的：「驻唱电台歌手 流行/说唱/摇滚」
+    # 「美甲美睫助理」——上面那张表只写了"主播/直播"这一族的写法，唱歌类
+    # （驻唱/歌手/电台/艺人/出镜）和美容类（美甲/美睫/美容/化妆）一个字都没进，
+    # 标题明明一眼就不是他要的活。
+    "驻唱", "歌手", "电台", "艺人", "出镜", "乐队", "商演",
+    "美甲", "美睫", "美容", "化妆", "半永久", "皮肤管理",
     # 跑腿／配送一族（"提供电动车""站点直招"是骑手岗的标准写法）
     # "站点"单列一条是 2026-10-08 补的：上海仟嘉百供应链那一单标题写
     # 「山姆新仓开业大量招人」，HR 的原话是「有好几个站点，我查下哪个离你近」——
@@ -492,7 +498,12 @@ class AIConfig:
     """
     enabled: bool = False
     providers: list = field(default_factory=list)  # AIProvider 列表
-    fail_action: str = "default"         # skip | default (default=句句有回应)
+    # skip（默认）| default。
+    # 2026-10-10 从 default 翻成 skip：AI 容灾链全挂时那句「好的，感谢您的消息，
+    # 我会尽快回复您。」今天发了 57 条，正好落在「毕业了吗」「什么时候方便过来」
+    # 这种必须答的话上——答非所问比不答更伤（不答那一轮还是"欠着回复"，
+    # 存档那条腿下一轮会重新捡起来）。想看兜底话术把这里或配置改回 default。
+    fail_action: str = "skip"
     # 投递那一侧单独一条：AI 判不出来时这一单投不投。
     # 以前只有 fail_action 一个值同时管两条链——回复侧要"句句有回应"（default），
     # 投递侧却是"没看过 JD 也别投"。盘上 2026-10-07 00 点那段 167 条记录里
@@ -653,12 +664,50 @@ def _accounts_of(data: dict) -> list:
     return []
 
 
+def _用户内容缩水处(new: dict, old: dict) -> list:
+    """磁盘上有、这份里没了的用户内容有几处。
+
+    一处是正常操作（界面上删个接口、删两条岗位）；两处以上同时清空，只有
+    "这份对象根本没加载过用户配置"才解释得通。账号数没变时老那条
+    "账号变少 + 接口清空"的组合闸不响，2026-10-10 就是从这里漏的：
+    跑测试写的 config 账号数一模一样，AI 接口 15→0、简历 7 段→0、
+    每号岗位 7/6→1 却在同一次保存里一起发生。
+    """
+    def 条数(段, 键):
+        值 = ((new.get(段) or {}).get(键) if 段 in new else None)
+        旧 = ((old.get(段) or {}).get(键) if 段 in old else None)
+        return len(值 or []), len(旧 or [])
+
+    处 = []
+    新接口, 旧接口 = 条数("ai", "providers")
+    if 旧接口 and not 新接口:
+        处.append("AI 接口 %d→0" % 旧接口)
+    新简历 = sum(1 for v in (new.get("resume") or {}).values() if v)
+    旧简历 = sum(1 for v in (old.get("resume") or {}).values() if v)
+    if 旧简历 and not 新简历:
+        处.append("简历 %d段→0" % 旧简历)
+    for 键 in ("target_job_keywords", "custom_filter_keywords", "custom_scoring_prompt"):
+        新值, 旧值 = 条数("ai", 键)
+        if 旧值 and not 新值:
+            处.append(键)
+    def 岗位数(数据):
+        return sum(len(a.get("jobs") or []) for a in _accounts_of(数据))
+    新岗位, 旧岗位 = 岗位数(new), 岗位数(old)
+    if 旧岗位 > 新岗位:
+        处.append("岗位 %d→%d 条" % (旧岗位, 新岗位))
+    return 处
+
+
 def _looks_like_default_fallback(new: dict, old: dict) -> bool:
     """新内容是不是"加载失败退回的默认值"。
 
-    只看这一个组合：账号比磁盘上少，同时 AI 接口从有到无。用户正常删账号 or
-    删接口只会命中一边，不会两个一起缩水。
+    两种形状都算：
+      1. 账号比磁盘上少，同时 AI 接口从有到无（2026-10-04 那次）；
+      2. 用户内容同时缩水两处以上（2026-10-10 那次，账号数没变所以第 1 条没响）。
+    正常在界面上删账号、删接口、删岗位每次只命中一处，不会被拦。
     """
+    if len(_用户内容缩水处(new, old)) >= 2:
+        return True
     new_accounts, old_accounts = _accounts_of(new), _accounts_of(old)
     if len(new_accounts) >= len(old_accounts):
         return False
@@ -1149,13 +1198,20 @@ class UnifiedConfig:
                 if rv == "send_resume" or (isinstance(rv, str) and 0 < len(rv.strip()) <= 200):
                     self.rules.reply_rules[rk.strip()] = rv
 
-        # 个人画像覆盖（如果 config_overrides.json 中有 user_profile 字段）
+        # 个人画像：这份只是保存整份配置时同步过去的快照，画像页保存写的是
+        # user_profile.json（app.py:1457）。所以它只补画像文件没给的字段，
+        # 绝不能反过来盖掉——10-11 三端一致性测试查出 9 条不一致就是这个顺序：
+        # 画像文件写着「黄维 / 有数据标注经验」，生效值却是快照里的「求职者 / 空」。
+        # 经验被抹成空，AI 答"有没有经验"时手上没东西，答完就是牛头不对马嘴。
         if "user_profile" in data and isinstance(data["user_profile"], dict):
             for k, v in data["user_profile"].items():
                 if v is None:
                     continue
-                if hasattr(self.user_profile, k):
-                    setattr(self.user_profile, k, v)
+                if not hasattr(self.user_profile, k):
+                    continue
+                if getattr(self.user_profile, k):
+                    continue
+                setattr(self.user_profile, k, v)
 
     def _apply_env_overrides(self):
         """应用环境变量覆盖（最高优先级）。"""
@@ -1327,10 +1383,11 @@ class UnifiedConfig:
         if not isinstance(existing, dict):
             existing = None
         if existing and _looks_like_default_fallback(data, existing):
+            缩水 = _用户内容缩水处(data, existing) or [
+                "账号 %d→%d" % (len(_accounts_of(existing)), len(_accounts_of(data)))]
             logger.warning(
-                f"拒绝写 {path.name}：内存里这份是出厂默认（账号 "
-                f"{len(_accounts_of(existing))}→{len(_accounts_of(data))} 且 AI 接口被清空），"
-                f"落盘会覆盖已有的账号/接口/规则。先排查加载为什么退回了默认值。")
+                f"拒绝写 {path.name}：内存里这份像出厂默认（{'、'.join(缩水)}），"
+                f"落盘会覆盖已有的账号/接口/简历/岗位。先排查加载为什么退回了默认值。")
             return
         if existing:
             stamp = datetime.now().strftime("%Y%m%d-%H%M%S")

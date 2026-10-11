@@ -884,3 +884,62 @@ class 每一端都吃到正文判岗Test:
         src = (ROOT / "boss_bot" / "main_loop.py").read_text(encoding="utf-8")
         assert "hr_recent or latest_other_msg" in src, "卡片那一遍还在只看最新一条"
         assert "hr_recent=" in src, "调用点没把窗口传进来，参数就是个死默认值"
+
+
+class Test今晚真漏掉的那三类:
+    """2026-10-10 20:0x 用户：「你为啥还在和那些主播聊天啊，看 JD 和标题就能看出来。」
+
+    盘上取证（data/reply_records.json，今天真实发出去的跟进）：
+      19:45 追  美甲美睫助理4-6K长沙
+      20:01 追  驻唱电台歌手 流行/说唱/摇滚5-8K长沙
+      19:05 追  给自家公司招两个学东西的（学徒岗）6-7K长沙
+    跟进那条腿本来就查标题否决词（worth_following_up），漏的是**词表**：
+    表里只有"主播/直播/语音厅"，没有"驻唱/歌手/电台/艺人"；只有"学徒工"，
+    标题写的是"学徒岗"；美甲美睫这一类从来没进过表。
+    """
+
+    漏掉的标题 = (
+        "驻唱电台歌手 流行/说唱/摇滚5-8K长沙查看职位",
+        "美甲美睫助理4-6K长沙查看职位",
+        "给自家公司招两个学东西的（学徒岗）6-7K长沙查看职位",
+    )
+
+    def test_这三类标题要命中否决词(self):
+        from boss_bot.reply_queue import veto_hit_anywhere
+        from boss_bot.unified_config import TITLE_VETO_KEYWORDS_DEFAULT
+        for 标题 in self.漏掉的标题:
+            assert veto_hit_anywhere(TITLE_VETO_KEYWORDS_DEFAULT, [], title=标题), 标题
+
+    def test_跟进腿不再追这三类(self):
+        from boss_bot.reply_queue import worth_following_up, veto_hit_anywhere
+        from boss_bot.unified_config import TITLE_VETO_KEYWORDS_DEFAULT
+        for 标题 in self.漏掉的标题:
+            会话 = {"company": "某某传媒", "job_name": 标题,
+                    "messages": [{"text": "在忙吗？方便聊聊~", "is_mine": False,
+                                  "time": "2026-10-10 09:00:00"}]}
+            assert worth_following_up(会话, TITLE_VETO_KEYWORDS_DEFAULT, []) is False, 标题
+
+    def test_他要的方向不会被新词误杀(self):
+        from boss_bot.reply_queue import veto_hit_anywhere
+        from boss_bot.unified_config import TITLE_VETO_KEYWORDS_DEFAULT
+        for 标题 in ("兼职·数据标注员15-20元/时承德查看职位",
+                     "数据分析助理（线上兼职）3-5K长沙查看职位",
+                     "兼职·线上微信运营助理80-120元/天赣州查看职位"):
+            assert veto_hit_anywhere(TITLE_VETO_KEYWORDS_DEFAULT, [], title=标题) == "", 标题
+
+    def test_学徒不压职业白名单(self):
+        """「学徒岗」那条靠普通否决词就拦住了，不必进 NO_EXEMPT。
+
+        进了 NO_EXEMPT 就变成"标题带学徒一律不放过"，而他真要投的那一族
+        完全可能写成「数据标注学徒」「分析学徒」——那是他自己说的"有经验"的岗。
+        美甲/驻唱那些必须压白名单，是因为它们本身就是这份工的名字；
+        "学徒"是个培养方式，挨着"数据"时说的是后者。
+        """
+        from boss_bot.reply_queue import veto_hit_anywhere
+        from boss_bot.unified_config import TITLE_VETO_KEYWORDS_DEFAULT
+        for 标题 in ("兼职·数据标注学徒15-20元/时长沙查看职位",
+                     "数据分析学徒（线上办公）3-5K长沙查看职位"):
+            assert veto_hit_anywhere(TITLE_VETO_KEYWORDS_DEFAULT, [], title=标题) == "", 标题
+        # 不带职业词的学徒岗照旧拦得住
+        assert veto_hit_anywhere(TITLE_VETO_KEYWORDS_DEFAULT, [],
+                                 title="给自家公司招两个学东西的（学徒岗）6-7K长沙") == "学徒"

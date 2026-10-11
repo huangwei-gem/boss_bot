@@ -52,7 +52,7 @@ class UnifiedConfigTest:
         assert cfg.reply.max_delay == 5
         assert cfg.reply.pause_on_important is True
         assert cfg.ai.enabled is False
-        assert cfg.ai.fail_action == "default"
+        assert cfg.ai.fail_action == "skip"   # 2026-10-10 从 default 翻过来：答非所问比不答更伤
         assert cfg.ai.max_tokens == 1200   # 200 会被思考吃光，见 tests/test_reply_max_tokens.py
         assert cfg.test_mode is False
         assert cfg.test_page == ""
@@ -114,21 +114,34 @@ class UnifiedConfigTest:
         assert cfg.user_profile.skills == ["Python", "SQL"]
         assert cfg.user_profile.salary_expectation == "15-20K"
 
-    def test_overrides_beat_user_profile(self, tmp_path):
-        """config_overrides.json 是最高优先级的用户画像来源（前端保存走这里）"""
+    def test_user_profile_beat_overrides_snapshot(self, tmp_path):
+        """画像优先，config_overrides.json 里那份只是兜底快照。
+
+        原来这条写的是"overrides 是最高优先级（前端保存走这里）"，那个前提是错的：
+        画像页保存只写 user_profile.json（flask-version/app.py:1457），
+        overrides 里那份是"保存整份配置"时同步进去的快照（app.py:1165）。
+        快照后应用就把画像页改的字盖掉了——10-11 三端一致性测试查出
+        磁盘 user_profile.json 是「黄维 / 有数据标注经验」，生效值却是
+        「求职者 / 经验空」，AI 答"有没有经验"时手上没东西。
+        """
         from boss_bot.unified_config import UnifiedConfig
         profile_file = tmp_path / "user_profile.json"
-        profile_file.write_text(json.dumps({"name": "画像名字"}), encoding="utf-8")
+        profile_file.write_text(json.dumps({"name": "画像名字", "experience": "有标注经验"}),
+                                encoding="utf-8")
         overrides_file = tmp_path / "config_overrides.json"
         overrides_file.write_text(
-            json.dumps({"user_profile": {"name": "覆盖名字"}}), encoding="utf-8")
+            json.dumps({"user_profile": {"name": "覆盖名字", "experience": "",
+                                        "highlights": ["上手就能干"]}}), encoding="utf-8")
 
         cfg = UnifiedConfig.load(
             config_path=str(tmp_path / "nonexistent.json"),
             profile_path=str(profile_file),
             overrides_path=str(overrides_file)
         )
-        assert cfg.user_profile.name == "覆盖名字"
+        assert cfg.user_profile.name == "画像名字", "画像页保存的姓名被旧快照盖掉"
+        assert cfg.user_profile.experience == "有标注经验"
+        # 画像文件没给的字段仍从快照兜底（历史配置别直接变空）
+        assert cfg.user_profile.highlights == ["上手就能干"]
 
     def test_load_browser_executable_keys(self, tmp_path):
         """browser_path/chrome_path/user_data_dir/debug_port 必须真正生效（README 承诺可配）"""

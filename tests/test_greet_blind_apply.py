@@ -21,9 +21,17 @@ class 投递兜底开关Test:
     def test_默认不盲投(self):
         assert AIConfig().greet_fail_action == "skip"
 
-    def test_回复那一条开关不变(self):
-        """句句有回应是回复侧的行为，拆开之后不能被投递这条牵连。"""
-        assert AIConfig().fail_action == "default"
+    def test_回复侧默认也是不硬发(self):
+        """拆开两条开关这件事本身不变；变的是回复侧的默认值。
+
+        2026-10-10 用户：「很多对话你都是牛头不对马嘴的」——盘上取证：
+        HR 问「毕业了吗」「什么时候方便过来详细了解一下」「方便发一份简历嘛」，
+        AI 容灾链全挂时发出去的是那句「好的，感谢您的消息，我会尽快回复您。」
+        今天这种空话发了 57 条。不回答比答非所问好：跳过之后这一路还是
+        "欠着回复"（_archive_owed_chats 会把 HR 最后说话、我们没接的会话
+        重新当候选），下一轮 AI 活了就正常答。
+        """
+        assert AIConfig().fail_action == "skip"
 
     def test_配置读写往返(self):
         import tempfile

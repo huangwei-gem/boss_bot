@@ -21,19 +21,25 @@ def _load(path):
     )
 
 
-def _rich_disk_config(path):
+def _rich_disk_config(path, 额外岗位=0):
+    岗位 = [{"city": "全国", "query": "数据标注"}, {"city": "全国", "query": "线上运营助理"},
+            {"city": "全国", "query": "游戏代练"}][:额外岗位]
     path.write_text(json.dumps({
         "ai": {"enabled": True, "providers": [
             {"name": "A", "api_key": "k1", "api_base": "https://a/v1", "model": "m1"},
             {"name": "B", "api_key": "k2", "api_base": "https://b/v1", "model": "m2"},
-        ]},
+        ], "target_job_keywords": ["数据分析", "数据标注"],
+           "custom_scoring_prompt": "猎头代招降权"},
         "accounts": [
             {"name": "主账号", "cookie_file": "zhipin_cookies.json",
-             "jobs": [{"city": "长沙", "query": "数据分析"}]},
+             "greeting_message": "您好～我是统计学本科，想找线上兼职数据分析方向。",
+             "jobs": [{"city": "长沙", "query": "数据分析"}] + 岗位},
             {"name": "账号2", "cookie_file": "zhipin_cookies_1.json",
-             "jobs": [{"city": "上海", "query": "数据挖掘"}]},
+             "greeting_message": "您好～想找线上兼职数据标注方向。",
+             "jobs": [{"city": "上海", "query": "数据挖掘"}] + 岗位},
         ],
-        "resume": {"school": "某某大学", "major": "统计学"},
+        "resume": {"school": "某某大学", "major": "统计学",
+                   "self_intro": "做过文本/图像/语音多模态标注"},
     }, ensure_ascii=False), encoding="utf-8")
 
 
@@ -109,3 +115,34 @@ class DefaultFallbackGuardTest:
         cfg.save(str(cfg_file))
         saved = json.loads(cfg_file.read_text(encoding="utf-8"))
         assert [j["city"] for a in saved["accounts"] for j in a["jobs"]] == ["全国", "全国"]
+
+    def test_账号数没变但接口简历岗位一起清空也要拒绝(self, tmp_path):
+        """2026-10-10 晚上真被盖掉的那次，老闸门没响：账号还是 2 个。
+
+        写盘的是 tests/test_headless_switch.py 里测试自己造的 config，
+        它和磁盘上那份比：AI 接口 15→0、简历 7 段→全空、每号岗位 7/6 条→1 条、
+        招呼语 132 字→55 字。账号数不变，"账号变少 + 接口清空"这一条组合就不成立，
+        于是闸门形同虚设，一晚上跑了三次（18:00、19:53、22:25 的 .bak 成对）。
+        """
+        cfg_file = tmp_path / "bot_config.json"
+        _rich_disk_config(cfg_file, 额外岗位=3)
+        before = json.loads(cfg_file.read_text(encoding="utf-8"))
+
+        测试自造的 = UnifiedConfig()
+        测试自造的.greet.accounts = _load(cfg_file).greet.accounts  # 账号数一模一样
+        测试自造的.save(str(cfg_file))
+
+        assert json.loads(cfg_file.read_text(encoding="utf-8")) == before, \
+            "接口/简历/岗位同时清空，账号数却没变——这正是默认回退的形状"
+
+    def test_单删几条岗位照常允许(self, tmp_path):
+        """界面上删掉几个岗位只命中"岗位"一处，不能被新闸门误伤。"""
+        cfg_file = tmp_path / "bot_config.json"
+        _rich_disk_config(cfg_file, 额外岗位=3)
+        cfg = _load(cfg_file)
+        cfg.greet.accounts[0].jobs = cfg.greet.accounts[0].jobs[:1]
+        cfg.save(str(cfg_file))
+        saved = json.loads(cfg_file.read_text(encoding="utf-8"))
+        assert len(saved["accounts"][0]["jobs"]) == 1
+        assert len(saved["ai"]["providers"]) == 2
+
