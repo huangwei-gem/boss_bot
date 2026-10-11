@@ -505,6 +505,10 @@ class BossChatHandler:
         """
         self.go_to_chat()
         time.sleep(1)
+        # 先滚回顶上再收：上一轮（或点开某个会话时）列表可能停在中间，
+        # 而置顶行恒排最前——不复位就整轮看不见它，标记会被当成"他取消了"写掉
+        self.page.run_js(self._SIDEBAR_RESET_JS, as_expr=True)
+        time.sleep(0.4)
 
         merged = {}
         pinned = set()

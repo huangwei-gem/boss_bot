@@ -366,6 +366,28 @@ class SidebarCoverageTest:
         assert [r["name"] for r in got] == ["HR0", "HR1"]
         assert page.scrolls <= 2, f"两行的列表滚了 {page.scrolls} 次"
 
+    def test_侧栏停在下面也要收到最顶那一行(self, monkeypatch):
+        """get_all_chats 原来不回滚到顶就开始收，而置顶行恒排在最前面。
+
+        10-08/10-10 的日志里「291 个会话，其中置顶 1 个」和「290 个会话，其中置顶 0 个」
+        一轮一轮交替——少的就是顶上那一行。旧代码紧接着把没看见的置顶写成 False，
+        他要自己聊的那路于是悄悄回到机器手里。收之前先复位滚动，别再靠运气看见它。
+        """
+        from boss_bot import page_handler as ph
+
+        rows = [("置顶的那位", "天盛传媒")] + [(f"HR{i}", f"公司{i}") for i in range(20)]
+        page = self._Page(rows, window=5)
+        page.pos = 7                       # 上一轮把列表停在了中间
+        monkeypatch.setattr(ph.time, "sleep", lambda s: None)
+        h = ph.BossChatHandler.__new__(ph.BossChatHandler)
+        h.page = page
+        h.browser = page
+
+        got = h.get_all_chats()
+        收 = [(r["name"], r["company"]) for r in got]
+        assert ("置顶的那位", "天盛传媒") in 收, f"顶上那行没收到（共 {len(收)} 行）"
+        assert len(收) == 21, f"应当收齐 21 行，实际 {len(收)}"
+
     def test_点开会话也要滚到目标那一行(self, monkeypatch):
         """enter_chat 的点击 JS 只能在"渲染出来的行"里找人。
 
