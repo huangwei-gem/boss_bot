@@ -152,6 +152,14 @@ class SelfEvolveEngine:
     # 无响应判定时间（小时）
     IGNORED_THRESHOLD_HOURS = 24
 
+    # 明细（reply_records）在盘上只留最近这么多条；累计另算在 reply_stats.total_replies。
+    # 这两个数以前只在代码里各待一处，界面上并排一显示就像"丢了 711 条"，
+    # 所以报告和存盘都从这里取，别再写第二个字面量。
+    明细保留条数 = 200
+
+    # 报告里"未标注"列表最多列几条（弹窗列得动），总数由 pending_total 另给
+    待评估列表上限 = 50
+
     def __init__(self, config: Optional[dict] = None, log_callback: Optional[Callable] = None,
                  data_file: Optional[str] = None):
         """初始化自进化引擎。
@@ -1277,12 +1285,12 @@ class SelfEvolveEngine:
             best_templates = template_stats[:3] if template_stats else []
             worst_templates = sorted(template_stats, key=lambda x: x["negative_rate"], reverse=True)[:3]
 
-            # 最近的回复记录（最多20条）
-            recent_records = []
-            for r in reversed(self._reply_records[-20:]):
-                recent_records.append({
+            def 行(r):
+                return {
                     "id": r["id"],
-                    "reply_text": r["reply_text"][:80],
+                    "reply_text": (r.get("reply_text") or "")[:80],
+                    "chat_name": r.get("chat_name", ""),
+                    "job_name": r.get("job_name", ""),
                     "source": r["source"],
                     "effect": r["effect"],
                     "evaluated": r["evaluated"],
@@ -1290,7 +1298,14 @@ class SelfEvolveEngine:
                     "hr_response": (r["hr_response"] or "")[:80],
                     "kind": r.get("kind", ""),
                     "note": (r.get("note") or "")[:80],
-                })
+                }
+
+            # 最近的回复记录（最多20条）
+            recent_records = [行(r) for r in reversed(self._reply_records[-20:])]
+            # 未标注的那几条单独再列一遍：界面上"待评估数"原来只有一个数字，
+            # 41 条挂着却翻不到是哪几条，等于看得见个数看不见东西。
+            没标注 = [r for r in self._reply_records if not r.get("evaluated")]
+            pending_records = [行(r) for r in reversed(没标注[-self.待评估列表上限:])]
 
             return {
                 "reply_stats": stats,
@@ -1299,6 +1314,11 @@ class SelfEvolveEngine:
                 "worst_templates": worst_templates,
                 "strategy_adjustments": list(self._strategy_adjustments[-20:]),
                 "recent_records": recent_records,
+                "records_kept": len(self._reply_records),
+                "records_cap": self.明细保留条数,
+                "pending_records": pending_records,
+                "pending_total": len(没标注),
+                "pending_records_limit": self.待评估列表上限,
                 "gate_blocks": self._gate_block_count,
                 "lessons": {
                     "active": [
@@ -1330,7 +1350,7 @@ class SelfEvolveEngine:
                     k: dict(v) for k, v in self._template_effectiveness.items()
                 },
                 "strategy_adjustments": list(self._strategy_adjustments),
-                "reply_records": self._reply_records[-200:],  # 保留最近200条
+                "reply_records": self._reply_records[-self.明细保留条数:],
                 "gate_blocks": self._gate_block_count,
                 "lessons": list(self._lessons),
                 "last_saved": datetime.now().isoformat(),

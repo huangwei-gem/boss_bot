@@ -2228,6 +2228,14 @@ function showEvolutionModal() {
     const gateBlocks = report.gate_blocks || 0;
     const adjustments = report.strategy_adjustments || [];
     const recentRecords = report.recent_records || [];
+    // 累计数和明细数是两码事：明细在盘上只留最近 records_cap 条，
+    // 卡片上那个总数是不减的累计计数。以前界面上只并排显示 911 和 200 条列表，
+    // 看上去像丢了 711 条，所以两处都要把口径写在脸上。
+    const keptRecords = report.records_kept || 0;
+    const recordsCap = report.records_cap || 0;
+    const pendingRecords = report.pending_records || [];
+    const pendingTotal = report.pending_total || 0;
+    const pendingLimit = report.pending_records_limit || pendingRecords.length;
     const lessons = (report.lessons || {});
     const activeLessons = lessons.active || [];
     const retiredLessons = lessons.retired_recent || [];
@@ -2273,24 +2281,39 @@ function showEvolutionModal() {
              + '</div>';
       }).join('');
     }
+    function evoRow(r) {
+      var eff = { positive: ['有效', 'var(--success,#46a758)'], neutral: ['一般', 'var(--fg-3rd)'],
+                  negative: ['无效', 'var(--danger,#e5484d)'], ignored: ['已读不回', 'var(--warning)'] }[r.effect];
+      var effHtml = '<span style="color:'+(eff ? eff[1] : 'var(--fg-4th)')+'">'+(eff ? eff[0] : '待评估')+'</span>';
+      var kindHtml = r.kind === 'gate_block' ? ' <span style="color:var(--danger,#e5484d)">闸门拦截</span>' : '';
+      var html = '<div style="padding:6px 0;border-bottom:1px solid var(--bd-2);font-size:11px;line-height:1.5">'
+               + '<div style="font-size:10px;color:var(--fg-4th)">'+escHtml(fmtEvoTime(r.timestamp))+' · '+escHtml(r.chat_name||'')+' · '+effHtml+kindHtml+'</div>'
+               + '<div style="color:var(--fg-2nd);margin-top:2px">“'+escHtml((r.reply_text||'').replace(/\s+/g,' ').trim())+'”</div>';
+      if (r.note) {
+        html += '<div style="color:var(--danger,#e5484d);margin-top:2px;font-size:10px">拦截原因：'+escHtml(r.note)+'</div>';
+      }
+      if (r.hr_response) {
+        html += '<div style="color:var(--fg-3rd);margin-top:2px;font-size:10px">HR 回复：'+escHtml(r.hr_response)+'</div>';
+      }
+      return html + '</div>';
+    }
+    var evoHead = 'font-size:11px;font-weight:600;color:var(--fg-2nd);margin:8px 0 6px';
     if (recentRecords.length > 0) {
-      reportHtml += '<div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin:8px 0 6px">最近回复记录</div>';
-      reportHtml += recentRecords.slice(0, 5).map(function(r) {
-        var eff = { positive: ['有效', 'var(--success,#46a758)'], neutral: ['一般', 'var(--fg-3rd)'],
-                    negative: ['无效', 'var(--danger,#e5484d)'], ignored: ['已读不回', 'var(--warning)'] }[r.effect];
-        var effHtml = '<span style="color:'+(eff ? eff[1] : 'var(--fg-4th)')+'">'+(eff ? eff[0] : '待评估')+'</span>';
-        var kindHtml = r.kind === 'gate_block' ? ' <span style="color:var(--danger,#e5484d)">闸门拦截</span>' : '';
-        var html = '<div style="padding:6px 0;border-bottom:1px solid var(--bd-2);font-size:11px;line-height:1.5">'
-                 + '<div style="font-size:10px;color:var(--fg-4th)">'+escHtml(fmtEvoTime(r.timestamp))+' · '+effHtml+kindHtml+'</div>'
-                 + '<div style="color:var(--fg-2nd);margin-top:2px">“'+escHtml((r.reply_text||'').replace(/\s+/g,' ').trim())+'”</div>';
-        if (r.note) {
-          html += '<div style="color:var(--danger,#e5484d);margin-top:2px;font-size:10px">拦截原因：'+escHtml(r.note)+'</div>';
-        }
-        if (r.hr_response) {
-          html += '<div style="color:var(--fg-3rd);margin-top:2px;font-size:10px">HR 回复：'+escHtml(r.hr_response)+'</div>';
-        }
-        return html + '</div>';
-      }).join('');
+      // 911 和 200 都摆出来并写清各是什么，不然翻明细就像少了 711 条
+      reportHtml += '<div style="'+evoHead+'">最近回复记录'
+        + '<span style="font-weight:400;color:var(--fg-3rd);font-size:10px">（累计 '+totalReplies+' 条'
+        + ' · 明细存最近 '+recordsCap+' 条 · 这里列 '+Math.min(5, recentRecords.length)+' 条）</span></div>';
+      reportHtml += recentRecords.slice(0, 5).map(evoRow).join('');
+    }
+    if (pendingTotal > 0) {
+      reportHtml += '<div style="'+evoHead+'">未标注效果（'+pendingTotal+' 条）'
+        + '<span style="font-weight:400;color:var(--fg-3rd);font-size:10px">'
+        + '· HR 回话或超时未答后会自动标注，不用手动点</span></div>';
+      reportHtml += pendingRecords.map(evoRow).join('');
+      if (pendingTotal > pendingRecords.length) {
+        reportHtml += '<div style="font-size:10px;color:var(--fg-3rd);padding:4px 0">还有 '
+          + (pendingTotal - pendingRecords.length) + ' 条没列出来（一屏最多 '+pendingLimit+' 条）</div>';
+      }
     }
     if (!reportHtml) {
       reportHtml = '<div class="empty-state"><div class="empty-icon"><i data-ki="evolve"></i></div><div class="empty-desc" style="font-weight:600;color:var(--fg-2nd)">暂无进化数据</div><div class="empty-desc">运行一段时间后会有数据</div></div>';
@@ -2311,10 +2334,12 @@ function showEvolutionModal() {
           '<div style="flex:1;text-align:center;padding:8px;border:1px solid var(--bd-2);border-radius:8px">'+
             '<div style="font-size:20px;font-weight:700;color:var(--accent)">'+totalReplies+'</div>'+
             '<div style="font-size:10px;color:var(--fg-3rd)">总回复数</div>'+
+            '<div style="font-size:9px;color:var(--fg-4th)">累计 · 明细存最近 '+recordsCap+' 条（现有 '+keptRecords+'）</div>'+
           '</div>'+
           '<div style="flex:1;text-align:center;padding:8px;border:1px solid var(--bd-2);border-radius:8px">'+
             '<div style="font-size:20px;font-weight:700;color:var(--warning)">'+pending+'</div>'+
             '<div style="font-size:10px;color:var(--fg-3rd)">待评估数</div>'+
+            '<div style="font-size:9px;color:var(--fg-4th)">'+(pending > 0 ? '下面逐条列出' : '已全部标注')+'</div>'+
           '</div>'+
           '<div style="flex:1;text-align:center;padding:8px;border:1px solid var(--bd-2);border-radius:8px">'+
             '<div style="font-size:20px;font-weight:700;color:var(--danger,#e5484d)">'+gateBlocks+'</div>'+
