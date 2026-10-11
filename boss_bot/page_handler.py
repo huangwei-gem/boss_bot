@@ -446,6 +446,7 @@ class BossChatHandler:
             self.page.run_js(self._SIDEBAR_RESET_JS, as_expr=True)
             time.sleep(0.4)
             merged = {}
+            seen = {}
             pinned = set()
             prev_pos = None
             for _ in range(max_rounds):
@@ -454,6 +455,9 @@ class BossChatHandler:
                     # 欠回复、跟进、批量清剿那几条腿只看存档，靠这份集合落盘才知道谁被置顶
                     if row.get("pinned"):
                         pinned.add(pinned_key(row))
+                    身 = pinned_key(row)
+                    if 身[0] and 身 not in seen:
+                        seen[身] = row
                     # 只认 BOSS 自己报的红点数，不拿"本地存了几条 HR 消息"去猜
                     if row.get("unread_count"):
                         merged.setdefault((row.get("name", ""), row.get("company", "")), row)
@@ -468,6 +472,9 @@ class BossChatHandler:
             # 置顶永远排在最前面，滚到哪儿都看得见，所以每轮都整份重建：
             # 他取消置顶后，这一轮就没有这个 key，存档里的标记跟着撤掉、机器重新接手
             self.pinned_chats = pinned
+            # 这一眼扫过的全部行（含没红点的）：撤置顶的正证要按"这轮真看见这行了"判，
+            # 只看红点那一小撮会把没红点的置顶行当成凭空消失
+            self.seen_chat_rows = list(seen.values())
         except Exception as e:
             logger.error(f"获取未读聊天列表失败: {e}")
 
@@ -516,6 +523,7 @@ class BossChatHandler:
             prev_pos = pos
         all_chats = list(merged.values())
         self.pinned_chats = pinned
+        self.seen_chat_rows = all_chats
         logger.debug(f"侧栏收集完成：{len(all_chats)} 个会话，其中置顶 {len(pinned)} 个")
         return all_chats
 

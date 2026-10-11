@@ -838,12 +838,26 @@ class MessageStore:
         置顶 = 他标的"这一路我自己聊"（2026-10-08），所以这个标记必须落进存档：
         欠回复、主动跟进、补发简历和两个批量清剿工具走的都是存档，不看侧栏。
         只在值真的变了时才写文件——回复轮十秒一轮，没变就不碰磁盘。
+
+        置顶而还没有存档的会话要新建一份只有身份的空存档：他置顶的那路往往
+        根本不经机器点开（启动全量同步实测只推进 10/273 个），原来是
+        直接 return，于是这一路永远存不下标记，存档驱动的那几条腿照旧去追。
+        反过来的"取消置顶"不给不存在的路新建空文件——那是没价值的噪音。
         """
+        from datetime import datetime
         cid = self.chat_id(chat_name, company, job_name)
         lock = self._get_lock(cid)
         with lock:
             path = self._read_path(chat_name, company, job_name)
             if not path.exists():
+                if not pinned:
+                    return
+                data = {"chat_name": chat_name, "company": company,
+                        "job_name": job_name, "account_index": self.account_index,
+                        "messages": [], "pinned": True,
+                        "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+                write_json_atomic(path, data)
+                self._cache_put(cid, data)
                 return
             try:
                 with open(path, "r", encoding="utf-8") as f:
