@@ -486,6 +486,7 @@ python tools/e2e_dashboard.py         # 70 项：界面渲染、指标卡、记�
 python tools/e2e_live_boss.py         # 26 项：反爬自检、登录态、会话读取、岗位解析、AI 真实判分、多账号归属（含另开账号2 浏览器比对会话）
 python tools/verify_dashboard_ui.py   # 14 项：指标卡口径 + AI 体检展示，产出 tools/verify_dashboard.png
 python tools/verify_three_way.py      # BOSS 页面 / 后端存储 / 前端显示 三端逐条比对
+python tools/consistency_test/run_consistency_test.py # 19 项：面板配置/记录/画像/统计卡片 三端比对 + API 与边界 case，报告写同目录 test_report.md（2026-10-11 起从 .codeartsdoer/ 挪进版本库，那份以前被 gitignore 挡着，改动传不到别的机器）
 python tools/measure_ai_quality.py    # 逐个接口真判分 + 生产解析判定（要联网，只发分析请求）
 python tools/diagnose_ai_providers.py --models   # 不可用接口归因：代理/直连各打 3 次 + 官方模型清单核对
 python tools/check_account_isolation.py         # 多账号隔离自检：端口/profile/cookie 文件/账号身份 四层比对

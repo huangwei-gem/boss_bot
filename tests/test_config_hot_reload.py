@@ -109,3 +109,31 @@ class 外部记账接口Test:
                                               "reply_source": "ai"})
         assert r.status_code == 400, r.get_json()
         assert c.get("/api/reply_records").get_json()["total"] == 0
+
+
+class 保存配置的坏请求Test:
+    """三端一致性脚本 2b 里那条"POST 空数据到 /api/config"原本被读成"无响应"，
+    拆开看是真的回了话——回了 500。浏览器/脚本发一个不带 JSON 的 POST 就能
+    把面板打成 500，这种应当是 400（请求方的错），不是服务器的锅。
+    """
+
+    def test_不带json的请求体要回400(self, flask_app):
+        app, tmp = flask_app
+        c = app.app.test_client()
+        r = c.post("/api/config", data="")
+        assert r.status_code == 400, (r.status_code, r.get_data(as_text=True)[:200])
+
+    def test_content_type不是json也要回400(self, flask_app):
+        app, tmp = flask_app
+        c = app.app.test_client()
+        r = c.post("/api/config", data='{"ai": {}}', content_type="text/plain")
+        assert r.status_code == 400, (r.status_code, r.get_data(as_text=True)[:200])
+
+    def test_坏请求不许动配置文件(self, flask_app):
+        app, tmp = flask_app
+        _write(tmp / "bot_config.json", ["A", "B"])
+        原样 = (tmp / "bot_config.json").read_bytes()
+        c = app.app.test_client()
+        c.post("/api/config", data="")
+        c.post("/api/config", data="不是 JSON", content_type="text/plain")
+        assert (tmp / "bot_config.json").read_bytes() == 原样, "坏请求把配置文件写了"

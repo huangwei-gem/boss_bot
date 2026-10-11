@@ -1139,7 +1139,10 @@ def api_save_config():
     """
     global _config, _multi_manager
     try:
-        data = request.get_json()
+        # silent=True：请求体不是 JSON（空 body、Content-Type 不对）时，
+        # get_json() 会抛 415/400，落到下面那个 except Exception 就变成 500——
+        # 客户端发坏了不该是服务器的错，这一路统一按"请求体为空"回 400
+        data = request.get_json(silent=True)
         if not data:
             return jsonify({"status": "error", "message": "请求体为空"}), 400
 

@@ -112,6 +112,9 @@ tools/*_cards_detail.json
 tools/message_types.json
 tools/ai_provider_diagnosis.json
 tools/*_probe.json
+# 三端一致性脚本每次跑都重写的报告（脚本入库，报告不入库）
+tools/consistency_test/test_report.md
+tools/consistency_test/test_report.json
 
 # 第三方 skill 安装目录、图标中间缓存（都不该进版本库）
 .qoder/
