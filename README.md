@@ -491,6 +491,7 @@ python tools/measure_ai_quality.py    # 逐个接口真判分 + 生产解析判�
 python tools/diagnose_ai_providers.py --models   # 不可用接口归因：代理/直连各打 3 次 + 官方模型清单核对
 python tools/check_account_isolation.py         # 多账号隔离自检：端口/profile/cookie 文件/账号身份 四层比对
 python tools/two_account_login_check.py         # 逐账号实连登录态：连自己的端口+profile，新标签页验会话页（全程只读）
+python tools/enumerate_sidebar_chats.py [名字]   # 只读枚举两个号侧栏全部会话（边滚边收，不点任何会话），可带一个名字去比对线上有没有这个人
 ```
 
 **多账号一定要用 `check_account_isolation.py` 验，别只看"有两个槽位两份文件"**：2026-09-29 查

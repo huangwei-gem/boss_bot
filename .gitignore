@@ -115,6 +115,8 @@ tools/*_probe.json
 # 三端一致性脚本每次跑都重写的报告（脚本入库，报告不入库）
 tools/consistency_test/test_report.md
 tools/consistency_test/test_report.json
+# 侧栏只读枚举的产出（每次跑都重写，账号里的真人名字不必留版本库）
+tools/sidebar_chats_account_*.json
 
 # 第三方 skill 安装目录、图标中间缓存（都不该进版本库）
 .qoder/
