@@ -79,6 +79,60 @@ class TestJdGateCarriesTarget:
         assert "主播" in reason
 
 
+class 要求段那一句Test:
+    """"任职要求里写着数据分析能力"不能当方向命中——标题里一个数据字样都没有的那些岗，
+    靠这句混进来的都是运营/推广/讲师/设计师。
+
+    取证：`tools/measure_direction_leak.py` 现算，投出去过的 904 单里有 **45 单**
+    方向词只落在任职要求段（数据分析 35、数据标注 5…），其中 22 单标题一个数据字样
+    都没有（线上运营专员、服装店线上运营、股票线上财经讲师、科研绘图设计师、
+    线上流量推广助理），23 单标题本来就写着 数据/分析/标注/标记（电商数据专员、
+    数据标记员、多模态数据质检）——那些是要留的，命中只是佐证。
+    """
+
+    技能句 = "具备较强的数据分析能力，能熟练使用 Excel 做数据清洗与报表。"
+
+    def _单(self, 标题, 工作, 要求=None):
+        return {"job_name": 标题, "jd_description": 工作,
+                "jd_requirements": 要求 or self.技能句}
+
+    def test_标题没数据字样时技能句不算方向(self):
+        for 标题, 工作 in (("线上运营专员", "负责账号内容发布、粉丝维护与商品上下架。"),
+                          ("服装店线上运营", "负责店铺日常运营与客户咨询回复。"),
+                          ("兼职（科研绘图设计师）线上远程办公", "按课题要求绘制示意图与配图。"),
+                          ("股票线上财经讲师", "负责直播间财经知识讲解。")):
+            assert not target_job_hit(TARGET_JOB_KEYWORDS_DEFAULT,
+                                      self._单(标题, 工作)), 标题
+
+    def test_标题写着数据那一族时要求段的命中算佐证(self):
+        """电商数据专员/数据采集专员/舆情分析师这些收窄会误杀，必须留住。"""
+        for 标题 in ("电商数据专员", "数据采集专员", "兼职舆情分析师（远程线上）",
+                     "Python自动化数据处理专员"):
+            assert target_job_hit(TARGET_JOB_KEYWORDS_DEFAULT,
+                                  self._单(标题, "负责日常业务对接与流程跟进。")), 标题
+
+    def test_工作内容空着只写在要求栏的仍然认(self):
+        """退路：BOSS 上真有一批把工作内容直接写进"任职要求"那一栏。"""
+        assert target_job_hit(TARGET_JOB_KEYWORDS_DEFAULT, {
+            "job_name": "线上兼职助理", "jd_description": "",
+            "jd_requirements": "负责业务数据清洗与整理，输出周报与指标波动的分析报告。"})
+
+    def test_工作内容段里写了方向词照常认(self):
+        """只有"任职要求之后"那一段才要额外条件——正文写了就是这岗的活。"""
+        assert target_job_hit(TARGET_JOB_KEYWORDS_DEFAULT, {
+            "job_name": "线上兼职助理",
+            "jd_description": "岗位职责：搭建业务看板，做数据分析与指标复盘。"
+                              "任职要求：统计学相关专业。",
+            "jd_requirements": "统计学相关专业。"})
+
+    def test_收窄后闸门拦下的是那句技能句冒充的岗(self):
+        """正文写足了才轮到方向闸定罪——不然先被"太薄"那条拦，测不到这一层。"""
+        长 = "负责账号内容发布、粉丝维护与商品上下架，配合门店做促销活动落地。" * 3
+        reason = jd_gate([], self._单("线上运营专员", 长),
+                         title_keywords=[], target_keywords=TARGET_JOB_KEYWORDS_DEFAULT)
+        assert "不是要投的方向" in reason
+
+
 class TestLabelingHalfStillCounts:
     """目标有两半（数据分析 + 数据标注），词表却是一个"标注"都没有。
 

@@ -208,6 +208,44 @@ def veto_keyword_hit(keywords, job: dict, title_keywords=None) -> str:
     return body_veto_hit(keywords, title_keywords or (), title=标题, text=正文)
 
 
+# 正文里这些小标题之后就是"任职要求"那一段。BOSS 详情页把工作内容和要求塞在同一段
+# 文本里（.job-sec-text），所以"落在要求段"要按标题切，不能按字段分。
+REQUIRE_HEAD_MARKS = ("任职要求", "职位要求", "任职资格", "岗位要求", "任职条件", "录用条件")
+# 标题里有这些字样，说明这岗本来就是数据那一族，要求段命中只是佐证（电商数据专员、
+# 数据采集专员、兼职舆情分析师）；一个都没有时，要求段的"具备较强的数据分析能力"
+# 是技能句冒充方向（线上运营专员、服装店线上运营、股票线上财经讲师）。
+DIRECTION_TITLE_STEMS = ("数据", "分析", "标注", "标记", "质检")
+
+
+def _要求段起点(文: str) -> int:
+    """第一个"任职要求"类小标题的位置；没有就返回 -1（全文都算工作内容）。"""
+    位 = -1
+    for 标 in REQUIRE_HEAD_MARKS:
+        i = 文.find(标)
+        if i >= 0 and (位 < 0 or i < 位):
+            位 = i
+    return 位
+
+
+def _方向命中(词表, 文: str, 算要求段: bool) -> str:
+    """在一段文本里找方向词。算要求段=False 时，只认要求小标题之前那一段。"""
+    低 = str(文 or "").lower()
+    if not 低:
+        return ""
+    切 = -1 if 算要求段 else _要求段起点(低)
+    for 词 in 词表:
+        k = str(词 or "").strip().lower()
+        if not k:
+            continue
+        i = 低.find(k)
+        if i < 0:
+            continue
+        if 切 >= 0 and i >= 切:
+            continue
+        return str(词)
+    return ""
+
+
 def target_job_hit(keywords, job: dict) -> str:
     """只投这些方向：标题或 JD 里命中任意一条就返回命中的那条，否则空串。
 
@@ -222,15 +260,31 @@ def target_job_hit(keywords, job: dict) -> str:
     补进来的这一半只认标题里不含到岗形状的：「数据标注兼职（可转正-线下面试
     和到岗）」那种自己写着要来公司的，仍然不给过（否决词表里只有"到岗面试/
     仅线下"，接不住"线下面试和到岗"这种写法）。
+
+    10-16 起方向词**不再把任职要求段当命中**：投出去过的 904 单里有 45 单的"数据分析"
+    只出现在"任职要求"之后，原句是"具备较强的数据分析能力"这种技能要求，岗本身是
+    线上运营/服装店运营/财经讲师/绘图设计师（tools/measure_direction_leak.py 现算，
+    10-10 01:11 就查出过 5 条，当时没法子收）。两条退路要留着：
+    ① 工作内容整段空着、把活写在要求栏的岗；② 标题本来就写着 数据/分析/标注 那一族的，
+    要求段那句只是佐证。
     """
     if not keywords:
         return ""
-    全文 = "|".join(str(job.get(k) or "") for k in VETO_FIELDS).lower()
-    for kw in keywords:
-        k = str(kw or "").strip().lower()
-        if k and k in 全文:
-            return str(kw)
     标题 = str(job.get("job_name") or "")
+    # 详情页字段两套键名都在（jd_* 是抓回来的，* 是搜索卡片带的），取先非空的那个
+    工作 = (str(job.get("jd_description") or "") or str(job.get("description") or "")
+            or str(job.get("job_description") or ""))
+    要求 = (str(job.get("jd_requirements") or "") or str(job.get("requirements") or "")
+            or str(job.get("job_requirements") or ""))
+    全文 = "|".join(str(job.get(k) or "") for k in VETO_FIELDS).lower()
+
+    命中 = _方向命中(keywords, 标题, True) or _方向命中(keywords, 工作, False)
+    if 命中:
+        return 命中
+    落 = _方向命中(keywords, 要求, True)
+    if 落 and (not 工作.strip()
+               or any(w in 标题 for w in DIRECTION_TITLE_STEMS)):
+        return 落
     if not any(m in 标题 for m in LABELING_OFFLINE_MARKS):
         for word in LABELING_DIRECTION:
             if word.lower() in 全文:
