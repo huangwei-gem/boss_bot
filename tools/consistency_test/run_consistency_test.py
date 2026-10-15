@@ -245,7 +245,19 @@ class FrontendReader:
         try:
             from playwright.sync_api import sync_playwright
             self.pw = sync_playwright().start()
-            self.browser = self.pw.chromium.launch(headless=True)
+            # 自带 headless shell 不一定在这台机器上（实测 ms-playwright 缓存是空的），
+            # 那样四条前端比对会全报"前端不可用"，红的是工具不是页面。逐个退到已装的浏览器。
+            for 方式 in ({}, {"channel": "chrome"}, {"channel": "msedge"}):
+                try:
+                    self.browser = self.pw.chromium.launch(headless=True, **方式)
+                    print("  [前端] Playwright 启动成功%s"
+                          % ("（用系统已装的 %s）" % 方式["channel"] if 方式 else ""))
+                    break
+                except Exception as e:
+                    print("  [警告] 换浏览器形态重试：%s" % str(e)[:90])
+                    self.browser = None
+            if self.browser is None:
+                raise RuntimeError("headless shell / chrome / msedge 都起不来")
             context = self.browser.new_context()
             self.page = context.new_page()
             # 使用 domcontentloaded 而不是 networkidle，避免长连接导致超时
