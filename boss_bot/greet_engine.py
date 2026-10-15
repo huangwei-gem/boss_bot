@@ -164,6 +164,16 @@ NAV_FAIL_WINDOW_SEC = 10 * 60
 NAV_FAIL_WINDOW_LIMIT = 5
 NAV_FAIL_COOLDOWN_SEC = 15 * 60
 
+# 算"整条腿坏了"的成因（进上面那个窗口记账的只有这几条）。
+# 10-16 一天里这一族有三种形状：「页面加载失败」、账号2 03:36 起 39 条
+# 「页面断开且恢复失败」（句柄的活动标签页指针死了，浏览器好得很）、
+# 主账号 04:15 起 7 条「浏览器未启动」。共同点是坏在腿上不是坏在岗位上——
+# 只数「页面加载失败」时后两种各自没人记，于是每 20 秒烧一条记录。
+# 岗位级失败（抽屉没出来、命中否决词、没登录）不进这一族：它们各有各的计数，
+# 混进来会把还在出货的好腿冻 15 分钟。
+LEG_FAILURE_REASONS = ("页面加载失败", "页面断开且恢复失败",
+                       "导航前页面断开且恢复失败", "浏览器未启动")
+
 
 def drawer_give_up_reason(times: int) -> str:
     return (f"这个岗位连着 {times} 次点了「立即沟通」都不出聊天抽屉，"
@@ -2077,6 +2087,13 @@ class GreetEngine:
             else:
                 self.skipped_count += 1
                 self._log("WARN", f"⏭️ 跳过: {job_name}（原因: {fail_reason}）")
+                # 坏在腿上（页面导航不动、句柄断开、浏览器没了）的这几条要进熔断账：
+                # 每一个 return 现场各记各的，就会有现场忘记——10-16 账号2 句柄死了
+                # 还每 20 秒烧一条，39 条烧了 16 分钟；主账号 04:15 起连着 7 条
+                # 「浏览器未启动」也是同一笔漏账。岗位级失败（抽屉没出来、否决词）
+                # 不进这里，各有各的计数，混进来会把好腿冻掉。
+                if fail_reason in LEG_FAILURE_REASONS:
+                    self._note_nav_fail(fail_reason)
                 self._emit_greet_event(job_info, "skip", skip_reason=fail_reason or "投递失败-原因未知")
                 self._record_greet(job_info, is_skipped=True, skip_reason=fail_reason or "投递失败-原因未知")
             self._report_progress()
@@ -2559,14 +2576,19 @@ class GreetEngine:
 
 
     def _handle_disconnect(self) -> bool:
-        """页面断开时的恢复：只把本账号的岗位页导航回来，不动整个浏览器。
+        """页面断开时的恢复：先把本账号的岗位页导航回来，导航不动就重绑句柄。
 
         为什么不 close()+launch()：浏览器是打招呼线程和回复线程共享的，回复侧正握着
         _chat_tab，从打招呼侧关掉它等于把别人的标签页一起带走；重建浏览器归
         UnifiedBotLoop._try_reconnect_browser 管，那里才有 _reconnect_lock 串行化。
         为什么不再导航到 about:blank：旧实现导航到空白页之后就 return True 说"恢复成功"，
         窗口于是停在一片白 —— 用户报的"第二个浏览器打开后无内容"就是这个现场。
-        起不来就如实返回 False，让上层走带锁的重连，不要拿着死对象继续跑。
+        为什么还要再试一次重绑：Windows 上这个句柄是浏览器级对象，活动标签页指针
+        一死，`get()` 和 `url` 都会抛（10-16 抛的还是空消息的异常），这时候"导航不动"
+        不代表页面起不来，代表拿的是死指针。重绑到一张活页再导航一趟，比把整条腿
+        交给 15 分钟冷却便宜得多。
+        最后还是起不来才如实返回 False——那句"交给重连流程处理"以前是空话，
+        `_try_reconnect_browser` 的六个调用点没有一个在这条路上，现在这条至少自己会修。
         """
         instance = self.browser_manager.get_instance()
         if instance is None:
@@ -2590,9 +2612,24 @@ class GreetEngine:
                     return True
                 self._log("WARN", f"导航后读不到 URL，换下一个落点: {url[:36]}")
             except Exception as e:
-                self._log("WARN", f"断开恢复导航失败({url[:36]}): {str(e)[:60]}")
+                self._log("WARN", f"断开恢复导航失败({url[:36]}): {type(e).__name__}: {str(e)[:60]}")
 
-        self._log("ERROR", "页面断开后两个落点都没起来，交给重连流程处理")
+        try:
+            重绑 = self.browser_manager.recover_search_tab(targets[0] if targets else "")
+        except Exception as e:
+            self._log("WARN", f"重绑搜索页句柄失败: {type(e).__name__}: {str(e).strip()[:60]}")
+            重绑 = None
+        if 重绑 is not None:
+            try:
+                landed = 重绑.url or ""
+                if landed:
+                    self._log("INFO", f"搜索页句柄已重绑到新标签页: {landed[:70]}")
+                    return True
+            except Exception as e:
+                self._log("WARN", f"重绑后仍读不到页面: {type(e).__name__}: "
+                                  f"{str(e).strip()[:60]}")
+
+        self._log("ERROR", "页面断开后两个落点加一次重绑都没起来")
         return False
 
     def _apply_job(self, job: dict, _disconnect_retry: int = 0):
@@ -2625,25 +2662,42 @@ class GreetEngine:
         return self._greet_cooldown_reason
 
     def _check_nav_fail(self, now=None) -> str:
-        """窗口里导航失败够多、这段时间又一单没投进去 → 是腿坏了，不是这个岗位。"""
+        """窗口里页面坏掉够多、这段时间又一单没投进去 → 是腿坏了，不是这个岗位。"""
         now = now or time.time()
-        败 = [t for t in (self._nav_fail_recent or []) if now - t <= NAV_FAIL_WINDOW_SEC]
+        败 = [(t, 词) for t, 词 in self._窗口内(self._nav_fail_recent, now)]
         成 = [t for t in (self._applied_recent or []) if now - t <= NAV_FAIL_WINDOW_SEC]
-        if len(败) >= NAV_FAIL_WINDOW_LIMIT and not 成:
-            return (f"{NAV_FAIL_WINDOW_SEC // 60} 分钟内 {len(败)} 次「页面加载失败」"
-                    f"（这段时间一单都没投进去），BOSS 的岗位页正在坏，"
-                    f"不是这些岗位本身的问题")
-        return ""
+        if len(败) < NAV_FAIL_WINDOW_LIMIT or 成:
+            return ""
+        词 = "、".join(f"「{w}」" for w in dict.fromkeys(词 for _, 词 in 败))
+        return (f"{NAV_FAIL_WINDOW_SEC // 60} 分钟内 {len(败)} 次{词}"
+                f"（这段时间一单都没投进去），BOSS 的岗位页正在坏，"
+                f"不是这些岗位本身的问题")
 
-    def _note_nav_fail(self, now=None) -> str:
-        """记一次"导航到岗位详情页没走通"，够判据就把整条打招呼腿停一会儿。
+    @staticmethod
+    def _窗口内(记录, now):
+        """把窗口的历史读成 (时间, 成因) 对——只存过时间戳的老写法也认。"""
+        for 条 in (记录 or []):
+            if isinstance(条, tuple):
+                t, 词 = 条
+            else:
+                t, 词 = 条, "页面加载失败"
+            if now - t <= NAV_FAIL_WINDOW_SEC:
+                yield t, 词
+
+    def _note_nav_fail(self, 原因: str = "页面加载失败", now=None) -> str:
+        """记一次"这一条腿的页面已经坏了"，够判据就把整条打招呼腿停一会儿。
 
         每个岗位重试都是三趟导航 × 3~6 秒，一轮 30 秒接一轮地灌记录：那 19 分钟
         150 条就是这么来的。冷却会自己到点醒，不需要人来点恢复。
+
+        成就要一起记：10-16 账号2 那一串是「页面断开且恢复失败」，以前只数
+        「页面加载失败」，于是句柄死了还在每 20 秒烧一条记录，烧了 39 条 16 分钟。
         """
         now = now or time.time()
-        近 = (self._nav_fail_recent or []) + [now]
-        self._nav_fail_recent = [t for t in 近 if now - t <= NAV_FAIL_WINDOW_SEC]
+        近 = list(self._nav_fail_recent or []) + [(now, 原因)]
+        self._nav_fail_recent = [条 for 条 in 近
+                                 if now - (条[0] if isinstance(条, tuple) else 条)
+                                 <= NAV_FAIL_WINDOW_SEC]
         窗口 = self._check_nav_fail(now)
         if 窗口 and self.greet_cooldown_left(now) <= 0:
             self._greet_cooldown_until = now + NAV_FAIL_COOLDOWN_SEC
@@ -2780,7 +2834,6 @@ class GreetEngine:
                     self._random_delay(2, 4)
             else:
                 self._log("WARN", "页面加载失败，跳过此岗位")
-                self._note_nav_fail()
                 return False, "页面加载失败"
 
             # 检查是否被重定向到登录页
@@ -3112,6 +3165,12 @@ class GreetEngine:
                             reply_chat_tab_id = None
                             if self.browser_manager is not None:
                                 reply_chat_tab_id = self.browser_manager.get_reply_tab_id()
+                            # 自己那张搜索页也要排除：①已经在当前页找过一遍了，
+                            # 这一路命中它只会把它登记成"待关的临时页"——收尾一关，
+                            # 这个号后面每一单都「页面断开且恢复失败」（10-16 账号2
+                            # 03:36→03:51 就是这么烧掉 39 条的）。
+                            搜索页id = (self.browser_manager.search_tab_id()
+                                       if self.browser_manager is not None else None)
                             if reply_chat_tab_id:
                                 self._log("DEBUG", f"回复引擎专用标签页 tab_id: {reply_chat_tab_id}，遍历时将排除")
                             if len(all_tabs) > 1:
@@ -3120,6 +3179,9 @@ class GreetEngine:
                                     # 跳过回复引擎的 _chat_tab，避免打招呼引擎抢占
                                     if reply_chat_tab_id and tab_id == reply_chat_tab_id:
                                         self._log("DEBUG", "  跳过回复引擎专用标签页")
+                                        continue
+                                    if 搜索页id and tab_id == 搜索页id:
+                                        self._log("DEBUG", "  跳过自己的搜索页（登记成待关临时页就等于自杀）")
                                         continue
                                     try:
                                         tab = browser.get_tab(tab_id)
@@ -3146,9 +3208,16 @@ class GreetEngine:
                                                             chromium=browser if _IS_MACOS else None,
                                                             tab=tab if _IS_MACOS else None,
                                                         )
-                                                        # 同步注册到 browser_manager
+                                                        # 登记要走 claim：它拒绝把搜索页
+                                                        # 收进来（直接赋值 _greet_chat_tab
+                                                        # 是 10-16 那条自杀路径的原样）
                                                         if self.browser_manager is not None:
-                                                            self.browser_manager._greet_chat_tab = greet_chat_instance
+                                                            if not self.browser_manager \
+                                                                    .claim_greet_chat_tab(
+                                                                        greet_chat_instance):
+                                                                input_area = None
+                                                                greet_chat_instance = None
+                                                                continue
                                                     except Exception:
                                                         pass
                                                     break

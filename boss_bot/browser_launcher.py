@@ -37,6 +37,16 @@ from boss_bot import platform_compat
 
 logger = logging.getLogger("browser_launcher")
 
+# DrissionPage 的"句柄钉住的那张标签页没了"这一族。单独引出来有两个用处：
+# ①`_handle_disconnect` 要认得出这是**页死了**而不是"这一单不好"；
+# ②真机量出来的时候它的 str() 是以换行开头的，日志里冒号后面看着是空的
+#   （10-16 那 39 条「断开恢复导航失败(...): 」就是这么来的）——认类型比认字符串靠谱。
+try:
+    from DrissionPage.errors import PageDisconnectedError
+except Exception:  # 没装 DrissionPage 的环境（单测、CI）也要能导入这个模块
+    class PageDisconnectedError(Exception):
+        pass
+
 # 平台检测
 _IS_MACOS = platform.system().lower() == "darwin"
 _IS_WINDOWS = platform.system().lower() == "windows"
@@ -942,12 +952,18 @@ class BrowserInstance:
         obj.close()
 
     def quit(self):
-        """关闭浏览器"""
+        """关闭浏览器
+
+        走浏览器对象而不是 `self._page`：重绑搜索页之后 `_page` 装的是一张 Tab
+        （实测 ChromiumTab 只有 close，**没有 quit**），照老写法打 `_page.quit()`
+        会变成"关不掉浏览器"——下一次启动撞自己留下的空壳，就是两个号起不来那种。
+        """
         try:
-            if self._page is not None:
+            浏览器 = self._get_browser()
+            if 浏览器 is not None:
+                浏览器.quit()
+            elif self._page is not None:
                 self._page.quit()
-            elif self._chromium is not None:
-                self._chromium.quit()
         except Exception as e:
             logger.warning(f"关闭浏览器异常: {e}")
         finally:
@@ -1798,6 +1814,76 @@ class BrowserManager:
 
         return self._search_tab
 
+    def search_tab_id(self):
+        """现在这个搜索/打招呼句柄钉住的是哪张标签页；读不到返回 None。
+
+        Windows 上 `_search_tab` 就是浏览器级对象（ChromiumPage），`tab_id` 是它
+        钉住的那张；重绑之后 `_page` 换成了 Tab，`tab_id` 依旧是那张页。
+        """
+        if self._instance is None:
+            return None
+        return getattr(self._instance._get_active(), "tab_id", None) or None
+
+    def _包的id(self, 包装):
+        if 包装 is None:
+            return None
+        底 = getattr(包装, "_page", None)
+        if 底 is None:
+            底 = getattr(包装, "_tab", None)
+        return getattr(底, "tab_id", None) or None
+
+    def claim_greet_chat_tab(self, 包装) -> bool:
+        """把一张标签页登记成"打招呼用完要关的临时页"。搜索页自己不给登记。
+
+        为什么要有这道门：greet_engine 的④兜底会 `browser.tab_ids` 全遍历找输入框，
+        以前只排除回复引擎那张，**自己那张搜索页也在候选里**。命中 `#chat-input`
+        之后把它注册成 `_greet_chat_tab`（原 greet_engine.py:3206），收尾
+        `close_greet_chat_tab()` 就把搜索页关了。实测（tools/probe_tab_rebind.py）：
+        ChromiumPage 一直钉在自己那张页上，关掉别的页都不疼，**关掉自己那张**之后
+        每一次 `url`/`get()` 都抛 PageDisconnectedError——10-16 账号2 从 03:36:02
+        起 39 条「页面断开且恢复失败」烧到 03:51，浏览器一直是活的。
+        """
+        tid = self._包的id(包装)
+        自己 = self.search_tab_id()
+        if tid and 自己 and tid == 自己:
+            logger.warning("打招呼找输入框时命中的就是搜索页自己——不登记成待关的临时页，"
+                           "否则收尾一关整条投递腿就死")
+            return False
+        self._greet_chat_tab = 包装
+        return True
+
+    def recover_search_tab(self, url: str = ""):
+        """句柄钉住的那张页没了：开一张新页顶上去，把包装里的页对象换掉。
+
+        为什么只能这么救：这台 DrissionPage 4.1.1.4 的 ChromiumPage 没有 `set_tab`
+        也没有 `tab_recover`（实测 dir() 只有 tab/tab_id/tab_ids/get_tab/get_tabs/
+        latest_tab/new_tab/activate_tab/close_tabs/tabs_count），指针挪不回去；
+        而 `new_tab()` 是走浏览器对象干事的，钉住的那张死了也照样能开新页
+        （实测 C1：new_tab 回来的 Tab 读得通）。Tab 撑得起打招呼要用的一串
+        url/get/ele/eles/run_js/scroll/set/listen/cookies/browser，就是没有 `quit`
+        ——所以 `BrowserInstance.quit()` 一并改成走浏览器对象。
+        """
+        if self._instance is None:
+            return None
+        页 = self._instance._page if getattr(self._instance, "_page", None) is not None \
+            else self._instance._tab
+        浏览器 = getattr(页, "browser", None) or 页
+        try:
+            新页 = 浏览器.new_tab(url) if url else 浏览器.new_tab()
+            if not (新页.url or True):           # 读一次：开出来就是死的页不算救活
+                return None
+        except Exception as e:
+            logger.warning(f"重绑搜索页：开新标签页也起不来 {type(e).__name__}: "
+                           f"{str(e).strip()[:60]}")
+            return None
+        if getattr(self._instance, "_page", None) is not None:
+            self._instance._page = 新页
+        else:
+            self._instance._tab = 新页
+        self._search_tab = self._instance
+        logger.info("搜索页句柄已重绑到新开的标签页")
+        return self._instance
+
     def get_chat_page(self) -> BrowserInstance:
         """获取聊天回复页面 tab（包装为 BrowserInstance）— 回复引擎专用
 
@@ -1868,8 +1954,19 @@ class BrowserManager:
 
         打招呼引擎发送完消息后必须调用此方法，避免新标签页累积。
         关闭后 _greet_chat_tab 置为 None，下次调用 get_greet_chat_tab() 会创建新标签页。
+
+        第二道门（`claim_greet_chat_tab` 那道之外的）：这张要是就是搜索页钉住的那张，
+        一律不关。10-16 账号2 就是这么把整条投递腿关死的——历史上这里有过
+        直接 `_greet_chat_tab = 搜索页` 的写法，光靠登记那一关挡不住。
         """
         if self._greet_chat_tab is None:
+            return
+        tid = self._包的id(self._greet_chat_tab)
+        自己 = self.search_tab_id()
+        if tid and 自己 and tid == 自己:
+            logger.warning("待关的临时会话页就是搜索页自己——只解绑，不关，"
+                           "关了这张这个号的每一单都会「页面断开且恢复失败」")
+            self._greet_chat_tab = None
             return
         try:
             self._greet_chat_tab.close_current_tab()

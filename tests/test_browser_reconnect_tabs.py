@@ -128,7 +128,12 @@ class ReconnectRebuildsTabsTest:
 
 
 class _DisconnectHarness:
-    """只测 GreetEngine._handle_disconnect 这一个方法，绕开它重型 __init__"""
+    """只测 GreetEngine._handle_disconnect 这一个方法，绕开它重型 __init__
+
+    `recover_search_tab` 默认给 None：这个 harness 测的是"换一张新页也起不来"
+    那一路（浏览器真没了）。能换页的那一路在 tests/test_search_tab_rebind.py 里
+    用按实测语义建模的假标签页测。
+    """
 
     def build(self):
         from boss_bot.greet_engine import GreetEngine
@@ -137,6 +142,7 @@ class _DisconnectHarness:
         inst.url = "https://www.zhipin.com/web/geek/jobs?query=%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90&city=101250100"
         bm = MagicMock()
         bm.get_instance.return_value = inst
+        bm.recover_search_tab.return_value = None
         eng.browser_manager = bm
         eng._log = lambda *a, **k: None
         eng._random_delay = lambda a, b: None
@@ -167,7 +173,11 @@ class DisconnectRecoveryTest:
         assert not bm.close.called, "打招呼侧不该从自己内部关掉两个线程共享的浏览器"
 
     def test_真起不来时如实返回失败(self):
-        """返回 False 上层才会去走带锁的串行重连，而不是拿着死对象继续跑"""
+        """返回 False 上层才不会再拿着死句柄往下点。
+
+        记账不在这儿——`send_greeting` 拿到这个 False 之后按成因进熔断窗口
+        （tests/test_search_tab_rebind.py::熔断那一路Test 盯着那一段）。
+        """
         eng, inst, _ = _DisconnectHarness().build()
         inst.get.side_effect = Exception("connection is closed")
         assert eng._handle_disconnect() is False
