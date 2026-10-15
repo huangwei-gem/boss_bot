@@ -200,3 +200,17 @@ def test_与线上引擎同判据():
         分发 = bool(veto.check(title=标题, jd=正文)["veto"])
         assert 产品 == 期望, ("产品侧", 标题, 产品, 期望)
         assert 分发 == 期望, ("分发侧", 标题, 分发, 期望)
+
+
+def test_抄写副本的词表和正本一字不差():
+    """上面那条只核 10 个形状，改表时这 10 条常常一条都不碰——词表飘了没人知道。
+
+    10-16 自净化第二轮往正本加了 18 个词（送餐/教师/BD/地推这一族），
+    副本一行没动，分发出去的人还在用旧口径拦。这张表比的是集合，不是样例。
+    """
+    from boss_bot.unified_config import TITLE_VETO_KEYWORDS_DEFAULT as T
+
+    缺 = [w for w in T if w not in veto.DEFAULT_TITLE_VETO]
+    多 = [w for w in veto.DEFAULT_TITLE_VETO if w not in T]
+    assert not 缺 and not 多, "副本缺 %s；副本多出 %s" % (缺, 多)
+
