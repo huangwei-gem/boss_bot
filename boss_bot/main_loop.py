@@ -52,6 +52,7 @@ from boss_bot.reply_queue import (chat_state, inbound_body, is_pinned, owed_repl
                                   followup_due, mark_followed,
                                   worth_following_up)
 from boss_bot.self_evolve import SelfEvolveEngine
+from boss_bot.reply_record import ai_should_probe, ai_skip_text
 from boss_bot.metrics import get_metrics
 
 # DrissionPage 断连异常
@@ -1672,9 +1673,12 @@ class UnifiedBotLoop:
         # 返回 True：这既不是"搜索为空"也不是异常，别让空轮计数把它当成投完而永久暂停
         cooldown_left = self._greet_engine.greet_cooldown_left()
         if cooldown_left > 0:
+            # 成因要念引擎那份：抽屉是额度，导航失败是页面在坏，
+            # 两句都写成"额度用完"会把他支去干等
+            why = (self._greet_engine.greet_cooldown_reason()
+                   or "疑似本号当日沟通额度用完")
             self._log("INFO", f"⏸️ 打招呼冷却中，本轮不搜索不建记录"
-                              f"（剩 {int(cooldown_left // 60) + 1} 分钟，"
-                              f"疑似本号当日沟通额度用完）")
+                              f"（剩 {int(cooldown_left // 60) + 1} 分钟，{why}）")
             return True
 
         try:
@@ -1714,11 +1718,13 @@ class UnifiedBotLoop:
                         break
                     cooldown_now = self._greet_engine.greet_cooldown_left()
                     if cooldown_now > 0:
-                        # 冷却多半是这一轮里刚挂上的（额度见底）。这时候剩下的岗位
+                        # 冷却多半是这一轮里刚挂上的（额度见底或页面正在坏）。这时候剩下的岗位
                         # 每一个都会先花 20~40 秒点开再被闸门弹回去，一晚上能刷出
                         # 几百条一模一样的"已冷却"记录，所以整轮直接收手
                         self._log("WARN", f"⏸️ 本轮到此为止：打招呼进入冷却（剩 "
-                                          f"{int(cooldown_now // 60) + 1} 分钟），不再逐岗位空跑")
+                                          f"{int(cooldown_now // 60) + 1} 分钟，"
+                                          f"{self._greet_engine.greet_cooldown_reason() or '原因未记'}）"
+                                          f"，不再逐岗位空跑")
                         return True
 
                     # 这一次岗位的落库与实时推送共用一个时间戳（见 GreetEngine.begin_event_ts）
@@ -1811,17 +1817,22 @@ class UnifiedBotLoop:
                                               f"{job.get('job_name', '')}")
                             continue
                         if ai_result is None and self._greet_engine._init_ai() is not None:
-                            # AI 判"不匹配"（或按 fail_action 跳过）：原因取自这条岗位自己的
-                            # 判分结果，传给 skip_reason 让前端完整显示
+                            # 判分结果取自这条岗位自己绑的那份（见 _bind_ai_result）。
+                            # "AI 判了不匹配"和"AI 这次没答上来"要写成两种 skip_reason：
+                            # 都写成"AI判定不匹配"会让这单今天再也不判（同类别一天只判一次）、
+                            # 面板上看不出是接口坏了，追问链还会去问一份根本没产生的判分。
                             last_ai = job.get("_ai_result") or {}
+                            ai_skip_reason = ai_skip_text(last_ai)
                             ai_reason = last_ai.get("reason", "")
-                            ai_skip_reason = (
-                                f"AI判定不匹配: {ai_reason}" if ai_reason else "AI判定不匹配"
-                            )
-                            self._log("WARN", f"🤖 AI 判定不匹配，跳过: {job.get('job_name', '')}（{ai_reason[:80] if ai_reason else ''}）")
-                            # 边界带上再追问一句"到底卡在哪条硬性要求"，结果写进这条
-                            # 记录（ai_probe），复盘界面据此出建议——只问 AI，不问 HR
-                            self._maybe_probe_rejection(job, last_ai)
+                            if ai_should_probe(last_ai):
+                                self._log("WARN", f"🤖 AI 判定不匹配，跳过: "
+                                                  f"{job.get('job_name', '')}（{ai_reason[:80] if ai_reason else ''}）")
+                                # 边界带上再追问一句"到底卡在哪条硬性要求"，结果写进这条
+                                # 记录（ai_probe），复盘界面据此出建议——只问 AI，不问 HR
+                                self._maybe_probe_rejection(job, last_ai)
+                            else:
+                                self._log("WARN", f"🛑 AI 这次没给出判断，本岗位不投也不追问: "
+                                                  f"{job.get('job_name', '')}（{ai_reason[:60] if ai_reason else ''}）")
                             self._record_greet_skip(job, "ai_skip", ai_skip_reason)
                             continue
                         if ai_result and ai_result.get("suggested_greeting"):

@@ -78,27 +78,27 @@ def start_server(tmp_dir):
     raise AssertionError("实测用的 Flask 实例 30 秒内没起来")
 
 
-def api_words():
+def api_words(key="title_veto_keywords"):
     import requests
     return (requests.get(URL + "/api/config", timeout=5).json()["config"]["ai"]
-            .get("title_veto_keywords", "<缺失>"))
+            .get(key, "<缺失>"))
 
 
-def box_value(page):
-    return page.run_js(f"return String(document.getElementById('{BOX}').value)")
+def box_value(page, box=BOX):
+    return page.run_js(f"return String(document.getElementById('{box}').value)")
 
 
-def type_into(page, value):
+def type_into(page, value, box=BOX):
     """真键入：直接改 .value 不触发 onchange，等于没测到收集那一段。"""
-    el = page.ele(f"@id={BOX}", timeout=8)
+    el = page.ele(f"@id={box}", timeout=8)
     if el is None:
-        raise AssertionError(f"面板上没有 #{BOX} 这个输入框")
+        raise AssertionError(f"面板上没有 #{box} 这个输入框")
     el.scroll.to_see()
     time.sleep(0.2)
-    page.run_js(f"document.getElementById('{BOX}').value = ''")
+    page.run_js(f"document.getElementById('{box}').value = ''")
     if value:
         el.input(str(value))
-    page.run_js(f"document.getElementById('{BOX}').blur()")
+    page.run_js(f"document.getElementById('{box}').blur()")
     time.sleep(0.3)
 
 
@@ -115,6 +115,7 @@ def main():
     tmp = Path(tempfile.mkdtemp(prefix="boss_title_veto_ui_"))
     src = json.loads((PROJECT_ROOT / "bot_config.json").read_text(encoding="utf-8"))
     src.setdefault("ai", {})["title_veto_keywords"] = ["普工", "主播"]
+    src["ai"]["target_job_keywords"] = ["数据分析", "剪辑"]
     (tmp / "bot_config.json").write_text(
         json.dumps(src, ensure_ascii=False, indent=2), encoding="utf-8")
 
@@ -157,6 +158,28 @@ def main():
         time.sleep(2.5)
         check("刷新后输入框是空的（placeholder 不算值）",
               box_value(page) == "", f"实际显示 {box_value(page)!r}")
+
+        # 方向词那一格今天起多担一件事：标题命中它并且没有到场/引流形状时，
+        # 可以豁免"正文太薄=空泛岗"那条。它要是不真落盘，豁免会照旧表算，
+        # 界面显示 22 条、引擎里还是 11 条——所以这一格也要走完键入→收集→落盘。
+        DBOX = "aiTargetJobKeywords"
+        check("方向词输入框在页面上", page.ele(f"@id={DBOX}", timeout=5) is not None)
+        check("方向词回填的是盘上那两条（数据分析、剪辑）",
+              box_value(page, DBOX) == "数据分析、剪辑",
+              f"实际显示 {box_value(page, DBOX)!r}")
+        type_into(page, "数据分析，数据标注、剪辑", box=DBOX)
+        time.sleep(1.5)
+        got = api_words("target_job_keywords")
+        check("改成 数据分析，数据标注、剪辑 之后后端收到三条",
+              got == ["数据分析", "数据标注", "剪辑"], f"接口给的是 {got}")
+        page.get(URL)
+        time.sleep(2.5)
+        check("刷新后方向词还是这三条（落盘了）",
+              box_value(page, DBOX) == "数据分析、数据标注、剪辑",
+              f"实际显示 {box_value(page, DBOX)!r}")
+        check("落盘文件里方向词也是三条",
+              json.loads((tmp / "bot_config.json").read_text(encoding="utf-8"))
+              ["ai"]["target_job_keywords"] == ["数据分析", "数据标注", "剪辑"])
     finally:
         if browser is not None:
             close_browser(proc)

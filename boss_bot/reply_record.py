@@ -65,6 +65,27 @@ def classify_greet_skip(reason: str) -> str:
     return ""
 
 
+def ai_skip_text(ai_result: dict) -> str:
+    """把"AI 这一单没给出判断"和"AI 判了这个岗位不合格"写成两种不同的 skip_reason。
+
+    接口超时/正文被截断/解析不出来都带 `ai_error` 标记（见
+    greet_engine._fallback_result），把它们写成"AI判定不匹配"会有三处实打实的坏：
+    classify_greet_skip 归到 ai_reject，而同一岗位同一天同一类别只判一次，
+    等于接口抖一下就把这单永久判死；面板上看不出是接口问题；追问链还会拿着
+    一份根本没产生的判分去问"卡在哪一条"，再烧一次配额。
+    """
+    结果 = ai_result or {}
+    原由 = str(结果.get("reason") or "").strip()
+    if 结果.get("ai_error"):
+        return f"AI 接口这次没给出判断: {原由 or '未知原因'}，按配置跳过"
+    return f"AI判定不匹配: {原由}" if 原由 else "AI判定不匹配"
+
+
+def ai_should_probe(ai_result: dict) -> bool:
+    """只有模型真判过"不匹配"才值得追问一句卡在哪条；没判过的别再去问。"""
+    return not (ai_result or {}).get("ai_error")
+
+
 def _normalize_timestamp(ts: Optional[str]) -> str:
     """规范化时间戳:
     - None / 空字符串 → 当前时间

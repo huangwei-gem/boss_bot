@@ -31,7 +31,7 @@ from urllib.error import URLError
 
 from boss_bot.unified_config import DEFAULT_GREETING, UnifiedConfig, BASE_DIR, resolve_path, write_json_atomic
 from boss_bot.unified_config import (TITLE_VETO_KEYWORDS_DEFAULT)
-from boss_bot.intent import body_veto_hit, title_veto_hit
+from boss_bot.intent import body_veto_hit, keyword_hit, title_veto_hit
 from boss_bot.greeting import (account_greeting_mode, effective_account_greeting,
                                sanitize_ai_greeting)
 from boss_bot.unified_config import strip_default_greeting
@@ -154,6 +154,16 @@ NO_DRAWER_WINDOW_OK_FLOOR = 10
 # 连败到这个次数就先放一放（进程重启会重新给机会，万一是当天临时抽风）。
 NO_DRAWER_GIVE_UP = 2
 
+# 导航这条腿坏起来是扎堆的，不是按岗位分的。全量记录现算（tools/audit_nav_failure_shape.py）：
+# 492 条「页面加载失败」只聚成 8 波，最大一波 2026-10-10 10:56→11:15 用 19 分钟把
+# 150 条失败摊到 50 个岗位 URL 上、这段时间一单都没投进去；每个 URL 都才第一次撞，
+# 所以按 URL 那道门（NO_DRAWER_GIVE_UP）看不见它。窗口内够数就停整条腿。
+# 反过来，10-09 22:52 那波 20 条失败中间夹着 7 单成功——腿还在出货就不能定罪，
+# 所以判据要同时看窗口里的成功数。
+NAV_FAIL_WINDOW_SEC = 10 * 60
+NAV_FAIL_WINDOW_LIMIT = 5
+NAV_FAIL_COOLDOWN_SEC = 15 * 60
+
 
 def drawer_give_up_reason(times: int) -> str:
     return (f"这个岗位连着 {times} 次点了「立即沟通」都不出聊天抽屉，"
@@ -234,14 +244,50 @@ def target_job_hit(keywords, job: dict) -> str:
     return ""
 
 
+# 标题写了这些说法，就不是"能在线上做完"的岗；认否定式（"不用坐班"不算坐班）。
+ONSITE_SHAPES = ("到岗", "到场", "到店", "驻场", "外勤", "现场面试", "线下面试",
+                 "线下办公", "到公司", "需到公司", "坐班", "全天班", "轮班", "倒班")
+# 引流话术的标记：标题敢这么写的，正文再短也不是"HR 懒得写"，是挂着要人。
+LURE_SHAPES = ("日入", "无门槛", "零门槛", "手机电脑都行", "副业天花板", "招代理",
+               "拉人", "押金", "保证金", "培训费", "在家日入", "来看看再说")
+
+
+def title_states_the_job(title: str, target_keywords) -> bool:
+    """标题有没有把"这是哪一类活"说清楚——"正文太短按引流处理"唯一的豁免口。
+
+    10-16 拿机器真看过的 1774 个岗位重放了一遍（tools/audit_jobseeker_view.py）：
+    140 个"他该投的单"死在 JD_THIN_REASON 那一条上，样本是「外贸数据分析」
+    「数据标注/AI训练师」「视频数据标注」——BOSS 上不少兼职岗正文就一句甚至空着，
+    可标题已经把活写明白了，那不是引流，是 HR 没写 JD。
+    真引流的挂法（「兼职·高薪日结岗位」「急招！来看看再说」）标题里没有方向词，
+    照样走那条闸；所以这里只认三件事：方向判据命中、标题没写到岗说法、
+    标题没有引流标记。
+
+    方向那一判直接叫 target_job_hit，不自己数词：标注那半壁（LABELING_DIRECTION
+    和"标题才认裸标注"）已经在那一头上，这里再抄一遍就会两头不一致——
+    盘上那张表今天没有裸"标注"，抄一份的写法会把「视频数据标注/AI训练师」漏掉。
+    """
+    标题 = str(title or "").strip()
+    if not 标题 or not target_keywords:
+        return False
+    if not target_job_hit(target_keywords, {"job_name": 标题}):
+        return False
+    if keyword_hit(ONSITE_SHAPES, 标题, honor_negation=True):
+        return False
+    if keyword_hit(LURE_SHAPES, 标题, honor_negation=True):
+        return False
+    return True
+
+
 def jd_gate(keywords, job: dict, thin_chars: int = JD_THIN_CHARS,
             title_keywords=None, target_keywords=None) -> str:
     """详情页的 JD 拿到手之后、点「立即沟通」之前的第二道闸门。
 
     返回跳过原因，空串=放行。三条判据按"先定性、再看写得详不详细"排：
     1. 否决词命中 JD 正文（工厂岗、到场岗、引流话术大多只有正文里才写）；
-    2. 方向词一条没命中——不是数据分析这个方向，正文写多长都不投；
-    3. 正文短到没具体内容——标题能编，"来看看再说"的挂法编不出工作量。
+    2. 方向词一条没命中——不是他要的那一类，正文写多长都不投；
+    3. 正文短到没具体内容——标题能编，"来看看再说"的挂法编不出工作量；
+       但标题自己已经把活说清楚的不算（见 title_states_the_job）。
     """
     hit = veto_keyword_hit(keywords, job, title_keywords=title_keywords)
     if hit:
@@ -252,7 +298,8 @@ def jd_gate(keywords, job: dict, thin_chars: int = JD_THIN_CHARS,
     # 任职要求也算正文：有的岗位把工作内容写在要求那一栏，只量描述会误杀
     body = (str(job.get("jd_description") or "").strip()
             or str(job.get("jd_requirements") or "").strip())
-    if len(body) < thin_chars:
+    if len(body) < thin_chars and not title_states_the_job(
+            job.get("job_name"), target_keywords):
         return f"{JD_THIN_REASON}（正文仅 {len(body)} 字，门槛 {thin_chars} 字）"
     return ""
 
@@ -815,7 +862,6 @@ class AIAnalyzerChain:
         veto_only_match: bool = False,
         judge_timeout: int = 0,
         title_veto_keywords: list = None,
-        target_job_keywords: list = None,
     ):
         self.providers = []
         for p in providers:
@@ -848,9 +894,9 @@ class AIAnalyzerChain:
         self.title_veto_keywords = (list(TITLE_VETO_KEYWORDS_DEFAULT)
                                     if title_veto_keywords is None
                                     else list(title_veto_keywords or []))
-        # 只投这些方向（正向门槛）。默认空 = 不做正向过滤，配置里填了才生效：
-        # 这一条会把投递量砍掉一大截，得由用户点头开，不能塞进代码默认值。
-        self.target_job_keywords = list(target_job_keywords or [])
+        # 只投这些方向（正向门槛）不在这里判：容灾链只管"要不要拦"，
+        # 正向门槛在 jd_gate 里跑（引擎字段 _ai_target_job_keywords），
+        # 链上再存一份会变成没人读的副本。
         self.custom_scoring_prompt = custom_scoring_prompt or ""
         self.analyze_max_tokens = analyze_max_tokens or self.DEFAULT_ANALYZE_MAX_TOKENS
         # AI 全军覆没时的处置：default = 按"默认通过"继续投（盲投），
@@ -1504,6 +1550,8 @@ class GreetEngine:
         # 按岗位 URL 记的抽屉连败（这一类不是额度，是那个岗位点不动）
         self._drawer_fails = {}
         self._drawer_announced = set()
+        # 「页面加载失败」的时刻（只留窗口内）——这一类是整条腿一起坏，见 NAV_FAIL_*
+        self._nav_fail_recent = []
 
         # 城市字典（从 API 捕获）
         self._city_dict = {}
@@ -2365,7 +2413,6 @@ class GreetEngine:
                     veto_only_match=self._ai_veto_only,
                     judge_timeout=self._ai_judge_timeout,
                     title_veto_keywords=self._ai_title_veto_keywords,
-                    target_job_keywords=self._ai_target_job_keywords,
                 )
             else:
                 self._log("WARN", "AI 已启用但未配置任何 provider")
@@ -2513,6 +2560,44 @@ class GreetEngine:
         """
         return max(0.0, self._greet_cooldown_until - (now or time.time()))
 
+    def greet_cooldown_reason(self, now=None) -> str:
+        """冷却中到底为什么——轮次日志要念这句，不能一口咬定"额度用完"。
+
+        抽屉和导航两类失败共用这一份冷却，成因不同、他要做的事也不同：
+        额度见底是等，页面加载失败是别在这时候反复重启浏览器。
+        """
+        if self.greet_cooldown_left(now) <= 0:
+            return ""
+        return self._greet_cooldown_reason
+
+    def _check_nav_fail(self, now=None) -> str:
+        """窗口里导航失败够多、这段时间又一单没投进去 → 是腿坏了，不是这个岗位。"""
+        now = now or time.time()
+        败 = [t for t in (self._nav_fail_recent or []) if now - t <= NAV_FAIL_WINDOW_SEC]
+        成 = [t for t in (self._applied_recent or []) if now - t <= NAV_FAIL_WINDOW_SEC]
+        if len(败) >= NAV_FAIL_WINDOW_LIMIT and not 成:
+            return (f"{NAV_FAIL_WINDOW_SEC // 60} 分钟内 {len(败)} 次「页面加载失败」"
+                    f"（这段时间一单都没投进去），BOSS 的岗位页正在坏，"
+                    f"不是这些岗位本身的问题")
+        return ""
+
+    def _note_nav_fail(self, now=None) -> str:
+        """记一次"导航到岗位详情页没走通"，够判据就把整条打招呼腿停一会儿。
+
+        每个岗位重试都是三趟导航 × 3~6 秒，一轮 30 秒接一轮地灌记录：那 19 分钟
+        150 条就是这么来的。冷却会自己到点醒，不需要人来点恢复。
+        """
+        now = now or time.time()
+        近 = (self._nav_fail_recent or []) + [now]
+        self._nav_fail_recent = [t for t in 近 if now - t <= NAV_FAIL_WINDOW_SEC]
+        窗口 = self._check_nav_fail(now)
+        if 窗口 and self.greet_cooldown_left(now) <= 0:
+            self._greet_cooldown_until = now + NAV_FAIL_COOLDOWN_SEC
+            self._greet_cooldown_reason = 窗口
+            self._log("WARN", f"{窗口} —— 打招呼冷却 {NAV_FAIL_COOLDOWN_SEC // 60} 分钟，"
+                              f"这段时间别 stop/start 反复重开浏览器，到点自己接着投")
+        return 窗口
+
     def _note_drawer_fail(self, url: str = "", now=None) -> int:
         """记一次"点了沟通没出抽屉"：连续计数、时间窗、按岗位的连败都要记。"""
         now = now or time.time()
@@ -2641,6 +2726,7 @@ class GreetEngine:
                     self._random_delay(2, 4)
             else:
                 self._log("WARN", "页面加载失败，跳过此岗位")
+                self._note_nav_fail()
                 return False, "页面加载失败"
 
             # 检查是否被重定向到登录页

@@ -179,6 +179,7 @@ def test_冷却中整轮不搜索不建记录():
     lp._build_greet_tasks = _boom
     lp._greet_engine = SimpleNamespace(
         greet_cooldown_left=lambda: 900.0,
+        greet_cooldown_reason=lambda: "10 分钟内 5 次「页面加载失败」",
         search_jobs=_boom,
         account_index=1,
     )

@@ -64,6 +64,8 @@ def main() -> int:
     ck = Path(str(resolve_path(acc.cookie_file or "zhipin_cookies.json")))
     sha_before = hashlib.sha256(ck.read_bytes()).hexdigest()[:16]
     keywords = list(cfg.ai.custom_filter_keywords or [])
+    类型表 = list(cfg.ai.title_veto_keywords or [])
+    方向表 = list(cfg.ai.target_job_keywords or [])
     job = (acc.jobs or [None])[0]
     query = getattr(job, "query", "") or "数据分析"
     city = getattr(job, "city", "") or "全国"
@@ -98,7 +100,9 @@ def main() -> int:
             instance.get(url)
             wait_jd(instance)
             info = read_detail(instance)
-            why = jd_gate(keywords, info)
+            # 三张表都要传：只给否决词会让方向闸和"正文薄但标题说清"那条不参与，
+            # 量出来的"挡下多少"比线上宽松，等于给出一条假的放行率
+            why = jd_gate(keywords, info, title_keywords=类型表, target_keywords=方向表)
             if why:
                 blocked += 1
             print(f"  [{'挡' if why else '放'}] {info['job_name'][:22]}|"

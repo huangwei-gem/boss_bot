@@ -174,14 +174,6 @@ class TestLabelingHalfStillCounts:
             "job_name": "在线标注专员（需到岗坐班）",
             "jd_description": self.LABEL_JD})
 
-    def test_用户配置那张表现读仍不含标注(self):
-        """这条是回归哨兵：他自己补上「数据标注」后本条会红，届时删掉它即可"""
-        cfg = UnifiedConfig.load(str(ROOT / "bot_config.json"),
-                                 overrides_path=str(ROOT / "__none__.json"))
-        if not cfg.ai.target_job_keywords:
-            pytest.skip("配置里没有正向方向词表，无从核对")
-        assert not any("标注" in str(k) for k in cfg.ai.target_job_keywords)
-
 
 class TestConfigWired:
 
