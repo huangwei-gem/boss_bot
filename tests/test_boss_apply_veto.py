@@ -210,7 +210,25 @@ def test_抄写副本的词表和正本一字不差():
     """
     from boss_bot.unified_config import TITLE_VETO_KEYWORDS_DEFAULT as T
 
-    缺 = [w for w in T if w not in veto.DEFAULT_TITLE_VETO]
-    多 = [w for w in veto.DEFAULT_TITLE_VETO if w not in T]
+    例子 = json.loads((PKG / "assets" / "rules.example.json").read_text(
+        encoding="utf-8"))["reject_title_keywords"]
+    for 名字, 副本 in (("veto.py", list(veto.DEFAULT_TITLE_VETO)),
+                      ("rules.example.json", list(例子))):
+        缺 = [w for w in T if w not in 副本]
+        多 = [w for w in 副本 if w not in T]
+        assert not 缺 and not 多, "%s 缺 %s；多 %s" % (名字, 缺, 多)
+
+
+def test_抄写副本的压白名单组和正本一字不差():
+    """NO_EXEMPT 单独比一次：词表对齐了但这组没对齐，副本仍会把漏掉的救回去。
+
+    10-16 查出来的实情：正本这组早有 驻唱/歌手/美甲/美睫，副本只有 合伙人/老师
+    那一小撮——「美甲美睫助理4-6K长沙」标题带"助理"（职业白名单）在副本里被
+    放行，而这一单正是 10-10 用户指着骂"你为啥还在和那些主播聊天"的漏。
+    """
+    from boss_bot.intent import NO_EXEMPT as 正本
+
+    缺 = sorted(set(正本) - set(veto.NO_EXEMPT))
+    多 = sorted(set(veto.NO_EXEMPT) - set(正本))
     assert not 缺 and not 多, "副本缺 %s；副本多出 %s" % (缺, 多)
 

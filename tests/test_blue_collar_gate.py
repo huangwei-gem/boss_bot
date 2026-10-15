@@ -1023,3 +1023,62 @@ class Test今晚真漏掉的那三类:
         # 不带职业词的学徒岗照旧拦得住
         assert veto_hit_anywhere(TITLE_VETO_KEYWORDS_DEFAULT, [],
                                  title="给自家公司招两个学东西的（学徒岗）6-7K长沙") == "学徒"
+
+
+class 数据字样的IT工种Test:
+    """10-16 真机跑出来的漏：「数据安全风险评估师」02:55 还被方向闸拦着，
+    方向判据改成"标题带数据就让任职要求段那句算佐证"之后，03:23 被 AI 判 95 放行。
+
+    标题里这个"数据"是 IT 工种的名字（数据安全/数据库运维/大数据开发/数据架构），
+    不是"那份数据工作"——和"合伙人/老师"同一种形状，必须压过"数据/分析"白名单。
+    盘上现算（greet+reply 按 job_url 去重 = 1209 个岗，只按标题命中）：
+    数据安全 2、数据库运维 2、大数据运维 2、大数据开发 9、数据架构 1，共 16 条；
+    这 16 条里标题带 标注/数据分析/数据整理/数据助理/数据核对 的 0 条。
+    不用裸"数据库"/裸"大数据"：「临床公共数据库分析」是拿数据库做分析、
+    「兼职·大数据分析50-55元/时成都」那份工就是数据分析，两条都得留。
+    """
+
+    该拦的标题 = (
+        "数据安全风险评估师",
+        "数据安全产品经理",
+        "数据库运维",
+        "大数据运维工程师",
+        "兼职远程大数据运维",
+        "资深大数据开发工程师",
+        "医保大数据开发工程师",
+        "大数据架构师",
+    )
+
+    def test_这些标题压过数据白名单(self):
+        for 标题 in self.该拦的标题:
+            assert title_veto_hit(TITLE_VETO_KEYWORDS_DEFAULT, 标题), 标题
+
+    def test_用数据库做分析的岗不杀(self):
+        for 标题 in ("临床公共数据库分析", "数据分析师（熟练 SQL 数据库）",
+                     "数据分析（MySQL 取数）", "兼职·大数据分析50-55元/时成都查看职位"):
+            assert title_veto_hit(TITLE_VETO_KEYWORDS_DEFAULT, 标题) == "", 标题
+
+    def test_回复侧同一份判据也拦得住(self):
+        from boss_bot.reply_queue import veto_hit_anywhere
+        for 标题 in self.该拦的标题:
+            assert veto_hit_anywhere(TITLE_VETO_KEYWORDS_DEFAULT, [], title=标题), 标题
+
+    def test_他要的方向不被这批新词带倒(self):
+        for 标题 in ("兼职·数据标注员15-20元/时长沙查看职位",
+                     "线上数据分析助理（可居家）",
+                     "数据整理专员（线上兼职）"):
+            assert title_veto_hit(TITLE_VETO_KEYWORDS_DEFAULT, 标题) == "", 标题
+
+    def test_这一组词两头都在(self):
+        """这组词必须同时住在否决词表和 NO_EXEMPT：只进一张表等于没进。
+
+        只进否决词表 → 标题里的"数据/分析"白名单把它救回去（03:23 那次就是）；
+        只进 NO_EXEMPT → 它不在遍历的词里，谁也拦不着。这一条就是
+        unified_config/intent 两处注释里说的"改一处要改两处"的门。
+        """
+        from boss_bot.intent import NO_EXEMPT
+
+        这一组 = {"数据安全", "数据库运维", "大数据运维", "大数据开发", "数据架构"}
+        assert 这一组 <= set(NO_EXEMPT), sorted(这一组 - set(NO_EXEMPT))
+        assert 这一组 <= set(TITLE_VETO_KEYWORDS_DEFAULT), \
+            sorted(这一组 - set(TITLE_VETO_KEYWORDS_DEFAULT))
