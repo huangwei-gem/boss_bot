@@ -130,6 +130,8 @@ MAX_AI_REASON_LEN = 500
 MAX_AI_SUGGESTED_GREETING_LEN = 200
 MAX_ACTUAL_GREETING_LEN = 200
 MAX_SKIP_REASON_LEN = 200
+# "这单不合适"的原因，跟 skip_reason 并列（用户 2026-10-17 要的，可喂自净化）
+MAX_DECLINE_REASON_LEN = 200
 MAX_AI_PROBE_LEN = 200
 MAX_STRENGTHS_LEN = 300
 MAX_WEAKNESSES_LEN = 300
@@ -196,6 +198,7 @@ class ReplyRecord:
         ai_raw_response: AI原始返回内容
         is_skipped: 是否跳过了回复
         skip_reason: 跳过原因
+        decline_reason: 不合适的原因（与 skip_reason 并列的另一列）——"这单为什么不合适"
         account_name: 账号名称
         account_index: 账号索引
     """
@@ -215,6 +218,7 @@ class ReplyRecord:
         ai_raw_response: Optional[str] = None,
         is_skipped: bool = False,
         skip_reason: str = "",
+        decline_reason: str = "",
         account_name: str = "",
         account_index: int = 0,
         timestamp: Optional[str] = None,
@@ -233,6 +237,7 @@ class ReplyRecord:
         self.ai_raw_response = _truncate(ai_raw_response, MAX_AI_RAW_RESPONSE_LEN)
         self.is_skipped = is_skipped
         self.skip_reason = _truncate(skip_reason, MAX_SKIP_REASON_LEN)
+        self.decline_reason = _truncate(decline_reason, MAX_DECLINE_REASON_LEN)
         self.account_name = account_name
         self.account_index = account_index
 
@@ -252,6 +257,7 @@ class ReplyRecord:
             "ai_raw_response": self.ai_raw_response,
             "is_skipped": self.is_skipped,
             "skip_reason": self.skip_reason,
+            "decline_reason": self.decline_reason,
             "account_name": self.account_name,
             "account_index": self.account_index,
         }
@@ -273,6 +279,7 @@ class ReplyRecord:
             ai_raw_response=data.get("ai_raw_response"),
             is_skipped=data.get("is_skipped", False),
             skip_reason=data.get("skip_reason", ""),
+            decline_reason=data.get("decline_reason", ""),
             account_name=data.get("account_name", ""),
             account_index=data.get("account_index", 0),
         )

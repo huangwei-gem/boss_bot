@@ -2919,6 +2919,8 @@ class UnifiedBotLoop:
             received_message=latest_other_msg, reply_content=OFFLINE_INTERVIEW_DECLINE,
             reply_source="policy", reply_intent=meta.get("intent", ""),
             reply_reason="现场面试邀请，页面上没有可点的「拒绝」，改发文字拒绝",
+            # 这一列并列于 skip_reason（用户 2026-10-17）：这单为什么不合适
+            decline_reason="线下面试（只要线上远程）",
         )
         self._emit_reply_event(
             contact_name=name, job_name=job_name,

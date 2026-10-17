@@ -71,6 +71,18 @@ def _reason_class(reason: str) -> str:
     """
     return re.sub(r"\d+(?:\.\d+)?", "#", (reason or "").strip())[:80]
 
+
+def decline_class(reason: str) -> str:
+    """"这单不合适"的原因折成一类。
+
+    用户 2026-10-17：「也开一个和 skip_reason 记录相并列的行，就是[收集]不合适原因，
+    然后记录下来，可以用于自净化」。
+
+    跟 _reason_class 一样的理由：原因里带着「普工包吃住18元一小时」这种每次都变的
+    数字，按整句分组一条都凑不够证据数，等于永远沉淀不出经验。
+    """
+    return re.sub(r"\d+(?:\.\d+)?", "#", (reason or "").strip())[:80]
+
 # 积极反应关键词（HR 继续对话、询问详情、约面试等）
 _POSITIVE_PATTERNS = [
     re.compile(r"(面试|聊聊|沟通|电话|视频|线下|来公司)", re.IGNORECASE),
@@ -634,6 +646,22 @@ class SelfEvolveEngine:
 
         # 默认中性
         return EFFECT_NEUTRAL
+
+    def decline_stats(self) -> Dict[str, int]:
+        """"这单不合适"的原因按类聚合（用户 2026-10-17 要的，喂自净化）。
+
+        这一列跟 skip_reason 并列：跳过原因讲的是"为什么没投/没回"，
+        这一列讲的是"这单为什么不合适"。数字折成 # 后同类合并，
+        同一件事才能凑够证据数沉淀成经验（见 decline_class）。
+        """
+        stats: Dict[str, int] = {}
+        with self._lock:
+            for r in self._reply_records:
+                cls = decline_class(r.get("decline_reason") or "")
+                if not cls:
+                    continue          # 空的不进统计，面板上留一列空白没有意义
+                stats[cls] = stats.get(cls, 0) + 1
+        return stats
 
     def _sweep_ignored_locked(self) -> int:
         """超时未答扫描（调用方已持锁）：超过 24 小时 HR 仍无任何消息的记录判 ignored。"""

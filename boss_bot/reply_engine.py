@@ -49,6 +49,25 @@ logger = logging.getLogger(__name__)
 FAMILY_DECLINE_REPLY = (
     "这类岗位我不考虑哈，以后这类的不用再给我推荐了，"
     "就不耽误您时间了，祝您招聘顺利~")
+
+
+def build_decline_reply(原因) -> str:
+    """拒单那句话：把"因为什么不合适"带上。
+
+    用户 2026-10-17：「又不合适的记得要准确[回复]HR为什么不合适，方便[以后]知道
+    说为什么不合适」。写死那句只说"这类岗位"，HR 和他事后都看不出是普工还是主播。
+
+    原因给空就退回写死那句——拼出「这类  岗位不考虑」比通用话术更难看。
+    """
+    词 = [str(x).strip() for x in (原因 if isinstance(原因, (list, tuple)) else [原因])
+          if str(x or "").strip()]
+    if not 词:
+        return FAMILY_DECLINE_REPLY
+    那类 = "、".join(词)
+    return (f"{那类}这种岗位我不考虑哈，以后这类的不用再给我推荐了，"
+            "就不耽误您时间了，祝您招聘顺利~")
+
+
 # 我们自己的话里出现过这一句，说明这一单已经当面拒过了；同一会话再复读一遍就是骚扰
 # （骗子过滤那句也以它收尾，两条链共用这一个标记）
 REPLY_REFUSAL_MARK = "就不耽误您时间了"
@@ -695,12 +714,16 @@ class ReplyEngine:
                 meta["source"] = "family_filter"
                 meta["intent"] = meta.get("intent") or "other"
                 self._log_decision(chat_name, latest, meta, "text", decision_start)
+                # 把"因为什么"带上（用户 2026-10-17：「又不合适的记得要准确[回复]
+                # HR为什么不合适」）；同一句也落进 decline_reason 那一列，喂自净化
+                文 = build_decline_reply(family_hit)
                 self._add_record(
                     chat_name=chat_name, job_name=job_name, received_message=latest,
-                    reply_content=FAMILY_DECLINE_REPLY, reply_source="family_filter",
+                    reply_content=文, reply_source="family_filter",
                     reply_intent=meta["intent"], reply_reason=reason,
+                    decline_reason=f"岗位类型命中「{family_hit}」",
                 )
-                return ("text", FAMILY_DECLINE_REPLY, meta)
+                return ("text", 文, meta)
 
         # ── 1. 关键词规则直通（最高优先级）──
         if latest:
