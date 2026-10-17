@@ -202,6 +202,29 @@ def launch_browser(account):
         raise
 
 
+def 等前端缓存就位(dash, chat_id, 秒=40):
+    """等 replyChatCache 里真出现这一路会话。
+
+    这份列表是 `/api/reply_records/grouped` 一次性下来的 10 MB JSON
+    （实测 10,728,581 字节，2272 组），面板刚重启时解析要好几秒。以前只睡
+    4+2.5 秒就去点会话，2026-10-17 那次第一路（傅知槿）读到"前端 0 条"、
+    后面五路全正常——不是界面漏画，是脚本抢在缓存落地前点了。
+    这种"等待"必须等条件，不能等秒数。
+    """
+    参数 = json.dumps(chat_id, ensure_ascii=False)
+    for _ in range(int(秒 / 0.5) + 1):
+        在 = dash.run_js(
+            "(function(){if(typeof replyChatCache==='undefined'"
+            "||typeof resolveChatKey!=='function')return 'no-var';"
+            "var k=resolveChatKey(%s);"
+            "return replyChatCache[k]?'yes':'no';})()" % 参数,
+            as_expr=True)
+        if 在 == "yes":
+            return True
+        time.sleep(0.5)
+    return False
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--chats", type=int, default=3, help="比对最近几个会话")
@@ -334,16 +357,35 @@ def main():
         be_norm = [{"text": norm(m.get("text") or m.get("content") or m.get("card_text")),
                     "mine": bool(m.get("is_mine"))}
                    for m in be if m.get("kind") != "action"]
+        # 空正文的行不能悄悄滤掉：2026-10-17 那次"线上15/后端15/前端16"就是被这个
+        # 滤子遮住的——存档里躺着一行 block 只剩时间标签的卡片，界面把它画了出来
+        be_all = [m for m in be_norm]
         be_norm = [m for m in be_norm if m["text"]]
         row["backend_count"] = len(be_norm)
+        row["backend_empty"] = len(be_all) - len(be_norm)
 
         # C 端：前端渲染（按身份选中；按昵称选会把同名的两路混成一路）
+        if not 等前端缓存就位(dash, chat["chat_id"]):
+            # 前端这份列表只从 /api/reply_records/grouped 来：存档有而它没有，
+            # 就是界面里点开看不到的一路会话（人看不见，不是脚本没等到）
+            row["issues"].append("前端会话列表里没有这一路（replyChatCache 取不到）")
+            report["chats"].append(row)
+            print(f"   [差异] {name}: 线上{row.get('boss_count', '-')} / "
+                  f"后端{row.get('backend_count', '-')} / 前端未列出"
+                  f"  -> {'; '.join(row['issues'])}")
+            continue
         dash.run_js('selectBossChat(%s)' % json.dumps(chat["chat_id"], ensure_ascii=False),
                     as_expr=True)
         time.sleep(2)
         ui = json.loads(dash.run_js(JS_UI_BUBBLES, as_expr=True) or "[]")
         ui_norm = [{"text": norm(m["text"]), "mine": m["mine"]} for m in ui if norm(m["text"])]
         row["ui_count"] = len(ui_norm)
+        row["ui_empty"] = len(ui) - len(ui_norm)
+        if row["backend_empty"]:
+            row["issues"].append("后端有 %d 条读不出正文的行（界面上会多画）"
+                                 % row["backend_empty"])
+        if row["ui_empty"]:
+            row["issues"].append("前端画出 %d 行是空的" % row["ui_empty"])
 
         # 比对 1：BOSS 线上每条消息后端都要有（BOSS 只渲染可视窗口，是子集关系）
         def card_key(t):
@@ -387,8 +429,11 @@ def main():
     report["summary"]["account"] = account
     report["summary"]["checked"] = len(report["chats"])
     report["summary"]["inconsistent"] = len(bad)
+    空行 = sum(int(c.get("backend_empty") or 0) for c in report["chats"])
+    report["summary"]["backend_empty_rows"] = 空行
     print("\n结论：")
     print(f"  账号{account}：比对会话 {len(report['chats'])} 个，三端不一致 {len(bad)} 个")
+    print(f"  后端读不出正文的行：{空行} 条（这种行界面不能画，线上一条文字都没有）")
     print(f"  BOSS 有但后端没存的会话：{report['summary']['boss_not_in_backend_count']} 个"
           f"（新会话未抓取/重名合并都会进这个名单）")
     out = os.path.join(BASE, "tools", f"verify_three_way_a{account}.json")

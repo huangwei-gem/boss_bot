@@ -288,6 +288,21 @@ class MessageStore:
         """BOSS 给每条消息的 data-mid（旧字段名 msg_id 也认）"""
         return str(msg.get("mid") or msg.get("msg_id") or "").strip()
 
+    @staticmethod
+    def 线上读不出正文(raw: dict) -> bool:
+        """刚从 DOM 读回来的这一行，是不是真的一行文字都没有。
+
+        `block` 是整条 `innerText`：线上一条读不出正文的行（图片？表情？撤回？本轮
+        不下结论，读的时候把形状写进日志）剩下的文字就只有它自己的时间标签。
+        时间已经单独存在 `time` 里、线上也只画在分段处，把它当正文，界面就会长出
+        BOSS 上没有的一行（实测 2265 份存档里 110 条，前端卡片显示成 "20:09"）。
+        """
+        for key in ("text", "content", "card_text"):
+            if (raw.get(key) or "").strip():
+                return False
+        block = (raw.get("block") or "").strip()
+        return not block or block == (raw.get("time") or "").strip()
+
     def _norm_msg(self, msg: dict) -> dict:
         """统一字段：正文、方向、mid、kind。
 
@@ -338,6 +353,9 @@ class MessageStore:
             if lbl and ct.startswith(lbl):
                 ct = ct[len(lbl):].lstrip()
             out["card_text"] = ct
+            # block 也要一起写回：前端画卡片取的是 card_text || block，
+            # 这里只清 card_text 就等于把 "20:09" 那种时间标签留给退路捞回来
+            out["block"] = ct
         return out
 
     @classmethod
@@ -479,16 +497,24 @@ class MessageStore:
 
             seen_keys = set()
             merged = []
+            丢掉 = 0
             for raw in list(existing_msgs) + list(new_messages):
                 norm = self._norm_msg(raw)
-                # 线上真的什么都没有才丢；卡片这类正文为空但有整块文本的要留下
-                if not norm["text"] and not norm.get("card_text") and not norm.get("mid"):
+                # 线上一条真的读不出文字的行不收：它画出来就是一行 BOSS 上没有的
+                # 空气泡/卡片（block 只剩时间标签那种），存量 110 条靠下次同步自愈
+                if self.线上读不出正文(norm):
+                    丢掉 += 1
                     continue
                 key = self._msg_key(norm)
                 if key in seen_keys:
                     continue
                 seen_keys.add(key)
                 merged.append(norm)
+            if 丢掉:
+                import logging
+                logging.getLogger(__name__).info(
+                    "回复记录(%s)：%d 行读不出正文，已跳过（线上形状见 read_all_messages 的日志）",
+                    cid, 丢掉)
 
             merged = self._reconcile_outgoing(merged)
             before = self._order_by_mid(

@@ -1151,14 +1151,29 @@ class BossChatHandler:
                                   || item.querySelector(".time");
                         var cls = item.className || "";
                         var sys = cls.indexOf("item-system") >= 0;
+                        var blk = (item.innerText || "").replace(/\\s+/g, " ").trim().slice(0, 300);
+                        var tmt = timeEl ? timeEl.textContent.trim() : "";
+                        var hint = "";
+                        if (!(textEl && textEl.textContent.trim())) {
+                            // 这只是 DOM 观察（.text-content 是空的），不是判据：
+                            // 卡片也是空的但有整块文本，要不要留痕由 Python 那头的
+                            // MessageStore.线上读不出正文 决定，判据不能抄两份
+                            var tags = {};
+                            item.querySelectorAll("*").forEach(function(e){
+                                tags[e.tagName.toLowerCase()] = 1;
+                            });
+                            hint = "class=" + cls.replace(/\\s+/g, ".").slice(0, 60)
+                                 + " 子标签=" + Object.keys(tags).join(",");
+                        }
                         result.push({
                             text: textEl ? textEl.textContent.trim() : "",
-                            time: timeEl ? timeEl.textContent.trim() : "",
+                            time: tmt,
                             isFriend: cls.indexOf("item-friend") >= 0,
                             is_mine: cls.indexOf("item-friend") < 0 && !sys,
                             is_system: sys,
                             mid: item.getAttribute("data-mid") || "",
-                            block: (item.innerText || "").replace(/\\s+/g, " ").trim().slice(0, 300)
+                            block: blk,
+                            hint: hint
                         });
                     }
                     return JSON.stringify(result);
@@ -1167,6 +1182,13 @@ class BossChatHandler:
 
             if result:
                 messages = json.loads(result)
+                for m in messages:
+                    形状 = m.pop("hint", "")
+                    # 存档不收读不出正文的行（判据在 MessageStore，只此一份），
+                    # 但它线上确实占着一行——形状写进日志，下一轮才有依据定口径
+                    if 形状 and self._msg_store.线上读不出正文(m):
+                        logger.info("[read_all_messages] 读不出正文的线上行 mid=%s %s",
+                                    m.get("mid"), 形状[:140])
 
             logger.info(f"[read_all_messages] 读取到完整消息数: {len(messages)}")
         except Exception as e:

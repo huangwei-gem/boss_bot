@@ -712,27 +712,32 @@ class SelfEvolveEngine:
             self._log("INFO", f"纠正前已留底: {archive.name}")
 
     def purify_records(self) -> Dict[str, int]:
-        """一次性数据纠正（幂等，可重复调用）：
+        """按现行判据重审整本回复记录（幂等，可重复调用）：
 
         1. 泄漏思考过程的记录剔除出统计（标记 excluded，不删除）；
         2. 已评估记录用现行判据重判，拒绝话术一律归 negative；
         3. 顺带跑一遍超时未答扫描（ignored）。
         改写前先归档原文件。
+
+        每趟都重审全库，不看 `purified` 标记：引擎只在账号启动时跑这一趟，
+        标过就等于"这一条永远按当时那版判据定罪"。词表后来又补过一批
+        （2026-10-16 那轮），补上去的词对存量一个字都没生效过。
+        评估本身是正则判词，200 条一趟几十毫秒，不需要省。
         """
         changed = {"reclassified": 0, "excluded": 0, "ignored": 0}
         if not self.enabled:
             return changed
         with self._lock:
-            pending = [r for r in self._reply_records if not r.get("purified")]
-            if not pending:
-                return changed
-            self._archive_before_purify()
-            for r in pending:
+            for r in self._reply_records:
+                # 闸门留痕存的就是被拦下的泄漏草稿：它从来没进过效果统计，
+                # 对它做"剔除"会把没加过的数扣成负的
+                if r.get("kind") == "gate_block":
+                    continue
                 r["purified"] = True
                 reply_text = r.get("reply_text") or ""
                 source_key = r.get("source") or "unknown"
                 effect = r.get("effect")
-                if _is_leaked_reply(reply_text):
+                if _is_leaked_reply(reply_text) and not r.get("excluded"):
                     r["excluded"] = True
                     changed["excluded"] += 1
                     self._stats_exclude(source_key, effect)
@@ -751,7 +756,13 @@ class SelfEvolveEngine:
                                           f"{effect} → {new_effect}")
             changed["ignored"] = self._sweep_ignored_locked()
             if any(changed.values()):
+                self._archive_before_purify()
                 self._save_internal()
+            else:
+                # 一趟零改动也要留一句话：否则日志里根本分不清"净化跑过了、数据是干净的"
+                # 和"这一趟压根没跑"（2026-10-17 查"自净化净化了吗"就只能靠把生产文件
+                # 拷到临时目录重跑一遍才能确认）
+                self._log("INFO", f"自净化重审 {len(self._reply_records)} 条：无改动")
         if any(changed.values()):
             self._log("INFO", f"自净化完成: 重判 {changed['reclassified']}、"
                               f"剔除泄漏 {changed['excluded']}、补判 ignored {changed['ignored']}")

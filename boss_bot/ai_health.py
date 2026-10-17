@@ -57,6 +57,13 @@ def classify_error(text: str) -> str:
         return "被限流（429，频率太高；稍后重测就会回来，不是 Key 的问题）"
     if any(k in t for k in ("quota", "insufficient")):
         return "额度用尽（需要充值或换 Key）"
+    if ("code: 410" in t or "status': 410" in t or "http 410" in t
+            or any(k in t for k in ("end of life", "no longer available",
+                                    "deprecated", "retired"))):
+        # 这条必须排在"模型名不存在"前面：下架报文里一定带 "model" 字样，
+        # 走到那条就会被说成"名字写错"，而名字其实是好的（2026-10-17 kimi-k3 实测）
+        return ("模型已下架（410 end of life / no longer available）："
+                "改模型名没用，这一条要从容灾链里摘掉")
     if any(k in t for k in ("404", "not found", "model", "does not exist")) \
             and "model" in t:
         return "模型名不存在"
@@ -64,10 +71,6 @@ def classify_error(text: str) -> str:
         # NVIDIA 实测：base_url 是对的、模型名写错（glm-5-3 → z-ai/glm-5.3）也回
         # '404 page not found'，所以两种可能都要点出来，并给核对办法
         return "404：模型名或接口地址(base_url)不对，用 GET {base_url}/models 核对官方模型名"
-    if any(k in t for k in ("429", "rate limit", "too many requests")):
-        return "被限流（429，频率太高；稍后重测就会回来，不是 Key 的问题）"
-    if any(k in t for k in ("quota", "insufficient")):
-        return "额度用尽（需要充值或换 Key）"
     if any(k in t for k in ("timeout", "timed out")):
         return "请求超时"
     if any(k in t for k in ("connection", "unreachable", "getaddrinfo",

@@ -4727,11 +4727,19 @@ function renderBossMessageBubble(msg, chatName) {
   var isMine = msg.is_mine || sender === 'bot' || sender === 'me';
   var type = msg.type || msg.msg_type || 'text';
   var cardText = msg.card_text || msg.block || content;
+  // block 是整条 innerText：线上一条读不出正文的行，只剩它自己的时间标签。
+  // 时间是 meta 那一行单独显示的，拿它当卡片正文就画出一行 BOSS 上没有的卡片
+  // （2026-10-17 三端实测：欧阳先生 线上15/后端15/前端16，多的就是这条 "20:09"）
+  if (cardText.trim() === rawTime) cardText = '';
   // kind 是后端按线上 DOM 定的真实形态：bubble 气泡 / card 卡片（线上正文区就是空的，
   // 只有整块文本）/ system BOSS 自己的系统条 / action 引擎自记标记。
   // 老数据没有 kind，就按类型和"正文为空但有整块文本"推，避免画出线上没有的空气泡。
   var kind = msg.kind || (type === 'system' || sender === 'system' ? 'system'
             : (!content && cardText ? 'card' : 'bubble'));
+
+  // 正文、卡片文本都读不出（存量文件里还有 110 条这种行）就一行都不画：
+  // 后端合并已经不再收新的，这里只兜"还没轮到下次同步"的存量
+  if (!content.trim() && !cardText.trim()) return '';
 
   if (kind === 'action') {
     // 线上没有这条气泡，画成居中小字，不伪装成对话内容
@@ -4808,7 +4816,7 @@ function renderBossMessageBubble(msg, chatName) {
   return html;
 }
 
-// �0刷新聊天详情
+// 刷新聊天详情
 function refreshBossChatDetail(key) {
   fetch('/api/chats/'+encodeURIComponent(displayChatName(key))+chatParams(key))
     .then(function(r){return r.json();}).then(function(data){

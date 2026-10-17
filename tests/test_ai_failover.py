@@ -855,6 +855,29 @@ class HealthReasonTest:
         assert "模型名" in r and "base_url" in r
         assert "模型名" in classify_error("Error code: 404 - {'error': {'message': 'model not found'}}")
 
+    def test_模型下架不说成模型名不存在(self):
+        """2026-10-17 11:08 线上真实报文：moonshotai/kimi-k3 回 410
+        "has reached its end of life"。以前这条会掉进"model"字样那个分支被判成
+        "模型名不存在"——于是他跑去核对一个本来就写对的 slug，而容灾链每轮还在
+        撞这扇已经焊死的门。下架和写错名要分开说。"""
+        from boss_bot.ai_health import classify_error
+        报文 = ("Error code: 410 - {'type': 'about:blank', 'title': 'Gone', 'status': 410, "
+                "'detail': \"The model 'moonshotai/kimi-k3' has reached its end of life "
+                "on 2026-10-15T08:00:00Z and is no longer available.\"}")
+        r = classify_error(报文)
+        assert "下架" in r or "停用" in r or "生命周期" in r, r
+        assert "模型名不存在" not in r, "410 下架被说成名字写错，会害人去改一个没坏的 slug"
+
+    def test_下架判据排在model字样之前(self):
+        """反向哨兵：报文里同时有 410 和 "model" 时必须判下架——
+        "模型名不存在"那条分支的触发条件就是文本里带 model"""
+        from boss_bot.ai_health import classify_error
+        for 文本 in ("Error code: 410 - model retired",
+                     "HTTP 410 Gone: this model is deprecated",
+                     "410: the model is no longer available"):
+            assert "模型名不存在" not in classify_error(文本), 文本
+            assert "410" in classify_error(文本) or "下架" in classify_error(文本), 文本
+
 
 class HealthTimeoutTest:
     """一次网络抖动不该把能用的接口踢出容灾链"""
