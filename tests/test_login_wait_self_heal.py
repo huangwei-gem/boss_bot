@@ -11,6 +11,7 @@ zhipin_cookies.json 的 mtime 是登录成功那一下存下的），可是没�
 把人睡着的 5 分钟当成放弃整条腿的理由，就是把这句话变成了空头承诺。
 """
 import sys
+import tempfile
 import threading
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -31,7 +32,13 @@ def _造循环(monkeypatch, account_index=0):
     lp._running = True
     lp.browser_manager = MagicMock()
     lp.browser_manager.get_instance.return_value = MagicMock()
-    monkeypatch.setattr(lp, "_cookie_file", lambda: "zhipin_cookies.json")
+    # Cookie 路径必须落在临时目录：这条链路一旦判成登录墙就会把 Cookie 文件归档搬走，
+    # 写真的文件名等于把用户那次人工登录的会话搬进 data/stale_cookies/
+    # （2026-10-17 16:16 就搬走了主账号那份，靠归档原样拷回才没逼人重新登录）。
+    假cookie = Path(tempfile.mkdtemp(prefix="boss_test_cookie_")) / "zhipin_cookies.json"
+    假cookie.write_text("[]", encoding="utf-8")
+    monkeypatch.setattr(lp, "_cookie_file", lambda: str(假cookie))
+    monkeypatch.setattr(lp, "_discard_stale_cookies", lambda *a, **k: None)
     monkeypatch.setattr(lp, "_ensure_login_window", lambda *a, **k: True)
     monkeypatch.setattr(lp, "_save_cookies_if_logged_in", lambda *a, **k: True)
     monkeypatch.setattr(lp, "_finish_login_window", lambda: None)
@@ -164,6 +171,46 @@ class 承诺和代码要对得上Test:
         src = (ROOT / "boss_bot" / "main_loop.py").read_text(encoding="utf-8")
         assert "登进去后这一轮自己继续" in src, "摆窗口的承诺要留着"
         assert "登录超时，主循环退出" not in src
+
+
+class 自动登录成功要把等登录那盏灯灭掉Test:
+    """16:11 实测：主账号这一轮 Cookie 注入成功、页面验过已登录、两条腿都在跑，
+    面板却还写着 needs_login=true / phase=waiting_login——那是上一轮
+    （16:06 那次 load_cookies 超时）留下的标记没人清。
+    他就是被这种"界面说卡住、其实没卡"骗过好几回（"我登录了主账号为什么还是卡住了"）。"""
+
+    def test_遗留的等登录标记要清掉(self, monkeypatch):
+        lp = _造循环(monkeypatch)
+        lp._needs_login = True
+        lp._login_reason = "no_cookie"
+        monkeypatch.setattr(lp, "_login_state_now", lambda instance: "logged_in")
+        assert lp._handle_login() is True
+        assert lp._needs_login is False, "页面都验过登录了还挂着等登录"
+        态 = lp.get_status()
+        assert 态["logged_in"] is True, 态
+        assert 态["phase"] != "waiting_login", 态["phase"]
+
+    def test_界面那盏灯不许自己把跑着的号说成卡住(self):
+        """status 的 logged_in 是 _logged_in and not _needs_login 拼出来的，
+        谁改了 _needs_login 就得两处一起对，否则面板又开始骗人"""
+        src = (ROOT / "boss_bot" / "main_loop.py").read_text(encoding="utf-8")
+        成功块 = src[src.index('if state == "logged_in":'):
+                     src.index('if state == "login_wall":')]
+        assert "_needs_login = False" in 成功块, "自动登录成功却不清等登录标记"
+
+    def test_自动登录没成时这盏灯要还亮着(self, monkeypatch):
+        """反向哨兵：判不准就是判不准，不能顺手把等登录灭掉"""
+        lp = _造循环(monkeypatch)
+        lp._needs_login = False
+
+        def 等不到(instance, cookie_file):
+            lp._running = False      # 人叫停，等待这才收尾（不许自己判死整条腿）
+            return False
+
+        monkeypatch.setattr(lp, "_login_state_now", lambda instance: "login_wall")
+        monkeypatch.setattr(lp, "_wait_for_login", 等不到)
+        assert lp._handle_login() is False
+        assert lp._needs_login is True
 
 
 if __name__ == "__main__":

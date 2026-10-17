@@ -127,3 +127,21 @@ def isolate_runtime_records(tmp_path_factory):
     metrics.METRICS_FILE = original_file
     metrics._store = None
     CFG.BASE_DIR = original_base
+
+
+@pytest.fixture(autouse=True, scope="session")
+def 仓库里的登录Cookie一条都不许动():
+    """2026-10-17 16:16 一条新写的反向哨兵测试把主账号的 zhipin_cookies.json 搬进了
+    data/stale_cookies/：harness 把 `_cookie_file()` 直接 patch 成了仓库里那个真文件名，
+    而 `_handle_login()` 判成登录墙的第一件事就是归档 Cookie。文件没丢（只归档不删除），
+    但它要是没人管，下一次重启就变成"要人工重新登录"。
+
+    这道门只看一件事：跑完一轮测试，仓库里那些 Cookie 文件必须还在原处。
+    """
+    原名 = sorted(p.name for p in REPO_DIR.glob("zhipin*.json"))
+    yield
+    还在 = {p.name for p in REPO_DIR.glob("zhipin*.json")}
+    少了 = [n for n in 原名 if n not in 还在]
+    assert not 少了, (
+        f"测试把用户的登录 Cookie 文件弄走了：{少了}。"
+        f"去 data/stale_cookies/ 按时间戳拷回来，再把那条测试的 _cookie_file 指到 tmp")

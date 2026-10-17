@@ -273,7 +273,10 @@ class 看守线程Test:
         m.start_idle_tab_watchdog(interval=3600)
         起 = time.perf_counter()
         m.stop_idle_tab_watchdog()
-        assert time.perf_counter() - 起 < 2, "等满一小时才退，面板关浏览器就卡住"
+        # 判据是"不等满那一圈"，不是"两秒内"：全量跑加上两个真浏览器在抢 CPU，
+        # 线程被排到 2 秒外很正常（10-17 全量 2178 条里就红了这一条，单跑 2.2 秒过）。
+        # 留 5 秒照样抓得住"压根没听信号、睡满 3600 秒才退"那种写法。
+        assert time.perf_counter() - 起 < 5, "等满一小时才退，面板关浏览器就卡住"
 
     def test_一圈里抛异常线程还要活着(self, monkeypatch):
         def 炸(address, keep_ids=(), timeout=5.0, 打开=None):

@@ -448,7 +448,7 @@ class ReplyBudgetTest:
         e, RE = self._engine(22)
         tried = []
         with patch.object(e, "_call_with_rate_limit_retry",
-                          side_effect=lambda c, m, msg, b, j, h, name: tried.append(name)):
+                          side_effect=lambda c, m, msg, b, j, h, name, 指令="": tried.append(name)):
             reply = e._ask_ai("薪资多少", "王经理", "数据分析师")
         assert len(tried) == AI_MAX_ATTEMPTS, f"预算没生效，试了 {len(tried)} 个接口"
         assert reply is None
@@ -457,7 +457,7 @@ class ReplyBudgetTest:
         e, RE = self._engine(22)
         tried = []
 
-        def fake(client, model, msg, b, j, h, name):
+        def fake(client, model, msg, b, j, h, name, 指令=""):
             tried.append(name)
             return "看经验定" if len(tried) == 2 else None
 

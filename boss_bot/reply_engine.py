@@ -35,7 +35,8 @@ from boss_bot.rules import RuleEngine
 from boss_bot.unified_config import TITLE_VETO_KEYWORDS_DEFAULT
 from boss_bot.intent import (classify, classify_interview_invite, is_contact_exchange_card,
                              is_resume_request, veto_hit_anywhere)
-from boss_bot.prompts import build_system_prompt, build_user_prompt
+from boss_bot.prompts import (build_system_prompt, build_user_prompt, 历史原始行上限,
+                              对话指纹, 消息正文)
 from boss_bot.reply_record import ReplyRecord, ReplyRecordStore, _get_reply_store
 
 logger = logging.getLogger(__name__)
@@ -158,6 +159,26 @@ def _format_rejection(t: str) -> str:
     return ""
 
 
+# 机器能做的只有"发消息"这一件事：发简历、加好友、交课程、走微信各有自己的动作和闸门。
+# 话里替使用者说"已经做了"或"可以加微信"，就是许一个当场兑现不了的结果。
+# 系统提示词第 9 条早就禁了这种说法，2026-10-17 15:26~15:28 线上跟进还是真发出去过
+# 「已发送好友申请」「简历已发您」「微信加也可以」——写在提示词里拦不住，就得拦在发送闸门上
+# （拦下是抛错换下一个接口，不是"降级发出去"）。
+_已完成动作说法 = ("已发送", "已经发送", "已发您", "已经发您", "已发给你", "我发了", "刚发了",
+                  "已提交", "已经提交", "已上传", "已经上传", "已报名", "已经报名",
+                  "已完成课程", "已经学完", "已加好友", "已经加好友")
+_站外承诺说法 = ("微信加也可以", "加我微信", "我加您微信", "我加你微信", "方便留个微信",
+                "留个微信", "加个微信", "稍后加您微信", "稍后添加您微信",
+                # 15:16 线上真把这句发出去了（HR: 加一下飞书联系吧）——换一个平台名
+                # 还是同一个兑现不了的动作，不能因为词表只写了"微信"就放行
+                "我来添加您", "我添加您", "留个飞书", "加个飞书", "飞书加也可以")
+
+
+def _unkept_promise(t: str) -> str:
+    hit = next((k for k in _已完成动作说法 + _站外承诺说法 if k in t), None)
+    return f"替用户许了兑现不了的话「{hit}」" if hit else ""
+
+
 def reply_rejection(text: str, profile: dict = None) -> str:
     """这条 AI 输出能不能发给 HR；能发返回空串，不能发返回原因。
 
@@ -166,7 +187,7 @@ def reply_rejection(text: str, profile: dict = None) -> str:
     profile 不传就现读画像（面板上改了年龄/学历，下一句就得按新的判）。
     """
     t = (text or "").strip()
-    bad = _format_rejection(t)
+    bad = _format_rejection(t) or _unkept_promise(t)
     if bad:
         return bad
     if profile is None:
@@ -369,22 +390,25 @@ class ReplyCache:
         self._max_size = max_size
         self._ttl = ttl
 
-    def _key(self, message: str, boss_name: str, job_name: str) -> str:
-        return f"{message[:100]}|{boss_name}|{job_name}"
+    def _key(self, message: str, boss_name: str, job_name: str,
+             上下文: str = "") -> str:
+        return f"{message[:100]}|{boss_name}|{job_name}|{上下文}"
 
-    def get(self, message: str, boss_name: str, job_name: str) -> Optional[str]:
-        key = self._key(message, boss_name, job_name)
+    def get(self, message: str, boss_name: str, job_name: str,
+            上下文: str = "") -> Optional[str]:
+        key = self._key(message, boss_name, job_name, 上下文)
         entry = self._cache.get(key)
         if entry and time.time() - entry[1] < self._ttl:
             logger.debug(f"[缓存命中] key={key[:30]}")
             return entry[0]
         return None
 
-    def set(self, message: str, boss_name: str, job_name: str, reply: str):
+    def set(self, message: str, boss_name: str, job_name: str, reply: str,
+            上下文: str = ""):
         if len(self._cache) >= self._max_size:
             oldest = min(self._cache.items(), key=lambda x: x[1][1])
             del self._cache[oldest[0]]
-        key = self._key(message, boss_name, job_name)
+        key = self._key(message, boss_name, job_name, 上下文)
         self._cache[key] = (reply, time.time())
 
 
@@ -513,10 +537,10 @@ class ReplyEngine:
         # 会话文件以昵称存，两个"杨女士"会共用同一个文件。
         if self._message_store is not None and chat_name and not isinstance(messages, list):
             try:
-                full_dialog = self._message_store.get_full_dialog(chat_name, limit=30)
+                full_dialog = self._message_store.get_full_dialog(chat_name, limit=历史原始行上限)
                 if full_dialog:
                     messages = full_dialog
-                    logger.debug(f"[get_reply] 使用前30句完整对话历史: {len(full_dialog)} 条消息")
+                    logger.debug(f"[get_reply] 用存档对话: {len(full_dialog)} 行原始消息")
             except Exception as e:
                 logger.debug(f"[get_reply] 获取完整对话历史失败，使用传入消息: {e}")
 
@@ -920,13 +944,38 @@ class ReplyEngine:
         for msg in reversed(messages):
             if msg.get("is_mine"):
                 continue
-            body = (msg.get("text") or msg.get("card_text") or "").strip()
+            body = 消息正文(msg)
             if body:
                 latest = body
                 break
         return latest, messages
 
     # ---------- AI ----------
+
+    跟进指令 = (
+        "这一条是【我方主动跟进】：上面这段对话里，最后开口的是我方，对方看完就没回了，"
+        "现在隔了一段时间要主动追一句，把话头接回面试或线上沟通。要求：\n"
+        "1. 不许重复上面任何一句「我:」已经说过的话，也不要再来一遍自我介绍\n"
+        "2. 对方最后提过一件事（要作品、要简历、问过能不能来、给了微信/电话），先接住那件事，再提下一步\n"
+        "3. 对方已经明确拒绝或说「以后再说」，只回一句礼貌收尾，不许再推销\n"
+        "4. 一句话，别超过 40 字；【你的背景】里没有的数字不许编"
+    )
+
+    def 现编跟进(self, 对话: list, boss_name: str, job_name: str, 兜底句: str) -> str:
+        """主动跟进那句：按这段对话现编；容灾链全挂了才退回固定模板。
+
+        以前跟进只在那三条模板里轮着发（要追的就是"能不能约面试"这一句），于是对方刚问完
+        "请问有作品吗"、刚说"麻烦把手机号发我"，机器回过去还是"这个岗位还在招吗"——
+        他 10-17 说的"很多消息没参考上下文、乱回答"，六成就是这一条（今天 134 条里 80 条是跟进）。
+        """
+        句 = (self._ask_ai("（对方这条之后没有再回复，这条是我方主动跟进）",
+                           boss_name, job_name, 对话,
+                           指令=self.跟进指令, 用缓存=False) or "").strip()
+        if not 句:
+            logger.info("[跟进] AI 没答上来，退回固定话术")
+            return 兜底句
+        logger.info("[跟进] 按这段对话现编: %s", 句[:40])
+        return 句
 
     @staticmethod
     def _is_rate_limit_error(e: Exception) -> bool:
@@ -935,12 +984,14 @@ class ReplyEngine:
         return "429" in text or "rate limit" in text or "insufficient quota" in text or "tpm/rpm" in text
 
     def _call_with_rate_limit_retry(self, client, model, message,
-                                    boss_name, job_name, history, api_name: str):
+                                    boss_name, job_name, history, api_name: str,
+                                    指令: str = ""):
         """调用 AI，429 限流时等待后重试一次；重试仍失败返回 None（由调用方切换备用 API）"""
         for attempt in range(2):
             try:
                 start = time.time()
-                reply = self._call_chat(client, model, message, boss_name, job_name, history)
+                reply = self._call_chat(client, model, message, boss_name, job_name,
+                                        history, 指令)
                 latency_ms = int((time.time() - start) * 1000)
                 logger.info(f"[ai_call] api={api_name} ok=True latency_ms={latency_ms}")
                 return reply
@@ -958,11 +1009,14 @@ class ReplyEngine:
         return None
 
     def _ask_ai(self, message: str, boss_name: str, job_name: str,
-                history: list = None) -> Optional[str]:
+                history: list = None, 指令: str = "",
+                用缓存: bool = True) -> Optional[str]:
         """调用 AI API 生成回复（OpenAI 兼容格式），多模型自动切换
 
         策略：
-        1. 缓存命中时直接返回
+        1. 缓存命中时直接返回（主动跟进那种"要按这段对话现编"的调用要关掉缓存：
+           缓存键是"最新消息+称呼+岗位"，跟进那句没有最新消息，键会空到一起去，
+           两个不同的会话能拿到同一句复读）
         2. 从模型池中随机打乱顺序，逐个尝试
         3. 429 限流时等待后重试一次
         4. 全部失败时返回 None
@@ -976,11 +1030,16 @@ class ReplyEngine:
         if message == "" and not history:
             return None
 
-        # 缓存检查
-        cached = self._cache.get(message, boss_name, job_name)
-        if cached:
-            logger.info(f"[缓存命中] 跳过 API 调用，直接返回缓存回复")
-            return cached
+        # 缓存检查（主动跟进那种现编的调用要关掉：键是"最新消息+称呼+岗位"，
+        # 跟进没有最新消息，两个不同会话会撞成同一句复读）
+        # 上下文指纹要算进来：HR 隔一会儿把同一句再问一遍，这段对话已经往前走了，
+        # 复用第一次那句就是他说的"没参考上下文，乱回答"。
+        上下文 = 对话指纹(history or [])
+        if 用缓存:
+            cached = self._cache.get(message, boss_name, job_name, 上下文)
+            if cached:
+                logger.info(f"[缓存命中] 跳过 API 调用，直接返回缓存回复")
+                return cached
 
         # 检查是否有配置模型（热重载后以实例属性为准）
         providers = self._ai_providers or config.AI_PROVIDERS
@@ -1022,10 +1081,11 @@ class ReplyEngine:
                 client = OpenAI(api_key=api_key, base_url=base_url,
                                 timeout=timeout, max_retries=0)
                 reply = self._call_with_rate_limit_retry(
-                    client, model, message, boss_name, job_name, history, provider_name)
+                    client, model, message, boss_name, job_name, history, provider_name, 指令)
                 if reply:
                     logger.info(f"[AI回复生成] {provider_name}: {reply[:50]}...")
-                    self._cache.set(message, boss_name, job_name, reply)
+                    if 用缓存:
+                        self._cache.set(message, boss_name, job_name, reply, 上下文)
                     return reply
             except ImportError:
                 logger.warning("未安装 openai 库，无法使用 AI 回复。运行: pip install openai")
@@ -1039,8 +1099,9 @@ class ReplyEngine:
         logger.error(f"{attempts} 个 AI 接口均调用失败")
         return None
 
-    def _call_chat(self, client, model, message, boss_name, job_name, history):
-        user_prompt = build_user_prompt(boss_name, job_name, message, history)
+    def _call_chat(self, client, model, message, boss_name, job_name, history, 指令: str = ""):
+        user_prompt = build_user_prompt(boss_name, job_name, message, history,
+                                        追加指令=指令)
         # 每次现取：前端改了 system_rules 或个人画像，下一条回复就该用新的
         system_prompt = build_system_prompt()
         # 经验补充只做增量追加，不重写基础提示词（Continual Harness：小范围更新）

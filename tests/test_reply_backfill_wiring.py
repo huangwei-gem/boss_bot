@@ -222,6 +222,10 @@ class FollowupRoundTest:
             else [_hr("你好"), _me("您好，方便约个面试吗？")])
         loop._chat_handler.get_job_name.return_value = "数据分析"
         loop._chat_handler.send_text.return_value = True
+        # 跟进那句现在按这段对话现编（ReplyEngine.现编跟进 自己有用例）。这一套测的是
+        # "该不该追、追几次、额度算不算"，话术层让它装作 AI 没答上来、退回模板，
+        # 句子才是可预期的。
+        loop._reply_engine.现编跟进.side_effect = lambda 对话, boss, job, 兜底句: 兜底句
         loop.config.reply.followup_after_hours = 1
         return loop
 

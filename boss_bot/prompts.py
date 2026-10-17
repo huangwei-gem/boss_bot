@@ -6,11 +6,71 @@ BOSS 自动回复机器人 - AI 提示词模板
 - 用户提示词包含多轮对话历史，保证回复连贯
 """
 
+import hashlib
 import json
+import logging
 from pathlib import Path
 
 from boss_bot.config import USER_PROFILE
 from boss_bot.unified_config import OVERRIDES_FILE, USER_PROFILE_FILE
+
+logger = logging.getLogger(__name__)
+
+# 回 HR 之前至少要看够这段对话最近多少句（2026-10-17 他第五次提这件事，
+# 口径从 10-10 的"20 条"抬到"至少上下 30 句"）。
+最少对话句数 = 30
+# 凑这 30 句最多回看多少行原始消息：实测存档里 16.16% 的行是卡片，
+# 120 行足够凑满 30 句，又能挡住几百行的长会话把 token 打满。
+历史原始行上限 = 120
+
+
+def 消息正文(m: dict) -> str:
+    """这一行到底说了什么 — text 是空的就退到卡片正文。
+
+    取值顺序和界面、存档一致（text → card_text → block），三处必须一致，否则会出现
+    "界面上看得见、AI 提示词里没有"的那种错位：HR 的"我想要一份您的附件简历，您是否同意"
+    线上 .text-content 是空的，正文只在 card_text/block 里。以前拼对话历史只读 text，
+    11404 行里 1843 行（16.16%）从来没进过提示词——机器答不上话就是这么来的。
+    """
+    for key in ("text", "card_text", "block"):
+        v = (m.get(key) or "").strip()
+        if v and v != (m.get("time") or "").strip():
+            return v
+    return ""
+
+
+def 对话窗口(messages: list, 最少句数: int = 最少对话句数,
+            原始行上限: int = 历史原始行上限) -> list:
+    """从最后一条往前取，取够 最少句数 句看得懂的对话就收，最多回看 原始行上限 行。
+
+    按"句"而不是按"行"取：按行截 30 的话，卡片行占掉一成多，模型实际只剩二十来句。
+    """
+    收 = []
+    句 = 0
+    for m in reversed(messages or []):
+        if len(收) >= 原始行上限:
+            break
+        收.append(m)
+        if 消息正文(m):
+            句 += 1
+            if 句 >= 最少句数:
+                break
+    收.reverse()
+    return 收
+
+
+def 对话指纹(messages: list) -> str:
+    """这段对话的短指纹——回复缓存的键必须带上它。
+
+    只按"最新消息+称呼+岗位"缓存时，HR 隔一会儿把同一句再问一遍（「在吗」「好的」这种），
+    中间对话已经往前走了，模型却被跳过、第一次那句话原样复读出来。
+    """
+    行 = [f"{'我' if m.get('is_mine') else '对方'}|{消息正文(m)}"
+          for m in 对话窗口(messages or []) if 消息正文(m)]
+    if not 行:
+        return ""
+    return hashlib.md5("\n".join(行).encode("utf-8")).hexdigest()[:12]
+
 
 
 def _load_overrides() -> dict:
@@ -137,21 +197,24 @@ def build_system_prompt(profile: dict = None) -> str:
 
 
 def build_conversation_history(messages: list) -> str:
-    """将消息列表格式化为对话记录文本"""
+    """将消息列表格式化为对话记录文本（卡片行按 card_text/block 取正文并标出是卡片）"""
     lines = []
     for m in messages or []:
-        text = (m.get("text") or "").strip()
-        if not text:
+        正文 = 消息正文(m)
+        if not 正文:
             continue
         role = "我" if m.get("is_mine") else "对方"
-        lines.append(f"{role}: {text}")
+        标 = "[卡片] " if not (m.get("text") or "").strip() else ""
+        lines.append(f"{role}: {标}{正文}")
     return "\n".join(lines) if lines else "（无历史消息）"
 
 
 def _exclude_latest_message(messages: list, latest_text: str) -> list:
     """从消息列表中排除最新一条对方消息（避免在 history 和 message 中重复显示）。
 
-    从后往前找到第一条非己方消息且内容与 latest_text 匹配的消息，排除它。
+    从后往前找到第一条非己方、且正文与 latest_text 相同的消息，排除它。
+    正文一律走 消息正文()：最新那句常常就是张卡片（text 是空的），
+    只比 text 会一条都排不掉，于是同一句在提示词里出现两遍。
     如果未找到匹配项，返回原列表（保持向后兼容）。
     """
     if not messages or not latest_text:
@@ -159,28 +222,37 @@ def _exclude_latest_message(messages: list, latest_text: str) -> list:
     latest_text = latest_text.strip()
     for i in range(len(messages) - 1, -1, -1):
         msg = messages[i]
-        if not msg.get("is_mine") and (msg.get("text") or "").strip() == latest_text:
+        if not msg.get("is_mine") and 消息正文(msg) == latest_text:
             return messages[:i] + messages[i + 1:]
     return messages
 
 
 def build_user_prompt(boss_name: str, job_name: str, message: str,
-                      messages: list = None, exclude_latest: bool = True) -> str:
+                      messages: list = None, exclude_latest: bool = True,
+                      追加指令: str = "") -> str:
     """构建用户提示词（含多轮历史）
 
     Args:
         boss_name: 招聘方称呼
         job_name: 招聘岗位
         message: 对方最新消息
-        messages: 消息列表 [{"text","is_mine","time"}]
+        messages: 消息列表 [{"text","card_text","block","is_mine","time"}]
         exclude_latest: 是否从历史中排除最新消息（避免在 history 和 message 中重复显示）
+        追加指令: 这次要它干什么（被动回复留空；主动跟进要说清"对方沉默了"）
     """
     history_messages = messages
     if exclude_latest and messages and message:
         history_messages = _exclude_latest_message(messages, message)
-    return user_prompt_template().format(
+    history_messages = 对话窗口(history_messages)
+    历史 = build_conversation_history(history_messages)
+    句数 = sum(1 for 行 in 历史.splitlines() if 行.startswith(("对方:", "我: ")))
+    logger.info("[对话窗口] 这次带进提示词 %d 句（口径至少 %d 句，最多回看 %d 行）",
+                句数, 最少对话句数, 历史原始行上限)
+    提示词 = user_prompt_template().format(
         boss_name=boss_name or "HR",
         job_name=job_name or current_profile().get("position", "目标岗位"),
-        history=build_conversation_history(history_messages),
+        history=历史,
         message=message,
     )
+    return 提示词 + ("\n\n" + 追加指令 if 追加指令 else "")
+

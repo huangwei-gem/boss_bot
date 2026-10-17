@@ -192,7 +192,7 @@ class FailoverTest:
         e = self._engine(3)
         seen = []
 
-        def fake(client, model, msg, b, j, h, name):
+        def fake(client, model, msg, b, j, h, name, 指令=""):
             seen.append(name)
             if len(seen) == 1:
                 raise RuntimeError("回复内容不像一句回复（分析稿/思考过程）")
@@ -208,3 +208,45 @@ class FailoverTest:
         e = self._engine(2)
         with patch.object(e, "_call_with_rate_limit_retry", return_value=None):
             assert e._ask_ai("我们聊聊", "肖瑾", "金融数据助理") is None
+
+
+class 替用户许兑现不了的话要拦Test:
+    """这三句是 2026-10-17 15:26~15:28 线上跟进真发出去的原文（改成现编之后）。
+
+    系统提示词第 9 条早就写了"不许声称已完成无法确认的事情"，只写在提示词里拦不住：
+    六个接口里有两个就这么回了。机器能做的只有发消息，发简历、加好友、交课程各有自己的
+    闸门，话里替使用者说"已发送/已发您/微信加也可以"就是许一个兑现不了的结果——
+    和被拦了的那些病句是同一类，所以拦在发送闸门上，不合格就换接口。
+    """
+
+    def test_声称已经发过好友申请要拦(self):
+        from boss_bot.reply_engine import reply_rejection
+        原 = "好的，已发送好友申请，麻烦通过一下，方便约面试时间~"
+        assert "已发送" in reply_rejection(原), "这句真发出去了，机器没发过好友申请"
+
+    def test_声称简历已经发过去要拦(self):
+        from boss_bot.reply_engine import reply_rejection
+        assert reply_rejection("好的，简历已发您，方便时想约个线上沟通，进一步了解数据类岗位机会。")
+
+    def test_主动提出走微信要拦(self):
+        from boss_bot.reply_engine import reply_rejection
+        assert reply_rejection("您有空回我一下就行，微信加也可以，想细聊下采集任务的具体安排。")
+
+    def test_换到飞书这种站外平台也要拦(self):
+        """15:16 线上真发出去的一句：HR 说"加一下飞书联系吧"，机器回"我来添加您"。
+        加飞书、加 QQ 都是机器做不到的动作，方向和"我加您微信"一模一样。"""
+        from boss_bot.reply_engine import reply_rejection
+        原 = "好的，没问题。请问您的飞书账号是？我来添加您。"
+        assert "我来添加您" in reply_rejection(原), reply_rejection(原)
+        assert reply_rejection("方便的话留个飞书也行，咱们那边细聊。")
+
+    def test_要求对方加自己好友也要拦(self):
+        from boss_bot.reply_engine import reply_rejection
+        assert reply_rejection("您加我微信吧，我平常不看 BOSS。")
+
+    def test_稍后发送这种说法仍然放行(self):
+        """反向哨兵：提示词明确让说"稍后完成/马上处理"，不能一起拦掉"""
+        from boss_bot.reply_engine import reply_rejection
+        assert reply_rejection("好的，我稍后把简历发给您，方便的话我们约个线上沟通？") == ""
+        assert reply_rejection("麻烦您有空通过一下好友申请，我这边随时可以面试。") == ""
+

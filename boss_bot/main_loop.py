@@ -40,6 +40,7 @@ from boss_bot.browser_launcher import BrowserManager, BOSS_AUTH_COOKIES
 from boss_bot.greet_engine import (GreetEngine, GREETING_MISSING_REASON,
                                    in_probe_band)
 from boss_bot.reply_engine import ReplyEngine, conversation_rejected
+from boss_bot.prompts import 历史原始行上限
 from boss_bot.intent import veto_hit_anywhere
 from boss_bot.contact_ledger import CONTACT_DECLINED_MARK
 from boss_bot.page_handler import BossChatHandler, pinned_key
@@ -1147,6 +1148,11 @@ class UnifiedBotLoop:
                         state = self._login_state_now(instance)
                     if state == "logged_in":
                         self._logged_in = True
+                        # 上一轮判成"要等登录"留下的标记必须在这里抹掉：
+                        # 16:11 主账号 Cookie 注入成功、页面也验过登进去了、两条腿都在跑，
+                        # /api/status 还写着 needs_login=true / phase=waiting_login，
+                        # 界面就摆出一副"这个号卡住了"的样子（他被这种假红骗过好几回）
+                        self._needs_login = False
                         self._login_reason = ""
                         self._log("SUCCESS", "Cookie 有效，已自动登录")
                         return True
@@ -2308,13 +2314,19 @@ class UnifiedBotLoop:
         except Exception as e:
             self._log("WARN", f"跟进次数没记进 {FOLLOWUP_STATE_FILE.name}（本次仍会追）: {e}")
 
-    def _followup_text(self, item: dict, boss: str, job_name: str) -> str:
-        """固定话术而不是让 AI 现编：要追的就是"能不能约个面试"这一句，
-        一次扫出几十个会话时 AI 又慢又贵，模板反而稳。"""
+    def _followup_text(self, item: dict, boss: str, job_name: str, 对话: list) -> str:
+        """跟进那句按这段对话现编（他和招呼语那次是同一条口径：不要固定的话，要 AI 生成的）。
+
+        以前只在那三条模板里轮着发，理由是一次扫出几十个会话 AI 又慢又贵。真数据里这一条
+        占今天发出回复的六成（134 条里 80 条），HR 刚问完"有作品吗"、刚说"把手机号发我"，
+        回过去的还是"这个岗位还在招吗"——就是"没参考上下文、乱回答"。模板留着当兜底：
+        容灾链全挂了才发它，一轮最多 6 个会话，AI 那条路的钱花得起。
+        """
         tpl = FOLLOWUP_LINES[min(int(item.get("times") or 0), len(FOLLOWUP_LINES) - 1)]
-        return tpl.format(boss=boss,
+        兜底 = tpl.format(boss=boss,
                           job=(job_name or "").strip() or "这个岗位",
                           company=(item.get("company") or "").strip() or "贵公司")
+        return self._reply_engine.现编跟进(对话 or [], boss, job_name, 兜底句=兜底)
 
     @staticmethod
     def _in_quiet_hours(now=None) -> bool:
@@ -2416,7 +2428,8 @@ class UnifiedBotLoop:
             self._log("INFO", f"⏭️ 跟进跳过 [{name}]：HR 已拒绝，再追是骚扰")
             return False
 
-        text = self._followup_text(item, name, job_name)
+        # 对话取页面上刚读到的这份（live），不是凭存档旧账——现编要看得见的就是刚才那几眼
+        text = self._followup_text(item, name, job_name, live)
         self._reply_engine.begin_event_ts()
         if self._dry_run("本应跟进", f"[{name}] {text}"):
             return False
@@ -2774,8 +2787,10 @@ class UnifiedBotLoop:
         try:
             # 会话按 姓名+公司 存，同名的两个 HR 已经是两个文件，
             # 不需要再靠"岗位名对不对得上"去怀疑这份历史是不是别人的
+            # limit 要给到 历史原始行上限：默认那个 50 行里有 16% 是卡片行，
+            # 真正拼进提示词就凑不满他要的 30 句
             full_dialog = self._msg_store.get_full_dialog(
-                name, company=chat_company)
+                name, limit=历史原始行上限, company=chat_company)
             if full_dialog:
                 messages_for_reply = full_dialog
                 self._log("DEBUG", f"使用完整对话历史: {len(full_dialog)} 条消息")
