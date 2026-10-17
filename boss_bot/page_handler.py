@@ -442,6 +442,9 @@ class BossChatHandler:
         time.sleep(1)
 
         unread_chats = []
+        # 每一轮重新开局：这一趟读到的全部行才是"撤置顶"的正证，
+        # 留着一份旧的会让抓取失败那一轮拿着上一轮的证据撤保护
+        self.seen_chat_rows = []
         try:
             self.page.run_js(self._SIDEBAR_RESET_JS, as_expr=True)
             time.sleep(0.4)
@@ -512,6 +515,7 @@ class BossChatHandler:
 
         merged = {}
         pinned = set()
+        self.seen_chat_rows = []      # 同 get_unread_chats：本轮证据只算本轮读到的
         prev_pos = None
         for _ in range(max_rounds):
             for row in self._sidebar_rows():

@@ -90,12 +90,12 @@ ROOT = Path(__file__).resolve().parent.parent
     "兼职·【居家办公/六级可投】线上英语绘本副业2500-6500元/月长沙查看职位",
 ]
 
-# 他点名要的方向：数据标注/数据分析/线上运营/电商客服/游戏代练，一个都不许误伤
+# 他点名要的方向：数据标注/数据分析/线上运营/游戏代练，一个都不许误伤
+# （"电商客服"2026-10-17 从这张表里拿掉了：用户原话「客服不要哈」，见 客服不要Test）
 要的标题 = [
     "兼职·数据标注专员20-30元/时徐州查看职位",
     "兼职·数据分析师（可线上工作）1000-6000元/月临沂查看职位",
     "直播运营助理（线上远程）3-6K长沙查看职位",
-    "电商客服（兼职可居家办公）5-8K长沙查看职位",
     "游戏代练/打手线上接单日结100-300元长沙查看职位",
     "短视频剪辑线上新手可学150-300元/天长沙查看职位",
 ]
@@ -630,7 +630,6 @@ class 否定式Test:
 
     def test_职业白名单仍旧放行(self):
         from boss_bot.intent import title_veto_hit
-        assert title_veto_hit(TITLE_VETO_KEYWORDS_DEFAULT, "聊天室客服（线上）") == ""
         assert title_veto_hit(TITLE_VETO_KEYWORDS_DEFAULT, "电动车数据标注员") == ""
 
     def test_盘上补的词拦得住今天漏的那几条(self):
@@ -856,7 +855,7 @@ class 合伙人与老师类Test:
 
     def test_要的方向不受影响(self):
         for 标题 in ("兼职·数据标注/AI训练师80-100元/天", "兼职·线上数据分析-兼职50-200元/时",
-                     "兼职·抖音线上运营10-35元/时", "兼职·电商客服专员（居家办公 远程）"):
+                     "兼职·抖音线上运营10-35元/时", "兼职·线上数据整理专员3000-4000元/月"):
             assert title_veto_hit(TITLE_VETO_KEYWORDS_DEFAULT, 标题) == "", 标题
 
 
@@ -871,7 +870,7 @@ class 正文判岗Test:
     于是 10-06 用文字拒过之后，10-07 21:48 主动跟进还替他说了一句
     「之前聊的山姆新仓开业大量招人我很有兴趣」。
     所以：标题不是目标职业形状时，类型词那一遍必须连正文一起量；
-    标题带数据/标注/客服的仍旧只查标题，「录制快递收发的画面并做文本标注」不误杀。
+    标题带数据/标注的仍旧只查标题，「录制快递收发的画面并做文本标注」不误杀。
     """
 
     标题 = "山姆新仓开业大量招人8-9K长沙查看职位"
@@ -896,7 +895,7 @@ class 正文判岗Test:
     def test_目标形状标题的正文不误杀(self):
         from boss_bot.intent import veto_hit_anywhere
         正文 = "拍摄并标注超市理货、快递收发、门店打包这些真实场景，按条结算，全程线上提交"
-        for 标题 in ("兼职·数据标注/AI训练师", "线上数据采集（超市场景）", "兼职·电商客服专员"):
+        for 标题 in ("兼职·数据标注/AI训练师", "线上数据采集（超市场景）", "兼职·线上数据整理专员"):
             assert veto_hit_anywhere(TITLE_VETO_KEYWORDS_DEFAULT, [],
                                      title=标题, text=正文) == "", 标题
 
@@ -1082,3 +1081,55 @@ class 数据字样的IT工种Test:
         assert 这一组 <= set(NO_EXEMPT), sorted(这一组 - set(NO_EXEMPT))
         assert 这一组 <= set(TITLE_VETO_KEYWORDS_DEFAULT), \
             sorted(这一组 - set(TITLE_VETO_KEYWORDS_DEFAULT))
+
+
+class 客服不要Test:
+    """用户 2026-10-17 原话：「客服不要哈」。
+
+    这一族以前住在**职业白名单**里（"电商客服"当时算他点名要的方向），所以光往
+    否决表加一行不顶用：盘上 2298 个去重标题里 28 个带客服的，改之前一条都没拦，
+    全被白名单判成目标形状放行。要动三处：否决表加"客服"、intent.NO_EXEMPT 加
+    "客服"（压过"助理/运营"这类白名单词）、白名单里把"客服"撤掉。
+    只查标题：JD 里"本岗位非客服、非销售"是常见反例，进正文表就误杀。
+    """
+
+    盘上真标题 = [
+        "兼职·异地客服/居家电商客服/天猫拼多多客服3000-4500元/月阿拉善盟查看职位",
+        "兼职·线上客服专员15-25元/时菏泽查看职位",
+        "兼职·电商客服专员（居家办公 远程）3000-4000元/月厦门查看职位",
+        "五险一金-福利待遇高-非催收类电话客服8-13K长沙查看职位",
+        "客服实习生（非电销）3-6K长沙查看职位",
+        "兼职·线上居家兼职客服【公司直招】20-25元/时广州查看职位",
+    ]
+
+    def test_盘上这族标题现在全部拦得住(self):
+        from boss_bot.intent import title_veto_hit
+        for 标题 in self.盘上真标题:
+            assert title_veto_hit(TITLE_VETO_KEYWORDS_DEFAULT, 标题) == "客服", 标题
+
+    def test_带助理运营字样的客服也拦(self):
+        """「客服助理」原来会被"助理"这条白名单救回去——NO_EXEMPT 必须压过它。"""
+        from boss_bot.intent import title_veto_hit
+        assert title_veto_hit(TITLE_VETO_KEYWORDS_DEFAULT, "客服助理（线上）") == "客服"
+        assert title_veto_hit(TITLE_VETO_KEYWORDS_DEFAULT,
+                              "兼职·【招聘线上运营/客服（居家/在校可）】20-25元/时") == "客服"
+
+    def test_三处口径一致(self):
+        """改一处漏一处就等于没改：否决表、NO_EXEMPT、白名单这次都要动。"""
+        from boss_bot.intent import NO_EXEMPT
+        from boss_bot.unified_config import TITLE_VETO_EXEMPT_KEYWORDS
+        assert "客服" in TITLE_VETO_KEYWORDS_DEFAULT
+        assert "客服" in NO_EXEMPT
+        assert "客服" not in TITLE_VETO_EXEMPT_KEYWORDS
+
+    def test_方向岗一个都不误伤(self):
+        from boss_bot.intent import title_veto_hit
+        for 标题 in ("兼职·数据标注/AI训练师80-100元/天", "兼职·线上数据分析-兼职50-200元/时",
+                     "直播运营助理（线上远程）3-6K", "兼职·线上数据整理专员3000-4000元/月"):
+            assert title_veto_hit(TITLE_VETO_KEYWORDS_DEFAULT, 标题) == "", 标题
+
+    def test_正文里那句非客服不算(self):
+        from boss_bot.intent import veto_hit_anywhere
+        assert veto_hit_anywhere(TITLE_VETO_KEYWORDS_DEFAULT, [],
+                                 title="兼职·数据标注/AI训练师",
+                                 text="本岗位非客服、非销售，全程线上提交标注结果") == ""

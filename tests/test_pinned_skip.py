@@ -131,6 +131,10 @@ class 回复轮放行Test:
         loop._msg_store.get_all_chats_detail.return_value = []
         loop._reply_engine.can_reply.return_value = True
         loop._process_single_chat = MagicMock()
+        # 假 handler 的"这一趟扫过的全部行"默认跟红点那一份一致；
+        # 要测"置顶行没红点所以只在全部行里出现"的用例自己改这一个属性
+        loop._chat_handler.get_unread_chats.side_effect = (
+            lambda **k: loop._chat_handler.seen_chat_rows)
         logs = []
         loop._log = lambda *a, **k: logs.append(a[-1])
         loop._logs = logs
@@ -138,7 +142,7 @@ class 回复轮放行Test:
 
     def test_置顶的红点会话不点开并说明是谁的主意(self, tmp_path, monkeypatch):
         loop = self._loop(tmp_path, monkeypatch)
-        loop._chat_handler.get_unread_chats.return_value = [
+        loop._chat_handler.seen_chat_rows = [
             _row(0, "陈女士", "湖南云幻科技", unread=1, pinned=True),
             _row(1, "王女士", "长沙数据标注", unread=1),
         ]
@@ -151,37 +155,48 @@ class 回复轮放行Test:
     def test_置顶标记落进存档(self, tmp_path, monkeypatch):
         """不落盘的话，欠回复/跟进/工具那几条只看存档的腿根本不知道谁被置顶了。"""
         loop = self._loop(tmp_path, monkeypatch)
-        loop._chat_handler.get_unread_chats.return_value = [
+        loop._chat_handler.seen_chat_rows = [
             _row(0, "陈女士", "湖南云幻科技", unread=1, pinned=True)]
         loop._run_reply_round()
         loop._msg_store.set_pinned.assert_called_once_with(
             "陈女士", True, company="湖南云幻科技")
 
     def test_取消置顶后机器重新接手(self, tmp_path, monkeypatch):
-        """撤标要正证：连着几轮侧栏都没有那一行，才当真他取消了置顶。
+        """撤标的正证：这一轮真扫到那一行、而那一行没标置顶——立刻撤、立刻照常回。
 
-        原来是一条 pinned=False 就立刻清档——而那正好也是"置顶判据被 BOSS 改版
-        打掉"的形状，保护会一夜之间自毁（见 撤标要正证Test）。
+        以前要"连着三轮没认出置顶行"才当真（2026-10-17 实测：置顶的唐女士那一行
+        常年没有红点，红点那份 rows 里压根没有她，于是每三轮打一次「按你已经取消了
+        处理」，而存档那位根本没变——保护在那一轮整个空窗）。
         """
-        from boss_bot.main_loop import UnifiedBotLoop
         loop = self._loop(tmp_path, monkeypatch)
-        loop._chat_handler.get_unread_chats.return_value = [
+        loop._chat_handler.seen_chat_rows = [
             _row(0, "陈女士", "湖南云幻科技", unread=1, pinned=True)]
         loop._run_reply_round()
         loop._msg_store.set_pinned.reset_mock()
         loop._process_single_chat.reset_mock()
-        loop._chat_handler.get_unread_chats.return_value = [
+        loop._chat_handler.seen_chat_rows = [
             _row(0, "陈女士", "湖南云幻科技", unread=1, pinned=False)]
-        for _ in range(UnifiedBotLoop.置顶空抓容忍轮数 - 1):
-            loop._run_reply_round()
-            loop._msg_store.set_pinned.assert_not_called()
-            loop._process_single_chat.assert_not_called()
-        assert loop._process_single_chat.call_count == 0, \
-            "宽限期内连红点那条腿也要按住，不然只拦了存档驱动的三条"
         loop._run_reply_round()
         loop._msg_store.set_pinned.assert_called_once_with(
             "陈女士", False, company="湖南云幻科技")
         assert loop._process_single_chat.call_count == 1, "不置顶了就该照常回"
+
+    def test_置顶行没有红点时靠扫过的全部行认出(self, tmp_path, monkeypatch):
+        """他自己聊的那路常常一条未读都没有：红点那份看不见她，只有全部行里有。
+
+        这一条就是 10-17 那个空窗的正面对立面——认出她就不会有"撤标"这一步。
+        """
+        loop = self._loop(tmp_path, monkeypatch)
+        loop._msg_store.get_all_chats_detail.return_value = [
+            _conv("陈女士", [_hr("在吗")], company="湖南云幻科技", pinned=True)]
+        loop._chat_handler.seen_chat_rows = [
+            _row(0, "陈女士", "湖南云幻科技", pinned=True),
+            _row(1, "王女士", "长沙数据标注", unread=1)]
+        loop._run_reply_round()
+        assert loop._置顶保住 == {("陈女士", "湖南云幻科技")}, loop._置顶保住
+        written = [c.args[:2] for c in loop._msg_store.set_pinned.call_args_list]
+        assert ("陈女士", True) in written, \
+            f"认出来的置顶也要落盘一次，别只留在内存里：{written}"
 
     def test_全量同步把没有红点的置顶会话也登记上(self, tmp_path, monkeypatch):
         """置顶行常常一条未读都没有（他一直自己聊），回复轮看不见它，只有同步那一趟能。"""
@@ -301,12 +316,16 @@ class 补发简历与工具绕开置顶Test:
 
 
 class 撤标要正证Test:
-    """2026-10-10 的形状：07:40 之前每次侧栏抓取都报「置顶 1 个」，之后连着几十次报 0 个，
-    盘上那一路的 pinned 位跟着被抓取写成 False。存档驱动的那几条腿于是重新开始
-    碰他自己聊的那一路——而且日志里一个字都没有。
-    判据哪天被 BOSS 改版打掉和"他真取消了置顶"在盘上长得一模一样，
-    所以撤标要正证：本轮一个置顶都没认出而存档里还有置顶时先不动，
-    连续几轮才当真，并且每一轮都要说话。
+    """撤掉置顶保护的唯一依据：这一轮侧栏真读到 姓名+公司 对得上的那一行，而那一行没标置顶。
+
+    两头的事故都摆在这儿：
+    · 2026-10-10 07:40 之前每次抓取都报「置顶 1 个」，之后连着几十次报 0 个，盘上那一路
+      的 pinned 被一轮轮写成 False，他自己聊的那路悄悄回到机器手里，日志一个字没有；
+    · 2026-10-17 反过来：唐女士|东莞市万昭贸易 那一行在侧栏 row0、class 带 friend-top，
+      但登记口只收到"有红点的那几行"（她自己聊、常年没红点），于是"认出"恒为空，
+      每三轮打一次「按你已经取消了处理」把当轮的红点保护清空——空窗就是这么来的。
+    所以"没认出"既不能撤标（10-10 的形状），也不能反过来当成撤不掉的的理由
+    （10-17 的形状）：判据只看"这一轮到底有没有真读到那一行"。
     """
 
     def _假循环(self, tmp_path, monkeypatch, 存档):
@@ -320,38 +339,61 @@ class 撤标要正证Test:
         loop._日志 = 日志
         loop._写 = 写
         from boss_bot.main_loop import UnifiedBotLoop
-        loop._登记置顶 = lambda rows: UnifiedBotLoop._登记置顶(loop, rows)
-        loop._容忍 = UnifiedBotLoop.置顶空抓容忍轮数
+        loop._登记置顶 = lambda rows, 全扫=None: UnifiedBotLoop._登记置顶(loop, rows, 全扫)
         return loop
 
-    def test_侧栏一个置顶都没认出时先不撤存档里的置顶(self, tmp_path, monkeypatch):
+    def test_这一轮压根没扫到那一行时一个字都不写(self, tmp_path, monkeypatch):
         存档 = [_conv("陈女士", [_hr("在吗")], company="湖南云幻科技", pinned=True)]
         loop = self._假循环(tmp_path, monkeypatch, 存档)
-        loop._登记置顶([_row(0, "陈女士", "湖南云幻科技", unread=1, pinned=False)])
-        assert loop._写 == [], f"没认出置顶不等于他取消了：{loop._写}"
+        # 只有别的行：侧栏滚到中间、那一行没渲染出来
+        loop._登记置顶([_row(0, "王女士", "长沙数据标注", unread=1, pinned=False)])
+        assert ("陈女士", False, "湖南云幻科技") not in loop._写, \
+            f"没看见不等于他取消了：{loop._写}"
+        assert ("王女士", False, "长沙数据标注") in loop._写, \
+            f"真看见的别的行照常登记：{loop._写}"
+        assert loop._置顶保住 == {("陈女士", "湖南云幻科技")}, loop._置顶保住
         assert any(级 == "WARN" for 级, _ in loop._日志), loop._日志
         assert "置顶" in " ".join(m for _, m in loop._日志)
 
-    def test_连续三轮都认不出才当真取消了(self, tmp_path, monkeypatch):
-        """不然他真取消之后那一路永远被供着，机器再也不回。"""
+    def test_侧栏一行都没读到时空窗不留给机器(self, tmp_path, monkeypatch):
         存档 = [_conv("陈女士", [_hr("在吗")], company="湖南云幻科技", pinned=True)]
         loop = self._假循环(tmp_path, monkeypatch, 存档)
-        for _ in range(loop._容忍 - 1):
-            loop._登记置顶([_row(0, "陈女士", "湖南云幻科技", unread=1, pinned=False)])
+        loop._登记置顶([])
         assert loop._写 == []
-        loop._登记置顶([_row(0, "陈女士", "湖南云幻科技", unread=1, pinned=False)])
-        assert loop._写 == [("陈女士", False, "湖南云幻科技")], loop._写
+        assert loop._置顶保住 == {("陈女士", "湖南云幻科技")}, \
+            f"抓取失败那一轮红点腿也要按住：{loop._置顶保住}"
 
-    def test_认出置顶就照常落盘并把计数清零(self, tmp_path, monkeypatch):
+    def test_真扫到那一行且没置顶就立刻撤(self, tmp_path, monkeypatch):
+        """反向哨兵：真取消了置顶，一轮就要撤掉并放回机器手里，不能供到天荒地老。"""
         存档 = [_conv("陈女士", [_hr("在吗")], company="湖南云幻科技", pinned=True)]
         loop = self._假循环(tmp_path, monkeypatch, 存档)
-        loop._登记置顶([_row(0, "陈女士", "湖南云幻科技", unread=1, pinned=False)])
+        loop._登记置顶([], [_row(0, "陈女士", "湖南云幻科技", pinned=False)])
+        assert loop._写 == [("陈女士", False, "湖南云幻科技")], loop._写
+        assert loop._置顶保住 == set(), loop._置顶保住
+
+    def test_只看见别的行不得连坐撤掉这一行(self, tmp_path, monkeypatch):
+        """同一轮里既有"看见且没置顶"的别行，也有压根没扫到的置顶行——后者不许被撤。"""
+        存档 = [_conv("陈女士", [_hr("在吗")], company="湖南云幻科技", pinned=True),
+                _conv("江女士", [_hr("在吗")], company="孤波", pinned=True)]
+        loop = self._假循环(tmp_path, monkeypatch, 存档)
+        loop._登记置顶([], [
+            _row(0, "江女士", "孤波", pinned=False),
+            _row(1, "王女士", "长沙数据标注", unread=1)])
+        assert loop._写 == [("江女士", False, "孤波"), ("王女士", False, "长沙数据标注")], \
+            loop._写
+        assert loop._置顶保住 == {("陈女士", "湖南云幻科技")}, loop._置顶保住
+
+    def test_认出置顶就落盘并留着保护(self, tmp_path, monkeypatch):
+        存档 = [_conv("陈女士", [_hr("在吗")], company="湖南云幻科技", pinned=True)]
+        loop = self._假循环(tmp_path, monkeypatch, 存档)
         loop._登记置顶([_row(0, "陈女士", "湖南云幻科技", unread=1, pinned=True)])
         assert loop._写 == [("陈女士", True, "湖南云幻科技")], loop._写
+        assert loop._置顶保住 == {("陈女士", "湖南云幻科技")}
         loop._写.clear()
-        # 计数被这次认出来清零了，下一轮就算没置顶也只是第一轮，不该撤
-        loop._登记置顶([_row(0, "陈女士", "湖南云幻科技", unread=1, pinned=False)])
-        assert loop._写 == [], loop._写
+        # 认出来过一次之后，下一轮没扫到她也不许撤（10-10 那条形状）
+        loop._登记置顶([_row(0, "王女士", "长沙数据标注", unread=1, pinned=False)])
+        assert loop._写 == [("王女士", False, "长沙数据标注")], loop._写
+        assert loop._置顶保住 == {("陈女士", "湖南云幻科技")}, loop._置顶保住
 
     def test_存档本来就没置顶时不必绕这一圈(self, tmp_path, monkeypatch):
         loop = self._假循环(tmp_path, monkeypatch, [_conv("王女士", [_hr("在吗")],
@@ -359,11 +401,38 @@ class 撤标要正证Test:
         loop._登记置顶([_row(0, "王女士", "长沙数据标注", unread=1, pinned=False)])
         assert loop._写 == [("王女士", False, "长沙数据标注")], "没有旧标可撤，就该照常写"
 
+    def test_别的号的置顶不进本号名册(self, tmp_path, monkeypatch):
+        """两个号共表（靠 account_index 分范围）：不筛就把主账号的置顶报到账号2 头上。
+
+        2026-10-17 21:49 线上实测那条告警就是这个形状——账号2 说
+        「按置顶留着不动：唐女士|东莞市万昭贸易」，而那一路是主账号的。
+        """
+        存档 = [_conv("陈女士", [_hr("在吗")], company="湖南云幻科技", pinned=True),
+                _conv("唐女士", [_hr("在吗")], company="东莞市万昭贸易", pinned=True)]
+        存档[1]["account_index"] = 1
+        loop = self._假循环(tmp_path, monkeypatch, 存档)
+        loop.account_index = 0
+        loop._登记置顶([])
+        assert loop._置顶保住 == {("陈女士", "湖南云幻科技")}, loop._置顶保住
+
+    def test_数轮次判死那套已经不在了(self):
+        """轮数计数是 10-17 空窗的根因：置顶行常年没红点，"认出恒为空"是常态而不是取消。"""
+        import inspect
+        from boss_bot.main_loop import UnifiedBotLoop
+        assert not hasattr(UnifiedBotLoop, "置顶空抓容忍轮数"), "计数撤标的门要一并拆掉"
+        全 = (ROOT / "boss_bot" / "main_loop.py").read_text(encoding="utf-8")
+        assert "置顶空抓容忍轮数" not in 全 and "_置顶空抓轮数" not in 全, \
+            "不许留一条靠数轮子撤保护的路"
+        assert "按你已经取消了处理" not in 全
+
     def test_回复轮和全量同步都走这一个登记口(self):
         """两处原来各写各的 for，改一处漏一处就等于没改。"""
         源 = (ROOT / "boss_bot" / "main_loop.py").read_text(encoding="utf-8")
         assert 源.count("self._登记置顶(") >= 2, "回复轮与全量同步都要登记"
         assert 源.count("set_pinned(") == 1, "落盘只留登记口那一条，别再有第二个写法"
+        assert "seen_chat_rows" in 源, \
+            "回复轮要把这一趟扫过的全部行也交给登记口，不然置顶行没红点就永远认不出"
+
 
 
 class 还没有存档的置顶会话Test:

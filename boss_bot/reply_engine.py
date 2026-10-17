@@ -36,7 +36,7 @@ from boss_bot.unified_config import TITLE_VETO_KEYWORDS_DEFAULT
 from boss_bot.intent import (classify, classify_interview_invite, is_contact_exchange_card,
                              is_resume_request, veto_hit_anywhere)
 from boss_bot.prompts import (build_system_prompt, build_user_prompt, 历史原始行上限,
-                              对话指纹, 消息正文)
+                              对话指纹, 消息正文, 机器人腔)
 from boss_bot.reply_record import ReplyRecord, ReplyRecordStore, _get_reply_store
 
 logger = logging.getLogger(__name__)
@@ -47,8 +47,8 @@ logger = logging.getLogger(__name__)
 # 报"我只找线上"等于给 HR 递话接着聊（"我们也线上的呀""居家主播就是线上"），
 # 这一句要的是把这一类关上门，不解释方向、不自报口径。
 FAMILY_DECLINE_REPLY = (
-    "您好，感谢您的介绍。这类岗位我不考虑，"
-    "以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~")
+    "这类岗位我不考虑哈，以后这类的不用再给我推荐了，"
+    "就不耽误您时间了，祝您招聘顺利~")
 # 我们自己的话里出现过这一句，说明这一单已经当面拒过了；同一会话再复读一遍就是骚扰
 # （骗子过滤那句也以它收尾，两条链共用这一个标记）
 REPLY_REFUSAL_MARK = "就不耽误您时间了"
@@ -75,7 +75,7 @@ INTENT_REPLIES = {
     "ask_experience": ("text", EXPERIENCE_REPLY),
     "greeting": ("text", GREETING_REPLY),
     "contact_request": ("text", "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~"),
-    "tell_salary": ("text", "感谢您的报价，我这边综合考虑一下，有进一步消息会及时回复您。"),
+    "tell_salary": ("text", "报价我这边看下哈，有消息我跟您说～"),
 }
 
 # ─────────────────────────────────────────────
@@ -617,8 +617,8 @@ class ReplyEngine:
                 # 线上运营助理、数据分析、游戏代练打手），对着标注 HR 说"我方向是数据分析"
                 # 等于自己把话聊死。真正的分界线是线上还是线下，就说这个。
                 reply = (
-                    "您好，感谢您的介绍。不过我这边只找线上远程就能做的兼职，"
-                    "这个岗位不太合适，就不耽误您时间了，祝您招聘顺利~"
+                    "这类岗我不太合适，我这边只找线上远程就能做的兼职，"
+                    "就不耽误您时间了，祝您招聘顺利~"
                 )
                 logger.info(f"[骗子过滤] {scam_reason}，已自动拒绝")
                 meta["source"] = "scam_filter"
@@ -961,6 +961,12 @@ class ReplyEngine:
         "4. 一句话，别超过 40 字；【你的背景】里没有的数字不许编"
     )
 
+    # 生成出来是模板腔时换说法重问一次用的追加指令
+    换说法指令 = (
+        "\n（刚才那句太像客服模板了，换种说法再说一遍：别复述他刚说的话、别总结前面"
+        "聊了什么，别用「您好/感谢您的」这类开头，像平时打字那样直接回一句人话。）"
+    )
+
     def 现编跟进(self, 对话: list, boss_name: str, job_name: str, 兜底句: str) -> str:
         """主动跟进那句：按这段对话现编；容灾链全挂了才退回固定模板。
 
@@ -1083,6 +1089,22 @@ class ReplyEngine:
                 reply = self._call_with_rate_limit_retry(
                     client, model, message, boss_name, job_name, history, provider_name, 指令)
                 if reply:
+                    毛刺 = 机器人腔(reply)
+                    if 毛刺:
+                        # 「我看有好多的人说我像机器人了」（2026-10-17）：模板腔就地
+                        # 换说法再问一次。只问一次——重问还是那腔就照发，别在一个
+                        # 接口上打转烧额度，也别把回复拖慢成十几秒。
+                        logger.warning(f"[人味] 这句是模板腔（{毛刺}），换说法再问一次: "
+                                       f"{reply[:40]}")
+                        换 = self._call_with_rate_limit_retry(
+                            client, model, message, boss_name, job_name, history,
+                            f"{provider_name}#换说法", 指令=指令 + self.换说法指令)
+                        if 换:
+                            if 机器人腔(换):
+                                logger.warning("[人味] 换说法还是模板腔，就发这一句，不再问")
+                            else:
+                                logger.info(f"[人味] 换说法这句像人打的: {换[:40]}")
+                            reply = 换
                     logger.info(f"[AI回复生成] {provider_name}: {reply[:50]}...")
                     if 用缓存:
                         self._cache.set(message, boss_name, job_name, reply, 上下文)

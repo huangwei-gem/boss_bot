@@ -279,6 +279,22 @@ def _方向命中(词表, 文: str, 算要求段: bool) -> str:
     return ""
 
 
+def 严选方向词(标题) -> str:
+    """他置顶那一路的岗位标题 → 一条方向词；洗不出岗位名就返回空串。
+
+    侧栏那份 job_name 是「岗型·岗位名+薪资+城市+查看职位」拼出来的（实测盘上
+    2505 个会话 100% 带「查看职位」、48% 带「兼职·」前缀），拆法直接叫台账那一份
+    split_job_title——薪资/城市的切法两处各写一遍，早晚会两头不一致。
+
+    只取岗位名那一段，薪资和城市绝不能进方向词：方向闸的判据是"标题里含这个串"，
+    带上「东莞」就把"东莞的任何岗"当成他要的方向了。
+    """
+    from boss_bot.contact_ledger import split_job_title
+    名 = (split_job_title(标题).get("title") or "").strip()
+    名 = re.sub(r"^(?:\s*(?:兼职|全职|实习)\s*[·・\-—|/:：]?\s*)+", "", 名)
+    return 名.strip(" ·、-—")
+
+
 def target_job_hit(keywords, job: dict) -> str:
     """只投这些方向：标题或 JD 里命中任意一条就返回命中的那条，否则空串。
 
@@ -951,6 +967,7 @@ class AIAnalyzerChain:
         veto_only_match: bool = False,
         judge_timeout: int = 0,
         title_veto_keywords: list = None,
+        pinned_job_examples: list = None,
     ):
         self.providers = []
         for p in providers:
@@ -987,6 +1004,11 @@ class AIAnalyzerChain:
         # 正向门槛在 jd_gate 里跑（引擎字段 _ai_target_job_keywords），
         # 链上再存一份会变成没人读的副本。
         self.custom_scoring_prompt = custom_scoring_prompt or ""
+        # 他自己置顶在聊的那几路是什么岗（清洗过的岗位名）。这份只在提示词里当
+        # "方向参照"，不参与判分闸门：闸门那张表在引擎那头合成
+        # （GreetEngine.方向词表），链上再存一份关键字就变成没人读的副本。
+        self.pinned_job_examples = [str(x).strip() for x in (pinned_job_examples or [])
+                                    if str(x or "").strip()]
         self.analyze_max_tokens = analyze_max_tokens or self.DEFAULT_ANALYZE_MAX_TOKENS
         # AI 全军覆没时的处置：default = 按"默认通过"继续投（盲投），
         # skip = 这一轮不投。以前判分链写死 default，配置里那个开关只对回复生效，
@@ -1510,6 +1532,19 @@ class AIAnalyzerChain:
         )
         if self.custom_scoring_prompt:
             system_msg += "\n\n【用户自定义打分要求】\n" + self.custom_scoring_prompt
+        if self.pinned_job_examples:
+            # 「我置顶的都是我严选的，可以朝着这方向去努力」（2026-10-17）。
+            # 这一段的分量要说清：它定"这类活算不算他要的方向"，不定"要不要放行"——
+            # 否决词那一条都不许因为像严选就松手。
+            system_msg += (
+                "\n\n【用户严选方向】\n"
+                "这些岗位是他自己在 BOSS 里置顶、正在亲自谈的（岗位名已剥掉薪资和城市）："
+                + "、".join(self.pinned_job_examples) + "。\n"
+                "判断「这是不是他要的那一类活」时以这一族为参照：同类方向（数据整理、"
+                "报表统计、线上助理这类能用电脑在线上做完的活）都算对得上方向。"
+                "这只是一条方向参照，不是放行理由——命中任何否决条件照样判不匹配，"
+                "也不要因为岗位像严选就编造简历里没有的经验。"
+            )
         user_msg = (
             "【求职者简历】\n"
             f"教育背景：{resume.get('school', '')} "
@@ -1561,6 +1596,7 @@ class AIAnalyzerChain:
         rule = "|".join([
             str(self.match_threshold),
             str(self.veto_only_match),
+            ",".join(self.pinned_job_examples),
             str(self.custom_scoring_prompt or ""),
             ",".join(self.custom_filter_keywords or []),
         ])
@@ -1632,6 +1668,7 @@ class GreetEngine:
         wind_control_cb: Optional[Callable] = None,
         captcha_gate_cb: Optional[Callable[[], bool]] = None,
         account_index: int = 0,
+        pinned_jobs_cb: Optional[Callable[[], list]] = None,
     ):
         self.browser_manager = browser_manager
         self.config = config
@@ -1649,6 +1686,9 @@ class GreetEngine:
         # 与 wind_control_cb 的分工：那个只通知前端"出风控了"，这个是**等结果**，
         # 不打招呼侧以前只 return 原因、从不等，于是验证页就在那儿干挂着。
         self._captcha_gate_cb = captcha_gate_cb
+        # 严选（他置顶那几路的岗位名）从主循环那边取：投递这一侧没有 MessageStore，
+        # 存档只有一份读法，再造一份读法就会两头不一致
+        self._pinned_jobs_cb = pinned_jobs_cb
 
         # 运行状态
         self.running = False
@@ -2542,8 +2582,47 @@ class GreetEngine:
         return ""
 
 
+    def 严选岗位名(self) -> list:
+        """他自己置顶、正在亲自谈的那几路是什么岗（清洗过的岗位名，可能为空）。
+
+        「我置顶的都是我严选的，可以朝着这方向去努力」（2026-10-17）。
+        读盘那份由主循环带缓存，这一层只管要一份当前值。
+        """
+        if not getattr(self, "_pinned_jobs_cb", None):
+            return []
+        try:
+            return [str(x).strip() for x in (self._pinned_jobs_cb() or [])
+                    if str(x or "").strip()]
+        except Exception as e:
+            self._log("WARN", f"读严选（置顶）岗位名没成功: {e}")
+            return []
+
+    def 方向词表(self) -> list:
+        """正向方向闸吃的那一张表 = 配置里的方向词 + 严选岗位名。
+
+        合并只在这一处做：闸门（jd_gate）、标题豁免（title_states_the_job）都从这里拿，
+        谁再直接读 `self._ai_target_job_keywords` 就漏掉严选那一半。
+        去重按"命中的判据"来：target_job_hit 查的是标题里含不含这条串，
+        所以「数据分析专员」这种把已有词包住的加进去也不多发一单，纯重复。
+        """
+        表 = [str(k) for k in (self._ai_target_job_keywords or []) if str(k or "").strip()]
+        for 名 in self.严选岗位名():
+            if any(词 in 名 for 词 in 表):
+                continue
+            if 名 not in 表:
+                表.append(名)
+        return 表
+
     def _init_ai(self):
         """初始化 AI 分析器（懒加载）。"""
+        严选 = self.严选岗位名()
+        if getattr(self, "_严选快照", None) != 严选:
+            self._严选快照 = 严选
+            if self._ai_analyzer is not None:
+                # 提示词里那段【用户严选方向】是建链时烘进去的，不换链就是改了不生效
+                self._log("INFO", f"📌 严选（置顶）那几路换了岗位，判分链按新方向重建："
+                                  f"{'、'.join(严选) or '（没有置顶了）'}")
+                self._ai_analyzer = None
         if self._ai_analyzer is not None:
             return self._ai_analyzer
         if not self._ai_enabled:
@@ -2562,6 +2641,7 @@ class GreetEngine:
                     veto_only_match=self._ai_veto_only,
                     judge_timeout=self._ai_judge_timeout,
                     title_veto_keywords=self._ai_title_veto_keywords,
+                    pinned_job_examples=严选,
                 )
             else:
                 self._log("WARN", "AI 已启用但未配置任何 provider")
@@ -2978,7 +3058,7 @@ class GreetEngine:
             # ── 3.5 JD 到手后再判一次，拦在点「立即沟通」之前 ──
             blocked = jd_gate(self._ai_custom_filter_keywords, job,
                               title_keywords=self._ai_title_veto_keywords,
-                              target_keywords=self._ai_target_job_keywords)
+                              target_keywords=self.方向词表())
             if blocked:
                 reason = f"{blocked}｜{job.get('job_name', '')}"
                 self._log("WARN", f"⛔ JD 闸门跳过: {reason}")

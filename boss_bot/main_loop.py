@@ -38,7 +38,7 @@ from boss_bot.unified_config import (UnifiedConfig, BASE_DIR, resolve_path,
                                      account_file, write_json_atomic)
 from boss_bot.browser_launcher import BrowserManager, BOSS_AUTH_COOKIES
 from boss_bot.greet_engine import (GreetEngine, GREETING_MISSING_REASON,
-                                   in_probe_band)
+                                   in_probe_band, 严选方向词)
 from boss_bot.reply_engine import ReplyEngine, conversation_rejected
 from boss_bot.prompts import 历史原始行上限
 from boss_bot.intent import veto_hit_anywhere
@@ -116,8 +116,8 @@ GREET_PAUSE_RETRY_SEC = 900
 # 现场/线下面试邀请：优先点平台上的「拒绝」，点不到才发这句话（同一口径的两种落法）。
 # 用户 2026-10-06："我只要线上的兼职不要线下的…他发面试邀请，你直接拒绝就行了"。
 OFFLINE_INTERVIEW_DECLINE = (
-    "不好意思，我这边只找线上远程就能完成的兼职，线下面试就不占用您的时间了，"
-    "这个岗位我先放弃，感谢您的邀请。")
+    "不好意思，我这边只找线上远程就能做的兼职，线下面试就不占用您的时间了，"
+    "这个岗我先放弃，感谢您找我～")
 
 # 按天归档的进程内互斥：记录文件所有账号共用，一天只能归一次
 _ARCHIVE_LOCK = threading.Lock()
@@ -1555,6 +1555,9 @@ class UnifiedBotLoop:
             # 验证页要交人工等结果：闸门负责 60 秒时限、到点跳过当前任务、
             # 连续三次没人处理停轮 —— 以前打招呼侧只 return 原因，从不叫它
             captcha_gate_cb=lambda: self._captcha_gate("greet"),
+            # 严选（他自己置顶那几路的岗位名）喂给判分提示词与方向闸——
+            # 投递侧没有 MessageStore，只能由主循环把这一条读法交过去
+            pinned_jobs_cb=self._严选岗位名,
         )
         # 关键：设置 running=True，否则 send_greeting 会直接返回 False
         self._greet_engine.running = True
@@ -2083,8 +2086,11 @@ class UnifiedBotLoop:
             self._log("DEBUG", f"获取到未读会话数: {len(unread_chats)}")
 
             # 置顶标记先落盘（他取消置顶的那一路也会跟着清掉）：欠回复、跟进、
-            # 补发简历和两个批量清剿工具读的是存档、不看侧栏，不落盘它们不知道谁被置顶
-            self._登记置顶(unread_chats)
+            # 补发简历和两个批量清剿工具读的是存档、不看侧栏，不落盘它们不知道谁被置顶。
+            # 一并交出这一趟滚过的全部行——他自己聊的那一路常常没有红点，
+            # 只给红点那一小撮就永远认不出她（2026-10-17 那个每三轮撤一次的空窗）
+            self._登记置顶(unread_chats,
+                           getattr(self._chat_handler, "seen_chat_rows", None))
 
             # 红点只是其中一条腿，另外一条腿在本地存档：
             # 启动全量同步把每个会话点开读过一遍，红点是我们自己清掉的，
@@ -2196,64 +2202,101 @@ class UnifiedBotLoop:
     # （实测 25~50 分钟），一路挡住回复轮就等于这段时间里没人回话
     SYNC_REPLY_EVERY = 20
 
-    # "这一轮侧栏一个置顶都没认出"要连着几轮才当真他取消了置顶
-    置顶空抓容忍轮数 = 3
-
     def _存档置顶名册(self) -> set:
-        """存档里现在写着置顶的会话（姓名, 公司）。
+        """存档里现在写着置顶的会话（姓名, 公司）——只算本号那一份。
 
-        只在"本轮一个置顶都没认出"这种反常情况下才读，读到就缓存——
-        存档是 2000 多个文件，不能十秒一轮翻一遍。
+        只在缓存空着的时候读盘（第一次登记那一轮，之后每轮用 DOM 认出的那份续上）：
+        存档是 2500 多个文件，回复轮十秒一轮，不能每轮翻一遍。
+        按 account_index 筛：两个号的存档是共表的（靠 account_index 分范围），
+        不筛的话账号2 的保护名单里会出现主账号的置顶会话（21:49 实测那条告警就把
+        「唐女士|东莞市万昭贸易」报到了账号2 头上），口径和 _archive_owed_chats 一致。
         """
         if getattr(self, "_置顶名册缓存", None) is None:
             try:
                 self._置顶名册缓存 = {
                     ((c.get("chat_name") or "").strip(), (c.get("company") or "").strip())
-                    for c in self._msg_store.get_all_chats_detail() if c.get("pinned")}
+                    for c in self._msg_store.get_all_chats_detail()
+                    if c.get("pinned") and c.get("account_index") == self.account_index}
             except Exception as e:
                 self._log("WARN", "读存档里的置顶名册没成功: %s" % e)
                 self._置顶名册缓存 = set()
         return self._置顶名册缓存
 
-    def _登记置顶(self, rows):
+    def _登记置顶(self, rows, 全扫=None):
         """把这一趟侧栏看到的置顶标记落进存档。
 
         存档驱动的那几条腿（欠回复、跟进、补发简历、两个批量清剿工具）不看侧栏，
         只认存档里的 pinned，所以不落盘等于不生效。
 
-        撤标要正证：本轮一个置顶都没认出来、而存档里还写着置顶时，先什么都不写。
-        "判据被 BOSS 改版打掉"和"他真取消了置顶"在盘上长得一模一样，而代价不对称——
-        多留一轮只是机器少动一路，撤错了就是把他要自己聊的那几路悄悄放回机器手里。
-        实测就是这个形状：2026-10-10 07:40 之前每次抓取都报「置顶 1 个」，之后连着
-        几十轮报 0 个，那一路的标记被一轮轮写成 False，日志里一个字都没有。
+        撤保护只有一个依据：**这一轮真读到 姓名+公司 对得上的那一行，而那一行没标置顶**。
+        两头都栽过：
+        · 2026-10-10 07:40 之前每次抓取都报「置顶 1 个」，之后连着几十次报 0 个，
+          那一路的标记被一轮轮写成 False，日志里一个字都没有——所以"没看见"绝不能撤；
+        · 2026-10-17 反过来，只看"有红点的那几行"，而他自己聊的那一路常年没红点，
+          "认出"因此恒为空，靠轮数计数每三轮就当真他取消了，把当轮的红点保护清空。
+        代价不对称：多留一轮只是机器少动一路，撤错了就是把他要自己聊的那几路
+        悄悄放回机器手里，所以看不见的留着、只撤真看见的。
+
+        全扫=这一趟滚侧栏读到的全部行（含没红点的）。回复轮传进来的 rows 只是红点
+        那一小撮，不带上这份就永远认出没红点的置顶行（page_handler.seen_chat_rows）。
         """
-        认出 = {pinned_key(r) for r in (rows or []) if r.get("pinned")}
-        self._置顶保住 = set()
-        if not 认出:
-            名册 = self._存档置顶名册()
-            if 名册:
-                self._置顶空抓轮数 = int(getattr(self, "_置顶空抓轮数", 0)) + 1
-                if self._置顶空抓轮数 < self.置顶空抓容忍轮数:
-                    # 这几路在宽限期内连红点那条腿也不许点开：存档标记还留着，
-                    # 而红点候选看的是 DOM 那一份，不补这一刀等于只拦了三条腿
-                    self._置顶保住 = 名册
-                    self._log("WARN",
-                              "📌 这一轮侧栏没认出任何置顶，可存档里还有 %d 路是置顶的——"
-                              "先按置顶留着不动（连着 %d 轮都这样才当真你取消了）：%s"
-                              % (len(名册), self.置顶空抓容忍轮数,
-                                 "、".join("%s|%s" % k for k in list(名册)[:6])))
-                    return
-                self._log("INFO", "📌 连续 %d 轮侧栏都没有置顶行，按你已经取消了处理"
-                          % self._置顶空抓轮数)
-                self._置顶空抓轮数 = 0
-                self._置顶名册缓存 = None
-        else:
-            self._置顶空抓轮数 = 0
-            self._置顶名册缓存 = 认出
-        for row in rows or []:
-            self._msg_store.set_pinned(
-                row.get("name", ""), bool(row.get("pinned")),
-                company=(row.get("company") or "").strip())
+        扫到 = {}
+        for row in list(rows or []) + list(全扫 or []):
+            身 = pinned_key(row)
+            if not 身[0]:
+                continue
+            if 身 not in 扫到 or row.get("pinned"):
+                扫到[身] = row
+        认出 = {身 for 身, row in 扫到.items() if row.get("pinned")}
+        名册 = self._存档置顶名册()
+        撤 = {身 for 身 in 名册
+              if 身 in 扫到 and not 扫到[身].get("pinned")}
+        self._置顶保住 = (名册 | 认出) - 撤
+        self._置顶名册缓存 = set(self._置顶保住)
+
+        看不见 = 名册 - 撤 - 认出
+        if 撤:
+            self._log("INFO", "📌 这一轮侧栏看见 %d 行不再置顶了，机器重新接手：%s"
+                      % (len(撤), "、".join("%s|%s" % k for k in list(撤)[:6])))
+        if 看不见:
+            self._log("WARN", "📌 这一轮侧栏没读到 %d 行置顶的（虚拟列表没渲染到/抓取失败），"
+                              "按置顶留着不动：%s" % (len(看不见),
+                              "、".join("%s|%s" % k for k in list(看不见)[:6])))
+        if 认出 and not 撤 and not 看不见:
+            self._log("DEBUG", "📌 侧栏认出 %d 路置顶（你自己聊）：%s"
+                      % (len(认出), "、".join("%s|%s" % k for k in list(认出)[:6])))
+
+        for 身, row in 扫到.items():
+            self._msg_store.set_pinned(身[0], bool(row.get("pinned")), company=身[1])
+
+    # 严选名册的读盘节流：存档 2500 多个文件，而判分链一个岗位就要问一次这份
+    严选缓存秒 = 300
+
+    def _严选岗位名(self) -> list:
+        """他自己置顶那几路在聊什么岗（剥掉薪资/城市后的岗位名，按出现顺序去重）。
+
+        「我置顶的都是我严选的，可以朝着这方向去努力」（2026-10-17）：这一份既要
+        进判分提示词当方向参照，也要并进方向闸那张表，两头同一份读法。
+        只算本号：两个号聊的岗不一样，混起来等于把账号2 的偏好投到主号身上
+        （存档串号那一次就是这么栽的，见 _read_path 那处修复）。
+        """
+        现在 = time.time()
+        if getattr(self, "_严选缓存", None) is not None and \
+                现在 - getattr(self, "_严选缓存时间", 0) < self.严选缓存秒:
+            return self._严选缓存
+        名 = []
+        try:
+            for c in self._msg_store.get_all_chats_detail():
+                if not is_pinned(c) or c.get("account_index") != self.account_index:
+                    continue
+                词 = 严选方向词(c.get("job_name") or "")
+                if 词 and 词 not in 名:
+                    名.append(词)
+        except Exception as e:
+            self._log("WARN", f"读严选（置顶）岗位名没成功: {e}")
+        self._严选缓存, self._严选缓存时间 = 名, 现在
+        return 名
+
 
     def _archive_owed_chats(self, unread_chats) -> list:
         """从本地存档里补出"HR 最后说话、我们没接"的会话，当作本轮候选。

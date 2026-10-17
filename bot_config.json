@@ -189,6 +189,7 @@
       "讲师",
       "速记",
       "伴读",
+      "客服",
       "送餐",
       "管家",
       "中介",
@@ -226,7 +227,15 @@
       "BI",
       "SQL",
       "数据标注",
-      "运营助理"
+      "运营助理",
+      "数据整理",
+      "数据处理",
+      "报表",
+      "资料整理",
+      "文档整理",
+      "办公助理",
+      "办公文员",
+      "飞书"
     ],
     "veto_only_match": true,
     "custom_scoring_prompt": "本轮只投「线上可完成的兼职」。判分只看一条：岗位是否命中我给的自定义筛选词/硬否决词。命中否决（例如仅线下、不接受远程、需坐班、线下驻场、坐班打卡、进厂/车间/流水线等工厂岗、现场面试/到公司/驻场/外勤等到场岗、包吃住/无门槛/零门槛/刷单/打字员/手工活这类空泛描述（只有标题和正文都没说清这是什么活的，才按疑似诈骗或中介引流处理；标题已经写明是数据标注/AI训练师/数据分析/运营助理这类线上岗的，正文空着不算诈骗，那只是 HR 没写 JD）、岗位已招满、实际是客服/推广/地推/主播/骑手/销售、不招实习生、应届生勿投等）就给 0-30 分并判不匹配；没命中就一律给 90 分以上并判匹配。不要考虑专业是否对口、学历是否够、经验年限、薪资高低、公司规模，也不要因为「数据标注比数据分析初级」而降分——这些都不在考虑范围内，命中否决词是唯一的不投理由。",
@@ -396,7 +405,7 @@
           ]
         },
         {
-          "enabled": false,
+          "enabled": true,
           "city": "全国",
           "query": "数据标注",
           "job_type": "兼职",
@@ -405,7 +414,7 @@
           "image_files": []
         },
         {
-          "enabled": false,
+          "enabled": true,
           "city": "全国",
           "query": "AI数据标注",
           "job_type": "兼职",
@@ -414,7 +423,7 @@
           "image_files": []
         },
         {
-          "enabled": false,
+          "enabled": true,
           "city": "全国",
           "query": "线上运营助理",
           "job_type": "兼职",
@@ -439,6 +448,33 @@
           "scroll_pages": 5,
           "greeting_message": "",
           "image_files": []
+        },
+        {
+          "enabled": true,
+          "city": "全国",
+          "job_type": "兼职",
+          "scroll_pages": 5,
+          "greeting_message": "",
+          "image_files": [],
+          "query": "数据整理"
+        },
+        {
+          "enabled": true,
+          "city": "全国",
+          "job_type": "兼职",
+          "scroll_pages": 5,
+          "greeting_message": "",
+          "image_files": [],
+          "query": "飞书"
+        },
+        {
+          "enabled": true,
+          "city": "全国",
+          "job_type": "兼职",
+          "scroll_pages": 5,
+          "greeting_message": "",
+          "image_files": [],
+          "query": "文档整理"
         }
       ]
     },
@@ -471,7 +507,7 @@
           "image_files": []
         },
         {
-          "enabled": false,
+          "enabled": true,
           "city": "全国",
           "query": "数据标注 线上",
           "job_type": "兼职",
@@ -505,6 +541,33 @@
           "scroll_pages": 5,
           "greeting_message": "",
           "image_files": []
+        },
+        {
+          "enabled": true,
+          "city": "全国",
+          "job_type": "兼职",
+          "scroll_pages": 5,
+          "greeting_message": "",
+          "image_files": [],
+          "query": "办公助理"
+        },
+        {
+          "enabled": true,
+          "city": "全国",
+          "job_type": "兼职",
+          "scroll_pages": 5,
+          "greeting_message": "",
+          "image_files": [],
+          "query": "资料整理"
+        },
+        {
+          "enabled": true,
+          "city": "全国",
+          "job_type": "兼职",
+          "scroll_pages": 5,
+          "greeting_message": "",
+          "image_files": [],
+          "query": "飞书 兼职"
         }
       ]
     }
