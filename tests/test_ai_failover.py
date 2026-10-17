@@ -192,8 +192,14 @@ class UsableOutputTest:
 class FailoverTest:
     """坏输出必须换接口，好输出才算成功"""
 
-    def _chain_with_bodies(self, bodies, **kw):
-        chain = make_chain(n=len(bodies), **kw)
+    def _chain_with_bodies(self, bodies, n=None, **kw):
+        """n 是接口个数（默认等于应答条数）。
+
+        截断那条链一个接口会连问两次（原预算 + 加预算重试），所以应答条数会比接口多，
+        这时候必须显式给 n，否则会凭空多出一个从没被问过的接口，测试就不是在测它 supposed
+        测的那条路了。
+        """
+        chain = make_chain(n=n if n is not None else len(bodies), **kw)
         it = iter(bodies)
         with patch("boss_bot.greet_engine.urlopen",
                    side_effect=lambda *a, **k: FakeResponse(next(it))):
@@ -201,10 +207,13 @@ class FailoverTest:
         return chain, result
 
     def test_第一个接口截断后第二个接口拿到真判断(self):
+        """截断先就地加预算重试一次（见 截断要就地加预算重试Test）；重试还不行才换接口。
+        所以这个接口要出现两次截断，容灾才算走到第二个。"""
         chain, result = self._chain_with_bodies([
             payload("", finish="length", reasoning="思考" * 200),
+            payload("", finish="length", reasoning="思考" * 260),
             payload('{"score": 82, "is_match": true, "reason": "对口"}'),
-        ])
+        ], n=2)
         assert not result.get("ai_error"), f"没能容灾到第二个接口：{result}"
         assert result["score"] == 82
         assert chain.last_model_name == "m1"
@@ -225,7 +234,8 @@ class FailoverTest:
         chain, result = self._chain_with_bodies([
             payload("没有 JSON 的散文"),
             payload("", finish="length", reasoning="思考" * 200),
-        ])
+            payload("", finish="length", reasoning="思考" * 260),
+        ], n=2)
         assert result["ai_error"] is True
         assert result["is_match"] is True
         assert "截断" in result["reason"] or "没有 JSON" in result["reason"]
@@ -975,3 +985,80 @@ class HealthStaleRowTest:
         keys = set(out["results"])
         assert keys == {"https://a/v1|m|在用的"}, keys
         assert out["summary"]["total"] == 1
+
+
+class 截断要就地加预算重试Test:
+    """2026-10-17 有 8 个数据分析岗就是这么丢的（日志：thinking 写了 2459~2773 字，
+    max_tokens=1600 不够）。容灾链把这当成"这个接口不行"换下一个，四个接口撞同一堵墙，
+    最后记一条「AI 接口这次没给出判断」，岗位没投。
+    问题不在接口在预算：thinking 是有穷的，翻倍就能把正文写出来。"""
+
+    class _Resp:
+        def __init__(self, body):
+            self._b = json.dumps(body).encode("utf-8")
+
+        def read(self):
+            return self._b
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    JOB = {"job_name": "数据分析师", "url": "https://job/1",
+           "description": "数据清洗与看板", "requirements": "SQL/Python"}
+
+    def test_截断后同接口加预算要重试成功(self):
+        送出 = []
+
+        def fake(req, timeout=None):
+            送出.append((json.loads(req.data.decode("utf-8")), timeout))
+            if len(送出) == 1:
+                return self._Resp({"choices": [{"message": {
+                    "content": "", "reasoning_content": "推理" * 1300},
+                    "finish_reason": "length"}]})
+            return self._Resp({"choices": [{"message": {
+                "content": '{"score": 88, "reason": "一致", "is_match": true, '
+                           '"strengths": [], "weaknesses": [], "veto_hit": "", '
+                           '"suggested_greeting": "你好"}'},
+                "finish_reason": "stop"}]})
+
+        chain = make_chain(analyze_max_tokens=1600)
+        with patch("boss_bot.greet_engine.urlopen", fake):
+            结果 = chain.analyze_job(self.JOB)
+        assert 结果.get("is_match") is True, 结果
+        assert not 结果.get("ai_error"), 结果
+        assert [d["max_tokens"] for d, _ in 送出] == [1600, 3200], 送出
+        # 第二次给的秒数必须比第一次宽：翻倍 token 还配原来那 30 秒，
+        # 截断只会换成"请求超时"，那条还要把接口冷却 5 分钟，比不重试更糟
+        秒 = [t for _, t in 送出]
+        assert 秒[0] == 30 and 30 < 秒[1] <= 60, 秒
+
+    def test_非截断的失败不许翻倍预算(self):
+        """反向哨兵：超时/429 那种翻倍也没用，别把岗位预算烧在一次无望的重试上"""
+        from urllib.error import URLError
+
+        def fake(req, timeout=None):
+            raise URLError("boom")
+
+        chain = make_chain(analyze_max_tokens=1600)
+        with patch("boss_bot.greet_engine.urlopen", fake):
+            结果 = chain.analyze_job(self.JOB)
+        assert 结果.get("ai_error"), 结果
+
+    def test_加预算还不行就照旧换接口(self):
+        """门还得能红：两次都截断时不许无限重试"""
+        次数 = []
+
+        def fake(req, timeout=None):
+            次数.append(json.loads(req.data.decode("utf-8"))["max_tokens"])
+            return self._Resp({"choices": [{"message": {
+                "content": "", "reasoning_content": "推理" * 1300},
+                "finish_reason": "length"}]})
+
+        chain = make_chain(analyze_max_tokens=1600)
+        with patch("boss_bot.greet_engine.urlopen", fake):
+            结果 = chain.analyze_job(self.JOB)
+        assert 结果.get("ai_error"), 结果
+        assert 次数 == [1600, 3200], 次数

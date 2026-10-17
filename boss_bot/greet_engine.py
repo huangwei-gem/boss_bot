@@ -927,6 +927,8 @@ class AIAnalyzerChain:
     # 带 thinking 的接口实测 1024 token 会被思考吃光（正文为空 + finish=length），
     # 默认给到 1600；真被截断时换接口，不再原地"默认通过"。
     DEFAULT_ANALYZE_MAX_TOKENS = 1600
+    # 截断就地重试的预算上限：翻倍再问一次，但不许一路加到天上（面板能配 1600 起步）
+    TRUNCATED_RETRY_MAX_TOKENS = 4000
     # 接口失败后的冷却时间（秒）：鉴权/额度类错误冷却更久
     COOLDOWN_AUTH_SECONDS = 1800
     COOLDOWN_OTHER_SECONDS = 300
@@ -1181,7 +1183,32 @@ class AIAnalyzerChain:
             attempts += 1
             try:
                 self._log("INFO", f"通过 [{provider.name}] ({provider.model}) 分析...")
-                result = self._call_provider_api(provider, prompt)
+                try:
+                    result = self._call_provider_api(provider, prompt)
+                except AIResponseUnusable as e:
+                    # 推理型接口把预算全花在 thinking 上，正文一个字没写。
+                    # 这不是"这个接口不行"，是这次给的 token 不够它想完再写：
+                    # 2026-10-17 有 8 个数据分析岗就是这么丢的（thinking 2459~2773 字，
+                    # 预算 1600），四个接口轮着撞同一堵墙，最后一条「AI 接口这次没给出判断」。
+                    # 就地把这个接口翻倍再问一次；还不行才按原路换接口。
+                    加码 = min(self.analyze_max_tokens * 2,
+                               self.TRUNCATED_RETRY_MAX_TOKENS)
+                    if "正文被截断" not in str(e) or 加码 <= self.analyze_max_tokens:
+                        raise
+                    一次 = self._provider_timeout(provider)
+                    剩余 = deadline - time.time()
+                    if 剩余 < 一次:
+                        # 连一次正常长度的请求都放不下了，别把这条岗位的余量耗在一次
+                        # 注定被打断的重试上（被打断那条还会把接口冷却 5 分钟）
+                        self._log("WARN", f"[{provider.name}] 截断了，但岗位预算只剩 "
+                                          f"{int(剩余)}s（一次要 {一次}s），按原路换接口")
+                        raise
+                    再问秒 = int(min(一次 * 2, 剩余))
+                    self._log("INFO", f"[{provider.name}] 正文被 thinking 吃满，"
+                                      f"就地加预算到 {加码}（{再问秒}s）再问一次")
+                    result = self._call_provider_api(provider, prompt,
+                                                     max_tokens=加码,
+                                                     timeout=再问秒)
                 self._cooldown_until.pop(provider.name, None)
                 self._report_health(provider, ok=True)
                 self.last_model_name = provider.model
@@ -1394,26 +1421,34 @@ class AIAnalyzerChain:
             result["reason"] = "只看否决词：未命中否决条件，放行。" + str(result.get("reason", ""))
         return result
 
-    def _provider_timeout(self, provider) -> int:
-        """这次请求给多少秒：判分有上限，服务商自己更快就按它自己的。"""
+    def _provider_timeout(self, provider, seconds: int = 0) -> int:
+        """这次请求给多少秒：判分有上限，服务商自己更快就按它自己的。
+
+        秒数按这里给的来，没给就按配置那份——加预算重试那条不能沿用原来的 30 秒封顶，
+        否则"正文被截断"只是换成了"请求超时"（超时还会把接口冷却 5 分钟，比不重试更糟）。
+        """
+        if seconds:
+            return int(seconds)
         base = int(getattr(provider, "timeout", 0) or 0) or 30
         if self.judge_timeout <= 0:
             return base
         return min(base, self.judge_timeout)
 
     def _call_provider_api(self, provider: AIProviderConfig, messages: list,
-                           normalize: bool = True) -> dict:
+                           normalize: bool = True,
+                           max_tokens: int = 0, timeout: int = 0) -> dict:
         """调用指定 AI 接口，返回一份可信判分；拿不到就抛 AIResponseUnusable。
 
         normalize=False 是给"判分复盘"的追问用的：那回答里没有 score/is_match，
         套判分校验会被当成无效输出丢掉。
+        max_tokens/timeout 只在就地加预算重试那种调用里传，0 表示按配置那份。
         """
         url = f"{provider.api_base}/chat/completions"
         payload = json.dumps({
             "model": provider.model,
             "messages": messages,
             "temperature": 0.3,
-            "max_tokens": self.analyze_max_tokens,
+            "max_tokens": max_tokens or self.analyze_max_tokens,
             "chat_template_kwargs": {"enable_thinking": True},
         }).encode("utf-8")
 
@@ -1421,13 +1456,14 @@ class AIAnalyzerChain:
         req.add_header("Content-Type", "application/json")
         req.add_header("Authorization", f"Bearer {provider.api_key}")
 
+        秒数 = self._provider_timeout(provider, timeout)
         try:
-            with urlopen(req, timeout=self._provider_timeout(provider)) as resp:
+            with urlopen(req, timeout=秒数) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
         except URLError as e:
             raise Exception(f"API 请求失败: {e}")
         except TimeoutError:
-            raise Exception(f"请求超时（{self._provider_timeout(provider)}s）")
+            raise Exception(f"请求超时（{秒数}s）")
 
         try:
             choice = data["choices"][0]
