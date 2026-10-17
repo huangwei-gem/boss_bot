@@ -179,6 +179,29 @@ def drawer_give_up_reason(times: int) -> str:
     return (f"这个岗位连着 {times} 次点了「立即沟通」都不出聊天抽屉，"
             f"BOSS 没把这次沟通记下来（不是当日额度，同期别的岗位投得出去），先放一放")
 
+
+def 薪资可信(salary) -> str:
+    """残缺的薪资折成空串，读得懂的（含"面议"）原样返回。
+
+    反爬字体解码丢字符以后会留下 "-23K"、"??-23K" 这种形状。这种值以前会原样
+    走进三处：AI 判分提示词（模型看见"薪资：-23K"当成一个数）、界面薪资格子
+    （他 10-17 指着问的"负数"）、前端的"薪资≥"筛选（"-23K" 数到 23，残缺值
+    冒充过线岗）。判据只管形状不管含义，所以"面议"这种没数字的合法写法要放行。
+    """
+    s = (salary or "").strip()
+    if not s or any(ch in s for ch in "?？\ufffd"):
+        return ""
+    if s[0] in "-–—~·/、，," or s[-1] in "-–—~·":
+        return ""
+    # 区间两头都得有数字："-23K"（低的那头被吃掉）、"8-K"（高的那头被吃掉）都算残缺。
+    # 判"有没有数字"而不是"挨着的是不是数字"，否则"1.5万-3万"这种合法写法会被误杀。
+    for i, ch in enumerate(s):
+        if ch in "-–—~":
+            if not any(c.isdigit() for c in s[:i]) or not any(c.isdigit() for c in s[i + 1:]):
+                return ""
+    return s
+
+
 # JD 正文短到这个字数就当作"没写具体工作内容"。数字是现算的，不是拍的：
 # 日志里 934 个取到过 JD 的岗位，正文中位 316 字、p10 也还有 146 字，
 # 低于 80 字的只有 15 个（1.6%），其中 2 个一个字都没有——挂个标题就来要人的
@@ -1461,7 +1484,7 @@ class AIAnalyzerChain:
             f"求职意向：{resume.get('target_position', '')}\n\n"
             "【招聘岗位】\n"
             f"岗位名称：{job.get('job_name', '')}\n"
-            f"薪资：{job.get('salary', '')}\n"
+            f"薪资：{薪资可信(job.get('salary', ''))}\n"
             f"岗位描述：{job.get('description', '')}\n"
             f"任职要求：{job.get('requirements', '')}\n"
             f"公司：{job.get('company', '')}\n\n"
@@ -1808,6 +1831,39 @@ class GreetEngine:
             _file_logger.info(f"[{level}] {msg}")
         except Exception:
             pass
+
+    # 没映射上的私用区码点最多记这么多种：一张搜索页几十个卡片共用同一个段位，
+    # 逐条打会把主日志淹掉；但一个都没记就只能靠猜该扩映射还是换退路。
+    反爬码点留痕上限 = 20
+
+    def _decode_anti_scrape(self, text):
+        """把 BOSS 反爬私用区字符映射回数字，认不出的留 ? 占位。
+
+        E030–E039 是 0–9。BOSS 会换段位，换出来的字符以前是直接 `continue` 丢掉的——
+        "15-23K" 于是变成 "-23K"，界面读起来像个负数，这个值还会原样进 AI 判分
+        提示词和"薪资≥"筛选。删字符会把残缺伪装成合法数字，占位符才让它可见；
+        下游一律按 薪资可信() 把带 ? 的值当"没读到"。
+        """
+        if not text:
+            return text
+        已记 = self.__dict__.setdefault("_反爬已记码点", set())
+        结果 = []
+        新码点 = []
+        for ch in text:
+            code = ord(ch)
+            if 0xe030 <= code <= 0xe039:
+                结果.append(str(code - 0xe030))
+            elif 0xe000 <= code <= 0xf8ff:
+                结果.append("?")
+                if code not in 已记 and len(已记) < self.反爬码点留痕上限:
+                    已记.add(code)
+                    新码点.append(code)
+            else:
+                结果.append(ch)
+        if 新码点:
+            self._log("WARN", "反爬解码：码点 %s 没有映射，值里已用 ? 占位（解码结果「%s」）"
+                      % ("、".join("U+%04X" % c for c in 新码点), "".join(结果)))
+        return "".join(结果)
 
     def begin_event_ts(self, ts: str = "") -> str:
         """开始一次岗位动作：落库与实时推送共用这一份时间戳。
@@ -2245,23 +2301,9 @@ class GreetEngine:
 
         self._log("INFO", f"共找到 {len(full_job_urls)} 个岗位链接")
 
-        # ── 反爬解码：BOSS直聘用 Unicode 私用区字符（E030-E039）代替数字 ──
-        # \ue030→0, \ue031→1, ..., \ue039→9；其他私用区字符（E000-F8FF）跳过
-        def _decode_anti_scrape(text):
-            """将BOSS直聘的反爬Unicode字符映射回数字。"""
-            if not text:
-                return text
-            result = []
-            for ch in text:
-                code = ord(ch)
-                if 0xe030 <= code <= 0xe039:
-                    result.append(str(code - 0xe030))
-                elif 0xe000 <= code <= 0xf8ff:
-                    # 其他私用区字符直接跳过
-                    continue
-                else:
-                    result.append(ch)
-            return ''.join(result)
+        # 反爬解码：BOSS 把数字放在 Unicode 私用区，认不出的字符留 ? 占位并记一句
+        # （判据在 _decode_anti_scrape）。取成局部名，下面 8 处字段解析都要用。
+        _decode_anti_scrape = self._decode_anti_scrape
 
         processed_jobs = []
 

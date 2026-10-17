@@ -4157,7 +4157,7 @@ function renderContactLedger(rows) {
     var resume = r.resume_sent ? '<span class="ledger-resume-sent">已发</span>'
       : r.resume_asked ? '<span class="ledger-resume-owed" title="对方要过简历，存档里没找到发送记录">要过·未发</span>' : dash;
     var link = r.job_url ? '<a class="ledger-link" href="' + escAttr(r.job_url) + '" target="_blank" rel="noopener" title="在 BOSS 上看这个岗位"><i data-ki="link"></i></a>' : '';
-    var pay = [r.salary, r.city].filter(Boolean).join(' · ') || dash;
+    var pay = [可信薪资(r.salary), r.city].filter(Boolean).join(' · ') || dash;
     return '<tr>'
       + '<td title="' + escAttr(r.last_activity) + '">' + escAttr((r.last_activity || '').slice(5, 16)) + '</td>'
       + '<td title="' + escAttr(accName) + '">' + escAttr(String(Number(r.account_index) + 1)) + '</td>'
@@ -4230,7 +4230,9 @@ function buildGreetRowHtml(data) {
   return '<td title="'+escAttr(timeFull)+'">'+escHtml(timeDisplay)+'</td>'
     +'<td title="'+escAttr(data.job_name||'')+'">'+escHtml(data.job_name||'—')+'</td>'
     +'<td title="'+escAttr(data.company||'')+'">'+escHtml(data.company||'—')+'</td>'
-    +'<td>'+escHtml(data.salary||'—')+'</td>'
+    +'<td'+(data.salary && !可信薪资(data.salary)
+      ? ' title="薪资没读全：BOSS 的反爬字体有个段位解码不出来"' : '')
+      +'>'+escHtml(可信薪资(data.salary)||'—')+'</td>'
     +'<td>'+statusHtml+'</td>'
     +'<td style="white-space:normal;word-break:break-word">'+skipReasonHtml+'</td>'
     +'<td>'+aiBadge+'</td>';
@@ -5095,10 +5097,29 @@ let greetLoadSeq = 0;
 // 缓存所有回复记录分组（用于前端筛选）
 let allReplyGroups = [];
 
+// 薪资残缺判定（与后端 greet_engine.薪资可信 同一套形状判据）：
+// BOSS 把数字放在 Unicode 私用区，段位一换解码就认不出，认不出的字符会被直接删掉——
+// "15-23K" 剩成 "-23K"，界面读起来像个负数，还会被薪资筛选数成 23 冒充过线岗。
+// 解码那头现在留 ? 占位；这一律把读不出的折成空串：格子画 —、筛选不认。
+// "面议"这种没数字的写法是合法值，不能一起藏掉。
+function 可信薪资(s) {
+  var v = (s == null ? '' : String(s)).trim();
+  if (!v) return '';
+  if (/[?？\uFFFD]/.test(v)) return '';
+  if (/^[-–—~·、，,\/]/.test(v) || /[-–—~·]$/.test(v)) return '';
+  var re = /[-–—~]/g, m;
+  while ((m = re.exec(v)) !== null) {
+    // 两头都得有数字，但判"这一段里有没有数字"而不是"挨着的是不是数字"，
+    // 否则"1.5万-3万"这种合法写法会被误杀
+    if (!/\d/.test(v.slice(0, m.index)) || !/\d/.test(v.slice(m.index + 1))) return '';
+  }
+  return v;
+}
+
 // 解析薪资数值（如 "10-15K·13薪" → 10）
 function parseSalaryMin(salary) {
-  if (!salary) return 0;
-  var s = String(salary).trim();
+  var s = 可信薪资(salary);   // 残缺值返回 0：读不出不能冒充过线
+  if (!s) return 0;
   // 匹配第一个数字
   var m = s.match(/(\d+)/);
   return m ? parseInt(m[1]) : 0;

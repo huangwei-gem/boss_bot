@@ -12,24 +12,27 @@ from logging.handlers import TimedRotatingFileHandler
 from tests.conftest import REPO_LOG_DIR, TEST_LOG_DIR
 
 
-def _size(path):
-    return path.stat().st_size if path.exists() else 0
+def _读(path):
+    # 面板正在往同一个文件里写，比字节数会撞车（10-17 全量跑到这条假红过一次）：
+    # 要防的是"测试自己写的行混进仓库日志、盖掉真实现场"，那就直接查哨兵在不在。
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8", errors="replace")
 
 
 def test_仓库日志文件一个字都不许多():
     import boss_bot.greet_engine  # noqa: F401  它 import 时就挂上 logs/greet_engine.log
 
-    before = {name: _size(REPO_LOG_DIR / name)
-              for name in ("boss_bot.log", "greet_engine.log")}
-    sentinel = "SENTINEL_日志隔离_%d" % int(time.time())
+    哨兵 = ["SENTINEL_日志隔离_%d" % int(time.time()),
+            "SENTINEL_日志隔离_另一个_%d" % (int(time.time()) + 1)]
 
     root = logging.getLogger()
     probe = TimedRotatingFileHandler(str(REPO_LOG_DIR / "boss_bot.log"),
                                      when="midnight", encoding="utf-8")
     root.addHandler(probe)
     try:
-        logging.getLogger("greet_engine_file").error(sentinel)
-        logging.getLogger("boss_bot.main_loop").error(sentinel)
+        logging.getLogger("greet_engine_file").error(哨兵[0])
+        logging.getLogger("boss_bot.main_loop").error(哨兵[1])
         for h in list(root.handlers) + list(
                 logging.getLogger("greet_engine_file").handlers):
             h.flush()
@@ -37,8 +40,11 @@ def test_仓库日志文件一个字都不许多():
         root.removeHandler(probe)
         probe.close()
 
-    for name, size in before.items():
-        assert _size(REPO_LOG_DIR / name) == size, f"{name} 被测试写进去了"
+    for name in ("boss_bot.log", "greet_engine.log"):
+        文 = _读(REPO_LOG_DIR / name)
+        for s in 哨兵:
+            assert s not in 文, f"{name} 里出现了测试写的 {s}（真实现场会被这种行盖掉）"
+
 
 
 def test_日志是真的被挪走而不是被丢掉():
