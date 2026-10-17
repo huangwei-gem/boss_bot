@@ -35,7 +35,7 @@ from boss_bot.intent import body_veto_hit, keyword_hit, title_veto_hit
 from boss_bot.greeting import (account_greeting_mode, effective_account_greeting,
                                sanitize_ai_greeting)
 from boss_bot.unified_config import strip_default_greeting
-from boss_bot.browser_launcher import BrowserManager, close_stray_tabs
+from boss_bot.browser_launcher import BrowserManager
 from boss_bot.reply_record import (GreetRecord, classify_greet_skip,
                                    _get_greet_store)
 
@@ -2985,12 +2985,15 @@ class GreetEngine:
                                 break
                         except Exception:
                             pass
-                    # 同一次点击甩出来的岗位详情页这一轮用不上，当场收掉：
-                    # 引擎只登记聊天页那张，剩下的没人认领——实测 9222 挂着 3 张，
-                    # 隔离实例里量过一张是 400 MB（开 2533→2932，关 2932→2533）
-                    关了 = close_stray_tabs(browser, new_tab_ids, keep=chat_tab_id)
-                    if 关了:
-                        self._log("DEBUG", f"关掉了 {关了} 张这次点击甩出来的岗位详情页")
+                    # 这一次点击甩出来、以及之前漏掉的岗位详情页当场收掉：差集那条路
+                    # 只认"快照之后开出来的"，BOSS 晚一步开的那张就永远没人关——实测
+                    # 9223 一轮里攒下 4 张，最旧的挂了一个钟头；一张约 400 MB
+                    # （隔离实例开一张再关一张：2533 → 2932 MB）。
+                    # 按标签页 id 保护：搜索页自己停在 job_detail 上那一种不能碰。
+                    if self.browser_manager is not None:
+                        关了 = self.browser_manager.sweep_idle_tabs()
+                        if 关了:
+                            self._log("DEBUG", "关掉了 %d 张没人认领的岗位详情页" % 关了)
                     # 关键修复：删除 latest_tab 回退逻辑。
                     # latest_tab 返回最近激活的标签页，如果回复引擎刚操作过 _chat_tab，
                     # latest_tab 就会返回回复引擎的聊天标签页，导致打招呼引擎在回复标签页上发消息。

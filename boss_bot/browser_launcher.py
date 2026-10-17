@@ -27,6 +27,7 @@ import shutil
 import socket
 import tempfile
 import logging
+import threading
 from pathlib import Path
 from urllib.request import urlopen
 from urllib.error import URLError
@@ -1488,32 +1489,122 @@ def _minimize_new_window(page) -> None:
 # BrowserManager 高层管理器
 # ──────────────────────────────────────────────────────────────
 
-def close_stray_tabs(browser, new_ids, keep=None) -> int:
-    """关掉这一次点击甩出来、当前用不上的标签页，返回关掉的张数。
+# 闲置页看守多久问一圈。一圈的成本是一次 `http://127.0.0.1:端口/json`（毫秒级、
+# 不发 websocket），比多挂一分钟冻着的岗位详情页便宜太多——一张实测约 400 MB。
+闲置页看守秒 = 60.0
 
-    BOSS 的卡片和"沟通"按钮都带 target=_blank，点下去除了聊天页还可能甩出一张
-    岗位详情页；打招呼引擎只登记聊天页那一张，剩下的没人认领，于是越攒越多：
-    2026-10-09 实测 9222 挂着 3 张 job_detail。一张详情页值多少——隔离实例里
-    开一张再关掉，进程树 2932 → 2533 MB，一进一出 400 MB 不到，三张就是一点几个 G。
-    只动 new_ids 里的那几张——搜索页和回复用的聊天页是长期存在的标签页，
-    差集之外的一张都不能碰。
+
+def 闲置岗位页(url) -> bool:
+    """这一张是不是"卡片和「沟通」按钮甩出来、没人认领"的那一类。
+
+    这一族是 target=_blank 开出来的，用完没人关；隔离实例量过一张值多少——开一张
+    进程树 2932 MB、关掉 2533 MB，约 400 MB。聊天页、搜索页是长期存在的，登录页
+    更要留着：等人扫码那张关了就把登录弄没了。所以只收这一族。
+
+    判据只写这一处：WS 那条清扫路和 HTTP 那条看守路都调它。补一类要收的页
+    （比如漏掉的会话页）只能在这里补，抄两份就是一次只补一半。
     """
+    return "job_detail" in (url or "")
+
+
+def 挑闲置岗位页(targets, keep_ids) -> list:
+    """从 `/json` 那批目标里挑出该关的标签页 id。
+
+    按 id 保护、不按 URL 猜：「点了立即沟通但抽屉没出来」那一种，搜索页自己就停在
+    job_detail 上，照 URL 挑就会把钉住的那张关掉——实测之后每一次 url/get() 都抛
+    PageDisconnectedError，10-16 那条投递腿就是这么死了 16 分钟、烧掉 39 条记录。
+
+    只认 type == "page"：`/json` 里还混着 service_worker / shared_worker
+    （BOSS 的 socket-worker 就带 zhipin.com 的地址），那些不是标签页，关了也关不掉，
+    还可能把平台侧的连接搅了。
+    """
+    留着 = set(keep_ids or ())
+    return [t.get("id") for t in (targets or ())
+            if t.get("type") == "page" and t.get("id")
+            and t.get("id") not in 留着 and 闲置岗位页(t.get("url"))]
+
+
+def close_idle_job_tabs_http(address, keep_ids=(), timeout=5.0, 打开=None) -> int:
+    """用 CDP 的 HTTP 端点收掉闲置的岗位详情页，全程不碰 WebSocket。
+
+    为什么要有这第二条路：2026-10-16 13:47 只读探 9223，9 个 page 目标里 6 个
+    完全不应答 `Runtime.evaluate`（6 秒超时）——机器只剩 0.52 GB 可用内存、交换区
+    吃了 16.5 GB，渲染进程被冻住了；那 6 张里就包括投递腿钉住的搜索页和 4 张
+    job_detail。腿卡在 websocket 收发里，Python 层的计时器抢不回来，于是轮次收尾
+    的清扫永远轮不到，页越来越冻得死。而同一时刻 `http://127.0.0.1:9223/json`
+    照样秒回——看守只有走这条才不受同一场冻结牵连。
+
+    打开 是 urlopen 的位置，测试注进来就不必真连端口。任何一步失败都咽下去
+    返回已关掉的张数：看守线程一死，两个号就再没人收页。
+    """
+    开 = 打开 or (lambda url, t: urlopen(url, timeout=t))
+    try:
+        with 开("http://%s/json" % address, timeout) as 响:
+            清单 = json.loads(响.read().decode("utf-8"))
+    except Exception as e:
+        logger.debug("标签页看守(%s)：读不到标签页列表，这一圈不动手: %s" % (address, e))
+        return 0
+    待关 = 挑闲置岗位页(清单, keep_ids)
+    if not 待关:
+        logger.debug("标签页看守(%s)：看到 %d 张（在册 %d 张），没有要收的岗位详情页"
+                     % (address, len(清单 or ()), len(set(keep_ids or ()))))
+        return 0
     关掉 = 0
-    for tid in (new_ids or ()):
-        if keep is not None and tid == keep:
+    for tid in 待关:
+        try:
+            开("http://%s/json/close/%s" % (address, tid), timeout).read()
+            关掉 += 1
+        except Exception as e:
+            logger.debug("标签页看守(%s)：%s 关不掉（继续关其余）: %s" % (address, tid, e))
+    logger.info("标签页看守(%s)：看到 %d 张（在册 %d 张），关掉 %d 张没人认领的岗位详情页"
+                % (address, len(清单), len(set(keep_ids or ())), 关掉))
+    return 关掉
+
+
+def close_idle_job_tabs(browser, keep_ids=(), only_ids=None) -> int:
+    """关掉闲置的岗位详情页标签页，keep_ids 里的一张都不碰。
+
+    only_ids 给定时只在这批里挑（调用方明确知道是哪几张），不给就全量扫。
+
+    为什么按 id 保护而不是按 URL 挑：「点了「立即沟通」但聊天抽屉没出来」那一种，
+    搜索页自己就停在 job_detail 上（skip_reason 那句"URL 仍停在岗位详情页"），
+    按 URL 清扫就会关掉钉住的那张句柄——实测之后每一次 url/get() 都抛
+    PageDisconnectedError，2026-10-16 那条投递腿就是这么死了 16 分钟、烧掉 39 条记录。
+
+    哪些页算"没人认领"由 `闲置岗位页` 判，和 HTTP 那条看守路共用一份。
+    """
+    if only_ids is not None:
+        候选 = list(only_ids)
+    else:
+        try:
+            候选 = list(browser.tab_ids)
+        except Exception as e:
+            logger.debug(f"读不到标签页列表，这次不清扫: {e}")
+            return 0
+    留着 = set(keep_ids or ())
+    关掉 = 0
+    读不到 = 0
+    for tid in 候选:
+        if tid in 留着:
             continue
         try:
             tab = browser.get_tab(tid)
             url = tab.url or ""
         except Exception:
-            continue
-        if "job_detail" not in url:
+            读不到 += 1
+            continue          # 读不到 URL 就判不了，判不了就不关别人的页
+        if not 闲置岗位页(url):
             continue
         try:
             tab.close()
             关掉 += 1
         except Exception as e:
-            logger.debug(f"甩出来的标签页关不掉（不拦这一轮）: {e}")
+            logger.debug(f"闲置的岗位详情页关不掉（不拦这一轮）: {e}")
+    # 「没得关」「没看成」「关不掉」在日志里必须长得不一样，否则值守只能猜；
+    # 端口也要带上——两个号共用一份日志，不写端口就分不清是哪条腿没动手。
+    logger.debug("标签页清扫(%s)：看到 %d 张（在册 %d 张），关掉 %d 张闲置的岗位详情页%s"
+                 % (getattr(browser, "address", "?"), len(候选), len(留着), 关掉,
+                    "，另有 %d 张读不到 URL" % 读不到 if 读不到 else ""))
     return 关掉
 
 
@@ -1568,6 +1659,10 @@ class BrowserManager:
         # 与 _chat_tab 严格区分，避免抢占回复引擎的聊天标签页。
         self._greet_chat_tab = None
         self._is_logged_in = False
+        # 闲置页看守：一条不依赖投递腿的收页出口（见 sweep_idle_tabs_http）
+        self._看守 = None
+        self._看守停 = None
+        self._看守间隔 = 闲置页看守秒
 
         # 每个账号使用不同的调试端口，避免端口冲突
         self._debug_port = port if port is not None else (9222 + account_index)
@@ -1664,6 +1759,10 @@ class BrowserManager:
         # 尝试加载 Cookie
         if self._cookie_file:
             self.load_cookies(self._cookie_file)
+
+        # 浏览器一起来就带上这条出口：投递腿一旦被冻住的页面卡住，轮次收尾的
+        # 清扫永远轮不到，1.6 GB 的岗位详情页能挂一个钟头（10-16 12:49 实测）
+        self.start_idle_tab_watchdog()
 
         return self._instance
 
@@ -1823,6 +1922,97 @@ class BrowserManager:
         if self._instance is None:
             return None
         return getattr(self._instance._get_active(), "tab_id", None) or None
+
+    def _在册标签页id(self) -> set:
+        """现在有谁在用这张页——清扫的保护集只在这里算一次。
+
+        WS 那条路和 HTTP 那条看守路都要用同一份；两边各拼各的，早晚会走偏到
+        "一边认得搜索页、另一边不认"，那就是一脚把钉住的那张关掉。
+        全是属性读，不发 CDP 请求——页面冻住、腿卡死的时候也算得出来。
+        """
+        return {t for t in (self.search_tab_id(),
+                             self._包的id(self._chat_tab),
+                             self._包的id(self._greet_chat_tab)) if t}
+
+    def sweep_idle_tabs(self) -> int:
+        """轮次收尾兜一趟全量清扫：把这一阵子挂着的岗位详情页收掉。
+
+        为什么每次发送的收尾也要扫一遍：只认"这一次点击甩出来的那几张"的话，
+        新页要是在那次
+        post 快照之后才开出来，它就永远不在差集里，谁也不认领。10-16 10:12 只读
+        探 9223，聊天页与搜索页之外还挂着 3 张 job_detail，就是这条漏口。
+        这一条走 DrissionPage（要拿每张页的 URL），所以它得和投递腿一样活着；
+        腿冻住时靠 `sweep_idle_tabs_http` 那条 HTTP 看守路兜。
+        """
+        if self._instance is None:
+            logger.debug("标签页清扫跳过：浏览器句柄还没建立")
+            return 0
+        页 = self._instance._get_active()
+        浏览器 = getattr(页, "browser", None)
+        if 浏览器 is None:
+            logger.debug("标签页清扫跳过：从 %s 拿不到浏览器对象" % type(页).__name__)
+            return 0
+        if not self.search_tab_id():
+            return self._认不出在册页("清扫")
+        return close_idle_job_tabs(浏览器, keep_ids=self._在册标签页id())
+
+    def _认不出在册页(self, 路: str) -> int:
+        """两条清扫路共用的那句"判不了就不关"。
+
+        保护集里少了钉住的那一张，扫到的第一页就是自己的搜索页——10-16 那条投递腿
+        就是这么死了 16 分钟、烧掉 39 条记录。宁可不扫。
+        """
+        logger.debug("标签页%s跳过：认不出哪张是搜索页，判不了就不关" % 路)
+        return 0
+
+    def sweep_idle_tabs_http(self) -> int:
+        """只用 CDP 的 HTTP 端点收页——这条不碰任何一条腿共用的 websocket。
+
+        轮次收尾的清扫有个死结：它要等这一单点完「沟通」之后走完，而 10-16 那天
+        渲染进程被冻住的号（9 张 page 里 6 张不应答）永远走不完，于是没人收页、
+        内存更紧、冻住的页更多。`/json` 在同一时刻照样秒回，看守就绑在这条上。
+        """
+        if self._instance is None:
+            return 0            # 浏览器不是我们起来的，就不去关别人的页
+        if not self._debug_port:
+            logger.debug("标签页看守跳过：这一份管理器没有自己的调试端口")
+            return 0
+        if not self.search_tab_id():
+            return self._认不出在册页("看守")
+        return close_idle_job_tabs_http("127.0.0.1:%s" % self._debug_port,
+                                        self._在册标签页id())
+
+    def start_idle_tab_watchdog(self, interval: float = 闲置页看守秒) -> None:
+        """拉起闲置页看守线程（幂等：已经在跑就只换周期，不开第二条）。"""
+        if self._看守 is not None and self._看守.is_alive():
+            self._看守停.set()
+        self._看守停 = threading.Event()
+        self._看守间隔 = max(1.0, float(interval))
+        self._看守 = threading.Thread(target=self._看守闲置页, daemon=True,
+                                      name="idle_tab_watchdog-%s" % self._debug_port)
+        self._看守.start()
+
+    def stop_idle_tab_watchdog(self) -> None:
+        """停掉看守。用 Event 等，不是 sleep 到点才退——不然关浏览器要等一整圈。"""
+        停 = self._看守停
+        线程 = self._看守
+        self._看守 = None
+        self._看守停 = None
+        if 停 is not None:
+            停.set()
+        if 线程 is not None and 线程.is_alive():
+            线程.join(timeout=2)
+
+    def _看守闲置页(self) -> None:
+        停 = self._看守停
+        while not 停.is_set():
+            try:
+                self.sweep_idle_tabs_http()
+            except Exception as e:
+                # 这一圈失败不算什么：端口挂了、列表读不到，下一圈再看。
+                # 线程要是就这么死了，两个号再没人收页（内存那条死循环原样回来）。
+                logger.debug("闲置页看守这一圈没做成: %s" % e)
+            停.wait(self._看守间隔)
 
     def _包的id(self, 包装):
         if 包装 is None:
@@ -2117,6 +2307,7 @@ class BrowserManager:
 
         清理所有标签页并关闭浏览器实例。
         """
+        self.stop_idle_tab_watchdog()
         self._search_tab = None
         self._chat_tab = None
         self._greet_chat_tab = None

@@ -552,6 +552,28 @@ def api_status():
     return jsonify(_enrich_status(manager.get_status()))
 
 
+@app.route("/api/debug/stacks")
+def api_debug_stacks():
+    """把每个线程此刻停在哪一行原样抄出来，只给值守用。
+
+    为什么要它：2026-10-16 两条投递腿各停了一个钟头，日志最后一个字是
+    「已点击沟通按钮，等待输入框…」，之后一条 DEBUG 都没有。DrissionPage 的调用
+    带 30 秒超时、超时就抛、抛了我们就会落一句——一句都没有，说明线程不是在等
+    超时，是压根没回到 Python 层。只看日志连着猜错三轮，这一份一次定死。
+    只读：不点、不发、不碰任何引擎对象。
+    """
+    import traceback
+    名字 = {}
+    for 线 in threading.enumerate():
+        名字[线.ident] = 线.name
+    段 = []
+    for ident, 帧 in sys._current_frames().items():
+        段.append("== %s (ident=%s)\n%s"
+                  % (名字.get(ident, "?"), ident, "".join(traceback.format_stack(帧))))
+    return ("线程栈 %d 条\n\n%s" % (len(段), "\n\n".join(段)), 200,
+            {"Content-Type": "text/plain; charset=utf-8"})
+
+
 def _enrich_status(data: dict) -> dict:
     """给每个账号补 cookie 字段，前端状态点因此能随轮询自己更新。
 

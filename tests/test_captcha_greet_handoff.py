@@ -155,6 +155,9 @@ class SideAwareHealthTest:
             def get_instance(self):
                 return self.instance
 
+            def sweep_idle_tabs(self):
+                return 0  # 测试只管轮次编排，不碰标签页
+
             def get_search_page(self):
                 return self.search
 

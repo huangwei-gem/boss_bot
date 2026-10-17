@@ -976,11 +976,29 @@ class UnifiedBotLoop:
             return 做()
         finally:
             self._轮深.n = 深 - 1
-            if 深 == 1:
-                try:
+            try:
+                # 清扫哪一层出来都做：它只关没人认领的岗位详情页，重不开浏览器、
+                # 不打断任何一条腿，等最外层反而等不到（回复轮常套在全量同步里）
+                self._清扫闲置页()
+                if 深 == 1:
                     self._内存回收()
-                except Exception as e:
-                    self._log("WARN", "内存回收这一步没做成: %s" % e)
+            except Exception as e:
+                self._log("WARN", "轮次收尾的内存清理没做成: %s" % e)
+
+    def _清扫闲置页(self) -> int:
+        """把这一阵子没人认领的岗位详情页收掉（一张约 400 MB）。
+
+        调它的地方有两处：两条腿各自的"轮次结束"那句，和 `_跑一轮` 的收口
+        （兜住追问轮/补简历/全量同步那三条没写"轮次结束"的腿）。多读一次 /json
+        很便宜，"有一个号一辈子不扫"才贵——10-16 11:43:51 账号2 写下「回复轮次
+        结束」之后，整份日志里没有一条 9223 的清扫，同一个进程里主账号每条都有。
+        漏下的样子：10:12 只读探 9223，聊天页与搜索页之外挂着 4 张 job_detail，
+        最旧的三张从 10:12 一直挂到 11:13。
+        """
+        收了 = self.browser_manager.sweep_idle_tabs()
+        if 收了:
+            self._log("INFO", "轮次收尾关掉 %d 张闲置的岗位详情页（一张约 400 MB）" % 收了)
+        return 收了
 
     def _重建浏览器(self) -> dict:
         """按当前形态重开浏览器，并把 Cookie、搜索标签页和引擎都接回来。
@@ -1005,11 +1023,13 @@ class UnifiedBotLoop:
         return 前后
 
     def _内存回收(self) -> bool:
-        """浏览器涨过阈值就重开一次，把挂机一天攒下的内存放掉。
+        """浏览器还超阈值就在轮次空档重开一次，把挂机一天攒下的内存放掉。
 
         依据：这台 15.3 GB 的机器上两个号刚重开是 404+328 MB，挂机到晚上整棵树
         接近 2.5 GB，可用只剩 0.5 GB，整机开始换页——比"少重开一次"更贵的是卡。
         重开不掉登录（会话躺在 profile 目录里），但只挑"这趟活做到底"的那一刻。
+        闲置的岗位详情页由 `_清扫闲置页` 在同一个收口里先扫掉，所以这里量到的是
+        扫过之后的数：能靠收几张页解决的，就不会走到重开这一步。
         """
         阈值 = int(getattr(self.config.browser, "memory_recycle_mb", 0) or 0)
         if 阈值 <= 0 or self._login_headed_temp:
@@ -1164,12 +1184,25 @@ class UnifiedBotLoop:
 
         self._log("INFO", "请在浏览器中登录 BOSS 直聘（扫码或手机号+验证码），登录成功后会自动继续")
 
-        if not self._wait_for_login(instance, cookie_file):
-            # 界面这一列靠它定位问题：前面已经判出 cookie_expired / login_uncertain
-            # 时不许用笼统的 login_timeout 盖掉
-            self._login_reason = self._login_reason or "login_timeout"
-            self._log("ERROR", "登录超时，主循环退出")
-            return False
+        # 等人工登录没有"放弃"这一档。wait_timeout 只规定"多久念一句还在等"，
+        # 不规定"这个号还跑不跑"。2026-10-16 05:18 把窗口摆到桌面上写的就是
+        # "登进去后这一轮自己继续"，05:23 却按超时把两条腿撤了；他随后真登了进去，
+        # 没人在等 → 主账号 running=false 挂到 10:12、当天 0 单。
+        第几轮 = 0
+        while not self._wait_for_login(instance, cookie_file):
+            第几轮 += 1
+            if self._stop_event.is_set() or not self._running:
+                # 只有人叫停才算这条路走不通，超时不算
+                self._log("WARN", f"第 {第几轮} 轮等登录被人叫停，退出等待")
+                return False
+            instance = self.browser_manager.get_instance()
+            if instance is None:
+                self._login_reason = "browser_failed"
+                self._log("ERROR", f"第 {第几轮} 轮等登录期间浏览器没了"
+                                  f"（窗口被关或进程被杀），退出等待")
+                return False
+            self._log("WARN", f"第 {第几轮} 轮等人登录（{self.config.login.wait_timeout} 秒）"
+                              f"没等到，窗口继续留在桌面上等着，登进去自己继续")
 
         # 登录确认后保存 Cookie（没确认就不许顶掉原文件）
         self._save_cookies_if_logged_in(instance)
@@ -1865,6 +1898,7 @@ class UnifiedBotLoop:
                 self._log("WARN", "检测到浏览器连接断开，尝试重连...")
                 self._try_reconnect_browser()
 
+        self._清扫闲置页()
         self._log("INFO", "━━━ 打招呼轮次结束 ━━━")
         return any_jobs_found
 
@@ -2140,6 +2174,7 @@ class UnifiedBotLoop:
                 self._log("WARN", "检测到浏览器连接断开，尝试重连...")
                 self._try_reconnect_browser()
 
+        self._清扫闲置页()
         self._log("INFO", "━━━ 回复轮次结束 ━━━")
 
     # 一条欠着的会话处理失败后多久才再试：侧栏对不上行时会一直空跑

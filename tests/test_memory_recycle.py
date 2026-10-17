@@ -130,21 +130,43 @@ class Test重开浏览器:
 
 
 class Test什么时候该回收:
-    def _循环(self, 阈值=1600, 量的=2000.0, 刚回收过=None):
+    def _循环(self, 阈值=1600, 量的=2000.0, 刚回收过=None, 收了=0, 扫后=None):
+        """量的 = 还没清扫时的真实占用，扫后 = 清扫完几张闲置页之后的占用。
+
+        memory_mb 按"清扫有没有做过"回不同的数，这样判据用错顺序也会被抓住：
+        拿清扫前的旧数去决定要不要重开，等于白收几张页还要把整个浏览器推倒。
+        """
         cfg = UnifiedConfig()
         cfg.browser.memory_recycle_mb = 阈值
-        日志, 重建 = [], []
+        日志, 重建, 扫过 = [], [], []
+        现场 = {"扫过了": False}
+
+        def _扫():
+            扫过.append(1)
+            现场["扫过了"] = True
+            return 收了
+
+        def _量():
+            return 扫后 if (现场["扫过了"] and 扫后 is not None) else 量的
+
         loop = types.SimpleNamespace(
             config=cfg, _login_headed_temp=False, 内存回收冷却秒=1800,
-            browser_manager=types.SimpleNamespace(memory_mb=lambda: 量的),
+            browser_manager=types.SimpleNamespace(memory_mb=_量, sweep_idle_tabs=_扫),
             _重建浏览器=lambda: (重建.append(量的), {"前": 量的, "后": 400.0})[1],
             _最后回收=刚回收过 or 0.0,
-            _回收受阻已报=False,
-            日志=日志, 重建=重建, _log=lambda lvl, msg: 日志.append((lvl, msg)))
+            _回收受阻已报=False, _轮深=types.SimpleNamespace(n=0),
+            日志=日志, 重建=重建, 扫过=扫过, _log=lambda lvl, msg: 日志.append((lvl, msg)))
+        loop._清扫闲置页 = types.MethodType(ML.UnifiedBotLoop._清扫闲置页, loop)
+        loop._内存回收 = types.MethodType(ML.UnifiedBotLoop._内存回收, loop)
+        loop._跑一轮 = types.MethodType(ML.UnifiedBotLoop._跑一轮, loop)
         return loop
 
     def _跑(self, loop):
-        return ML.UnifiedBotLoop._内存回收(loop)
+        return loop._内存回收()
+
+    def _跑一圈(self, loop):
+        """走真的收口：一趟活出来先清扫、最外层那趟再判要不要重开。"""
+        return loop._跑一轮(lambda: None)
 
     def test_超阈值就重开并报出前后(self):
         loop = self._循环()
@@ -189,6 +211,68 @@ class Test什么时候该回收:
         assert len(说) == 1, "每个轮次边界都会走到这里，刷屏就没人看了"
         assert "2000" in 说[0][1] and "1600" in 说[0][1]
 
+    # ── 轮次收尾的标签页清扫（一张岗位详情页约 400 MB）────────────────
+    def test_每轮收尾都先清扫闲置标签页(self):
+        """没到阈值也要扫：漏下来的 job_detail 就是内存慢慢涨上去的那部分。
+
+        现场：10-16 10:12 只读探 9223，账号2 的聊天页与搜索页之外挂着 3 张
+        job_detail——按"这一次点击的差集"关的那条路漏下了它们。
+        """
+        loop = self._循环(量的=900.0, 收了=3)
+
+        self._跑一圈(loop)
+
+        assert loop.扫过 == [1], "收口不扫，漏下来的页就一直挂到重启"
+        assert any("3 张" in m for _, m in loop.日志), loop.日志
+
+    def test_清扫之后才量内存(self):
+        """判据必须用清扫之后的读数：能靠收几张页解决的，不必打断两条腿重开。"""
+        loop = self._循环(阈值=1600, 量的=2400.0, 扫后=1200.0, 收了=2)
+
+        self._跑一圈(loop)
+
+        assert loop.重建 == [], "清扫后已低于阈值，重开浏览器是白打断一轮"
+
+    def test_清扫完还是超阈值就照旧重开(self):
+        loop = self._循环(阈值=1600, 量的=2400.0, 扫后=2000.0, 收了=2)
+
+        self._跑一圈(loop)
+
+        assert loop.重建 == [2400.0]
+
+    def test_关掉回收开关也要照样清扫(self):
+        """memory_recycle_mb=0 关的是"重开浏览器"，不是"别把没人认领的页攒着"。"""
+        loop = self._循环(阈值=0, 量的=9000.0, 收了=1)
+
+        self._跑一圈(loop)
+
+        assert loop.扫过 == [1]
+        assert loop.重建 == []
+
+    def test_嵌套的轮次也要清扫(self):
+        """清扫每一层出来都做；只有"重开浏览器"才要等最外层那趟做完。"""
+        loop = self._循环(量的=900.0, 收了=1)
+        loop.扫过.clear()
+        loop._轮深.n = 3            # 全量同步套着回复轮的那种嵌套
+
+        loop._跑一轮(lambda: None)
+
+        assert loop.扫过 == [1], "里面那层出来也要扫，不然嵌套期间永远不扫"
+        assert loop.重建 == [], "里面那层不许重开浏览器"
+        assert loop._轮深.n == 3, "层数要还原成进来时那样，别把外面的账销了"
+
+    def test_两条腿各自的轮次末尾都扫(self):
+        """层数收口靠不住，两条腿都得在自己的"轮次结束"那句上扫。
+
+        10-16 11:43:51 账号2 的「回复轮次结束」之后日志里没有一条 9223 的清扫——
+        同一个进程里主账号有。只挂在那一层，就有一个号一辈子不扫。
+        """
+        src = (Path(__file__).resolve().parents[1] / "boss_bot" / "main_loop.py"
+               ).read_text(encoding="utf-8")
+        for 锚 in ("━━━ 打招呼轮次结束 ━━━", "━━━ 回复轮次结束 ━━━"):
+            at = src.index(锚)
+            assert "self._清扫闲置页()" in src[max(0, at - 400):at + 40], 锚
+
     def test_没到阈值不啰嗦(self):
         loop = self._循环(量的=900.0)
         self._跑(loop)
@@ -222,6 +306,8 @@ class Test什么时候算一轮跑完:
         记 = []
         loop = types.SimpleNamespace(_轮深=__import__("threading").local(), _回收=记)
         loop._内存回收 = lambda: 记.append("回收")
+        loop._清扫闲置页 = lambda: 记.append("清扫")
+        loop._log = lambda lvl, msg: None
         loop._跑一轮 = lambda 做: ML.UnifiedBotLoop._跑一轮(loop, 做)
         return loop
 
@@ -229,7 +315,7 @@ class Test什么时候算一轮跑完:
         loop = self._循环()
         got = ML.UnifiedBotLoop._跑一轮(loop, lambda: "本轮结果")
         assert got == "本轮结果", "轮次的返回值要原样传回去（打招呼腿拿它判断有没有岗位）"
-        assert loop._回收 == ["回收"]
+        assert loop._回收 == ["清扫", "回收"]
 
     def test_套在上一趟活里面不回收(self):
         """启动全量同步里插着回复轮：插的那轮跑完时同步还没做完，不能换浏览器。"""
@@ -239,7 +325,9 @@ class Test什么时候算一轮跑完:
             return ML.UnifiedBotLoop._跑一轮(loop, lambda: "内层")
 
         assert ML.UnifiedBotLoop._跑一轮(loop, 里面) == "内层"
-        assert loop._回收 == ["回收"], "只有最外层出来那一次才算空档"
+        assert [x for x in loop._回收 if x == "回收"] == ["回收"], \
+            "只有最外层出来那一次才算空档"
+        assert loop._回收.count("清扫") == 2, "两层出来各扫一次（清扫不打断活，随便做）"
 
     def test_轮次里抛异常也要把层数降回来(self):
         loop = self._循环()
@@ -247,11 +335,13 @@ class Test什么时候算一轮跑完:
             ML.UnifiedBotLoop._跑一轮(loop, lambda: (_ for _ in ()).throw(ValueError()))
         assert loop._轮深.n == 0, "层数留在上面就再也不会回收了"
         ML.UnifiedBotLoop._跑一轮(loop, lambda: 1)
-        assert loop._回收 == ["回收", "回收"], "抛错那趟和下一趟都要有那一次检查"
+        assert [x for x in loop._回收 if x == "回收"] == ["回收", "回收"], \
+            "抛错那趟和下一趟都要有那一次检查"
 
     def test_回收本身抛错不能带崩轮次(self):
         loop = types.SimpleNamespace(_轮深=__import__("threading").local(),
                                      _内存回收=lambda: (_ for _ in ()).throw(RuntimeError("量内存失败")),
+                                     _清扫闲置页=lambda: 0,
                                      _log=lambda lvl, msg: None)
         assert ML.UnifiedBotLoop._跑一轮(loop, lambda: 1) == 1
 
