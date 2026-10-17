@@ -601,7 +601,7 @@ class PromptHotReloadTest:
 
     def test_改完system_rules立刻生效(self, isolated):
         P, overrides, _ = isolated
-        assert "语气专业" in P.build_system_prompt()
+        assert "别写成客服" in P.build_system_prompt(), "改规则块时把这句锚点也换了就重定这条"
         _write(overrides, system_rules="只允许回复两个字：好的")
         assert "只允许回复两个字" in P.build_system_prompt()
 
@@ -738,8 +738,9 @@ class FlaskAiEndpointTest:
         from boss_bot.prompts import _SYSTEM_RULES_DEFAULT
         d = client.get("/api/ai/prompts").get_json()
         assert d["defaults"]["system_rules"] == _SYSTEM_RULES_DEFAULT
-        # 默认值必须是引擎那份 20 条的，不是界面上的 10 条抄本
-        assert "必须根据完整对话上下文回复" in d["defaults"]["system_rules"]
+        # 默认值必须是引擎那份（含"别复述上下文""不编个人信息"），不是界面上的旧抄本
+        assert "不复述对方刚说过的话" in d["defaults"]["system_rules"]
+        assert "绝不写别的数" in d["defaults"]["system_rules"]
 
 
 class SelfEvolveReportHonestyTest:
