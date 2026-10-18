@@ -35,7 +35,8 @@ from boss_bot.intent import body_veto_hit, keyword_hit, title_veto_hit
 from boss_bot.greeting import (account_greeting_mode, effective_account_greeting,
                                sanitize_ai_greeting)
 from boss_bot.unified_config import strip_default_greeting
-from boss_bot.browser_launcher import BrowserManager
+from boss_bot.browser_launcher import (
+    BrowserManager, 保存登录Cookie, 页面被踢到哪, 是风控验证页)
 from boss_bot.reply_record import (GreetRecord, classify_greet_skip,
                                    _get_greet_store)
 
@@ -412,6 +413,19 @@ _INPUTISH = ("#chat-input", ".chat-input", '[contenteditable="true"]', ".input-a
 _LOGIN_CLS = ("ipt-phone", "ipt-sms")
 
 
+def _浏览器里的登录项(instance) -> list:
+    """两路证据里的第二路：浏览器里那份跨域名的 Cookie（含 HttpOnly）。
+
+    读不到就交空表 —— 空表只可能把结论推向"这一页确实是登录页而且没登录项"，
+    不会反过来把好会话判成失效；风控页在 页面被踢到哪 里先于 Cookie 判掉，
+    所以这里读失败也不会把 security.html 说成掉登录。
+    """
+    try:
+        return list(instance._get_all_cookies() or [])
+    except Exception:
+        return []
+
+
 def _visible_inputs(snap):
     """快照里的输入框类名，只算页面上真看得见的。
 
@@ -690,7 +704,11 @@ def chat_button_failure_reason(requested_url: str, landed_url: str, snap: dict):
     landed = landed_url or str(snap.get("url") or "")
     if "/geek/chat" in landed or "/web/geek/chat" in landed:
         return CHAT_REDIRECT_REASON, True
-    if any(k in landed for k in ("login", "passport", "/web/user")):
+    # 风控页和登录页是两件不同的事：security.html 的路径里也带 passport，先按
+    # 统一判据把风控挑出来，记录里才不会出现"登录态已失效"这种误导性原因。
+    if 页面被踢到哪(landed, []) == "risk":
+        return CAPTCHA_REASON, False
+    if 页面被踢到哪(landed, []) == "login_wall":
         return LOGIN_WALL_REASON, False
     if snap.get("captcha"):
         return CAPTCHA_REASON, False
@@ -2994,11 +3012,22 @@ class GreetEngine:
                 self._log("WARN", "页面加载失败，跳过此岗位")
                 return False, "页面加载失败"
 
-            # 检查是否被重定向到登录页
+            # 落地页被踢走了：先分清是"要人工滑一下的风控页"还是"真掉登录"。
+            # 以前这里只有一句 `"passport" in url or "login" in url`，而 BOSS 的
+            # 风控页 https://www.zhipin.com/web/passport/zp/security.html 里就带
+            # passport —— 2026-10-18 11:58 那两次就是这么把 Cookie 好着的账号2
+            # 说成"请重新登录"，让他白点了「我已登录」，12:03 还报了登录超时。
             try:
-                current_url = instance.url
-                if "passport" in current_url or "login" in current_url:
-                    self._log("WARN", "访问岗位详情时被重定向到登录页")
+                current_url = instance.url or ""
+                踢到哪 = self._落地后判性(instance)
+                if 踢到哪 == "risk":
+                    self._log("WARN", "岗位页被 BOSS 风控验证页挡住（要人工滑一下，"
+                                      "不是登录失效，Cookie 原封不动）: %s" % current_url[:70])
+                    if not self._captcha_handoff():
+                        return False, CAPTCHA_REASON
+                elif 踢到哪 == "login_wall":
+                    self._log("WARN", "访问岗位详情时被重定向到登录页，且浏览器里没有"
+                                      "未过期的登录 Cookie")
                     if self._login_required_cb:
                         self._login_required_cb()
                     self._log("INFO", "请重新登录，登录后点击「确认登录」")
@@ -3929,6 +3958,19 @@ class GreetEngine:
                 self._interruptible_sleep(CHAT_OPEN_POLL_SEC)
         return None, {}
 
+    def _落地后判性(self, instance) -> str:
+        """导航之后这一页是 risk / login_wall / other —— 页面与浏览器内登录项两路一起看。
+
+        判据在 browser_launcher 那一份，不在这里长第二份：这一腿以前只写
+        `"passport" in url`，BOSS 把风控页放在 /web/passport/zp/ 下面，
+        于是验证码被说成"请重新登录"，Cookie 好着的号白等五分钟。
+        """
+        try:
+            url = instance.url or ""
+        except Exception:
+            return "other"
+        return 页面被踢到哪(url, _浏览器里的登录项(instance))
+
     def _on_captcha_page(self, instance) -> bool:
         """当前页面是不是 BOSS 的人机验证页。"""
         try:
@@ -3975,21 +4017,26 @@ class GreetEngine:
             return False
 
     def _save_cookies(self):
-        """保存 Cookie。"""
+        """把这一号的会话补存一次 —— 走唯一的写入口，读不到登录项就一个字不写。
+
+        原来这里直接 `json.dump(instance.cookies())`：tab 级那份经常缺 wt2/zp_at
+        这类 HttpOnly 登录项，等完人工登录一冲就把账号自己的好会话顶成一份
+        "看着像 Cookie 文件"的空壳。跨域名+HttpOnly 要读 CDP（_get_all_cookies），
+        闸门和回读都在 browser_launcher.保存登录Cookie，别再在这里另起一套。
+        """
         instance = self.browser_manager.get_instance()
         if instance is None:
+            self._log("WARN", "浏览器没起来，这次没处存 Cookie")
             return
+        cookie_name = self._cookie_file or "zhipin_cookies.json"
         try:
-            cookie_name = self._cookie_file or "zhipin_cookies.json"
-            dst = str(resolve_path(cookie_name))
-            cookies = instance.cookies()
-            with open(dst, "w", encoding="utf-8") as f:
-                json.dump(cookies, f, ensure_ascii=False, indent=2)
-            self._log("INFO", f"已保存 Cookie: {dst}")
-            # 这里以前还会把本账号的 Cookie 再 copy 一份到公共的 zhipin_cookies.json，
-            # 等于把 B 号的登录态盖到 A 号头上，多账号下必须各写各的
+            cookies = instance._get_all_cookies()
         except Exception as e:
-            self._log("WARN", f"Cookie 保存失败: {e}")
+            self._log("WARN", "读浏览器 Cookie 失败，本次不保存: %s: %s"
+                      % (type(e).__name__, str(e) or repr(e)))
+            return
+        成功, 说明 = 保存登录Cookie(str(resolve_path(cookie_name)), cookies or [])
+        self._log("SUCCESS" if 成功 else "WARN", "Cookie: " + 说明)
 
 
     # ── 去重管理 ──

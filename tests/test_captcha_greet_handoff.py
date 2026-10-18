@@ -167,6 +167,12 @@ class SideAwareHealthTest:
             def get_reply_tab_id(self):
                 return None
 
+            def show_login_window(self, url, navigate=True):
+                # 闸门现在碰到验证就先把窗口摆到桌面上（无头那侧不摆，
+                # 「请在浏览器窗口里手动完成」就是一句做不到的话）。
+                # 这里回"已有窗口、没重开"，测试不碰真实浏览器。
+                return {"windows": 1, "relaunched": False}
+
         with patch("boss_bot.main_loop.BrowserManager", FakeManager):
             from boss_bot.main_loop import MultiAccountManager
             mgr = MultiAccountManager(config=cfg)

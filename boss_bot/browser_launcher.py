@@ -326,6 +326,139 @@ def backup_cookie_file(path: str, backup_dir: str = None,
 
 
 # ──────────────────────────────────────────────────────────────
+# 登录态的两路证据 + Cookie 落盘的唯一入口
+# ──────────────────────────────────────────────────────────────
+# 放在这一层是因为三条腿（page_handler 手动确认、main_loop 自动登录、
+# greet_engine 等完人工补存）都依赖本模块，而它们互相之间不能循环引用。
+# 2026-10-18 11:58 那次「账号2 说失效」就是三条腿各判各的：page_handler 那份
+# 判据写在 main_loop 里、greet 那条只会 `"passport" in url`，风控验证页
+# /web/passport/zp/security.html 因此被当成掉登录，而盘上四个登录项都好着。
+
+# 页面落在哪 + 浏览器里有没有未过期的登录 Cookie，两路一致才给结论。
+# 单看 URL 会误判——/web/geek/chat 是 SPA，未登录时它先渲染一下才跳 /web/user，
+# 抓早了就是"看着像登录了"或者"看着像过期了"，两种都出过事。
+LOGIN_WALL_MARKS = ("/web/user", "/login", "passport.")
+CHAT_PAGE_MARKS = ("/web/geek/chat",)
+# BOSS 的风控中间页：要人工滑一次，跟登录态没关系。这一族的路径都挂在
+# /web/passport/ 下面（实测两种写法：security.html、verify.html），而登录墙
+# 用的是 /web/user、/login 或主机名 passport.zhipin.com —— 所以先判风控，
+# 否则每个验证码都被说成"请重新登录"（2026-10-18 11:58 与 13:20 两次现场）。
+RISK_PAGE_MARKS = ("/web/passport/", "security.html", "verify.html")
+
+
+def 是风控验证页(url) -> bool:
+    """这一页是 BOSS 让人滑的验证页，不是登录页。"""
+    u = (url or "").lower()
+    return any(k in u for k in RISK_PAGE_MARKS)
+
+
+def has_live_auth_cookie(cookies) -> bool:
+    """浏览器里有没有还没过期的 BOSS 登录项。"""
+    for c in cookies or []:
+        if not isinstance(c, dict) or c.get("name") not in BOSS_AUTH_COOKIES:
+            continue
+        if not c.get("value"):
+            continue
+        try:
+            expires = float(c.get("expires") or -1)
+        except (TypeError, ValueError):
+            expires = -1
+        if expires < 0 or expires > time.time():
+            return True
+    return False
+
+
+def login_state_of(url: str, has_auth_cookie: bool) -> str:
+    """logged_in / login_wall / uncertain —— 两路证据一致才给结论。
+
+    uncertain 不等于失效：它只表示"这一眼看不准"，调用方要么重看要么留痕，
+    绝不能拿它当"Cookie 过期"去动用户的会话文件。
+    """
+    u = (url or "").lower()
+    wall = any(k in u for k in LOGIN_WALL_MARKS)
+    chat = any(k in u for k in CHAT_PAGE_MARKS)
+    if wall and not has_auth_cookie:
+        return "login_wall"
+    if chat and has_auth_cookie:
+        return "logged_in"
+    return "uncertain"
+
+
+def 页面被踢到哪(url, cookies) -> str:
+    """risk / login_wall / other —— 被踢走了也要分清是"要滑一下"还是"掉登录"。
+
+    顺序很重要：风控页的 URL 里也有 passport，先判风控才不会把验证码说成
+    会话失效（那句"请重新登录，登录后点击「确认登录」"就是这么来的）。
+    login_wall 只在两路证据一致时才给：页面像登录页、浏览器里又真没登录项。
+    """
+    if 是风控验证页(url):
+        return "risk"
+    if login_state_of(url or "", has_live_auth_cookie(cookies)) == "login_wall":
+        return "login_wall"
+    return "other"
+
+
+def _读回Cookie(path: str) -> list:
+    """把刚写的文件读回来。写盘这件事只有回读得到才算数。"""
+    try:
+        with open(str(path), encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+
+def 保存登录Cookie(路径, cookies) -> tuple:
+    """把一份 Cookie 落到 路径，返回 (成功?, 说明)。
+
+    两道闸：读到的集合里得有未过期登录项（否则这是登录页那一份，写下去就顶掉
+    用户唯一的会话文件）；写完从盘上回读还得能读出登录项（半截文件、编码坏了、
+    被别的进程截胡，都只能靠回读发现）。任何一步不成都保持原文件一个字不动，
+    所以先写 .tmp、验证过、备份旧的、再 os.replace。
+    """
+    path = str(resolve_path(路径)) if 路径 else ""
+    if not path or path == ".":
+        return False, "没给 Cookie 文件路径，什么都没写"
+    if not has_live_auth_cookie(cookies):
+        return False, ("浏览器里没有未过期的登录 Cookie（%s 之一），这份不配覆盖 %s"
+                       % ("/".join(BOSS_AUTH_COOKIES), Path(path).name))
+    tmp = path + ".tmp"
+    try:
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(cookies, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        return False, "写临时文件失败: %s: %s" % (type(e).__name__, str(e) or repr(e))
+    if not has_live_auth_cookie(_读回Cookie(tmp)):
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        return False, ("写完回读不到登录项，%s 保持原样（盘上那份没被换掉）"
+                       % Path(path).name)
+    try:
+        kept = backup_cookie_file(path)
+        if kept:
+            logger.info(f"覆盖前已备份旧 Cookie 到 {Path(kept).name}")
+    except OSError as e:
+        # 备份失败不拦登录写入，但必须说清楚：这份文件是唯一凭据
+        logger.warning(f"Cookie 备份失败，本次将直接覆盖且没有底: {e}")
+    try:
+        os.replace(tmp, path)
+    except Exception as e:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        return False, "换文件失败: %s: %s" % (type(e).__name__, str(e) or repr(e))
+    return True, ("%d 个 Cookie 已写入 %s（回读确认含登录项）"
+                  % (len(cookies), Path(path).name))
+
+
+# ──────────────────────────────────────────────────────────────
 # 便携版浏览器检测
 # ──────────────────────────────────────────────────────────────
 
@@ -1014,27 +1147,19 @@ class BrowserInstance:
         使用 CDP Storage.getCookies 获取浏览器所有 cookies（包括 HttpOnly），
         而非 tab.cookies，因为需要跨域名获取所有 cookie。
 
+        闸门与回读都在 保存登录Cookie 那一处：读不到未过期登录项就不动用户的
+        文件，写完还要从盘上确认一遍。这里把它包成异常，是为了让每一个调用方
+        都必须处理"没写成"，而不是写完就以为自己登录成功了。
+
         Args:
             filepath: 保存路径
         """
-        try:
-            cookies = self._get_all_cookies()
-            filepath = str(resolve_path(filepath))
-            if filepath in ("", "."):
-                raise ValueError("未指定 Cookie 保存路径")
-            try:
-                kept = backup_cookie_file(filepath)
-                if kept:
-                    logger.info(f"覆盖前已备份旧 Cookie 到 {Path(kept).name}")
-            except OSError as e:
-                # 备份失败不拦登录写入，但必须说清楚：这份文件是唯一凭据
-                logger.warning(f"Cookie 备份失败，本次将直接覆盖且没有底: {e}")
-            with open(filepath, "w", encoding="utf-8") as f:
-                json.dump(cookies, f, ensure_ascii=False, indent=2)
-            logger.info(f"已保存 {len(cookies)} 个 Cookie 到 {filepath}")
-        except Exception as e:
-            logger.error(f"save_cookies 失败: {e}")
-            raise
+        cookies = self._get_all_cookies()
+        成功, 说明 = 保存登录Cookie(filepath, cookies)
+        if not 成功:
+            logger.warning(f"Cookie 未保存: {说明}")
+            raise RuntimeError(说明)
+        logger.info(f"Cookie 落盘: {说明}")
 
     def load_cookies(self, filepath: str) -> bool:
         """从文件加载 cookies（跨平台，使用 CDP）

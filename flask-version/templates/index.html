@@ -3626,15 +3626,46 @@ function confirmLoginAs(idx) {
     ? controlUrl('confirm_login') : '/api/accounts/' + idx + '/confirm_login';
   var who = (idx === null || idx === undefined)
     ? scopeLabel() : '（' + ((config.accounts[idx] || {}).name || ('账号' + idx)) + '）';
+  addLog('SYSTEM', '正在向后端确认' + who + '的登录...');
   fetch(url, { method:'POST' })
-    .then(function(r){return r.json()})
+    .then(function(r){
+      // 后端拒绝时返回的是 JSON 错误体（404/409），不看 r.ok 就直接 .json() 再
+      // 报成功，等于把"没保存成"显示成"已确认登录"—— 2026-10-18 他两次点
+      // 「我已登录」都盘上没动静，界面却始终给绿，就是这么漏掉的
+      if (!r.ok) return r.text().then(function(t){
+        var msg = t; try { msg = (JSON.parse(t).message) || t; } catch(e) {}
+        throw new Error('接口 ' + r.status + '：' + String(msg || '').replace(/<[^>]*>/g, '').trim().slice(0, 160));
+      });
+      return r.json();
+    })
     .then(function(data) {
-      addLog('SYSTEM', '已确认登录' + who);
-      toast('已确认登录' + who + '，等浏览器状态刷新', 'ok');
+      var st = (data && data.status) || 'error';
+      var msg = (data && data.message) || '登录确认没有回音';
+      if (st === 'ok') {
+        addLog('SUCCESS', '已确认登录' + who + '：' + msg);
+        toast('已确认登录' + who + '，Cookie 已写盘', 'ok');
+      } else {
+        addLog('ERROR', '登录未确认' + who + '：' + msg);
+        toast(msg, 'warn');
+        reopenLoginModal();
+      }
       // 登录完立刻重测 Cookie，红点不用等下一轮轮询
       setTimeout(function(){ refreshCookieStates(true); }, 800);
     })
-    .catch(function(e){addLog('ERROR', '确认登录失败: ' + e.message)});
+    .catch(function(e){
+      addLog('ERROR', '确认登录失败' + who + '：' + e.message);
+      toast('确认登录失败：' + e.message, 'warn');
+      reopenLoginModal();
+    });
+}
+
+function reopenLoginModal() {
+  // 没确认成不能让弹窗就这么没了：他还得在那个窗口里把登录或验证做完
+  var modal = document.getElementById('loginModal');
+  if (modal && !modal.classList.contains('active')) {
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+  }
 }
 
 function doConfirmLogin() {

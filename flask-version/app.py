@@ -740,13 +740,36 @@ def api_resume_reply():
 
 # ===================== 登录 API =====================
 
+def _confirm_login_result(结果: dict, 单号: bool) -> tuple:
+    """把 loop.confirm_login 的真实结果翻译成界面要说的话。
+
+    "没确认"只有一种成因：浏览器里读不到未过期的登录项，所以 Cookie 没落盘
+    （闸门与回读在 browser_launcher.保存登录Cookie）。这时候绝不能报 ok——
+    报了就等于让他以为点生效了，而盘上一个字没变。
+    """
+    确认了 = (结果 or {}).get("确认了的") or []
+    没确认 = (结果 or {}).get("没确认的") or []
+    if 没确认:
+        return ("error",
+                "「我已登录」没生效：%s 的浏览器里读不到未过期的登录 Cookie，"
+                "没写盘、原文件没动。窗口已摆到桌面上，请在**那个窗口**里登录；"
+                "如果它停在「安全验证」页，那是要人工滑一次，不是掉登录"
+                % "、".join(没确认), 409)
+    if not 确认了 and 单号:
+        return ("error", "这个账号没有在运行，收不到登录确认；先启动它或点左侧「登录」", 404)
+    return ("ok", "已确认登录：%s（Cookie 已写盘并回读确认）" % "、".join(确认了), 200)
+
+
 @app.route("/api/confirm_login", methods=["POST"])
 def api_confirm_login():
     """确认所有账号的登录完成。"""
+    logger.info("[/api/confirm_login] 来源 %s", _control_trace())
     manager = _ensure_manager()
-    manager.confirm_login()
+    结果 = manager.confirm_login()
+    状态, 消息, 码 = _confirm_login_result(结果, 单号=False)
     socketio.emit("status_update", _enrich_status(manager.get_status()))
-    return jsonify({"status": "ok", "message": "登录已确认"})
+    logger.info("[/api/confirm_login] 结果=%s %s", 状态, 消息)
+    return jsonify({"status": 状态, "message": 消息}), 码
 
 
 # ===================== 账号级别控制 API =====================
@@ -837,14 +860,26 @@ def api_account_resume_reply(idx: int):
 
 @app.route("/api/accounts/<int:idx>/confirm_login", methods=["POST"])
 def api_account_confirm_login(idx: int):
-    """确认指定账号的登录完成。"""
+    """确认指定账号的登录完成。
+
+    以前这里不问结果，无论 Cookie 有没有落盘都回 "登录已确认"——他点了半天，
+    界面绿了，盘上却什么都没写，事后日志里连这条请求到过都证明不了。
+    """
+    logger.info("[/api/accounts/%s/confirm_login] 来源 %s", idx, _control_trace())
     manager, error = _validate_account_index(idx)
     if error:
         return error
-    manager.confirm_login(idx)
+    结果 = manager.confirm_login(idx)
     acc_status = manager.get_account_status(idx)
     socketio.emit("status_update", _enrich_status(manager.get_status()))
-    return jsonify({"status": "ok", "message": f"账号 {idx} 登录已确认"})
+    logged_in = bool((acc_status or {}).get("logged_in"))
+    if not logged_in:
+        return jsonify({"status": "error",
+                        "message": "这个账号还没确认成登录：浏览器里读不到"
+                                   "未过期的登录 Cookie，没有写盘"}), 409
+    状态, 消息, 码 = _confirm_login_result(结果, 单号=True)
+    logger.info("[/api/accounts/%s/confirm_login] 结果=%s %s", idx, 状态, 消息)
+    return jsonify({"status": 状态, "message": 消息}), 码
 
 
 @app.route("/api/accounts/<int:idx>/login", methods=["POST"])
@@ -4012,12 +4047,18 @@ def on_stop_all():
 
 @socketio.on("confirm_login")
 def on_confirm_login():
-    """确认登录。"""
+    """确认登录（socket 那条旧路径，和 /api/confirm_login 同一个口径）。"""
     logger.info("收到 confirm_login 事件")
-    emit("bot_log", {"time": _now(), "message": "登录已确认", "level": "SUCCESS"})
     global _multi_manager
-    if _multi_manager is not None:
-        _multi_manager.confirm_login()
+    if _multi_manager is None:
+        emit("bot_log", {"time": _now(), "level": "WARN",
+                         "message": "机器人还没启动，这次登录确认没人接收"})
+        return
+    结果 = _multi_manager.confirm_login()
+    状态, 消息, _码 = _confirm_login_result(结果, 单号=False)
+    emit("bot_log", {"time": _now(),
+                     "level": "SUCCESS" if 状态 == "ok" else "ERROR",
+                     "message": 消息})
 
 
 @socketio.on("check_login")

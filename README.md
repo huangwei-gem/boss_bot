@@ -107,7 +107,9 @@ BOSS 直聘有风控，**必须使用反检测浏览器**：项目内 `cloakbrow
 python -m boss_bot --web        # 或双击 start.bat
 ```
 
-界面点「启动」→ 弹出的浏览器里扫码/手机号登录 → 登录态被自动识别（检测未过期登录 Cookie + 实际访问聊天页双重判定），Cookie 按账号写入 `zhipin_cookies.json` / `zhipin_cookies_N.json`，之后免登录。
+界面点「启动」→ 弹出的浏览器里扫码/手机号登录 → 登录态被自动识别（检测未过期登录 Cookie + 实际访问聊天页双重判定），Cookie 按账号写入 `zhipin_cookies.json` / `zhipin_cookies_N.json`，之后免登录。点「我已登录」时以**盘上那份**为准：只有写进去并回读出登录项才算确认，写不成就在日志和界面两条出口都报红，不会给你一个假的绿。
+
+无头模式撞见 BOSS 的「安全验证」页（`/web/passport/zp/verify.html`）时，机器会临时把这个号的窗口摆到桌面上让你滑一次，滑完自己换回无头——这张页要人工过，不是重新登录能解决的，界面也不再把它说成"登录失效"。
 
 ## 运行
 
@@ -559,7 +561,8 @@ OpenCode 侧同理：官方文档确认 base_url 就是 `https://opencode.ai/zen
 `page_handler` 确认登录时写的是**全局** `config.COOKIE_FILE`（账号2 登录会把主账号那份覆盖成自己的会话），
 `greet_engine._save_cookies` 存完自己的还要 `shutil.copy2` 一份到公共 `zhipin_cookies.json` 当"兜底"。
 现在两处都只写本账号那一份，且路径一律 `resolve_path()` 锚到项目根（界面从 `flask-version/` 启动，
-返回相对名会按 CWD 落到别处）。
+返回相对名会按 CWD 落到别处）。`greet_engine._save_cookies` 在 2026-10-18 又收进同一个写入口：它以前拿
+tab 级 `instance.cookies()` 无条件覆盖，那份常常缺 `wt2/zp_at`，等完一次人工登录就把好会话写成空壳。
 
 **界面上删掉的 AI 接口又回来了** → 以前 `app._ensure_config()` 只在第一次读盘，之后一直用内存那份，
 外部改动（脚本清理、手改文件）看不见，且界面上任意一次保存会把旧内容整份写回磁盘。
@@ -675,9 +678,11 @@ pre-click 命中逐条比对导航前后的 URL，其实是三件事：
 
 | 洞 | 修法 | 位置 |
 |----|------|------|
-| 拿一眼 URL 当结论（BOSS 是 SPA，`/web/geek/chat` 未登录时先渲染再跳 `/web/user`） | `_settle_url()` 连读两次一致才定罪；`login_state_of(url, has_auth_cookie)` 要页面与浏览器内登录项**两路一致**才给 `logged_in`/`login_wall`，矛盾一律 `uncertain` | `boss_bot/main_loop.py` |
-| 判"过期"就删用户的会话文件（不可逆，且丢了排查依据） | 改归档：`archive_cookie_file()` 把文件挪到 `data/stale_cookies/主账号_<时间戳>.json`（原路径为空，下一轮照样走完整登录，内容还在）；`uncertain` 时一个字节都不动 | 同上，开关仍是 `login.clear_cookies_on_failure` |
-| 假登录后无条件 `save_cookies`，用登录页那份顶掉好会话 | `_save_cookies_if_logged_in()`：浏览器里没有未过期的 `wt2/zp_at/bst/wbg` 就不落盘，并打日志说明 | 同上 |
+| 拿一眼 URL 当结论（BOSS 是 SPA，`/web/geek/chat` 未登录时先渲染再跳 `/web/user`） | `_settle_url()` 连读两次一致才定罪；`login_state_of(url, has_auth_cookie)` 要页面与浏览器内登录项**两路一致**才给 `logged_in`/`login_wall`，矛盾一律 `uncertain` | `boss_bot/browser_launcher.py`（2026-10-18 从 main_loop 挪来，三条腿共用一份） |
+| 把 BOSS 的人机验证页说成"掉登录"（风控页住在 `/web/passport/zp/` 下面，`security.html`、`verify.html` 两种写法都有） | `是风控验证页()` 先于登录墙判，`页面被踢到哪()` 返回 `risk`/`login_wall`/`other`；撞到就按验证码那一档处理并**把这个号的窗口临时摆到有头**让他滑，不再喊"请重新登录"、不再 park 5 分钟、不动 Cookie | `browser_launcher.py` + `greet_engine.py` + `page_handler.classify_health()` + `main_loop._captcha_gate()` |
+| 判"过期"就删用户的会话文件（不可逆，且丢了排查依据） | 改归档：`archive_cookie_file()` 把文件挪到 `data/stale_cookies/主账号_<时间戳>.json`（原路径为空，下一轮照样走完整登录，内容还在）；`uncertain` 时一个字节都不动 | `boss_bot/main_loop.py`，开关仍是 `login.clear_cookies_on_failure` |
+| 三条腿各自 `save_cookies`，读不到登录项也照写，用登录页那一份顶掉好会话 | 写盘收成一入口 `保存登录Cookie(路径, cookies)`：先闸"有未过期 `wt2/zp_at/bst/wbg`"，再写 `.tmp` → **回读确认还能读出登录项** → 备份旧文件 → `os.replace`；任何一步不成都保持原文件不动并返回原因 | `boss_bot/browser_launcher.py`；`page_handler`/`greet_engine`/`main_loop` 三条腿都调它 |
+| 「我已登录」无论有没有落盘都报成功（他点了两次，界面绿了，盘上一个字没变） | `confirm_and_save()` 只有写盘+回读通过才置 `_logged_in` 并唤醒等待；`UnifiedBotLoop.confirm_login()` 返回真实结果，`MultiAccountManager` 汇总成 `{确认了的, 没确认的}`，端点带 `_control_trace()` 留痕并按结果回 `ok`/`error`（409），前端先看 `r.ok` 再看 `data.status`，失败时把登录弹窗留着 | `boss_bot/page_handler.py`、`main_loop.py`、`flask-version/app.py`、`templates/index.html` |
 
 两侧健康检查报"要登录"时都不再凭第一眼定罪：`_recheck_before_archive()` 用同一套两路证据**只读复核**
 当前标签页（不导航——把另一个线程正在用的页面拽走比误判更糟），复核不是 `login_wall` 就不动 Cookie 文件、
@@ -690,10 +695,12 @@ pre-click 命中逐条比对导航前后的 URL，其实是三件事：
 `_login_reason` 也不会被笼统的 `login_timeout` 盖掉：界面那一列靠 `cookie_expired` / `login_uncertain`
 定位问题。
 
-Cookie 文件从此**不可能静默消失**，四层各留一手：`uncertain` 一个字节都不动；确认失效只挪进
-`data/stale_cookies/`；`save_cookies` 覆盖写之前先把旧文件复制进 `data/cookie_backups/`（保留最近
-`COOKIE_BACKUP_KEEP=5` 份，`browser_launcher.backup_cookie_file`）；界面「删除 Cookie」按钮也只归档。
-两个目录都在 `.gitignore` 的 `data/` 里，不会跟着提交走。
+Cookie 文件从此**不可能静默消失**，五层各留一手：`uncertain` 一个字节都不动；确认失效只挪进
+`data/stale_cookies/`；`保存登录Cookie()` 先闸"读到的集合里得有未过期登录项"，登录页那一份根本进不到
+写这一步；覆盖写之前先把旧文件复制进 `data/cookie_backups/`（保留最近 `COOKIE_BACKUP_KEEP=5` 份，
+`browser_launcher.backup_cookie_file`）；写完先落到 `.tmp` 并**从盘上回读**确认还能读出登录项，
+才 `os.replace` 换掉正式文件——回读不过就删临时文件、原文件不动，并把原因返回给调用方去报红。
+界面「删除 Cookie」按钮也只归档。两个目录都在 `.gitignore` 的 `data/` 里，不会跟着提交走。
 
 `tools/two_account_login_check.py` 同批修正：它原先只排除 `login`/`passport`，把 `/web/user/`（BOSS 的登录页）
 报成"已登录"，正好盖住了这次最要紧的坏消息；现在 `logged_in_from_url()` 明确排除 `/web/user`，并加

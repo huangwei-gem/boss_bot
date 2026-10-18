@@ -122,48 +122,18 @@ OFFLINE_INTERVIEW_DECLINE = (
 # 按天归档的进程内互斥：记录文件所有账号共用，一天只能归一次
 _ARCHIVE_LOCK = threading.Lock()
 
-# 登录态的两路证据：页面落在哪 + 浏览器里有没有未过期的登录 Cookie。
-# 单看 URL 会误判——/web/geek/chat 是 SPA，未登录时它先渲染一下才跳 /web/user，
-# 抓早了就是"看着像登录了"或者"看着像过期了"，两种都出过事。
-LOGIN_WALL_MARKS = ("/web/user", "/login", "passport.")
-CHAT_PAGE_MARKS = ("/web/geek/chat",)
+# 登录态的两路证据住在 browser_launcher（和 BOSS_AUTH_COOKIES 放一起），三条腿
+# 都从那里取一份：挪个地方是为了让 greet_engine 也能用同一份判据 —— 它以前只写
+# `"passport" in url`，于是 BOSS 的风控页 /web/passport/zp/security.html 被当成
+# 掉登录，好着 Cookie 的号被叫去"重新登录"，白等 5 分钟（2026-10-18 11:58）。
+# 这两个名字继续从这里导出，README 和老调用点用的还是同一份判据。
+from boss_bot.browser_launcher import (          # noqa: F401  (对外导出)
+    LOGIN_WALL_MARKS, CHAT_PAGE_MARKS, login_state_of, has_live_auth_cookie)
 
 # 回复侧连续判这么多次登录失效就停这个号，等人工——不再每 30 秒空刷
 REPLY_LOGIN_FAIL_LIMIT = 3
 # 等页面跳转稳定：最多这么多秒，连续两次 URL 一样就算定了
 URL_SETTLE_SECONDS = 8
-
-
-def login_state_of(url: str, has_auth_cookie: bool) -> str:
-    """logged_in / login_wall / uncertain —— 两路证据一致才给结论。
-
-    uncertain 不等于失效：它只表示"这一眼看不准"，调用方要么重看要么留痕，
-    绝不能拿它当"Cookie 过期"去动用户的会话文件。
-    """
-    u = (url or "").lower()
-    wall = any(k in u for k in LOGIN_WALL_MARKS)
-    chat = any(k in u for k in CHAT_PAGE_MARKS)
-    if wall and not has_auth_cookie:
-        return "login_wall"
-    if chat and has_auth_cookie:
-        return "logged_in"
-    return "uncertain"
-
-
-def has_live_auth_cookie(cookies) -> bool:
-    """浏览器里有没有还没过期的 BOSS 登录项。"""
-    for c in cookies or []:
-        if not isinstance(c, dict) or c.get("name") not in BOSS_AUTH_COOKIES:
-            continue
-        if not c.get("value"):
-            continue
-        try:
-            expires = float(c.get("expires") or -1)
-        except (TypeError, ValueError):
-            expires = -1
-        if expires < 0 or expires > time.time():
-            return True
-    return False
 
 
 def archive_cookie_file(path: str, archive_dir: str, label: str = "") -> str:
@@ -261,6 +231,8 @@ class UnifiedBotLoop:
         self._reply_paused = False
         # 连续多少次"等了 60 秒没人过验证"之后才真暂停
         self._captcha_strikes = 0
+        # 验证页的窗口只为这一轮摆过一次：反复重开会把自己刚滑过去的会话再丢一次
+        self._验证码窗口已摆 = False
         # 最近一次健康检查的页面判据：提示里要说清"凭什么说这是验证码"
         self._health_why = ""
         # 回复侧连续判了几次登录失效：到 REPLY_LOGIN_FAIL_LIMIT 就停下等人工
@@ -622,15 +594,28 @@ class UnifiedBotLoop:
             "stats": dict(self._stats_dict),
         }
 
-    def confirm_login(self):
-        """确认登录完成（外部调用，通知主循环用户已手动登录）。"""
-        self._log("INFO", "收到登录确认信号")
-        self._login_event.set()
+    def confirm_login(self) -> bool:
+        """确认登录完成（外部调用，通知主循环用户已手动登录）。
 
+        返回真话：只有本账号的 Cookie 真的落盘了才算确认。以前这里无条件
+        `_logged_in=True`、`_needs_login=False`，面板拿到的永远是 ok——
+        于是"点了我已登录但什么都没保存"这句话在日志里根本不存在。
+        """
+        self._log("INFO", "收到登录确认信号")
+
+        存好了 = True
+        if self._chat_handler is not None:
+            存好了 = bool(self._chat_handler.confirm_and_save())
+        if not 存好了:
+            # 不动 _login_event：等登录的那条线程不能被一句没落盘的确认叫醒，
+            # 否则它会把"没写成"当成"登进去了"往下走（窗口也不换回无头）
+            self._log("WARN", "「我已登录」没有确认成本账号的 Cookie："
+                              "浏览器里没读到未过期的登录项，原文件没动，继续等你登录")
+            return False
+        # 会话确认真的落盘了，才去把打招呼腿从等登录里叫醒
         if self._greet_engine is not None:
             self._greet_engine.confirm_login()
-        if self._chat_handler is not None:
-            self._chat_handler.confirm_and_save()
+        self._login_event.set()
 
         self._needs_login = False
         self._logged_in = True
@@ -648,11 +633,7 @@ class UnifiedBotLoop:
             target=self._popup_login_window,
             name=f"boss-popup-{self.account_index}", daemon=True)
         self._popup_thread.start()
-
-    def _popup_login_window(self):
-        """把这一号的浏览器窗口摆到桌面上；已登录时不把他导航回登录页。"""
-        self._login_window_shown = False
-        self._ensure_login_window("面板", 导航=False)
+        return True
 
     def _popup_login_window(self):
         """把这一号的浏览器窗口摆到桌面上；已登录时不把他导航回登录页。
@@ -3587,8 +3568,18 @@ class UnifiedBotLoop:
             self._log("DEBUG", f"健康检查（无聊天处理器）失败: {e}")
             return "unknown"
 
+    @staticmethod
+    def _验证码等待秒(摆了窗口: bool) -> int:
+        """验证页要等人，但人得先看得见这张页。
+
+        本来就看得见（有头）按 60 秒；刚把这个号临时重开成有头摆到桌面上，
+        60 秒不够他从座位上走过来坐下 —— 给三分钟。超时的代价只是跳过这一单，
+        窗口都摆了却等不到人滑才是白折腾。
+        """
+        return 180 if 摆了窗口 else CAPTCHA_WAIT_SECONDS
+
     def _captcha_gate(self, pause_field: str = "greet") -> bool:
-        """碰到人机验证：提示人工处理，最多等 CAPTCHA_WAIT_SECONDS 秒。
+        """碰到人机验证：把窗口摆到他眼前等人工滑，最多等 _验证码等待秒。
 
         True = 页面已恢复可以继续；False = 超时，调用方跳过当前任务继续跑。
         旧逻辑是一遇验证码就 `_greet_paused = True` 永久暂停，而自动恢复只认
@@ -3596,17 +3587,32 @@ class UnifiedBotLoop:
         "程序卡在那张验证图不动"。连续 CAPTCHA_STRIKES_TO_PAUSE 次没人应答
         才真暂停，止损还是要有的，但不能第一次就停。
         pause_field 决定耗尽重试后停哪一侧（打招呼 / 回复）。
+
+        以前这句提示是做不到的："请在浏览器窗口里手动完成"，而这个号是无头
+        跑的，桌面上根本没有它的窗口（2026-10-18 13:20 账号2 两张标签页都停在
+        /web/passport/zp/verify.html，标题「安全验证」，一直等到超时）。
         """
+        摆过 = self._验证码窗口已摆
+        if not 摆过:
+            # 导航=False：验证页要留在原地给他滑，踢回登录页等于把要过的关丢了
+            摆过 = bool(self._ensure_login_window("验证侧", 导航=False))
+            self._验证码窗口已摆 = 摆过
+        等待秒 = self._验证码等待秒(摆过)
         self._emit_wind(
             f"BOSS 触发人机验证（{self._health_why or '页面判据未取到'}），"
+            f"{'已把「' + self.account_name + '」的窗口放到桌面上，' if 摆过 else ''}"
             f"请在浏览器窗口里手动完成；"
-            f"{CAPTCHA_WAIT_SECONDS} 秒内没操作会自动跳过当前任务", "captcha")
-        deadline = time.time() + CAPTCHA_WAIT_SECONDS
+            f"{等待秒} 秒内没操作会自动跳过当前任务", "captcha")
+        deadline = time.time() + 等待秒
         while time.time() < deadline:
             if self._stop_event.is_set() or not self._running:
                 return False
             if self._check_health(side=pause_field) != "captcha":
                 self._captcha_strikes = 0
+                self._验证码窗口已摆 = False
+                if 摆过:
+                    # 验证过了就把借来的有头还回配置里的形态，别让窗口一直挂着
+                    self._finish_login_window()
                 self._log("INFO", "人工已完成验证，继续")
                 return True
             self._stop_event.wait(timeout=min(CAPTCHA_POLL_SECONDS,
@@ -3918,16 +3924,28 @@ class MultiAccountManager:
     # 登录确认
     # ─────────────────────────────────────────────
 
-    def confirm_login(self, account_index: Optional[int] = None):
-        """确认登录（指定账号或全部）。"""
+    def confirm_login(self, account_index: Optional[int] = None) -> dict:
+        """确认登录（指定账号或全部），把每个号的真实结果带回去。
+
+        返回 {确认了的: [名字…], 没确认的: [名字…]}。以前这个方法什么都不返回，
+        面板因此只能自己编一句"登录已确认"——用户点了之后 Cookie 没落盘，
+        界面却报成功，日志里连这条请求到没到过都查不出来（2026-10-18 11:58）。
+        """
+        确认了, 没确认 = [], []
         with self._lock:
             if account_index is not None:
-                loop = self._loops.get(account_index)
-                if loop is not None:
-                    loop.confirm_login()
+                targets = [(account_index, self._loops.get(account_index))]
             else:
-                for loop in self._loops.values():
-                    loop.confirm_login()
+                targets = sorted(self._loops.items())
+            for idx, loop in targets:
+                if loop is None:
+                    continue
+                名 = getattr(loop, "account_name", None) or f"账号{idx}"
+                if loop.confirm_login():
+                    确认了.append(名)
+                else:
+                    没确认.append(名)
+        return {"确认了的": 确认了, "没确认的": 没确认}
 
     # ─────────────────────────────────────────────
     # 状态查询

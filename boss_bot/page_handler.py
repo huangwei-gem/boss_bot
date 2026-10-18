@@ -22,7 +22,9 @@ from typing import List, Optional, Dict
 from pathlib import Path
 
 from boss_bot.config import CHAT_URL, COOKIE_FILE, TEST_MODE, TEST_PAGE, HEADLESS
-from boss_bot.browser_launcher import launch_browser, BrowserInstance, BrowserManager
+from boss_bot.browser_launcher import (
+    launch_browser, BrowserInstance, BrowserManager, 保存登录Cookie,
+    是风控验证页, LOGIN_WALL_MARKS)
 from boss_bot.message_store import MessageStore
 
 logger = logging.getLogger(__name__)
@@ -116,12 +118,17 @@ def classify_health(url: str, probe) -> str:
     验证优先于登录：风控滑块常盖在登录框上，判成 need_login 会去动 Cookie 文件、
     逼人重新扫码，而实情只差过一次验证。
     探针拿不到证据时不兜底成 ok——旧代码就是这么漏掉纯图形验证页的。
+    地址这一路也不能裸着判 "passport"：实测 BOSS 把风控页放在
+    /web/passport/zp/{security,verify}.html 下面（2026-10-18 13:20 账号2 两张
+    标签页都停在 verify.html，标题「安全验证」），那一版把它算成 need_login，
+    于是这一腿每次 park 五分钟等一个根本不存在的"重新登录"。判据用
+    browser_launcher 那一份，不在这里另起一套。
     """
     is_captcha, _why = captcha_evidence(probe)
-    if is_captcha:
+    if is_captcha or 是风控验证页(url):
         return "captcha"
-    u = url or ""
-    if "login" in u or "/web/user" in u or "passport" in u:
+    u = (url or "").lower()
+    if any(k in u for k in LOGIN_WALL_MARKS):
         return "need_login"
     return "ok" if _probe_data(probe) is not None else "unknown"
 
@@ -366,7 +373,14 @@ class BossChatHandler:
         return False
 
     def confirm_and_save(self) -> bool:
-        """前端「我已登录」按钮调用 — 保存 Cookie 并通知机器人继续。"""
+        """前端「我已登录」按钮调用 — 保存 Cookie 并通知机器人继续。
+
+        只有真的把带登录项的会话写到盘上才认领"已登录"。写不成必须返回 False
+        并叫醒等登录的那条线程之外的东西都不做：以前这里无论 _save_cookies
+        做了什么都会把 _logged_in 置真、事件置真，日志留下一句
+        「✅ Cookie 已保存，登录完成」，而盘上可能一个字都没变——
+        用户看到的就是"我点了已登录，它没保存 cookie"。
+        """
         try:
             logger.info("用户确认登录，正在保存 Cookie...")
             # 导航到主站确保 Cookie 作用域正确
@@ -374,15 +388,17 @@ class BossChatHandler:
             time.sleep(2)
             self._dismiss_login_popup()
             time.sleep(0.5)
-            # 保存 Cookie
-            self._save_cookies()
+            成功, 说明 = self._save_cookies()
+            if not 成功:
+                logger.error("❌ 「我已登录」没有生效：%s" % 说明)
+                return False
             self._logged_in = True
             # 唤醒等待中的机器人线程
             self._login_event.set()
-            logger.info("✅ Cookie 已保存，登录完成")
+            logger.info("✅ Cookie 已保存（%s），登录完成" % 说明)
             return True
         except Exception as e:
-            logger.error(f"确认登录失败: {e}")
+            logger.error("确认登录失败: %s: %s" % (type(e).__name__, str(e) or repr(e)))
             return False
 
     def _dismiss_login_popup(self):
@@ -424,20 +440,21 @@ class BossChatHandler:
             return str(resolve_path(self._cookie_file_override))
         return COOKIE_FILE
 
-    def _save_cookies(self):
-        """保存 cookies 到文件（使用 CDP 获取完整 Cookie，包括 HttpOnly）"""
+    def _save_cookies(self) -> tuple:
+        """把浏览器里的会话写进本账号的 Cookie 文件，返回 (成功?, 说明)。
+
+        闸门（有没有未过期登录项）、备份、回读验证都在 browser_launcher
+        保存登录Cookie 那一处，这里不再自己判断，也不再留一条"读不到就
+        调 browser.save_cookies 兜底写一次"的路——那句等于闭眼覆盖用户唯一
+        的会话文件（2026-10-18 他报「点了我已登录没保存 cookie」时，盘上
+        那两份 wt2/zp_at/bst/wbg 明明还在，可这条路上没有任何一处会说"没写成"）。
+        """
         try:
             cookies = self._get_all_cookies()
-            cookie_file = self._get_cookie_file()
-            if cookies:
-                with open(cookie_file, "w", encoding="utf-8") as f:
-                    json.dump(cookies, f, ensure_ascii=False, indent=2)
-                logger.info(f"Cookie 已保存到 {cookie_file} ({len(cookies)} 个)")
-            else:
-                self.browser.save_cookies(cookie_file)
-                logger.info(f"Cookie 已保存到 {cookie_file}（兜底方式）")
         except Exception as e:
-            logger.error(f"保存 Cookie 失败: {e}")
+            return False, "读浏览器 Cookie 失败: %s: %s" % (
+                type(e).__name__, str(e) or repr(e))
+        return 保存登录Cookie(self._get_cookie_file(), cookies)
 
     def _get_all_cookies(self) -> list:
         """获取所有 Cookie（包括 HttpOnly）
@@ -475,19 +492,18 @@ class BossChatHandler:
             logger.error(f"加载 Cookie 失败: {e}")
             return False
 
-    def save_cookies_manual(self) -> bool:
-        """手动保存 Cookie（用户点击"已登录"按钮后调用）"""
+    def save_cookies_manual(self) -> tuple:
+        """手动保存 Cookie（用户点击"已登录"按钮后调用），返回 (成功?, 说明)。"""
         try:
             # 先导航到主站确保 cookie 作用域正确
             self.page.get("https://www.zhipin.com")
             time.sleep(1)
             self._dismiss_login_popup()
             time.sleep(0.5)
-            self._save_cookies()
-            return True
+            return self._save_cookies()
         except Exception as e:
-            logger.error(f"手动保存 Cookie 失败: {e}")
-            return False
+            return False, "手动保存 Cookie 失败: %s: %s" % (
+                type(e).__name__, str(e) or repr(e))
 
     def go_to_chat(self):
         """导航到聊天页面"""
