@@ -300,8 +300,8 @@ class SidebarCoverageTest:
     class _Page:
         """假浏览器：侧栏只渲染可视窗口那几行，靠 scrollTop 往前挪。
 
-        与生产代码的约定只有两处在字符串上：滚动 JS 里有 scrollTop，
-        探针 JS 里有 HAS_ROW 和 `var want = {...}`（内容是 JSON）。
+        与生产代码的约定只有两处在字符串上：读行的 JS 里有 READ_ROWS，
+        滚动的 JS 里有 scrollTop。认人不再写在 JS 里，所以这里不用假装会比较。
         """
         def __init__(self, rows, window=5):
             self.rows = rows
@@ -318,24 +318,22 @@ class SidebarCoverageTest:
             pass
 
         def run_js(self, js, as_expr=False):
+            if "READ_ROWS" in js:
+                start = self.pos
+                return json.dumps([
+                    {"index": i, "name": n, "company": c, "preview": "",
+                     "unread_count": 0, "_y": start}
+                    for i, (n, c) in enumerate(self.rendered(), start)],
+                    ensure_ascii=False)
             if "RESET" in js:
                 self.pos = 0
                 return "0"
-            if "HAS_ROW" in js:
-                want = json.loads(re.search(r"var want = (\{.*?\});", js).group(1))
-                return "yes" if any(
-                    n == want["n"] and (not want["c"] or c == want["c"])
-                    for (n, c) in self.rendered()) else "no"
             if "scrollTop" in js:
                 self.scrolls += 1
                 self.pos = min(self.pos + self.window,
                                max(0, len(self.rows) - self.window))
                 return f"{self.pos}/{len(self.rows)}"
-            start = self.pos
-            return json.dumps([
-                {"index": i, "name": n, "company": c, "preview": "", "unread_count": 0}
-                for i, (n, c) in enumerate(self.rows[start:start + self.window], start)
-            ])
+            return "[]"
 
     def test_滚到底要把全部会话收齐(self, monkeypatch):
         from boss_bot import page_handler as ph
@@ -426,7 +424,8 @@ class SidebarCoverageTest:
 
         ok = h.enter_chat({"index": 5, "name": "HR160", "company": "公司160"})
         assert ok is True, "目标在列表深处就该滚过去点开，而不是报校验失败"
-        assert page.calls[0] in ("probe", "RESET"), f"第一步就得确认目标行渲染没有: {page.calls[:4]}"
+        assert page.calls[0] in ("rows", "RESET", "jump"), \
+            f"第一步就得确认目标行渲染没有: {page.calls[:4]}"
         assert page.clicked == ("HR160", "公司160"), f"点到别人身上了: {page.clicked}"
 
     def test_目标行已经渲染时不用滚(self, monkeypatch):
@@ -466,33 +465,32 @@ class _OpPageMixin:
             return "https://www.zhipin.com/web/geek/chat"
 
         def run_js(self, js, as_expr=False):
+            if "READ_ROWS" in js:
+                self.calls.append("rows")
+                return json.dumps([{"index": i, "name": n, "company": c,
+                                    "preview": "", "unread_count": 0,
+                                    "_y": self.pos}
+                                   for i, (n, c) in enumerate(self.rendered())])
             if "RESET" in js:
                 self.calls.append("RESET")
                 self.pos = 0
                 return "0"
-            if "HAS_ROW" in js:
-                self.calls.append("probe")
-                want = json.loads(re.search(r"var want = (\{.*?\});", js).group(1))
-                return "yes" if any(
-                    n == want["n"] and (not want["c"] or c == want["c"])
-                    for (n, c) in self.rendered()) else "no"
+            if "JUMP_TO" in js:
+                self.calls.append("jump")
+                self.pos = min(int(js.split("JUMP_TO:")[1].split("*/")[0]),
+                               max(0, len(self.rows) - self.window))
+                return str(self.pos)
             if "scrollTop" in js:
                 self.calls.append("scrollTop")
                 self.pos = min(self.pos + self.window, max(0, len(self.rows) - self.window))
                 return f"{self.pos}/{len(self.rows)}"
-            if "by_index" in js:                     # enter_chat 的点击 JS
+            if "CLICK_ROW" in js:
                 self.calls.append("click")
-                want = re.search(r'\{n: "(.*?)",\s*c: "(.*?)"\}', js, re.S)
-                n, c = want.groups()
-                visible = self.rendered()
-                for (rn, rc) in visible:
-                    if rn == n and (not c or rc == c):
-                        self.clicked = (rn, rc)
-                        return "ok"
                 idx = int(re.search(r"friends\[(\d+)\]", js).group(1))
-                if idx < len(visible):               # 真实行为：按索引点到当前第 idx 行
+                visible = self.rendered()
+                if idx < len(visible):
                     self.clicked = visible[idx]
-                    return "by_index"
+                    return "ok"
                 return "not_found"
             if '"selected"' in js or "selected" in js:
                 if not self.clicked:
@@ -501,7 +499,9 @@ class _OpPageMixin:
                                    "company": self.clicked[1], "title": ""})
             if "#chat-input" in js:
                 return "ready"
-            return self.clicked[0] if self.clicked else ""
+            if "HTMLInputElement" in js:
+                return "no-input"        # 这组假页面没有联系人搜索框
+            return self.clicked[0] if self.clicked else ""   # 顶栏姓名
 
 
 _OpPage = _OpPageMixin._OpPage

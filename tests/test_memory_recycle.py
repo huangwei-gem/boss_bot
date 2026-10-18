@@ -151,12 +151,15 @@ class Test什么时候该回收:
 
         loop = types.SimpleNamespace(
             config=cfg, _login_headed_temp=False, 内存回收冷却秒=1800,
-            browser_manager=types.SimpleNamespace(memory_mb=_量, sweep_idle_tabs=_扫),
+            browser_manager=types.SimpleNamespace(memory_mb=_量, sweep_idle_tabs=_扫,
+                                                  端口还活着=lambda: True),
             _重建浏览器=lambda: (重建.append(量的), {"前": 量的, "后": 400.0})[1],
             _最后回收=刚回收过 or 0.0,
-            _回收受阻已报=False, _轮深=types.SimpleNamespace(n=0),
+            _回收受阻已报=False, _进程没了已报=False, _轮深=types.SimpleNamespace(n=0),
             日志=日志, 重建=重建, 扫过=扫过, _log=lambda lvl, msg: 日志.append((lvl, msg)))
         loop._清扫闲置页 = types.MethodType(ML.UnifiedBotLoop._清扫闲置页, loop)
+        loop._浏览器没了就重开 = types.MethodType(ML.UnifiedBotLoop._浏览器没了就重开, loop)
+        loop._try_reconnect_browser = lambda: 重建.append("重连")
         loop._内存回收 = types.MethodType(ML.UnifiedBotLoop._内存回收, loop)
         loop._跑一轮 = types.MethodType(ML.UnifiedBotLoop._跑一轮, loop)
         return loop
@@ -307,6 +310,7 @@ class Test什么时候算一轮跑完:
         loop = types.SimpleNamespace(_轮深=__import__("threading").local(), _回收=记)
         loop._内存回收 = lambda: 记.append("回收")
         loop._清扫闲置页 = lambda: 记.append("清扫")
+        loop._浏览器没了就重开 = lambda: 记.append("探活")
         loop._log = lambda lvl, msg: None
         loop._跑一轮 = lambda 做: ML.UnifiedBotLoop._跑一轮(loop, 做)
         return loop
@@ -315,7 +319,8 @@ class Test什么时候算一轮跑完:
         loop = self._循环()
         got = ML.UnifiedBotLoop._跑一轮(loop, lambda: "本轮结果")
         assert got == "本轮结果", "轮次的返回值要原样传回去（打招呼腿拿它判断有没有岗位）"
-        assert loop._回收 == ["清扫", "回收"]
+        # 探活排在回收之前：进程没了等不了那 30 分钟冷却，先把它救回来
+        assert loop._回收 == ["清扫", "探活", "回收"]
 
     def test_套在上一趟活里面不回收(self):
         """启动全量同步里插着回复轮：插的那轮跑完时同步还没做完，不能换浏览器。"""

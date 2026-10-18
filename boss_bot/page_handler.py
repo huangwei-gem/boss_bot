@@ -131,6 +131,85 @@ def pinned_key(row: dict):
     return ((row.get("name") or "").strip(), (row.get("company") or "").strip())
 
 
+# ── 侧栏"这一行是不是我要找的那个人"的判据（全项目只此一处）──
+# 以前同一条规则写在三处：侧栏探针 JS 里一份、点击 JS 里一份、核对 selected 的
+# python 里再一份，而且两份 JS 都要求公司一模一样。改一处漏两处，
+# 2026-10-18 那批"点不开的会话"里两条就是这么来的：
+#   · 行里公司写"厦门中洲联创科技"、存档是"厦门中洲联创"（简称/全称），精确相等判成陌生人；
+#   · "宋女士"那一行的公司格是空的（实测），人确实在侧栏里，但没有任何一格能对得上。
+# 判据挪到 python，是为了能拿普通 dict 直接单测，不用假浏览器。
+正文最短可用长度 = 6
+
+
+def 折叠公司(s: str) -> str:
+    """把存档里被 BOSS 截断的公司名尾巴省略号去掉。
+
+    实测 2506 份会话存档里有 208 份公司长这样："上海华屹数码科技..."——
+    带着省略号谁都配不上（既不是对方的子串，对方也不是它的子串），
+    这些人的会话就一律"查无此人"。
+    """
+    return (s or "").strip().strip(".。…").strip()
+
+
+def 是同一家(行公司: str, 存档公司: str) -> bool:
+    """互为包含算同一家；任一边为空就是"没这一格"，不许当成"和谁都配"。"""
+    a = 折叠公司(行公司)
+    b = 折叠公司(存档公司)
+    if not a or not b:
+        return False
+    return a == b or a in b or b in a
+
+
+def _同正文(行正文: str, 存档正文: str) -> bool:
+    """最后一句正文是公司格为空时唯一还能定人的字段。
+
+    太短的不算："好的""嗯嗯"这种整屏都是，拿它当身份等于只看名字。
+    """
+    折 = lambda s: re.sub(r"\s+", "", s or "")
+    a, b = 折(行正文), 折(存档正文)
+    if len(a) < 正文最短可用长度 or len(b) < 正文最短可用长度:
+        return False
+    return a == b or a in b or b in a
+
+
+def 认行(rows, name: str, company: str = "", preview: str = "") -> tuple:
+    """在当前渲染出来的侧栏行里找目标，返回 (行号, 依据或失败原因)。
+
+    行号 >= 0 时依据是 "company"（公司那格对上了）或 "preview"（公司格为空，
+    但同名只此一行且最后一句正文和存档一致）。
+    行号 < 0 时第二个返回值就是原因，调用方原样写进日志：
+      no_name            这一屏没有叫这个名的行
+      dup_name:N[公司…]  同名 N 行且公司都对不上（重名实测一屏好几个）
+      company_miss[公司] 只有一行同名但公司是别家
+    """
+    if not name:
+        return -1, "no_name"
+    # 名字两边都折掉首尾空白：补扫那一头的名字来自盘上存档，多一个空格就全程配不上
+    name = name.strip()
+    同名的 = [(i, r) for i, r in enumerate(rows)
+             if (r.get("name") or "").strip() == name]
+    if not 同名的:
+        return -1, "no_name"
+
+    for i, r in 同名的:
+        if 是同一家(r.get("company", ""), company):
+            return i, "company"
+    if not company:
+        # 存档没给公司（老数据、代招职位那种）：只有全屏同名唯一才敢认
+        if len(同名的) == 1:
+            return 同名的[0][0], "company"
+        return -1, f"dup_name:{len(同名的)}"
+
+    空的 = [(i, r) for i, r in 同名的 if not (r.get("company") or "").strip()]
+    if len(空的) == 1 and _同正文(空的[0][1].get("preview", ""), preview):
+        return 空的[0][0], "preview"
+
+    公司串 = "/".join((r.get("company") or "·空·") for _, r in 同名的)[:120]
+    if len(同名的) > 1:
+        return -1, f"dup_name:{len(同名的)}[{公司串}]"
+    return -1, f"company_miss[{公司串}]"
+
+
 # 简历"真发出去了"的唯一证据：会话里多出 BOSS 那张附件卡片。
 # 这些字样必须是卡片特有的——只写"简历"会把 HR 索要简历的卡片读成送达。
 # 直接复用台账那份常量：界面统计和发送核对必须是同一口径，否则一边说发了
@@ -498,13 +577,18 @@ class BossChatHandler:
         }
     )()'''
 
-    def get_all_chats(self, max_rounds: int = 30) -> List[Dict]:
+    def get_all_chats(self, max_rounds: int = 60) -> List[Dict]:
         """获取侧栏全部会话（不看红点），用于启动后的一次性全量同步。
 
         与 get_unread_chats 同一套 CSS 判据（.friend-content / .name-text /
         .name-box / .last-msg-text），只是不做"有没有未读标记"的过滤。
         边滚边收、按 姓名+公司 去重：实测账号2 本地存了 68 个会话，
         不滚只读到 40 个，没渲染的那半截既进不了全量同步也进不了补发简历。
+
+        上限从 30 提到 60 是 2026-10-18 量出来的：账号0 收到第 30 步只覆盖
+        21000px（列表当时已经 54564px），整份 388 个会话要 46 步才收完——
+        这就是"存档比线上薄"的那半截，也让 `_scroll_to_chat_row` 的跳格名册
+        少记一大片人。
         """
         self.go_to_chat()
         time.sleep(1)
@@ -535,34 +619,8 @@ class BossChatHandler:
         logger.debug(f"侧栏收集完成：{len(all_chats)} 个会话，其中置顶 {len(pinned)} 个")
         return all_chats
 
-    # 探针：目标那一行现在渲染出来没有。__WANT__ 由 json 填，
-    # HAS_ROW / var want = {...} 这两处字样是 tests/test_pending_resume.py 的假页面认的约定
-    _SIDEBAR_HAS_ROW_JS = '''(
-        function() {
-            /* HAS_ROW */
-            var want = __WANT__;
-            var items = document.querySelectorAll(".friend-content");
-            for (var i = 0; i < items.length; i++) {
-                var el = items[i];
-                var n = el.querySelector(".name-text");
-                var name = n ? n.textContent.trim() : "";
-                var box = el.querySelector(".name-box"), comp = "";
-                if (box) {
-                    var spans = [];
-                    for (var k = 0; k < box.children.length; k++) {
-                        var c = box.children[k];
-                        if (c.tagName === "SPAN") {
-                            var t = (c.textContent || "").trim();
-                            if (t) spans.push(t);
-                        }
-                    }
-                    comp = spans.length > 1 ? spans[1] : "";
-                }
-                if (name === want.n && (!want.c || comp === want.c)) return "yes";
-            }
-            return "no";
-        }
-    )()'''
+    # 探针：目标那一行现在渲染出来没有。判据只有一份，就在 `认行` 里
+    # （以前这里另写一份要求公司一模一样的判据，简称/空公司那一族永远配不上）。
 
     # 回顶部：滚到底之后直接找靠前的会话是找不到的，必须先归零再往下找
     _SIDEBAR_RESET_JS = '''(
@@ -576,40 +634,86 @@ class BossChatHandler:
         }
     )()'''
 
-    def _sidebar_has_row(self, name: str, company: str) -> bool:
-        js = self._SIDEBAR_HAS_ROW_JS.replace(
-            "__WANT__", json.dumps({"n": name, "c": company}, ensure_ascii=False))
+    # 直接跳到名册记过的某一格：这条列表实测要滚 76 步（54564px）还没到底，
+    # 逐格滚一条会话要半分钟，一轮十几条就把回复腿拖死了
+    _SIDEBAR_JUMP_JS = '''(
+        function() {
+            var box = document.querySelector(".user-list-content");
+            if (!box) return "no-box";
+            /* JUMP_TO:__Y__ */
+            box.scrollTop = __Y__;
+            box.dispatchEvent(new Event("scroll", {bubbles: true}));
+            return String(Math.round(box.scrollTop));
+        }
+    )()'''
+
+    def _跳到(self, y: int) -> None:
         try:
-            return self.page.run_js(js, as_expr=True) == "yes"
+            self.page.run_js(self._SIDEBAR_JUMP_JS.replace("__Y__", str(int(y))),
+                             as_expr=True)
         except Exception as e:
-            logger.debug(f"侧栏行探针失败: {e}")
-            return False
+            logger.debug(f"侧栏跳到 {y}px 失败: {e}")
 
-    def _scroll_to_chat_row(self, name: str, company: str, max_steps: int = 30) -> bool:
-        """把侧栏滚到"姓名+公司"那一行，滚到底还没有就返回 False。
+    def _sidebar_has_row(self, name: str, company: str, preview: str = "") -> bool:
+        return 认行(self._sidebar_rows(), name, company, preview)[0] >= 0
 
-        虚拟列表只渲染可视区那几十行，"当前 DOM 里没有"不等于"没这个会话"：
-        实测补扫时列表已被收集流程滚到底，8 个欠简历的目标全被判成
-        "会话切换校验失败"，一个都没点开。
+    # 一条会话最多允许滚多久找它的行：实测整份列表要 76 步才到底（约 45 秒），
+    # 名册里有位置线索时走"跳"那条快路，这里只是给没有线索的那种兜个上限。
+    找行上限秒 = 40
+
+    def _scroll_to_chat_row(self, name: str, company: str, preview: str = "",
+                            上限秒: Optional[float] = None) -> bool:
+        """把侧栏弄到"目标那一行在屏幕上"，做不到就返回 False 并说清为什么。
+
+        两条路：先按名册记过的滚动位置直接跳（采集那趟顺手记的），跳不中就
+        从顶上逐格滚，滚到位置不动为止——不是"滚满 30 步"。
+        30 步 ×700px = 21000px，而实测这条列表 54564px 还没到底，
+        "李女士|重庆劳多拉企业管理"那张交换微信的卡片就是这么挂了 45 小时。
+
+        但逐格滚之前先看本轮已经收到的名册：名字压根不在名册里，再怎么滚也滚不出来，
+        与其花 40 秒滚到 46348/46837 报一句"没到底"（10-18 11:02 实测就这样），
+        不如立刻如实说"这一轮侧栏里没有这个人"。
         """
+        名册 = getattr(self, "seen_chat_rows", None) or []
+        if 名册 and not any((r.get("name") or "") == name for r in 名册):
+            logger.warning(f"本轮侧栏名册 {len(名册)} 行里没有「{name}」，不滚了"
+                           f"（存档公司={company}）")
+            return False
+        for y in self._名册位置(name):
+            self._跳到(y)
+            time.sleep(0.4)
+            idx, 依据 = 认行(self._sidebar_rows(), name, company, preview)
+            if idx >= 0:
+                logger.debug(f"跳到名册位置 {y}px 认出 [{name}|{company}]（{依据}）")
+                return True
         try:
             self.page.run_js(self._SIDEBAR_RESET_JS, as_expr=True)
             time.sleep(0.4)
+            截止 = time.time() + (上限秒 if 上限秒 is not None else self.找行上限秒)
             prev_pos = None
-            for _ in range(max_steps):
-                if self._sidebar_has_row(name, company):
+            steps = 0
+            while time.time() < 截止:
+                steps += 1
+                idx, 依据 = 认行(self._sidebar_rows(), name, company, preview)
+                if idx >= 0:
                     return True
                 pos = str(self.page.run_js(self._SIDEBAR_SCROLL_JS, as_expr=True))
                 time.sleep(0.5)
                 if not self._SIDEBAR_POS_RE.match(pos):
-                    # 这页没有可滚的容器（或探针被换掉了）：盲滚 30 轮只会白等
+                    # 这页没有可滚的容器（或探针被换掉了）：盲滚只会白等
+                    logger.warning(f"侧栏读不到滚动位置（{pos}），没法找 [{name}] 那一行")
                     return False
-                if pos == prev_pos:        # 位置不动了 = 已经到底
+                if pos == prev_pos:        # 位置不动了 = 真到底了
+                    logger.warning(f"侧栏滚遍 {steps} 屏（{pos}）没有 "
+                                   f"[{name}|{company}]：{依据}")
                     return False
                 prev_pos = pos
+            logger.warning(f"侧栏找 [{name}|{company}] 用完 {self.找行上限秒}秒 "
+                           f"还没到底（{prev_pos}）：{依据}")
+            return False
         except Exception as e:
             logger.debug(f"侧栏滚动定位失败 [{name}]: {e}")
-        return False
+            return False
 
     # 聊天页左上角的联系人搜索框（placeholder="搜索30天内的联系人"）。
     # 这是 React 受控输入：直接赋 .value 组件不认，要走原生 setter 再派发 input。
@@ -648,61 +752,83 @@ class BossChatHandler:
                 var n = li.querySelector(".boss-name");
                 return !!n && norm(n.textContent) === want.n;
             }
+            function compOf(li) {
+                var c = li.querySelector(".company-name");
+                return norm(c ? c.textContent : "");
+            }
             function hit(li) {
                 if (!nameEq(li)) return false;
-                var c = li.querySelector(".company-name");
                 if (!want.c) return true;
-                var a = norm(want.c), b = norm(c ? c.textContent : "");
+                var a = norm(want.c), b = compOf(li);
                 // 浮层里的公司名是简称（"创响教育"），存档里是全称
                 // （"湖南创响教育科技有限公司"），谁包含谁都算同一家。
                 return !!b && (a === b || a.indexOf(b) >= 0 || b.indexOf(a) >= 0);
             }
+            var 同名 = [], 公司串 = [];
             for (var i = 0; i < items.length; i++) {
-                if (hit(items[i])) { items[i].click(); return "ok"; }
+                if (hit(items[i])) { items[i].click();
+                    return JSON.stringify({v: "ok", n: 同名.length, comps: []}); }
+                if (nameEq(items[i])) {
+                    同名.push(i);
+                    公司串.push(compOf(items[i]) || "·空·");
+                }
             }
             // 关键字本来就是姓名，浮层只剩一行时已经没有第二种可能：存档里的
             // 公司常被截断（"义乌市睿笔网络技..."），包含关系也配不上，一律不点
             // 就永远不回话。点完还有 enter_chat 的顶栏姓名核对兜着。
-            // 同名剩几行的场合不猜：重名在侧栏实测 4 组/34 行，点错就是替
-            // 另一家公司的人收这条消息。
+            // 同名剩几行的场合不猜：实测这个浮层搜的是全站同名的人
+            // （"李女士"能回 39 行、公司全是别家），点错就是替另一家公司的人收这条消息。
+            var 报 = {n: 同名.length, comps: 公司串.slice(0, 6)};
             if (items.length === 1 && nameEq(items[0])) {
                 items[0].click();
-                return "unique_name";
+                报.v = "unique_name";
+                return JSON.stringify(报);
             }
-            return items.length ? "name_only" : "no_result";
+            报.v = items.length ? "name_only" : "no_result";
+            return JSON.stringify(报);
         }
     )()'''
 
     def _open_chat_by_search(self, name: str, company: str,
                              timeout: float = 6.0) -> str:
-        """用聊天页的联系人搜索直接点开那条会话。
+        """用聊天页左上那张联系人搜索框直接点开那条会话。
 
-        侧栏是虚拟列表，171 行只渲染 ~40 行："今天不排在前面的人"滚到底
-        也不在 DOM 里，日志一天三百多条「侧栏滚到底也没有会话」就是这么来的，
-        这些人一次回复都收不到。搜索框不筛侧栏，它弹自己的结果浮层，
-        点浮层里 (姓名+公司) 都对得上的那一行；公司配不上但浮层只剩这一行时
-        也算点开（unique_name），只剩名字对不上的多行时才放弃（name_only）。
+        侧栏是虚拟列表，实测这条列表要滚 76 屏才到底：不排在前面的人既不在 DOM 里
+        也滚不到，于是「找不到会话」——这些人一次回复都收不到。搜索框不筛侧栏，
+        它弹自己的结果浮层（placeholder 实测就是"搜索30天内的联系人"），
+        点浮层里 (姓名+公司) 都对得上的那一行。
 
-        返回 ok / unique_name / name_only / no_result / no_input / no_name，
-        由调用方决定要不要清搜索框（见 enter_chat 的 finally）。
+        返回 ok / unique_name / name_only / no_result / no_input / no_name / error，
+        并且每种结局各自写一条日志：上一轮我就是被一句把所有病混在一起的
+        「滚到底也找不到会话」带偏，跑去怀疑搜索框选错了。
         """
         if not name:
             return "no_name"
         if not self._set_contact_filter(name):
+            logger.warning(f"联系人搜索框没找到（这一屏不是聊天页？）: [{name}]")
             return "no_input"
         js = self._SEARCH_RESULT_JS.replace(
-            "__WANT__", json.dumps({"n": name, "c": company}, ensure_ascii=False))
+            "__WANT__", json.dumps({"n": name, "c": 折叠公司(company)},
+                                   ensure_ascii=False))
         end = time.time() + timeout
-        verdict = "no_result"
+        报 = {"v": "no_result", "n": 0, "comps": []}
         while time.time() < end:
             try:
-                verdict = self.page.run_js(js, as_expr=True) or "no_result"
+                报 = json.loads(self.page.run_js(js, as_expr=True) or "{}") or 报
             except Exception as e:
-                logger.debug(f"搜索结果点击失败 [{name}]: {e}")
+                logger.warning(f"联系人搜索脚本报错 [{name}]: {str(e)[:120]}")
                 return "error"
+            verdict = 报.get("v") or "no_result"
             if verdict in ("ok", "unique_name"):
                 return verdict
             time.sleep(0.5)
+        串 = "/".join(报.get("comps") or [])[:120]
+        if verdict == "no_result":
+            logger.warning(f"联系人搜索浮层是空的：[{name}|{company}] 不在"
+                           f"\"30 天内的联系人\"里")
+        else:
+            logger.warning(f"联系人搜索浮层有 {报.get('n', 0)} 个同名「{name}」，"
+                           f"公司都对不上（{串 or '·全空·'}）: [{company}]")
         return verdict
 
     def _clear_contact_filter(self) -> None:
@@ -711,11 +837,18 @@ class BossChatHandler:
         time.sleep(0.4)
 
     def _sidebar_rows(self) -> List[Dict]:
-        """读一次当前渲染出来的侧栏行（不滚动）"""
+        """读一次当前渲染出来的侧栏行（不滚动），顺手记下每行当时的滚动位置。
+
+        位置是给 `_scroll_to_chat_row` 跳格用的：这条列表实测滚到 54564px 还没到底，
+        逐格滚过去一条会话就要半分钟，而采集那趟本来已经把整份滚过一遍了。
+        """
         all_chats = []
         try:
             result = self.page.run_js('''(
                 function() {
+                    /* READ_ROWS */
+                    var box0 = document.querySelector(".user-list-content");
+                    var y = box0 ? Math.round(box0.scrollTop) : -1;
                     var friendEls = document.querySelectorAll(".friend-content");
                     var rows = [];
                     for (var i = 0; i < friendEls.length; i++) {
@@ -752,7 +885,8 @@ class BossChatHandler:
                             company: company,
                             preview: preview,
                             unread_count: unread,
-                            pinned: (el.className || "").indexOf("friend-top") >= 0
+                            pinned: (el.className || "").indexOf("friend-top") >= 0,
+                            _y: y
                         });
                     }
                     return JSON.stringify(rows);
@@ -761,10 +895,41 @@ class BossChatHandler:
 
             if result:
                 all_chats = json.loads(result)
+            self._登记行位置(all_chats)
 
         except Exception as e:
             logger.error(f"获取全部会话列表失败: {e}")
         return all_chats
+
+    def 行位置(self):
+        """姓名 -> 这一名字在各次采集里被渲染出来时的 scrollTop 列表（去相邻重复）。"""
+        return self.__dict__.setdefault("_行位置", {})
+
+    # 一个名字最多记几格位置：列表随时重排，太老的位置没意义，
+    # 而每次跳一格都要读一遍屏（0.4 秒），记太多反而把找行拖长
+    名册每人最多记 = 6
+
+    def _登记行位置(self, rows) -> None:
+        位置 = self.行位置()
+        for r in rows or []:
+            y = r.get("_y")
+            if not isinstance(y, int) or y < 0:
+                continue        # 假页面/旧数据没带这个字段就别乱记
+            表 = 位置.setdefault(r.get("name") or "", [])
+            if 表 and 表[-1] == y:
+                continue
+            表.append(y)
+            if len(表) > self.名册每人最多记:
+                del 表[0]
+
+    def _名册位置(self, name: str) -> List[int]:
+        """名册里有没有"这个名字大概滚到哪儿能看到"的线索（最近记的先用）。
+
+        只按名字挑、不看公司：跳到那儿之后还要用 `认行` 核一遍才准点，
+        所以线索宽一点不会点错人，最多是白跳一格。
+        """
+        return list(reversed(self.行位置().get(name) or []))
+
 
     def read_selected_row(self) -> Dict:
         """读侧栏里当前真正带 selected 态的那一行（身份以它为准，不靠点击时的索引）
@@ -821,16 +986,16 @@ class BossChatHandler:
         """
         expected_name = chat_info.get('name', '')
         expected_company = chat_info.get('company', '')
+        expected_preview = chat_info.get('preview', '')
 
-        # 先确认目标行真的在渲染出来的那几十行里，不在就滚过去，再不在就用
-        # 联系人搜索直接点开。侧栏是虚拟列表：账号2 实测 171 行只渲染 ~20 行，
-        # 采集时记下的 index 到点击时早就不是同一个人了（按旧 index 点
-        # "孙先生|沐数科技"，那位置上已经是"马女士|掌门教育"，三次重试全点在
-        # 错的人身上）。
-        found, opened = self._locate_chat_row(expected_name, expected_company)
+        # 先确认目标行真的在渲染出来的那几十行里，不在就跳/滚过去，再不在就用
+        # 联系人搜索直接点开。侧栏是虚拟列表：采集时记下的 index 到点击时早就
+        # 不是同一个人了（按旧 index 点"孙先生|沐数科技"，那位置上已经是
+        # "马女士|掌门教育"，三次重试全点在错的人身上）。
+        found, opened, 原因 = self._locate_chat_row(expected_name, expected_company,
+                                                   expected_preview)
         if not found:
-            logger.warning(
-                f"侧栏滚到底、搜索也找不到会话 [{expected_name}|{expected_company}]，跳过")
+            logger.warning(f"没能点开 [{expected_name}|{expected_company}]：{原因}，跳过")
             return False
         try:
             # 搜索浮层那一下点击已经把会话打开了，只剩核对，不许再点一次侧栏
@@ -842,72 +1007,64 @@ class BossChatHandler:
             if opened:
                 self._clear_contact_filter()
 
-    def _locate_chat_row(self, name: str, company: str) -> tuple:
-        """把目标会话弄到屏幕上：认现成的行 → 滚 → 联系人搜索点开。
+    def _locate_chat_row(self, name: str, company: str,
+                         preview: str = "") -> tuple:
+        """把目标会话弄到屏幕上：认现成的行 → 跳/滚 → 联系人搜索点开。
 
-        返回 (找得到吗, 是不是搜索直接点开的)，后者决定调用方要不要清搜索框、
-        以及还需不需要再点一次侧栏行。
+        返回 (找得到吗, 是不是搜索直接点开的, 给日志看的依据)。
+        第三项是这次新加的：以前四种不同的病都并成一句
+        「滚到底也找不到会话」，结果查的时候根本分不开是滚不够、
+        判据太严，还是这人真不在 30 天联系人里。
         """
-        if self._sidebar_has_row(name, company):
-            return True, False
-        if self._scroll_to_chat_row(name, company):
-            return True, False
-        if self._open_chat_by_search(name, company) in ("ok", "unique_name"):
-            return True, True
-        return False, False
+        if self._sidebar_has_row(name, company, preview):
+            return True, False, "行就在屏上"
+        if self._scroll_to_chat_row(name, company, preview):
+            return True, False, "跳/滚到了那一行"
+        verdict = self._open_chat_by_search(name, company)
+        if verdict in ("ok", "unique_name"):
+            return True, True, verdict
+        return False, False, f"侧栏和联系人搜索都没有这个人（搜索:{verdict}）"
+
+    # 点某一行的最小脚本：认哪一行由 python 里的 `认行` 定，这里只负责点。
+    _CLICK_ROW_JS = '''(
+        function() {
+            var friends = document.querySelectorAll(".friend-content");
+            var el = friends[__IDX__];
+            if (!el) return "not_found";
+            /* CLICK_ROW */
+            el.click();
+            return "ok";
+        }
+    )()'''
 
     def _click_and_verify(self, chat_info: dict, retries: int) -> bool:
-        """点进行、等输入框就绪、核对 selected 行与顶栏姓名是不是同一个人。"""
-        idx = chat_info.get('index', 0)
+        """点进行、等输入框就绪、核对 selected 行与顶栏姓名是不是同一个人。
+
+        哪一行归他点由 `认行` 判（和探针、核对同一份判据）。这里以前还留着
+        "认不到就按采集时记的 index 点"的退路——列表随时重排，那条退路就是
+        替另一家公司的人收这条消息；现在宁可不点。
+        """
         expected_name = chat_info.get('name', '')
         expected_company = chat_info.get('company', '')
+        expected_preview = chat_info.get('preview', '')
 
         for attempt in range(1, retries + 2):
-            # 按 姓名+公司 定位行：实测 34 行里 (姓名,公司) 唯一 34/34，
-            # 只用姓名则有 4 组撞车。公司字段为空的行退到按索引点，再靠下面
-            # 的 selected 复核兜住。
-            click_result = self.page.run_js(f'''(
-                function() {{
-                    var friends = document.querySelectorAll(".friend-content");
-                    var want = {{n: {json.dumps(expected_name, ensure_ascii=False)},
-                                c: {json.dumps(expected_company, ensure_ascii=False)}}};
-                    function info(el) {{
-                        var e = el.querySelector(".name-text");
-                        var name = e ? e.textContent.trim() : "";
-                        var box = el.querySelector(".name-box"), comp = "";
-                        if (box) {{
-                            var spans = [];
-                            for (var k = 0; k < box.children.length; k++) {{
-                                var c = box.children[k];
-                                if (c.tagName === "SPAN") {{
-                                    var t = (c.textContent || "").trim();
-                                    if (t) spans.push(t);
-                                }}
-                            }}
-                            comp = spans.length > 1 ? spans[1] : "";
-                        }}
-                        return {{name: name, company: comp}};
-                    }}
-                    for (var i = 0; i < friends.length; i++) {{
-                        var got = info(friends[i]);
-                        if (want.n && got.name === want.n &&
-                            (!want.c || got.company === want.c)) {{
-                            friends[i].click();
-                            return "ok";
-                        }}
-                    }}
-                    if (friends[{idx}]) {{ friends[{idx}].click(); return "by_index"; }}
-                    return "not_found";
-                }}
-            )()''', as_expr=True)
-            if click_result == "not_found":
-                if self._scroll_to_chat_row(expected_name, expected_company):
+            idx, 依据 = 认行(self._sidebar_rows(), expected_name,
+                            expected_company, expected_preview)
+            if idx < 0:
+                if self._scroll_to_chat_row(expected_name, expected_company,
+                                            expected_preview):
                     logger.debug(f"侧栏目标行未渲染，滚到 [{expected_name}] 那一行后重试")
                     continue
-                logger.warning(f"侧栏滚到底也找不到会话 [{expected_name}]，跳过")
+                logger.warning(f"侧栏滚遍也没这一行 [{expected_name}|"
+                               f"{expected_company}]：{依据}")
                 return False
-            if self._wait_and_verify(expected_name, expected_company,
-                                     opened_by_index=(click_result == "by_index")):
+            点 = self.page.run_js(self._CLICK_ROW_JS.replace("__IDX__", str(idx)),
+                                  as_expr=True)
+            if 点 != "ok":
+                logger.debug(f"第 {idx} 行没点到（{点}），重来")
+                continue
+            if self._wait_and_verify(expected_name, expected_company, 依据=依据):
                 return True
             logger.warning(
                 f"会话切换校验失败（第 {attempt}/{retries + 1} 次）: "
@@ -918,11 +1075,12 @@ class BossChatHandler:
         return False
 
     def _wait_and_verify(self, expected_name: str, expected_company: str,
-                         opened_by_index: bool = False) -> bool:
+                         依据: str = "") -> bool:
         """等聊天面板加载，再核对"现在打开的就是我要的那个人"。
 
         selected 行的姓名/公司与顶栏姓名三方对齐才算过：光核姓名会被重名的人
-        骗过去（实测侧栏 34 行里有 4 组同名昵称）。
+        骗过去（实测侧栏 34 行里有 4 组同名昵称）。公司那一格用 `是同一家`
+        比，"厦门中洲联创科技"和存档"厦门中洲联创"是一家人。
         """
         time.sleep(3)
         for _ in range(10):
@@ -943,11 +1101,13 @@ class BossChatHandler:
             # 这时只剩顶栏姓名可核，同名风险由调用方按岗位/公司再判
             logger.debug(f"侧栏没有 selected 标记，退回顶栏姓名核对 [{expected_name}]")
             return head_ok
-        sel_ok = (not expected_name or sel.get("name") == expected_name) \
-            and (not expected_company or sel.get("company") == expected_company)
-        if sel_ok and head_ok:
-            if opened_by_index:
-                logger.debug(f"按索引点开会话 [{expected_name}]，selected 复核通过")
+        名对 = (not expected_name) or sel.get("name") == expected_name
+        公司对 = (not expected_company) or 是同一家(sel.get("company", ""), expected_company)
+        if 依据 == "preview" and not (sel.get("company") or "").strip():
+            # 这一行公司格本来就是空的（认行就是靠"同名唯一+最后一句正文"点的），
+            # 核对时不能拿"selected 没写公司"当反证，否则点开了还是判成陌生人
+            公司对 = 名对
+        if 名对 and 公司对 and head_ok:
             return True
         logger.debug(
             f"会话核对不上: 期望[{expected_name}|{expected_company}] "

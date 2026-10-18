@@ -43,7 +43,7 @@ from boss_bot.reply_engine import ReplyEngine, conversation_rejected
 from boss_bot.prompts import 历史原始行上限
 from boss_bot.intent import veto_hit_anywhere
 from boss_bot.contact_ledger import CONTACT_DECLINED_MARK
-from boss_bot.page_handler import BossChatHandler, pinned_key
+from boss_bot.page_handler import BossChatHandler, pinned_key, 认行
 from boss_bot.pending_resume import pending_resume_asks, resume_already_sent
 from boss_bot.state_store import StateStore
 from boss_bot.stats import Stats
@@ -353,6 +353,7 @@ class UnifiedBotLoop:
         self._轮深 = threading.local()
         self._最后回收 = 0.0
         self._回收受阻已报 = False
+        self._进程没了已报 = False
         # 在方法入口包一层，而不是把那五个调用点各改一遍：那几处的顺序（回复轮排在
         # 全量同步前面、补扫挂在轮后）都有按源码文本盯的回归，动一处要跟着改一片。
         for 方法名 in ("_run_greet_round", "_run_reply_round", "_run_followup_round",
@@ -982,6 +983,9 @@ class UnifiedBotLoop:
                 # 不打断任何一条腿，等最外层反而等不到（回复轮常套在全量同步里）
                 self._清扫闲置页()
                 if 深 == 1:
+                    # 进程没了这件事要抢在回收之前问：回收受 30 分钟冷却管，
+                    # 而浏览器死了的每一分钟都是实打实没人回消息（11:23 那次）
+                    self._浏览器没了就重开()
                     self._内存回收()
             except Exception as e:
                 self._log("WARN", "轮次收尾的内存清理没做成: %s" % e)
@@ -1022,6 +1026,37 @@ class UnifiedBotLoop:
                           f"{getattr(搜索页, 'url', '') or '（读不到 URL）'}")
         self._init_engines()
         return 前后
+
+    def _浏览器没了就重开(self) -> bool:
+        """端口上没人听了就当场重开——这一趟不等冷却。
+
+        2026-10-18 11:23:35 线上：9222 的 `/json` 报 WinError 10061（积极拒绝），
+        也就是 Chromium 进程已经没了。可这一号后面的每一条都在死句柄上白干：
+        投递腿每单「页面断开且恢复失败」，跟进腿每个候选六次「侧栏跳到 Npx 失败」
+        加一次「联系人搜索框没找到」（11:10~11:28 数出来 91 条 no_input）。
+        断开恢复那三条（两个落点导航 + 一次重绑）本来就必须靠浏览器活着才干事，
+        真会重开进程的是 `_try_reconnect_browser`，而它当时一个调用点都不在这条路上。
+
+        探不准就当还在：把两条腿正点着卡片的浏览器掀掉，比多等一轮严重得多，
+        所以只有"拒连"这一种定罪，超时和读不出都不动手。
+        """
+        try:
+            活 = self.browser_manager.端口还活着()
+        except Exception as e:
+            self._log("DEBUG", f"端口探活本身没做成（不动手）: {type(e).__name__}: "
+                               f"{str(e).strip()[:60]}")
+            return False
+        if 活:
+            self._进程没了已报 = False
+            return False
+        # 每一轮都探一次，所以这句只在"刚从活变成死"那一下说：不然日志里
+        # 全是同一句重开，真出事那句反而找不到
+        if not self._进程没了已报:
+            self._进程没了已报 = True
+            self._log("WARN", "这个号的浏览器进程不在了（调试端口拒连），"
+                              "当场重开一次，不等内存回收那 30 分钟")
+        self._try_reconnect_browser()
+        return True
 
     def _内存回收(self) -> bool:
         """浏览器还超阈值就在轮次空档重开一次，把挂机一天攒下的内存放掉。
@@ -2552,20 +2587,17 @@ class UnifiedBotLoop:
         self._log("INFO", f"启动全量同步完成：{synced}/{len(chats)} 个会话已同步，之后只采未读")
 
     @staticmethod
-    def _sidebar_row_for(rows, name: str, company: str):
-        """在侧栏行里找到这一条会话，找不到或多解都返回 None（宁可跳过也不猜人）"""
-        def same(a, b):
-            # BOSS 会自己把公司名截成"招商银行股份有限..."，两边都可能是截断后的
-            a = (a or "").strip().rstrip(".")
-            b = (b or "").strip().rstrip(".")
-            if not a or not b:
-                return False
-            n = min(len(a), len(b))
-            return a[:n] == b[:n]
+    def _sidebar_row_for(rows, name: str, company: str, preview: str = ""):
+        """在侧栏行里找这一条会话，返回 (行或 None, 依据/失败原因)。
 
-        hits = [r for r in rows or []
-                if r.get("name") == name and (not company or same(r.get("company"), company))]
-        return hits[0] if len(hits) == 1 else None
+        判据只有 `page_handler.认行` 那一份。这里以前另写了一份私有规则：
+        同名行必须全屏只有一行才敢认，于是"两行其实是同一个人（公司被 BOSS
+        截成两种写法）"和"两个重名的人"被记成同一种失败，而且失败只说一句
+        "对不上"——2026-10-18 11:09:19「沈女士」刚收完 527 行名册就当场被判成
+        对不上跳过，到底是这两条里的哪一条，日志看不出来。现在原因原样打出来。
+        """
+        idx, 依据 = 认行(rows or [], name, company, preview)
+        return (rows[idx] if idx >= 0 else None), 依据
 
     def _resume_backfill_due(self, now=None) -> bool:
         """欠简历的补扫这趟该不该跑（没跑过=该跑）。"""
@@ -2626,10 +2658,14 @@ class UnifiedBotLoop:
                 self._log("WARN", "补扫让位给新一次启动，剩下的欠简历下一趟再补")
                 return
             name = item["chat_name"]
-            row = self._sidebar_row_for(rows, name, item.get("company", ""))
+            row, 依据 = self._sidebar_row_for(rows, name, item.get("company", ""))
             if row is None:
-                self._log("INFO", f"⏭️ 跳过 [{name}]：侧栏按 姓名+公司 对不上这一行"
-                                  f"（存档公司={item.get('company', '')!r}），不猜人")
+                # 原因原样打出来：no_name=名册里没这个人，dup_name:N[公司…]=同名几行
+                # 都不是这家，company_miss[公司]=只有这一行同名但公司是别家。
+                # 合成一句"对不上"的话，两天都看不出到底是哪一头坏了。
+                self._log("INFO", f"⏭️ 跳过 [{name}]：侧栏名册 {len(rows or [])} 行里"
+                                  f"对不上这一条（存档公司={item.get('company', '')!r}"
+                                  f"，原因={依据}），不猜人")
                 continue
             if is_pinned(row):
                 self._log("INFO", f"⏭️ 跳过 [{name}]：这一路你置顶了自己聊，机器不动")

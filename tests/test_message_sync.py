@@ -127,8 +127,10 @@ class ChatSwitchGateTest:
     而两个陈女士姓名一样 —— 点错了照样"校验通过"。所以现在要求三方对齐。
     """
 
-    def _handler(self, selected, header_name=""):
+    def _handler(self, selected, header_name="", rows=None):
         from boss_bot.page_handler import BossChatHandler
+
+        行们 = rows if rows is not None else ([selected] if selected else [])
 
         class FakePage:
             def run_js(self, script, as_expr=False):
@@ -139,12 +141,14 @@ class ChatSwitchGateTest:
                     return "ready"
                 if "top-info-content" in s:
                     return header_name
-                if "HAS_ROW" in s:
-                    # 侧栏滚动探针：这组测试关心的是"点完以后的校验"，
+                if "READ_ROWS" in s:
+                    # 侧栏当前渲染出来的行：这组测试关心的是"点完以后的校验"，
                     # 所以目标行一律当成已经渲染在屏幕上
-                    return "yes"
-                if "want.n" in s:
+                    return json.dumps([{"preview": "", "_y": 0, **r} for r in 行们])
+                if "CLICK_ROW" in s:
                     return "ok"
+                if "HTMLInputElement" in s:
+                    return "no-input"       # 这组假页面没有联系人搜索框
                 return "[]"
 
             def get(self, url):
@@ -174,7 +178,8 @@ class ChatSwitchGateTest:
 
     def test_读不到selected行时按名字回落(self):
         """BOSS 偶尔不给 selected 类：这时不能整轮都罢工，用顶栏姓名核对"""
-        h = self._handler(None, header_name="唐女士")
+        h = self._handler(None, header_name="唐女士",
+                          rows=[{"index": 0, "name": "唐女士", "company": ""}])
         assert h.enter_chat({"index": 15, "name": "唐女士", "company": ""}) is True
 
 

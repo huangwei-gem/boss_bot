@@ -34,7 +34,7 @@ class Recorder:
         self._scroll_ok = scroll_ok
         self._search_ok = search_ok
 
-    def sidebar_has_row(self, name, company):
+    def sidebar_has_row(self, name, company, preview=""):
         self.calls.append(("has_row", name, company))
         return self._has_row
 
@@ -80,24 +80,33 @@ def _handler_with(rec):
 
 
 class Test定位三级:
+    """`_locate_chat_row` 回 (找得到吗, 是不是搜索点开的, 给日志看的依据)。
+
+    第三项是 2026-10-18 新加的：以前四种不同的病并成一句
+    「滚到底也找不到会话」，查的时候根本分不开是滚不够、判据太严，
+    还是这人真不在 30 天联系人里。
+    """
+
     def test_行就在屏幕上时不滚也不搜(self, wire):
         rec = Recorder(has_row=True)
-        assert wire(rec)._locate_chat_row("陈女士", "爱森电商") == (True, False)
+        assert wire(rec)._locate_chat_row("陈女士", "爱森电商")[:2] == (True, False)
         assert rec.names() == ["has_row"]
 
     def test_滚到了就不用搜(self, wire):
         rec = Recorder(has_row=False, scroll_ok=True)
-        assert wire(rec)._locate_chat_row("陈女士", "爱森电商") == (True, False)
+        assert wire(rec)._locate_chat_row("陈女士", "爱森电商")[:2] == (True, False)
         assert rec.names() == ["has_row", "scroll"]
 
     def test_滚到底才动搜索(self, wire):
         rec = Recorder(has_row=False, scroll_ok=False, search_ok=True)
-        assert wire(rec)._locate_chat_row("陈女士", "爱森电商") == (True, True)
+        assert wire(rec)._locate_chat_row("陈女士", "爱森电商")[:2] == (True, True)
         assert rec.names() == ["has_row", "scroll", "search"]
 
     def test_三级都用上还是没人就认失败(self, wire):
         rec = Recorder(has_row=False, scroll_ok=False, search_ok=False)
-        assert wire(rec)._locate_chat_row("陈女士", "爱森电商") == (False, False)
+        找, 搜开, 原因 = wire(rec)._locate_chat_row("陈女士", "爱森电商")
+        assert (找, 搜开) == (False, False)
+        assert "no_result" in 原因, f"日志得说得出是哪一步没认出人: {原因}"
 
 
 class Test搜索点开后:
@@ -106,7 +115,7 @@ class Test搜索点开后:
     def test_只剩核对不许再点一次侧栏(self, wire):
         rec = Recorder(has_row=False, scroll_ok=False, search_ok=True)
         verified = []
-        ph = wire(rec, _wait_and_verify=lambda n, c, opened_by_index=False:
+        ph = wire(rec, _wait_and_verify=lambda n, c, **k:
                   verified.append((n, c)) or True,
                   _click_and_verify=lambda ci, retries: pytest.fail(
                       "搜索浮层已经点开了会话，不该再点侧栏行"))
@@ -115,7 +124,7 @@ class Test搜索点开后:
 
     def test_用完清掉搜索框(self, wire):
         rec = Recorder(has_row=False, scroll_ok=False, search_ok=True)
-        ph = wire(rec, _wait_and_verify=lambda n, c, opened_by_index=False: True)
+        ph = wire(rec, _wait_and_verify=lambda n, c, **k: True)
         ph.enter_chat(dict(self.CHAT))
         assert rec.names()[-1] == "clear"
 
@@ -123,7 +132,7 @@ class Test搜索点开后:
         """漏清的话，下一轮搜索框里还留着上一个名字，结果浮层会替我们"选中"
         一个上一个人——回错人比不回更糟。"""
         rec = Recorder(has_row=False, scroll_ok=False, search_ok=True)
-        ph = wire(rec, _wait_and_verify=lambda n, c, opened_by_index=False: False)
+        ph = wire(rec, _wait_and_verify=lambda n, c, **k: False)
         assert ph.enter_chat(dict(self.CHAT)) is False
         assert rec.names()[-1] == "clear"
 
@@ -136,7 +145,7 @@ class Test搜索点开后:
     def test_压根找不到人就不清也不核对(self, wire):
         rec = Recorder(has_row=False, scroll_ok=False, search_ok=False)
         checked = []
-        ph = wire(rec, _wait_and_verify=lambda n, c, opened_by_index=False:
+        ph = wire(rec, _wait_and_verify=lambda n, c, **k:
                   checked.append(1) or True)
         assert ph.enter_chat(dict(self.CHAT)) is False
         assert not checked and "clear" not in rec.names()
@@ -144,7 +153,12 @@ class Test搜索点开后:
 
 class Test搜索框写法:
     def test_受控组件要走原生setter(self):
-        """直接 inp.value=x 时 React 不认，写字等于没写"""
+        """直接 inp.value=x 时 React 不认，写字等于没写。
+
+        顺带钉一条我上一轮搞错过的事实：线上聊天页只有一张可见输入框，
+        class 就是 boss-search-input、placeholder="搜索30天内的联系人"
+        （2026-10-18 只读 CDP 实测）。它不是搜岗位的那个框，别再去换选择器。
+        """
         js = PageHandler._CONTACT_FILTER_JS
         assert "HTMLInputElement.prototype" in js
         assert 'dispatchEvent(new Event("input"' in js
@@ -173,14 +187,14 @@ class Test搜索框写法:
     def test_唯一命中当成正面结果(self):
         rec = Recorder(has_row=False, scroll_ok=False, search_ok="unique_name")
         ph = _handler_with(rec)
-        assert ph._locate_chat_row("陈女士", "旺旺集团") == (True, True)
+        assert ph._locate_chat_row("陈女士", "旺旺集团")[:2] == (True, True)
 
     def test_多个同名时不许猜一个(self):
         """重名是实测存在的：浮层里剩 3 个"刘女士"时，公司又对不上就只能放弃，
         点错一个等于给另一个公司的人回话。"""
         rec = Recorder(has_row=False, scroll_ok=False, search_ok="name_only")
         ph = _handler_with(rec)
-        assert ph._locate_chat_row("刘女士", "沙果") == (False, False)
+        assert ph._locate_chat_row("刘女士", "沙果")[:2] == (False, False)
         assert "clear" not in rec.names(), "没点开就别清搜索框，更别核对陌生人"
 
     def test_写字时姓名转义进JS(self):
@@ -229,6 +243,13 @@ class Test搜索框写法:
         # 写字成功了、只是搜不到人：这种要走到超时，不能当成"页面没搜索框"
         class P:
             def run_js(self, script, as_expr=False):
-                return "ok" if "HTMLInputElement" in script else "no_result"
+                return "ok" if "HTMLInputElement" in script else '{"v":"no_result"}'
         ph = _handler(P())
         assert ph._open_chat_by_search("陈女士", "爱森电商", timeout=0.6) == "no_result"
+
+    def test_浮层回的是带计数的判决(self):
+        """认不出人的时候要把"同名几个、公司分别是什么"一起回，
+        日志才写得出来——上一轮我只能一遍遍开浏览器手工看。"""
+        js = PageHandler._SEARCH_RESULT_JS
+        assert 'v: "ok"' in js, "判决不再是一个光秃秃的字符串，得带上计数"
+        assert "comps" in js

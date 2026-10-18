@@ -1524,6 +1524,25 @@ def 挑闲置岗位页(targets, keep_ids) -> list:
             and t.get("id") not in 留着 and 闲置岗位页(t.get("url"))]
 
 
+def 是拒连(e) -> bool:
+    """这个异常是不是"端口上没人听"。超时、读不出、DNS 都不算。
+
+    Windows 给 10061，Linux/macOS 给 ECONNREFUSED(111)；`urlopen` 会把它们裹进
+    URLError 的 `reason` 里，所以两层都要看。字符串也认——线上那句就是
+    `<urlopen error [WinError 10061] 由于目标计算机积极拒绝，无法连接。>`。
+    """
+    码 = (10061, 111)
+    for 一 in (e, getattr(e, "reason", None)):
+        if 一 is None:
+            continue
+        if isinstance(一, ConnectionRefusedError):
+            return True
+        if getattr(一, "errno", None) in 码:
+            return True
+    文 = str(e)
+    return "10061" in 文 or "Connection refused" in 文
+
+
 def close_idle_job_tabs_http(address, keep_ids=(), timeout=5.0, 打开=None) -> int:
     """用 CDP 的 HTTP 端点收掉闲置的岗位详情页，全程不碰 WebSocket。
 
@@ -1981,6 +2000,31 @@ class BrowserManager:
             return self._认不出在册页("看守")
         return close_idle_job_tabs_http("127.0.0.1:%s" % self._debug_port,
                                         self._在册标签页id())
+
+    def 端口还活着(self, 打开=None, timeout: float = 3.0) -> bool:
+        """调试端口上还有没有人听——没有就是这个号已经没有浏览器了。
+
+        为什么只认"拒连"这一种：2026-10-18 11:23:35 9222 的 `/json` 报
+        `[WinError 10061] 由于目标计算机积极拒绝`，那是进程没了（端口上没人 listen）；
+        同一时刻句柄里还留着旧页，于是两条腿接着拿死句柄白干了几百次。
+        超时要按"还在"算：机器换页时页会冻但进程还在（10-16 那次 `/json` 秒回而
+        websocket 全冻），这时候重开只会打断正点着卡片的那一条腿。
+        没有自己的调试端口（连别人起来的浏览器）也不归我们重开。
+        """
+        if not self._debug_port:
+            return True
+        开 = 打开 or (lambda url, t: urlopen(url, timeout=t))
+        try:
+            with 开("http://127.0.0.1:%s/json/version" % self._debug_port,
+                    timeout) as 响:
+                return bool(响.read())
+        except Exception as e:
+            if 是拒连(e):
+                logger.debug("调试端口 127.0.0.1:%s 拒连（浏览器进程不在了）: %s"
+                             % (self._debug_port, str(e).strip()[:80]))
+                return False
+            logger.debug("调试端口探活读不出，先当还在: %s" % str(e).strip()[:80])
+            return True
 
     def start_idle_tab_watchdog(self, interval: float = 闲置页看守秒) -> None:
         """拉起闲置页看守线程（幂等：已经在跑就只换周期，不开第二条）。"""
