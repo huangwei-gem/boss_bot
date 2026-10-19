@@ -104,6 +104,11 @@ LOGIN_POLL_INTERVAL = 5
 # 一分钟看一眼足够接上，又不至于把日志刷成一片。
 端口空出来再试秒 = 60
 
+# 等人工登录时，"导航到会话页去问一眼"的最小间隔。
+# 13:52~14:00 实测：这个循环每 5 秒导航一次，把人正在滑的安全验证掀了五回，
+# 原话是「你刷新太频繁了，我根本就登录不了」。定论优先用只读的一眼，导航是例外。
+登录导航冷却秒 = 60
+
 # BOSS 的登录页：界面"登录"按钮和运行循环缺会话时都停在这里
 BOSS_LOGIN_URL = "https://www.zhipin.com/web/user/?ka=header-login"
 
@@ -134,7 +139,7 @@ _ARCHIVE_LOCK = threading.Lock()
 # 这两个名字继续从这里导出，README 和老调用点用的还是同一份判据。
 from boss_bot.browser_launcher import (          # noqa: F401  (对外导出)
     LOGIN_WALL_MARKS, CHAT_PAGE_MARKS, login_state_of, has_live_auth_cookie,
-    是登不进去的地址)
+    是风控验证页, 是登不进去的地址)
 
 # 回复侧连续判这么多次登录失效就停这个号，等人工——不再每 30 秒空刷
 REPLY_LOGIN_FAIL_LIMIT = 3
@@ -228,6 +233,8 @@ class UnifiedBotLoop:
         # 2479 vs 2484 MB），但配置写的是无头，登完还挂着有头就是用户改的东西
         # 没生效，桌面上还多一个窗口——见 _finish_login_window
         self._login_headed_temp = False
+        # 停在安全验证页那句提醒只说一遍：等登录每 5 秒轮一次，不说就刷成一片
+        self._验证页已说 = False
         # 需要登录的原因，供前端状态点说明"为什么是黄的"
         self._login_reason = ""
         self._greet_paused = False
@@ -867,7 +874,7 @@ class UnifiedBotLoop:
             # 13:23:12 账号2 就是这么停在"未启动"，他把那扇窗口关掉之后什么都没有发生。
             # 只有人叫停才算这个号不干了；等端口空出来这一趟自己接着往下走。
             第几趟 = 0
-            while not self._init_browser():
+            while not self._init_browser(安静=第几趟 > 0):
                 if self._stop_event.is_set() or not self._running:
                     self._log("WARN", "等端口期间被人叫停，退出初始化")
                     self._running = False
@@ -881,9 +888,10 @@ class UnifiedBotLoop:
                 第几趟 += 1
                 self._login_reason = "browser_taken"
                 self.browser_manager.摘掉句柄()
-                self._log("ERROR", f"第 {第几趟} 趟起不来：{说明}。不动那扇窗口"
-                                  f"（不是本账号的浏览器），每 {端口空出来再试秒} 秒再看一次，"
-                                  f"它一空出来这个号自己接着往下走")
+                报 = "ERROR" if 第几趟 == 1 else "DEBUG"
+                self._log(报, f"第 {第几趟} 趟起不来：{说明}。不动那扇窗口"
+                              f"（不是本账号的浏览器），每 {端口空出来再试秒} 秒再看一次，"
+                              f"它一空出来这个号自己接着往下走")
                 self._stop_event.wait(timeout=端口空出来再试秒)
             if self._login_reason in ("browser_taken", "browser_failed"):
                 self._login_reason = ""
@@ -930,25 +938,31 @@ class UnifiedBotLoop:
             self._current_mode = "idle"
             self._log("INFO", "初始化线程结束")
 
-    def _init_browser(self) -> bool:
+    def _init_browser(self, 安静: bool = False) -> bool:
         """启动共享浏览器实例；连不上端口时再试一次。
 
         切形态那一下会同时重开两个号的浏览器，负载下 DrissionPage 会连不上端口：
         11:41:37 那个 /json 还回 200，11:41:39 就抛 BrowserConnectError，号就此停在
         stopped——用户点的是"换个形态"，代价不该是一个号悄悄下线。
+
+        安静=True 只把级别降成 DEBUG，不删事件：端口被别人的窗口占着时这条重试
+        一分钟走一趟，四行/趟一小时两百行，真要查的那一行会被埋掉
+        （login_uncertain 那回已经付过一次这个代价）。
         """
+        报 = "DEBUG" if 安静 else "INFO"
+        败 = "DEBUG" if 安静 else "ERROR"
         for 第几次 in (1, 2):
             try:
-                self._log("INFO", "正在启动共享浏览器...")
+                self._log(报, "正在启动共享浏览器...")
                 self._log("DEBUG", f"浏览器配置: type={self.config.browser.browser_type}, "
                                   f"chrome_path={self.config.browser.chrome_path}, "
                                   f"{self.browser_manager.启动现场()}")
                 self.browser_manager.launch()
                 self._log("DEBUG", "浏览器进程已启动，等待连接...")
-                self._log("INFO", "浏览器已启动")
+                self._log(报, "浏览器已启动")
                 return True
             except Exception as e:
-                self._log("ERROR", f"浏览器启动失败: {e}")
+                self._log(败, f"浏览器启动失败: {e}")
                 self._log("DEBUG", f"浏览器启动异常详情: {e!r}")
                 if 第几次 == 1:
                     # 半截的句柄先清掉，否则第二次 launch() 会把它当"已有实例"直接返回
@@ -1124,6 +1138,17 @@ class UnifiedBotLoop:
         if self._login_window_shown:
             return False
         self._login_window_shown = True
+        try:
+            停在 = str(self.browser_manager.get_instance().url or "")
+        except Exception:
+            停在 = ""
+        if 导航 and (是风控验证页(停在) or 是登不进去的地址(停在)):
+            # 那一页本来就是我们要他停的地方：再导航一次=刚滑完的验证白做、
+            # 刚刷出来的二维码换一张、填到一半的手机号没了（13:52~14:00 实测
+            # 每 5 秒来一回，把人刷到「我根本就登录不了」）。窗口摆到眼前就够。
+            导航 = False
+            self._log("WARN", "浏览器已经停在%s，不再刷新那一页，只把窗口摆到眼前"
+                      % ("安全验证页" if 是风控验证页(停在) else "登录页"))
         果 = self.browser_manager.show_login_window(BOSS_LOGIN_URL, navigate=导航)
         if 果.get("error"):
             self._login_window_shown = False
@@ -1135,8 +1160,9 @@ class UnifiedBotLoop:
             self._login_headed_temp = True
         self._log("WARN",
                   f"{侧}已把「{self.account_name}」的浏览器窗口放到桌面上"
-                  f"（{果.get('windows', 0)} 个窗口）并停在登录页，"
-                  f"请扫码或手机号+验证码登录，登进去后这一轮自己继续")
+                  f"（{果.get('windows', 0)} 个窗口）"
+                  + ("并停在登录页，" if 导航 else "，当前那一页原样不动，")
+                  + f"请扫码或手机号+验证码登录，登进去后这一轮自己继续")
         return True
 
     def _finish_login_window(self):
@@ -1417,14 +1443,19 @@ class UnifiedBotLoop:
         登录页）。今天就是只等 2 秒看 URL，把停在登录页的现场报成了登录成功，随后
         那份登录页 Cookie 被存成文件，顶掉了原来的好会话。
 
-        轮询时先只看 Cookie：还没出现登录项就说明人压根没扫完，此时不去动页面，
-        免得把二维码刷没。出现登录项后才真访问会话页确认一次。
+        **人不缺导航。** 以前每轮（5 秒）都 `instance.get(会话页)` 去"验一下"，
+        2026-10-19 13:52~14:00 实测：那一下把人正在填的登录页、正在滑的
+        "当前 IP 地址可能存在异常访问行为"安全验证整页掀掉，五趟都没登进去
+        （「你刷新太频繁了，我根本就登录不了」）。验证滑完 BOSS 自己会跳走，
+        所以定论优先用只读的一眼；导航只在页面既不像登录页也不像会话页时才做，
+        而且 登录导航冷却秒 之内最多一次。
 
         轮次结束的条件是"没人再等这个登录"：运行循环被停掉（``_running`` 变假）
         或收到停止信号就立刻退出；界面"登录"按钮那条独立路径靠
         ``_login_wait_active`` 顶位，它本来就不在跑流水线。
         """
         deadline = time.time() + self.config.login.wait_timeout
+        上次导航 = 0.0
         while (time.time() < deadline and not self._stop_event.is_set()
                and (self._running or self._login_wait_active)):
             if self._login_event.wait(timeout=LOGIN_POLL_INTERVAL):
@@ -1432,9 +1463,26 @@ class UnifiedBotLoop:
                 return True
             if not self._has_live_auth_cookie(instance):
                 continue
-            if self._login_state_now(instance) == "logged_in":
+            页面 = self._settle_url(instance, 早收=True)
+            if 是风控验证页(页面):
+                if not self._验证页已说:
+                    self._验证页已说 = True
+                    self._log("WARN", "浏览器停在安全验证页：这一页不刷新（刷一次你刚滑的验证就白做），"
+                                      "滑完它自己跳走，我们只看着不动")
+                continue
+            self._验证页已说 = False
+            if 是登不进去的地址(页面):
+                # 登录页上有二维码、有填到一半的手机号：跳去会话页就是把它掀了
+                continue
+            if self._login_state_read(instance, 早收=False) == "logged_in":
                 self._log("SUCCESS", "检测到登录成功，自动继续（无需手动点击）")
                 return True
+            if time.time() - 上次导航 >= 登录导航冷却秒:
+                # 这一眼定不了论（页面停在一个中性地址）才值得导航去问一次
+                上次导航 = time.time()
+                if self._login_state_now(instance) == "logged_in":
+                    self._log("SUCCESS", "检测到登录成功，自动继续（无需手动点击）")
+                    return True
         return False
 
     def _settle_url(self, instance, timeout: float = URL_SETTLE_SECONDS,
