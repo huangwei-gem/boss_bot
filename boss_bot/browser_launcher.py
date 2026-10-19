@@ -442,6 +442,66 @@ def _读回Cookie(path: str) -> list:
         return []
 
 
+# BOSS 那四份登录项（wt2/zp_at/bst/wbg）在浏览器里全是**会话级**的：CDP 报告
+# expires=-1、session=true。Chrome 只把带到期时间的 Cookie 写进 profile，
+# 会话级的那一份随浏览器进程一起消失。所以"落盘成功"并不等于"下次还登得上"——
+# 必须自己给它一个未来到期时间，写回浏览器时也带上，否则内存回收、无头↔有头
+# 切换、页面断开重开，每一次都是"请重新登录"（2026-10-19 账号2 一天要登三次）。
+会话Cookie续期天数 = 30
+# Storage.setCookies 只吃这些；getCookies 回来的 size/session/sourceScheme/
+# sourcePort 是浏览器报告的只读视图，喂回去等于拿"结果格式"当"参数格式"用。
+_CDP可写字段 = ("name", "value", "domain", "path", "expires",
+                "httpOnly", "secure", "sameSite", "priority", "sameParty")
+
+
+def _是BOSS的Cookie(c) -> bool:
+    return "zhipin.com" in str(c.get("domain") or "")
+
+
+def _到期时间(c) -> float:
+    try:
+        return float(c.get("expires"))
+    except (TypeError, ValueError):
+        return -1.0
+
+
+def 会话级Cookie条数(cookies) -> int:
+    """这一份里有多少条 BOSS 的 Cookie 是"随进程没掉"的那种（说明里要说这个数）"""
+    return sum(1 for c in cookies or []
+               if isinstance(c, dict) and _是BOSS的Cookie(c) and _到期时间(c) < 0)
+
+
+def 规范待写Cookie(cookies, now: float = None, 天数: int = 会话Cookie续期天数) -> list:
+    """把浏览器（或旧文件）里的一份 Cookie 补成"下次还认得出"的样子。
+
+    补两样：缺 path 的给 '/'（缺了它 Chrome 按当前路径记，换一张页就读不到）；
+    BOSS 域名下没有到期时间的补成 `天数` 天之后。**域外的不动** —— 别家接口临时
+    混进来的会话 Cookie 续成 30 天是凭空造状态。返回新列表，不改出参。
+    """
+    now = time.time() if now is None else now
+    出 = []
+    for c in cookies or []:
+        if not isinstance(c, dict):
+            continue
+        n = dict(c)
+        if not n.get("path"):
+            n["path"] = "/"
+        if _是BOSS的Cookie(n) and _到期时间(n) < 0:
+            n["expires"] = now + 天数 * 86400
+            if "session" in n:
+                n["session"] = False
+        出.append(n)
+    return 出
+
+
+def 可写入Cookie(c: dict) -> dict:
+    """只留 CDP Storage.setCookies 收得下的字段（入参要先过 规范待写Cookie）"""
+    出 = {字段: 值 for 字段, 值 in (c or {}).items()
+          if 字段 in _CDP可写字段 and 值 is not None}
+    出.setdefault("path", "/")
+    return 出
+
+
 def 保存登录Cookie(路径, cookies) -> tuple:
     """把一份 Cookie 落到 路径，返回 (成功?, 说明)。
 
@@ -449,6 +509,9 @@ def 保存登录Cookie(路径, cookies) -> tuple:
     用户唯一的会话文件）；写完从盘上回读还得能读出登录项（半截文件、编码坏了、
     被别的进程截胡，都只能靠回读发现）。任何一步不成都保持原文件一个字不动，
     所以先写 .tmp、验证过、备份旧的、再 os.replace。
+
+    写之前先过 规范待写Cookie：那份是会话级登录项的唯一救命动作，放在这里是因为
+    三条腿都只经过这一处。
     """
     path = str(resolve_path(路径)) if 路径 else ""
     if not path or path == ".":
@@ -456,10 +519,12 @@ def 保存登录Cookie(路径, cookies) -> tuple:
     if not has_live_auth_cookie(cookies):
         return False, ("浏览器里没有未过期的登录 Cookie（%s 之一），这份不配覆盖 %s"
                        % ("/".join(BOSS_AUTH_COOKIES), Path(path).name))
+    补了 = 会话级Cookie条数(cookies)
+    待写 = 规范待写Cookie(cookies)
     tmp = path + ".tmp"
     try:
         with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(cookies, f, ensure_ascii=False, indent=2)
+            json.dump(待写, f, ensure_ascii=False, indent=2)
     except Exception as e:
         try:
             os.unlink(tmp)
@@ -488,8 +553,12 @@ def 保存登录Cookie(路径, cookies) -> tuple:
         except OSError:
             pass
         return False, "换文件失败: %s: %s" % (type(e).__name__, str(e) or repr(e))
-    return True, ("%d 个 Cookie 已写入 %s（回读确认含登录项）"
-                  % (len(cookies), Path(path).name))
+    说明 = ("%d 个 Cookie 已写入 %s（回读确认含登录项）"
+            % (len(待写), Path(path).name))
+    if 补了:
+        说明 += ("，其中 %d 条本来没有到期时间，按 %d 天有效期补齐"
+                 % (补了, 会话Cookie续期天数))
+    return True, 说明
 
 
 # ──────────────────────────────────────────────────────────────
@@ -1175,8 +1244,8 @@ class BrowserInstance:
 
     # ── Cookie 管理（跨平台，使用 CDP） ──
 
-    def save_cookies(self, filepath: str):
-        """保存 cookies 到文件（跨平台，使用 CDP）
+    def save_cookies(self, filepath: str) -> str:
+        """保存 cookies 到文件，并把带有效期的那份写回浏览器（返回说明）
 
         使用 CDP Storage.getCookies 获取浏览器所有 cookies（包括 HttpOnly），
         而非 tab.cookies，因为需要跨域名获取所有 cookie。
@@ -1185,8 +1254,14 @@ class BrowserInstance:
         文件，写完还要从盘上确认一遍。这里把它包成异常，是为了让每一个调用方
         都必须处理"没写成"，而不是写完就以为自己登录成功了。
 
+        写完还要回灌一次：此刻浏览器里那四份登录项**还是会话级的**，只补盘上
+        那一份，这个进程一退出照样掉登录——用户看到的还是"又让我登录"。
+
         Args:
             filepath: 保存路径
+
+        Returns:
+            str: "写了几个、写到哪、补了几条有效期"那句话
         """
         cookies = self._get_all_cookies()
         成功, 说明 = 保存登录Cookie(filepath, cookies)
@@ -1194,6 +1269,14 @@ class BrowserInstance:
             logger.warning(f"Cookie 未保存: {说明}")
             raise RuntimeError(说明)
         logger.info(f"Cookie 落盘: {说明}")
+        try:
+            self._set_cookies(_读回Cookie(filepath))
+            logger.info("已把带有效期的登录项写回浏览器（这份登录态现在活得过浏览器重启）")
+        except Exception as e:
+            # 盘上那份是准的，这里只是没能顺手把正在跑的浏览器也升级成持久的
+            logger.warning("落盘成了但没写回浏览器，这个浏览器一退出还得重登: %s: %s"
+                           % (type(e).__name__, str(e) or repr(e)))
+        return 说明
 
     def load_cookies(self, filepath: str) -> bool:
         """从文件加载 cookies（跨平台，使用 CDP）
@@ -1240,13 +1323,22 @@ class BrowserInstance:
 
         使用 CDP Storage.setCookies 而非 tab.set.cookies，
         因为需要设置跨域名 cookie。
+
+        喂之前先过两道：规范待写Cookie（把用户盘上那份被旧版削成
+        name/value/domain 的会话 Cookie 补上 path 和到期时间，否则这次修复
+        对他已有的账号等于没生效，还得先重登一次才享受得到）、
+        可写入Cookie（getCookies 回来的 size/session/sourcePort 是只读视图，
+        不该出现在设置参数里）。
         """
+        待写 = [可写入Cookie(c) for c in 规范待写Cookie(cookies)]
+        if not 待写:
+            return
         browser = self._get_browser()
         if browser is not None:
-            browser._run_cdp('Storage.setCookies', cookies=cookies)
+            browser._run_cdp('Storage.setCookies', cookies=待写)
         else:
             # 兜底：用 document.cookie
-            for c in cookies:
+            for c in 待写:
                 name = c.get("name", "")
                 value = c.get("value", "")
                 domain = c.get("domain", "")
@@ -2557,8 +2649,8 @@ class BrowserManager:
             self._is_logged_in = False
             return False
 
-    def save_cookies(self, filepath: str = ""):
-        """保存 Cookie 到文件
+    def save_cookies(self, filepath: str = "") -> str:
+        """保存 Cookie 到文件，返回那句"写了几个、补了几条有效期"的说明
 
         Args:
             filepath: 保存路径，为空则使用配置中的 cookie_file
@@ -2570,7 +2662,7 @@ class BrowserManager:
         if not path:
             raise ValueError("未指定 Cookie 保存路径")
 
-        self._instance.save_cookies(path)
+        return self._instance.save_cookies(path)
 
     def load_cookies(self, filepath: str = "") -> bool:
         """从文件加载 Cookie

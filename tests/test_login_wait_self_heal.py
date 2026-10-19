@@ -376,8 +376,8 @@ class 端口被占时初始化不许自己判死Test:
         lp, _ = self._造初始化(monkeypatch, ("窗口被别人占了", "PID=45228 档案 Temp"))
         趟 = []
 
-        def 假起():
-            趟.append(1)
+        def 假起(安静=False):
+            趟.append(安静)
             if len(趟) >= 3:
                 lp._running = False      # 第三趟之后人叫停，这才算走不通
             return False
@@ -386,15 +386,19 @@ class 端口被占时初始化不许自己判死Test:
         lp._init_and_run()
 
         assert len(趟) >= 3, "端口被占就当这个号不干了，空出来也没人接: %s" % (趟,)
+        assert 趟[0] is False and any(趟[1:]), "第 2 趟起没传安静，日志会被同一句刷满"
         assert lp._login_reason == "browser_taken", lp._login_reason
         assert lp.browser_manager.摘掉句柄.called, "死句柄留着下一趟照样白干"
         assert any("一空出来" in m or "空出来" in m for _, m in lp.日志), lp.日志
+        assert any(lv == "ERROR" and "1 趟起不来" in m for lv, m in lp.日志), lp.日志
+        assert not [m for lv, m in lp.日志 if lv == "ERROR" and "2 趟起不来" in m], \
+            "第 2 趟还上 ERROR，一小时就是两百行同话"
 
     def test_端口一空出来自己就把号跑起来(self, monkeypatch):
         lp, 成功 = self._造初始化(monkeypatch, ("窗口被别人占了", "PID=45228"))
         趟 = []
 
-        def 假起():
+        def 假起(安静=False):
             趟.append(1)
             return len(趟) >= 2          # 第二趟他关掉了那个窗口
 
@@ -404,12 +408,26 @@ class 端口被占时初始化不许自己判死Test:
         assert 成功 == [1], "浏览器一起来就必须往下走登录，不许停在初始化"
         assert lp._login_reason != "browser_taken", "端口空出来了还挂着被占"
 
+    def test_第2趟起重复的失败详情要转成安静(self, monkeypatch):
+        """端口被占这一类每分钟重试一次，四行/趟一小时就是两百行，
+        真要查的那一行会被埋掉（login_uncertain 那回已经付过一次）。"""
+        lp = _造循环(monkeypatch)
+        monkeypatch.setattr(lp, "_interruptible_sleep", lambda s: None)
+        lp.browser_manager.launch.side_effect = RuntimeError("端口 9223 上挂着别人的浏览器")
+        lp._init_browser()                        # 第一趟：该有 ERROR
+        头一趟 = [m for lv, m in lp.日志 if lv == "ERROR"]
+        lp.日志.clear()
+        lp._init_browser(安静=True)               # 后面每趟：不许再拿 ERROR 刷屏
+        assert 头一趟, "第一次失败连一条 ERROR 都没有，界面就只能靠猜"
+        assert not [m for lv, m in lp.日志 if lv == "ERROR"], lp.日志
+        assert any("启动失败" in m for _, m in lp.日志), "安静不等于把这件事删掉"
+
     def test_别的原因起不来还是当场认失败(self, monkeypatch):
         """反向哨兵：cloakbrowser 没了/参数坏了那种重试没意义，不许改成空转。"""
         lp, 成功 = self._造初始化(monkeypatch, ("窗口在", ""))
         趟 = []
 
-        def 假起():
+        def 假起(安静=False):
             趟.append(1)
             return False
 

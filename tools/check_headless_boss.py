@@ -559,6 +559,29 @@ def _probe_chat_features(instance, account_index: int) -> dict:
     return out
 
 
+def _登录项取证(instance) -> list:
+    """把浏览器里 BOSS 那四份登录项的到期时间抄下来（只读，一个字都不改）
+
+    `会话级: true` 就是"随浏览器进程没掉"的那一份。这个探针用的是临时 profile，
+    所以掉不掉看得见；线上那两个号每天掉的正是同一个东西。
+    """
+    import boss_bot.browser_launcher as BL
+
+    出 = []
+    for c in (instance._get_all_cookies() or []):
+        if not isinstance(c, dict) or c.get("name") not in BL.BOSS_AUTH_COOKIES:
+            continue
+        try:
+            到期 = float(c.get("expires") or -1)
+        except (TypeError, ValueError):
+            到期 = -1.0
+        出.append({"name": c.get("name"), "domain": c.get("domain"),
+                   "path": c.get("path"), "expires": 到期,
+                   "会话级": 到期 < 0,
+                   "还剩几天": round((到期 - time.time()) / 86400, 2) if 到期 > 0 else None})
+    return 出
+
+
 def probe(mode: str, account_index: int, port: int) -> dict:
     headless = mode == "headless"
     cookie_path, cookie_from = _cookie_file(account_index)
@@ -584,6 +607,11 @@ def probe(mode: str, account_index: int, port: int) -> dict:
         )
         if not instance.load_cookies(str(cookie_path)):
             report["errors"].append("Cookie 加载失败")
+
+        # 只读取证：注入之后，那四份登录项在浏览器里到底是不是"带到期时间"的。
+        # Chrome 不把会话级 Cookie 存进 profile，session=true 的那一份随浏览器
+        # 进程一起没掉——这正是"每次重启都要人工登录"的形状（2026-10-19 账号2）。
+        report["checks"]["登录项"] = _登录项取证(instance)
 
         instance.get(SEARCH_URL)
         time.sleep(5)

@@ -359,6 +359,16 @@ Cookie 点由 `GET /api/accounts/cookies` 供数（只查文件，不启动浏�
 
 `_ensure_login_window(导航=True)` 那一下同样收口：那一页本来就是我们要他停的地方（登录页、验证页）就不再导航，只把窗口摆到眼前；确实停在别处（城市页、会话页）才送去登录页。回归：tests/test_login_no_refresh_while_verifying.py。
 
+#### 登录态要活得过浏览器重启（会话级 Cookie 落盘前补有效期）
+
+BOSS 那四份登录项 `wt2/zp_at/bst/wbg` 在浏览器里全是**会话级**的（CDP 报 `expires:-1, session:true`）。Chrome 只把带到期时间的 Cookie 写进 profile，会话级的那一份随浏览器进程一起没——所以"Cookie 文件写成功了"和"下次还登得上"是两件事。现在 `保存登录Cookie` 在落盘前过 `规范待写Cookie`：缺 `path` 的补 `/`，BOSS 域名下没有到期时间的补成 `会话Cookie续期天数`（30 天）之后，**域外的一条都不动**（别家接口临时混进来的会话凭据续成 30 天是凭空造状态）。写完还要 `_set_cookies` 回灌一次：此刻正在跑的这个浏览器里那份还是会话级的，不回灌它一退出照样掉登录，用户看到的还是"又让我登录"。
+
+`_set_cookies` 喂给 CDP 之前过 `可写入Cookie`，只留 `Storage.setCookies` 收得下的字段（`size/session/sourceScheme/sourcePort` 是 `getCookies` 报告回来的只读视图，不该出现在设置参数里）。**加载这一端也补全**，所以用户盘上那两份已经被削薄的文件不用重登一次就能享受这次修复。
+
+削字段的是 `page_handler` 自己那套读取，不是写入口：它先问 `_get_browser_obj()`，而那个函数返回 `BrowserInstance.browser`，也就是 `self._chromium` —— **只有 macOS 那条路才有值**，Windows 上恒为 None，于是每次确认登录都掉进兜底 `self.browser.cookies()`，而 DrissionPage 的 `cookies()` 不带 `all_info` 时只干一件事（`_pages/chromium_base.py:418`）：把每条 Cookie 削成 name/value/domain，还只取当前那张页的域名范围。线上实锤在 2026-10-19 的 `logs/boss_bot.log`：14:23:38 `browser_launcher` 存下 17 条带 `path/expires` 的会话，14:24:06 `page_handler` 那句「✅ Cookie 已保存（15 个…）」之后，盘上变成 15 条三字段、到期时间全空。
+
+现在读取、闸门、备份、回读、补有效期、回灌全收在 `BrowserInstance.save_cookies` 一处，三条腿（`page_handler` 确认登录、`greet_engine` 补存、`main_loop` 自动那条）都只是调它；`page_handler` 里那套 CDP 读取和 `save_cookies_manual` 一并删掉。`confirm_and_save` 也不再先 `page.get("https://www.zhipin.com")`——那句"确保 Cookie 作用域正确"是给 tab 级读取擦的屁股，浏览器级读取本来就跨域名，动作没有收益，代价是人在验证页上时刚滑的一半没了。回归：tests/test_cookie_persistence.py（含一条按 AST 数 `json.dump` 的门，改名不会让它空转）+ tests/test_cookie_save_honest.py。
+
 #### 后端每个 `login_reason` 界面都得有句人话
 
 `tests/test_login_uncertain_visible.py` 里那条门把 `main_loop.py` 里所有 `_login_reason = "xxx"` 的字面量抓出来，逐个核对 `index.html` 的 `LOGIN_REASON_LABEL`。漏一个，界面上就只剩一个黄点和"等你登录"，说不清到底要他动手在哪。

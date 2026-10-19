@@ -175,3 +175,22 @@ def 仓库里的登录Cookie一条都不许动():
     assert not 少了, (
         f"测试把用户的登录 Cookie 文件弄走了：{少了}。"
         f"去 data/stale_cookies/ 按时间戳拷回来，再把那条测试的 _cookie_file 指到 tmp")
+
+
+@pytest.fixture(autouse=True, scope="session")
+def cookie备份目录也隔开():
+    """备份目录同样是用户的：里面是按时间留着的历史登录凭据，轮换时会按数量删旧的。
+
+    2026-10-19 14:26 我自己跑一趟 pytest，data/cookie_backups/ 就多了三条
+    "上一轮的好会话"——那是 fixture 造的假 Cookie。它们本身没用，但会挤掉真备份，
+    而真备份是唯一能在"会话被写坏"之后捞回登录态的东西。
+    """
+    import boss_bot.browser_launcher as BL
+
+    临时目录 = Path(tempfile.mkdtemp(prefix="boss_test_cookie_backups_"))
+    原函数 = BL._cookie_backup_dir
+    BL._cookie_backup_dir = lambda: str(临时目录)
+    try:
+        yield
+    finally:
+        BL._cookie_backup_dir = 原函数

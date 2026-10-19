@@ -119,8 +119,34 @@ class Test唯一写入口:
             assert not os.path.exists(target)
 
 
+class 会落盘的浏览器:
+    """把写入口的真行为挂到被测对象上：闸门拒绝就得真的拒
+
+    MagicMock 的 `save_cookies` 什么都不做，"没写成不许认领已登录"那几条会
+    因为它而绿得毫无意义。这个替身调真的 保存登录Cookie，行为跟
+    BrowserInstance.save_cookies 一致（读不到登录项就 raise）。
+    """
+
+    def __init__(self, cookies):
+        self._cookies = list(cookies)
+        self.调用 = []
+
+    def save_cookies(self, path):
+        self.调用.append(str(path))
+        成功, 说明 = 保存登录Cookie(path, self._cookies)
+        if not 成功:
+            raise RuntimeError(说明)
+        return 说明
+
+
 class Test三条腿都走这一处:
-    """确认登录、自动登录、打招呼侧补存 —— 三条都得经过闸门。"""
+    """确认登录、自动登录、打招呼侧补存 —— 三条都得经过闸门。
+
+    这一轮 page_handler 与 greet_engine 都不再自己读浏览器，改成调
+    `instance.save_cookies(...)`：读取、闸门、备份、回读、给会话级登录项补
+    有效期再打回浏览器，全在那一处。所以这里的替身要真的走一遍
+    保存登录Cookie，不然"没写成就不许认领已登录"这条会绿成假绿。
+    """
 
     def _handler(self, cookies, tmp):
         from boss_bot.page_handler import BossChatHandler
@@ -128,20 +154,18 @@ class Test三条腿都走这一处:
         _只写着录项(target, [_登录项(value="上一轮的好会话")])
         with patch("boss_bot.page_handler.launch_browser"):
             h = BossChatHandler(cookie_file=target)
-        h.browser = MagicMock()
-        h._get_all_cookies = lambda: list(cookies)
+        h.browser = 会落盘的浏览器(cookies)
         return h, target
 
     def test_浏览器里没有登录项时不覆盖也不兜底盲写(self):
+        """闸门现在住在写入口里：这一腿照样得把"没写成"带回来，一个字都不写"""
         import tempfile
         with tempfile.TemporaryDirectory() as td:
             h, target = self._handler([{"name": "abtest", "value": "1", "expires": -1}], td)
             成功, 说明 = h._save_cookies()
             assert 成功 is False
             assert _读(target)[0]["value"] == "上一轮的好会话"
-            assert h.browser.save_cookies.call_count == 0, \
-                "读不到登录项还走 browser.save_cookies 兜底，等于闭眼覆盖"
-            assert "登录" in 说明
+            assert "登录" in 说明, f"没写成的原因得原样带到界面上: {说明}"
 
     def test_确认存盘时写自己那份并带回说明(self):
         import tempfile
@@ -174,7 +198,7 @@ class Test三条腿都走这一处:
             assert h._login_event.is_set()
 
     def test_打招呼侧补存也走闸门(self):
-        """greet_engine 等完人工登录会自己补存一次，那份是 tab 级的，缺登录项。"""
+        """greet_engine 等完人工登录会自己补存一次，那份过去是 tab 级的，缺登录项。"""
         import tempfile
         from boss_bot.greet_engine import GreetEngine
         with tempfile.TemporaryDirectory() as td:
@@ -183,14 +207,15 @@ class Test三条腿都走这一处:
             eng = GreetEngine.__new__(GreetEngine)
             eng._cookie_file = "zhipin_cookies_1.json"
             eng.browser_manager = MagicMock()
-            inst = MagicMock()
-            inst.cookies.return_value = [{"name": "abtest", "value": "1", "expires": -1}]
-            inst._get_all_cookies.return_value = [{"name": "abtest", "value": "1"}]
-            eng.browser_manager.get_instance.return_value = inst
-            eng._log = lambda *a, **k: None
+            eng.browser_manager.get_instance.return_value = 会落盘的浏览器(
+                [{"name": "abtest", "value": "1"}])
+            记 = []
+            eng._log = lambda 级, 文: 记.append((级, 文))
             with patch("boss_bot.greet_engine.resolve_path", return_value=target):
                 eng._save_cookies()
             assert _读(target)[0]["value"] == "上一轮的好会话", "打招呼侧把好会话顶掉了"
+            assert any("没存成" in 文 for 级, 文 in 记), \
+                f"闸门拦下了却没说一句：{记}"
 
     def test_三条腿调的是同一个写入口(self):
         import inspect
@@ -234,14 +259,32 @@ class Test风控页不算掉登录:
 
 
 class Test判据只有一份:
+    def _写盘调用(self, 文件):
+        """按 AST 数 json.dump(...)，不按变量名数。
+
+        上一版盯的是字面量 `json.dump(cookies`：这一轮为了在写盘前先补 Cookie 的
+        有效期，把那个局部变量改名成 `待写`，字面量门当场变成"哪都没写"——
+        一个只会因为改名而空转的门，拦不住任何事。
+        """
+        import ast
+        树 = ast.parse(io.open(os.path.join(ROOT, 文件), encoding="utf-8").read())
+        行号 = []
+        for n in ast.walk(树):
+            if not isinstance(n, ast.Call):
+                continue
+            函数 = n.func
+            if (isinstance(函数, ast.Attribute) and 函数.attr == "dump"
+                    and isinstance(函数.value, ast.Name) and 函数.value.id == "json"):
+                行号.append(n.lineno)
+        return 行号
+
     def test_全仓库只有一处把cookie写盘(self):
-        命中 = []
-        for 文件 in ("boss_bot/browser_launcher.py", "boss_bot/greet_engine.py",
-                     "boss_bot/page_handler.py", "boss_bot/main_loop.py"):
-            src = io.open(os.path.join(ROOT, 文件), encoding="utf-8").read()
-            if "json.dump(cookies" in src:
-                命中.append(文件)
-        assert 命中 == ["boss_bot/browser_launcher.py"], f"还有别处在直接写 Cookie 文件: {命中}"
+        assert self._写盘调用("boss_bot/browser_launcher.py"), "统一写入口里已经没有 json.dump 了"
+        命中 = {文件: self._写盘调用(文件)
+                for 文件 in ("boss_bot/greet_engine.py", "boss_bot/page_handler.py",
+                             "boss_bot/main_loop.py")}
+        真的 = {k: v for k, v in 命中.items() if v}
+        assert not 真的, f"还有别处在直接写 Cookie 文件: {真的}"
 
     def test_登录态两路证据只定义一次(self):
         for 函数 in ("has_live_auth_cookie", "login_state_of"):

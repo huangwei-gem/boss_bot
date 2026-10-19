@@ -36,7 +36,7 @@ from boss_bot.greeting import (account_greeting_mode, effective_account_greeting
                                sanitize_ai_greeting)
 from boss_bot.unified_config import strip_default_greeting
 from boss_bot.browser_launcher import (
-    BrowserManager, 保存登录Cookie, 页面被踢到哪, 是风控验证页)
+    BrowserManager, 页面被踢到哪, 是风控验证页)
 from boss_bot.reply_record import (GreetRecord, classify_greet_skip,
                                    _get_greet_store)
 
@@ -4024,26 +4024,28 @@ class GreetEngine:
             return False
 
     def _save_cookies(self):
-        """把这一号的会话补存一次 —— 走唯一的写入口，读不到登录项就一个字不写。
+        """把这一号的会话补存一次 —— 交给唯一的写入口，它说没写成就不算。
 
         原来这里直接 `json.dump(instance.cookies())`：tab 级那份经常缺 wt2/zp_at
         这类 HttpOnly 登录项，等完人工登录一冲就把账号自己的好会话顶成一份
-        "看着像 Cookie 文件"的空壳。跨域名+HttpOnly 要读 CDP（_get_all_cookies），
-        闸门和回读都在 browser_launcher.保存登录Cookie，别再在这里另起一套。
+        "看着像 Cookie 文件"的空壳。后来改成自己读 `_get_all_cookies` 再调
+        `保存登录Cookie`，闸门和回读是对了，可**这一条腿拿不到"给会话级登录项补
+        有效期、再打回浏览器"那一步**（page_handler 削字段那次就是同一类问题：
+        多写一套就有两套会不一致）。读取、闸门、备份、回读、补有效期、回灌，
+        现在只在 BrowserInstance.save_cookies 一处。
         """
         instance = self.browser_manager.get_instance()
         if instance is None:
             self._log("WARN", "浏览器没起来，这次没处存 Cookie")
             return
         cookie_name = self._cookie_file or "zhipin_cookies.json"
+        路径 = str(resolve_path(cookie_name))
         try:
-            cookies = instance._get_all_cookies()
+            说明 = instance.save_cookies(路径)
         except Exception as e:
-            self._log("WARN", "读浏览器 Cookie 失败，本次不保存: %s: %s"
-                      % (type(e).__name__, str(e) or repr(e)))
+            self._log("WARN", "Cookie 没存成: %s" % (str(e) or type(e).__name__))
             return
-        成功, 说明 = 保存登录Cookie(str(resolve_path(cookie_name)), cookies or [])
-        self._log("SUCCESS" if 成功 else "WARN", "Cookie: " + 说明)
+        self._log("SUCCESS", "Cookie: " + (说明 or "已写入 %s" % Path(路径).name))
 
 
     # ── 去重管理 ──

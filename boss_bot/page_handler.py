@@ -23,7 +23,7 @@ from pathlib import Path
 
 from boss_bot.config import CHAT_URL, COOKIE_FILE, TEST_MODE, TEST_PAGE, HEADLESS
 from boss_bot.browser_launcher import (
-    launch_browser, BrowserInstance, BrowserManager, 保存登录Cookie,
+    launch_browser, BrowserInstance, BrowserManager,
     是风控验证页, LOGIN_WALL_MARKS)
 from boss_bot.message_store import MessageStore
 
@@ -383,11 +383,11 @@ class BossChatHandler:
         """
         try:
             logger.info("用户确认登录，正在保存 Cookie...")
-            # 导航到主站确保 Cookie 作用域正确
-            self.page.get("https://www.zhipin.com")
-            time.sleep(2)
-            self._dismiss_login_popup()
-            time.sleep(0.5)
+            # 一次页都不翻：以前这里先 page.get 到主站，注释说"确保 Cookie 作用域
+            # 正确"——那是给 tab 级读取擦的屁股。现在读的是浏览器级
+            # Storage.getCookies，本来就跨域名，这个动作没有收益；而人在验证码页上
+            # 滑到一半点这一下，刚滑的就白做了（2026-10-19 他原话："我在安全验证
+            # 就不要刷新"、"你刷新太频繁了，我根本就登录不了"）。
             成功, 说明 = self._save_cookies()
             if not 成功:
                 logger.error("❌ 「我已登录」没有生效：%s" % 说明)
@@ -441,44 +441,26 @@ class BossChatHandler:
         return COOKIE_FILE
 
     def _save_cookies(self) -> tuple:
-        """把浏览器里的会话写进本账号的 Cookie 文件，返回 (成功?, 说明)。
+        """把这一号的会话写进它自己的 Cookie 文件，返回 (成功?, 说明)。
 
-        闸门（有没有未过期登录项）、备份、回读验证都在 browser_launcher
-        保存登录Cookie 那一处，这里不再自己判断，也不再留一条"读不到就
-        调 browser.save_cookies 兜底写一次"的路——那句等于闭眼覆盖用户唯一
-        的会话文件（2026-10-18 他报「点了我已登录没保存 cookie」时，盘上
-        那两份 wt2/zp_at/bst/wbg 明明还在，可这条路上没有任何一处会说"没写成"）。
+        读取、闸门、备份、回读，以及"给会话级登录项补上有效期再打回浏览器"
+        全在 BrowserInstance.save_cookies 那一处（唯一的写入口）。
+
+        这里原来自己拼了一套读取：先 `_get_browser_obj()`，而它返回的
+        `BrowserInstance.browser` 就是 `self._chromium` —— **只有 macOS 那条路
+        才有值**，Windows 上恒为 None，于是每次都掉进兜底
+        `self.browser.cookies()`。DrissionPage 的 `cookies()` 不带 all_info 时
+        只做一件事（_pages/chromium_base.py:418）：把每条 Cookie 削成
+        name/value/domain。2026-10-19 14:23:38 自动那条腿存下 17 条带 path/expires
+        的会话，14:24:06 他点了一下「我已登录」，这份就被换成 15 条三字段、
+        到期时间全空的。Chrome 只把**带到期时间**的 Cookie 写进 profile，
+        会话级的那一份随浏览器进程没掉 —— 他看到的"账号2 老是让我登录"就是这句。
         """
         try:
-            cookies = self._get_all_cookies()
+            说明 = self.browser.save_cookies(self._get_cookie_file())
         except Exception as e:
-            return False, "读浏览器 Cookie 失败: %s: %s" % (
-                type(e).__name__, str(e) or repr(e))
-        return 保存登录Cookie(self._get_cookie_file(), cookies)
-
-    def _get_all_cookies(self) -> list:
-        """获取所有 Cookie（包括 HttpOnly）
-        使用 CDP Storage.getCookies 而非 tab.cookies，因为需要跨域名获取所有 cookie。"""
-        try:
-            browser = self._get_browser_obj()
-            if browser is not None:
-                result = browser._run_cdp('Storage.getCookies')
-                return list(result.get('cookies', []))
-        except Exception:
-            pass
-        # 兜底
-        try:
-            return list(self.browser.cookies())
-        except Exception:
-            return []
-
-    def _get_browser_obj(self):
-        """获取底层 Chromium 对象"""
-        if hasattr(self.browser, 'browser'):
-            return self.browser.browser
-        if hasattr(self.browser, '_chromium'):
-            return self.browser._chromium
-        return None
+            return False, str(e) or "%s: Cookie 没写成" % type(e).__name__
+        return True, 说明 or "Cookie 已写入本账号的文件"
 
     def _load_cookies(self) -> bool:
         """从文件加载 cookies"""
@@ -491,19 +473,6 @@ class BossChatHandler:
         except Exception as e:
             logger.error(f"加载 Cookie 失败: {e}")
             return False
-
-    def save_cookies_manual(self) -> tuple:
-        """手动保存 Cookie（用户点击"已登录"按钮后调用），返回 (成功?, 说明)。"""
-        try:
-            # 先导航到主站确保 cookie 作用域正确
-            self.page.get("https://www.zhipin.com")
-            time.sleep(1)
-            self._dismiss_login_popup()
-            time.sleep(0.5)
-            return self._save_cookies()
-        except Exception as e:
-            return False, "手动保存 Cookie 失败: %s: %s" % (
-                type(e).__name__, str(e) or repr(e))
 
     def go_to_chat(self):
         """导航到聊天页面"""
