@@ -222,3 +222,23 @@ class TestMainLoopCallsIt:
 
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-v"]))
+
+
+class 连不上浏览器之前先等够久Test:
+    """把无头临时重开成有头实测要 40~70 秒才应答，而 DrissionPage 默认 30 秒就判死；
+    判死之后下一次启动还会把 40 秒后才显形的那个有头窗口当"旧形态"杀掉重开成无头——
+    端口活着、页面 chrome://newtab、桌面上什么都没有（用户 12:0x 报的那条）。"""
+
+    def test_连接等待确实设进去了(self):
+        from boss_bot.browser_launcher import _设浏览器连接等待, 浏览器连接等待秒
+        _设浏览器连接等待()
+        from DrissionPage._functions.settings import Settings
+        assert float(Settings.browser_connect_timeout) >= 浏览器连接等待秒, \
+            "第三方改了内部路径会让这行静默退回 30 秒，窗口又摆不出来"
+
+    def test_设在哪里也要看得见(self):
+        import inspect
+        from boss_bot import browser_launcher as BL
+        源 = inspect.getsource(BL._launch_windows)
+        assert 源.index("_设浏览器连接等待") < 源.index("ChromiumPage(co)"), \
+            "起完浏览器再设就晚了"

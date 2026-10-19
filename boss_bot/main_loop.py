@@ -1222,10 +1222,27 @@ class UnifiedBotLoop:
                 return False
             instance = self.browser_manager.get_instance()
             if instance is None:
+                # 浏览器没了**不是**放弃等登录的理由。以前这里 return False，
+                # 调用方一拿到假就把 _running 置假——整个号连"在等你登录"都不再
+                # 显示，桌面上连窗口都没了（09:57 账号2 就是这么停住的一直到底）。
+                # 当场重开、把窗口重新摆出来，接着等。
                 self._login_reason = "browser_failed"
                 self._log("ERROR", f"第 {第几轮} 轮等登录期间浏览器没了"
-                                  f"（窗口被关或进程被杀），退出等待")
-                return False
+                                  f"（窗口被关或进程被杀），当场重开再接着等")
+                # 重开会按配置起成无头，那桌面上就又没窗口了；这个标志不清掉
+                # _ensure_login_window 会以为"已经摆过一次"直接返回，永远不再摆
+                self._login_window_shown = False
+                try:
+                    self.browser_manager.launch()
+                except Exception as e:
+                    self._log("ERROR", "等登录期间重开浏览器失败: %s: %s"
+                              % (type(e).__name__, str(e) or repr(e)))
+                self._ensure_login_window("等登录重开", 导航=True)
+                instance = self.browser_manager.get_instance()
+                if instance is None:
+                    # 还是没连上：这一轮先歇一下再重来，不许把整条腿撤了
+                    self._stop_event.wait(timeout=LOGIN_POLL_INTERVAL)
+                    continue
             self._log("WARN", f"第 {第几轮} 轮等人登录（{self.config.login.wait_timeout} 秒）"
                               f"没等到，窗口继续留在桌面上等着，登进去自己继续")
 

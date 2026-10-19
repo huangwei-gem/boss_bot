@@ -15,6 +15,7 @@ import os
 import json
 import re
 import copy
+import time
 import logging
 from pathlib import Path
 from dataclasses import dataclass, field
@@ -38,19 +39,37 @@ def write_json_atomic(path, data) -> None:
     半截 JSON；各存储的 _load() 遇到解析失败一律回退到空字典，等于静默清空
     去重记录，表现为重启后重复回复、重复打招呼。
 
+    临时文件带进程号+序号，改名失败要重试：2026-10-19 09:27:29 一次
+    `os.replace` 抛 WinError 5（拒绝访问——读的那一路正占着同一个文件），
+    从那一刻起到 10:20 那一整轮 44 个岗位（招呼语真发出去了）一条都没进库，
+    而界面上什么都看不出来。固定名的 .tmp 还会让两个写者互相踩。
+
     Args:
         path: 目标文件路径（str / Path），父目录会自动创建
         data: 可 json 序列化的对象
     """
     target = Path(str(path))
     target.parent.mkdir(parents=True, exist_ok=True)
-    tmp = target.with_name(target.name + ".tmp")
+    global _原子写序号
+    _原子写序号 += 1
+    tmp = target.with_name("%s.%s.%s.tmp" % (target.name, os.getpid(), _原子写序号))
+    最后一次 = None
     try:
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
             f.flush()
             os.fsync(f.fileno())
-        os.replace(tmp, target)
+        # 前几次撞 WinError 5 是"有人正占着这个文件"，等 0.2 秒基本就过去了；
+        # 一次撞不上就放弃等于把这一批记录整批丢掉。
+        for 第次 in range(替换重试次数):
+            try:
+                os.replace(tmp, target)
+                return
+            except OSError as e:
+                最后一次 = e
+                if 第次 + 1 < 替换重试次数:
+                    time.sleep(替换重试间隔秒)
+        raise 最后一次
     except BaseException:
         # 序列化中途失败要把临时文件清掉，否则目录里留下永远用不上的垃圾
         try:
@@ -59,6 +78,11 @@ def write_json_atomic(path, data) -> None:
         except OSError:
             pass
         raise
+
+
+_原子写序号 = 0
+替换重试次数 = 6
+替换重试间隔秒 = 0.2
 
 
 def account_file(path, account_index: int) -> str:

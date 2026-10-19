@@ -345,6 +345,30 @@ CHAT_PAGE_MARKS = ("/web/geek/chat",)
 # 否则每个验证码都被说成"请重新登录"（2026-10-18 11:58 与 13:20 两次现场）。
 RISK_PAGE_MARKS = ("/web/passport/", "security.html", "verify.html")
 
+# 从"下发启动命令"到"端口上连得上浏览器"要等多久。DrissionPage 默认 30 秒，
+# 实测把无头临时重开成有头要 40~70 秒（每个号的 profile 都有几百 MB 缓存），
+# 30 秒一到就判死；紧接着下一次启动还会把 40 秒后才显形的那个有头窗口当
+# "旧形态"杀掉、按无头重开——端口活着、页面是 chrome://newtab、桌面上什么都没有。
+浏览器连接等待秒 = 120
+
+
+def _设浏览器连接等待() -> None:
+    """把 DrissionPage"连不上浏览器就判死"的等待从默认 30 秒抬到 浏览器连接等待秒。
+
+    装的是用户目录里那份 4.1.1.4，`from DrissionPage import Settings` 是拿不到的
+    （12:22 实测 ImportError），只能走它自己的内部路径；两处都试一下，
+    设完再读回来核一遍——设没-setting 是看不出来的，出事了只会表现为"窗口没起来"。
+    """
+    Settings = None
+    try:
+        from DrissionPage import Settings  # 新版本可能收进顶层
+    except ImportError:
+        from DrissionPage._functions.settings import Settings
+    Settings.set_browser_connect_timeout(浏览器连接等待秒)
+    实 = float(getattr(Settings, "browser_connect_timeout", 0) or 0)
+    if 实 < 浏览器连接等待秒:
+        raise RuntimeError("设完读回来还是 %s 秒，没生效" % 实)
+
 
 def 是风控验证页(url) -> bool:
     """这一页是 BOSS 让人滑的验证页，不是登录页。"""
@@ -1591,6 +1615,20 @@ def _launch_windows(
     if proxy:
         co.set_proxy(proxy)
 
+    # 端口多久能连上浏览器由 DrissionPage 的 browser_connect_timeout 定，默认 30 秒，
+    # 而"把无头临时重开成有头"实测要 40~70 秒才应答（10-19 11:57:39 起、12:00:13 起
+    # 两次都是）。30 秒一到它抛 BrowserConnectError，调用方当成"浏览器没了"，
+    # 下一次启动又会把 40 秒后才显形的那个有头窗口当"旧形态"杀掉、按无头重开——
+    # 于是端口活着、页面是 chrome://newtab、桌面上什么都没有（用户 12:0x 报的
+    # 「你让我登录账号二，没打开浏览器」就是这么来的）。
+    try:
+        _设浏览器连接等待()
+    except Exception as e:
+        # 这个旋钮是第三方内部路径，拿不到也要把浏览器起来——
+        # 12:22 我就因为 import 名写错，两个号的启动一起失败、主循环当场退
+        logger.warning("设置浏览器连接等待失败（按 DrissionPage 默认 30 秒继续）: %s: %s",
+                       type(e).__name__, str(e) or repr(e))
+
     page = ChromiumPage(co)
     logger.info(f"Windows: ChromiumPage 启动成功 (port={port})")
 
@@ -2044,7 +2082,9 @@ class BrowserManager:
                 self._instance.get(登录页)
                 结果["url_shown"] = 登录页
         except Exception as e:
-            结果["error"] = f"{type(e).__name__}: {e}"
+            # DrissionPage 的 BrowserConnectError str() 是空串，只打 {e} 会留下
+            # 「BrowserConnectError: 」这种比没记更糟的一行（10-19 12:08 现场）
+            结果["error"] = "%s: %s" % (type(e).__name__, str(e) or repr(e))
         return 结果
 
     def get_search_page(self) -> BrowserInstance:

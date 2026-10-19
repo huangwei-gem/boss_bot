@@ -143,5 +143,52 @@ class Test写法不许再退回去:
 
 
 
+class 改名撞拒绝访问要重试Test:
+    """09:27:29 一次 os.replace 抛 WinError 5（读的那一路占着同一个文件），
+    从那次起到 10:20 那一整轮 44 个岗位（招呼语真发出去了）一条都没进库——
+    写失败只留下一行日志，界面上什么都看不出来。"""
+
+    def _换掉替换(self, monkeypatch, 撞几次):
+        import os as 真os
+        见 = []
+        原替换 = 真os.replace  # 要在换掉之前接住：换掉之后再取就拿的是自己
+
+        def 假替换(源, 标):
+            见.append(str(源))
+            if len(见) <= 撞几次:
+                raise PermissionError(5, "拒绝访问")
+            return 原替换(源, 标)
+
+        monkeypatch.setattr("os.replace", 假替换)
+        return 见
+
+    def test_撞两次之后要真的写成(self, tmp_path, monkeypatch):
+        import json
+        from boss_bot.unified_config import write_json_atomic
+        目标 = tmp_path / "greet_records.json"
+        见 = self._换掉替换(monkeypatch, 2)
+        write_json_atomic(目标, {"records": [{"job_name": "数据标注"}]})
+        assert len(见) == 3, f"没重试到第三次：试了 {len(见)} 次"
+        assert json.loads(目标.read_text(encoding="utf-8"))["records"][0]["job_name"] == "数据标注"
+
+    def test_一直撞不上要抛出来且不留临时文件(self, tmp_path, monkeypatch):
+        import pytest
+        from boss_bot.unified_config import write_json_atomic
+        目标 = tmp_path / "bot_state.json"
+        self._换掉替换(monkeypatch, 999)
+        with pytest.raises(PermissionError):
+            write_json_atomic(目标, {"a": 1})
+        assert list(tmp_path.glob("*.tmp")) == [], "撞不上还把临时文件丢在目录里"
+
+    def test_两次写的临时文件不许同名(self, tmp_path, monkeypatch):
+        """固定名的 .tmp：两个写者一个还在写、另一个已经把文件换走，
+        前者的半截内容就会被换成正式文件。"""
+        from boss_bot.unified_config import write_json_atomic
+        见 = self._换掉替换(monkeypatch, 0)
+        write_json_atomic(tmp_path / "a.json", {"n": 1})
+        write_json_atomic(tmp_path / "b.json", {"n": 2})
+        assert len(set(见)) == 2, f"两次用的是同一个临时文件名：{见}"
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-v"]))
