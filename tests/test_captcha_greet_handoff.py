@@ -197,7 +197,7 @@ class SideAwareHealthTest:
         loop = self._loop()
         seen = []
 
-        def fake_health(side="reply"):
+        def fake_health(side="reply", 安静=False):
             seen.append(side)
             return "ok"
 
@@ -206,6 +206,54 @@ class SideAwareHealthTest:
         loop._running = True
         assert loop._captcha_gate("greet") is True
         assert seen and seen[0] == "greet", f"闸门复核读错侧：{seen}"
+
+    def test_闸门等人工时不许每两秒刷一行判据(self):
+        """验证页要等两三分钟，逐轮打印会把日志刷成一堵墙。
+
+        2026-10-19 08:43 账号2 那一段：同一个「页面判据=captcha（页面文案 安全验证）」
+        两秒一行连刷 40 多行，真要看的别的行被埋在里面。等人的轮询要安静，
+        开头那句和结尾那句照留。
+        """
+        loop = self._loop()
+        看到 = []
+
+        def fake_health(side="reply", 安静=False):
+            看到.append(安静)
+            loop._running = False   # 轮一次就收，测试不等满窗口
+            return "captcha"
+
+        loop._check_health = fake_health
+        loop._emit_wind = lambda *a, **k: None
+        loop._running = True
+        loop._captcha_gate("greet")
+        assert 看到 and all(看到), f"闸门还在逐次打印判据：{看到}"
+
+    def test_安静模式只哑掉判据那一行(self):
+        loop = self._loop()
+        条 = []
+        loop._log = lambda level, msg, *a: 条.append(str(msg))
+        assert loop._check_health(side="greet", 安静=True) == "captcha"
+        assert not any("页面判据" in m for m in 条), f"安静模式还是刷了：{条}"
+        assert loop._check_health(side="greet") == "captcha"
+        assert any("页面判据" in m for m in 条), \
+            "平时那句判据是要留痕的（他问『凭什么说页面没验证码』就靠它），不能一起哑掉"
+
+    def test_超时那句要说真等了多少秒(self):
+        """摆了窗口实际等的是 180 秒，句子里写死的却是 60 秒。
+
+        他对着"验证码等待 60 秒无人应答"的日志找不到自己那三分钟，
+        只能再来问一次。数字必须来自真的用了多久。
+        """
+        loop = self._loop()
+        条 = []
+        loop._log = lambda level, msg, *a: 条.append(str(msg))
+        loop._emit_wind = lambda *a, **k: None
+        loop._ensure_login_window = lambda *a, **k: {"windows": 1}
+        loop._验证码等待秒 = lambda 摆了: 1
+        loop._check_health = lambda side="reply", 安静=False: "captcha"
+        loop._running = True
+        assert loop._captcha_gate("greet") is False
+        assert any("验证码等待 1 秒" in m for m in 条), 条
 
 
 class InterruptibleWaitTest:

@@ -346,6 +346,9 @@ class TestEventTimestampParity:
         e._account_label = lambda: "账号2"
         e._log = lambda *a: None
         e._event_ts = None
+        # 引擎级"最近一次定下来的招呼语来源"：真引擎在 __init__ 里就有这份，
+        # 手搓的这台要照样给，否则落库那一格读它会当场抛 AttributeError
+        e._greeting_source = "默认"
         events = []
         e._greet_event_cb = events.append
         return e, events

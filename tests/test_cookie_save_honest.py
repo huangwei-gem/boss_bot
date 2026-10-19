@@ -401,7 +401,7 @@ class Test验证页那一类:
         loop._ensure_login_window = lambda 侧="", 导航=True: 摆过.append((侧, 导航)) or True
         loop._log = lambda *a, **k: None
         loop._emit_wind = lambda *a, **k: None
-        loop._check_health = lambda side="reply": "captcha"
+        loop._check_health = lambda side="reply", 安静=False: "captcha"
         loop._captcha_strikes = 0
         loop._running = True
         loop._验证码窗口已摆 = False
@@ -425,7 +425,7 @@ class Test验证页那一类:
         loop._ensure_login_window = lambda 侧="", 导航=True: 摆过.append(侧)
         loop._log = lambda *a, **k: None
         loop._emit_wind = lambda *a, **k: None
-        loop._check_health = lambda side="reply": "ok"
+        loop._check_health = lambda side="reply", 安静=False: "ok"
         loop._captcha_strikes = 0
         loop._running = True
         loop._验证码窗口已摆 = True

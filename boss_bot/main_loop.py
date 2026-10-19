@@ -128,11 +128,14 @@ _ARCHIVE_LOCK = threading.Lock()
 # 掉登录，好着 Cookie 的号被叫去"重新登录"，白等 5 分钟（2026-10-18 11:58）。
 # 这两个名字继续从这里导出，README 和老调用点用的还是同一份判据。
 from boss_bot.browser_launcher import (          # noqa: F401  (对外导出)
-    LOGIN_WALL_MARKS, CHAT_PAGE_MARKS, login_state_of, has_live_auth_cookie)
+    LOGIN_WALL_MARKS, CHAT_PAGE_MARKS, login_state_of, has_live_auth_cookie,
+    是登不进去的地址)
 
 # 回复侧连续判这么多次登录失效就停这个号，等人工——不再每 30 秒空刷
 REPLY_LOGIN_FAIL_LIMIT = 3
-# 等页面跳转稳定：最多这么多秒，连续两次 URL 一样就算定了
+# 等页面跳转稳定要看满这么多秒：坏消息（登录墙/风控页）随到随收，
+# 好消息要撑满这个窗口才算数——BOSS 的 SPA 会先渲染会话页再跳走，
+# 跳转经常晚于"连续两次读到同一个地址"（见 tests/test_login_settle_late_redirect.py）
 URL_SETTLE_SECONDS = 8
 
 
@@ -1377,40 +1380,54 @@ class UnifiedBotLoop:
                 return True
         return False
 
-    def _settle_url(self, instance, timeout: float = URL_SETTLE_SECONDS) -> str:
-        """等 SPA 把跳转走完再读 URL。
+    def _settle_url(self, instance, timeout: float = URL_SETTLE_SECONDS,
+                    早收: bool = False) -> str:
+        """等 SPA 把跳转走完再读 URL：坏消息随到随收，好消息要撑满窗口。
 
         /web/geek/chat 未登录时会先渲染再跳 /web/user，抓早了两种误判都会发生：
-        看成"还停在会话页"（假已登录）或看成"中间态"（假过期）。连续两次读到同一个
-        URL 才算稳定。
+        看成"还停在会话页"（假已登录）或看成"中间态"（假过期）。
+        旧规则是"连续两次读到同一个 URL 就算稳定"，可 2026-10-19 08:35 实测：
+        账号2 复核时读到会话页，当场判「Cookie 有效，已自动登录」，界面全绿，
+        十几秒后那张标签停在 /web/user/——那个"稳定"只是跳转还没发生。
+        所以刚导航过的页一律看满整个窗口，只有被踢回登录页/风控页这种
+        再等也不会变好的地址才提前收工。
+
+        早收=True 只给"没导航、路过看一眼"的读法：界面的登录点小每 5 秒要问一次
+        （`_account_cookie_state` 还带 5 秒缓存），陪一张闲着的页等满 8 秒会把
+        /api/status 拖成几秒一次。闲着的页不存在"跳转晚到"，两次一样就走。
         """
         deadline = time.time() + timeout
         last = ""
-        same = 0
         while time.time() < deadline:
             try:
                 cur = instance.url or ""
             except Exception:
                 cur = ""
-            if cur and cur == last:
-                same += 1
-                if same >= 1:
+            if cur:
+                if 早收 and cur == last:
                     return cur
-            else:
-                same = 0
-            last = cur
+                last = cur
+                if 是登不进去的地址(cur):
+                    return cur
             time.sleep(0.5)
         return last
 
-    def _login_state_read(self, instance) -> str:
+    def _login_state_read(self, instance, 早收: bool = True) -> str:
         """只读当前标签页：等 URL 稳定 + 看浏览器里的登录项，不主动导航。
 
         两个线程各占一个标签页，复核时把对方的页面拽走比误判本身更糟。
+        默认按"闲着的页"快读；刚导航过的那一眼要盯晚到的跳转，
+        由 _login_state_now 传 早收=False。
         """
-        return login_state_of(self._settle_url(instance), self._has_live_auth_cookie(instance))
+        return login_state_of(self._settle_url(instance, 早收=早收),
+                              self._has_live_auth_cookie(instance))
 
     def _login_state_now(self, instance) -> str:
-        """访问会话页并等跳转稳定，返回 logged_in / login_wall / uncertain。"""
+        """访问会话页并等跳转**稳定到窗口结束**，返回 logged_in / login_wall / uncertain。
+
+        这一眼是导航之后读的，所以必须用满窗口的盯法：BOSS 的会话页会先渲染
+        再跳登录页，早收就等于拿一个转瞬即逝的好消息当定论。
+        """
         try:
             instance.get("https://www.zhipin.com/web/geek/chat")
         except Exception as e:
@@ -1419,7 +1436,7 @@ class UnifiedBotLoop:
             # 而这一句正是"页面与 Cookie 矛盾→判需人工登录"那条链唯一的现场证据。
             self._log("DEBUG", ("访问会话页异常: %s: %s"
                                 % (type(e).__name__, str(e) or repr(e)))[:200])
-        return self._login_state_read(instance)
+        return self._login_state_read(instance, 早收=False)
 
     def _save_cookies_if_logged_in(self, instance=None) -> bool:
         """只在浏览器里确实有未过期登录项时才落盘。
@@ -1465,12 +1482,31 @@ class UnifiedBotLoop:
 
         两个线程共用一个浏览器：打招呼侧正在搜索/岗位页跳转时，回复侧读到的是
         半截页面；反过来也一样。23:01 实测两边都凭第一眼判过"失效"。
+
+        复核不出结论时把"看不准"记进 login_reason：这一条既是给面板的实话
+        （10-19 一整天盘面上这个号写着"已登录"，日志里每 30 秒报一次失效），
+        也是去重的依据——状态没变就不该再重复同一条 WARN。
         """
         state = self._login_state_read(instance)
+        if state != "uncertain" and self._login_reason == "login_uncertain":
+            # 之前的存疑被这一眼否掉了，标记必须跟着撤，否则界面一直挂着"看不准"
+            self._login_reason = ""
         if state == "login_wall":
             return True
-        self._log("WARN", f"{side}报登录失效，但复核是 {state}（另一个线程正在动这个"
-                          f"浏览器）——不动 Cookie 文件、不计失败，本轮先跳过")
+        if state == "logged_in":
+            self._log("INFO", f"{side}复核读回已登录，之前那句『看不准』撤掉")
+            return False
+        if self._login_reason == "login_uncertain":
+            self._log("DEBUG", f"{side}复核仍是不准（{state}）——状态没变，不重复刷屏")
+            return False
+        if self._needs_login:
+            # 已经定过罪（session_lost 那类）就把原因留着，别用"看不准"盖掉真原因
+            self._log("DEBUG", f"{side}复核是 {state}，本号已按 {self._login_reason} 处理")
+            return False
+        self._login_reason = "login_uncertain"
+        self._log("WARN", f'{side}报登录失效，但复核是 {state}（另一个线程正在动这个'
+                          f'浏览器）——不动 Cookie 文件、不计失败，本轮先跳过；'
+                          f'面板上这个号会标成『看不准』，等它自己稳定')
         return False
 
     def _reply_login_guard(self, chat_instance) -> str:
@@ -1614,7 +1650,8 @@ class UnifiedBotLoop:
                 # ── 健康检查：检测验证码/风控/登录态 ──
                 health = self._check_health(side="greet")
                 if health == "captcha":
-                    self._log("ERROR", "⚠️ 检测到验证码/风控拦截，等人工处理（最多 60 秒）")
+                    self._log("ERROR", "⚠️ 检测到验证码/风控拦截，等人工滑一下"
+                                       "（要等多久由闸门按有没有摆窗口决定，结束时按实数记）")
                     # 人工解掉就继续本轮；超时则跳过这一轮，不再永久暂停
                     self._captcha_gate()
                     continue
@@ -1995,7 +2032,8 @@ class UnifiedBotLoop:
                 self._sync_chat_tab()
                 health = self._check_health(side="reply")
                 if health == "captcha":
-                    self._log("ERROR", "⚠️ 回复侧检测到验证码/风控拦截，等人工处理（最多 60 秒）")
+                    self._log("ERROR", "⚠️ 回复侧检测到验证码/风控拦截，等人工滑一下"
+                                       "（要等多久由闸门按有没有摆窗口决定，结束时按实数记）")
                     self._captcha_gate(pause_field="reply")
                     continue
                 if health == "need_login":
@@ -3521,12 +3559,16 @@ class UnifiedBotLoop:
             self._log("DEBUG", f"实测登录态读不到: {e}")
             return None
 
-    def _check_health(self, side: str = "reply") -> str:
+    def _check_health(self, side: str = "reply", 安静: bool = False) -> str:
         """健康检查：检测登录态和验证码拦截。side 决定读哪张标签页。
 
         打招呼侧必须读搜索/详情那一页 —— 人机验证就弹在那儿。以前只要聊天处理器
         建好了就永远读会话页，验证页在另一张标签上等着，闸门等到超时也等不到
         "已恢复"，用户看到的还是"卡在那张验证图不动"。
+
+        安静=True 只用于"等人来滑"那种轮询：判据本身照算，但不写日志。
+        一次验证要等两三分钟，两秒一行同话会把真正要看的行埋掉
+        （2026-10-19 08:43 账号2 那一段刷了 40 多行）。
         """
         instance = (self.browser_manager.get_search_page() if side == "greet"
                     else self.browser_manager.get_instance())
@@ -3561,8 +3603,9 @@ class UnifiedBotLoop:
             _is_c, why = captcha_evidence(probe)
             self._health_why = why or "无挑战证据"
             # 判据写进日志：以后再说"页面没有验证码"，能当场看出是哪条判据响的
-            self._log("DEBUG" if verdict != "captcha" else "WARN",
-                      f"页面判据={verdict}（{self._health_why}）URL={url[:90]}")
+            if not 安静:
+                self._log("DEBUG" if verdict != "captcha" else "WARN",
+                          f"页面判据={verdict}（{self._health_why}）URL={url[:90]}")
             return verdict
         except Exception as e:
             self._log("DEBUG", f"健康检查（无聊天处理器）失败: {e}")
@@ -3607,7 +3650,7 @@ class UnifiedBotLoop:
         while time.time() < deadline:
             if self._stop_event.is_set() or not self._running:
                 return False
-            if self._check_health(side=pause_field) != "captcha":
+            if self._check_health(side=pause_field, 安静=True) != "captcha":
                 self._captcha_strikes = 0
                 self._验证码窗口已摆 = False
                 if 摆过:
@@ -3618,7 +3661,9 @@ class UnifiedBotLoop:
             self._stop_event.wait(timeout=min(CAPTCHA_POLL_SECONDS,
                                               max(0.1, deadline - time.time())))
         self._captcha_strikes += 1
-        self._log("WARN", f"验证码等待 {CAPTCHA_WAIT_SECONDS} 秒无人应答，"
+        # 秒数说真的：摆了窗口等的是 180，写死 CAPTCHA_WAIT_SECONDS 的话
+        # 他对着"60 秒没人滑"的日志找不到自己那三分钟
+        self._log("WARN", f"验证码等待 {等待秒} 秒无人应答，"
                           f"跳过当前任务（连续 {self._captcha_strikes}/"
                           f"{CAPTCHA_STRIKES_TO_PAUSE} 次）")
         if self._captcha_strikes >= CAPTCHA_STRIKES_TO_PAUSE:

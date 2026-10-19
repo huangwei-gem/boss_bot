@@ -492,7 +492,7 @@ class 空消息异常要看得出类型(unittest.TestCase):
                 raise _空消息异常()
 
         lp = UnifiedBotLoop.__new__(UnifiedBotLoop)
-        lp._login_state_read = lambda inst: "uncertain"
+        lp._login_state_read = lambda inst, 早收=True: "uncertain"
         logs = []
         lp._log = lambda *a, **k: logs.append(a[-1])
 

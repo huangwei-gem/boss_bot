@@ -189,7 +189,7 @@ class CaptchaGateTest:
         monkeypatch.setattr(ML, "CAPTCHA_POLL_SECONDS", 0.1)
         lp = make_loop()
         seq = ["captcha", "captcha", "ok"]
-        lp._check_health = lambda side="reply": seq.pop(0) if seq else "ok"
+        lp._check_health = lambda side="reply", 安静=False: seq.pop(0) if seq else "ok"
         assert lp._captcha_gate() is True
         assert lp._greet_paused is False
 
@@ -198,7 +198,7 @@ class CaptchaGateTest:
         monkeypatch.setattr(ML, "CAPTCHA_WAIT_SECONDS", 0.3)
         monkeypatch.setattr(ML, "CAPTCHA_POLL_SECONDS", 0.1)
         lp = make_loop()
-        lp._check_health = lambda side="reply": "captcha"
+        lp._check_health = lambda side="reply", 安静=False: "captcha"
         assert lp._captcha_gate() is False
         assert lp._greet_paused is False, "一次超时就永久暂停，等于回到老 bug"
 
@@ -209,7 +209,7 @@ class CaptchaGateTest:
         monkeypatch.setattr(ML, "CAPTCHA_POLL_SECONDS", 0.1)
         lp = make_loop()
         seq = ["captcha", "captcha", "captcha", "ok"]
-        lp._check_health = lambda side="reply": seq.pop(0)
+        lp._check_health = lambda side="reply", 安静=False: seq.pop(0)
         t0 = time.time()
         assert lp._captcha_gate() is True
         assert time.time() - t0 < 5
@@ -219,7 +219,7 @@ class CaptchaGateTest:
         monkeypatch.setattr(ML, "CAPTCHA_WAIT_SECONDS", 60)
         monkeypatch.setattr(ML, "CAPTCHA_POLL_SECONDS", 0.5)
         lp = make_loop()
-        lp._check_health = lambda side="reply": "captcha"
+        lp._check_health = lambda side="reply", 安静=False: "captcha"
 
         def stop_soon():
             time.sleep(0.6)
@@ -236,7 +236,7 @@ class CaptchaGateTest:
         lp = make_loop()
         notices = []
         lp._emit_wind = lambda msg, wtype: notices.append((msg, wtype))
-        lp._check_health = lambda side="reply": "captcha"
+        lp._check_health = lambda side="reply", 安静=False: "captcha"
         for _ in range(ML.CAPTCHA_STRIKES_TO_PAUSE - 1):
             assert lp._captcha_gate() is False
         assert lp._greet_paused is False
@@ -249,10 +249,10 @@ class CaptchaGateTest:
         monkeypatch.setattr(ML, "CAPTCHA_WAIT_SECONDS", 0.2)
         monkeypatch.setattr(ML, "CAPTCHA_POLL_SECONDS", 0.1)
         lp = make_loop()
-        lp._check_health = lambda side="reply": "captcha"
+        lp._check_health = lambda side="reply", 安静=False: "captcha"
         lp._captcha_gate()
         assert lp._captcha_strikes == 1
-        lp._check_health = lambda side="reply": "ok"
+        lp._check_health = lambda side="reply", 安静=False: "ok"
         assert lp._captcha_gate() is True
         assert lp._captcha_strikes == 0
 

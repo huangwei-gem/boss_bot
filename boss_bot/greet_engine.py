@@ -2083,7 +2083,11 @@ class GreetEngine:
                 actual_greeting_sent=actual_greeting_sent,
                 # 这句是哪来的：AI 按岗位现编 / 岗位手写兜底 / 账号兜底。
                 # 用户要的是"发 AI 现编的"，所以必须能逐条查回来，不能只听我说
-                greeting_source=job.get("_greeting_source", ""),
+                # 岗位字典上没带就兜引擎这一份：抽屉那条路把句子存了、来源存空了
+                # （2026-10-18 有 70 条这个样子），而他要查的正好是这一栏。
+                # 只在真发出去过话时兜——跳过那类借上一条的来源就是张冠李戴。
+                greeting_source=(job.get("_greeting_source")
+                                 or (self._greeting_source if actual_greeting_sent else "")),
                 is_greeted=is_greeted,
                 is_skipped=is_skipped,
                 skip_reason=skip_reason,
@@ -2967,6 +2971,7 @@ class GreetEngine:
             return False, GREETING_MISSING_REASON
         # 来源一取到就记上：抽屉路径和「平台自动发」那条路径都要能说出这句是哪来的
         job["_greeting_source"] = greeting_source
+        self._greeting_source = greeting_source
 
         instance = self.browser_manager.get_instance()
         if instance is None:

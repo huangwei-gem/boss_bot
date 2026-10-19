@@ -2826,7 +2826,8 @@ var LOGIN_REASON_LABEL = {
   cookie_error: 'Cookie 读取失败',
   login_timeout: '等待登录超时，Cookie 未保存（界面「登录」按钮那条路；跑批那条会一直等下去）',
   browser_failed: '浏览器没起来（端口或用户目录被别的 Chrome 占了），详见日志',
-  session_lost: '登录态失效（被踢下线或要验证码）'
+  session_lost: '登录态失效（被踢下线或要验证码）',
+  login_uncertain: '登录态这一眼定不了论（页面像登录墙，浏览器里却还有登录 Cookie，多半是两个线程共用一个浏览器）——Cookie 文件原样没动，等它自己稳定'
 };
 
 // 状态点只有颜色，颜色之外要有字能说清同一件事
@@ -2834,6 +2835,8 @@ var ACC_STATE_WORD = {idle:'空闲', running:'运行', starting:'启动', paused
 function accDotClass(st) {
   if (!st || !st.phase) return st && st.running ? 'running' : 'idle';
   if (st.phase === 'waiting_login') return 'needs_login';
+  // 看不准既不是"好得很"（绿）也不是"现在就登"（黄），用 info 色等它自己稳定
+  if (st.login_reason === 'login_uncertain') return 'paused';
   if (st.phase === 'starting') return 'starting';
   if (st.phase === 'stopped') return 'idle';
   // 两条流水线都停了才算暂停，只停打招呼时回复还在跑就是运行中

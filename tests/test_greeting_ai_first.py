@@ -111,3 +111,37 @@ class 来源必须看得见Test:
         源 = inspect.getsource(GreetEngine._apply_job_inner)
         assert 源.index("_greeting_source") < 源.index("_record_sent_now"), \
             "来源在落库之后才赋值，记录里会是空的"
+
+    def _引擎(self, 已知来源=""):
+        """只给 _record_greet 要的那几样，别的都不碰——这条测的就是落库这一格。"""
+        存 = []
+        引 = GreetEngine.__new__(GreetEngine)
+        引._greet_store = type("假库", (), {"add": staticmethod(lambda r: 存.append(r))})()
+        引._account_label = lambda: "主账号"
+        引.account_index = 0
+        引.event_ts = lambda: "2026-10-19 09:00:00"
+        引._log = lambda *a, **k: None
+        引._greeting_source = 已知来源
+        return 引, 存
+
+    def test_抽屉那条路的来源要真的落库(self):
+        """上面那两条是"源码里有这个字"，抓不住真丢的那次。
+
+        2026-10-18 的日志里「打招呼语来源: AI 按岗位定制」出现了 110 次，可记录里
+        带正文的 70 条这一栏全是空的——句子存了、来源没存。他要查的正是
+        "有没有用固定话术"这一半，空着等于没答。
+        """
+        引, 存 = self._引擎(已知来源="AI 按岗位定制")
+        引._record_greet({"job_name": "数据标注", "url": "https://x/1"},
+                         is_greeted=True, actual_greeting_sent="您好，我是统计学在读")
+        assert 存, "没落库"
+        assert 存[0].to_dict()["greeting_source"] == "AI 按岗位定制", \
+            "岗位字典上没带来源时，引擎已经知道的那一句来源被丢了"
+
+    def test_没发出去的那条不许顶用上一条的来源(self):
+        """兜底值是自进化引擎级的一份，跳过那类记录不能借用——会张冠李戴。"""
+        引, 存 = self._引擎(已知来源="AI 按岗位定制")
+        引._record_greet({"job_name": "别的岗", "url": "https://x/2"},
+                         is_skipped=True, skip_reason="打招呼已冷却")
+        assert 存[0].to_dict()["greeting_source"] == "", \
+            "这条根本没发话，却把上一单的来源写上了"

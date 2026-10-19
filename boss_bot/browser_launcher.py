@@ -352,6 +352,16 @@ def 是风控验证页(url) -> bool:
     return any(k in u for k in RISK_PAGE_MARKS)
 
 
+def 是登不进去的地址(url) -> bool:
+    """这一眼已经够定论了：登录墙或风控页，再盯着也不会自己变好。
+
+    等页面稳定那条路要用它做"坏消息随到随收"的判据（见 main_loop._settle_url）——
+    好消息必须看满窗口，坏消息看一眼就算。
+    """
+    u = (url or "").lower()
+    return 是风控验证页(u) or any(k in u for k in LOGIN_WALL_MARKS)
+
+
 def has_live_auth_cookie(cookies) -> bool:
     """浏览器里有没有还没过期的 BOSS 登录项。"""
     for c in cookies or []:
