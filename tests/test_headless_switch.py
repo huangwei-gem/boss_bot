@@ -293,6 +293,10 @@ class Test启动要能自己再来一次:
                 if self.n <= 抛错次数:
                     raise RuntimeError("浏览器连接失败，请确认浏览器已启动。")
 
+            def 启动现场(self):
+                # _init_browser 的日志要问这个号真正用的端口/目录（替身也得答得出）
+                return "端口=9223 用户目录=C:\\x\\account_1 形态=无头"
+
             def close(self):
                 pass
 

@@ -99,6 +99,11 @@ FOLLOWUP_LINES = (
 # 等待人工登录时的登录态轮询间隔（秒）
 LOGIN_POLL_INTERVAL = 5
 
+# 调试端口被别的程序的浏览器占着时，初始化每隔这么多秒再试一次。
+# 比 LOGIN_POLL_INTERVAL 长：这一问要扫进程表，而且那扇窗口什么时候关没人知道，
+# 一分钟看一眼足够接上，又不至于把日志刷成一片。
+端口空出来再试秒 = 60
+
 # BOSS 的登录页：界面"登录"按钮和运行循环缺会话时都停在这里
 BOSS_LOGIN_URL = "https://www.zhipin.com/web/user/?ka=header-login"
 
@@ -858,10 +863,30 @@ class UnifiedBotLoop:
             self._log("INFO", "=" * 50)
 
             # 1. 启动浏览器
-            if not self._init_browser():
-                self._log("ERROR", "浏览器启动失败，主循环退出")
-                self._running = False
-                return
+            # 端口上挂着别的程序的窗口时守卫拒连是对的，可整条腿一撤就没人再试了：
+            # 13:23:12 账号2 就是这么停在"未启动"，他把那扇窗口关掉之后什么都没有发生。
+            # 只有人叫停才算这个号不干了；等端口空出来这一趟自己接着往下走。
+            第几趟 = 0
+            while not self._init_browser():
+                if self._stop_event.is_set() or not self._running:
+                    self._log("WARN", "等端口期间被人叫停，退出初始化")
+                    self._running = False
+                    return
+                现场, 说明 = self._等登录现场()
+                if 现场 != "窗口被别人占了":
+                    # cloakbrowser 没了、参数坏了那一类：重开十次也是坏，当场认失败
+                    self._log("ERROR", "浏览器启动失败，主循环退出")
+                    self._running = False
+                    return
+                第几趟 += 1
+                self._login_reason = "browser_taken"
+                self.browser_manager.摘掉句柄()
+                self._log("ERROR", f"第 {第几趟} 趟起不来：{说明}。不动那扇窗口"
+                                  f"（不是本账号的浏览器），每 {端口空出来再试秒} 秒再看一次，"
+                                  f"它一空出来这个号自己接着往下走")
+                self._stop_event.wait(timeout=端口空出来再试秒)
+            if self._login_reason in ("browser_taken", "browser_failed"):
+                self._login_reason = ""
 
             # 2. 登录
             if not self._handle_login():
@@ -917,7 +942,7 @@ class UnifiedBotLoop:
                 self._log("INFO", "正在启动共享浏览器...")
                 self._log("DEBUG", f"浏览器配置: type={self.config.browser.browser_type}, "
                                   f"chrome_path={self.config.browser.chrome_path}, "
-                                  f"debug_port={self.config.browser.debug_port}")
+                                  f"{self.browser_manager.启动现场()}")
                 self.browser_manager.launch()
                 self._log("DEBUG", "浏览器进程已启动，等待连接...")
                 self._log("INFO", "浏览器已启动")
@@ -1221,7 +1246,20 @@ class UnifiedBotLoop:
                 self._log("WARN", f"第 {第几轮} 轮等登录被人叫停，退出等待")
                 return False
             instance = self.browser_manager.get_instance()
-            if instance is None:
+            现场, 说明 = self._等登录现场()
+            if 现场 == "窗口被别人占了":
+                # 端口上挂着的是别的程序起的浏览器（档案不是本账号那一份）。
+                # 在那扇窗口里登进去的会话这个号读不到，此时再念"窗口继续留在
+                # 桌面上等着"就是狼来了——12:37/12:42 连着两轮，他妹妹正是在
+                # 别人那台里登完的。只摘句柄，绝不 quit（quit 照端口发，会关掉邻居）。
+                self._login_reason = "browser_taken"
+                self._login_window_shown = False
+                self.browser_manager.摘掉句柄()
+                self._log("ERROR", f"第 {第几轮} 轮等登录：{说明}——桌面上那扇窗口不是这个号的，"
+                                   f"在里面登进去面板也读不到；把那个窗口关掉，"
+                                   f"下一轮自己重开浏览器并把窗口摆出来")
+                continue
+            if instance is None or 现场 == "窗口没了":
                 # 浏览器没了**不是**放弃等登录的理由。以前这里 return False，
                 # 调用方一拿到假就把 _running 置假——整个号连"在等你登录"都不再
                 # 显示，桌面上连窗口都没了（09:57 账号2 就是这么停住的一直到底）。
@@ -1232,6 +1270,8 @@ class UnifiedBotLoop:
                 # 重开会按配置起成无头，那桌面上就又没窗口了；这个标志不清掉
                 # _ensure_login_window 会以为"已经摆过一次"直接返回，永远不再摆
                 self._login_window_shown = False
+                # 死句柄必须先摘：留着下一轮照样拿它读 Cookie，读出来永远是"没有登录项"
+                self.browser_manager.摘掉句柄()
                 try:
                     self.browser_manager.launch()
                 except Exception as e:
@@ -1493,6 +1533,19 @@ class UnifiedBotLoop:
             return has_live_auth_cookie(instance._get_all_cookies())
         except Exception:
             return False
+
+    def _等登录现场(self) -> tuple:
+        """问一句"端口上挂的还是不是我这份档案的浏览器"，探不准就当还在。
+
+        这一问要扫进程表（PowerShell/ps，一秒上下），所以只在等登录的
+        每一轮开头问一次，不进每 5 秒的轮询。
+        """
+        try:
+            return self.browser_manager.等登录现场()
+        except Exception as e:
+            self._log("DEBUG", f"认不出端口上挂的是谁（不动手）: {type(e).__name__}: "
+                               f"{str(e).strip()[:60]}")
+            return ("窗口在", "")
 
     def _recheck_before_archive(self, instance, side: str) -> bool:
         """报"要登录"时先自己复核两路证据，确认是登录墙才允许动 Cookie 文件。

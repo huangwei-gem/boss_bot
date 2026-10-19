@@ -343,6 +343,16 @@ Cookie 点由 `GET /api/accounts/cookies` 供数（只查文件，不启动浏�
 
 两路矛盾时结论是"看不准"（`login_reason=login_uncertain`），不是"Cookie 过期"：Cookie 文件原样不动，界面点标成中性蓝并给一句说明。这一类状态每变一次只说一条日志，后面转 DEBUG——两个线程共用一个浏览器时它每隔 30 秒就会复核一次，不收敛的话一个上午几十条，真要看的行全被埋掉。
 
+#### 等人工登录之前先确认那扇窗口是自己的（`login_reason=browser_taken`）
+
+端口有人应答不等于"我这个号的浏览器还在"。2026-10-19 12:35:22 账号 2 自己那台浏览器没了（页面句柄抛 `PageDisconnectedError`），12:35:46 另一个项目用 DrissionPage 的临时档案（`%TEMP%\DrissionPage\userData\9223`）占了同一个 9223。端口照样通，于是等登录那条腿从 12:37 起每五分钟念一句"窗口继续留在桌面上等着"——可桌面上根本没有这个号的窗口，人家在那台别人的浏览器里登完，面板读的还是自己那份死句柄，永远读不到，就出现了"我都登录了为什么还让我登录"。
+
+现在每轮等待开头先问一次 `BrowserManager.等登录现场()`：拿进程表里那个端口的 `--user-data-dir` 和本账号的 `browser_data/account_N` 比（判据和端口守卫 `assert_port_is_free_for` 同一份）。比出"不是本账号的档案"就标 `browser_taken`、把句柄摘掉（`摘掉句柄()` **不 quit**——DrissionPage 的 quit 是照端口发的，会把邻居的浏览器连带他刚登进去的会话一起关掉），日志和界面都写清 PID 与那份档案，让这一轮等端口空出来自己重开重摆窗口。比对不了（老 CLI 不写 `--user-data-dir`）一律当作"还在"：拿不准就去掀一个正在干活的浏览器，比多等一轮贵得多。
+
+#### 后端每个 `login_reason` 界面都得有句人话
+
+`tests/test_login_uncertain_visible.py` 里那条门把 `main_loop.py` 里所有 `_login_reason = "xxx"` 的字面量抓出来，逐个核对 `index.html` 的 `LOGIN_REASON_LABEL`。漏一个，界面上就只剩一个黄点和"等你登录"，说不清到底要他动手在哪。
+
 ### 数据归属
 
 每个账号一套独立运行数据，主账号（索引 0）沿用原文件名不迁移，其余加 `_account_N`：

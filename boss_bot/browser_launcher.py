@@ -1546,6 +1546,40 @@ def assert_port_is_free_for(port: int, user_data_dir: str, owners=None) -> None:
         )
 
 
+def 端口上是谁的浏览器(端口: int, 用户目录: str, owners=None) -> dict:
+    """这个调试端口上现在挂着谁：{"归属": 自家/别人/没人/说不准, "说明": 给人看的一句话}。
+
+    为什么不问端口通不通而要问档案：2026-10-19 12:35:22 账号2 自己那台浏览器没了
+    （页面句柄抛 PageDisconnectedError），12:35:46 另一个项目用 DrissionPage 的
+    临时档案占了同一个 9223。端口"有人应答"这件事照样成立，于是等登录那条腿从
+    12:37 起每五分钟念一句「窗口继续留在桌面上等着」，可桌面上根本没有这个号的
+    窗口——他妹妹在那台别人的浏览器里登完，面板读的是自己那份死句柄，永远读不到。
+    端口守卫（assert_port_is_free_for）用的是同一张进程表，判据只留这一份。
+
+    比对不了就回"说不准"，让调用方当作还在：拿不准而去掀掉/摘掉一个正在干活的
+    浏览器，比多等一轮严重得多。
+    """
+    端口 = int(端口 or 0)
+    if 端口 <= 0:
+        return {"归属": "说不准", "说明": "这一份管理器没有自己的调试端口"}
+    if owners is None:
+        owners = _browser_owners()
+    挂着 = [o for o in (owners or []) if int(o.get("port") or 0) == 端口]
+    if not 挂着:
+        return {"归属": "没人", "说明": "端口 %s 上没有浏览器进程" % 端口}
+    if not 用户目录:
+        return {"归属": "说不准", "说明": "本账号没写 --user-data-dir，比对不了档案"}
+    for owner in 挂着:
+        if same_profile(owner.get("user_data_dir", ""), 用户目录):
+            return {"归属": "自家", "说明": ""}
+    挡 = 挂着[0]
+    return {"归属": "别人",
+            "说明": "端口 %s 上挂着 PID=%s 的浏览器，档案是 %s，而这个号要用 %s"
+                    % (端口, 挡.get("pid"),
+                       挡.get("user_data_dir") or "（没写 --user-data-dir，DrissionPage 临时目录）",
+                       用户目录)}
+
+
 def _端口上的自家浏览器(端口: int, 用户目录: str) -> dict:
     """这个端口上挂着的那份**本账号**浏览器：{pid, headless}；不是自家的就回 {}。
 
@@ -2200,6 +2234,49 @@ class BrowserManager:
                 return False
             logger.debug("调试端口探活读不出，先当还在: %s" % str(e).strip()[:80])
             return True
+
+    def 启动现场(self) -> str:
+        """一行说清这个号要用哪台浏览器：端口、用户目录、形态。
+
+        日志里只印配置里的 debug_port 会把 9222 说成账号2 的端口（12:31:27 那条就是：
+        `[账号2] 浏览器配置: ... debug_port=9222`），查"账号2 连到了谁"时被带偏过一回。
+        """
+        return ("端口=%s 用户目录=%s 形态=%s"
+                % (self._debug_port, self._user_data_dir,
+                   "无头" if self._headless else "有头"))
+
+    def 等登录现场(self, owners=None) -> tuple:
+        """等人工登录之前先问这一句：桌面上那台浏览器还归不归这个号。
+
+        返回 ("窗口在"|"窗口没了"|"窗口被别人占了", 说明)。只有"别人"这一档
+        是确证（进程表里那个端口上明明白白挂着另一份档案），"没人"还要再看一眼
+        端口有没有人听：进程表扫失败时会一片空，把正在干活的浏览器判成没了、
+        再把句柄摘掉重开，代价比多等一轮大得多。
+        """
+        结 = 端口上是谁的浏览器(self._debug_port, self._user_data_dir, owners=owners)
+        if 结["归属"] == "别人":
+            return ("窗口被别人占了", 结["说明"])
+        if 结["归属"] == "没人":
+            if _is_port_open("127.0.0.1", int(self._debug_port or 0)):
+                return ("窗口在", "进程表没认出端口 %s 上的浏览器，但它在听，不动"
+                        % self._debug_port)
+            return ("窗口没了", 结["说明"])
+        return ("窗口在", 结["说明"])
+
+    def 摘掉句柄(self) -> None:
+        """丢掉手里这台浏览器的句柄，但**绝不 quit**。
+
+        DrissionPage 的 quit 是照端口发的：端口上挂着邻居的浏览器时，quit 会把
+        邻居连同他刚登进去的会话一起关掉。红线是只关自己起的。
+        """
+        self.stop_idle_tab_watchdog()
+        self._instance = None
+        self._search_tab = None
+        self._chat_tab = None
+        self._greet_chat_tab = None
+        self._is_logged_in = False
+        logger.warning("已摘掉端口 %s 上的浏览器句柄（没有关它：那可能不是本账号的浏览器）"
+                       % self._debug_port)
 
     def start_idle_tab_watchdog(self, interval: float = 闲置页看守秒) -> None:
         """拉起闲置页看守线程（幂等：已经在跑就只换周期，不开第二条）。"""

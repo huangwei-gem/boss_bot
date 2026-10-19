@@ -7,6 +7,7 @@ logged_in=true / needs_login=false / login_reason=""。盘面上"这个号好得
 兆日志——盘面这句假话比刷屏更有害。
 """
 
+import re
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -119,6 +120,23 @@ class 等待秒数要说真话Test(unittest.TestCase):
               ).read_text(encoding="utf-8")
         self.assertNotIn("等人工处理（最多 60 秒）", 源,
                          "写死的秒数和闸门真正等的数不是一回事")
+
+
+class 每个登录原因界面都要有句人话Test(unittest.TestCase):
+
+    def test_后端能置的原因不许在界面上没字(self):
+        """新增 login_reason（今天加的 browser_taken）只改后端的话，界面上这个号
+        就只剩一个黄色点和"等你登录"，说不清到底要他动手在哪——这正是
+        「提示不许狼来了」要避免的那种半截真话。"""
+        后 = (Path(__file__).resolve().parents[1] / "boss_bot" / "main_loop.py"
+              ).read_text(encoding="utf-8")
+        前 = (Path(__file__).resolve().parents[1] / "flask-version" / "templates" /
+              "index.html").read_text(encoding="utf-8")
+        能置的 = set(re.findall(r'_login_reason\s*=\s*["\']([a-z_]+)["\']', 后))
+        self.assertTrue(能置的, "一条 login_reason 都没抓到，这个门已经空转")
+        缺 = [原 for 原 in sorted(能置的)
+              if not re.search(r'^\s*%s\s*:' % 原, 前, re.M)]
+        self.assertEqual(缺, [], "这些原因在界面 LOGIN_REASON_LABEL 里没有说法: %s" % (缺,))
 
 
 if __name__ == "__main__":
