@@ -130,6 +130,36 @@ def isolate_runtime_records(tmp_path_factory):
 
 
 @pytest.fixture(autouse=True, scope="session")
+def 仓库里的进化数据一条都不许写():
+    """SelfEvolveEngine 的状态文件属于用户：测试里不传 data_file 的那种构造，
+    默认路径要整个换到临时目录。
+
+    2026-10-19 撞上的：引擎内部那份"质量数据"路径过去只跟着文件名换、不跟着目录换，
+    于是 `_save_quality_data()` 会写进仓库的 data/self_evolve_data.json，
+    一条测试就把 4 条真规则调整顶成了 1 条 fixture。目录那半已在 self_evolve.py
+    改对；这里再把默认路径本身换掉，测试从结构上就够不着仓库那份文件。
+
+    为什么不是"跑完比对一下有没有被动过"：线上面板随时会合法地写这两个文件
+    （实测 08:53:07 它就写了一次），那种比法只会天天报假红。
+    """
+    import boss_bot.self_evolve as SE
+
+    数据目录 = Path(tempfile.mkdtemp(prefix="boss_test_evolution_"))
+    原默认 = SE._EVOLUTION_DATA_FILE
+    for 名字 in ("evolution_data.json", "self_evolve_data.json"):
+        真的 = REPO_DIR / "data" / 名字
+        if 真的.exists():
+            (数据目录 / 名字).write_bytes(真的.read_bytes())
+    SE._EVOLUTION_DATA_FILE = 数据目录 / "evolution_data.json"
+    try:
+        yield
+        assert str(SE._EVOLUTION_DATA_FILE).startswith(str(数据目录)), (
+            "进化数据的默认路径又指回仓库了：测试一跑就写用户的真记录")
+    finally:
+        SE._EVOLUTION_DATA_FILE = 原默认
+
+
+@pytest.fixture(autouse=True, scope="session")
 def 仓库里的登录Cookie一条都不许动():
     """2026-10-17 16:16 一条新写的反向哨兵测试把主账号的 zhipin_cookies.json 搬进了
     data/stale_cookies/：harness 把 `_cookie_file()` 直接 patch 成了仓库里那个真文件名，

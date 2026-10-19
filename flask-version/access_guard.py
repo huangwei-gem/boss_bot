@@ -7,6 +7,8 @@ X-Forwarded-For 这类头里 —— 于是"把面板暴露到公网"这一步会
 /api/cookies/delete 这些也一起敞开。这里把规则写成纯函数，app.py 只负责调用。
 """
 
+import json
+
 # 回环地址的几种写法（IPv6 映射那一种 Flask 也会给出来）
 LOCAL_ADDRESSES = {"127.0.0.1", "::1", "::ffff:127.0.0.1"}
 
@@ -67,3 +69,47 @@ def 放行(头, 直连IP, token="", 免鉴权=False):
         if 名 == COOKIE名 and 值 == token:
             return True
     return False
+
+
+# ===================== 这台机器上是不是已经有一个面板 =====================
+
+面板主机 = "127.0.0.1"
+默认面板端口 = 5000
+# 这个口一定要在"读数据"的接口上：/ 会返回 index.html，任何 web 服务都返 200，
+# 光看"有没有人应答"就把对面认领成面板，等于把 5000 上别的服务当成第二个副本、
+# 于是永远起不来（而真面板可能压根没跑）。accounts 这个键只有本面板有。
+面板探路 = "/api/status"
+
+
+def 已有面板在跑(取, 主机=面板主机, 端口=默认面板端口):
+    """探测本机端口，返回 (是不是面板在跑, 一句人话)。
+
+    探测动作由调用方给（app.py 用 urllib，单测用假函数），这样判据能测、
+    启动路径也能测，而且不会为了自检真去占一个端口。
+
+    三档必须分开，它们的处置完全不同：
+    - 连不上：没人跑，正常起。
+    - 应答了、回音里有 accounts：就是面板，第二个副本必须退出——两套
+      MultiAccountManager 会把同一个岗位点两遍、记录写两份、浏览器树各 ~400 MB。
+    - 应答了但看不出是面板：别关机也别认领，只说"端口被别的东西占着"，
+      起不起得来交给 socketio 的绑定错误去判。
+    带 token 的面板对无凭据的请求回 401，那也是面板在跑（应答的就是它）。
+    """
+    谁 = "%s:%s" % (主机, 端口)
+    try:
+        状态, 正文 = 取("http://%s%s" % (谁, 面板探路))
+    except Exception:
+        return False, ""
+
+    if 状态 in (401, 403):
+        return True, ("%s 上已经有一个面板在跑（%s，读内容要凭据，但应答的就是它）" % (谁, 状态))
+    if 状态 != 200:
+        return False, ("%s 上有东西应答了 HTTP %s，不像面板" % (谁, 状态))
+
+    try:
+        数据 = json.loads(正文 or "")
+    except Exception:
+        数据 = None
+    if isinstance(数据, dict) and "accounts" in 数据:
+        return True, ("%s 上已经有一个面板在跑（/api/status 回音里有 accounts）" % 谁)
+    return False, ("%s 被别的东西占着：应答 200 但回音里没有面板的 accounts 字段" % 谁)

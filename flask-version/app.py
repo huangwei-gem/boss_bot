@@ -39,6 +39,7 @@ if sys.stderr.encoding != 'utf-8':
 from flask import Flask, render_template, jsonify, request, send_file, abort
 from flask_socketio import SocketIO, emit
 from access_guard import COOKIE名 as _COOKIE名, 放行 as _放行
+from access_guard import 已有面板在跑 as _已有面板在跑
 
 # 抑制警告
 warnings.filterwarnings("ignore", category=UserWarning, module="urllib3")
@@ -60,6 +61,7 @@ from boss_bot.unified_config import (
     OVERRIDES_FILE,
     load_config, save_config, save_overrides, validate_config,
     ACCOUNT_OVERLAY_LOCKED, ACCOUNT_OVERLAY_SECTIONS, diff_against,
+    write_json_atomic,
 )
 from boss_bot.judgement_review import apply_suggestion, build_review
 from boss_bot.greet_engine import account_greeting_ready, account_greeting_mode
@@ -276,8 +278,7 @@ def _load_notifications():
 def _save_notifications():
     """将当前通知列表持久化到 notifications.json。"""
     try:
-        with open(_NOTIFICATIONS_FILE, "w", encoding="utf-8") as f:
-            json.dump(_notifications, f, ensure_ascii=False, indent=2)
+        write_json_atomic(_NOTIFICATIONS_FILE, _notifications)
     except Exception:
         pass
 
@@ -1514,8 +1515,7 @@ def api_save_profile():
         profile_data = data["profile"]
 
         # 保存到 user_profile.json
-        with open(USER_PROFILE_FILE, "w", encoding="utf-8") as f:
-            json.dump(profile_data, f, ensure_ascii=False, indent=2)
+        write_json_atomic(USER_PROFILE_FILE, profile_data)
 
         # 重新加载配置
         _config = UnifiedConfig.load()
@@ -1850,8 +1850,7 @@ def api_save_ai_prompts():
         if "user_prompt_template" in prompts:
             overrides["user_prompt_template"] = prompts["user_prompt_template"]
 
-        with open(OVERRIDES_FILE, "w", encoding="utf-8") as f:
-            json.dump(overrides, f, ensure_ascii=False, indent=2)
+        write_json_atomic(OVERRIDES_FILE, overrides)
 
         return jsonify({"status": "ok", "message": "AI 提示词已保存"})
     except Exception as e:
@@ -3361,8 +3360,7 @@ def api_save_rules():
             overrides["reply_rules"] = dict(rules_data["reply_rules"])
         if "importance_keywords" in rules_data and isinstance(rules_data["importance_keywords"], list):
             overrides["importance_keywords"] = list(rules_data["importance_keywords"])
-        with open(OVERRIDES_FILE, "w", encoding="utf-8") as f:
-            json.dump(overrides, f, ensure_ascii=False, indent=2)
+        write_json_atomic(OVERRIDES_FILE, overrides)
 
         # 3. 同步写入 bot_config.json，保持三端一致
         try:
@@ -3376,8 +3374,7 @@ def api_save_rules():
             bot_cfg["reply_rules"] = dict(rules_data["reply_rules"])
         if "importance_keywords" in rules_data and isinstance(rules_data["importance_keywords"], list):
             bot_cfg["importance_keywords"] = list(rules_data["importance_keywords"])
-        with open(BOT_CONFIG_FILE, "w", encoding="utf-8") as f:
-            json.dump(bot_cfg, f, ensure_ascii=False, indent=2)
+        write_json_atomic(BOT_CONFIG_FILE, bot_cfg)
 
         # 4. 重新加载配置以保持一致性
         _config = UnifiedConfig.load()
@@ -3470,8 +3467,7 @@ def api_save_templates():
         if "resume_unavailable_reply" in templates_data:
             rt["RESUME_UNAVAILABLE_REPLY"] = str(templates_data["resume_unavailable_reply"])
         overrides["reply_templates"] = rt
-        with open(OVERRIDES_FILE, "w", encoding="utf-8") as f:
-            json.dump(overrides, f, ensure_ascii=False, indent=2)
+        write_json_atomic(OVERRIDES_FILE, overrides)
 
         # 3. 同步写入 bot_config.json（templates 小写键），保持三端一致
         try:
@@ -3499,8 +3495,7 @@ def api_save_templates():
         if "resume_unavailable_reply" in templates_data:
             bt["resume_unavailable_reply"] = str(templates_data["resume_unavailable_reply"])
         bot_cfg["templates"] = bt
-        with open(BOT_CONFIG_FILE, "w", encoding="utf-8") as f:
-            json.dump(bot_cfg, f, ensure_ascii=False, indent=2)
+        write_json_atomic(BOT_CONFIG_FILE, bot_cfg)
 
         # 4. 重新加载配置以保持一致性
         _config = UnifiedConfig.load()
@@ -4135,6 +4130,44 @@ def _log_cleanup_loop():
 
 # ===================== 主入口 =====================
 
+# 监听口和"有没有第二个副本"的探测口共用这一个数：写死两遍，早晚会有一天探 A 听 B，
+# 门形同虚设还看不出来。
+面板端口 = 5000
+
+
+def _面板探一次(地址):
+    """只读地问一次本机面板，返回 (HTTP 状态码, 正文前 4096 字)。
+
+    401/403 也当作"有人应答"交回判据函数：urllib 默认会把它们抛 HTTPError，
+    不接住就等于带 token 的面板在探测里隐身，第二个副本照样起得来。
+    """
+    import urllib.error
+    import urllib.request
+    req = urllib.request.Request(地址, headers={"User-Agent": "boss-panel-single-instance"})
+    try:
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            return resp.status, (resp.read(4096) or b"").decode("utf-8", "replace")
+    except urllib.error.HTTPError as e:
+        return e.code, (e.read(4096) or b"").decode("utf-8", "replace")
+
+
+def _拒绝第二个面板():
+    """已经有一个面板在跑，这个进程就不许再起一套。
+
+    两套 MultiAccountManager = 每个号两条打招呼腿：同一个岗位被点两遍、
+    记录写两份、两个浏览器树各 ~400 MB，而界面上分不清哪条日志是谁说的。
+    用 sys.exit(1) 而不是 0：start.bat / 任何按退出码判断的脚本不能把
+    "我主动让路"读成"面板起好了"。
+    """
+    在跑, 说明 = _已有面板在跑(_面板探一次, 端口=面板端口)
+    if 在跑:
+        logger.error("拒绝启动第二个面板：%s。请先停掉正在跑的那个"
+                     "（面板右上停止，或找到它的 python app.py 进程）", 说明)
+        sys.exit(1)
+    if 说明:
+        logger.warning("启动前探测：%s——照常起来，但界面可能访问不到这个口", 说明)
+
+
 def main():
     """启动 Flask 应用。"""
     logger.info("=" * 50)
@@ -4142,6 +4175,10 @@ def main():
     logger.info(f"项目根目录: {PROJECT_ROOT}")
     logger.info(f"配置文件: {BOT_CONFIG_FILE}")
     logger.info("=" * 50)
+
+    # 排在一切副作用之前：日志清理线程、浏览器、通知都建起来之后才发现端口已有人占，
+    # 那一趟就白建了，还可能把正在跑的面板的浏览器抢过去。
+    _拒绝第二个面板()
 
     # 预加载配置
     _ensure_config()
@@ -4158,7 +4195,7 @@ def main():
     logger.info("日志清理已启动")
 
     # 启动 Flask-SocketIO
-    _run_kwargs = {"host": "0.0.0.0", "port": 5000, "debug": False, "use_reloader": False}
+    _run_kwargs = {"host": "0.0.0.0", "port": 面板端口, "debug": False, "use_reloader": False}
     if _socketio_kwargs.get("async_mode") == "threading":
         _run_kwargs["allow_unsafe_werkzeug"] = True
 
@@ -4191,10 +4228,11 @@ def _auto_ai_health():
 def _open_dashboard():
     """打开管理界面。失败不影响服务运行。"""
     import webbrowser
+    地址 = "http://localhost:%s" % 面板端口
     try:
-        webbrowser.open("http://localhost:5000")
+        webbrowser.open(地址)
     except Exception as e:
-        logger.warning(f"自动打开浏览器失败，请手动访问 http://localhost:5000（{e}）")
+        logger.warning(f"自动打开浏览器失败，请手动访问 {地址}（{e}）")
 
 
 if __name__ == "__main__":

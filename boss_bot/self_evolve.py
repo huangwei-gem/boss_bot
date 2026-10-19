@@ -15,6 +15,7 @@ BOSS 自动回复机器人 - AI 自进化引擎
 """
 
 import json
+import os
 import re
 import shutil
 import time
@@ -24,13 +25,12 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional, Callable, List, Dict, Any
 
+from boss_bot.unified_config import write_json_atomic
+
 logger = logging.getLogger(__name__)
 
 # 进化数据文件路径
 _EVOLUTION_DATA_FILE = Path(__file__).parent.parent / "data" / "evolution_data.json"
-
-# 自进化质量数据文件路径（评分、规则调整、模板优化记录）
-_QUALITY_DATA_FILE = Path(__file__).parent.parent / "data" / "self_evolve_data.json"
 
 # 回复效果分类
 EFFECT_POSITIVE = "positive"
@@ -186,7 +186,10 @@ class SelfEvolveEngine:
         self._data_file = Path(data_file) if data_file else _EVOLUTION_DATA_FILE
         # 质量数据（规则调整、模板效果）跟着账号走：共用一个文件的话
         # 账号2 的回复效果会算到账号1 头上。主账号仍用原文件名，兼容已有数据。
-        self._quality_data_file = _QUALITY_DATA_FILE.with_name(
+        # 目录必须跟着 _data_file 走：以前用 _QUALITY_DATA_FILE.with_name() 只换名字
+        # 不换目录，指向临时文件的引擎照样写进仓库 data/，测试一跑就把真数据顶掉
+        # （2026-10-19 实测：rule_adjustments 4 条被一条 fixture 换成 1 条）。
+        self._quality_data_file = self._data_file.with_name(
             self._data_file.stem.replace("evolution", "self_evolve") + ".json"
         )
         self._lock = threading.Lock()
@@ -1379,6 +1382,25 @@ class SelfEvolveEngine:
     # 持久化
     # ─────────────────────────────────────────────
 
+    def _读坏就挪开(self, path: Path) -> str:
+        """读不出来的状态文件原地改名留证据，返回新名字（挪不动返回空串）。
+
+        不挪就会被下一次保存原地盖掉：内存里是空的，一写回去，坏件里可能还能
+        捞回来的字节就真没了。2026-10-19 早上那份 133109 字节全 NUL 的
+        evolution_data.json 就是这个形状——机器 19:17 硬重启时正好在写它，
+        `open(path,"w")` 已经把原文件截断，页缓存里的新内容再也没落盘。
+        """
+        try:
+            if not path.exists():
+                return ""
+            挪到 = path.with_name("%s.corrupt-%s%s" % (
+                path.stem, datetime.now().strftime("%Y%m%d-%H%M%S-%f"), path.suffix))
+            os.replace(str(path), str(挪到))
+            return 挪到.name
+        except Exception as e:
+            self._log("ERROR", f"读坏的 {path.name} 连挪都挪不动: {e}")
+            return ""
+
     def _save_internal(self):
         """内部保存方法（不加锁，由调用方负责加锁）。"""
         try:
@@ -1394,10 +1416,9 @@ class SelfEvolveEngine:
                 "lessons": list(self._lessons),
                 "last_saved": datetime.now().isoformat(),
             }
-            with open(self._data_file, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
+            write_json_atomic(self._data_file, data)
         except Exception as e:
-            self._log("ERROR", f"保存进化数据失败: {e}")
+            self._log("ERROR", f"保存进化数据失败: {e}——原文件没动，盘里还是上一次存好的")
 
     def save_evolution_data(self):
         """持久化进化数据到文件。"""
@@ -1425,7 +1446,9 @@ class SelfEvolveEngine:
             else:
                 self._log("DEBUG", "无历史进化数据文件，使用空数据初始化")
         except Exception as e:
-            self._log("ERROR", f"加载进化数据失败: {e}")
+            挪到 = self._读坏就挪开(self._data_file)
+            self._log("ERROR", f"加载进化数据失败: {e}——坏文件已挪成 {挪到 or '（挪不动，还在原路径）'} 留着，"
+                              f"本次从空数据起步；要捞原文件里的东西就找那个名字")
 
     # ─────────────────────────────────────────────
     # 工具方法
@@ -2694,10 +2717,9 @@ class SelfEvolveEngine:
                 },
                 "last_saved": datetime.now().isoformat(),
             }
-            with open(self._quality_data_file, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
+            write_json_atomic(self._quality_data_file, data)
         except Exception as e:
-            self._log("ERROR", f"保存质量数据失败: {e}")
+            self._log("ERROR", f"保存质量数据失败: {e}——原文件没动，盘里还是上一次存好的")
 
     def _load_quality_data(self):
         """从 self_evolve_data.json 加载质量评分数据。"""
@@ -2718,7 +2740,9 @@ class SelfEvolveEngine:
             else:
                 self._log("DEBUG", "无历史质量数据文件，使用空数据初始化")
         except Exception as e:
-            self._log("ERROR", f"加载质量数据失败: {e}")
+            挪到 = self._读坏就挪开(self._quality_data_file)
+            self._log("ERROR", f"加载质量数据失败: {e}——坏文件已挪成 {挪到 or '（挪不动，还在原路径）'} 留着，"
+                              f"本次从空数据起步；要捞原文件里的东西就找那个名字")
     # ─────────────────────────────────────────────
     # 基于聊天记录的自进化（任务85新增）
     # ─────────────────────────────────────────────
@@ -3141,8 +3165,7 @@ class SelfEvolveEngine:
 
             try:
                 self._EVOLVE_RESULT_FILE.parent.mkdir(parents=True, exist_ok=True)
-                with open(self._EVOLVE_RESULT_FILE, "w", encoding="utf-8") as f:
-                    json.dump(result, f, ensure_ascii=False, indent=2)
+                write_json_atomic(self._EVOLVE_RESULT_FILE, result)
                 self._log("INFO", f"自进化结果已保存到: {self._EVOLVE_RESULT_FILE}")
             except Exception as e:
                 self._log("ERROR", f"保存自进化结果失败: {e}")

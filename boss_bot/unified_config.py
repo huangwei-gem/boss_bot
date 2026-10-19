@@ -1752,8 +1752,7 @@ def save_config(cfg: dict) -> None:
                     data.setdefault(key, value)
     except (json.JSONDecodeError, OSError) as e:
         logger.warning(f"读取 bot_config.json 以保留未建模字段失败: {e}")
-    with open(BOT_CONFIG_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    write_json_atomic(BOT_CONFIG_FILE, data)
 
 
 def save_overrides(cfg: dict) -> None:
@@ -1816,8 +1815,7 @@ def save_overrides(cfg: dict) -> None:
             rt["RESUME_UNAVAILABLE_REPLY"] = str(templates["resume_unavailable_reply"])
         existing["reply_templates"] = rt
 
-    with open(OVERRIDES_FILE, "w", encoding="utf-8") as f:
-        json.dump(existing, f, ensure_ascii=False, indent=2)
+    write_json_atomic(OVERRIDES_FILE, existing)
 
 
 def validate_config(cfg: dict) -> list:

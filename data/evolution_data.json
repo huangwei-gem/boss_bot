@@ -1,25 +1,25 @@
 {
   "reply_stats": {
-    "total_replies": 842,
-    "positive": 393,
-    "neutral": 285,
-    "negative": 78,
-    "ignored": 44
+    "total_replies": 855,
+    "positive": 397,
+    "neutral": 291,
+    "negative": 80,
+    "ignored": 45
   },
   "template_effectiveness": {
     "ai": {
-      "used": 603,
-      "positive": 290,
-      "neutral": 212,
-      "negative": 52,
+      "used": 610,
+      "positive": 293,
+      "neutral": 214,
+      "negative": 53,
       "ignored": 23
     },
     "rejection": {
-      "used": 73,
-      "positive": 17,
-      "neutral": 18,
-      "negative": 20,
-      "ignored": 11
+      "used": 76,
+      "positive": 18,
+      "neutral": 19,
+      "negative": 21,
+      "ignored": 12
     },
     "default": {
       "used": 62,
@@ -29,16 +29,16 @@
       "ignored": 8
     },
     "intent": {
-      "used": 43,
+      "used": 44,
       "positive": 27,
-      "neutral": 15,
+      "neutral": 16,
       "negative": 0,
       "ignored": 0
     },
     "rule": {
-      "used": 61,
+      "used": 63,
       "positive": 37,
-      "neutral": 18,
+      "neutral": 20,
       "negative": 1,
       "ignored": 2
     }
@@ -578,177 +578,6 @@
     }
   ],
   "reply_records": [
-    {
-      "id": 201,
-      "reply_text": "好的，明白了，感谢您的耐心说明，那我先不打扰了，祝您招聘顺利。",
-      "chat_name": "王女士",
-      "job_name": "分析专员7-11K长沙查看职位",
-      "source": "ai",
-      "intent": "other",
-      "timestamp": "2026-10-08T13:46:46.482169",
-      "effect": "neutral",
-      "hr_response": "这个岗位不招实习生的",
-      "evaluated": true,
-      "purified": true
-    },
-    {
-      "id": 202,
-      "reply_text": "您好，我没有这些心理咨询相关证书，和岗位要求不太匹配，感谢您的沟通，祝您招聘顺利。",
-      "chat_name": "沈女士",
-      "job_name": "兼职·全职/兼职心理咨询师(线上工作/无证勿扰)60-200元/时长沙查看职位",
-      "source": "ai",
-      "intent": "other",
-      "timestamp": "2026-10-08T13:47:06.472005",
-      "effect": "positive",
-      "hr_response": "您好，老师。请问您有以下证书（其一即可）吗？① 国家二级心理咨询师资格证（人社部颁发，2018年前考取）② 国家三级心理咨询师资格证（人社部颁发，2018年前考取）③ 心理治疗师证书（卫健委）④ 精神科医生资格证书（医生执业注册精神科）",
-      "evaluated": true,
-      "purified": true
-    },
-    {
-      "id": 201,
-      "reply_text": "您好，请问这个号码是微信吗？方便的话我稍后添加。另外我想先确认下，岗位是否更偏电商客服接待；我主要想找数据标注、数据分析或线上运营助理类兼职。",
-      "chat_name": "蒋旭冉",
-      "job_name": "兼职·居家电商客服70-100元/时南宁查看职位",
-      "source": "ai",
-      "intent": "other",
-      "timestamp": "2026-10-08T14:00:14.105367",
-      "effect": "neutral",
-      "hr_response": "-7770007",
-      "evaluated": true,
-      "purified": true
-    },
-    {
-      "id": 202,
-      "reply_text": "我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。",
-      "chat_name": "刘女士",
-      "job_name": "兼职·线上兼职媒介30-55元/时长沙查看职位",
-      "source": "rule",
-      "intent": "ask_job_content",
-      "timestamp": "2026-10-08T14:00:26.136013",
-      "effect": "positive",
-      "hr_response": "你好，我们正在招5k实习生+五险一金+包住+无试岗期带薪培训，你可以看下职位信息哈，要是感兴趣，可以随时回复我~",
-      "evaluated": true,
-      "purified": true
-    },
-    {
-      "id": 203,
-      "reply_text": "小红书我个人一直在用，但正式做账号运营还没接触过；不过内容数据复盘、AI辅助创作这些我上手比较快，也愿意按你们的方法快速学起来。",
-      "chat_name": "邓女士",
-      "job_name": "兼职·小红书新媒体兼职（线上可做）50-100元/时长沙查看职位",
-      "source": "ai",
-      "intent": "other",
-      "timestamp": "2026-10-08T14:01:00.639531",
-      "effect": "neutral",
-      "hr_response": "之前有接触过小红书嘛",
-      "evaluated": true,
-      "purified": true
-    },
-    {
-      "id": 204,
-      "reply_text": "抱歉我误解了，以为需要线下面试。既然岗位是线上兼职，我很感兴趣，可以加您微信进一步沟通吗？",
-      "chat_name": "柯女士",
-      "job_name": "兼职·ai数据标注（招暑期工）20-25元/时福州查看职位",
-      "source": "ai",
-      "intent": "other",
-      "timestamp": "2026-10-08T14:21:15.568996",
-      "effect": "neutral",
-      "hr_response": "我们是线上的啊",
-      "evaluated": true,
-      "purified": true
-    },
-    {
-      "id": 205,
-      "reply_text": "感谢您的祝福，也祝您工作顺利。",
-      "chat_name": "沈女士",
-      "job_name": "兼职·全职/兼职心理咨询师(线上工作/无证勿扰)60-200元/时长沙查看职位",
-      "source": "ai",
-      "intent": "other",
-      "timestamp": "2026-10-08T14:33:46.416727",
-      "effect": "negative",
-      "hr_response": "祝您求职顺利",
-      "evaluated": true,
-      "purified": true
-    },
-    {
-      "id": 206,
-      "reply_text": "Let me analyze the conversation history carefully.\n\nThe context:\n- Recruiter: 宗女士 (Ms. Zong)\n- Position: 兼职·兼职（科研绘图设计师）- Part-time scientific illustration designer, remote, 150-300 yuan/hour, Beijing\n",
-      "chat_name": "",
-      "job_name": "",
-      "source": "ai",
-      "intent": "",
-      "timestamp": "2026-10-08T14:35:25.833992",
-      "effect": null,
-      "hr_response": null,
-      "evaluated": true,
-      "kind": "gate_block",
-      "note": "接口没有回复正文（content 为空，思考过程写了 4443 字，不能当回复发出去）",
-      "purified": true
-    },
-    {
-      "id": 207,
-      "reply_text": "宗女士您好，我的求职方向是线上数据标注、数据分析或运营助理相关岗位，请问贵司目前有这类兼职吗？感谢告知~",
-      "chat_name": "宗女士",
-      "job_name": "兼职·兼职（科研绘图设计师）线上远程办公150-300元/时北京查看职位",
-      "source": "ai",
-      "intent": "other",
-      "timestamp": "2026-10-08T14:36:08.913812",
-      "effect": "neutral",
-      "hr_response": "加您了",
-      "evaluated": true,
-      "purified": true
-    },
-    {
-      "id": 208,
-      "reply_text": "我每天有充足的时间可以投入兼职工作，至少保证3小时没问题，电脑也随时可用。工作日下午都可以面试，时间灵活，可以按规范按时完成任务。",
-      "chat_name": "彭艺",
-      "job_name": "兼职·数据标注兼职150-200元/天雅安查看职位",
-      "source": "ai",
-      "intent": "other",
-      "timestamp": "2026-10-08T14:57:04.256690",
-      "effect": "positive",
-      "hr_response": "此岗位是兼职。需要每天白天至少有3小时的工作时间，需要用电脑，时间可以自己安排！你这边有多少时间可以工作呢？",
-      "evaluated": true,
-      "purified": true
-    },
-    {
-      "id": 209,
-      "reply_text": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
-      "chat_name": "王培鑫",
-      "job_name": "兼职·AI语音数据测试员25-40元/时延边朝鲜族自治州查看职位",
-      "source": "intent",
-      "intent": "contact_request",
-      "timestamp": "2026-10-08T14:57:14.324827",
-      "effect": "neutral",
-      "hr_response": "我加您微信，拉你进预招募工作群，后续有订单会优先通知",
-      "evaluated": true,
-      "purified": true
-    },
-    {
-      "id": 210,
-      "reply_text": "谢谢您的详细说明，模式我大致清楚了。想先了解一下内容方向和大概的发布量，另外想问下这边是否有数据标注或线上运营助理这类岗位？我统计背景，做数据和AI辅助这块更对口一些。",
-      "chat_name": "邓女士",
-      "job_name": "兼职·小红书新媒体兼职（线上可做）50-100元/时长沙查看职位",
-      "source": "ai",
-      "intent": "other",
-      "timestamp": "2026-10-08T14:57:50.038594",
-      "effect": "positive",
-      "hr_response": "您看一下，觉得可以我们在合作",
-      "evaluated": true,
-      "purified": true
-    },
-    {
-      "id": 211,
-      "reply_text": "您好，我目前的求职方向是数据标注、数据分析或线上运营助理相关岗位，与游戏代练不太匹配。想请问贵司是否有其他符合我方向的兼职机会？",
-      "chat_name": "李斌",
-      "job_name": "兼职·居家游戏代练50-300元/天焦作查看职位",
-      "source": "ai",
-      "intent": "other",
-      "timestamp": "2026-10-08T14:58:18.729835",
-      "effect": "neutral",
-      "hr_response": "你好，您平时都玩什么游戏？",
-      "evaluated": true,
-      "purified": true
-    },
     {
       "id": 212,
       "reply_text": "感谢您的指导，我会尽快完成官网信息提交并等待审核。如有后续流程或项目匹配需要沟通，欢迎随时联系，期待能参与适合的AI相关任务。",
@@ -3186,7 +3015,8 @@
       "timestamp": "2026-10-10T09:17:51.230242",
       "effect": "neutral",
       "hr_response": "我看了你的简历，我最近留意下其他项目，有适配你的联系你",
-      "evaluated": true
+      "evaluated": true,
+      "purified": true
     },
     {
       "id": 202,
@@ -3196,6 +3026,175 @@
       "source": "rejection",
       "intent": "rejection",
       "timestamp": "2026-10-10T09:22:55.973181",
+      "effect": "ignored",
+      "hr_response": null,
+      "evaluated": true,
+      "purified": true
+    },
+    {
+      "id": 201,
+      "reply_text": "好嘞，这就同意～",
+      "chat_name": "刘先生",
+      "job_name": "兼职·急招湖州数据标注兼职！！4500-5000元/月湖州查看职位",
+      "source": "ai",
+      "intent": "other",
+      "timestamp": "2026-10-19T08:38:29.641371",
+      "effect": "positive",
+      "hr_response": "您可以直接同意我的简历申请",
+      "evaluated": true,
+      "purified": true
+    },
+    {
+      "id": 201,
+      "reply_text": "好的，谢谢您告知，祝您招聘顺利！",
+      "chat_name": "曾女士",
+      "job_name": "数据平台研发工程师（湖仓存储&计算引擎）13-25K长沙查看职位",
+      "source": "ai",
+      "intent": "other",
+      "timestamp": "2026-10-19T08:44:41.787560",
+      "effect": "negative",
+      "hr_response": "我们已经认真审阅了您的简历，但很遗憾，您的经验并不完全符合我们当前项目的需求。祝您在BOSS直聘找到更好的机会！",
+      "evaluated": true,
+      "purified": true
+    },
+    {
+      "id": 202,
+      "reply_text": "理解，感谢您的反馈，祝您招聘顺利~",
+      "chat_name": "祁女士",
+      "job_name": "兼职·短期-数据标注-双休2000-3000元/月许昌查看职位",
+      "source": "rejection",
+      "intent": "rejection",
+      "timestamp": "2026-10-19T08:45:55.436235",
+      "effect": "neutral",
+      "hr_response": "我们这是个短期的岗位，工期1-2个月左右",
+      "evaluated": true,
+      "purified": true
+    },
+    {
+      "id": 203,
+      "reply_text": "我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。",
+      "chat_name": "曾傲",
+      "job_name": "数据标注/AI训练师（管理岗同步招聘）3-4K长沙查看职位",
+      "source": "rule",
+      "intent": "ask_job_content",
+      "timestamp": "2026-10-19T08:46:51.111726",
+      "effect": "neutral",
+      "hr_response": "工作内容岗位职责里面有写哦",
+      "evaluated": true,
+      "purified": true
+    },
+    {
+      "id": 204,
+      "reply_text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "chat_name": "欧阳凯",
+      "job_name": "数据采集工程师15-18K长沙查看职位",
+      "source": "rejection",
+      "intent": "rejection",
+      "timestamp": "2026-10-19T08:47:08.280282",
+      "effect": "positive",
+      "hr_response": "我们认真审阅了您的简历，但暂不完全匹配岗位情况。祝您在BOSS直聘找到更合适的机会！",
+      "evaluated": true,
+      "purified": true
+    },
+    {
+      "id": 201,
+      "reply_text": "哦哦这样，我这边只能做线上远程的，去不了现场坐班，那就不合适啦，谢谢您哈~",
+      "chat_name": "贾琳",
+      "job_name": "兼职·数据标注专员500-3000元/月临汾查看职位",
+      "source": "ai",
+      "intent": "other",
+      "timestamp": "2026-10-19T08:53:07.902955",
+      "effect": "neutral",
+      "hr_response": "曲沃，不在临汾",
+      "evaluated": true,
+      "purified": true
+    },
+    {
+      "id": 202,
+      "reply_text": "嗯我时间挺灵活的，在读期间能持续做，具体时长面谈细聊哈。对了这个岗支持线上远程不？我主要想找线上能干的活。",
+      "chat_name": "刘钟",
+      "job_name": "实习产品助理100-110元/天长沙查看职位",
+      "source": "ai",
+      "intent": "other",
+      "timestamp": "2026-10-19T08:54:53.664481",
+      "effect": "positive",
+      "hr_response": "可以实习多久",
+      "evaluated": true,
+      "purified": true
+    },
+    {
+      "id": 203,
+      "reply_text": "好的，感谢您的时间，祝您招聘顺利~",
+      "chat_name": "庄先生",
+      "job_name": "兼职·线上小红书运营2000-6000元/月广州查看职位",
+      "source": "rejection",
+      "intent": "rejection",
+      "timestamp": "2026-10-19T08:55:20.720101",
+      "effect": "negative",
+      "hr_response": "我们岗位暂停招聘了哈，后面有需求我再联系您",
+      "evaluated": true,
+      "purified": true
+    },
+    {
+      "id": 204,
+      "reply_text": "加您啦，您通过下哈",
+      "chat_name": "苏明泉",
+      "job_name": "兼职·数据标注兼职20-25元/时厦门查看职位",
+      "source": "ai",
+      "intent": "other",
+      "timestamp": "2026-10-19T08:56:29.845822",
+      "effect": "neutral",
+      "hr_response": "OK",
+      "evaluated": true,
+      "purified": true
+    },
+    {
+      "id": 201,
+      "reply_text": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+      "chat_name": "葛女士",
+      "job_name": "兼职·医疗合规质量与数据决策专家‑在线标注兼职90-150元/时北京查看职位",
+      "source": "rule",
+      "intent": "tell_salary",
+      "timestamp": "2026-10-19T09:37:44.313796",
+      "effect": "neutral",
+      "hr_response": "评测・高价值出题项目，诚邀进群等待培训。薪资 95–100 元 / 时，月结，按合格 case 结算（500-600 元 / 合格 case），每人最多 3 题。在其他供应商做过该项目的不予招聘结算，要求统招本科、1 年以上实际工作经验，有大模型评测经验者优先。高优方向：供应链 & 采购、电商 & 零售、增长营销、金融投研。还有其他共20几个方向/请留意飞书通知，勿失联",
+      "evaluated": true,
+      "purified": true
+    },
+    {
+      "id": 202,
+      "reply_text": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "chat_name": "杨女士",
+      "job_name": "兼职·数据标注20-25元/时徐州查看职位",
+      "source": "intent",
+      "intent": "contact_request",
+      "timestamp": "2026-10-19T09:38:04.460212",
+      "effect": "neutral",
+      "hr_response": "微信同号，加我",
+      "evaluated": true,
+      "purified": true
+    },
+    {
+      "id": 201,
+      "reply_text": "好的",
+      "chat_name": "曾傲",
+      "job_name": "数据标注/AI训练师（管理岗同步招聘）3-4K长沙查看职位",
+      "source": "ai",
+      "intent": "other",
+      "timestamp": "2026-10-19T09:48:38.837704",
+      "effect": "positive",
+      "hr_response": "好的",
+      "evaluated": true,
+      "purified": true
+    },
+    {
+      "id": 201,
+      "reply_text": "这个时间我可以，就问下云创中心售楼处那边方便去不？",
+      "chat_name": "冯先生",
+      "job_name": "兼职·数据标注人员20-25元/时聊城查看职位",
+      "source": "ai",
+      "intent": "other",
+      "timestamp": "2026-10-19T09:55:10.572842",
       "effect": null,
       "hr_response": null,
       "evaluated": false
@@ -3222,5 +3221,5 @@
       "last_confirmed_at": null
     }
   ],
-  "last_saved": "2026-10-10T09:22:55.973507"
+  "last_saved": "2026-10-19T09:55:10.573517"
 }
