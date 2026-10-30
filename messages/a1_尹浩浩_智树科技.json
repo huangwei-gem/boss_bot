@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "393890975412738",
-      "block": "00:26 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -30,7 +30,50 @@
       "kind": "bubble",
       "content": "您好～我是统计学本科，想找数据处理 线上的线上兼职机会。看到贵司这个岗位和我的方向挺匹配，方便的话想把简历发您细聊，工作日下午可以面试。",
       "reply_source": "greet"
+    },
+    {
+      "text": "您好 请问剪辑软件熟练吗",
+      "time": "10:33",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395101948310018",
+      "block": "10:33 您好 请问剪辑软件熟练吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好 请问剪辑软件熟练吗"
+    },
+    {
+      "sender": "bot",
+      "content": "剪辑软件不太熟练，但我有丰富的数据标注经验，剪辑工具可以快速上手学习。",
+      "text": "剪辑软件不太熟练，但我有丰富的数据标注经验，剪辑工具可以快速上手学习。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 10:37:29",
+      "time": "10:37",
+      "job_name": "兼职·数据标注剪辑20-40元/时洛阳查看职位",
+      "isFriend": false,
+      "mid": "395102812189184"
+    },
+    {
+      "sender": "bot",
+      "content": "剪辑确实是我的短板，但标注经验能直接上手。方便的话聊聊岗位具体内容？",
+      "text": "剪辑确实是我的短板，但标注经验能直接上手。方便的话聊聊岗位具体内容？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 17:20:30",
+      "time": "17:20",
+      "job_name": "兼职·数据标注剪辑20-40元/时洛阳查看职位",
+      "isFriend": false,
+      "mid": "397679130350080"
     }
   ],
-  "updated_at": "2026-10-08 15:14:44"
+  "updated_at": "2026-10-23 13:59:56",
+  "unread_on_boss": 0
 }

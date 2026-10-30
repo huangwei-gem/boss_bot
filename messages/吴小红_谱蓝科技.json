@@ -1,0 +1,63 @@
+{
+  "chat_name": "吴小红",
+  "chat_id": "吴小红#谱蓝科技",
+  "account_index": 0,
+  "job_name": "无人驾驶地图数据标注员3-5K长沙",
+  "company": "谱蓝科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "12:05",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397601735639812",
+      "block": "12:05 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397601735680768",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "不好意思，您不太适合我这个职位，很遗憾不能和您继续深入交流了，抱歉，祝您找到合适的工作岗位",
+      "time": "11:34",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398301818721033",
+      "block": "11:34 不好意思，您不太适合我这个职位，很遗憾不能和您继续深入交流了，抱歉，祝您找到合适的工作岗位",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，您不太适合我这个职位，很遗憾不能和您继续深入交流了，抱歉，祝您找到合适的工作岗位"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-22 22:35:59",
+      "time": "22:35",
+      "job_name": "无人驾驶地图数据标注员3-5K长沙查看职位",
+      "isFriend": false,
+      "mid": "399526131012353"
+    }
+  ],
+  "updated_at": "2026-10-25 02:07:03",
+  "unread_on_boss": 0
+}

@@ -56,9 +56,54 @@
       "timestamp": "2026-10-10 03:59:47",
       "time": "03:59",
       "job_name": "数据分析师-双休+免费三餐和茶饮-线上面试11-16K上海查看职位",
+      "isFriend": false,
+      "mid": "395005084377601"
+    },
+    {
+      "sender": "bot",
+      "content": "姜先生您好，之前聊的数据分析师-双休+免费三餐和茶饮-线上面试11-16K上海查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "姜先生您好，之前聊的数据分析师-双休+免费三餐和茶饮-线上面试11-16K上海查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 12:11:13",
+      "time": "12:11",
+      "job_name": "数据分析师-双休+免费三餐和茶饮-线上面试11-16K上海查看职位",
+      "isFriend": false,
+      "mid": "397603121684993"
+    },
+    {
+      "sender": "bot",
+      "content": "在的哈，这个岗还在招吗？方便的话咱们约个时间线上简单聊下？",
+      "text": "在的哈，这个岗还在招吗？方便的话咱们约个时间线上简单聊下？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-20 14:58:56",
+      "time": "14:58",
+      "job_name": "数据分析师-双休+免费三餐和茶饮-线上面试11-16K上海查看职位",
+      "isFriend": false,
+      "mid": "398706030690821"
+    },
+    {
+      "sender": "bot",
+      "content": "方便线上简单对一下岗位需求吗，时间好调～",
+      "text": "方便线上简单对一下岗位需求吗，时间好调～",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 13:33:29",
+      "time": "13:33",
+      "job_name": "数据分析师-双休+免费三餐和茶饮-线上面试11-16K上海查看职位",
       "isFriend": false
     }
   ],
-  "updated_at": "2026-10-10 03:59:47",
+  "updated_at": "2026-10-24 13:33:29",
   "unread_on_boss": 0
 }

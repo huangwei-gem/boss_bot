@@ -1,0 +1,52 @@
+{
+  "chat_name": "李先生",
+  "chat_id": "李先生#青岛云裁智能科技",
+  "account_index": 1,
+  "job_name": "兼职·数据标注-居家办公兼职20-40元/时青岛查看职位",
+  "company": "青岛云裁智能科技",
+  "messages": [
+    {
+      "sender": "bot",
+      "content": "工作日下午都可以安排面试，您看哪个时间段方便？",
+      "text": "工作日下午都可以安排面试，您看哪个时间段方便？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rule",
+      "action": "text",
+      "timestamp": "2026-10-10 18:36:20",
+      "time": "18:36",
+      "job_name": "兼职·数据标注-居家办公兼职20-40元/时青岛查看职位",
+      "isFriend": false,
+      "mid": "395220509729537"
+    },
+    {
+      "text": "12日下午方便吗",
+      "time": "18:44",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395222438822657",
+      "block": "18:44 12日下午方便吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "12日下午方便吗"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-10 19:01:47",
+      "time": "19:01",
+      "job_name": "兼职·数据标注-居家办公兼职20-40元/时青岛查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-16 01:29:53",
+  "unread_on_boss": 0
+}

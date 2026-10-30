@@ -187,9 +187,63 @@
       "timestamp": "2026-10-10 01:30:41",
       "time": "01:30",
       "job_name": "素人平面模特/保底1万7-10K长沙查看职位",
+      "isFriend": false,
+      "mid": "394968443003649"
+    },
+    {
+      "text": "好的",
+      "time": "10:03",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395094578438913",
+      "block": "10:03 好的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，那就不打扰您了，祝您工作顺利。",
+      "text": "好的，那就不打扰您了，祝您工作顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 10:07:55",
+      "time": "10:07",
+      "job_name": "素人平面模特/保底1万7-10K长沙查看职位",
+      "isFriend": false,
+      "mid": "395095560946433"
+    },
+    {
+      "text": "祝你早日找到合适的工作",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395095698723585",
+      "block": "祝你早日找到合适的工作",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "祝你早日找到合适的工作"
+    },
+    {
+      "sender": "bot",
+      "content": "谢谢您，也祝您一切顺利。",
+      "text": "谢谢您，也祝您一切顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 10:11:29",
+      "time": "10:11",
+      "job_name": "素人平面模特/保底1万7-10K长沙查看职位",
       "isFriend": false
     }
   ],
-  "updated_at": "2026-10-10 01:30:41",
+  "updated_at": "2026-10-10 10:11:29",
   "unread_on_boss": 0
 }

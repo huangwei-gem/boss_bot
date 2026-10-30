@@ -83,8 +83,35 @@
       "sender": "hr",
       "kind": "bubble",
       "content": "正式的项目飞书会写明单价和操作明细"
+    },
+    {
+      "sender": "bot",
+      "content": "明白，有单价和操作明细会更清楚，我可以按规范要求交付。后续怎么加飞书或进項目，您方便时同步我就行。",
+      "text": "明白，有单价和操作明细会更清楚，我可以按规范要求交付。后续怎么加飞书或进項目，您方便时同步我就行。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-17 11:43:39",
+      "time": "11:43",
+      "job_name": "兼职·云南话数据标注2000-2500元/月宜宾查看职位",
+      "isFriend": false,
+      "mid": "397596347949313"
+    },
+    {
+      "text": "计件多劳多得，由于每个项目不同，薪资会有项目部统一通知",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397596553396483",
+      "block": "计件多劳多得，由于每个项目不同，薪资会有项目部统一通知",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "计件多劳多得，由于每个项目不同，薪资会有项目部统一通知"
     }
   ],
-  "updated_at": "2026-10-10 09:18:18",
+  "updated_at": "2026-10-24 14:44:11",
   "unread_on_boss": 0
 }

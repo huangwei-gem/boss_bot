@@ -2,7 +2,7 @@
   "chat_name": "蔡先生",
   "chat_id": "蔡先生#创峰科技",
   "account_index": 0,
-  "job_name": "兼职·Ai人工智能标注70-200元/天日照查看职位",
+  "job_name": "兼职·Ai人工智能标注70-200元/天日照",
   "company": "创峰科技",
   "messages": [
     {
@@ -209,8 +209,111 @@
       "job_name": "兼职·Ai人工智能标注70-200元/天日照查看职位",
       "isFriend": false,
       "mid": "394938058867457"
+    },
+    {
+      "text": "这边城西满人了",
+      "time": "15:44",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395178379961089",
+      "block": "15:44 这边城西满人了",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "这边城西满人了"
+    },
+    {
+      "text": "沭东商务中心和闫庄",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395178411541252",
+      "block": "沭东商务中心和闫庄",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "沭东商务中心和闫庄"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-10 15:45:17",
+      "time": "15:45",
+      "job_name": "兼职·Ai人工智能标注70-200元/天日照查看职位",
+      "isFriend": false,
+      "mid": "395178473501446"
+    },
+    {
+      "text": "这两个位置距你远不远呢",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395178476778241",
+      "block": "这两个位置距你远不远呢",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "这两个位置距你远不远呢"
+    },
+    {
+      "sender": "bot",
+      "content": "离得还好，都能过去，您看沭东商务中心和闫庄哪个时间方便？我随时配合。",
+      "text": "离得还好，都能过去，您看沭东商务中心和闫庄哪个时间方便？我随时配合。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-16 13:14:47",
+      "time": "13:14",
+      "job_name": "兼职·Ai人工智能标注70-200元/天日照查看职位",
+      "isFriend": false,
+      "mid": "397264848536323"
+    },
+    {
+      "text": "闫庄吧",
+      "time": "14:17",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397280374473473",
+      "block": "14:17 闫庄吧",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "闫庄吧"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397280381924097",
+      "block": "我想要和您交换微信，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换微信，您是否同意 拒绝 同意"
+    },
+    {
+      "text": "加我微，可以约时间过来看看",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397280407556868",
+      "block": "加我微，可以约时间过来看看",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "加我微，可以约时间过来看看"
     }
   ],
-  "updated_at": "2026-10-09 23:46:43",
+  "updated_at": "2026-10-25 08:11:17",
   "unread_on_boss": 0
 }

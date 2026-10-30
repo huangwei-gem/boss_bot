@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "389070930739203",
-      "block": "09-23 09:33 此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+      "block": "此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
       "sender": "hr",
       "kind": "system",
       "content": "此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
@@ -100,7 +100,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "392997430448133",
-      "block": "11:50 该消息暂不支持",
+      "block": "该消息暂不支持",
       "sender": "hr",
       "kind": "system",
       "content": "该消息暂不支持",
@@ -150,8 +150,23 @@
       "job_name": "居家打打字 日结8-13K长沙查看职位",
       "isFriend": false,
       "mid": "394150474952714"
+    },
+    {
+      "sender": "bot",
+      "content": "诸先生您好，之前聊的居家打打字 日结8-13K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "诸先生您好，之前聊的居家打打字 日结8-13K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 14:33:25",
+      "time": "14:33",
+      "job_name": "居家打打字 日结8-13K长沙查看职位",
+      "isFriend": false,
+      "mid": "395160812285961"
     }
   ],
-  "updated_at": "2026-10-09 10:59:52",
+  "updated_at": "2026-10-23 14:36:41",
   "unread_on_boss": 0
 }

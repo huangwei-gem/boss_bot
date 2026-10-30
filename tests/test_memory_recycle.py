@@ -94,38 +94,47 @@ class Test重开浏览器:
     def test_主循环重建时按起浏览器装Cookie接搜索页重跑引擎(self):
         """这条路径断线重连和内存回收共用，别再抄成两份。"""
         次序 = []
+        参数 = []
 
         class 管:
             def recycle(self):
                 次序.append("recycle"); return {"前": 2000.0, "后": 400.0}
             def load_cookies(self, path):
                 次序.append("cookie"); return True
-            def get_search_page(self):
+            def get_search_page(self, **kw):
                 次序.append("搜索页")
+                参数.append(kw)
                 return types.SimpleNamespace(url="https://www.zhipin.com/web/geek/jobs")
 
         loop = types.SimpleNamespace(
             browser_manager=管(), _cookie_file=lambda: "cookies.json",
-            _init_engines=lambda: 次序.append("引擎"),
+            _init_engines=lambda **kw: 次序.append("引擎"),
+            _计时=lambda 名, 干, *a, **k: 干(*a, **k),   # 只量秒，不动这里的次序账
+            _needs_login=False,      # 这一趟是登着的时候回收内存重开，页要照常开出去
             日志=[], _log=lambda lvl, msg: None)
         ML.UnifiedBotLoop._重建浏览器(loop)
         assert 次序 == ["recycle", "cookie", "搜索页", "引擎"]
+        assert 参数 == [{"导航": True}], 参数
 
     def test_没配Cookie文件也要照样接回搜索页(self):
         次序 = []
+        参数 = []
 
         class 管:
             def recycle(self):
                 次序.append("recycle"); return {"前": 1.0, "后": 1.0}
-            def get_search_page(self):
-                次序.append("搜索页"); return None
+            def get_search_page(self, **kw):
+                次序.append("搜索页"); 参数.append(kw); return None
 
         loop = types.SimpleNamespace(
             browser_manager=管(), _cookie_file=lambda: "",
-            _init_engines=lambda: 次序.append("引擎"),
+            _init_engines=lambda **kw: 次序.append("引擎"),
+            _计时=lambda 名, 干, *a, **k: 干(*a, **k),
+            _needs_login=False,
             日志=[], _log=lambda lvl, msg: None)
         ML.UnifiedBotLoop._重建浏览器(loop)
         assert 次序 == ["recycle", "搜索页", "引擎"]
+        assert 参数 == [{"导航": True}], 参数
 
 
 
@@ -135,6 +144,9 @@ class Test什么时候该回收:
 
         memory_mb 按"清扫有没有做过"回不同的数，这样判据用错顺序也会被抓住：
         拿清扫前的旧数去决定要不要重开，等于白收几张页还要把整个浏览器推倒。
+
+        这里默认"没有标签停在验证页"——有验证页时回收必须住手，那条判据连同
+        反向哨兵一起写在 tests/test_verify_page_watch.py 的「内存回收不许拆掉验证页」。
         """
         cfg = UnifiedConfig()
         cfg.browser.memory_recycle_mb = 阈值
@@ -156,6 +168,7 @@ class Test什么时候该回收:
             _重建浏览器=lambda: (重建.append(量的), {"前": 量的, "后": 400.0})[1],
             _最后回收=刚回收过 or 0.0,
             _回收受阻已报=False, _进程没了已报=False, _轮深=types.SimpleNamespace(n=0),
+            _扫验证页=lambda: [],
             日志=日志, 重建=重建, 扫过=扫过, _log=lambda lvl, msg: 日志.append((lvl, msg)))
         loop._清扫闲置页 = types.MethodType(ML.UnifiedBotLoop._清扫闲置页, loop)
         loop._浏览器没了就重开 = types.MethodType(ML.UnifiedBotLoop._浏览器没了就重开, loop)

@@ -2,7 +2,7 @@
   "chat_name": "丁琼",
   "chat_id": "丁琼#上海恬媛服饰有限公司",
   "account_index": 0,
-  "job_name": "兼职·女装线上短视频运营20-35元/时上海查看职位",
+  "job_name": "兼职·女装线上短视频运营20-35元/时上海",
   "company": "上海恬媛服饰有限公司",
   "messages": [
     {
@@ -58,8 +58,68 @@
       "job_name": "兼职·女装线上短视频运营20-35元/时上海查看职位",
       "isFriend": false,
       "mid": "394139092648705"
+    },
+    {
+      "sender": "bot",
+      "content": "丁琼您好，之前聊的兼职·女装线上短视频运营20-35元/时上海查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "丁琼您好，之前聊的兼职·女装线上短视频运营20-35元/时上海查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 14:18:06",
+      "time": "14:18",
+      "job_name": "兼职·女装线上短视频运营20-35元/时上海查看职位",
+      "isFriend": false,
+      "mid": "395157046371075"
+    },
+    {
+      "sender": "bot",
+      "content": "丁琼您好，上海恬媛服饰有限公司这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "丁琼您好，上海恬媛服饰有限公司这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 14:23:01",
+      "time": "14:23",
+      "job_name": "兼职·女装线上短视频运营20-35元/时上海查看职位",
+      "isFriend": false,
+      "mid": "397635510452992"
+    },
+    {
+      "sender": "bot",
+      "content": "我主要找线上数据分析这类的，这个方向不太匹配哈。",
+      "text": "我主要找线上数据分析这类的，这个方向不太匹配哈。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 12:51:01",
+      "time": "12:51",
+      "job_name": "兼职·女装线上短视频运营20-35元/时上海查看职位",
+      "isFriend": false,
+      "mid": "399736261473025"
+    },
+    {
+      "sender": "bot",
+      "content": "那先这样哈，您那边要是有线上能做的数据类活儿，随时招呼我一声。",
+      "text": "那先这样哈，您那边要是有线上能做的数据类活儿，随时招呼我一声。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 13:22:29",
+      "time": "13:22",
+      "job_name": "兼职·女装线上短视频运营20-35元/时上海查看职位",
+      "isFriend": false,
+      "mid": "400097897091841"
     }
   ],
-  "updated_at": "2026-10-09 11:09:01",
+  "updated_at": "2026-10-25 02:01:01",
   "unread_on_boss": 0
 }

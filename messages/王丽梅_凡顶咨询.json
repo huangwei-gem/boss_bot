@@ -1,0 +1,63 @@
+{
+  "chat_name": "王丽梅",
+  "chat_id": "王丽梅#凡顶咨询",
+  "account_index": 0,
+  "job_name": "BI数据分析（猎头职位）21-26K长沙",
+  "company": "凡顶咨询",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "11:16",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397589592511235",
+      "block": "11:16 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397589592539906",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会",
+      "time": "09:01",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398264194614018",
+      "block": "09:01 对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，祝您招聘顺利~",
+      "text": "好的，感谢您的时间，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-20 18:12:46",
+      "time": "18:12",
+      "job_name": "BI数据分析（猎头职位）21-26K长沙查看职位",
+      "isFriend": false,
+      "mid": "398753667486469"
+    }
+  ],
+  "updated_at": "2026-10-25 02:10:25",
+  "unread_on_boss": 0
+}

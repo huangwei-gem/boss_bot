@@ -7,12 +7,12 @@
   "messages": [
     {
       "text": "",
-      "time": "08:44",
+      "time": "09-28 08:44",
       "isFriend": true,
       "is_mine": false,
       "is_system": false,
       "mid": "390828317278466",
-      "block": "08:44 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -26,19 +26,18 @@
       "is_system": false,
       "mid": "390828510368000",
       "block": "已读 您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
-      "sender": "bot",
+      "sender": "me",
       "kind": "bubble",
-      "content": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
-      "reply_source": "greet"
+      "content": "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，愿意踏实积累。十分认可贵公司，希望能获得面试机会。"
     },
     {
       "text": "方便发一份你的简历过来吗？",
-      "time": "09:14",
+      "time": "09-28 09:14",
       "isFriend": true,
       "is_mine": false,
       "is_system": false,
       "mid": "390835641180420",
-      "block": "09:14 方便发一份你的简历过来吗？",
+      "block": "09-28 09:14 方便发一份你的简历过来吗？",
       "sender": "hr",
       "kind": "bubble",
       "content": "方便发一份你的简历过来吗？"
@@ -50,7 +49,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "393028791677185",
-      "block": "13:58 附件简历请求已发送",
+      "block": "附件简历请求已发送",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -126,9 +125,40 @@
       "timestamp": "2026-10-10 07:33:43",
       "time": "07:33",
       "job_name": "数据分析师7-12K长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395057662030080"
+    },
+    {
+      "sender": "bot",
+      "content": "谭明亮您好，湖南星联智创科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "谭明亮您好，湖南星联智创科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 15:50:27",
+      "time": "15:50",
+      "job_name": "数据分析师7-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "397656998748417"
+    },
+    {
+      "sender": "bot",
+      "content": "简历发您了，看什么时候方便安排个线上面试？",
+      "text": "简历发您了，看什么时候方便安排个线上面试？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 13:57:31",
+      "time": "13:57",
+      "job_name": "数据分析师7-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "399752611815683"
     }
   ],
-  "updated_at": "2026-10-10 07:33:43",
+  "updated_at": "2026-10-23 14:04:18",
   "unread_on_boss": 0
 }

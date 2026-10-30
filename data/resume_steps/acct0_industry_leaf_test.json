@@ -1,0 +1,9 @@
+[
+  {"do": "open"},
+  {"do": "js", "limit": 700, "code": "(() => {\n  const clean = (s) => ((s || '') + '').trim();\n  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };\n  const 值 = (p) => clean(([...document.querySelectorAll('input')].find((x) => vis(x) && (x.placeholder || '').includes(p)) || {}).value);\n  return {公司: 值('北京华品博睿'), 行业: 值('所属行业'), 职位: 值('职位名称'), 报错: [...document.querySelectorAll('.form-error-tip')].filter(vis).map((x) => clean(x.innerText)).slice(0, 6)};\n})()"},
+  {"do": "realclick", "css": "div[ka=resume_form_edit_industryName]", "wait": 2.5},
+  {"do": "mark", "at": {"scope": ".industry-dialog", "want": "生活服务(O2O)", "隐藏也认": true}},
+  {"do": "realclick", "css": "[data-orca-tag=hit]", "wait": 2.5},
+  {"do": "js", "limit": 700, "code": "(() => {\n  const clean = (s) => ((s || '') + '').trim();\n  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };\n  const 值 = (p) => clean(([...document.querySelectorAll('input')].find((x) => vis(x) && (x.placeholder || '').includes(p)) || {}).value);\n  return {行业: 值('所属行业'), 公司: 值('北京华品博睿'), 职位: 值('职位名称'), 报错: [...document.querySelectorAll('.form-error-tip')].filter(vis).map((x) => clean(x.innerText)).slice(0, 6)};\n})()"},
+  {"do": "clickka", "ka": "resume_form_work_cancel", "wait": 1.5}
+]

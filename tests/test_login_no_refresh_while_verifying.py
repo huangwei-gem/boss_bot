@@ -91,7 +91,12 @@ class 承诺不许再写反Test:
         源 = (ROOT / "boss_bot" / "main_loop.py").read_text(encoding="utf-8")
         块 = 源[源.index("def _wait_for_login"):源.index("def _settle_url")]
         assert "_wait_不刷新这一页" in 块 or "不刷新" in 块, "等待循环没留下'为什么不刷'的自述"
-        assert "登录导航冷却秒" in 块, "导航没有冷却就是每 5 秒刷人一次"
+        # 2026-10-22：冷却从这两处各自的一句 if 收进 这一眼该不该导航()，
+        # 因为启动复验那条没接进来，一重启就发了 19 次整页加载（见 test_verify_startup_burst.py）
+        assert "这一眼该不该导航(" in 块, "导航判据被拆回去了：两份判据早晚一份有冷却一份没有"
+        判据 = 源[源.index("def 这一眼该不该导航"):源.index("def archive_cookie_file")]
+        assert "登录导航冷却秒" in 判据, "导航没有冷却就是每 5 秒刷人一次"
+        assert "是风控验证页(页面)" in 判据, "判据里必须先认验证页：那一页一律不导航"
 
 
 class 摆窗口那一跳也算刷新Test:
@@ -109,7 +114,7 @@ class 摆窗口那一跳也算刷新Test:
         对象 = types.SimpleNamespace(
             _login_window_shown=False, _login_headed_temp=False,
             account_name="账号2", browser_manager=管理器,
-            _log=lambda lvl, msg: 记.append((lvl, msg)), _init_engines=lambda: None)
+            _log=lambda lvl, msg: 记.append((lvl, msg)), _init_engines=lambda **kw: None)
         monkeypatch.setattr(对象, "_验证页已说", False, raising=False)
         return 对象, 记, 跳
 

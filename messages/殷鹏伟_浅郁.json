@@ -126,9 +126,37 @@
       "timestamp": "2026-10-09 12:47:00",
       "time": "12:47",
       "job_name": "兼职·数据分析师（兼职）1000-6000元/月临沂查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394780752433920"
+    },
+    {
+      "text": "沟通吧",
+      "time": "15:10",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395169997017857",
+      "block": "15:10 沟通吧",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "沟通吧"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，想先确认下这个数据分析师兼职是否支持全程线上远程？我做过数据标注和数据分析，Excel、SQL、Python 都能上手，工作日下午方便随时沟通，您看怎么安排合适？",
+      "text": "好的，想先确认下这个数据分析师兼职是否支持全程线上远程？我做过数据标注和数据分析，Excel、SQL、Python 都能上手，工作日下午方便随时沟通，您看怎么安排合适？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-16 16:21:01",
+      "time": "16:21",
+      "job_name": "兼职·数据分析师（兼职）1000-6000元/月临沂查看职位",
+      "isFriend": false,
+      "mid": "397310619857665"
     }
   ],
-  "updated_at": "2026-10-09 12:47:00",
+  "updated_at": "2026-10-23 14:15:28",
   "unread_on_boss": 0
 }

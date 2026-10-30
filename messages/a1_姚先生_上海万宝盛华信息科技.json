@@ -1,0 +1,36 @@
+{
+  "chat_name": "姚先生",
+  "chat_id": "姚先生#上海万宝盛华信息科技",
+  "account_index": 1,
+  "job_name": "大促招商运营(数据分析/商家BD)10-11K上海查看职位",
+  "company": "上海万宝盛华信息科技",
+  "messages": [
+    {
+      "text": "",
+      "time": "10:22",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397930364297475",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学专业在读学生，有数据标注和AI训练数据质检经验，熟悉Excel/SQL/Python数据分析工具。看到贵司相关岗位需求，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397930562457856",
+      "block": "送达 您好，我是统计学专业在读学生，有数据标注和AI训练数据质检经验，熟悉Excel/SQL/Python数据分析工具。看到贵司相关岗位需求，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读学生，有数据标注和AI训练数据质检经验，熟悉Excel/SQL/Python数据分析工具。看到贵司相关岗位需求，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 13:48:55"
+}

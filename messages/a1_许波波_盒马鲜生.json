@@ -39,7 +39,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394165117202689",
-      "block": "19:01 我想要和您交换微信，您是否同意 拒绝 同意",
+      "block": "我想要和您交换微信，您是否同意 拒绝 同意",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -58,8 +58,36 @@
       "time": "03:51",
       "job_name": "app推广专员10-15K北京查看职位",
       "isFriend": false
+    },
+    {
+      "text": "",
+      "time": "10-10 03:51",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395003142648064",
+      "block": "13215541119 许波波的微信号 13215541119 复制微信号",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "13215541119 许波波的微信号 13215541119 复制微信号"
+    },
+    {
+      "sender": "bot",
+      "content": "推广这种岗位我不考虑哈，以后这类的不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "text": "推广这种岗位我不考虑哈，以后这类的不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-21 19:22:42",
+      "time": "19:22",
+      "job_name": "app推广专员10-15K北京查看职位",
+      "isFriend": false,
+      "mid": "399124736155905"
     }
   ],
-  "updated_at": "2026-10-10 03:51:52",
+  "updated_at": "2026-10-23 12:59:08",
   "unread_on_boss": 0
 }

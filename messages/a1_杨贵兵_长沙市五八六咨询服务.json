@@ -77,7 +77,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "393075868512768",
-      "block": "17:09 附件简历请求已发送",
+      "block": "附件简历请求已发送",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -220,24 +220,11 @@
       "is_mine": true,
       "is_system": false,
       "mid": "393712301457921",
-      "block": "12:19 拒绝了面试邀请",
+      "block": "拒绝了面试邀请",
       "sender": "me",
       "kind": "card",
       "content": "",
       "card_text": "拒绝了面试邀请"
-    },
-    {
-      "text": "",
-      "time": "13:01",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "393722647687681",
-      "block": "13:01",
-      "sender": "hr",
-      "kind": "card",
-      "content": "",
-      "card_text": ""
     },
     {
       "sender": "bot",
@@ -282,6 +269,6 @@
       "mid": "395005438505472"
     }
   ],
-  "updated_at": "2026-10-10 04:21:01",
+  "updated_at": "2026-10-23 15:23:09",
   "unread_on_boss": 0
 }

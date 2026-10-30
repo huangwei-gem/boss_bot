@@ -167,8 +167,87 @@
       "job_name": "包住！底薪5k！周末休息！资料整理文员5-10K长沙查看职位",
       "isFriend": false,
       "mid": "394957391811328"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395087215039233",
+      "block": "湖南企税建银信息科技邀请您现场面试，前往查看，确认是否接受 立即查看",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "湖南企税建银信息科技邀请您现场面试，前往查看，确认是否接受 立即查看"
+    },
+    {
+      "text": "下周一下午你看方便吗‘",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395087252288258",
+      "block": "下周一下午你看方便吗‘",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "下周一下午你看方便吗‘"
+    },
+    {
+      "sender": "bot",
+      "content": "[已拒绝现场面试邀请]",
+      "text": "[已拒绝现场面试邀请]",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "policy",
+      "action": "text",
+      "timestamp": "2026-10-10 09:36:41",
+      "time": "09:36",
+      "job_name": "包住！底薪5k！周末休息！资料整理文员5-10K长沙查看职位",
+      "isFriend": false
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395087883576069",
+      "block": "拒绝了面试邀请",
+      "sender": "me",
+      "kind": "card",
+      "content": "",
+      "card_text": "拒绝了面试邀请"
+    },
+    {
+      "text": "怎么了",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395088861115138",
+      "block": "怎么了",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "怎么了"
+    },
+    {
+      "sender": "bot",
+      "content": "不好意思，我这边只找线上远程就能完成的兼职，线下面试就不占用您的时间了，这个岗位我先放弃，感谢您的邀请。",
+      "text": "不好意思，我这边只找线上远程就能完成的兼职，线下面试就不占用您的时间了，这个岗位我先放弃，感谢您的邀请。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "policy",
+      "action": "text",
+      "timestamp": "2026-10-10 09:43:16",
+      "time": "09:43",
+      "job_name": "包住！底薪5k！周末休息！资料整理文员5-10K长沙查看职位",
+      "isFriend": false,
+      "mid": "395089502401285"
     }
   ],
-  "updated_at": "2026-10-10 02:25:29",
+  "updated_at": "2026-10-23 14:43:01",
   "unread_on_boss": 0
 }

@@ -175,7 +175,19 @@ console.log(JSON.stringify(out));
         f.write(js)
         path = f.name
     try:
-        proc = subprocess.run(["node", path], capture_output=True, text=True, timeout=30)
+        for 第几次 in (1, 2):
+            try:
+                # 这台机器上常有另一个会话在跑重活（10-23 全量回归时 node 冷启动被挤到 30 秒以外，
+                # 把这条判成了红；单跑这一份只要 2.8 秒）。所以给足预算、再让一次，
+                # 两次都不回才说话，而且要说成"机器被占满"这条可核对的原因，不许含糊成前端坏了。
+                proc = subprocess.run(["node", path], capture_output=True,
+                                      text=True, encoding="utf-8", errors="replace",
+                                      timeout=120)
+                break
+            except subprocess.TimeoutExpired:
+                if 第几次 == 2:
+                    pytest.fail("node 连跑两次各 120 秒都没回话（单跑这一份只要 2.8 秒）——"
+                                "先确认是不是别的会话把机器占满了，再重跑这一条")
     finally:
         Path(path).unlink(missing_ok=True)
     assert proc.returncode == 0, "node 执行失败:\n%s" % proc.stderr

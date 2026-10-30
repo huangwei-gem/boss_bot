@@ -1,0 +1,50 @@
+{
+  "chat_name": "甘佳",
+  "chat_id": "甘佳#三一重工",
+  "account_index": 0,
+  "job_name": "数据产品经理16-17K长沙",
+  "company": "三一重工",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "02:40",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394985641870083",
+      "block": "02:40 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "不好意思，我们这个岗位已经招满了，暂时没有新的招聘需求。",
+      "time": "14:33",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "399053557166849",
+      "block": "14:33 不好意思，我们这个岗位已经招满了，暂时没有新的招聘需求。",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，我们这个岗位已经招满了，暂时没有新的招聘需求。"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，祝您招聘顺利~",
+      "text": "好的，感谢您的时间，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-21 14:33:34",
+      "time": "14:33",
+      "job_name": "数据产品经理16-17K长沙查看职位",
+      "isFriend": false,
+      "mid": "399053714871044"
+    }
+  ],
+  "updated_at": "2026-10-25 02:07:52",
+  "unread_on_boss": 0
+}

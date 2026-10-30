@@ -1,0 +1,79 @@
+{
+  "chat_name": "隋先生",
+  "chat_id": "隋先生#银雁科技",
+  "account_index": 1,
+  "job_name": "数据分析师（双休+五险一金）6-8K上海查看职位",
+  "company": "银雁科技",
+  "messages": [
+    {
+      "text": "",
+      "time": "10:48",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397228913148418",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学在读本科生，主做数据分析和数据标注，有AI训练数据质检经验。看到贵司数据分析师岗位，想线上兼职参与，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397229029474822",
+      "block": "已读 您好，我是统计学在读本科生，主做数据分析和数据标注，有AI训练数据质检经验。看到贵司数据分析师岗位，想线上兼职参与，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学在读本科生，主做数据分析和数据标注，有AI训练数据质检经验。看到贵司数据分析师岗位，想线上兼职参与，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "你好，人在哪里，还在职吗，学历是学信网全日制的吗",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397229151343107",
+      "block": "你好，人在哪里，还在职吗，学历是学信网全日制的吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，人在哪里，还在职吗，学历是学信网全日制的吗"
+    },
+    {
+      "sender": "bot",
+      "content": "您好隋先生，我在校在读，暂未全职工作，学信网可查本科在读。线上可协作，是否需要我发送简历进一步沟通？",
+      "text": "您好隋先生，我在校在读，暂未全职工作，学信网可查本科在读。线上可协作，是否需要我发送简历进一步沟通？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-16 15:42:11",
+      "time": "15:42",
+      "job_name": "数据分析师（双休+五险一金）6-8K上海查看职位",
+      "isFriend": false,
+      "mid": "397301077000707"
+    },
+    {
+      "sender": "bot",
+      "content": "方便的话我发下简历，您有空看下？",
+      "text": "方便的话我发下简历，您有空看下？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-20 16:24:54",
+      "time": "16:24",
+      "job_name": "数据分析师（双休+五险一金）6-8K上海查看职位",
+      "isFriend": false,
+      "mid": "398727160676870"
+    }
+  ],
+  "updated_at": "2026-10-23 13:21:58",
+  "unread_on_boss": 0
+}

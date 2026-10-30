@@ -6,46 +6,6 @@
   "company": "湖南喆胜",
   "messages": [
     {
-      "text": "月入8-9k 坐班审核岗 午休两小时+社保 有兴趣了解下吗？",
-      "time": "昨天 19:16",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "392753096336129",
-      "block": "昨天 19:16 月入8-9k 坐班审核岗 午休两小时+社保 有兴趣了解下吗？",
-      "sender": "hr",
-      "kind": "bubble",
-      "content": "月入8-9k 坐班审核岗 午休两小时+社保 有兴趣了解下吗？"
-    },
-    {
-      "text": "",
-      "time": "",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "392753096418052",
-      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
-      "sender": "hr",
-      "kind": "card",
-      "content": "",
-      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
-    },
-    {
-      "sender": "bot",
-      "content": "好的，感谢您的消息，我会尽快回复您。",
-      "text": "好的，感谢您的消息，我会尽快回复您。",
-      "is_mine": true,
-      "kind": "bubble",
-      "source": "bot",
-      "reply_source": "default",
-      "action": "text",
-      "timestamp": "2026-10-04 10:44:53",
-      "time": "10:44",
-      "job_name": "审核岗 月入五位数 可盖实习章 接受小白11-12K长沙查看职位",
-      "isFriend": false,
-      "mid": "392981274391297"
-    },
-    {
       "sender": "bot",
       "content": "钱先生您好，之前聊的审核岗 月入五位数 可盖实习章 接受小白11-12K长沙查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
       "text": "钱先生您好，之前聊的审核岗 月入五位数 可盖实习章 接受小白11-12K长沙查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
@@ -305,9 +265,64 @@
       "timestamp": "2026-10-10 04:02:50",
       "time": "04:02",
       "job_name": "审核岗 月入五位数 可盖实习章 接受小白11-12K长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395005834408705"
+    },
+    {
+      "text": "今天就是工作日今天下午方便吗",
+      "time": "08:20",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395069273260801",
+      "block": "08:20 今天就是工作日今天下午方便吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "今天就是工作日今天下午方便吗"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的邀约，不过我之前提到过，我目前主要找线上远程的兼职岗位，线下坐班的话可能不太适合我，如果贵公司后续有线上岗位可以优先考虑我。",
+      "text": "感谢您的邀约，不过我之前提到过，我目前主要找线上远程的兼职岗位，线下坐班的话可能不太适合我，如果贵公司后续有线上岗位可以优先考虑我。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 09:46:20",
+      "time": "09:46",
+      "job_name": "审核岗 月入五位数 可盖实习章 接受小白11-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "395090254488321"
+    },
+    {
+      "text": "不接受线上办公",
+      "time": "10:57",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395107693744898",
+      "block": "10:57 不接受线上办公",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不接受线上办公"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，岗位情况我了解了，不耽误您时间。感谢钱先生这几天的耐心介绍，祝您招聘顺利。",
+      "text": "好的，岗位情况我了解了，不耽误您时间。感谢钱先生这几天的耐心介绍，祝您招聘顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 12:33:43",
+      "time": "12:33",
+      "job_name": "审核岗 月入五位数 可盖实习章 接受小白11-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "395131389784834"
     }
   ],
-  "updated_at": "2026-10-10 04:02:50",
-  "unread_on_boss": 1
+  "updated_at": "2026-10-16 05:30:06",
+  "unread_on_boss": 0
 }

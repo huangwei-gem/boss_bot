@@ -164,9 +164,37 @@
       "timestamp": "2026-10-09 12:38:41",
       "time": "12:38",
       "job_name": "兼职·教育专家库-居家线上命题评审项目兼职500-600元/天芜湖查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394778709967619"
+    },
+    {
+      "text": "不需要了哦",
+      "time": "昨天 15:24",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394819518993160",
+      "block": "昨天 15:24 不需要了哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不需要了哦"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，祝您招聘顺利。",
+      "text": "好的，感谢您的时间，祝您招聘顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 10:12:11",
+      "time": "10:12",
+      "job_name": "兼职·教育专家库-居家线上命题评审项目兼职500-600元/天芜湖查看职位",
+      "isFriend": false,
+      "mid": "395096610177798"
     }
   ],
-  "updated_at": "2026-10-09 12:38:41",
+  "updated_at": "2026-10-23 14:42:29",
   "unread_on_boss": 0
 }

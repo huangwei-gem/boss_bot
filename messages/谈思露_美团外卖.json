@@ -2,7 +2,7 @@
   "chat_name": "谈思露",
   "chat_id": "谈思露#美团外卖",
   "account_index": 0,
-  "job_name": "美团送餐员8-9K长沙查看职位",
+  "job_name": "美团送餐员8-9K长沙",
   "company": "美团外卖",
   "messages": [
     {
@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "394386338530056",
-      "block": "10:02 此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+      "block": "此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
       "sender": "hr",
       "kind": "system",
       "content": "此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
@@ -201,6 +201,6 @@
       "content": "好的，祝您一切顺利～"
     }
   ],
-  "updated_at": "2026-10-10 06:48:25",
+  "updated_at": "2026-10-25 07:58:44",
   "unread_on_boss": 0
 }

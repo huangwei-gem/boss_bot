@@ -1,0 +1,23 @@
+{
+  "chat_name": "谢女士",
+  "chat_id": "谢女士#拼多多集团_PDD",
+  "account_index": 1,
+  "job_name": "【拼多多集团】2027届数据分析师20-35K·16薪上海查看职位",
+  "company": "拼多多集团-PDD",
+  "messages": [
+    {
+      "text": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Python、SQL和Excel。看到贵司数据分析师岗位，方向很匹配，方便的话我把简历发您细聊。",
+      "time": "14:23",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397635631710724",
+      "block": "14:23 送达 您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Python、SQL和Excel。看到贵司数据分析师岗位，方向很匹配，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Python、SQL和Excel。看到贵司数据分析师岗位，方向很匹配，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:20:52"
+}

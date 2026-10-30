@@ -74,9 +74,22 @@ def 放行(头, 直连IP, token="", 免鉴权=False):
 # ===================== 这台机器上是不是已经有一个面板 =====================
 
 面板主机 = "127.0.0.1"
-默认面板端口 = 5000
+# 面板用哪个口不在这里写死——住在 boss_bot/unified_config.py 一处（10-28 起是 5001，
+# 因为这台机器上 5000 长期被另一个项目的 app.py 占着，面板一起来就绑不上，
+# "看一眼前端统计"变成"得先去关别的程序"）。这里只把那个数连同 BOSS_PANEL_PORT
+# 的覆盖取过来，给 app.py 和单测用；启动器与实测脚本读的是同一份。
+# 自己把路径补上：app.py 有 sys.path 处理，但单测/脚本可能只把 flask-version 加进路径。
+import sys as _sys
+from pathlib import Path as _Path
+
+_仓库根 = str(_Path(__file__).resolve().parents[1])
+if _仓库根 not in _sys.path:
+    _sys.path.insert(0, _仓库根)
+from boss_bot.unified_config import 面板端口 as _面板端口  # noqa: E402
+
+默认面板端口 = _面板端口()
 # 这个口一定要在"读数据"的接口上：/ 会返回 index.html，任何 web 服务都返 200，
-# 光看"有没有人应答"就把对面认领成面板，等于把 5000 上别的服务当成第二个副本、
+# 光看"有没有人应答"就把对面认领成面板，等于把端口上别的服务当成第二个副本、
 # 于是永远起不来（而真面板可能压根没跑）。accounts 这个键只有本面板有。
 面板探路 = "/api/status"
 

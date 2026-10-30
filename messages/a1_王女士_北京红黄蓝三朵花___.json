@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394396329955841",
-      "block": "昨天 10:42 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -30,7 +30,73 @@
       "kind": "bubble",
       "content": "您好，我有数据标注和AI训练数据处理经验，熟悉多模态数据采集与质检流程，看到贵司机器人信息数据采集岗非常匹配，想进一步了解具体工作内容和线上协作方式，期待沟通！",
       "reply_source": "greet"
+    },
+    {
+      "text": "哈喽 您好 地址距离看合适吗？",
+      "time": "10-13 14:43",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396225056604680",
+      "block": "10-13 14:43 哈喽 您好 地址距离看合适吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "哈喽 您好 地址距离看合适吗？"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396225064923657",
+      "block": "您是否接受此工作地点? 得实大厦(北京海淀区得实大厦1-1-1) 暂不考虑可以接受",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "您是否接受此工作地点? 得实大厦(北京海淀区得实大厦1-1-1) 暂不考虑可以接受"
+    },
+    {
+      "text": "您方便发份简历嘛？",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396225068429824",
+      "block": "您方便发份简历嘛？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您方便发份简历嘛？"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396225075622400",
+      "block": "我想要一份您的附件简历，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意"
+    },
+    {
+      "sender": "bot",
+      "content": "不好意思，我这边只找线上远程就能完成的兼职，线下面试就不占用您的时间了，这个岗位我先放弃，感谢您的邀请。",
+      "text": "不好意思，我这边只找线上远程就能完成的兼职，线下面试就不占用您的时间了，这个岗位我先放弃，感谢您的邀请。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "policy",
+      "action": "text",
+      "timestamp": "2026-10-16 05:35:37",
+      "time": "05:35",
+      "job_name": "兼职·日薪200简单操作，机器人信息数据采集岗4000-6000元/月北京查看职位",
+      "isFriend": false,
+      "mid": "397152001933825"
     }
   ],
-  "updated_at": "2026-10-09 23:08:16"
+  "updated_at": "2026-10-23 14:53:48",
+  "unread_on_boss": 0
 }

@@ -3,7 +3,7 @@
 pytest 那侧锁的是源码形状；这里要看到的是"手真的点下去了，界面真的换了"。
 尤其"右侧数据范围点了没反应"这一条，只有真浏览器能证。
 
-绝不碰用户那份 bot_config.json，也不干扰正在跑的 5000 面板：
+绝不碰用户那份 bot_config.json，也不干扰正在跑的线上面板：
 临时目录放一份副本，起第二个 Flask（端口 5056，路径全指向副本），
 浏览器用项目内置 cloakbrowser 的独立实例。全程只点本地面板，不碰 BOSS，
 不点任何发送/打招呼/发简历按钮。
@@ -25,6 +25,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+from tests.conftest import mk测试临时目录  # noqa: E402
 sys.path.insert(0, str(PROJECT_ROOT / "tests"))
 
 import e2e_greet_records_ui as harness  # noqa: E402
@@ -122,11 +123,13 @@ def wait_for(page, js, tries=24):
 
 
 def active_chip(page):
-    return page.run_js("return (document.querySelector('.scope-chip.active')||{}).textContent||''")
+    # 只认数据范围那一组：无头/有头两颗按钮和判分复盘的账号按钮同用 .scope-chip 类名，
+    # 取全局 .active 会先撞上页首那颗形态按钮（scope_chips() 就是为此按 data-scope 过滤的）
+    return page.run_js("return (document.querySelector('#metricsScope .scope-chip.active')||{}).textContent||''")
 
 
 def main():
-    tmp_dir = Path(tempfile.mkdtemp(prefix="boss_account_scope_"))
+    tmp_dir = mk测试临时目录("boss_account_scope")
     proc = None
     page = br = None
     before = sha_of_cookies()
@@ -145,7 +148,8 @@ def main():
         page.get(URL)
         page.wait.doc_loaded()
         check("开机零点击就有数据范围条（不用等 20 秒轮询）",
-              wait_for(page, f"return document.querySelectorAll('.scope-chip').length === {n_accounts + 1}"),
+              wait_for(page, "return document.querySelectorAll("
+                             f"'#metricsScope [data-scope]').length === {n_accounts + 1}"),
               f"chip {len(scope_chips(page))} 个 / 期望 {n_accounts + 1} 个")
         check("默认高亮在「全部账号」", "全部" in active_chip(page), active_chip(page))
 
@@ -156,37 +160,65 @@ def main():
               bool(page.run_js("return !!((document.querySelector('#metricsScope .scope-chip')||{})).__keep")))
 
         # ── 1. 点右侧 chip：立刻高亮，且记录跟着切 ──
-        target = n_accounts          # 最后一个 chip = 最后一个账号
-        # 只取 .chip-name：chip 里还挂着状态点和"空闲/投递中"这类计数，
-        # 拿整颗 chip 的 textContent 会得到「账号2空闲」，跟提示语里的
-        # 账号名永远对不上（这条曾经就是这么假失败的）。
-        chip_text = (page.run_js(
-            "var c=document.querySelectorAll('.scope-chip')[%d]||{};"
-            "var n=c.querySelector?c.querySelector('.chip-name'):null;"
-            "return (n?n.textContent:(c.textContent||''))||''" % target)
-            or "").strip()
-        assert chip_text and click_chip(page, target), "点不到账号 chip"
+        # 只认数据范围那一组（无头/有头两颗按钮同用 .scope-chip），按下标取第 n_accounts 颗
+        # = 最后一个账号；只取 .chip-name 是因为 chip 里还挂着状态点和"空闲/投递中"，
+        # 拿整颗 textContent 会得到「账号2空闲」，跟提示语里的账号名永远对不上（假失败过）。
+        颗 = page.run_js("""
+            return JSON.stringify([...document.querySelectorAll('#metricsScope [data-scope]')]
+                .map(function(b){var n=b.querySelector('.chip-name');
+                  return {ds: b.getAttribute('data-scope'),
+                          name: (n?n.textContent:(b.textContent||'')).trim()};}));""")
+        chips_ = json.loads(颗 or "[]")
+        要 = chips_[n_accounts] if len(chips_) > n_accounts else None
+        assert 要 and 要["name"], "数据范围条里没等到最后一颗账号 chip：%s" % 颗
+        chip_text = 要["name"]
+        # 点下去没换范围就重点：实测踩过一次句柄拿到了、坐标也点了，但 dataScope 还在 all
+        # （chip 会被 20 秒轮询重绘，grab 和 click 之间可能换了节点），
+        # 三次点不到才算红——不能把"没点到"写成"产品没换"。
+        点了 = False
+        for _ in range(3):
+            if click_chip(page, n_accounts):
+                点了 = wait_for(page, "return String(dataScope) === %s"
+                                      % json.dumps(str(要["ds"])), tries=8)
+                if 点了:
+                    break
+            time.sleep(0.4)
+        assert 点了, "点了三回账号 chip，dataScope 还是没换成 %s" % 要["ds"]
         check("点一下 chip 高亮立即换人",
-              wait_for(page, "return ((document.querySelector('.scope-chip.active')||{}).textContent||'')"
+              wait_for(page, "return ((document.querySelector('#metricsScope .scope-chip.active')||{}).textContent||'')"
                              ".indexOf(%s) >= 0" % json.dumps(chip_text, ensure_ascii=False),
                        tries=12),
               f"点的是「{chip_text}」，现在高亮「{active_chip(page)}」")
+        # 提示语跟着 /api/config 回来才重画（账号名要从盘上取），读一次就断言等于读在请求前面：
+        # 实测这条红过一次，界面其实几秒后就对了。有界地等，等够还不改才算产品没换
         check("切换后作用对象提示跟着改",
-              (chip_text or "").strip() in page.run_js(
-                  "return String((document.getElementById('aiScopeNote')||{}).textContent||'')"),
+              wait_for(page, "return String((document.getElementById('aiScopeNote')||{}).textContent||'')"
+                             ".indexOf(%s) >= 0" % json.dumps(chip_text, ensure_ascii=False), tries=24),
               page.run_js("return String((document.getElementById('aiScopeNote')||{}).textContent||'')"))
 
         want = api(f"/api/greet_records?account={n_accounts - 1}")
-        rows = int(page.run_js("return document.querySelectorAll('#greetTable tbody tr').length") or 0)
-        shown = page.run_js(
-            "return Array.from(document.querySelectorAll('#greetTable tbody tr'))"
-            ".slice(0,3).map(function(t){var c=t.querySelectorAll('td');return (c[1]?c[1].innerText:'')+'|'"
-            "+(c[2]?c[2].innerText:'')}).join(' || ')")
-        api_head = " || ".join(f"{(r.get('job_name') or '')}|{(r.get('company') or '')}"
+        记录条 = len(want.get("records") or [])
+        # 界面把空字段画成 —，接口给的是空串：照界面的画法把接口那侧也写成 —，
+        # 不然"两边其实一样"会被比成不一致（这条曾经就是这么假红的）
+        api_head = " || ".join(f"{(r.get('job_name') or '—')}|{(r.get('company') or '—')}"
                                for r in (want.get("records") or [])[:3])
+        rows, shown = 0, ""
+        for _ in range(16):
+            # 点完 chip 表要重拉一次才有新范围的内容，立刻读一定读到旧的
+            rows = int(page.run_js("return document.querySelectorAll('#greetTable tbody tr').length") or 0)
+            shown = page.run_js(
+                "return Array.from(document.querySelectorAll('#greetTable tbody tr'))"
+                ".slice(0,3).map(function(t){var c=t.querySelectorAll('td');return (c[1]?c[1].innerText:'')+'|'"
+                "+(c[2]?c[2].innerText:'')}).join(' || ')") or ""
+            if (api_head in shown) if 记录条 else (rows == 0):
+                break
+            time.sleep(0.5)
+        if 记录条:
+            一致 = api_head in shown
+        else:
+            一致 = rows == 0      # 这个号一条都没有，表里也不该留着行
         check("打招呼记录表按新范围重拉（前几行与后端一致）",
-              (not api_head) or (api_head in shown) or rows == 0,
-              f"界面 {shown[:90]} / 接口 {api_head[:90]}")
+              一致, f"界面 {shown[:90]} / 接口 {api_head[:90]} / 盘上 {记录条} 条")
 
         # ── 2. 右侧/底部不再有登录入口，左侧仍然能登录 ──
         check("「确认登录」按钮已从界面撤掉（函数也一起删了）",
@@ -273,7 +305,11 @@ def main():
         label = page.run_js("return Array.from(document.querySelectorAll('#jobModal label'))"
                             ".map(function(e){return e.textContent}).join('|')")
         check("新建岗位弹窗的招呼语框不预填话术", not modal_g.strip(), repr(modal_g[:60]))
-        check("岗位招呼语写明留空走账号级", "账号级" in label, label[:120])
+        # 2026-10-18 招呼语优先级翻转（AI 现编 > 岗位手写 > 账号默认）之后，
+        # 这一格的说明改成"兜底：只在 AI 这次没现编出来时才用"，不再是"账号级"三个字；
+        # 要测的东西没变：留空不许预填话术，而且标签得说清留空会走哪一层兜底。
+        check("岗位招呼语写明留空走兜底（AI 现编优先，落不到账号级就是漏说）",
+              ("兜底" in label) or ("账号级" in label), label[:120])
         page.run_js("closeJobModal && closeJobModal();return 1")
 
         # ── 6. 新增账号：列表 +1，红点，数据范围自动跟到新号 ──
@@ -386,7 +422,8 @@ def main():
         print(f"  共 {len(results)} 项，失败 {len(results) - passed} 项")
         for name, ok, detail in results:
             if not ok:
-                print(f"  ✗ {name} — {detail}")
+                # 不用 ✗：默认 GBK 控制台编不出来，异常会把这条失败本身吞掉
+                print(f"  [FAIL] {name} — {detail}")
         return 0 if passed == len(results) else 1
 
 

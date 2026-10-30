@@ -2,7 +2,7 @@
   "chat_name": "叶先生",
   "chat_id": "叶先生#红精灵网络科技有公司",
   "account_index": 0,
-  "job_name": "兼职·兼职游戏客服30-50元/时广州查看职位",
+  "job_name": "兼职·兼职游戏客服30-50元/时广州",
   "company": "红精灵网络科技有公司",
   "messages": [
     {
@@ -44,9 +44,37 @@
       "timestamp": "2026-10-09 13:52:14",
       "time": "13:52",
       "job_name": "兼职·兼职游戏客服30-50元/时广州查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394796785316608"
+    },
+    {
+      "text": "你好呀，公司招兼职客服主要工作内容是回访推广公司游戏，与玩家打字交流",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394796820902656",
+      "block": "你好呀，公司招兼职客服主要工作内容是回访推广公司游戏，与玩家打字交流",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好呀，公司招兼职客服主要工作内容是回访推广公司游戏，与玩家打字交流"
+    },
+    {
+      "sender": "bot",
+      "content": "客服这种岗位我不考虑哈，以后这类的不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "text": "客服这种岗位我不考虑哈，以后这类的不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-18 17:30:19",
+      "time": "17:30",
+      "job_name": "兼职·兼职游戏客服30-50元/时广州查看职位",
+      "isFriend": false,
+      "mid": "398035434107651"
     }
   ],
-  "updated_at": "2026-10-09 13:52:14",
+  "updated_at": "2026-10-25 02:18:44",
   "unread_on_boss": 0
 }

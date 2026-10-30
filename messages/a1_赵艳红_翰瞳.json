@@ -1,0 +1,23 @@
+{
+  "chat_name": "赵艳红",
+  "chat_id": "赵艳红#翰瞳",
+  "account_index": 1,
+  "job_name": "算法数据分析师25-35K上海查看职位",
+  "company": "翰瞳",
+  "messages": [
+    {
+      "text": "您好，我是统计学本科在读，具备数据标注、AI训练数据质检和数据分析经验，熟练使用SQL和Python，对算法数据分析师岗位很感兴趣，方便的话我把简历发您细聊",
+      "time": "14:09",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397632099422722",
+      "block": "14:09 送达 您好，我是统计学本科在读，具备数据标注、AI训练数据质检和数据分析经验，熟练使用SQL和Python，对算法数据分析师岗位很感兴趣，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，具备数据标注、AI训练数据质检和数据分析经验，熟练使用SQL和Python，对算法数据分析师岗位很感兴趣，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-18 12:42:51"
+}

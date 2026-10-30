@@ -133,7 +133,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394976252715521",
-      "block": "02:02 -Re1ax 袁先生的微信号 -Re1ax 复制微信号",
+      "block": "-Re1ax 袁先生的微信号 -Re1ax 复制微信号",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -166,9 +166,67 @@
       "timestamp": "2026-10-10 06:19:38",
       "time": "06:19",
       "job_name": "兼职·AI数据标注20-30元/时西安查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395039454712321"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，已发送好友申请，麻烦通过一下，方便约面试时间~",
+      "text": "好的，已发送好友申请，麻烦通过一下，方便约面试时间~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 15:26:58",
+      "time": "15:26",
+      "job_name": "兼职·AI数据标注20-30元/时西安查看职位",
+      "isFriend": false,
+      "mid": "397651228983808"
+    },
+    {
+      "text": "已经加你了，没通过",
+      "time": "昨天 18:56",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398410437272066",
+      "block": "昨天 18:56 已经加你了，没通过",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "已经加你了，没通过"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，稍等哈～我这边通过下，马上加您。",
+      "text": "好的，稍等哈～我这边通过下，马上加您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 18:39:11",
+      "time": "18:39",
+      "job_name": "兼职·AI数据标注20-30元/时西安查看职位",
+      "isFriend": false,
+      "mid": "398760161677825"
+    },
+    {
+      "sender": "bot",
+      "content": "啊，我这边可能没刷出来，现在通过下，稍等哈",
+      "text": "啊，我这边可能没刷出来，现在通过下，稍等哈",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 19:00:42",
+      "time": "19:00",
+      "job_name": "兼职·AI数据标注20-30元/时西安查看职位",
+      "isFriend": false,
+      "mid": "398765449458179"
     }
   ],
-  "updated_at": "2026-10-10 06:19:38",
+  "updated_at": "2026-10-23 13:14:05",
   "unread_on_boss": 0
 }

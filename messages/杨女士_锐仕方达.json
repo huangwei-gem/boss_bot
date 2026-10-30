@@ -28,7 +28,35 @@
       "sender": "hr",
       "kind": "bubble",
       "content": "🙏不好意思，不太合适！"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-10 17:49:32",
+      "time": "17:49",
+      "job_name": "仿真工程师（机械、分析、NVH、电机结构）（猎头职位）18-35K长沙查看职位",
+      "isFriend": false,
+      "mid": "395209017020675"
+    },
+    {
+      "text": "谢谢~",
+      "time": "10-12 09:32",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395794742399237",
+      "block": "10-12 09:32 谢谢~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "谢谢~"
     }
   ],
-  "updated_at": "2026-10-10 09:13:10"
+  "updated_at": "2026-10-23 14:24:43",
+  "unread_on_boss": 1
 }

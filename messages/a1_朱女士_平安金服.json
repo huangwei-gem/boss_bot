@@ -1,0 +1,51 @@
+{
+  "chat_name": "朱女士",
+  "chat_id": "朱女士#平安金服",
+  "account_index": 1,
+  "job_name": "人事数据分析岗/周末双休+六险二金10-13K·15薪上海查看职位",
+  "company": "平安金服",
+  "messages": [
+    {
+      "text": "您好，我是统计学本科在读，有数据标注、AI训练数据清洗与质检经验，熟练使用Python/SQL做数据分析与可视化。看到贵司在招人数据分析岗，我对这个方向很感兴趣，方便的话我把简历发您细聊。",
+      "time": "14:11",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397632699036161",
+      "block": "14:11 送达 您好，我是统计学本科在读，有数据标注、AI训练数据清洗与质检经验，熟练使用Python/SQL做数据分析与可视化。看到贵司在招人数据分析岗，我对这个方向很感兴趣，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据标注、AI训练数据清洗与质检经验，熟练使用Python/SQL做数据分析与可视化。看到贵司在招人数据分析岗，我对这个方向很感兴趣，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "19:13",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397706885243395",
+      "block": "19:13 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "text": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-17 19:13:46",
+      "time": "19:13",
+      "job_name": "人事数据分析岗/周末双休+六险二金10-13K·15薪上海查看职位",
+      "isFriend": false,
+      "mid": "397706966376961"
+    }
+  ],
+  "updated_at": "2026-10-23 13:58:55",
+  "unread_on_boss": 0
+}

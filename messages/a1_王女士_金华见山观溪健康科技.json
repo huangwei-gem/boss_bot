@@ -69,9 +69,81 @@
       "timestamp": "2026-10-10 04:30:29",
       "time": "04:30",
       "job_name": "兼职·短视频运营专员（远程线上，每月四条）1000-2000元/月金华查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395012629098752"
+    },
+    {
+      "text": "",
+      "time": "10:15",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395097402216705",
+      "block": "我想要和您交换联系方式，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换联系方式，您是否同意 拒绝 同意"
+    },
+    {
+      "sender": "bot",
+      "content": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "text": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-10 10:20:51",
+      "time": "10:20",
+      "job_name": "兼职·短视频运营专员（远程线上，每月四条）1000-2000元/月金华查看职位",
+      "isFriend": false,
+      "mid": "395098740859146"
+    },
+    {
+      "text": "没问题，时间安排我这边可以配合，今天或明天完成录音没问题。我稍后加您微信，具体操作和注意事项咱们微信上细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395098874654984",
+      "block": "已读 没问题，时间安排我这边可以配合，今天或明天完成录音没问题。我稍后加您微信，具体操作和注意事项咱们微信上细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "没问题，时间安排我这边可以配合，今天或明天完成录音没问题。我稍后加您微信，具体操作和注意事项咱们微信上细聊。",
+      "reply_source": "ai"
+    },
+    {
+      "sender": "bot",
+      "content": "王女士您好，之前聊的兼职·短视频运营专员（远程线上，每月四条）1000-2000元/月金华查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "王女士您好，之前聊的兼职·短视频运营专员（远程线上，每月四条）1000-2000元/月金华查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 15:00:29",
+      "time": "15:00",
+      "job_name": "兼职·短视频运营专员（远程线上，每月四条）1000-2000元/月金华查看职位",
+      "isFriend": false,
+      "mid": "397644722852096"
+    },
+    {
+      "sender": "bot",
+      "content": "我主要找线上数据分析这类的",
+      "text": "我主要找线上数据分析这类的",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 13:39:07",
+      "time": "13:39",
+      "job_name": "兼职·短视频运营专员（远程线上，每月四条）1000-2000元/月金华查看职位",
+      "isFriend": false,
+      "mid": "399748085633289"
     }
   ],
-  "updated_at": "2026-10-10 04:30:29",
+  "updated_at": "2026-10-23 14:14:44",
   "unread_on_boss": 0
 }

@@ -1,0 +1,23 @@
+{
+  "chat_name": "孙女士",
+  "chat_id": "孙女士#睿资达",
+  "account_index": 1,
+  "job_name": "数据分析师（国企，双休）（猎头职位）25-40K·15薪上海查看职位",
+  "company": "睿资达",
+  "messages": [
+    {
+      "text": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel、SQL、Python，看到贵司数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "time": "14:14",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397633308090881",
+      "block": "14:14 送达 您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel、SQL、Python，看到贵司数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel、SQL、Python，看到贵司数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:21:00"
+}

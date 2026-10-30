@@ -2,7 +2,7 @@
   "chat_name": "李女士",
   "chat_id": "李女士#中软国际",
   "account_index": 0,
-  "job_name": "数据标注3-4K长沙查看职位",
+  "job_name": "数据标注3-4K长沙",
   "company": "中软国际",
   "messages": [
     {
@@ -160,19 +160,6 @@
       "mid": "394405431665410"
     },
     {
-      "text": "",
-      "time": "11:30",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "394408098816771",
-      "block": "11:30",
-      "sender": "hr",
-      "kind": "card",
-      "content": "",
-      "card_text": ""
-    },
-    {
       "text": "哈哈你在搞抽象吗",
       "time": "",
       "isFriend": true,
@@ -212,18 +199,6 @@
       "content": "弟弟 你倒是把简历发我呀"
     },
     {
-      "text": "",
-      "time": "",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "394409318978305",
-      "block": "",
-      "sender": "hr",
-      "kind": "bubble",
-      "content": ""
-    },
-    {
       "sender": "bot",
       "content": "[简历已发送]",
       "text": "[简历已发送]",
@@ -257,7 +232,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "394447463240449",
-      "block": "14:10 对方已查看了您的附件简历",
+      "block": "对方已查看了您的附件简历",
       "sender": "hr",
       "kind": "system",
       "content": "对方已查看了您的附件简历",
@@ -302,9 +277,25 @@
       "timestamp": "2026-10-09 14:54:20",
       "time": "14:54",
       "job_name": "数据标注3-4K长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394812050170633"
+    },
+    {
+      "sender": "bot",
+      "content": "李女士，远程随时能上手，您看方便约个电话细聊下岗位细节吗？",
+      "text": "李女士，远程随时能上手，您看方便约个电话细聊下岗位细节吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-20 15:33:27",
+      "time": "15:33",
+      "job_name": "数据标注3-4K长沙查看职位",
+      "isFriend": false,
+      "mid": "398714510967552"
     }
   ],
-  "updated_at": "2026-10-09 14:54:20",
+  "updated_at": "2026-10-25 02:13:21",
   "unread_on_boss": 0
 }

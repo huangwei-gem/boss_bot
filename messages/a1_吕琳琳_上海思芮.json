@@ -1,0 +1,23 @@
+{
+  "chat_name": "吕琳琳",
+  "chat_id": "吕琳琳#上海思芮",
+  "account_index": 1,
+  "job_name": "数据分析师（大厂 包三餐）8-12K上海查看职位",
+  "company": "上海思芮",
+  "messages": [
+    {
+      "text": "您好，我是统计学本科在读，有数据分析和数据标注经验，熟练使用Excel、SQL、Python和AI工具。看到贵司数据分析师岗位，方向很契合，方便的话我把简历发您细聊。",
+      "time": "14:06",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397631375716867",
+      "block": "14:06 送达 您好，我是统计学本科在读，有数据分析和数据标注经验，熟练使用Excel、SQL、Python和AI工具。看到贵司数据分析师岗位，方向很契合，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据分析和数据标注经验，熟练使用Excel、SQL、Python和AI工具。看到贵司数据分析师岗位，方向很契合，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:28:42"
+}

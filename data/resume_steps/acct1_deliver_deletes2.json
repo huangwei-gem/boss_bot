@@ -1,0 +1,15 @@
+[
+  {"do": "clickka", "ka": "user-resume-del-expectation0", "wait": 2.0},
+  {"do": "clicktext", "text": "继续删除", "wait": 3.0},
+  {"do": "js", "limit": 500, "code": "(() => {\n  const clean = (s) => ((s || '') + '').trim();\n  const p = document.getElementById('purpose');\n  return p ? clean(p.innerText).slice(0, 200) : 'NO BLOCK';\n})()"},
+  {"do": "js", "limit": 700, "code": "(() => {\n  const clean = (s) => ((s || '') + '').trim();\n  const 行 = [...document.querySelectorAll('.annex-item')].find((e) => clean(e.innerText).includes('AIGC生成师'));\n  if (!行) return '没有 AIGC 那一行';\n  const 钮 = 行.querySelector('[ka=side_delete_attachment_btn_click]');\n  if (!钮) return 'AIGC 行里没找到删除钮';\n  [...document.querySelectorAll('[data-orca-tag]')].forEach((x) => x.removeAttribute('data-orca-tag'));\n  行.setAttribute('data-orca-tag', 'row');\n  钮.setAttribute('data-orca-tag', 'hit');\n  return '打上了：行 + 删除钮（删除钮宽=' + Math.round(钮.getBoundingClientRect().width) + '）';\n})()", "wait": 1.0},
+  {"do": "hover", "css": "[data-orca-tag=row]", "wait": 1.5},
+  {"do": "js", "limit": 300, "code": "(() => {const b=document.querySelector('[data-orca-tag=hit]'); if(!b) return '没了'; b.scrollIntoView({block:'center'}); const r=b.getBoundingClientRect(); return '悬停后删除钮 w=' + Math.round(r.width) + ' h=' + Math.round(r.height);})()"},
+  {"do": "realclick", "css": "[data-orca-tag=hit]", "wait": 2.5},
+  {"do": "js", "limit": 800, "code": "(() => {\n  const clean = (s) => ((s || '') + '').trim();\n  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };\n  const d = [...document.querySelectorAll('[class*=dialog]')].filter((e) => vis(e) && clean(e.innerText).length > 2);\n  return {弹窗: d.map((e) => (e.className || '').toString().slice(0, 30) + ':' + clean(e.innerText).slice(0, 80)).slice(0, 3)};\n})()"},
+  {"do": "clicktext", "text": "继续删除", "wait": 3.0},
+  {"do": "clicktext", "text": "确定", "wait": 3.0},
+  {"do": "js", "limit": 700, "code": "(() => {\n  const clean = (s) => ((s || '') + '').trim();\n  const side = document.querySelector('.user-sider') || document;\n  const t = clean(side.innerText);\n  const i = t.indexOf('附件管理');\n  const p = document.getElementById('purpose');\n  return {附件: i >= 0 ? t.slice(i, i + 240) : '读不到', 期望职位: p ? clean(p.innerText).slice(0, 160) : 'NO'};\n})()"},
+  {"do": "reload", "sec": 8},
+  {"do": "js", "limit": 700, "code": "(() => {\n  const clean = (s) => ((s || '') + '').trim();\n  const side = document.querySelector('.user-sider') || document;\n  const t = clean(side.innerText);\n  const i = t.indexOf('附件管理');\n  const p = document.getElementById('purpose');\n  return {附件: i >= 0 ? t.slice(i, i + 300) : '读不到', 期望职位: p ? clean(p.innerText).slice(0, 200) : 'NO'};\n})()"}
+]

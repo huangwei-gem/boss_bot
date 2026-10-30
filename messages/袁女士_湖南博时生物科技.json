@@ -1,0 +1,22 @@
+{
+  "chat_name": "袁女士",
+  "chat_id": "袁女士#湖南博时生物科技",
+  "account_index": 0,
+  "job_name": "数据分析7-8K长沙查看职位",
+  "company": "湖南博时生物科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:42",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394971346461443",
+      "block": "01:42 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-23 14:57:58"
+}

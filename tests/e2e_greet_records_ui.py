@@ -1,10 +1,12 @@
 """打招呼记录实时性的真机点击测试（task #33/#35）。
 
-只打开 http://localhost:5000，不碰 BOSS、不点任何发送类按钮。
+自己起一个临时面板（配置与记录都指向临时副本），不碰 BOSS、不点任何发送类按钮。
 用项目内置 cloakbrowser 起独立实例（独立端口 + 临时用户目录），
 不干扰正在跑的两个投递浏览器。
 
-前置条件：Flask 服务运行在 http://localhost:5000
+不依赖线上那份记录：2026-10-23 用户清掉 172 条旧记录后线上就是 0 条，
+"历史记录渲染出来了"曾经因此变成假红。这里种两条真格式的记录再验渲染。
+
 运行：python tests/e2e_greet_records_ui.py
 """
 
@@ -18,13 +20,18 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+from tests.conftest import mk测试临时目录, 挑空闲端口  # noqa: E402
 from boss_bot.platform_compat import 终止进程
 
 
 from boss_bot.browser_launcher import _find_best_browser_path, _wait_for_port  # noqa: E402
+from boss_bot.unified_config import 面板端口  # noqa: E402
 
 DEBUG_PORT = int(os.environ.get("BOSS_PROBE_PORT", "9333"))
-FLASK_URL = "http://localhost:5000"
+TEST_PORT = 挑空闲端口(int(os.environ.get("BOSS_GREET_UI_PORT", "5061")), "打招呼记录实测")
+if TEST_PORT == 面板端口():
+    raise RuntimeError("实测禁止打线上面板：临时实例不能占用 %d" % TEST_PORT)
+FLASK_URL = "http://127.0.0.1:%s" % TEST_PORT
 UI_TAG = "UI实测"
 _probe_port = DEBUG_PORT
 
@@ -41,6 +48,54 @@ PUSH_AI = dict(PUSH_OK, job_name=f"{UI_TAG}-AI不匹配岗", status="skip", is_s
                skip_reason="AI判定不匹配: 只接受长期实习生",
                ai_reason="岗位只要长期实习生，与期望不符",
                url="https://www.zhipin.com/job_detail/ui_probe_ai.html")
+# 2026-10-29 现场：他勾了「数据标注/AI训练师」，投递腿拿否决词把它弹回来，
+# 记录里那一行被画成「AI不匹配」——那句「AI」是岗位名带进来的，模型根本没判过。
+# 所以状态归类别只认后端真写下的判据原文，不许拿裸「AI」字样猜。
+PUSH_VETO = dict(PUSH_OK, job_name="数据标注/AI训练师", status="skip", is_skipped=True,
+                 skip_reason="JD 命中否决词「坐班」｜数据标注/AI训练师",
+                 ai_reason="", url="https://www.zhipin.com/job_detail/ui_probe_veto.html")
+
+LAUNCHER = """
+import sys, pathlib
+sys.path.insert(0, %(root)r)
+sys.path.insert(0, %(flask)r)
+import boss_bot.unified_config as UC
+tmp = pathlib.Path(%(tmp)r)
+UC.BOT_CONFIG_FILE = tmp / "bot_config.json"
+UC.OVERRIDES_FILE = tmp / "config_overrides.json"
+UC.USER_PROFILE_FILE = tmp / "user_profile.json"
+# 记录文件也指向副本：种的两条只落在临时目录，用户那份记录一个字节都不动
+import boss_bot.reply_record as RR
+RR.DATA_DIR = tmp / "data"
+RR.REPLY_RECORDS_FILE = RR.DATA_DIR / "reply_records.json"
+RR.GREET_RECORDS_FILE = RR.DATA_DIR / "greet_records.json"
+RR._reply_store = None
+RR._greet_store = None
+import boss_bot.job_pool as JP
+JP.resolve_path = lambda p: tmp / "data"
+import app as A
+A.DATA_DIR = tmp / "data"
+A._ensure_config()
+kwargs = {"host": "127.0.0.1", "port": %(port)d, "debug": False, "use_reloader": False}
+if (getattr(A, "_socketio_kwargs", {}) or {}).get("async_mode") == "threading":
+    kwargs["allow_unsafe_werkzeug"] = True
+A.socketio.run(A.app, **kwargs)
+"""
+
+种子记录 = [
+    {"timestamp": "2026-09-29 10:00:00", "job_name": "种子-园林植物养护",
+     "job_url": "https://www.zhipin.com/job_detail/seed_ok.html", "company": "种子公司A",
+     "salary": "6-8K", "ai_score": 85, "ai_is_match": True,
+     "is_greeted": True, "status": "applied", "greeting_message": "您好，我对这个岗位很感兴趣",
+     "account_index": 0, "account_name": "主账号"},
+    {"timestamp": "2026-09-29 10:05:00", "job_name": "种子-AI不匹配岗",
+     "job_url": "https://www.zhipin.com/job_detail/seed_ai.html", "company": "种子公司B",
+     "salary": "5-7K", "ai_score": 20, "ai_is_match": False,
+     "ai_reason": "岗位只要长期实习生，与期望不符",
+     "is_skipped": True, "status": "skipped",
+     "skip_reason": "AI判定不匹配: 只接受长期实习生",
+     "account_index": 0, "account_name": "主账号"},
+]
 
 results = []
 
@@ -80,7 +135,7 @@ def open_browser():
     if not inside_project:
         raise RuntimeError(f"实测必须用项目内置 cloakbrowser，拿到的是 {browser_type}: {exe}")
     print(f"  使用浏览器: {exe}", flush=True)
-    profile = tempfile.mkdtemp(prefix="boss_ui_probe_")
+    profile = str(mk测试临时目录("boss_ui_probe"))
     args = [exe, f"--remote-debugging-port={DEBUG_PORT}", f"--user-data-dir={profile}",
             "--no-first-run", "--no-default-browser-check",
             # 窗口太窄会切到移动端布局：侧栏直接隐藏，元素取不到矩形，点不了
@@ -163,16 +218,51 @@ def click_chip(page, idx):
     return False
 
 
-def main():
+def 种一份临时配置(tmp_dir, 记录=None):
+    """抄三份真配置到临时目录，再种一份打招呼记录（默认用本套件的两条）。"""
+    记录 = 种子记录 if 记录 is None else 记录
+    for 名 in ("bot_config.json", "user_profile.json", "config_overrides.json"):
+        源 = PROJECT_ROOT / 名
+        if 源.is_file():
+            (tmp_dir / 名).write_text(源.read_text(encoding="utf-8"), encoding="utf-8")
+    (tmp_dir / "data").mkdir(parents=True, exist_ok=True)
+    (tmp_dir / "data" / "greet_records.json").write_text(
+        json.dumps({"records": 记录, "total": len(记录),
+                    "last_saved": 记录[-1].get("timestamp") if 记录 else ""},
+                   ensure_ascii=False),
+        encoding="utf-8")
+
+
+def 起临时面板(tmp_dir, port=None):
+    port = int(TEST_PORT if port is None else port)
+    url = "http://127.0.0.1:%s" % port
+    script = LAUNCHER % {"root": str(PROJECT_ROOT),
+                         "flask": str(PROJECT_ROOT / "flask-version"),
+                         "tmp": str(tmp_dir), "port": port}
+    env = dict(os.environ, BOSS_BOT_CONFIG=str(tmp_dir / "bot_config.json"),
+               PYTHONUTF8="1")
+    proc = subprocess.Popen([sys.executable, "-c", script], env=env,
+                            stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     import requests
-    try:
-        requests.get(FLASK_URL, timeout=5)
-    except Exception as e:
-        print(f"Flask 未运行（{e}），先启动面板再跑本脚本")
-        return 2
+    for _ in range(60):
+        if proc.poll() is not None:
+            raise RuntimeError("临时面板自己退了（检查 LAUNCHER 与端口 %d）" % port)
+        try:
+            if requests.get(url + "/api/config", timeout=1).ok:
+                return proc
+        except Exception:
+            time.sleep(0.5)
+    proc.kill()
+    raise RuntimeError("临时面板 30 秒内没起来（端口 %d）" % port)
+
+
+def main():
+    tmp_dir = mk测试临时目录("boss_greet_ui")
+    种一份临时配置(tmp_dir)
+    panel = 起临时面板(tmp_dir)
 
     print("=" * 60)
-    print("  打招呼记录实时性 — 真机点击测试")
+    print("  打招呼记录实时性 — 真机点击测试（临时面板 %d）" % TEST_PORT)
     print("=" * 60)
 
     page, proc = open_browser()
@@ -180,6 +270,13 @@ def main():
         page.get(FLASK_URL)
         page.wait.doc_loaded()
         js = page.run_js
+
+        # 端口落在 Chrome 受限口时，浏览器给的是自己的错误页而不是面板，
+        # 后面每条 JS 都会炸在 ReferenceError 上，看不出为什么。这里先点名。
+        if js("return typeof allGreetRecords") == "undefined":
+            raise RuntimeError(
+                "临时面板页面没打开（端口 %d，正文开头：%s）"
+                % (TEST_PORT, (js("return (document.body.innerText||'').slice(0,80)") or "")))
 
         def dom_rows():
             """DrissionPage 的 "#greetTableBody tr" 取不到子行，只能自己数 DOM"""
@@ -243,6 +340,35 @@ def main():
         check("推送的 AI 跳过与落库判定一致（ai_skip）",
               js("return allGreetRecords[0].status") == "ai_skip")
 
+        # ── 真机：否决词跳过那条不许被岗位名里的「AI」带成「AI不匹配」 ──
+        push_veto_js = json.dumps(PUSH_VETO, ensure_ascii=False)
+        js(f"addGreetRecord({push_veto_js});")
+        check("否决词跳过归 skip（不是 ai_skip）",
+              js("return allGreetRecords[0].status") == "skip",
+              js("return allGreetRecords[0].skip_reason"))
+        veto_rows = []
+        for _ in range(10):
+            time.sleep(0.3)
+            veto_rows = [t for t in row_texts() if PUSH_VETO["job_name"] in t]
+            if veto_rows:
+                break
+        check("那一行上屏是「跳过」不是「AI不匹配」",
+              bool(veto_rows) and "跳过" in veto_rows[0] and "AI不匹配" not in veto_rows[0],
+              veto_rows[0][:130] if veto_rows else "没有那一行")
+        状 = page.ele("#greetFilterStatus")
+        状.click()
+        状.select.by_text("AI不匹配")
+        名 = page.ele("#greetFilterJob")
+        名.click()
+        名.clear(by_js=True)
+        名.input(PUSH_VETO["job_name"])
+        time.sleep(0.6)
+        筛后 = [t for t in row_texts() if PUSH_VETO["job_name"] in t]
+        check("挑「AI不匹配」筛不出这条否决词跳过",
+              len(筛后) == 0, f"屏上 {len(筛后)} 行: {(筛后 or [''])[0][:90]}")
+        js("resetGreetFilter()")
+        time.sleep(0.3)
+
         # ── 真机点筛选：这就是原来的 bug，推送行一动筛选就消失 ──
         kw = page.ele("#greetFilterJob")
         kw.click()
@@ -285,7 +411,7 @@ def main():
 
         # ── 数据范围切换要真换数据（右侧只管数据）──
         chips = scope_chips(page)
-        js_chips = int(js("return document.querySelectorAll('.scope-chip').length"))
+        js_chips = int(js("return document.querySelectorAll('#metricsScope [data-scope]').length"))
         want = len(load_config_accounts()) + 1   # 全部账号 + 每个账号一个 chip
         if want < 3:
             check("点数据范围 chip 会按账号重拉记录", len(chips) == 0,
@@ -324,6 +450,7 @@ def main():
         print(f"  截图: tests/screenshots/greet_records_ui.png", flush=True)
     finally:
         close_browser(proc)
+        终止进程(panel.pid)
 
     failed = [r for r in results if not r[1]]
     print("\n" + "=" * 60)

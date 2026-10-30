@@ -2,7 +2,7 @@
   "chat_name": "陈女士",
   "chat_id": "陈女士#新佳宜便利店",
   "account_index": 0,
-  "job_name": "业务数据治理专家/工程师18-30K长沙查看职位",
+  "job_name": "业务数据治理专家/工程师18-30K长沙",
   "company": "新佳宜便利店",
   "messages": [
     {
@@ -28,7 +28,23 @@
       "sender": "hr",
       "kind": "bubble",
       "content": "感谢您的关注与沟通，您的优势方向可能和当前沟通的该职位我司的需求方向不太一致，希望下次有机会合作。"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-10 15:35:00",
+      "time": "15:35",
+      "job_name": "业务数据治理专家/工程师18-30K长沙查看职位",
+      "isFriend": false,
+      "mid": "395175946502923"
     }
   ],
-  "updated_at": "2026-10-10 09:13:34"
+  "updated_at": "2026-10-25 07:03:53",
+  "unread_on_boss": 0
 }

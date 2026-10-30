@@ -2,7 +2,7 @@
   "chat_name": "陈先生",
   "chat_id": "陈先生#波烽数据",
   "account_index": 0,
-  "job_name": "兼职·数据标注/AI训练师20-25元/时南充查看职位",
+  "job_name": "兼职·数据标注/AI训练师20-25元/时南充",
   "company": "波烽数据",
   "messages": [
     {
@@ -29,7 +29,50 @@
       "kind": "card",
       "content": "",
       "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "你好，在阆中吗",
+      "time": "16:36",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395190929474306",
+      "block": "16:36 你好，在阆中吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，在阆中吗"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-10 16:36:43",
+      "time": "16:36",
+      "job_name": "兼职·数据标注/AI训练师20-25元/时南充查看职位",
+      "isFriend": false,
+      "mid": "395191115916036"
+    },
+    {
+      "sender": "bot",
+      "content": "不在阆中，但可全程线上远程协作，工作交付不受影响，方便的话想进一步沟通。",
+      "text": "不在阆中，但可全程线上远程协作，工作交付不受影响，方便的话想进一步沟通。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 17:03:17",
+      "time": "17:03",
+      "job_name": "兼职·数据标注/AI训练师20-25元/时南充查看职位",
+      "isFriend": false,
+      "mid": "397674898113281"
     }
   ],
-  "updated_at": "2026-10-09 13:01:56"
+  "updated_at": "2026-10-25 02:37:02",
+  "unread_on_boss": 0
 }

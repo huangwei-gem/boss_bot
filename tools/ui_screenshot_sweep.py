@@ -12,7 +12,7 @@
 
 用法：
     python -X utf8 tools/ui_screenshot_sweep.py                # 自己起临时面板
-    python -X utf8 tools/ui_screenshot_sweep.py --url http://127.0.0.1:5000
+    python -X utf8 tools/ui_screenshot_sweep.py --url http://127.0.0.1:5001
 """
 import argparse
 import json
@@ -20,18 +20,19 @@ import os
 import shutil
 import subprocess
 import sys
-import tempfile
 import time
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE))
+from boss_bot.unified_config import 面板端口 as _面板端口  # 端口只有一个出处
 sys.path.insert(0, str(BASE / "tests"))
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 from DrissionPage import ChromiumOptions, ChromiumPage  # noqa: E402
 from boss_bot.platform_compat import 破解版路径  # noqa: E402
+from boss_bot.unified_config import 新建临时目录  # noqa: E402
 
 CLOAK = 破解版路径(BASE)
 PORT = 9402
@@ -162,13 +163,14 @@ def main():
     tmp = proc = None
     url = args.url
     if url:
-        # 带 --url 就是让脚本去点那个面板：5000 是线上投递用的面板，
+        # 带 --url 就是让脚本去点那个面板：默认口是线上投递用的面板，
         # 巡检会切范围、开弹窗、点开关，绝不能拿它当靶子
-        assert ":5000" not in url or os.environ.get("BOSS_SWEEP_ALLOW_LIVE") == "1", \
+        assert (":%s" % _面板端口()) not in url \
+               or os.environ.get("BOSS_SWEEP_ALLOW_LIVE") == "1", \
             f"巡检脚本不得对着线上面板 {url} 点按钮（会打断投递）。去掉 --url 让它自起临时面板。"
     else:
         import e2e_account_scope_ui as E
-        tmp = Path(tempfile.mkdtemp(prefix="boss_sweep_"))
+        tmp = 新建临时目录("boss_sweep_")
         E.seed(tmp)
         proc = E.start_server(tmp, PANEL_PORT)
         url = f"http://127.0.0.1:{PANEL_PORT}"

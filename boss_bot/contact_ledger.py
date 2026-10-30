@@ -24,10 +24,15 @@ PHONE_RE = re.compile(r"(?<!\d)1[3-9]\d{9}(?!\d)")
 WECHAT_RE = re.compile(
     r"(?:微信号|添加微信|加我微信|加我微|加v|加V|vx|VX|wx|WX|weixin|微❤|V信|维信)"
     r"\s*[:：]?\s*([A-Za-z][A-Za-z0-9_-]{4,19}|1[3-9]\d{9})")
-# BOSS 交换联系方式的卡片整行：「<号码> <姓名>的微信号 <号码> 复制微信号」。
+# BOSS 交换联系方式那张卡片整行：「muzang623 傅女士的微信号 muzang623 复制微信号」。
+# 号在前、微信名紧挨着「的微信号」，两个都要按卡片上印的原样留下：
+# ① 号码以前限死"字母开头或纯数字"，卡片写「-Re1ax 袁先生的微信号」就被截成 "Re1ax"，
+#    他照界面上那串字去微信里搜就搜不到人（143 张卡片里就这一张是这种开头）；
+# ② 名字只能读卡片，不许拿 BOSS 会话名顶：盘上有 3 张卡片印的名字和会话名不一样
+#    （会话「杨小湖」→微信名「杨女士」、「杨康」→「杨先生」、「易杨畅」→「易女士」），
+#    而他问的正是"微信里那串名字是谁"，拿会话名填等于把答案写成另一个人的样子。
 # 连尾巴一起匹配掉，否则同一个数字会被下面的手机号正则再报一遍，界面上像两个联系方式。
-CARD_CONTACT_RE = re.compile(
-    r"(?:\d{6,20}|[A-Za-z][A-Za-z0-9_-]{4,19})\s+\S{0,12}的微信号[^\n]*复制微信号")
+CARD_CONTACT_RE = re.compile(r"(\S+)\s+(\S{1,20}?)的微信号[^\n]*复制微信号")
 # 这些词紧跟在"添加微信"后面是链接不是微信号（真实误报：…扫描二维码添加微信https://docs…）
 URL_SCHEMES = {"https", "http", "www", "ftp", "mailto"}
 
@@ -44,6 +49,11 @@ CONTACT_REQUEST_RE = re.compile(
 EXCHANGE_REQUEST_RE = re.compile(
     r"交换(?:微信|联系方式|电话|手机)|互换|电话联系TA"
     r"|我想要[一]?(?:份|个)?您的?(?:电话号码|微信号码)")
+# 「BOSS向您发送企业微信，请点击按钮去添加」：HR 把自己企业微信的添加入口推过来了。
+# 它不是"您是否同意"那种请求，点不点在我们这边，所以单独一档；按 card_text 读到 7 个
+# 会话有它，其中 2 单除了这张卡没有任何其它联系方式证据（台账 508 行→510 行就是这两单）
+# ——不加这一条，"谁在微信上加我"这张表就漏掉这 2 个人，而这正是他问的那个问题。
+ENTERPRISE_WECHAT_CARD_RE = re.compile(r"向您发送企业微信")
 
 # 我们自记的动作行：界面上标"机器动过手"，但**不能**拿来当"简历已送达"的证据
 # （证据口径见 pending_resume.RESUME_SENT_MARKS，只认 BOSS 那张卡）
@@ -68,6 +78,26 @@ SALARY_RE = re.compile(
     r"|(?!0\d)\d{1,6}\s*[-~至到]\s*(?!0\d)\d{1,6}\s*元"
     r"|(?!0\d)\d{1,4}\s*[-~至到]\s*(?!0\d)\d{1,4}\s*万\s*(?:[/月年]*)"
     r"|(?!0\d)\d{1,6}\s*元\s*/\s*[天月时单日年]")
+
+
+def 洗岗位标题(raw) -> str:
+    """剥掉标题尾巴上那些不是岗位名的页面文字。
+
+    「查看职位」是侧栏/会话页那个链接的标签，抓取时和岗位名拼成了一串：盘上 2779 个
+    会话里 2778 个的 job_name 以它收尾。台账早就把这尾巴切掉了（界面那条门是
+    「岗位不带『查看职位』」），但会话页读出来的那份没洗，于是 4 条跟进句把整串原样
+    念给了 HR——「之前聊的人力招聘实习生100-150元/天长沙查看职位我很有兴趣」
+    （10-23 11:59 王祥旭、15:49 张女士、16:06 滕云飞、10-24 13:21 朱微）。
+    """
+    text = str(raw or "").strip()
+    改 = True
+    while 改:
+        改 = False
+        for 尾 in ("查看职位详情", "查看职位", "查看详情", "职位详情", "了解更多", "更多"):
+            if text.endswith(尾):
+                text = text[: -len(尾)].strip()
+                改 = True
+    return text
 
 
 def split_job_title(raw) -> dict:
@@ -101,14 +131,21 @@ def _is_from_hr(msg: dict) -> bool:
     return bool(msg.get("isFriend"))
 
 
+def 微信卡片(text) -> list:
+    """一段对方原文 → 卡片上印的 [(微信号, 微信名)]，一字不改地照卡片还回去。"""
+    return [(hit.group(1), hit.group(2))
+            for hit in CARD_CONTACT_RE.finditer(str(text or ""))]
+
+
 def extract_contacts(text) -> dict:
-    """一段对方原文 → 拿到的电话/微信号 + 是否只提到要给。"""
+    """一段对方原文 → 拿到的电话/微信号/微信名 + 是否只提到要给。"""
     body = str(text or "")
-    wechats, phones = [], []
-    for hit in CARD_CONTACT_RE.finditer(body):
-        token = hit.group(0).split()[0]
+    wechats, phones, names = [], [], []
+    for token, name in 微信卡片(body):
         if token not in wechats:
             wechats.append(token)
+        if name and name not in names:
+            names.append(name)
     masked = CARD_CONTACT_RE.sub(lambda m: " " * len(m.group(0)), body)
     for hit in WECHAT_RE.finditer(masked):
         token = hit.group(1)
@@ -122,7 +159,8 @@ def extract_contacts(text) -> dict:
     hinted = (not wechats and not phones
               and bool(CONTACT_REQUEST_RE.search(body))
               and not any(w in body for w in OUR_OWN_ECHO))
-    return {"phones": phones, "wechats": wechats, "hinted": bool(hinted)}
+    return {"phones": phones, "wechats": wechats,
+            "wechat_names": names, "hinted": bool(hinted)}
 
 
 def _norm_job(job_name) -> str:
@@ -164,6 +202,53 @@ def _match_greet(greets, account, company, archive_norm):
     return {}
 
 
+def 微信名说明(names, wechats, agreed, requested, enterprise=False) -> str:
+    """「微信名」这一栏空着的时候是为什么——照实说，不许拿 BOSS 会话名顶上去。
+
+    他问的是"微信里那串名字对应哪个 HR"，名字取不到就等于认不出人；
+    这时候写个相近的字进去，比留空危险得多（他会照着去加错的那个人）。
+    """
+    if names:
+        return ""
+    if wechats:
+        return "号是 HR 打字发的，BOSS 那张卡片上没印微信名"
+    if agreed:
+        return "点过同意，但存档里没有那张带微信号的卡片"
+    if enterprise:
+        return "对方发来的是企业微信「去添加」卡片，卡片上没印微信名"
+    if requested:
+        return "只是对方发起了交换，还没到给号那一步"
+    return ""
+
+
+# 「谁给了微信」这条轴上的档，一行只落一档（优先级在 台账归类 里）。
+# 界面上那排筛选按钮照这份生成，统计数字也按这份数——两边不各写一套判据。
+台账档位 = ("给了微信号", "点过同意没看到号", "发来企业微信卡片", "只发起交换",
+            "已拒绝交换", "说要给没留号", "只给了电话", "只聊简历没聊联系方式")
+
+
+def 台账归类(row) -> str:
+    """这一行在「微信到底给到没有」上算哪一档（只看行上已经算好的字段）。"""
+    if row.get("wechat_given"):
+        return "给了微信号"
+    型 = row.get("contact_kind")
+    if 型 == "卡片已同意":
+        return "点过同意没看到号"
+    if row.get("enterprise_wechat"):
+        return "发来企业微信卡片"
+    if 型 == "发起交换请求":
+        return "只发起交换"
+    if 型 == "卡片已拒绝":
+        return "已拒绝交换"
+    if 型 == "说要给没留号":
+        return "说要给没留号"
+    if row.get("phones"):
+        # 给了电话没给微信：这类行有号码，画成"只聊简历"就是假话；
+        # 但它也不该混进"给了微信号"那一档——他要在微信里认人，认不出电话里那个人
+        return "只给了电话"
+    return "只聊简历没聊联系方式"
+
+
 def contact_rows(chats, greet_rows=None) -> list:
     """会话存档列表 → 台账行（按最后活动时间倒序）。
 
@@ -173,8 +258,9 @@ def contact_rows(chats, greet_rows=None) -> list:
     rows = []
     for chat in chats or []:
         phones, wechats, hinted = [], [], False
+        wechat_names = []
         resume_sent = contact_agreed = asked_resume = exchange_requested = False
-        contact_declined = False
+        contact_declined = enterprise_push = False
         hr_last = ""
         quotes = []
         for msg in chat.get("messages") or []:
@@ -198,22 +284,25 @@ def contact_rows(chats, greet_rows=None) -> list:
             got = extract_contacts(text)
             phones += [p for p in got["phones"] if p not in phones]
             wechats += [w for w in got["wechats"] if w not in wechats]
+            wechat_names += [w for w in got["wechat_names"] if w not in wechat_names]
             hinted = hinted or got["hinted"]
             is_exchange_request = bool(EXCHANGE_REQUEST_RE.search(text))
             exchange_requested = exchange_requested or is_exchange_request
+            enterprise_push = enterprise_push or bool(
+                ENTERPRISE_WECHAT_CARD_RE.search(text))
             if (got["phones"] or got["wechats"] or got["hinted"]
-                    or is_exchange_request):
+                    or is_exchange_request or enterprise_push):
                 quotes.append(text.replace("\n", " ")[:80])
             if any(w in text for w in RESUME_ASK_WORDS):
                 asked_resume = True
-        if not (phones or wechats or hinted or exchange_requested
+        if not (phones or wechats or hinted or exchange_requested or enterprise_push
                 or resume_sent or contact_agreed or contact_declined or asked_resume):
             continue
         raw_job = chat.get("job_name") or ""
         parts = split_job_title(raw_job)
         hit = _match_greet(greets, chat.get("account_index"),
                            chat.get("company"), _norm_job(parts["title"]))
-        rows.append({
+        row = {
             "account_index": chat.get("account_index"),
             "chat_name": chat.get("chat_name") or "",
             "company": chat.get("company") or "",
@@ -224,6 +313,11 @@ def contact_rows(chats, greet_rows=None) -> list:
             "job_url": hit.get("job_url", ""),
             "phones": phones,
             "wechats": wechats,
+            "wechat_names": wechat_names,
+            "wechat_given": bool(wechats),
+            "enterprise_wechat": bool(enterprise_push),
+            "wechat_name_note": 微信名说明(wechat_names, wechats, contact_agreed,
+                                          exchange_requested, enterprise_push),
             "contact_kind": ("卡片已同意" if contact_agreed else
                              "卡片已拒绝" if contact_declined else
                              "给了号码" if (phones or wechats) else
@@ -234,6 +328,27 @@ def contact_rows(chats, greet_rows=None) -> list:
             "last_activity": chat.get("updated_at") or "",
             "hr_last_message": hr_last.replace("\n", " ")[:80],
             "matched_quote": " / ".join(quotes[-2:])[:160],
-        })
+        }
+        row["ledger_bucket"] = 台账归类(row)
+        rows.append(row)
     rows.sort(key=lambda r: str(r["last_activity"]), reverse=True)
     return rows
+
+
+def contact_stats(rows) -> dict:
+    """台账行 → 各档计数（每轮现算，界面那条统计条和筛选按钮都念这一份）。
+
+    按会话计数不按人头：同一个人可以在两个号上各聊一单，那是两条各自独立的线索，
+    合并成一个人才反而看不出该在哪台手机的微信里去加。
+    """
+    行 = list(rows or [])
+    给了 = [r for r in 行 if r.get("wechat_given")]
+    return {
+        "total_rows": len(行),
+        "wechat_given": len(给了),
+        "wechat_named": len([r for r in 给了 if r.get("wechat_names")]),
+        "wechat_id_only": len([r for r in 给了 if not r.get("wechat_names")]),
+        "buckets": [{"name": 档, "count": len([r for r in 行
+                                              if r.get("ledger_bucket") == 档])}
+                    for 档 in 台账档位],
+    }

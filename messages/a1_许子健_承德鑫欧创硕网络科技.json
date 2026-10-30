@@ -1,0 +1,24 @@
+{
+  "chat_name": "许子健",
+  "chat_id": "许子健#承德鑫欧创硕网络科技",
+  "account_index": 1,
+  "job_name": "兼职·数据标注员15-20元/时承德查看职位",
+  "company": "承德鑫欧创硕网络科技",
+  "messages": [
+    {
+      "sender": "bot",
+      "content": "许子健您好，之前聊的兼职·数据标注员15-20元/时承德查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "许子健您好，之前聊的兼职·数据标注员15-20元/时承德查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 19:19:26",
+      "time": "19:19",
+      "job_name": "兼职·数据标注员15-20元/时承德查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-16 01:29:53"
+}

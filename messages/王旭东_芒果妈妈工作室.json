@@ -2,7 +2,7 @@
   "chat_name": "王旭东",
   "chat_id": "王旭东#芒果妈妈工作室",
   "account_index": 0,
-  "job_name": "兼职·娱乐营销号线上剪辑60-100元/时长沙查看职位",
+  "job_name": "兼职·娱乐营销号线上剪辑3000-6000元/周长沙",
   "company": "芒果妈妈工作室",
   "messages": [
     {
@@ -16,7 +16,50 @@
       "sender": "me",
       "kind": "bubble",
       "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "相关短视频剪辑作品，发一下。要链接",
+      "time": "10:19",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398991252882177",
+      "block": "10:19 相关短视频剪辑作品，发一下。要链接",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "相关短视频剪辑作品，发一下。要链接"
+    },
+    {
+      "sender": "bot",
+      "content": "我主要找线上数据分析这类的，剪辑作品没有。",
+      "text": "我主要找线上数据分析这类的，剪辑作品没有。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-21 10:20:35",
+      "time": "10:20",
+      "job_name": "兼职·娱乐营销号线上剪辑60-100元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "398991517070080"
+    },
+    {
+      "sender": "bot",
+      "content": "理解哈，不知贵司是否有数据分析类兼职机会？可随时沟通。",
+      "text": "理解哈，不知贵司是否有数据分析类兼职机会？可随时沟通。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 11:44:16",
+      "time": "11:44",
+      "job_name": "兼职·娱乐营销号线上剪辑3000-6000元/周长沙查看职位",
+      "isFriend": false,
+      "mid": "400073761751809"
     }
   ],
-  "updated_at": "2026-10-09 23:03:49"
+  "updated_at": "2026-10-25 02:05:40",
+  "unread_on_boss": 0
 }

@@ -21,6 +21,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+from tests.conftest import mk测试临时目录  # noqa: E402
 from boss_bot.platform_compat import 终止进程
 
 sys.path.insert(0, str(PROJECT_ROOT / "tests"))
@@ -143,7 +144,7 @@ def disk(tmp_dir):
 
 
 def main():
-    tmp_dir = Path(tempfile.mkdtemp(prefix="boss_per_account_cfg_"))
+    tmp_dir = mk测试临时目录("boss_per_account_cfg")
     proc = None
     page = br = None
     try:

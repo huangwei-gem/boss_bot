@@ -6,47 +6,6 @@
   "company": "孩子王",
   "messages": [
     {
-      "text": "你好，看过你的简历，觉得蛮合适的，期待和你聊一下",
-      "time": "09:43",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "390842824872448",
-      "block": "09:43 你好，看过你的简历，觉得蛮合适的，期待和你聊一下",
-      "sender": "hr",
-      "kind": "bubble",
-      "content": "你好，看过你的简历，觉得蛮合适的，期待和你聊一下",
-      "is_read": true
-    },
-    {
-      "text": "",
-      "time": "",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "390842824872450",
-      "block": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA",
-      "sender": "hr",
-      "kind": "card",
-      "content": "",
-      "card_text": "我觉得你很适合我们的岗位，你可以直接跟我互换电话联系我 电话联系TA",
-      "is_read": true
-    },
-    {
-      "text": "",
-      "time": "",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "390842824925700",
-      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
-      "sender": "hr",
-      "kind": "card",
-      "content": "",
-      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
-      "is_read": true
-    },
-    {
       "text": "您好，我对南昌方言录音数据采集岗位很感兴趣，具备良好的数据处理经验，能否详细介绍下工作具体要求？",
       "time": "17:06",
       "isFriend": false,
@@ -104,6 +63,6 @@
       "isFriend": false
     }
   ],
-  "updated_at": "2026-10-09 13:26:07",
+  "updated_at": "2026-10-16 01:29:53",
   "unread_on_boss": 0
 }

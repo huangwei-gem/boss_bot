@@ -36,7 +36,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "394782006047234",
-      "block": "12:52 附件简历请求已发送",
+      "block": "附件简历请求已发送",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -81,9 +81,55 @@
       "timestamp": "2026-10-10 02:43:26",
       "time": "02:43",
       "job_name": "兼职·亚马逊店铺运营｜可全职可兼职 线上居家8000-15000元/月南昌查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394986323759616"
+    },
+    {
+      "sender": "bot",
+      "content": "徐先生您好，之前聊的兼职·亚马逊店铺运营｜可全职可兼职 线上居家8000-15000元/月南昌查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "徐先生您好，之前聊的兼职·亚马逊店铺运营｜可全职可兼职 线上居家8000-15000元/月南昌查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-16 10:54:28",
+      "time": "10:54",
+      "job_name": "兼职·亚马逊店铺运营｜可全职可兼职 线上居家8000-15000元/月南昌查看职位",
+      "isFriend": false,
+      "mid": "397230363927045"
+    },
+    {
+      "sender": "bot",
+      "content": "徐先生，简历您看了不？合适的话这周下午我随时能线上聊",
+      "text": "徐先生，简历您看了不？合适的话这周下午我随时能线上聊",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-18 11:59:59",
+      "time": "11:59",
+      "job_name": "兼职·亚马逊店铺运营｜可全职可兼职 线上居家8000-15000元/月南昌查看职位",
+      "isFriend": false,
+      "mid": "397954252734977"
+    },
+    {
+      "sender": "bot",
+      "content": "简历发了，您看了吗？这周下午随时可以线上聊。",
+      "text": "简历发了，您看了吗？这周下午随时可以线上聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 12:18:22",
+      "time": "12:18",
+      "job_name": "兼职·亚马逊店铺运营｜可全职可兼职 线上居家8000-15000元/月南昌查看职位",
+      "isFriend": false,
+      "mid": "399728234721794"
     }
   ],
-  "updated_at": "2026-10-10 02:43:26",
+  "updated_at": "2026-10-23 12:52:34",
   "unread_on_boss": 0
 }

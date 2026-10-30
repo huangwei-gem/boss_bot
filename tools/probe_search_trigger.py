@@ -15,7 +15,6 @@ import argparse
 import hashlib
 import json
 import sys
-import tempfile
 import time
 from pathlib import Path
 
@@ -23,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from boss_bot.browser_launcher import launch_browser  # noqa: E402
 from boss_bot.unified_config import UnifiedConfig, resolve_path  # noqa: E402
+from boss_bot.unified_config import 新建临时目录  # noqa: E402
 
 CHAT_URL = "https://www.zhipin.com/web/geek/chat"
 
@@ -133,7 +133,7 @@ def main() -> int:
     sha = hashlib.sha256(ck.read_bytes()).hexdigest()[:16]
 
     inst = launch_browser(headless=True, port=a.port,
-                          user_data_dir=tempfile.mkdtemp(prefix="boss_trig_"))
+                          user_data_dir=str(新建临时目录("boss_trig_")))
     try:
         if not inst.load_cookies(str(ck)):
             print("Cookie 加载失败")

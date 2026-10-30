@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "393203994571265",
-      "block": "01:51 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -151,19 +151,6 @@
       "mid": "393515935457792"
     },
     {
-      "text": "",
-      "time": "08:04",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "393649549402624",
-      "block": "08:04",
-      "sender": "hr",
-      "kind": "card",
-      "content": "",
-      "card_text": ""
-    },
-    {
       "sender": "bot",
       "content": "姚女士您好，之前聊的兼职·数据标注25-30元/时蚌埠查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
       "text": "姚女士您好，之前聊的兼职·数据标注25-30元/时蚌埠查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
@@ -190,9 +177,37 @@
       "timestamp": "2026-10-09 13:45:24",
       "time": "13:45",
       "job_name": "兼职·数据标注25-30元/时蚌埠查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394795106980356"
+    },
+    {
+      "text": "可以的",
+      "time": "10-10 22:57",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395284791427585",
+      "block": "10-10 22:57 可以的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "可以的"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢姚女士，那我们约个工作日下午线上沟通，您看具体什么时间方便？",
+      "text": "感谢姚女士，那我们约个工作日下午线上沟通，您看具体什么时间方便？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-16 03:57:15",
+      "time": "03:57",
+      "job_name": "兼职·数据标注25-30元/时蚌埠查看职位",
+      "isFriend": false,
+      "mid": "397127826698753"
     }
   ],
-  "updated_at": "2026-10-09 13:45:24",
+  "updated_at": "2026-10-23 14:59:07",
   "unread_on_boss": 0
 }

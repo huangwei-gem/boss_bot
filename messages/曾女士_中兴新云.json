@@ -1,0 +1,65 @@
+{
+  "chat_name": "曾女士",
+  "chat_id": "曾女士#中兴新云",
+  "account_index": 0,
+  "job_name": "数据平台研发工程师（湖仓存储&计算引擎）13-25K长沙",
+  "company": "中兴新云",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "13:50",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397981479854596",
+      "block": "13:50 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "我们已经认真审阅了您的简历，但很遗憾，您的经验并不完全符合我们当前项目的需求。祝您在BOSS直聘找到更好的机会！",
+      "time": "08:37",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398258357260801",
+      "block": "08:37 我们已经认真审阅了您的简历，但很遗憾，您的经验并不完全符合我们当前项目的需求。祝您在BOSS直聘找到更好的机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "我们已经认真审阅了您的简历，但很遗憾，您的经验并不完全符合我们当前项目的需求。祝您在BOSS直聘找到更好的机会！"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您告知，祝您招聘顺利！",
+      "text": "好的，谢谢您告知，祝您招聘顺利！",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-19 08:44:48",
+      "time": "08:44",
+      "job_name": "数据平台研发工程师（湖仓存储&计算引擎）13-25K长沙查看职位",
+      "isFriend": false,
+      "mid": "398260176200196"
+    },
+    {
+      "sender": "bot",
+      "content": "曾女士您好，之前聊的数据平台研发工程师（湖仓存储&计算引擎）13-25K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "曾女士您好，之前聊的数据平台研发工程师（湖仓存储&计算引擎）13-25K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-20 17:34:10",
+      "time": "17:34",
+      "job_name": "数据平台研发工程师（湖仓存储&计算引擎）13-25K长沙查看职位",
+      "isFriend": false,
+      "mid": "398744181985793"
+    }
+  ],
+  "updated_at": "2026-10-25 02:12:13",
+  "unread_on_boss": 0
+}

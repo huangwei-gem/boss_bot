@@ -1,0 +1,23 @@
+{
+  "chat_name": "陈沁妍",
+  "chat_id": "陈沁妍#荷瑞国际物流_上___",
+  "account_index": 1,
+  "job_name": "数据分析师Intern160-200元/天上海查看职位",
+  "company": "荷瑞国际物流(上...",
+  "messages": [
+    {
+      "text": "您好，我是统计学在读本科生，有数据标注和数据分析经验，熟练使用Excel、SQL和Python，看到贵司数据分析师Intern岗位，方便的话我把简历发您细聊。",
+      "time": "12:18",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397604864430849",
+      "block": "12:18 送达 您好，我是统计学在读本科生，有数据标注和数据分析经验，熟练使用Excel、SQL和Python，看到贵司数据分析师Intern岗位，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学在读本科生，有数据标注和数据分析经验，熟练使用Excel、SQL和Python，看到贵司数据分析师Intern岗位，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:35:16"
+}

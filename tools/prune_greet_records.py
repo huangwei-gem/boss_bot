@@ -20,6 +20,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+from boss_bot.unified_config import 面板端口 as _面板端口  # 端口只有一个出处
 
 RETIRED_REASONS = (
     "未找到输入框",   # 三档归因改造前的平铺原因；现在的代码只会写
@@ -29,7 +30,8 @@ RETIRED_REASONS = (
 DEFAULT_FILE = ROOT / "data" / "greet_records.json"
 
 
-def dashboard_running(port: int = 5000) -> bool:
+def dashboard_running(port: int = None) -> bool:
+    port = port or _面板端口()
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.settimeout(0.6)
         return s.connect_ex(("127.0.0.1", port)) == 0

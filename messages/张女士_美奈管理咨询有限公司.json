@@ -2,7 +2,7 @@
   "chat_name": "张女士",
   "chat_id": "张女士#美奈管理咨询有限公司",
   "account_index": 0,
-  "job_name": "兼职·工程资料编写员（线上兼职）100-120元/时长沙查看职位",
+  "job_name": "兼职·工程资料编写员（线上兼职）100-120元/时长沙",
   "company": "美奈管理咨询有限公司",
   "messages": [
     {
@@ -29,7 +29,91 @@
       "kind": "card",
       "content": "",
       "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "你好啊，可以聊一聊~",
+      "time": "10-14 08:41",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396489961501442",
+      "block": "10-14 08:41 你好啊，可以聊一聊~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好啊，可以聊一聊~"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396489969423105",
+      "block": "我想要和您交换微信，您是否同意 为保障您的安全建议在平台内沟通，微信沟通中需特别保护您的个人信息，谨防受骗。 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换微信，您是否同意 为保障您的安全建议在平台内沟通，微信沟通中需特别保护您的个人信息，谨防受骗。 拒绝 同意"
+    },
+    {
+      "text": "",
+      "time": "10-14 18:57",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396641292120837",
+      "block": "dx14788 张女士的微信号 dx14788 复制微信号",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "dx14788 张女士的微信号 dx14788 复制微信号"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，我来添加您的微信，期待进一步沟通。另外也想了解一下，这个岗位是否涉及数据整理相关工作，我这方面经验也比较丰富。",
+      "text": "好的，我来添加您的微信，期待进一步沟通。另外也想了解一下，这个岗位是否涉及数据整理相关工作，我这方面经验也比较丰富。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-16 04:03:11",
+      "time": "04:03",
+      "job_name": "兼职·工程资料编写员（线上兼职）100-120元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "397129284715264"
+    },
+    {
+      "sender": "bot",
+      "content": "张女士您好，之前聊的兼职·工程资料编写员（线上兼职）100-120元/时长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "张女士您好，之前聊的兼职·工程资料编写员（线上兼职）100-120元/时长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-16 12:06:59",
+      "time": "12:06",
+      "job_name": "兼职·工程资料编写员（线上兼职）100-120元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "397248186675969"
+    },
+    {
+      "sender": "bot",
+      "content": "嗯，微信您方便通过下？资料整理这些我熟，想约个线上面试。",
+      "text": "嗯，微信您方便通过下？资料整理这些我熟，想约个线上面试。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-18 12:01:45",
+      "time": "12:01",
+      "job_name": "兼职·工程资料编写员（线上兼职）100-120元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "397954683273986"
     }
   ],
-  "updated_at": "2026-10-06 23:57:40"
+  "updated_at": "2026-10-25 02:29:35",
+  "unread_on_boss": 0
 }

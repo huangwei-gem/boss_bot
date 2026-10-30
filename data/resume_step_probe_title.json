@@ -1,0 +1,7 @@
+[
+  {"do": "open"},
+  {"do": "set", "fields": {"0": "天鹅到家"}},
+  {"do": "focus", "field": 3},
+  {"do": "type", "field": 3, "text": "AI产品经理"},
+  {"do": "show"}
+]

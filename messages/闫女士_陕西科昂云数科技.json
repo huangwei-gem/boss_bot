@@ -2,7 +2,7 @@
   "chat_name": "闫女士",
   "chat_id": "闫女士#陕西科昂云数科技",
   "account_index": 0,
-  "job_name": "兼职·居家2d标注员(接受无经验)15-20元/时菏泽查看职位",
+  "job_name": "兼职·居家2d标注员(接受无经验)15-20元/时菏泽",
   "company": "陕西科昂云数科技",
   "messages": [
     {
@@ -109,9 +109,55 @@
       "timestamp": "2026-10-10 00:38:55",
       "time": "00:38",
       "job_name": "兼职·居家2d标注员(接受无经验)15-20元/时菏泽查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394955721032449"
+    },
+    {
+      "sender": "bot",
+      "content": "闫女士您好，之前聊的兼职·居家2d标注员(接受无经验)15-20元/时菏泽查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "闫女士您好，之前聊的兼职·居家2d标注员(接受无经验)15-20元/时菏泽查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 15:18:39",
+      "time": "15:18",
+      "job_name": "兼职·居家2d标注员(接受无经验)15-20元/时菏泽查看职位",
+      "isFriend": false,
+      "mid": "395171926463232"
+    },
+    {
+      "sender": "bot",
+      "content": "闫女士您好，陕西科昂云数科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "闫女士您好，陕西科昂云数科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 14:53:23",
+      "time": "14:53",
+      "job_name": "兼职·居家2d标注员(接受无经验)15-20元/时菏泽查看职位",
+      "isFriend": false,
+      "mid": "397642981196545"
+    },
+    {
+      "sender": "bot",
+      "content": "微信号记下了。这个标注岗还招人吗，方便的话咱们线上聊。",
+      "text": "微信号记下了。这个标注岗还招人吗，方便的话咱们线上聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 14:20:47",
+      "time": "14:20",
+      "job_name": "兼职·居家2d标注员(接受无经验)15-20元/时菏泽查看职位",
+      "isFriend": false,
+      "mid": "400112225370884"
     }
   ],
-  "updated_at": "2026-10-10 00:38:55",
+  "updated_at": "2026-10-25 01:57:32",
   "unread_on_boss": 0
 }

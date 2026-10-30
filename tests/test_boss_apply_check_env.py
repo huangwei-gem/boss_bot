@@ -9,6 +9,8 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "boss-apply" / "scripts" / "check_env.py"
 
@@ -19,6 +21,29 @@ def load_mod(monkeypatch, home):
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
+
+
+class 起了真命令(BaseException):
+    """故意不接 `Exception`。
+
+    check_env 里那句 `except Exception as e` 会把 AssertionError 咽成一行 FAIL 判据，
+    测试看着还是绿的——这一条要炸得让它接不住，才知道自己漏了打桩。
+    """
+
+
+@pytest.fixture(autouse=True)
+def 不许真起外部命令(monkeypatch):
+    """这一支只管判据，不许真去跑 bsk。
+
+    2026-10-26 全量回归里这个文件卡满 300 秒被记成 HANG：`test_没配置时指路example复制`
+    两样都没打桩，机器上装着 bsk 就真起了 `bsk doctor`。那是个 npm CLI，会派孙进程，
+    Windows 上 `subprocess.run(timeout=)` 超时 kill 完还要 `communicate()`，
+    管道被孙进程攥着就再也不返回——DOCTOR_TIMEOUT=20 也拦不住这一种。
+    """
+    def 拦(*a, **k):
+        raise 起了真命令("测试里不许真起外部命令: %r" % (a[:1],))
+    monkeypatch.setattr(subprocess, "run", 拦)
+    yield
 
 
 def test_bsk不在就判MISS并给出处置(tmp_path, monkeypatch):
@@ -42,9 +67,19 @@ def test_doctor不通判FAIL(tmp_path, monkeypatch):
 
 def test_没配置时指路example复制(tmp_path, monkeypatch):
     mod = load_mod(monkeypatch, tmp_path)
+    # 这一支只管 rules 那一项；不打桩 which 就会真起一次 bsk（见上面那个 fixture）
+    monkeypatch.setattr(mod.shutil, "which", lambda _: None)
     got = [c for c in mod.run_checks() if c["name"] == "rules"][0]
     assert got["status"] == "MISS"
     assert "rules.example.json" in got["action"]
+
+
+def test_真起外部命令会被当场拦住(tmp_path, monkeypatch):
+    """门本身要能红：装了 bsk 的机器上漏打桩，得当场炸而不是等 300 秒超时"""
+    mod = load_mod(monkeypatch, tmp_path)
+    monkeypatch.setattr(mod.shutil, "which", lambda _: "bsk")
+    with pytest.raises(起了真命令):
+        mod.run_checks()
 
 
 def test_目录可写且有配置时整体通过(tmp_path, monkeypatch):

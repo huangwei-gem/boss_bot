@@ -168,9 +168,25 @@
       "timestamp": "2026-10-09 13:22:37",
       "time": "13:22",
       "job_name": "保底1w起！招舞蹈艺人！单身公寓|流量|设备9-12K长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394789508432645"
+    },
+    {
+      "sender": "bot",
+      "content": "钱女士您好，长沙中星时代这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "钱女士您好，长沙中星时代这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 09:31:31",
+      "time": "09:31",
+      "job_name": "保底1w起！招舞蹈艺人！单身公寓|流量|设备9-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "395086615479044"
     }
   ],
-  "updated_at": "2026-10-09 13:22:37",
+  "updated_at": "2026-10-23 14:43:10",
   "unread_on_boss": 0
 }

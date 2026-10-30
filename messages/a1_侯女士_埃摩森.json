@@ -150,9 +150,25 @@
       "timestamp": "2026-10-10 02:05:25",
       "time": "02:05",
       "job_name": "猎头实习生（双休 师徒带教 尽快到岗）150-200元/天上海查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394976976617985"
+    },
+    {
+      "sender": "bot",
+      "content": "侯女士您好，埃摩森这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "侯女士您好，埃摩森这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-16 10:06:41",
+      "time": "10:06",
+      "job_name": "猎头实习生（双休 师徒带教 尽快到岗）150-200元/天上海查看职位",
+      "isFriend": false,
+      "mid": "397218618311170"
     }
   ],
-  "updated_at": "2026-10-10 02:05:25",
+  "updated_at": "2026-10-23 14:52:27",
   "unread_on_boss": 0
 }

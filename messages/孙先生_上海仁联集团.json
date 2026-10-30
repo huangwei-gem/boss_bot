@@ -2,7 +2,7 @@
   "chat_name": "孙先生",
   "chat_id": "孙先生#上海仁联集团",
   "account_index": 0,
-  "job_name": "做五休二+金融SQL运营分析+14薪+五险一金（派遣职位）5-7K长沙查看职位",
+  "job_name": "做五休二+金融SQL运营分析+14薪+五险一金（派遣职位）5-7K长沙",
   "company": "上海仁联集团",
   "messages": [
     {
@@ -56,9 +56,55 @@
       "timestamp": "2026-10-10 00:43:55",
       "time": "00:43",
       "job_name": "做五休二+金融SQL运营分析+14薪+五险一金（派遣职位）5-7K长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394956950328065"
+    },
+    {
+      "sender": "bot",
+      "content": "孙先生您好，之前聊的做五休二+金融SQL运营分析+14薪+五险一金（派遣职位）5-7K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "孙先生您好，之前聊的做五休二+金融SQL运营分析+14薪+五险一金（派遣职位）5-7K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 15:33:32",
+      "time": "15:33",
+      "job_name": "做五休二+金融SQL运营分析+14薪+五险一金（派遣职位）5-7K长沙查看职位",
+      "isFriend": false,
+      "mid": "395175586841346"
+    },
+    {
+      "sender": "bot",
+      "content": "孙先生您好，上海仁联集团这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "孙先生您好，上海仁联集团这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 15:08:54",
+      "time": "15:08",
+      "job_name": "做五休二+金融SQL运营分析+14薪+五险一金（派遣职位）5-7K长沙查看职位",
+      "isFriend": false,
+      "mid": "397646786609925"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，那不打扰您了，祝顺利。",
+      "text": "好的，那不打扰您了，祝顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 14:38:36",
+      "time": "14:38",
+      "job_name": "做五休二+金融SQL运营分析+14薪+五险一金（派遣职位）5-7K长沙查看职位",
+      "isFriend": false,
+      "mid": "400116605571841"
     }
   ],
-  "updated_at": "2026-10-10 00:43:55",
+  "updated_at": "2026-10-25 01:56:37",
   "unread_on_boss": 0
 }

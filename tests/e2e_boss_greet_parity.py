@@ -21,9 +21,12 @@ from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "flask-version"))
+from tests.conftest import mk测试临时目录  # noqa: E402
 
 from boss_bot.browser_launcher import BrowserInstance, BrowserManager  # noqa: E402
 from boss_bot.unified_config import BASE_DIR, UnifiedConfig  # noqa: E402
+from log_retention import 日志文件, 读日志文本  # noqa: E402
 
 COOKIE_FILES = ("zhipin_cookies.json", "zhipin_cookies_1.json")
 CHAT_URL = "https://www.zhipin.com/web/geek/chat"
@@ -119,7 +122,7 @@ def read_boss_list(idx: int, max_rounds: int = 80) -> list:
     """
     acc = UnifiedConfig.load().greet.accounts[idx]
     cookie = str(Path(BASE_DIR) / (acc.cookie_file or "zhipin_cookies.json"))
-    tmp = tempfile.mkdtemp(prefix=f"boss_parity_{idx}_")
+    tmp = str(mk测试临时目录(f"boss_parity_{idx}_"))
     mgr = BrowserManager(
         config=type("C", (), {
             "headless": False,
@@ -148,12 +151,19 @@ def read_boss_list(idx: int, max_rounds: int = 80) -> list:
                 pass
         seen: dict = {}
         stagnant = 0
+        读不到 = 0
         prev_n = -1
         prev_pos = ""
         for _ in range(max_rounds):
             pos = str(page.run_js(SCROLL_JS, as_expr=True))
             time.sleep(0.6)
-            for it in json.loads(page.run_js(LIST_JS, as_expr=True) or "[]"):
+            原样 = page.run_js(LIST_JS, as_expr=True)
+            if not 原样:
+                # 这一轮一个字没读到，不能当成"这一屏 0 条会话"继续往下滚：
+                # 那样最后会把"取不到"印成"BOSS 侧没有这条会话"，比对结论整个反了
+                读不到 += 1
+                continue
+            for it in json.loads(原样):
                 if it.get("name"):
                     seen[(it["name"], it.get("company", ""), it.get("time", ""))] = it
             # 条数、滚动位置、总高度三者都不再变化才算读到底
@@ -165,6 +175,9 @@ def read_boss_list(idx: int, max_rounds: int = 80) -> list:
             prev_n, prev_pos = len(seen), pos
             if stagnant >= 3:
                 break
+        if not seen:
+            raise AssertionError(f"一趟下来 {读不到} 轮都没读到会话——"
+                                 f"这是取不到，不是「BOSS 侧 0 条」，不能拿去比对")
         return list(seen.values())
     finally:
         mgr.close()
@@ -206,12 +219,16 @@ def local_truth(idx: int, day: str) -> dict:
 
 
 def log_truth(idx_name: str, day: str) -> dict:
-    """当天日志里这几类跳过各出现了几行——和记录条数应当 1:1。"""
-    p = Path(BASE_DIR) / "logs" / f"boss_bot.log.{day}"
-    if not p.exists():
+    """当天日志里这几类跳过各出现了几行——和记录条数应当 1:1。
+
+    走 日志文件()/读日志文本() 那一份读法：躺过窗口的那天已经挪进 logs/kept/ 且压成
+    .gz，按死路径 `logs/boss_bot.log.<day>` 找就把"换了地方"读成"那天没日志"。
+    """
+    p = 日志文件(Path(BASE_DIR) / "logs", day)
+    if not p:
         return {}
     tag = f"[{idx_name}]"
-    lines = [l for l in p.read_text(encoding="utf-8", errors="replace").splitlines() if tag in l]
+    lines = [l for l in 读日志文本(p).splitlines() if tag in l]
     return {
         "未配置招呼语": sum(1 for l in lines if "未配置招呼语" in l),
         "AI 判定不匹配": sum(1 for l in lines if "AI 判定不匹配，跳过" in l),
@@ -246,7 +263,7 @@ def main() -> int:
             print(f"  {day} 本地记录：共 {truth['today_records']} 条 / "
                   f"未配置招呼语 {truth['today_missing_greeting']} / AI 判不匹配 {truth['today_ai_reject']}")
             lg = log_truth(name, day)
-            print(f"  {day} 日志行数：{lg or '日志文件不存在'}")
+            print(f"  {day} 日志行数：{lg or '那天日志读不到'}")
             if lg:
                 # 2026-10-02 那份日志是修复前跑的：闸门和收尾各打一行，
                 # "未配置招呼语"的行数正好是记录条数的两倍。比率算出来，

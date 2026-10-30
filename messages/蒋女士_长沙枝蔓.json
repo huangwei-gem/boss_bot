@@ -2,7 +2,7 @@
   "chat_name": "蒋女士",
   "chat_id": "蒋女士#长沙枝蔓",
   "account_index": 0,
-  "job_name": "数据产品经理8-13K长沙查看职位",
+  "job_name": "数据产品经理8-13K长沙",
   "company": "长沙枝蔓",
   "messages": [
     {
@@ -16,7 +16,35 @@
       "sender": "me",
       "kind": "bubble",
       "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "抱歉，您的简历虽优秀，但与我们当前职位的特定需求不完全匹配。祝您在BOSS直聘找到合适您的机会！",
+      "time": "10-14 11:37",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396533106602756",
+      "block": "10-14 11:37 抱歉，您的简历虽优秀，但与我们当前职位的特定需求不完全匹配。祝您在BOSS直聘找到合适您的机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "抱歉，您的简历虽优秀，但与我们当前职位的特定需求不完全匹配。祝您在BOSS直聘找到合适您的机会！"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-16 03:23:15",
+      "time": "03:23",
+      "job_name": "数据产品经理8-13K长沙查看职位",
+      "isFriend": false,
+      "mid": "397119469994754"
     }
   ],
-  "updated_at": "2026-10-05 01:59:15"
+  "updated_at": "2026-10-25 07:17:27",
+  "unread_on_boss": 0
 }

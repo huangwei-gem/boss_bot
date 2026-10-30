@@ -16,7 +16,6 @@
 import argparse
 import shutil
 import sys
-import tempfile
 import time
 from pathlib import Path
 
@@ -27,6 +26,7 @@ import psutil  # noqa: E402
 
 from boss_bot.browser_launcher import launch_browser  # noqa: E402
 from boss_bot.platform_compat import 浏览器进程名  # noqa: E402
+from boss_bot.unified_config import 新建临时目录  # noqa: E402
 
 CHAT = "https://www.zhipin.com/web/geek/chat"
 JOBS = "https://www.zhipin.com/web/geek/jobs?query=%E7%BA%BF%E4%B8%8A%E5%85%BC%E8%81%8C&city=101250100"
@@ -40,7 +40,7 @@ def measure(extra_flags, port, label, headless=True):
 
     只数 cmdline 里带本次临时 profile 的进程，绝不把线上那两个号的浏览器算进来。
     """
-    prof = tempfile.mkdtemp(prefix=f"mem_{label}_")
+    prof = str(新建临时目录(f"mem_{label}_"))
     inst = None
     try:
         inst = launch_browser(headless=headless, chrome_path="", browser_type="chrome",

@@ -1,0 +1,75 @@
+{
+  "chat_name": "黄辅杰",
+  "chat_id": "黄辅杰#焕天科技",
+  "account_index": 0,
+  "job_name": "兼职·ai数据标注3000-6000元/月防城港",
+  "company": "焕天科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "10:40",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397934631985156",
+      "block": "10:40 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397934632017921",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "可以过来面试",
+      "time": "11:20",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397944663875585",
+      "block": "11:20 可以过来面试",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "可以过来面试"
+    },
+    {
+      "text": "你现在有时间吗",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397944725786625",
+      "block": "你现在有时间吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你现在有时间吗"
+    },
+    {
+      "sender": "bot",
+      "content": "不好意思，我这边只找线上远程就能做的兼职，线下面试就不占用您的时间了，这个岗我先放弃，感谢您找我～",
+      "text": "不好意思，我这边只找线上远程就能做的兼职，线下面试就不占用您的时间了，这个岗我先放弃，感谢您找我～",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "policy",
+      "action": "text",
+      "timestamp": "2026-10-18 11:33:04",
+      "time": "11:33",
+      "job_name": "兼职·ai数据标注3000-6000元/月防城港查看职位",
+      "isFriend": false,
+      "mid": "397947637522433"
+    }
+  ],
+  "updated_at": "2026-10-25 02:31:07",
+  "unread_on_boss": 0
+}

@@ -44,8 +44,35 @@
       "job_name": "上海咪咕数据分析（社区平台方向）9-13K·13薪上海查看职位",
       "isFriend": false,
       "mid": "394926561735427"
+    },
+    {
+      "text": "不好意思，暂时有候选人了",
+      "time": "10:37",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398641770758912",
+      "block": "10:37 不好意思，暂时有候选人了",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，暂时有候选人了"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，祝您招聘顺利~",
+      "text": "好的，感谢您的时间，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-20 18:30:39",
+      "time": "18:30",
+      "job_name": "上海咪咕数据分析（社区平台方向）9-13K·13薪上海查看职位",
+      "isFriend": false,
+      "mid": "398758064411393"
     }
   ],
-  "updated_at": "2026-10-10 07:12:04",
+  "updated_at": "2026-10-23 13:10:00",
   "unread_on_boss": 0
 }

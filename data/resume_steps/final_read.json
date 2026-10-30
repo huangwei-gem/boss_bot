@@ -1,0 +1,4 @@
+[
+ {"do": "reload", "sec": 8},
+ {"do": "js", "limit": 3000, "code": "(() => { const clean = (s) => (s || '').replace(/\\u00a0/g, ' ').trim(); const 取 = (id) => { const e = document.getElementById(id); return e ? clean(e.innerText).slice(0, 700) : '（没有这个板块）'; }; const side = document.querySelector('.user-sider'); const t = side ? clean(side.innerText) : ''; const i = t.indexOf('附件管理'); return {期望职位: 取('purpose'), 个人优势: 取('summary').slice(0, 300), 教育: 取('education').slice(0, 300), 附件: i >= 0 ? t.slice(i, i + 260) : '读不到附件'}; })()"}
+]

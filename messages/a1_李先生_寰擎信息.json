@@ -1,0 +1,35 @@
+{
+  "chat_name": "李先生",
+  "chat_id": "李先生#寰擎信息",
+  "account_index": 1,
+  "job_name": "高级数据分析师13-20K·13薪上海查看职位",
+  "company": "寰擎信息",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 05:03",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397144213598721",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel、SQL、Python及大模型工具。看到贵司在招高级数据分析师，想了解一下岗位详情，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397144921317889",
+      "block": "已读 您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel、SQL、Python及大模型工具。看到贵司在招高级数据分析师，想了解一下岗位详情，方便的话我把简历发您细聊。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel、SQL、Python及大模型工具。看到贵司在招高级数据分析师，想了解一下岗位详情，方便的话我把简历发您细聊。"
+    }
+  ],
+  "updated_at": "2026-10-23 14:54:29"
+}

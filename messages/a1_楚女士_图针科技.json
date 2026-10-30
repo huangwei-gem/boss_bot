@@ -1,0 +1,90 @@
+{
+  "chat_name": "楚女士",
+  "chat_id": "楚女士#图针科技",
+  "account_index": 1,
+  "job_name": "兼职·AI机器人数据标注（居家线上兼职）80-100元/天北京查看职位",
+  "company": "图针科技",
+  "messages": [
+    {
+      "text": "【求职警示】刷单就是诈骗！打榜都是骗局！求职不缴费，不垫资，不打榜，不刷单，不添加变体联系方式，不轻信陌生短信和邮件，接到offer要与平台上沟通的Boss进行确认！如遇可疑情况，随时向平台举报。",
+      "time": "10-10 01:45",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394971999080961",
+      "block": "【求职警示】刷单就是诈骗！打榜都是骗局！求职不缴费，不垫资，不打榜，不刷单，不添加变体联系方式，不轻信陌生短信和邮件，接到offer要与平台上沟通的Boss进行确认！如遇可疑情况，随时向平台举报。",
+      "sender": "hr",
+      "kind": "system",
+      "content": "【求职警示】刷单就是诈骗！打榜都是骗局！求职不缴费，不垫资，不打榜，不刷单，不添加变体联系方式，不轻信陌生短信和邮件，接到offer要与平台上沟通的Boss进行确认！如遇可疑情况，随时向平台举报。",
+      "card_text": "【求职警示】刷单就是诈骗！打榜都是骗局！求职不缴费，不垫资，不打榜，不刷单，不添加变体联系方式，不轻信陌生短信和邮件，接到offer要与平台上沟通的Boss进行确认！如遇可疑情况，随时向平台举报。"
+    },
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据标注与AI辅助流程搭建，看到贵司AI机器人数据标注岗位需求，方便的话我把简历发您细聊",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394972109570560",
+      "block": "已读 您好，我是统计学专业在读生，擅长数据标注与AI辅助流程搭建，看到贵司AI机器人数据标注岗位需求，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据标注与AI辅助流程搭建，看到贵司AI机器人数据标注岗位需求，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "方便发一份简历过来吗？",
+      "time": "10-10 15:11",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395170144076296",
+      "block": "10-10 15:11 方便发一份简历过来吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "方便发一份简历过来吗？"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395170144293379",
+      "block": "我想要一份您的附件简历，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-16 04:05:47",
+      "time": "04:05",
+      "job_name": "兼职·AI机器人数据标注（居家线上兼职）80-100元/天北京查看职位",
+      "isFriend": false,
+      "mid": "397129925349889"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "397136723522049",
+      "block": "您的附件简历 AIGC生成师... 已发送给Boss点击查看附件",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "您的附件简历 AIGC生成师... 已发送给Boss点击查看附件"
+    }
+  ],
+  "updated_at": "2026-10-23 14:58:15",
+  "unread_on_boss": 0
+}

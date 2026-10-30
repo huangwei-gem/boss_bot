@@ -2,7 +2,7 @@
   "chat_name": "侯女士",
   "chat_id": "侯女士#胜火品牌策划",
   "account_index": 0,
-  "job_name": "兼职·科研绘图师——线上兼职7000-7500元/月长沙查看职位",
+  "job_name": "兼职·科研绘图师——线上兼职7000-7500元/月长沙",
   "company": "胜火品牌策划",
   "messages": [
     {
@@ -16,7 +16,77 @@
       "sender": "me",
       "kind": "bubble",
       "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "教学设计、课件PPT、说课PPT、说课稿、微课动画、作业设计您这边更擅长哪个呢？咱的稿费和接单流程您看下有问题吗",
+      "time": "14:49",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397642074665731",
+      "block": "14:49 教学设计、课件PPT、说课PPT、说课稿、微课动画、作业设计您这边更擅长哪个呢？咱的稿费和接单流程您看下有问题吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "教学设计、课件PPT、说课PPT、说课稿、微课动画、作业设计您这边更擅长哪个呢？咱的稿费和接单流程您看下有问题吗"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您发来流程。不过我的求职方向主要是数据标注和数据分析类，教学设计和课件PPT这类内容不是我的专长，请问贵司是否有相关方向的岗位？",
+      "text": "感谢您发来流程。不过我的求职方向主要是数据标注和数据分析类，教学设计和课件PPT这类内容不是我的专长，请问贵司是否有相关方向的岗位？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-17 14:50:50",
+      "time": "14:50",
+      "job_name": "兼职·科研绘图师——线上兼职7000-7500元/月长沙查看职位",
+      "isFriend": false,
+      "mid": "397642347991808"
+    },
+    {
+      "text": "没有呢",
+      "time": "14:56",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397643725816578",
+      "block": "14:56 没有呢",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "没有呢"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的回复，理解情况。如果后续有数据标注或数据分析相关的兼职岗位，欢迎随时联系我。祝您招聘顺利！",
+      "text": "感谢您的回复，理解情况。如果后续有数据标注或数据分析相关的兼职岗位，欢迎随时联系我。祝您招聘顺利！",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-17 14:57:18",
+      "time": "14:57",
+      "job_name": "兼职·科研绘图师——线上兼职7000-7500元/月长沙查看职位",
+      "isFriend": false,
+      "mid": "397643936482051"
+    },
+    {
+      "sender": "bot",
+      "content": "哈好的那不打扰啦，后续有合适岗位随时联系",
+      "text": "哈好的那不打扰啦，后续有合适岗位随时联系",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 14:37:01",
+      "time": "14:37",
+      "job_name": "兼职·科研绘图师——线上兼职7000-7500元/月长沙查看职位",
+      "isFriend": false,
+      "mid": "400116213383937"
     }
   ],
-  "updated_at": "2026-10-08 02:20:20"
+  "updated_at": "2026-10-25 01:56:54",
+  "unread_on_boss": 0
 }

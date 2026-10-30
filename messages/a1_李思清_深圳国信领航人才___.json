@@ -1,0 +1,51 @@
+{
+  "chat_name": "李思清",
+  "chat_id": "李思清#深圳国信领航人才___",
+  "account_index": 1,
+  "job_name": "商品数据分析-上海（猎头职位）20-40K·16薪上海查看职位",
+  "company": "深圳国信领航人才...",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据分析与AI工具应用，看到贵司商品数据分析岗位觉得方向契合，方便的话我把简历发您细聊",
+      "time": "13:55",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397628751593984",
+      "block": "13:55 已读 您好，我是统计学专业在读生，擅长数据分析与AI工具应用，看到贵司商品数据分析岗位觉得方向契合，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据分析与AI工具应用，看到贵司商品数据分析岗位觉得方向契合，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397628833915393",
+      "block": "不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "text": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-17 14:01:52",
+      "time": "14:01",
+      "job_name": "商品数据分析-上海（猎头职位）20-40K·16薪上海查看职位",
+      "isFriend": false,
+      "mid": "397630312067587"
+    }
+  ],
+  "updated_at": "2026-10-24 12:47:13",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,22 @@
+{
+  "chat_name": "林先生",
+  "chat_id": "林先生#富贵聪科技",
+  "account_index": 0,
+  "job_name": "兼职·Ai方言客家话标注员40-50元/时南宁",
+  "company": "富贵聪科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "14:33",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397991942329093",
+      "block": "14:33 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-25 02:21:17"
+}

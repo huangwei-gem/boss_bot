@@ -1,0 +1,66 @@
+{
+  "chat_name": "何女士",
+  "chat_id": "何女士#甘肃嘉盛鑫创信息服务",
+  "account_index": 1,
+  "job_name": "人事专员4-5K兰州查看职位",
+  "company": "甘肃嘉盛鑫创信息服务",
+  "messages": [
+    {
+      "text": "你好，我们甘肃嘉盛鑫创信息服务正在诚聘人事专员，可以聊聊吗？",
+      "time": "16:24",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "399081009345025",
+      "block": "16:24 你好，我们甘肃嘉盛鑫创信息服务正在诚聘人事专员，可以聊聊吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，我们甘肃嘉盛鑫创信息服务正在诚聘人事专员，可以聊聊吗？"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "399081009390083",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "sender": "bot",
+      "content": "我主要找线上数据分析、数据标注这类的，这个岗方向不太对。",
+      "text": "我主要找线上数据分析、数据标注这类的，这个岗方向不太对。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-21 16:26:43",
+      "time": "16:26",
+      "job_name": "人事专员4-5K兰州查看职位",
+      "isFriend": false,
+      "mid": "399081485926923"
+    },
+    {
+      "sender": "bot",
+      "content": "我主要找线上数据分析这类的，这个岗不太合适，感谢哈。",
+      "text": "我主要找线上数据分析这类的，这个岗不太合适，感谢哈。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-21 17:53:00",
+      "time": "17:53",
+      "job_name": "人事专员4-5K兰州查看职位",
+      "isFriend": false,
+      "mid": "399102688662017"
+    }
+  ],
+  "updated_at": "2026-10-23 13:07:53",
+  "unread_on_boss": 0
+}

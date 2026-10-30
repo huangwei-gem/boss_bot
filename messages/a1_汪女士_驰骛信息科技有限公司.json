@@ -1,0 +1,51 @@
+{
+  "chat_name": "汪女士",
+  "chat_id": "汪女士#驰骛信息科技有限公司",
+  "account_index": 1,
+  "job_name": "咨询顾问（偏数据分析）10-15K上海查看职位",
+  "company": "驰骛信息科技有限公司",
+  "messages": [
+    {
+      "text": "您好，我是统计学在读本科生，有数据分析和数据标注经验，熟悉Excel、SQL、Python和AI工具。看到贵司咨询顾问偏数据分析的岗位，想了解一下是否接受线上兼职，方便的话我把简历发您细聊。",
+      "time": "13:46",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397626586268162",
+      "block": "13:46 送达 您好，我是统计学在读本科生，有数据分析和数据标注经验，熟悉Excel、SQL、Python和AI工具。看到贵司咨询顾问偏数据分析的岗位，想了解一下是否接受线上兼职，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学在读本科生，有数据分析和数据标注经验，熟悉Excel、SQL、Python和AI工具。看到贵司咨询顾问偏数据分析的岗位，想了解一下是否接受线上兼职，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "您好，看了您的简历以后觉得不太合适，希望您早日找到满意的工作机会~",
+      "time": "昨天 16:58",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398381403615747",
+      "block": "昨天 16:58 您好，看了您的简历以后觉得不太合适，希望您早日找到满意的工作机会~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好，看了您的简历以后觉得不太合适，希望您早日找到满意的工作机会~"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "text": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-20 17:49:47",
+      "time": "17:49",
+      "job_name": "咨询顾问（偏数据分析）10-15K上海查看职位",
+      "isFriend": false,
+      "mid": "398748018106881"
+    }
+  ],
+  "updated_at": "2026-10-23 13:15:47",
+  "unread_on_boss": 0
+}

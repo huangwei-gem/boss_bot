@@ -42,6 +42,7 @@ def _recording_loop():
         def __init__(self, config=None, account_index=0, port=None, user_data_dir=None):
             self.account_index = account_index
             self._instance = MagicMock()
+            self.参数s = {}
             # URL 要给真串：断连恢复与重连日志都靠它判断"这一页到底是不是岗位页"
             self._instance.url = ("https://www.zhipin.com/web/geek/jobs"
                                   "?query=%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90&city=101250100")
@@ -73,12 +74,14 @@ def _recording_loop():
             calls.append("load_cookies")
             return True
 
-        def get_search_page(self):
+        def get_search_page(self, **kw):
             calls.append("search")
+            self.参数s["search"] = kw
             return self._instance
 
-        def get_chat_page(self):
+        def get_chat_page(self, **kw):
             calls.append("chat")
+            self.参数s["chat"] = kw
             return self._instance
 
     with patch("boss_bot.main_loop.BrowserManager", RecordingManager):
@@ -90,7 +93,7 @@ def _recording_loop():
     loop._running = True              # 重连开头就检查这个，False 会直接 return
     # 真 _init_engines 会去建聊天标签页（main_loop.py:1128），这里用 side_effect 记账，
     # 既不打桩掉真实顺序，也不让引擎构造把测试拖成集成测试
-    loop._init_engines = MagicMock(side_effect=lambda: calls.append("chat"))
+    loop._init_engines = MagicMock(side_effect=lambda **kw: calls.append("chat"))
     return loop, calls
 
 

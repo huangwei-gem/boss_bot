@@ -1,0 +1,80 @@
+{
+  "chat_name": "吴宇萌",
+  "chat_id": "吴宇萌#京博控股",
+  "account_index": 1,
+  "job_name": "期货数据分析岗-泰和嘉柏15-25K上海查看职位",
+  "company": "京博控股",
+  "messages": [
+    {
+      "text": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用SQL/Python做数据整理与分析，对贵司期货数据分析岗位很感兴趣，方便的话我把简历发您细聊。",
+      "time": "10-10 05:03",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395020617642497",
+      "block": "10-10 05:03 送达 您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用SQL/Python做数据整理与分析，对贵司期货数据分析岗位很感兴趣，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用SQL/Python做数据整理与分析，对贵司期货数据分析岗位很感兴趣，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "感谢您的投递，但是很抱歉我们正在寻找其他背景的候选人。祝您在BOSS直聘找到完美的工作机会！",
+      "time": "昨天 09:19",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "399330505531908",
+      "block": "昨天 09:19 感谢您的投递，但是很抱歉我们正在寻找其他背景的候选人。祝您在BOSS直聘找到完美的工作机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢您的投递，但是很抱歉我们正在寻找其他背景的候选人。祝您在BOSS直聘找到完美的工作机会！"
+    },
+    {
+      "sender": "bot",
+      "content": "好嘞，谢谢您告知。",
+      "text": "好嘞，谢谢您告知。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-23 11:21:03",
+      "time": "11:21",
+      "job_name": "期货数据分析岗-泰和嘉柏15-25K上海查看职位",
+      "isFriend": false,
+      "mid": "399714159337987"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您，祝招聘顺利。",
+      "text": "好的，谢谢您，祝招聘顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-23 11:47:42",
+      "time": "11:47",
+      "job_name": "期货数据分析岗-泰和嘉柏15-25K上海查看职位",
+      "isFriend": false,
+      "mid": "399720701829635"
+    },
+    {
+      "sender": "bot",
+      "content": "嗯，那不打扰您了。",
+      "text": "嗯，那不打扰您了。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 12:03:25",
+      "time": "12:03",
+      "job_name": "期货数据分析岗-泰和嘉柏15-25K上海查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-24 12:03:25",
+  "unread_on_boss": 0
+}

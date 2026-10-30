@@ -32,6 +32,14 @@ reply_records_export.json
 _tmp_*
 flask_server.log
 
+# 10-29 根目录清理的两处落点，都不回版本库：
+# archive/ 是从根目录挪走的原件（80 份配置备份、过期日志、被取代的脚本）——
+# 挪走的目的是别让 clone 再装一遍，改成跟踪就等于把它们搬回仓库里；
+# config_backups/ 是 save() 覆盖写之前的旧份，本地留 20 份够回滚，机器人一天一份不该占版本库。
+# 两份都是"只挪不删"，在硬盘上，随时能捞回来。
+archive/
+config_backups/
+
 # 浏览器运行数据：396MB Chrome profile，里面有 >100MB 的 Cache_Data/data_3，
 # GitHub 单文件 100MB 是硬墙，物理传不上去；登录态另有 zhipin_cookies*.json 承载
 flask-version/browser_data/

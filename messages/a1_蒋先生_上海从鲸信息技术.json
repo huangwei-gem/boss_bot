@@ -72,9 +72,25 @@
       "timestamp": "2026-10-10 07:32:13",
       "time": "07:32",
       "job_name": "数据分析师20-40K·18薪上海查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395057296728577"
+    },
+    {
+      "sender": "bot",
+      "content": "蒋先生您好，上海从鲸信息技术这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "蒋先生您好，上海从鲸信息技术这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 15:34:32",
+      "time": "15:34",
+      "job_name": "数据分析师20-40K·18薪上海查看职位",
+      "isFriend": false,
+      "mid": "397653091213825"
     }
   ],
-  "updated_at": "2026-10-10 07:32:13",
+  "updated_at": "2026-10-23 14:04:41",
   "unread_on_boss": 0
 }

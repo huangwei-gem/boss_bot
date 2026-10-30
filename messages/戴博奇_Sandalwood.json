@@ -1,0 +1,22 @@
+{
+  "chat_name": "戴博奇",
+  "chat_id": "戴博奇#Sandalwood",
+  "account_index": 0,
+  "job_name": "数据分析师8-12K·14薪长沙查看职位",
+  "company": "Sandalwood",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "02:34",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394984006353666",
+      "block": "02:34 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-23 14:54:52"
+}

@@ -1,0 +1,79 @@
+{
+  "chat_name": "秦女士",
+  "chat_id": "秦女士#微创软件",
+  "account_index": 1,
+  "job_name": "数据分析师-电商/金融背景优先10-11K上海查看职位",
+  "company": "微创软件",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:07",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397587482558977",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学在读本科生，有数据分析和数据标注经验，熟练使用Excel、SQL和Python。看到贵司数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397587596636677",
+      "block": "送达 您好，我是统计学在读本科生，有数据分析和数据标注经验，熟练使用Excel、SQL和Python。看到贵司数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学在读本科生，有数据分析和数据标注经验，熟练使用Excel、SQL和Python。看到贵司数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "您好，您在线简历已查看。我们深感荣幸收到您的简历，祝您在BOSS直聘早日找到合适机会～",
+      "time": "昨天 13:40",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398332897473025",
+      "block": "昨天 13:40 您好，您在线简历已查看。我们深感荣幸收到您的简历，祝您在BOSS直聘早日找到合适机会～",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好，您在线简历已查看。我们深感荣幸收到您的简历，祝您在BOSS直聘早日找到合适机会～"
+    },
+    {
+      "sender": "bot",
+      "content": "嗯好嘞，谢谢告知～",
+      "text": "嗯好嘞，谢谢告知～",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 16:56:46",
+      "time": "16:56",
+      "job_name": "数据分析师-电商/金融背景优先10-11K上海查看职位",
+      "isFriend": false,
+      "mid": "398734991933958"
+    },
+    {
+      "sender": "bot",
+      "content": "好嘞，谢谢秦女士，祝后续招聘顺利～",
+      "text": "好嘞，谢谢秦女士，祝后续招聘顺利～",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 17:45:25",
+      "time": "17:45",
+      "job_name": "数据分析师-电商/金融背景优先10-11K上海查看职位",
+      "isFriend": false,
+      "mid": "398746947777026"
+    }
+  ],
+  "updated_at": "2026-10-23 13:20:13",
+  "unread_on_boss": 0
+}

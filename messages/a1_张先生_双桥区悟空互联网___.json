@@ -161,8 +161,38 @@
       "job_name": "兼职·游戏代练50-300元/天承德查看职位",
       "isFriend": false,
       "mid": "394427250803202"
+    },
+    {
+      "sender": "bot",
+      "content": "张先生您好，之前聊的兼职·游戏代练50-300元/天承德查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "张先生您好，之前聊的兼职·游戏代练50-300元/天承德查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 12:39:15",
+      "time": "12:39",
+      "job_name": "兼职·游戏代练50-300元/天承德查看职位",
+      "isFriend": false,
+      "mid": "395132754067969"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，张先生如果有合适的兼职机会随时联系我，祝您工作顺利。",
+      "text": "好的，张先生如果有合适的兼职机会随时联系我，祝您工作顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 17:36:15",
+      "time": "17:36",
+      "job_name": "兼职·游戏代练50-300元/天承德查看职位",
+      "isFriend": false,
+      "mid": "397683001405954"
     }
   ],
-  "updated_at": "2026-10-09 22:50:51",
+  "updated_at": "2026-10-23 13:59:20",
   "unread_on_boss": 0
 }

@@ -39,7 +39,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394164328919809",
-      "block": "18:58 我想要和您交换微信，您是否同意 拒绝 同意",
+      "block": "我想要和您交换微信，您是否同意 拒绝 同意",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -126,9 +126,10 @@
       "timestamp": "2026-10-09 14:50:48",
       "time": "14:50",
       "job_name": "轻松 月入过万主播时间自由8-13K娄底查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394811180225280"
     }
   ],
-  "updated_at": "2026-10-09 14:50:48",
+  "updated_at": "2026-10-18 17:15:16",
   "unread_on_boss": 0
 }

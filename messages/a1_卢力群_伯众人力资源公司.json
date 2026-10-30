@@ -1,0 +1,36 @@
+{
+  "chat_name": "卢力群",
+  "chat_id": "卢力群#伯众人力资源公司",
+  "account_index": 1,
+  "job_name": "数据分析师（猎头职位）15-25K上海查看职位",
+  "company": "伯众人力资源公司",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:50",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397597965939202",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学在读本科生，主攻数据分析方向，熟练使用Excel、SQL、Python，也有数据标注和AI质检经验。看到贵司数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397598080164354",
+      "block": "已读 您好，我是统计学在读本科生，主攻数据分析方向，熟练使用Excel、SQL、Python，也有数据标注和AI质检经验。看到贵司数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学在读本科生，主攻数据分析方向，熟练使用Excel、SQL、Python，也有数据标注和AI质检经验。看到贵司数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:37:34"
+}

@@ -2,7 +2,7 @@
   "chat_name": "闵月",
   "chat_id": "闵月#常州炽星诚文化传媒",
   "account_index": 0,
-  "job_name": "兼职攒攒小零花/可日结/多人聊天（代招职位）8-15K长沙查看职位",
+  "job_name": "兼职攒攒小零花/可日结/多人聊天（代招职位）8-15K长沙",
   "company": "常州炽星诚文化传媒",
   "messages": [
     {
@@ -299,9 +299,22 @@
       "timestamp": "2026-10-10 03:35:30",
       "time": "03:35",
       "job_name": "兼职攒攒小零花/可日结/多人聊天（代招职位）8-15K长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394999118090753"
+    },
+    {
+      "text": "嗯嗯",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394999123587585",
+      "block": "嗯嗯 AI生成回复",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "嗯嗯"
     }
   ],
-  "updated_at": "2026-10-10 03:35:30",
+  "updated_at": "2026-10-25 08:09:16",
   "unread_on_boss": 0
 }

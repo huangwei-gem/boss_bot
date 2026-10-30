@@ -1,0 +1,22 @@
+{
+  "chat_name": "余先生",
+  "chat_id": "余先生#鸣鸣很忙集团",
+  "account_index": 0,
+  "job_name": "门店空间分析师25-35K长沙",
+  "company": "鸣鸣很忙集团",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "12:24",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397960329888512",
+      "block": "12:24 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-25 02:27:45"
+}

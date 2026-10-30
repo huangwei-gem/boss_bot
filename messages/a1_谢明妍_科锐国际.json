@@ -1,0 +1,63 @@
+{
+  "chat_name": "谢明妍",
+  "chat_id": "谢明妍#科锐国际",
+  "account_index": 1,
+  "job_name": "数据分析师（猎头职位）15-25K上海查看职位",
+  "company": "科锐国际",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 10:50",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397229501608451",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学在读本科生，有数据分析与数据标注经验，熟练使用SQL/Python，看到贵司数据分析师岗位，想进一步了解是否支持线上兼职，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397229622706688",
+      "block": "已读 您好，我是统计学在读本科生，有数据分析与数据标注经验，熟练使用SQL/Python，看到贵司数据分析师岗位，想进一步了解是否支持线上兼职，方便的话我把简历发您细聊。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我是统计学在读本科生，有数据分析与数据标注经验，熟练使用SQL/Python，看到贵司数据分析师岗位，想进一步了解是否支持线上兼职，方便的话我把简历发您细聊。"
+    },
+    {
+      "text": "我们认真审阅了您的简历，但暂不完全匹配岗位情况。祝您在BOSS直聘找到更合适的机会！",
+      "time": "昨天 14:53",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397289018655233",
+      "block": "昨天 14:53 我们认真审阅了您的简历，但暂不完全匹配岗位情况。祝您在BOSS直聘找到更合适的机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "我们认真审阅了您的简历，但暂不完全匹配岗位情况。祝您在BOSS直聘找到更合适的机会！"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-17 15:17:40",
+      "time": "15:17",
+      "job_name": "数据分析师（猎头职位）15-25K上海查看职位",
+      "isFriend": false,
+      "mid": "397648941376000"
+    }
+  ],
+  "updated_at": "2026-10-24 14:03:46",
+  "unread_on_boss": 0
+}

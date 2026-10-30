@@ -1,0 +1,36 @@
+{
+  "chat_name": "李女士",
+  "chat_id": "李女士#银雁科技",
+  "account_index": 1,
+  "job_name": "质检数据分析/金融行业驻场8-9K上海查看职位",
+  "company": "银雁科技",
+  "messages": [
+    {
+      "text": "",
+      "time": "10:25",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397931139432964",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学专业擅长数据标注与分析的在校生，看到贵司线上兼职机会，方便的话我把简历发您细聊",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397931296285185",
+      "block": "送达 您好，我是统计学专业擅长数据标注与分析的在校生，看到贵司线上兼职机会，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业擅长数据标注与分析的在校生，看到贵司线上兼职机会，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 13:48:41"
+}

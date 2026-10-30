@@ -1,0 +1,78 @@
+{
+  "chat_name": "易女士",
+  "chat_id": "易女士#拼多多集团_PDD",
+  "account_index": 1,
+  "job_name": "数据分析师【27届校招】20-40K·18薪上海查看职位",
+  "company": "拼多多集团-PDD",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 10:57",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397231055442434",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学本科在读，有数据分析和数据标注经验，看到贵司数据分析师岗位，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397231168872962",
+      "block": "已读 您好，我是统计学本科在读，有数据分析和数据标注经验，看到贵司数据分析师岗位，方便的话我把简历发您细聊。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据分析和数据标注经验，看到贵司数据分析师岗位，方便的话我把简历发您细聊。"
+    },
+    {
+      "text": "你好，可以聊一聊哦～",
+      "time": "昨天 20:27",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397371234357763",
+      "block": "昨天 20:27 你好，可以聊一聊哦～",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，可以聊一聊哦～"
+    },
+    {
+      "sender": "bot",
+      "content": "好嘞，那我先把简历发您，您有什么想了解的随时问我。",
+      "text": "好嘞，那我先把简历发您，您有什么想了解的随时问我。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 18:23:25",
+      "time": "18:23",
+      "job_name": "数据分析师【27届校招】20-40K·18薪上海查看职位",
+      "isFriend": false,
+      "mid": "398756286632449"
+    },
+    {
+      "sender": "bot",
+      "content": "在的～这个岗支持线上远程吗？我这边主要想做线上数据分析这类。",
+      "text": "在的～这个岗支持线上远程吗？我这边主要想做线上数据分析这类。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 18:44:58",
+      "time": "18:44",
+      "job_name": "数据分析师【27届校招】20-40K·18薪上海查看职位",
+      "isFriend": false,
+      "mid": "398761582420485"
+    }
+  ],
+  "updated_at": "2026-10-23 13:14:37",
+  "unread_on_boss": 0
+}

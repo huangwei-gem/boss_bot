@@ -13,7 +13,6 @@ file:// 页面（路径里带 job_detail 这个词，用来喂判据），不碰
 """
 import shutil
 import sys
-import tempfile
 import time
 from pathlib import Path
 
@@ -21,13 +20,14 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from boss_bot.browser_launcher import BrowserManager, launch_browser  # noqa: E402
+from boss_bot.unified_config import 新建临时目录  # noqa: E402
 
 PORT = 9337
 岗位页张数 = 3
 
 
 def main() -> int:
-    临时目录 = Path(tempfile.mkdtemp(prefix="sweep_probe_"))
+    临时目录 = 新建临时目录("sweep_probe_")
     岗位文件 = 临时目录 / "job_detail_probe.html"
     岗位文件.write_text("<html><body>probe</body></html>", encoding="utf-8")
     在用的 = 临时目录 / "chat_like.html"

@@ -8,7 +8,7 @@
 """
 import os
 import time
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -17,6 +17,7 @@ from boss_bot.greet_engine import (GREETING_MISSING_REASON, DEFAULT_GREETING,
                                    GreetEngine, classify_greet_skip, pick_greeting)
 from boss_bot.reply_record import GreetRecord, GreetRecordStore
 from boss_bot.unified_config import UnifiedConfig
+from tests.conftest import mk测试临时目录
 
 
 def _engine(account_index=0, store=None):
@@ -161,10 +162,17 @@ class TestSameDaySameOutcomeRecordedOnce:
 class TestGreetRoundOrder:
     """招呼语没配就不该先烧 AI 预算；同一结论当天只落一条"""
 
-    def _loop(self, greeting="", recorded_today=False):
+    def _loop(self, greeting="", recorded_today=False, 池目录=None):
+        from boss_bot.job_pool import 岗位池
         from boss_bot.main_loop import UnifiedBotLoop
         with patch("boss_bot.main_loop.BrowserManager"):
             loop = UnifiedBotLoop()
+        # 这几条锁的是"取不到招呼语就别烧 AI 预算"那条直投路径；界面默认已改成
+        # 只抓不投，不翻回 False 就根本走不到岗位循环，断言会空过
+        loop.config.greet.capture_only = False
+        # 池钉在项目内的临时目录：轮次一开头就排空勾选队列，不隔开会往真实 data/job_pool.json 写假岗位
+        loop._pool = 岗位池(account_index=0,
+                            目录=str(池目录 or mk测试临时目录("pool_fixture")))
         loop._running = True
         loop._greet_paused = False
         loop._log = MagicMock()
@@ -331,6 +339,81 @@ class TestUnhealthyListRefreshesAcrossAccounts:
         assert chain._unhealthy_names() == {"P1"}
         # 另一个账号（另一个 chain 实例）随后拿到的是刚写好的那份，而不是旧缓存
         write("available")
+        assert chain._unhealthy_names() == set()
+
+
+class TestUnhealthyExpiry:
+    """体检给的"死刑"要自己过期——2026-10-24 现场：盘上那份是前一天 16:33 的，
+    15 个接口里 12 个被它划在门外，打招呼腿从 11 点到 17 点念了 13348 次
+    「暂无可用 AI 接口」。24 小时不重审，一次抖动就把这条链饿死一整天。"""
+
+    def _链(self, tmp_path, monkeypatch, 接口s=None):
+        from boss_bot import ai_health, greet_engine
+        path = tmp_path / "ai_health.json"
+        monkeypatch.setattr(ai_health, "HEALTH_FILE", path)
+        接口s = 接口s or [{"name": "P1", "api_key": "k", "api_base": "https://x/v1",
+                          "model": "m"}]
+        return greet_engine.AIAnalyzerChain(providers=接口s, match_threshold=70,
+                                            log_callback=lambda *a, **k: None,
+                                            skip_unhealthy=True), path
+
+    def _写(self, path, 结果, 文件时刻):
+        import json
+        self.第几次 = getattr(self, "第几次", 0) + 1
+        path.write_text(json.dumps(
+            {"updated_at": 文件时刻.strftime("%Y-%m-%d %H:%M:%S"), "results": 结果},
+            ensure_ascii=False), encoding="utf-8")
+        # 那份清单按 mtime+大小失效；同一秒里连写两次要能分出先后，
+        # 否则第二次写完链条还在用第一次的缓存，测试会假绿
+        os.utime(path, (time.time() + self.第几次, time.time() + self.第几次))
+
+    def _时刻(self, 几分前):
+        return datetime.now() - timedelta(minutes=几分前)
+
+    def test_刚判死的半小时内照旧跳过(self, tmp_path, monkeypatch):
+        from boss_bot.ai_health import provider_key
+        chain, path = self._链(tmp_path, monkeypatch)
+        key = provider_key({"api_base": "https://x/v1", "model": "m", "name": "P1"})
+        self._写(path, {key: {"status": "unavailable",
+                              "checked_at": self._时刻(5).strftime("%Y-%m-%d %H:%M:%S")}},
+                 self._时刻(0))
+        assert chain._unhealthy_names() == {"P1"}, "新鲜死刑还是要跳，别把 30s 预算白烧"
+
+    def test_死刑过了重审钟点要再给一次机会(self, tmp_path, monkeypatch):
+        from boss_bot.ai_health import provider_key
+        chain, path = self._链(tmp_path, monkeypatch)
+        key = provider_key({"api_base": "https://x/v1", "model": "m", "name": "P1"})
+        self._写(path, {key: {"status": "unavailable",
+                              "checked_at": self._时刻(31).strftime("%Y-%m-%d %H:%M:%S")}},
+                 self._时刻(0))
+        assert chain._unhealthy_names() == set(), "半小时前的结论不能再替今天做主"
+
+    def test_一条运行时回写不许把别的旧死刑刷新(self, tmp_path, monkeypatch):
+        """`updated_at` 是整份文件的时间，任何一次回写都会把它推到当下。
+        拿它算每一条的年龄，等于一条新证据替一屋子旧结论续了一天的命。"""
+        from boss_bot.ai_health import provider_key
+        两 = [{"name": "P1", "api_key": "k", "api_base": "https://x/v1", "model": "m"},
+              {"name": "P2", "api_key": "k2", "api_base": "https://y/v1", "model": "m2"}]
+        chain, path = self._链(tmp_path, monkeypatch, 接口s=两)
+        旧 = provider_key({"api_base": "https://x/v1", "model": "m", "name": "P1"})
+        新 = provider_key({"api_base": "https://y/v1", "model": "m2", "name": "P2"})
+        self._写(path, {旧: {"status": "unavailable",
+                             "checked_at": self._时刻(180).strftime("%Y-%m-%d %H:%M:%S")},
+                        新: {"status": "unavailable", "source": "runtime",
+                             "checked_at": self._时刻(1).strftime("%Y-%m-%d %H:%M:%S")}},
+                 self._时刻(0))
+        assert chain._unhealthy_names() == {"P2"}, \
+            "1 分钟前那条该跳，3 小时前那条该重审——别让整份文件的时间替单条续命"
+
+    def test_没有逐条时刻的老条目按文件时间算(self, tmp_path, monkeypatch):
+        """10-24 之前写的体检行没有 checked_at，不能因为读不到就一律放行，
+        也不能因为读不到就一律判死——照文件那份时间走，跟旧口径一致。"""
+        from boss_bot.ai_health import provider_key
+        chain, path = self._链(tmp_path, monkeypatch)
+        key = provider_key({"api_base": "https://x/v1", "model": "m", "name": "P1"})
+        self._写(path, {key: {"status": "unavailable"}}, self._时刻(5))
+        assert chain._unhealthy_names() == {"P1"}
+        self._写(path, {key: {"status": "unavailable"}}, self._时刻(25 * 60))
         assert chain._unhealthy_names() == set()
 
 

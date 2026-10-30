@@ -1,0 +1,22 @@
+{
+  "chat_name": "凌女士",
+  "chat_id": "凌女士#甲骨易",
+  "account_index": 0,
+  "job_name": "数据标注标注组长（5-6K  30%绩效）5-6K长沙查看职位",
+  "company": "甲骨易",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "03:43",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395000991544065",
+      "block": "03:43 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-23 14:50:51"
+}

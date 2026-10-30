@@ -1,0 +1,22 @@
+{
+  "chat_name": "宋先生",
+  "chat_id": "宋先生#青岛铭天教育科技",
+  "account_index": 0,
+  "job_name": "兼职·数据标注员100-200元/天烟台",
+  "company": "青岛铭天教育科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "14:15",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397987462140675",
+      "block": "14:15 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-25 02:22:52"
+}

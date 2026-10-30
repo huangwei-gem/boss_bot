@@ -33,22 +33,31 @@ class Test挑出地址:
 
 
 class Test隧道命令:
+    # 假口用 18080，不用 500x：端口字面量在仓库里只许有 unified_config 那一份判据，
+    # 测试再写一遍"看着像面板口"的数，换口那天就悄悄测了个不存在的目标。
+    假口 = 18080
+
     def test_localhost_run只把本机端口的服务转出去(self):
-        命令 = 隧道命令(5000, "localhost-run")
+        命令 = 隧道命令(self.假口, "localhost-run")
         assert 命令[0] == "ssh"
         i = 命令.index("-R")
-        assert 命令[i + 1] == "80:localhost:5000"
+        assert 命令[i + 1] == "80:localhost:%s" % self.假口
         assert 命令[-1] == "nokey@localhost.run"
 
     def test_cloudflared指向127_0_0_1而不是localhost(self):
         # 面板绑在 0.0.0.0，隧道只该连本机；Windows 上 localhost 有走代理被吃成 502 的先例
-        命令 = 隧道命令(5000, "cloudflared")
+        命令 = 隧道命令(self.假口, "cloudflared")
         assert "--url" in 命令
-        assert 命令[命令.index("--url") + 1] == "http://127.0.0.1:5000"
+        assert 命令[命令.index("--url") + 1] == "http://127.0.0.1:%s" % self.假口
+
+    def test_默认就转现在那个面板口(self):
+        """隧道要是默认转一个写死的旧口，他点开链接看到的是别的项目。"""
+        from boss_bot.unified_config import 面板端口
+        assert 隧道命令() == 隧道命令(面板端口(), "cloudflared")
 
     def test_不能卡在首次连接的确认提示上(self):
         # 无人值守的重连循环里弹一句 yes/no，隧道就永远起不来
-        命令 = " ".join(隧道命令(5000, "localhost-run"))
+        命令 = " ".join(隧道命令(self.假口, "localhost-run"))
         assert "StrictHostKeyChecking=no" in 命令
         assert "BatchMode=yes" in 命令
 

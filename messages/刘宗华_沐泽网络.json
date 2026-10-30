@@ -2,7 +2,7 @@
   "chat_name": "刘宗华",
   "chat_id": "刘宗华#沐泽网络",
   "account_index": 0,
-  "job_name": "无需露脸~萌新友好~居家办公5-10K长沙查看职位",
+  "job_name": "无需露脸~萌新友好~居家办公5-10K长沙",
   "company": "沐泽网络",
   "messages": [
     {
@@ -113,19 +113,6 @@
     },
     {
       "text": "",
-      "time": "19:16",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "394522700268033",
-      "block": "19:16",
-      "sender": "hr",
-      "kind": "card",
-      "content": "",
-      "card_text": ""
-    },
-    {
-      "text": "",
       "time": "",
       "isFriend": true,
       "is_mine": false,
@@ -138,6 +125,6 @@
       "card_text": "我想要和您交换微信，您是否同意 拒绝 同意"
     }
   ],
-  "updated_at": "2026-10-10 07:12:44",
+  "updated_at": "2026-10-25 07:51:20",
   "unread_on_boss": 0
 }

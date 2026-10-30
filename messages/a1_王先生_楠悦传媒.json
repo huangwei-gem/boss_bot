@@ -116,7 +116,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "393953283940353",
-      "block": "04:40 18557163963 王先生的微信号 18557163963 复制微信号",
+      "block": "18557163963 王先生的微信号 18557163963 复制微信号",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -136,19 +136,6 @@
       "job_name": "兼职·线上在线读文/可兼职/月薪1w+320-400元/天长沙查看职位",
       "isFriend": false,
       "mid": "393971374346241"
-    },
-    {
-      "text": "",
-      "time": "10:12",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "394034947629057",
-      "block": "10:12",
-      "sender": "hr",
-      "kind": "card",
-      "content": "",
-      "card_text": ""
     },
     {
       "text": "打开微信→添加朋友下面→找到企业微信联系人→输入微信号进行搜索即可。",
@@ -228,9 +215,64 @@
       "timestamp": "2026-10-10 06:09:42",
       "time": "06:09",
       "job_name": "兼职·线上在线读文/可兼职/月薪1w+320-400元/天长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395037016117249"
+    },
+    {
+      "text": "好的",
+      "time": "10:04",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395094798925835",
+      "block": "10:04 好的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的"
+    },
+    {
+      "sender": "bot",
+      "content": "稍后添加完成后微信上联系您。",
+      "text": "稍后添加完成后微信上联系您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 10:07:29",
+      "time": "10:07",
+      "job_name": "兼职·线上在线读文/可兼职/月薪1w+320-400元/天长沙查看职位",
+      "isFriend": false,
+      "mid": "395095452479491"
+    },
+    {
+      "text": "经过认真考虑，我们认为您的经验与我们的职位需求并不完全一致。祝您在BOSS直聘找到您理想的工作！",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395095511289858",
+      "block": "经过认真考虑，我们认为您的经验与我们的职位需求并不完全一致。祝您在BOSS直聘找到您理想的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "经过认真考虑，我们认为您的经验与我们的职位需求并不完全一致。祝您在BOSS直聘找到您理想的工作！"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "text": "感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 10:13:08",
+      "time": "10:13",
+      "job_name": "兼职·线上在线读文/可兼职/月薪1w+320-400元/天长沙查看职位",
+      "isFriend": false,
+      "mid": "395096842076173"
     }
   ],
-  "updated_at": "2026-10-10 06:09:42",
+  "updated_at": "2026-10-23 15:09:05",
   "unread_on_boss": 0
 }

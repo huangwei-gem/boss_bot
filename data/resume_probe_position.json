@@ -1,0 +1,10 @@
+[
+ {"do": "open"},
+ {"do": "mark", "at": {"ph": "选择职位名称"}, "wait": 0.6},
+ {"do": "realclick", "css": "[data-orca-tag=hit]", "wait": 2.5},
+ {"do": "mark", "at": {"want": "人力/行政/法务", "包含": true, "scope": ".position-category-wrap", "覆盖": true}, "试几次": 3, "wait": 0.5},
+ {"do": "realclick", "css": "[data-orca-tag=hit]", "wait": 2.0},
+ {"do": "mark", "at": {"want": "人力资源", "包含": true, "scope": ".position-list-wrap", "覆盖": true}, "试几次": 3, "wait": 0.5},
+ {"do": "realclick", "css": "[data-orca-tag=hit]", "wait": 2.5},
+ {"do": "js", "limit": 9000, "code": "(() => { const clean = (s) => (s || '').replace(/\\u00a0/g, ' ').trim(); const sel = document.querySelector('.position-selecter') || document; const cols = [...sel.querySelectorAll('[class*=wrap],[class*=content]')].filter((e) => { const r = e.getBoundingClientRect(); return r.width > 40 && r.height > 40; }); const items = [...sel.querySelectorAll('.position-item')].map((e) => clean(e.innerText)).filter(Boolean); return {colsFound: cols.length, items: items.slice(0, 60), full: clean(sel.innerText).slice(0, 900)}; })()"}
+]

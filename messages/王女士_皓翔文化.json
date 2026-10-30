@@ -2,7 +2,7 @@
   "chat_name": "王女士",
   "chat_id": "王女士#皓翔文化",
   "account_index": 0,
-  "job_name": "兼职·线上兼职客/服20-25元/时南通查看职位",
+  "job_name": "兼职·线上兼职客/服20-25元/时南通",
   "company": "皓翔文化",
   "messages": [
     {
@@ -109,9 +109,40 @@
       "timestamp": "2026-10-10 02:47:53",
       "time": "02:47",
       "job_name": "兼职·线上兼职客/服20-25元/时南通查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394987415618304"
+    },
+    {
+      "sender": "bot",
+      "content": "王女士您好，之前聊的兼职·线上兼职客/服20-25元/时南通查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "王女士您好，之前聊的兼职·线上兼职客/服20-25元/时南通查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 16:51:28",
+      "time": "16:51",
+      "job_name": "兼职·线上兼职客/服20-25元/时南通查看职位",
+      "isFriend": false,
+      "mid": "395194740593411"
+    },
+    {
+      "sender": "bot",
+      "content": "王女士，我这边已发微信申请，您方便时通过一下，想和您聊聊岗位细节。",
+      "text": "王女士，我这边已发微信申请，您方便时通过一下，想和您聊聊岗位细节。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 17:03:35",
+      "time": "17:03",
+      "job_name": "兼职·线上兼职客/服20-25元/时南通查看职位",
+      "isFriend": false,
+      "mid": "397674972242695"
     }
   ],
-  "updated_at": "2026-10-10 02:47:53",
+  "updated_at": "2026-10-25 02:36:32",
   "unread_on_boss": 0
 }

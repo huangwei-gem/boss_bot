@@ -1,0 +1,50 @@
+{
+  "chat_name": "侯先生",
+  "chat_id": "侯先生#上海嘉驰信息技术咨询",
+  "account_index": 0,
+  "job_name": "AI数据服务主管（蚂蚁子公司/标注）10-15K长沙",
+  "company": "上海嘉驰信息技术咨询",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "12:22",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397959797330688",
+      "block": "12:22 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "不好意思，不太合适哈，祝你早日找到合适的岗位",
+      "time": "昨天 15:13",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398355748881153",
+      "block": "昨天 15:13 不好意思，不太合适哈，祝你早日找到合适的岗位",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哈，祝你早日找到合适的岗位"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-20 17:43:33",
+      "time": "17:43",
+      "job_name": "AI数据服务主管（蚂蚁子公司/标注）10-15K长沙查看职位",
+      "isFriend": false,
+      "mid": "398746487517955"
+    }
+  ],
+  "updated_at": "2026-10-25 02:11:57",
+  "unread_on_boss": 0
+}

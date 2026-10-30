@@ -1,0 +1,23 @@
+{
+  "chat_name": "李女士",
+  "chat_id": "李女士#上海保隆汽车科技___",
+  "account_index": 1,
+  "job_name": "数据分析师 (MJ001952)8-13K·14薪上海查看职位",
+  "company": "上海保隆汽车科技...",
+  "messages": [
+    {
+      "text": "您好，统计学本科在读，擅长数据标注和分析，熟悉Excel、SQL和Python，有AI辅助标注经验。看到贵司数据分析师岗位，方便的话我把简历发您细聊。",
+      "time": "12:11",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397603307331585",
+      "block": "12:11 送达 您好，统计学本科在读，擅长数据标注和分析，熟悉Excel、SQL和Python，有AI辅助标注经验。看到贵司数据分析师岗位，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，统计学本科在读，擅长数据标注和分析，熟悉Excel、SQL和Python，有AI辅助标注经验。看到贵司数据分析师岗位，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:36:21"
+}

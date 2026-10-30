@@ -1,0 +1,50 @@
+{
+  "chat_name": "魏女士",
+  "chat_id": "魏女士#安徽蘅德人力资源",
+  "account_index": 0,
+  "job_name": "AI数据服务主管+双休五险一金10-15K长沙",
+  "company": "安徽蘅德人力资源",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "14:43",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397640617468675",
+      "block": "14:43 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "不好意思，不太合适哈",
+      "time": "09:14",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398267500749573",
+      "block": "09:14 不好意思，不太合适哈",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哈"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，祝您招聘顺利~",
+      "text": "好的，感谢您的时间，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-19 12:47:14",
+      "time": "12:47",
+      "job_name": "AI数据服务主管+双休五险一金10-15K长沙查看职位",
+      "isFriend": false,
+      "mid": "398319759958784"
+    }
+  ],
+  "updated_at": "2026-10-25 02:15:39",
+  "unread_on_boss": 0
+}

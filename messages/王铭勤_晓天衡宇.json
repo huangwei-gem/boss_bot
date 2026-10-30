@@ -76,7 +76,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "394458929591046",
-      "block": "14:57 对方已查看了您的附件简历",
+      "block": "对方已查看了您的附件简历",
       "sender": "hr",
       "kind": "system",
       "content": "对方已查看了您的附件简历",
@@ -203,9 +203,37 @@
       "timestamp": "2026-10-10 01:45:04",
       "time": "01:45",
       "job_name": "兼职·线上社区工作专家80-120元/时北京查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394971976368896"
+    },
+    {
+      "sender": "bot",
+      "content": "王铭勤您好，晓天衡宇这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "王铭勤您好，晓天衡宇这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 16:05:05",
+      "time": "16:05",
+      "job_name": "兼职·线上社区工作专家80-120元/时北京查看职位",
+      "isFriend": false,
+      "mid": "395183341073155"
+    },
+    {
+      "text": "在招募的哈",
+      "time": "10-12 11:39",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395825923613440",
+      "block": "10-12 11:39 在招募的哈",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "在招募的哈"
     }
   ],
-  "updated_at": "2026-10-10 01:45:04",
-  "unread_on_boss": 0
+  "updated_at": "2026-10-23 14:23:47",
+  "unread_on_boss": 1
 }

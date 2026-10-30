@@ -42,9 +42,25 @@
       "timestamp": "2026-10-10 09:18:03",
       "time": "09:18",
       "job_name": "数据分析师（电商）10-15K·14薪上海查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395083303637515"
+    },
+    {
+      "sender": "bot",
+      "content": "理解岗位需求，如有其他合作机会欢迎联系，祝您招聘顺利！",
+      "text": "理解岗位需求，如有其他合作机会欢迎联系，祝您招聘顺利！",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 16:03:13",
+      "time": "16:03",
+      "job_name": "数据分析师（电商）10-15K·14薪上海查看职位",
+      "isFriend": false,
+      "mid": "397660135891460"
     }
   ],
-  "updated_at": "2026-10-10 09:18:03",
+  "updated_at": "2026-10-23 14:00:59",
   "unread_on_boss": 0
 }

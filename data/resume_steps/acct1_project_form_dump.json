@@ -1,0 +1,4 @@
+[
+  {"do": "open"},
+  {"do": "js", "limit": 4000, "code": "(() => {\n  const clean = (s) => ((s || '') + '').trim();\n  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };\n  const lblOf = (e) => { const p = e.closest('div[class*=form-item]') || e.parentElement; return clean(p && p.innerText).slice(0, 30); };\n  const blk = document.getElementById('project');\n  return {\n    字段: [...document.querySelectorAll('input,textarea,[contenteditable=true]')].filter(vis).map((e, i) => i + ':' + e.tagName + '|ph=' + (e.placeholder || '').slice(0, 24) + '|lbl=' + lblOf(e).slice(0, 22) + '|ka=' + (e.getAttribute('ka') || '')).slice(0, 16),\n    按钮: blk ? [...blk.querySelectorAll('[ka]')].map((e) => e.getAttribute('ka') + '|' + clean(e.innerText).slice(0, 8)).filter((t) => /ok|cancel|_del|add/.test(t)).slice(0, 12) : [],\n    板块: blk ? clean(blk.innerText).slice(0, 420) : 'NO BLOCK'\n  };\n})()"}
+]

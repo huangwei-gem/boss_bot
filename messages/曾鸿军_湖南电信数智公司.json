@@ -1,0 +1,79 @@
+{
+  "chat_name": "曾鸿军",
+  "chat_id": "曾鸿军#湖南电信数智公司",
+  "account_index": 0,
+  "job_name": "数据开发9-12K长沙",
+  "company": "湖南电信数智公司",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 15:11",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "398001314411269",
+      "block": "昨天 15:11 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "认真看了您的简历，抱歉，我们希望寻找与当前项目周期更匹配的候选人。祝您在BOSS直聘找到更好的机会！",
+      "time": "昨天 15:02",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398352971219714",
+      "block": "昨天 15:02 认真看了您的简历，抱歉，我们希望寻找与当前项目周期更匹配的候选人。祝您在BOSS直聘找到更好的机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "认真看了您的简历，抱歉，我们希望寻找与当前项目周期更匹配的候选人。祝您在BOSS直聘找到更好的机会！"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，祝您项目顺利~",
+      "text": "好的，祝您项目顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 17:30:46",
+      "time": "17:30",
+      "job_name": "数据开发9-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "398743354168065"
+    },
+    {
+      "sender": "bot",
+      "content": "好嘞，谢谢回复，祝招聘顺利~",
+      "text": "好嘞，谢谢回复，祝招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 17:55:03",
+      "time": "17:55",
+      "job_name": "数据开发9-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "398749311456000"
+    },
+    {
+      "sender": "bot",
+      "content": "嗯，明白了，那不打扰您了。",
+      "text": "嗯，明白了，那不打扰您了。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-25 07:05:00",
+      "time": "07:05",
+      "job_name": "数据开发9-12K长沙",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-25 07:05:00",
+  "unread_on_boss": 0
+}

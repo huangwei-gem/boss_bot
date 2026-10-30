@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "393199799259905",
-      "block": "01:34 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -168,7 +168,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394459382485769",
-      "block": "10-08 14:59 Fairy_122107 王女士的微信号 Fairy_122107 复制微信号",
+      "block": "Fairy_122107 王女士的微信号 Fairy_122107 复制微信号",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -201,9 +201,22 @@
       "timestamp": "2026-10-10 05:13:04",
       "time": "05:13",
       "job_name": "兼职·温州方言兼职（线上远程）200-210元/天温州查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395023096034049"
+    },
+    {
+      "text": "好，加我的时候备注姓名就可以",
+      "time": "10-10 11:08",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395110364717826",
+      "block": "10-10 11:08 好，加我的时候备注姓名就可以",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好，加我的时候备注姓名就可以"
     }
   ],
-  "updated_at": "2026-10-10 05:13:04",
+  "updated_at": "2026-10-23 15:08:50",
   "unread_on_boss": 0
 }

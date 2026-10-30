@@ -1,0 +1,22 @@
+{
+  "chat_name": "陈华",
+  "chat_id": "陈华#三一重工",
+  "account_index": 0,
+  "job_name": "大数据产品经理25-40K·14薪长沙查看职位",
+  "company": "三一重工",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "02:23",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394981433463553",
+      "block": "02:23 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-23 14:57:19"
+}

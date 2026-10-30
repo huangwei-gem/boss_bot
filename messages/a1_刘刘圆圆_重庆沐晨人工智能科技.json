@@ -108,9 +108,52 @@
       "timestamp": "2026-10-10 02:06:16",
       "time": "02:06",
       "job_name": "兼职·红河方言采集兼职-线上兼职20-30元/时红河哈尼族彝族自治州查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394977187308033"
+    },
+    {
+      "text": "好的",
+      "time": "11:02",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395108975026691",
+      "block": "11:02 好的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您，再见。",
+      "text": "好的，谢谢您，再见。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 11:39:39",
+      "time": "11:39",
+      "job_name": "兼职·红河方言采集兼职-线上兼职20-30元/时红河哈尼族彝族自治州查看职位",
+      "isFriend": false,
+      "mid": "395118104130050"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，后续有合适的岗位麻烦联系我，期待有机会合作。",
+      "text": "好的，后续有合适的岗位麻烦联系我，期待有机会合作。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 17:21:18",
+      "time": "17:21",
+      "job_name": "兼职·红河方言采集兼职-线上兼职20-30元/时红河哈尼族彝族自治州查看职位",
+      "isFriend": false,
+      "mid": "397679327343106"
     }
   ],
-  "updated_at": "2026-10-10 02:06:16",
+  "updated_at": "2026-10-23 13:59:49",
   "unread_on_boss": 0
 }

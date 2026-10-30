@@ -17,7 +17,6 @@ import os
 import shutil
 import subprocess
 import sys
-import tempfile
 import time
 from pathlib import Path
 
@@ -25,12 +24,13 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from boss_bot.browser_launcher import launch_browser  # noqa: E402
+from boss_bot.unified_config import 新建临时目录  # noqa: E402
 
 PORT = 9339
 
 
 def main() -> int:
-    临时目录 = Path(tempfile.mkdtemp(prefix="attach_probe_"))
+    临时目录 = 新建临时目录("attach_probe_")
     岗位文件 = 临时目录 / "job_detail_probe.html"
     岗位文件.write_text("<html><body>probe</body></html>", encoding="utf-8")
     干净文件 = 临时目录 / "untouched.html"

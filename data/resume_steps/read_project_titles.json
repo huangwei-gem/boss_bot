@@ -1,0 +1,4 @@
+[
+ {"do": "reload", "sec": 8},
+ {"do": "js", "limit": 2000, "code": "(() => { const b = document.getElementById('project'); if (!b) return 'NO BLOCK'; const 全部 = [...b.querySelectorAll('[ka]')].map((e) => e.getAttribute('ka')); const 计数 = {}; for (const k of 全部) 计数[k] = (计数[k] || 0) + 1; const 删 = Object.keys(计数).filter((k) => k.indexOf('user-resume-del-project') === 0); const clean = (s) => (s || '').replace(/\\u00a0/g, ' ').trim(); const 每条 = 删.map((k) => { const n = b.querySelector('[ka=' + k + ']'); const 行 = clean((n && n.parentElement ? n.parentElement.parentElement : n) .innerText).split(String.fromCharCode(10)).filter(Boolean); return k + ' 出现' + 计数[k] + '次 → ' + 行.slice(0, 3).join(' / '); }); return {板块内ka种类: Object.keys(计数).length, 删除钮种类: 删.length, 每条: 每条}; })()"}
+]

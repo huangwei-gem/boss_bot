@@ -52,10 +52,40 @@ class BackupTest:
         cfg = _load(cfg_file)
         cfg.save(str(cfg_file))
 
-        backups = sorted(tmp_path.glob("bot_config.json.bak-*"))
+        backups = sorted((tmp_path / "config_backups").glob("bot_config.json.bak-*"))
         assert backups, "改完必须留一份能回滚的旧文件"
         assert json.loads(backups[-1].read_text(encoding="utf-8")) == \
             json.loads(before)
+
+    def test_备份不许摊在配置文件同目录(self, tmp_path):
+        """根目录那 79 份 bot_config.json.bak-* 就是这么攒出来的。"""
+        cfg_file = tmp_path / "bot_config.json"
+        _rich_disk_config(cfg_file)
+        _load(cfg_file).save(str(cfg_file))
+        assert not list(tmp_path.glob("*.bak-*")), "备份又落回配置文件旁边了"
+
+    def test_同一秒里保存两次不许把前一份盖掉(self, tmp_path):
+        cfg_file = tmp_path / "bot_config.json"
+        _rich_disk_config(cfg_file)
+        _load(cfg_file).save(str(cfg_file))
+        _load(cfg_file).save(str(cfg_file))
+        份s = sorted((tmp_path / "config_backups").glob("bot_config.json.bak-*"))
+        assert len(份s) == 2, "两次保存只留下一份备份＝有一份回滚点丢了"
+        assert 份s[0].read_text(encoding="utf-8") != 份s[1].read_text(encoding="utf-8") or \
+            份s[0].name != 份s[1].name
+
+    def test_备份只留最近二十份超出的挪进_kept(self, tmp_path):
+        from boss_bot.unified_config import 备份旧配置, 备份保留份数
+        目录 = tmp_path / "config_backups"
+        目录.mkdir()
+        先前 = 备份保留份数 + 5
+        for i in range(先前):
+            (目录 / ("bot_config.json.bak-202610%02d-%06d" % (1 + i // 60, i * 111))).write_text(
+                "{}", encoding="utf-8")
+        备份旧配置(tmp_path / "bot_config.json", {"accounts": []})
+        assert len(list(目录.glob("bot_config.json.bak-*"))) == 备份保留份数, "超了却没挪走"
+        assert len(list((目录 / "kept").glob("bot_config.json.bak-*"))) == 先前 + 1 - 备份保留份数, \
+            "挪走的必须留着不删"
 
     def test_首次保存没有旧文件也不报错(self, tmp_path):
         cfg = UnifiedConfig()

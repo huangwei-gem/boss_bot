@@ -1,0 +1,22 @@
+{
+  "chat_name": "刘先生",
+  "chat_id": "刘先生#万诚测绘",
+  "account_index": 0,
+  "job_name": "兼职·资料整理员2500-3000元/月锦州",
+  "company": "万诚测绘",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "13:15",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397972850639616",
+      "block": "13:15 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-25 02:25:51"
+}

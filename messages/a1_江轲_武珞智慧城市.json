@@ -1,0 +1,36 @@
+{
+  "chat_name": "江轲",
+  "chat_id": "江轲#武珞智慧城市",
+  "account_index": 1,
+  "job_name": "数据分析师15-20K上海查看职位",
+  "company": "武珞智慧城市",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:10",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397588190990339",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学在读本科生，有数据分析与数据标注经验，熟练使用Excel、SQL、Python和可视化工具。看到贵司数据分析师岗位，想申请线上兼职，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397588318236672",
+      "block": "送达 您好，我是统计学在读本科生，有数据分析与数据标注经验，熟练使用Excel、SQL、Python和可视化工具。看到贵司数据分析师岗位，想申请线上兼职，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学在读本科生，有数据分析与数据标注经验，熟练使用Excel、SQL、Python和可视化工具。看到贵司数据分析师岗位，想申请线上兼职，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:46:45"
+}

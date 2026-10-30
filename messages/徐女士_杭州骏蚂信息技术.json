@@ -1,0 +1,35 @@
+{
+  "chat_name": "徐女士",
+  "chat_id": "徐女士#杭州骏蚂信息技术",
+  "account_index": 0,
+  "job_name": "兼职·藏语语音数据标注师（远程兼职）50-120元/时甘南藏族自治州",
+  "company": "杭州骏蚂信息技术",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "10:40",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397934774850050",
+      "block": "10:40 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397934774878723",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-25 02:32:29"
+}

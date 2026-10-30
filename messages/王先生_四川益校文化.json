@@ -101,9 +101,25 @@
       "timestamp": "2026-10-09 11:45:32",
       "time": "11:45",
       "job_name": "兼职·校园大使(兼职)1500-3000元/周嘉兴查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394765647778561"
+    },
+    {
+      "sender": "bot",
+      "content": "王先生您好，四川益校文化这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "王先生您好，四川益校文化这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 11:52:58",
+      "time": "11:52",
+      "job_name": "兼职·校园大使(兼职)1500-3000元/周嘉兴查看职位",
+      "isFriend": false,
+      "mid": "395121374315264"
     }
   ],
-  "updated_at": "2026-10-09 11:45:32",
+  "updated_at": "2026-10-23 14:41:07",
   "unread_on_boss": 0
 }

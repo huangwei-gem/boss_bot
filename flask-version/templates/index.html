@@ -168,6 +168,8 @@ a{color:var(--accent);text-decoration:none}
 .account-tab .acc-status-dot.needs_login{background:var(--warning)}
 /* 多账号状态点：初始化中 / 已暂停 要和"在跑""要登录"分得开 */
 .account-tab .acc-status-dot.starting{background:var(--accent);animation:pulse 1s ease-in-out infinite}
+/* 用 Cookie 自动登录：和"初始化"同色同呼吸，但字要说清它在验登录而不是卡住 */
+.account-tab .acc-status-dot.checking_login{background:var(--accent);animation:pulse 1s ease-in-out infinite}
 .account-tab .acc-status-dot.paused{background:var(--info)}
 /* 账号条上的今日计数：两个号各跑各的，不看数字就以为只有一个在动 */
 .account-tab .acc-counts{font-size:9.5px;color:var(--fg-3rd);font-weight:500;margin-left:2px;letter-spacing:.02em}
@@ -461,7 +463,7 @@ a{color:var(--accent);text-decoration:none}
 .record-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 .record-tab .tab-count{font-size:9px;padding:1px 6px;border-radius:8px;background:var(--surface-soft);color:var(--fg-3rd);font-weight:600}
 .record-tab.active .tab-count{background:var(--accent-light);color:var(--accent)}
-.record-tab-content{display:none;flex:1;overflow-y:auto}
+.record-tab-content{display:none;flex:1;overflow:auto}
 .record-tab-content.active{display:block}
 /* ── 联系与简历台账 ── */
 .ledger-note{padding:7px 10px;font-size:11px;line-height:1.5;color:var(--fg-3rd);background:var(--surface-soft);border-bottom:1px solid var(--bd-2)}
@@ -469,12 +471,100 @@ a{color:var(--accent);text-decoration:none}
 .ledger-kind.num{background:var(--success-bg);color:var(--success)}
 .ledger-kind.ask{background:var(--warning-bg);color:var(--warning)}
 .ledger-kind.plain{background:var(--surface-soft);color:var(--fg-3rd)}
-.ledger-num{cursor:pointer;border-bottom:1px dashed var(--bd-2);font-variant-numeric:tabular-nums}
-.ledger-num:hover{color:var(--accent)}
+.ledger-num,.ledger-name{cursor:pointer;border-bottom:1px dashed var(--bd-2);font-variant-numeric:tabular-nums}
+.ledger-num:hover,.ledger-name:hover{color:var(--accent)}
 .ledger-resume-sent{color:var(--success);font-weight:600}
 .ledger-resume-owed{color:var(--warning);font-weight:600}
 .ledger-quote{color:var(--fg-3rd);font-size:11px}
 .ledger-link{display:inline-flex;vertical-align:-2px;margin-left:4px;color:var(--accent)}
+.ledger-bar{display:flex;flex-direction:column;gap:6px;padding:7px 10px;border-bottom:1px solid var(--bd-2)}
+.ledger-bar .ledger-stats{font-size:11px;color:var(--fg-3rd)}
+.ledger-filters{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ledger-bar .ledger-stats b{color:var(--fg);font-variant-numeric:tabular-nums}
+.ledger-name-diff{color:var(--accent);font-weight:600}
+.ledger-search{height:22px;min-width:196px;padding:0 7px;font-size:11px;color:var(--fg);background:var(--bg-2);border:1px solid var(--bd-2);border-radius:5px;outline:none}
+.ledger-search::placeholder{color:var(--fg-4th)}
+.ledger-search:focus{border-color:var(--accent)}
+.ledger-hit{font-size:11px;color:var(--fg-3rd)}
+.ledger-hit b{color:var(--fg);font-variant-numeric:tabular-nums}
+
+/* ── 岗位候选池 ── */
+.pool-note{padding:7px 10px;font-size:11px;line-height:1.5;color:var(--fg-3rd);background:var(--surface-soft);border-bottom:1px solid var(--bd-2)}
+.pool-toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 10px;border-bottom:1px solid var(--bd-2);font-size:11px}
+.pool-stats{display:flex;gap:8px;flex-wrap:wrap;color:var(--fg-3rd)}
+.pool-stats b{font-weight:600;font-variant-numeric:tabular-nums;color:var(--fg-1st)}
+.pool-stats .pool-on b{color:var(--accent)}
+.pool-add{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:6px 10px;border-bottom:1px solid var(--bd-2);font-size:11px;background:var(--surface-soft)}
+.pool-add input{padding:3px 6px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);min-width:0}
+.pool-add-url{flex:1 1 260px}
+.pool-add-hint{color:var(--fg-4th);font-size:10.5px}
+/* AI 自定义筛选：他给的那份要求就住在这个框里（存盘 + 按它重判整池） */
+.ai-screen-panel{border-bottom:1px solid var(--bd-2);background:var(--surface-soft)}
+.ai-screen-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 10px;font-size:11.5px;color:var(--fg-3rd)}
+.ai-screen-head b{color:var(--fg-1st);font-size:12px;white-space:nowrap}
+.ai-screen-head .side-hint{margin:0}
+#aiScreenBody{padding:0 10px 8px}
+#aiScreenText{width:100%;min-height:76px;max-height:220px;padding:6px 8px;border:1px solid var(--border-2nd);border-radius:6px;background:var(--bg-1st);color:var(--fg-1st);font-size:11.5px;line-height:1.55;resize:vertical;box-sizing:border-box;font-family:inherit}
+.ai-screen-row{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;padding-top:6px;font-size:11px;color:var(--fg-3rd)}
+.ai-screen-row b{font-weight:600;color:var(--fg-1st);font-variant-numeric:tabular-nums}
+.ai-screen-doc{color:var(--fg-2nd);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ai-screen-run{font-variant-numeric:tabular-nums}
+.ai-screen-run.is-on{color:var(--accent)}
+.ai-screen-run.is-bad{color:var(--danger)}
+/* 勾选列：26px 减掉左右各 10px 内边距只剩 6px，勾选框被裁成一个点，点也点不中。
+   现在整格包在 label 里、内边距归零：列宽 44px 全是可点区域，勾选框 17px 看得清。
+   三千行时勾一个不重建表格（见 poolPaintChecks），所以尺寸和交互都不靠重画。 */
+.greet-table th.pool-sel,.greet-table td.pool-sel{width:44px;min-width:44px;padding:0;text-align:center;vertical-align:middle;overflow:visible}
+/* 表头下面那行逐列筛选：格子贴着列边，输入框吃满列宽；底色比表头浅一档，
+   滚动时整块 thead（含这一行）一起吸顶，筛到一半也不会飘走 */
+.greet-table .pool-filter-row th{padding:3px 5px;background:var(--surface-soft);border-bottom:1px solid var(--bd-2)}
+.pool-f{width:100%;min-width:0;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:10.5px;line-height:1.35;background:var(--bg-1st);color:var(--fg-1st)}
+.pool-f::placeholder{color:var(--fg-4th)}
+.pool-f:focus{outline:1px solid var(--accent);outline-offset:0}
+.pool-f-icon{width:13px;height:13px;color:var(--fg-4th);vertical-align:middle}
+@media screen and (max-width: 1200px){ .pool-f{font-size:10px} .greet-table .pool-filter-row th{padding:2px 3px} }
+.pool-sel label{display:flex;align-items:center;justify-content:center;width:100%;min-height:36px;cursor:pointer}
+.pool-sel label:hover{background:var(--accent-light)}
+#poolTable input[type=checkbox]{width:17px;height:17px;margin:0;accent-color:var(--accent);cursor:pointer;vertical-align:middle}
+#poolTable{min-width:1180px}
+.pool-selcount{font-variant-numeric:tabular-nums;color:var(--fg-3rd);white-space:nowrap}
+.pool-selcount b{color:var(--accent);font-weight:600}
+.pool-status{width:86px;padding:2px 3px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)}
+.pool-note-input{width:100%;min-width:80px;padding:2px 5px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)}
+.pool-tag{display:inline-block;padding:1px 5px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap;margin:1px 3px 1px 0}
+.pool-tag.pass{background:var(--success-bg);color:var(--success)}
+.pool-tag.veto{background:rgba(239,68,68,.12);color:var(--danger)}
+.pool-tag.idle{background:var(--surface-soft);color:var(--fg-4th);font-weight:500}
+.pool-reason{color:var(--fg-3rd);font-size:10.5px}
+/* 两行截断只能挂在里面的 div 上：display:-webkit-box 一旦挂到 <td>，这一格就不再是
+   表格单元，高度只剩文本那两行；行悬停时这一列空出一块没被涂到的深色方块（他截图指的就是它）。
+   td 的 white-space:nowrap 会继承下来，内层要显式改回 normal 才换得了行。 */
+.pool-reason>div{line-height:1.35;word-break:break-word;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pool-sub{color:var(--fg-4th);font-size:10.5px;margin-top:2px}
+.pool-fail{color:var(--danger);font-size:10.5px;margin-top:2px}
+.pool-retry{color:var(--warning);font-size:10.5px;margin-top:2px}
+tr.pool-pinned td{background:rgba(245,158,11,.07)}
+.pool-act{display:inline-flex;gap:4px;align-items:center}
+/* 两号合起来近三千行 × 11 格：整表一次性排版实测要 8 秒多，期间页面点不动。
+   屏外的行跳过排版与绘制，滚到哪儿排到哪儿；auto 会记住真实行高，滚动条不跳。 */
+#poolTableBody tr{content-visibility:auto;contain-intrinsic-size:auto 44px}
+/* 「全部账号」下两号的池并成一张表，行上要认得出是哪个号的（单号范围里不出现） */
+.pool-acc-tag{display:inline-block;padding:1px 5px;border-radius:4px;font-size:10px;font-weight:600;color:var(--accent);background:var(--accent-light);white-space:nowrap;margin-right:4px;vertical-align:1px}
+
+/* ── 薪资格子 / 城市格 ── */
+/* 三种薪资要一眼分得开：读全的粗体数字、读不出的写「读不出」、没写的画 —。
+   以前读不出的也画成 —，看着像"这岗位没写薪资"，其实是我方把数字解码丢了。 */
+.salary-val{font-weight:600;font-variant-numeric:tabular-nums}
+.salary-bad{color:var(--warning);border-bottom:1px dotted var(--warning);cursor:help;font-size:11px}
+.salary-none{color:var(--fg-4th)}
+/* 城市串是「长沙·岳麓区·望城坡」：城市一行、区/商圈一行小字，窄格子也不丢后半截 */
+.cell-city{font-variant-numeric:tabular-nums}
+.cell-city-sub{color:var(--fg-4th);font-size:10.5px;margin-top:1px}
+/* 三张记录表各自的最小宽度：窗口窄了不再把固定列压成一条缝，
+   改成整表横向滚动——.record-tab-content 就是那个滚动容器 */
+#greetTable{min-width:980px}
+#contactTable{min-width:1200px}
+#poolTable{min-width:1240px}
 
 /* ── 回复记录聊天界面（一比一模仿BOSS直聘） ── */
 .boss-chat-wrap{display:flex;width:100%;height:100%;min-height:480px;overflow:hidden;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--bd)}
@@ -630,7 +720,26 @@ a{color:var(--accent);text-decoration:none}
 .sidebar-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:999}
 .records-table-wrapper{overflow-x:auto;-webkit-overflow-scrolling:touch}
 
+/* 1200 以下：筛选栏原来挤在 tab 那一行里换行，把 tab 条撑到 244px 高，
+   记录表只剩 140px；这一档把筛选栏挪到 tab 下面独占一行 */
+@media screen and (max-width: 1200px) {
+  .record-tabs { flex-wrap: wrap !important; align-items: flex-start !important; }
+  .record-tab { white-space: nowrap; flex-shrink: 0; }
+  #greetFilterBar, #replyFilterBar, #poolFilterBar {
+    flex: 1 1 100% !important;
+    justify-content: flex-start !important;
+    padding: 6px 8px;
+    border-top: 1px solid var(--bd-2);
+  }
+}
+
 @media screen and (max-width: 768px) {
+  /* 统计卡和操作栏一折行，就把下面的记录面板挤成 0 高（表看不见也点不到）：
+     这一档改成内容区自己纵向滚，记录卡留一个看得见的高度 */
+  .content { overflow-y: auto; overflow-x: hidden; }
+  .panel-row { flex: 0 0 auto; }
+  .panel-full { min-height: 460px; }
+
   /* 侧边栏改为可折叠抽屉 */
   .side {
     position: fixed;
@@ -661,6 +770,15 @@ a{color:var(--accent);text-decoration:none}
   /* 表格水平滚动 */
   .records-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   table { min-width: 500px; }
+
+  /* 记录页：tab 横向滚动、格距收紧，表格按各自 min-width 横向滚而不是压扁 */
+  .record-tabs { overflow-x: auto; padding: 0 8px; -webkit-overflow-scrolling: touch; }
+  .record-tab { white-space: nowrap; flex-shrink: 0; padding: 8px 10px; }
+  .greet-table th, .greet-table td { padding: 6px 7px; }
+  .ledger-bar, .pool-toolbar, .pool-add { padding: 6px 8px; }
+  .ledger-search { min-width: 0; flex: 1 1 160px; }
+  .boss-chat-sidebar { flex-basis: 210px; }
+  .ledger-note, .pool-note { font-size: 10.5px; padding: 6px 8px; }
 
   /* 模态弹窗占满屏幕 */
   .modal { width: 95% !important; margin: 5vh auto !important; max-width: 95vw !important; }
@@ -954,6 +1072,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
           <label>回复预算 tokens</label><input class="side-form-input" id="aiMaxTokens" type="number" min="512" max="8192" step="100" placeholder="1200" onchange="onAiChange()"></div>
         <div class="acc-field-row" title="AI 判「不符合」后，只追问分数离阈值最近的那批（阈值-15 到阈值）到底卡在哪一条硬性要求。一次追问≈一次判分的耗时；填 0 就是关掉">
           <label>复盘追问/每号每轮</label><input class="side-form-input" id="aiProbeMaxPerRound" type="number" min="0" max="20" step="1" placeholder="5" onchange="onAiChange()"></div>
+        <div class="acc-field-row" title="抓来的岗位先进候选池，由 AI 逐条判「像不像能投」，判多少条看这里。一抓就是几十条，不设闸这一轮要跑十几分钟、回复腿跟着挨饿；没轮到的显示「未判」，下一轮自己补上。填 0 = 完全不送 AI，只留本地词表粗筛"><label>精筛送 AI/每号每轮(条)</label><input class="side-form-input" id="aiScreenMaxPerRound" type="number" min="0" max="400" step="1" placeholder="40" onchange="onAiChange()"></div>
         <div class="acc-field-row" title="判分时单个接口最多等几秒，超了就换下一家。体检那边仍按服务商自己的 45 秒等（慢但活着的不算坏），但判分等不起：实测三家 46~50 秒超时，一轮还没换到能用的一家，这条岗位就按「默认通过」盲投出去了。填 0 = 不另设上限">
           <label>判分单接口超时（秒）</label><input class="side-form-input" id="aiJudgeTimeout" type="number" min="0" max="60" step="1" placeholder="30" onchange="onAiChange()"></div>
         <button class="adv-toggle" id="aiProvToggle" onclick="toggleAiProviders()">
@@ -979,7 +1098,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
         <div class="acc-field-row acc-stack" style="margin-top:8px">
           <label style="font-size:12px;font-weight:600">岗位类型词（只看岗位标题）</label>
           <input class="side-form-input" id="aiTitleVetoKeywords" type="text" placeholder="普工、主播、直播、快递、保洁、骑手" style="width:100%;box-sizing:border-box" onchange="onCustomAiChange()">
-          <div class="side-hint" title="只查岗位标题，命中就不投、HR 发来交换微信/电话的卡片也只点「拒绝」。刻意不查 JD 正文：正文里"标注快递场景""直播间语音切片"到处都是，照正文杀会把数据标注、线上运营这些真正要的方向一起杀掉。标题里同时带"客服/运营/标注/剪辑"这类职业词的放行（直播运营助理、电商客服）">命中就不投，交换联系方式的卡片也只点拒绝；标题带客服/运营/标注这类职业词时放行</div>
+          <div class="side-hint" title="只查岗位标题，命中就不投、HR 发来交换微信/电话的卡片也只点「拒绝」。刻意不查 JD 正文：正文里"标注快递场景""直播间语音切片"到处都是，照正文杀会把数据标注、线上运营这些真正要的方向一起杀掉。标题里同时带"客服/运营/标注/剪辑"这类职业词的放行（直播运营助理、电商客服）">命中不投；职业词标题放行，交换卡片只拒</div>
         </div>
         <div class="acc-field-row acc-stack" style="margin-top:8px">
           <label style="font-size:12px;font-weight:600">只投这些方向（标题或 JD 至少要命中一个）</label>
@@ -1038,12 +1157,25 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
             <div class="adv-field-row"><label>宽度</label><input class="side-form-input" id="advViewportW" type="number" placeholder="1280" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label>高度</label><input class="side-form-input" id="advViewportH" type="number" placeholder="800" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label>超时(s)</label><input class="side-form-input" id="advTimeout" type="number" placeholder="30" onchange="onAdvChange()"></div>
-            <div class="adv-field-row"><label>UA</label><input class="side-form-input" id="advUserAgent" type="text" placeholder="留空自动" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="整页加载等到哪一步才算完。默认 DOM就绪：以前按「全都加载完」等，10-24 实测启动一趟四次整页加载各 126~135 秒，527 秒里 508 秒都花在等图片和统计脚本，而抓取/回复本来就各自等自己的元素，不需要浏览器替它们等。改成 DOM就绪要重启这个号才换（这是浏览器的启动参数）。全部加载完=老行为，最快=发了导航就走（最容易读到空 DOM，只在别的都不行时试）">加载等到</label>
+              <select class="side-form-input" id="advLoadMode" onchange="onAdvChange()" style="flex:1;padding:4px 6px;border-radius:4px;border:1px solid var(--bd-2);background:var(--side-input-bg);color:var(--fg-2nd);font-size:12px">
+                <option value="eager">DOM就绪（默认）</option>
+                <option value="normal">全部加载完</option>
+                <option value="none">最快（不等）</option>
+              </select>
+            </div>
+            <!-- UA 那格 10-23 撤掉了：实测（cloakbrowser 与系统 Chrome 146 各起一台无头，只开 data: 页）
+                 一旦带上 --user-agent，navigator.userAgent 直接变成空串——那不是"换成我的 UA"，
+                 是给风控送一个不可能的指纹。配置字段 custom_user_agent 还在（手填生效并会告警），
+                 界面上不再给这个入口。 -->
             <div class="adv-field-row"><label>代理</label><input class="side-form-input" id="advProxy" type="text" placeholder="http://..." onchange="onAdvChange()"></div>
             <div class="adv-group-title">频率限制</div>
             <div class="adv-field-row"><label>启用</label><span id="advRateLimit" class="toggle-switch" onclick="toggleAdvBool('rate_limit_enabled')"></span></div>
             <div class="adv-field-row"><label>每小时最多</label><input class="side-form-input" id="advRatePerHour" type="number" placeholder="30" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label>每天最多</label><input class="side-form-input" id="advRatePerDay" type="number" placeholder="100" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="两次打开岗位详情页之间至少隔几秒（两个号共用一份账，风控按 IP 算）。8 天日志里被甩安全验证的 111/112 处，上一条动作都是打开详情页；填 0 = 不节流">详情页间隔(s)</label><input class="side-form-input" id="jobDetailMinInterval" type="number" min="0" max="600" step="5" placeholder="30" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="人工把安全验证滑完之后再歇几秒才碰页面；立刻照原频率回去撞等于再要一张验证页。填 0 = 不等">验证后冷却(s)</label><input class="side-form-input" id="afterVerifyCooldown" type="number" min="0" max="3600" step="30" placeholder="300" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="整个进程里两次「把一张页整个换掉」之间至少隔几秒。已装的详情页间隔只管岗位详情页，这一条管剩下那些没人管的：回复腿会话页地址一漂就重刷、抓取腿刷搜索页、断线重连与内存回收重开浏览器、检测 Cookie 那趟两次加载。10-23~10-25 三天日志共 792 次整页加载，其中 11 个「同一秒两号各发一发」，而两个号走同一个出口 IP。填 0 = 关掉">整页加载地板(s)</label><input class="side-form-input" id="pageLoadMinInterval" type="number" min="0" max="60" step="1" placeholder="3" onchange="onAdvChange()"></div>
             <div class="adv-group-title">登录</div>
             <div class="adv-field-row"><label>等待超时(s)</label><input class="side-form-input" id="advLoginWait" type="number" placeholder="300" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label>失败时清除Cookie</label><span id="advClearCookies" class="toggle-switch" onclick="toggleAdvBool('clear_cookies')"></span></div>
@@ -1055,7 +1187,10 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
             <div class="adv-field-row"><label>最小间隔</label><input class="side-form-input" id="advMsgIntervalMin" type="number" value="3" min="1" max="60" step="1" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label>最大间隔</label><input class="side-form-input" id="advMsgIntervalMax" type="number" value="8" min="1" max="120" step="1" onchange="onAdvChange()"></div>
             <div class="adv-group-title">投递/回复限制</div>
-            <div class="adv-field-row"><label>每小时最多打招呼</label><input class="side-form-input" id="advMaxGreet" type="number" value="30" min="1" max="200" step="1" onchange="onAdvChange()"></div>
+            <!-- 每小时最多打招呼只有一个出口，就在上面「频率限制」那一组（config.rate_limit.max_per_hour）。
+                 这里原来还有一颗同名输入框，写的是 config.greet.rate_limit——加载器只认平铺的
+                 rate_limit 段，所以填了永远不生效，10-23 查出来撤掉。 -->
+            <div class="adv-field-row"><label title="开着：搜到的岗位只进【岗位候选池】，一条都不自动点「立即沟通」，投哪条由你在池里勾（勾完由打招呼线程按冷却投）。关掉：回到老样子，判得过就当轮投出去。你要的「先抓岗位、再选择性投递」就是这一条开着">只抓不投(勾选才投)</label><span id="advCaptureOnly" class="toggle-switch" onclick="toggleAdvBool('capture_only')"></span></div>
             <div class="adv-field-row"><label>每小时最多回复</label><input class="side-form-input" id="advMaxReply" type="number" value="60" min="1" max="200" step="1" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label title="HR 发来 offer/面试邀请这类重要消息时机器人会停手等人工，但一句话不该把整个号锁住：超过这个分钟数自动恢复回复。手动按「暂停回复」不受影响，0 = 永不自动恢复">重要消息暂停自动恢复(分钟)</label><input class="side-form-input" id="advPauseResumeMin" type="number" value="10" min="0" max="720" step="1" onchange="onAdvChange()"></div>
             <div class="adv-group-title">回复补漏与主动跟进</div>
@@ -1072,6 +1207,10 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
             <div class="adv-field-row"><label title="照常搜索岗位、照常让 AI 判分和生成回复，只在最后一步不点发送：不消耗每日上限，也不会打扰 HR">演练模式（只筛不发）</label><span id="advDryRun" class="toggle-switch" onclick="toggleAdvBool('dry_run')"></span></div>
             <div class="adv-field-row"><label title="容灾链不再把 30s 预算浪费在体检明确不可用的接口上（相对顺序不变）；全部不可用时自动不生效">跳过体检不可用的AI接口</label><span id="advSkipUnhealthy" class="toggle-switch" onclick="toggleAdvBool('skip_unhealthy')"></span></div>
             <div class="adv-field-row"><label title="记录并评估每条 AI 回复的效果，不会自动改动你写的话术和规则">自进化记录与评估</label><span id="advSelfEvolve" class="toggle-switch" onclick="toggleAdvBool('self_evolve')"></span></div>
+            <div class="adv-group-title">历史数据体积闸</div>
+            <div class="adv-field-row"><label title="data/ + logs/ 一共涨到这么多 MB 才开始删按天的旧历史（归档盒、logs/kept、data/kept 的留档副本）。没到线一个字节都不动。写 0 = 不看体积，每轮都只留下面那些天。Cookie 备份那一族永远不在这个闸的射程里——总共 0.1 MB，删了不省地方，代价是掉登录。">到线就清(MB)</label><input class="side-form-input" id="advHistoryCleanupMb" type="number" min="0" step="50" placeholder="500" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="动手那一天往回数，只留这么多天的按天历史。下限 1 天：填 0 也不会把今天删掉">只留(天)</label><input class="side-form-input" id="advHistoryKeepDays" type="number" min="1" max="365" step="1" placeholder="3" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label>&nbsp;</label><span id="advHistoryNote" style="font-size:11px;color:var(--fg-3rd);line-height:1.5;white-space:normal">历史数据体积：读取中…</span></div>
           </div>
         </div>
 
@@ -1161,6 +1300,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
             <button class="record-tab active" onclick="switchRecordTab('greet')"><i data-ki="greet"></i>打招呼记录 <span class="tab-count" id="greetTabCount">0</span></button>
             <button class="record-tab" onclick="switchRecordTab('reply')"><i data-ki="reply"></i>回复记录 <span class="tab-count" id="replyTabCount">0</span></button>
             <button class="record-tab" onclick="switchRecordTab('contact')"><i data-ki="clipboard-list"></i>联系与简历 <span class="tab-count" id="contactTabCount">0</span></button>
+            <button class="record-tab" onclick="switchRecordTab('pool')"><i data-ki="jobs"></i>岗位候选池 <span class="tab-count" id="poolTabCount">0</span></button>
             <!-- 打招呼筛选栏（和tab同一行） -->
             <div id="greetFilterBar" style="display:flex;align-items:center;gap:4px 6px;flex:1;justify-content:flex-end;flex-wrap:wrap;font-size:11px">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">开始</label>
@@ -1223,11 +1363,39 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
               <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="resetReplyFilter()"><i data-ki="reset"></i>重置</button>
               <span id="replyFilterCount" style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0"></span>
             </div>
+            <!-- 岗位池筛选栏（和tab同一行，默认隐藏）。筛的是服务端：池按号存文件，
+                 一次可能几百条，前端拿全量再筛会把这一屏拖住 -->
+            <div id="poolFilterBar" style="display:none;align-items:center;gap:4px 6px;flex:1;justify-content:flex-end;flex-wrap:wrap;font-size:11px">
+              <!-- 逐列的筛选框在表头下面那一行（.pool-filter-row）：状态、城市、薪资、
+                   AI 精筛、本地粗筛、备注、抓到，跟列对齐摆。这里只留跨列的东西
+                   （搜全部、排序、按钮、计数）——同一个筛选项两处都有，早晚筛出两个结果 -->
+              <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">搜全部</label>
+              <input type="text" id="poolFilterQ" placeholder="岗位/公司/备注/城市" style="width:136px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()">
+              <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">排序</label>
+              <select id="poolFilterSort" style="width:86px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyPoolFilter()">
+                <option value="分降">AI 分高在前</option>
+                <option value="新抓的在前">刚抓到的在前</option>
+              </select>
+              <!-- 「只看本地没否过的」「只看 AI 匹配」这两颗勾选框搬到了表头那两格
+                   （本地粗筛 / AI 精筛的下拉里），选项比原来多：未判/判过/合/不合、
+                   没过过的/被否过的/要人看一眼/词表没读到 -->
+              <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="aiScreenFocus()" title="把你的筛选要求交给 AI，按它重判池里的岗位"><i data-ki="sparkle"></i>AI 自定义筛选</button>
+              <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="loadJobPool(true)"><i data-ki="regenerate"></i>刷新</button>
+              <button class="btn btn-ghost btn-sm" style="flex-shrink:0" onclick="resetPoolFilter()"><i data-ki="reset"></i>重置</button>
+              <!-- 分页：一次只铺一页（默认 200 条）。两号并起来三千多行全铺进 DOM，
+                   滚动每一下都要重排整表——那就是"卡"。勾选跨页保留（按行身份记） -->
+              <span id="poolPager" style="display:none;align-items:center;gap:4px;white-space:nowrap;flex-shrink:0">
+                <button class="btn btn-ghost btn-sm" title="上一页" onclick="pool页翻(-1)">&lsaquo;</button>
+                <span id="poolPagerText" style="color:var(--fg-3rd)"></span>
+                <button class="btn btn-ghost btn-sm" title="下一页" onclick="pool页翻(1)">&rsaquo;</button>
+              </span>
+              <span id="poolFilterCount" style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0"></span>
+            </div>
           </div>
           <div class="record-tab-content active" id="greetTabContent" style="padding:0;flex:1;overflow-y:auto">
             <div id="greetAlert" class="greet-alert" style="display:none"><i data-ki="alert-triangle" style="width:14px;height:14px"></i><span><span class="greet-alert-names" id="greetAlertNames"></span> <span id="greetAlertWhy"></span></span><button class="btn btn-ghost btn-sm" id="greetAlertGo"><i data-ki="edit"></i>去填写</button></div>
             <table class="greet-table" id="greetTable">
-              <thead><tr><th>时间</th><th>岗位</th><th>公司</th><th>薪资</th><th>状态</th><th>跳过原因</th><th>AI</th></tr></thead>
+              <thead><tr><th style="width:104px">时间</th><th>岗位</th><th style="width:132px">公司</th><th style="width:104px">城市</th><th style="width:96px">薪资</th><th style="width:84px">状态</th><th style="width:250px">跳过原因</th><th style="width:84px">AI</th></tr></thead>
               <tbody id="greetTableBody"></tbody>
             </table>
             <div class="empty-state" id="greetEmpty" style="height:100%;min-height:200px">
@@ -1265,7 +1433,17 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
             </div>
           </div>
           <div class="record-tab-content" id="contactTabContent" style="padding:0;flex:1;overflow-y:auto">
-            <div class="ledger-note">这张表每行是一个「聊到留联系方式或收发简历」的会话，现算自会话存档，不另存一份。「依据」列就是被判进来的那句原话，判错了照它改判据。点号码可复制。<br>「要过·未发」发不出去时先查 BOSS 的附件大小上限 <b>2000K</b>：超了每次点发送都会被拒（页面提示"附件简历大小超出限制"），要换小一点的那份简历重传到【简历·附件简历】。现在机器只认"我方气泡里出现简历条目"才算发成功，不会再拿 HR 那句"发份简历"当送达。</div>
+            <div class="ledger-note">这张表每行是一个「聊到留联系方式或收发简历」的会话，现算自会话存档，不另存一份。「依据」列就是被判进来的那句原话，判错了照它改判据。点号码可复制。<br>「微信名」是 BOSS 那张「××的微信号」卡片上印的名字——别人在微信里加你，显示的就是这一串，它跟左边 BOSS 会话名<b>可能不是同一个字</b>（盘上实测有 3 单不一致），所以认人只认这一列，别拿会话名去搜。<br>上面那个框是认人用的：微信里那串名字粘进去，就照出他是哪个 HR、哪家公司、开的多少钱——档位按钮管"给到没有"，这个框管"这是谁"，两个一起用是交集。<br>「要过·未发」发不出去时先查 BOSS 的附件大小上限 <b>2000K</b>：超了每次点发送都会被拒（页面提示"附件简历大小超出限制"），要换小一点的那份简历重传到【简历·附件简历】。现在机器只认"我方气泡里出现简历条目"才算发成功，不会再拿 HR 那句"发份简历"当送达。</div>
+            <div class="ledger-bar" id="contactStatsBar">
+              <div class="ledger-stats" id="contactStats">正在统计…</div>
+              <div class="ledger-filters">
+                <input class="ledger-search" id="contactSearchInput" type="search" autocomplete="off"
+                       placeholder="搜微信名／姓名／公司／号码" oninput="setLedgerSearch(this.value)">
+                <span class="ledger-hit" id="ledgerSearchHit"></span>
+                <button class="scope-chip active" data-ledger-bucket="" onclick="setLedgerFilter('')">全部</button>
+                <span id="contactFilterChips"></span>
+              </div>
+            </div>
             <table class="greet-table" id="contactTable">
               <thead><tr>
                 <th style="width:104px">时间</th>
@@ -1274,6 +1452,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
                 <th>岗位</th>
                 <th style="width:124px">薪资·城市</th>
                 <th style="width:88px">联系方式</th>
+                <th style="width:104px">微信名</th>
                 <th style="width:142px">号码 / 微信号</th>
                 <th style="width:84px">简历</th>
                 <th style="width:240px">依据原话</th>
@@ -1285,6 +1464,116 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
               <div class="empty-desc" style="font-size:13px;font-weight:600;margin-top:8px">还没有拿到联系方式或发出简历的会话</div>
               <div class="empty-hint" style="font-size:11px;color:var(--fg-3rd);margin-top:4px">
                 对方同意交换微信/电话、或简历发出去之后，会话会自动进这张表
+              </div>
+            </div>
+          </div>
+          <div class="record-tab-content" id="poolTabContent" style="padding:0;flex:1;overflow:auto">
+            <div class="pool-note">抓来的岗位先进这张表，<b>不自动沟通</b>：勾上「投递」的那几条才由打招呼线程按冷却投出去。<b>勾了就等于你判过了</b>——投递那一步不再拿否决词、方向词、AI 结论把这条弹回来，只有真投不出去才会停（BOSS 侧已有会话、页面被风控挡住、点了没出聊天框、这一刻这句话过不了发送闸门）。<b>表头下面那一行按列筛</b>：填哪一格就只看那一列（两格一起填是交集），薪资按「元/月」折过再比——时薪按 8 小时×22 天、日薪按 22 天，「面议」不参与；「重置」一次清干净。<b>BOSS 侧已经有会话的岗位不进这张表</b>（机器以前招呼过的都记在去重库里，勾了也只会被判「已沟通过」，所以抓的时候就拦掉；那几条要看去「打招呼记录」）。<b>「上次没投出去」是黄字不是红字</b>：那一类是话术这一刻过不了发送闸门，你把画像或招呼语改对，下一轮它自己就投走了。<b>本地粗筛</b>是词表白拿（不要钱），只贴标签不删人；<b>AI 精筛</b>每号每轮有额度，没判到的显示「未判」，下一轮自己补——这两栏是给你挑的时候看的，不是替你决定。<b>池按号分开存</b>：「全部账号」把两号并成一张表看（每行标着是哪个号），改哪一行就写回哪一行的号；切到具体某个号就只看那一个。</div>
+            <!-- AI 自定义筛选：把「我的要求」交给 AI，按它把池里的岗位逐条重判 -->
+            <div class="ai-screen-panel" id="aiScreenPanel">
+              <div class="ai-screen-head">
+                <b>AI 自定义筛选</b>
+                <span class="side-hint">把你的筛选要求粘贴到下面，或者选一个 .txt / .md / .docx / .pdf 文件；AI 按这份要求把池里的岗位逐条重判，判「合」的在表头「AI 精筛」那一格里选「判成合」就只剩它们。</span>
+                <span style="flex:1"></span>
+                <input type="file" id="aiScreenFile" accept=".txt,.md,.markdown,.docx,.pdf" style="display:none" onchange="aiScreenPickFile()">
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('aiScreenFile').click()"><i data-ki="upload"></i>选文件</button>
+                <button class="btn btn-ghost btn-sm" id="aiScreenCollapse" onclick="toggleAiScreenPanel()">收起</button>
+              </div>
+              <div id="aiScreenBody">
+                <textarea id="aiScreenText" placeholder="例：只要长沙、上海的数据分析/数据标注岗；不要外包、派遣、中介；不要单休；薪资 8K 以上。把它写成「必须满足什么、什么一律不要」，AI 会照这份要求判，文件里没提到的方面才按它自己的标准补。"></textarea>
+                <div class="ai-screen-row">
+                  <span id="aiScreenDocName" class="ai-screen-doc">还没有要求文件</span>
+                  <span id="aiScreenStat"></span>
+                  <span style="flex:1"></span>
+                  <span id="aiScreenRunText" class="ai-screen-run">未开始</span>
+                  <button class="btn btn-ghost btn-sm" id="aiScreenStop" onclick="aiScreenStop()" style="display:none"><i data-ki="stop"></i>停止</button>
+                  <button class="btn btn-ghost btn-sm" onclick="aiScreenRun()" title="不改要求，只把还没按这份要求判过的岗位再判一遍"><i data-ki="regenerate"></i>重新匹配</button>
+                  <button class="btn btn-sm btn-tint ok" id="aiScreenSave" onclick="aiScreenSave()"><i data-ki="check-circle"></i>保存并匹配</button>
+                </div>
+              </div>
+            </div>
+            <div class="pool-toolbar">
+              <div class="pool-stats" id="poolStats"></div>
+              <span class="pool-selcount" id="poolSelCount" title="勾选状态：批量操作只对勾上的行生效">未勾选</span>
+              <span style="flex:1"></span>
+              <button class="btn btn-sm btn-tint ok" id="poolBatchSelected" disabled onclick="poolBatch('selected')"><i data-ki="greet"></i><span class="btn-label">投递选中的</span></button>
+              <button class="btn btn-sm btn-tint" id="poolBatchNew" disabled onclick="poolBatch('new')"><i data-ki="reset"></i><span class="btn-label">退回待选</span></button>
+              <button class="btn btn-sm btn-tint warn" id="poolBatchRejected" disabled onclick="poolBatch('rejected')"><i data-ki="x-circle"></i><span class="btn-label">标为不投</span></button>
+              <button class="btn btn-ghost btn-sm" id="poolDeleteSelected" disabled onclick="poolDeleteSelected()"><i data-ki="delete"></i>删除选中的</button>
+              <button class="btn btn-ghost btn-sm" id="poolClearChecked" disabled onclick="poolClearChecked()"><i data-ki="clear"></i>取消勾选</button>
+            </div>
+            <div class="pool-add">
+              <input class="pool-add-url" id="poolAddUrl" placeholder="岗位链接（必填）https://www.zhipin.com/job_detail/xxx.html">
+              <input id="poolAddName" placeholder="岗位名" style="width:110px">
+              <input id="poolAddCompany" placeholder="公司" style="width:110px">
+              <input id="poolAddSalary" placeholder="薪资" style="width:76px">
+              <button class="btn btn-ghost btn-sm" onclick="poolAddManual()"><i data-ki="plus"></i>加进池</button>
+              <span class="pool-add-hint">在别处看到的岗位，粘链接进来就能一起筛、一起勾</span>
+            </div>
+            <table class="greet-table" id="poolTable" style="display:none">
+              <thead><tr>
+                <th class="pool-sel"><label title="全选本页筛出来的岗位（再点一次取消；Shift+点行首可连续勾一段）"><input type="checkbox" id="poolCheckAll" onchange="poolCheckAll(this.checked)" aria-label="全选本页筛出的岗位"></label></th>
+                <th>岗位</th>
+                <th style="width:120px">公司</th>
+                <th style="width:96px">城市</th>
+                <th style="width:100px">薪资</th>
+                <th style="width:126px">AI 精筛</th>
+                <th>判分理由</th>
+                <th style="width:104px">本地粗筛</th>
+                <th style="width:96px">状态</th>
+                <th style="width:118px">备注</th>
+                <th style="width:66px">抓到</th>
+                <th style="width:76px">操作</th>
+              </tr>
+              <!-- 表头下面这一行是逐列筛选：每一格只管自己那一列，判据全在
+                   job_pool.筛行 那一份里（单号视图与「全部账号」合并视图共用）。
+                   整行是静态 HTML，轮询只重画 tbody —— 不然他打字打到一半就被冲掉 -->
+              <tr class="pool-filter-row">
+                <th class="pool-sel" aria-label="筛选"><i data-ki="filter" class="pool-f-icon" title="这一行按列筛岗位：填哪一格就筛哪一列"></i></th>
+                <th><input class="pool-f" type="text" id="poolFilterJob" placeholder="含岗位名" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()"></th>
+                <th><input class="pool-f" type="text" id="poolFilterCompany" placeholder="含公司" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()"></th>
+                <th><select class="pool-f" id="poolFilterCity" onchange="applyPoolFilter()" title="选项是接口现算的整池城市清单（不受当前筛选影响），选中哪个筛哪个">
+                  <option value="">全部城市</option>
+                </select></th>
+                <th><input class="pool-f" type="number" min="0" step="1" id="poolFilterSalaryK" placeholder="≥ K/月" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()" title="按「元/月」比：8-10K 算 8000，211-221元/天 按 22 天折，31-36元/时 按 8 小时×22 天折；面议和反爬字体读不出的不参与"></th>
+                <th><select class="pool-f" id="poolFilterAiState" onchange="applyPoolFilter()">
+                  <option value="">全部</option>
+                  <option value="未判">未判</option>
+                  <option value="判过">判过</option>
+                  <option value="合">判成合</option>
+                  <option value="不合">判成不合</option>
+                </select></th>
+                <th><input class="pool-f" type="text" id="poolFilterAiReason" placeholder="含理由字样" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()"></th>
+                <th><select class="pool-f" id="poolFilterGateState" onchange="applyPoolFilter()">
+                  <option value="">全部</option>
+                  <option value="没过过的">没过过的</option>
+                  <option value="被否过的">被否过的</option>
+                  <option value="要人看一眼">要人看一眼</option>
+                  <option value="词表没读到">词表没读到</option>
+                </select></th>
+                <th><select class="pool-f" id="poolFilterStatus" onchange="applyPoolFilter()">
+                  <option value="">全部</option>
+                  <option value="new">待选</option>
+                  <option value="selected">已勾待投</option>
+                  <option value="applied">已投</option>
+                  <option value="rejected">不投</option>
+                </select></th>
+                <th><input class="pool-f" type="text" id="poolFilterNote" placeholder="含备注" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()"></th>
+                <th><select class="pool-f" id="poolFilterFresh" onchange="applyPoolFilter()" title="按「抓到时刻」筛：今天=最近 24 小时">
+                  <option value="">不限</option>
+                  <option value="1">今天</option>
+                  <option value="3">近 3 天</option>
+                  <option value="7">近 7 天</option>
+                </select></th>
+                <th></th>
+              </tr></thead>
+              <tbody id="poolTableBody"></tbody>
+            </table>
+            <div class="empty-state" id="poolEmpty" style="height:100%;min-height:200px">
+              <div class="empty-icon"><i data-ki="jobs"></i></div>
+              <div class="empty-desc" style="font-size:13px;font-weight:600;margin-top:8px" id="poolEmptyMsg">这个号的池子还是空的</div>
+              <div class="empty-hint" style="font-size:11px;color:var(--fg-3rd);margin-top:4px" id="poolEmptyHint">
+                点上方 <span style="color:var(--accent);font-weight:600">启动</span>，线程每搜一轮就把岗位放进这里，投哪条你来勾
               </div>
             </div>
           </div>
@@ -1401,7 +1690,7 @@ function updateAiScopeNote() {
 // ── AI 配置渲染 ──
 function renderAiConfig() {
   if (!config.ai) config.ai = {};
-  config.ai = Object.assign({enabled:true,api_key:'',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,max_tokens:1200,analyze_max_tokens:1600,judge_timeout:30,providers:[]}, config.ai);
+  config.ai = Object.assign({enabled:true,api_key:'',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,max_tokens:1200,analyze_max_tokens:1600,judge_timeout:30,probe_max_per_round:5,screen_max_per_round:40,providers:[]}, config.ai);
   setEl('aiEnabled', 'toggle-switch ai-switch' + (config.ai.enabled ? ' on' : ''));
   setVal('aiThreshold', config.ai.match_threshold || 70);
   setVal('aiMaxTokens', config.ai.max_tokens || 1200);
@@ -1410,6 +1699,8 @@ function renderAiConfig() {
     ? config.ai.judge_timeout : 30);
   setVal('aiProbeMaxPerRound', typeof config.ai.probe_max_per_round === 'number'
     ? config.ai.probe_max_per_round : 5);
+  setVal('aiScreenMaxPerRound', typeof config.ai.screen_max_per_round === 'number'
+    ? config.ai.screen_max_per_round : 40);
   setVal('customFilterKeywords', (config.ai.custom_filter_keywords || []).join('、'));
   setVal('aiTitleVetoKeywords', (config.ai.title_veto_keywords || []).join('、'));
   setVal('aiTargetJobKeywords', (config.ai.target_job_keywords || []).join('、'));
@@ -1705,6 +1996,9 @@ function onAiChange() {
   // 0 是「关掉复盘」这个合法值，所以不能像上面那样用 || 兜底
   var probeVal = parseInt(document.getElementById('aiProbeMaxPerRound').value);
   config.ai.probe_max_per_round = isNaN(probeVal) ? 5 : Math.max(0, Math.min(20, probeVal));
+  // 同上：0 = 「只留本地粗筛，一条都不送 AI」，是个有效值不是空着
+  var 精筛条 = parseInt((document.getElementById('aiScreenMaxPerRound') || {}).value, 10);
+  config.ai.screen_max_per_round = isNaN(精筛条) ? 40 : Math.max(0, Math.min(400, 精筛条));
   var providers = config.ai.providers || [];
   if (providers.length > 0) {
     config.ai.api_key = providers[0].api_key || '';
@@ -2565,12 +2859,12 @@ function loadConfig() {
     if (!config.login) config.login = {};
     if (!config.rate_limit) config.rate_limit = {};
     if (!config.retry) config.retry = {};
-    config.browser = Object.assign({headless:false,background:true,memory_recycle_mb:1600,viewport_width:1280,viewport_height:800,page_load_timeout:30,custom_user_agent:'',proxy:'',browser_type:'chrome'}, config.browser);
+    config.browser = Object.assign({headless:false,background:true,memory_recycle_mb:1600,viewport_width:1280,viewport_height:800,page_load_timeout:30,load_mode:'eager',custom_user_agent:'',proxy:'',browser_type:'chrome'}, config.browser);
     config.login = Object.assign({wait_timeout:300,clear_cookies_on_failure:true}, config.login);
-    config.rate_limit = Object.assign({enabled:true,max_per_hour:30,max_per_day:150}, config.rate_limit);
+    config.rate_limit = Object.assign({enabled:true,max_per_hour:30,max_per_day:150,job_detail_min_interval:30,page_load_min_interval:3,after_verify_cooldown:300}, config.rate_limit);
     config.retry = Object.assign({max_attempts:3,base_delay:2,backoff_factor:2}, config.retry);
     if (!config.ai) config.ai = {};
-    config.ai = Object.assign({enabled:true,api_key:'',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,max_tokens:1200,analyze_max_tokens:1600,probe_max_per_round:5,judge_timeout:30,providers:[]}, config.ai);
+    config.ai = Object.assign({enabled:true,api_key:'',api_base:'https://apihub.agnes-ai.com/v1',model:'agnes-2.5-flash',match_threshold:70,max_tokens:1200,analyze_max_tokens:1600,probe_max_per_round:5,screen_max_per_round:40,judge_timeout:30,providers:[]}, config.ai);
     if (!config.resume) config.resume = {};
     config.resume = Object.assign({school:'某某大学',major:'统计学',degree:'本科',skills:['Excel','SQL','Python','数据分析'],experience:'负责业务数据报表与洞察分析',target_position:'数据分析师',self_intro:'做事严谨细心，学习能力强'}, config.resume);
     if (!config.accounts || !config.accounts.length) {
@@ -2819,7 +3113,7 @@ function renderConfigPreview() {
 // 由 /api/accounts/cookies 自动刷新（随状态轮询），不再只在手动点击时才有值
 let cookieStatusCache = {};
 
-var PHASE_LABEL = {stopped:'未启动', starting:'初始化中', waiting_login:'等你登录', running:'运行中'};
+var PHASE_LABEL = {stopped:'未启动', starting:'初始化中', checking_login:'正在用Cookie自动登录', waiting_login:'等你登录', running:'运行中'};
 var LOGIN_REASON_LABEL = {
   cookie_expired: 'Cookie 已过期，需要重新登录',
   no_cookie: '这个账号还没有登录过',
@@ -2834,10 +3128,14 @@ var LOGIN_REASON_LABEL = {
 };
 
 // 状态点只有颜色，颜色之外要有字能说清同一件事
-var ACC_STATE_WORD = {idle:'空闲', running:'运行', starting:'启动', paused:'暂停', needs_login:'待登录'};
+var ACC_STATE_WORD = {idle:'空闲', running:'运行', starting:'启动', paused:'暂停',
+  needs_login:'待登录', checking_login:'自动登录'};
 function accDotClass(st) {
   if (!st || !st.phase) return st && st.running ? 'running' : 'idle';
   if (st.phase === 'waiting_login') return 'needs_login';
+  // 自动登录这一档最容易被看成"卡住了"或"好得很"：既不是绿（还没验进去）
+  // 也不是黄（不需要人动手），必须自己一个色、自己一句话
+  if (st.phase === 'checking_login') return 'checking_login';
   // 看不准既不是"好得很"（绿）也不是"现在就登"（黄），用 info 色等它自己稳定
   if (st.login_reason === 'login_uncertain') return 'paused';
   if (st.phase === 'starting') return 'starting';
@@ -3015,6 +3313,27 @@ function setVal(id, v) { var e = document.getElementById(id); if (e) e.value = v
 function setPlh(id, v) { var e = document.getElementById(id); if (e) e.placeholder = v; }
 
 // ── 高级设置渲染 ──
+// 历史数据体积闸那一行：只问后端"现在多大、到没到线、到线会删几项"，不在这台机器上删东西
+function loadRetention() {
+  fetch('/api/retention').then(function (r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }).then(function (d) {
+    var el = document.getElementById('advHistoryNote');
+    if (!el || !d || !d.ok) return;
+    var v = d.data || {};
+    var 明细 = (v.按目录 || []).slice(0, 3).join('、');
+    el.textContent = '现在 ' + v.MB + ' MB / ' + v.文件数 + ' 个文件'
+      + (明细 ? '（大头：' + 明细 + '）' : '')
+      + '；到 ' + v.阈值MB + ' MB 才动手，动手只留 ' + v.保留天数 + ' 天'
+      + (v.到线 ? '——已到线，本回合会删 ' + v.本回合会删几项 + ' 项、约 ' + v.本回合会省MB + ' MB'
+                : '——没到线，一条不删');
+    el.title = v.说法 || '';
+  }).catch(function (e) {
+    var el = document.getElementById('advHistoryNote');
+    if (el) el.textContent = '历史数据体积：读不到（' + e.message + '）';
+  });
+}
 function renderAdvSettings() {
   const b = config.browser || {};
   paintModeChips(!!b.headless);
@@ -3023,9 +3342,8 @@ function renderAdvSettings() {
   setVal('advViewportW', b.viewport_width != null ? b.viewport_width : 1280);
   setVal('advViewportH', b.viewport_height != null ? b.viewport_height : 800);
   setVal('advTimeout', b.page_load_timeout != null ? b.page_load_timeout : 30);
+  setVal('advLoadMode', b.load_mode || 'eager');
   setVal('advMemoryRecycle', b.memory_recycle_mb != null ? b.memory_recycle_mb : 1600);
-  setVal('advUserAgent', b.custom_user_agent || '');
-  setPlh('advUserAgent', '留空自动');
   setVal('advProxy', b.proxy || '');
   setPlh('advProxy', 'http://...');
 
@@ -3033,9 +3351,17 @@ function renderAdvSettings() {
   setEl('advRateLimit', 'toggle-switch' + (rl.enabled !== false ? ' on' : ''));
   setVal('advRatePerHour', rl.max_per_hour != null ? rl.max_per_hour : 30);
   setVal('advRatePerDay', rl.max_per_day != null ? rl.max_per_day : 150);
+  setVal('jobDetailMinInterval', rl.job_detail_min_interval != null ? rl.job_detail_min_interval : 30);
+  setVal('afterVerifyCooldown', rl.after_verify_cooldown != null ? rl.after_verify_cooldown : 300);
+  setVal('pageLoadMinInterval', rl.page_load_min_interval != null ? rl.page_load_min_interval : 3);
 
   const lg = config.login || {};
   setVal('advLoginWait', lg.wait_timeout != null ? lg.wait_timeout : 300);
+
+  const logCfg = config.log || {};
+  setVal('advHistoryCleanupMb', logCfg.history_cleanup_mb != null ? logCfg.history_cleanup_mb : 500);
+  setVal('advHistoryKeepDays', logCfg.history_keep_days != null ? logCfg.history_keep_days : 3);
+  loadRetention();
   setEl('advClearCookies', 'toggle-switch' + (lg.clear_cookies_on_failure !== false ? ' on' : ''));
 
   const rt = config.retry || {};
@@ -3050,8 +3376,10 @@ function renderAdvSettings() {
   }
 
   // 投递/回复限制
-  var _grl = (config.greet && config.greet.rate_limit) || config.rate_limit || {};
-  setVal('advMaxGreet', _grl.max_per_hour != null ? _grl.max_per_hour : 30);
+  // 每小时最多打招呼只认 config.rate_limit.max_per_hour（上面「频率限制」那组，
+  // 加载器把它写进 greet.rate_limit）；这里不再读第二个同名键。
+  // 缺省按"开着"画：后端 capture_only 默认 True，画成关就是界面与实跑相反
+  setEl('advCaptureOnly', 'toggle-switch' + (((config.greet || {}).capture_only) !== false ? ' on' : ''));
   var _rl = config.reply || {};
   setVal('advMaxReply', _rl.max_replies_per_hour != null ? _rl.max_replies_per_hour : 60);
   setVal('advPauseResumeMin', _rl.pause_auto_resume_minutes != null ? _rl.pause_auto_resume_minutes : 10);
@@ -3129,6 +3457,13 @@ function toggleAdvBool(key) {
     config.reply.accept_contact_exchange = !(config.reply.accept_contact_exchange !== false);
     setEl('advAcceptContact', 'toggle-switch' + (config.reply.accept_contact_exchange ? ' on' : ''));
     toast(config.reply.accept_contact_exchange ? '已开启：HR 要交换微信/电话时直接点同意' : '已关闭：交换联系方式留给人工处理');
+  } else if (key === "capture_only") {
+    if (!config.greet) config.greet = {};
+    config.greet.capture_only = !(config.greet.capture_only !== false);
+    setEl('advCaptureOnly', 'toggle-switch' + (config.greet.capture_only ? ' on' : ''));
+    toast(config.greet.capture_only
+      ? '已改成只抓不投：搜到的岗位进【岗位候选池】，勾了才投'
+      : '已关掉只抓不投：判得过的岗位当轮直接投出去（老行为）');
   } else if (key === "self_evolve") {
     config.self_evolve_enabled = !(config.self_evolve_enabled !== false);
     setEl('advSelfEvolve', 'toggle-switch' + (config.self_evolve_enabled ? ' on' : ''));
@@ -3145,19 +3480,34 @@ function onAdvChange() {
   config.browser.viewport_width = parseInt(document.getElementById('advViewportW').value) || 1280;
   config.browser.viewport_height = parseInt(document.getElementById('advViewportH').value) || 800;
   config.browser.page_load_timeout = parseInt(document.getElementById('advTimeout').value) || 30;
+  config.browser.load_mode = document.getElementById('advLoadMode').value || 'eager';
   // 0 是"关掉回收"这个有效值，不能和留空一样当默认处理
   var 回收MB = parseInt(document.getElementById('advMemoryRecycle').value, 10);
   config.browser.memory_recycle_mb = isNaN(回收MB) ? 1600 : Math.max(0, 回收MB);
-  config.browser.custom_user_agent = document.getElementById('advUserAgent').value;
   config.browser.proxy = document.getElementById('advProxy').value;
 
   if (!config.rate_limit) config.rate_limit = {};
   config.rate_limit.enabled = document.getElementById('advRateLimit').classList.contains('on');
   config.rate_limit.max_per_hour = parseInt(document.getElementById('advRatePerHour').value) || 30;
   config.rate_limit.max_per_day = parseInt(document.getElementById('advRatePerDay').value) || 150;
+  // 0 是"关掉节流"这个合法值，不许用 || 兜成默认（那样永远关不掉）
+  const _夹 = (id, 默认, 下, 上) => {
+    const v = parseInt(document.getElementById(id).value, 10);
+    return Number.isNaN(v) ? 默认 : Math.max(下, Math.min(上, v));
+  };
+  config.rate_limit.job_detail_min_interval = _夹('jobDetailMinInterval', 30, 0, 600);
+  config.rate_limit.after_verify_cooldown = _夹('afterVerifyCooldown', 300, 0, 3600);
+  config.rate_limit.page_load_min_interval = _夹('pageLoadMinInterval', 3, 0, 60);
 
   if (!config.login) config.login = {};
   config.login.wait_timeout = parseInt(document.getElementById('advLoginWait').value) || 300;
+
+  // 0 是"不看体积、每轮都清"这个合法值，不许用 || 兜成 500（那样 0 永远存不进去）
+  if (!config.log) config.log = {};
+  var _清MB = parseInt(document.getElementById('advHistoryCleanupMb').value, 10);
+  config.log.history_cleanup_mb = isNaN(_清MB) ? 500 : Math.max(0, _清MB);
+  var _留天 = parseInt(document.getElementById('advHistoryKeepDays').value, 10);
+  config.log.history_keep_days = isNaN(_留天) ? 3 : Math.max(1, Math.min(365, _留天));
   config.login.clear_cookies_on_failure = document.getElementById('advClearCookies').classList.contains('on');
 
   if (!config.retry) config.retry = {};
@@ -3173,8 +3523,7 @@ function onAdvChange() {
 
   // 投递/回复限制
   if (!config.greet) config.greet = {};
-  if (!config.greet.rate_limit) config.greet.rate_limit = {};
-  config.greet.rate_limit.max_per_hour = parseInt(document.getElementById('advMaxGreet').value) || 30;
+  config.greet.capture_only = document.getElementById('advCaptureOnly').classList.contains('on');
   if (!config.reply) config.reply = {};
   config.reply.max_replies_per_hour = parseInt(document.getElementById('advMaxReply').value) || 30;
   // 0 是有效值（"每轮补 0 个"就是把补漏关掉），这里不能用 parseInt(x) || 默认
@@ -3986,6 +4335,13 @@ function updateScopeLabel() {
 function setDataScope(v) {
   dataScope = v;
   if (v !== 'all') activeAccountIdx = Number(v);
+  // 池的勾是跟着行走的：范围一换屏上就是另一批行，上一批的勾再留着，
+  // 「删除选中的」就会对着他看不见的行动手。换范围先清勾（池里的状态一个字没动）
+  if (poolSelectedIds().length) {
+    poolSelected = {};
+    poolLastCheckIdx = -1;
+    poolSyncSelection();
+  }
   _metricsLastLoad = Date.now();
   renderMetricsScope();   // 点下去必须先自己高亮：别等 metrics 回来才动
   renderGreetAlert();     // 提示跟着范围换：只看账号1 时不许报账号2 没填
@@ -4007,6 +4363,8 @@ function applyScopeToView() {
   loadReplyChatList();
   // 台账跟着范围走：只看账号2 时不许冒出账号1 拿到的号码
   if (contactLedgerLoaded) loadContactLedger(true);
+  // 池更硬：文件本身就按号分开，范围换了不重拉的话，屏上还是上一个号的池
+  if (poolTabActive()) loadJobPool(true);
   loadAiQuality();
   loadAiReview();
   updatePauseButtons();
@@ -4113,7 +4471,7 @@ function switchRecordTab(tab) {
   var contents = document.querySelectorAll('.record-tab-content');
   tabs.forEach(function(t){ t.classList.remove('active'); });
   contents.forEach(function(c){ c.classList.remove('active'); });
-  var bars = {greet: 'greetFilterBar', reply: 'replyFilterBar'};
+  var bars = {greet: 'greetFilterBar', reply: 'replyFilterBar', pool: 'poolFilterBar'};
   Object.keys(bars).forEach(function(k) {
     var el = document.getElementById(bars[k]);
     if (el) el.style.display = (k === tab) ? 'flex' : 'none';
@@ -4122,34 +4480,106 @@ function switchRecordTab(tab) {
   if (btn) btn.classList.add('active');
   var content = document.getElementById(tab + 'TabContent');
   if (content) content.classList.add('active');
-  // 台账是从会话存档现算出来的，没有"清空"这回事：留着这颗按钮，
-  // 点下去清的是回复记录，表里的行却还在，等于给了个假开关
+  // 台账是从会话存档现算出来的，池是抓来的岗位清单，两张表都没有"清空"这回事：
+  // 留着这颗按钮，点下去清的是回复记录，表里的行却还在，等于给了个假开关
   var clearBtn = document.getElementById('btnClearRecord');
-  if (clearBtn) clearBtn.style.display = (tab === 'contact') ? 'none' : '';
+  if (clearBtn) clearBtn.style.display = (tab === 'contact' || tab === 'pool') ? 'none' : '';
   if (tab === 'contact') loadContactLedger();
+  if (tab === 'pool') { loadJobPool(true); loadAiScreenDoc(); }
 }
 
 // ── 联系与简历台账 ──
 // 现算自 messages/*.json，面板不另存一份：存了就会有"和 BOSS 上对不上"的一天
+// 筛选的档位、统计条上的数字、每行归哪一档，三处都来自后端 contact_ledger.台账归类 一份判据：
+// 这里再自己写一套 hit 判据，就会出现"按钮上写 136、点进去 130 行"这种对不上。
 let contactLedgerLoaded = false;
+let contactLedgerRows = [];
+let contactLedgerStats = null;
+let contactLedgerFilter = '';
+let contactLedgerSearch = '';
+
+function ledgerSearchText(r) {
+  // 搜索面只管"这是谁"，不碰归哪一档：微信名排最前，因为他手上就只有那一串
+  return [(r.wechat_names || []).join(' '), r.chat_name, r.company, r.job_name, r.job_title,
+          (r.wechats || []).join(' '), (r.phones || []).join(' ')].join(' ').toLowerCase();
+}
+
+function setLedgerSearch(v) {
+  contactLedgerSearch = (v || '').trim().toLowerCase();
+  // 打字只重画表格体：重新拉接口会把他正看着的行换掉，重建筛选条会抢走输入框焦点
+  renderContactLedger();
+}
+
+function markLedgerHit(on, hit, total) {
+  // 命中数必须当场说出来：只有表格变少、没有一句话解释，他会以为存档掉了一批
+  var el = document.getElementById('ledgerSearchHit');
+  if (!el) return;
+  el.innerHTML = on ? ('命中 <b>' + hit + '</b> / 范围内 ' + total + ' 行') : '';
+}
+
+function installLedgerCopyProxy() {
+  // 微信名是外部文本，拼进 onclick 的字符串里不安全；整张 tbody 只装一趟委托，
+  // 重画行不必重装监听（innerHTML 换掉子节点，代理在父节点上不受影响）
+  var body = document.getElementById('contactTableBody');
+  if (!body || body.dataset.copyProxy === '1') return;
+  body.dataset.copyProxy = '1';
+  body.addEventListener('click', function(e) {
+    var el = e.target && e.target.closest ? e.target.closest('[data-copy]') : null;
+    if (el) copyLedgerContact(el.getAttribute('data-copy'));
+  });
+}
 
 function loadContactLedger(force) {
   if (contactLedgerLoaded && !force) return;
   var body = document.getElementById('contactTableBody');
   if (!body) return;
+  installLedgerCopyProxy();
   if (!body.children.length || force) {
-    body.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--fg-3rd);padding:24px">正在从会话存档里捞联系方式…</td></tr>';
+    body.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--fg-3rd);padding:24px">正在从会话存档里捞联系方式…</td></tr>';
   }
   fetch('/api/contact_ledger' + scopeQs()).then(function(r) { return r.json(); }).then(function(data) {
     if (data.status !== 'ok') {
-      body.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--danger);padding:24px">台账读取失败：' + escAttr(data.message || '未知错误') + '</td></tr>';
+      body.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--danger);padding:24px">台账读取失败：' + escAttr(data.message || '未知错误') + '</td></tr>';
       return;
     }
     contactLedgerLoaded = true;
-    renderContactLedger(data.rows || []);
+    contactLedgerRows = data.rows || [];
+    contactLedgerStats = data.stats || null;
+    renderLedgerStats();
+    renderContactLedger();
   }).catch(function(e) {
-    body.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--danger);padding:24px">台账读取异常：' + escAttr(e.message) + '</td></tr>';
+    body.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--danger);padding:24px">台账读取异常：' + escAttr(e.message) + '</td></tr>';
   });
+}
+
+function renderLedgerStats() {
+  var el = document.getElementById('contactStats');
+  if (!el) return;
+  var s = contactLedgerStats;
+  if (!s) { el.textContent = '统计没拿到：接口这次没返回 stats，别当成一个人都没给。'; return; }
+  el.innerHTML = '给了微信号 <b>' + s.wechat_given + '</b> 个会话，其中卡片上印了微信名 <b>' + s.wechat_named
+    + '</b>（没印的 ' + s.wechat_id_only + ' 个会在名字栏写清为什么）· 台账共 ' + s.total_rows + ' 行';
+  var box = document.getElementById('contactFilterChips');
+  if (box) {
+    box.innerHTML = (s.buckets || []).map(function(b) {
+      return '<button class="scope-chip" data-ledger-bucket="' + escAttr(b.name)
+        + '" onclick="setLedgerFilter(\'' + escAttr(b.name) + '\')">' + escAttr(b.name)
+        + ' <b>' + b.count + '</b></button>';
+    }).join(' ');
+  }
+}
+
+function markLedgerFilterActive() {
+  document.querySelectorAll('#contactStatsBar [data-ledger-bucket]').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-ledger-bucket') === contactLedgerFilter);
+  });
+}
+
+function setLedgerFilter(key) {
+  contactLedgerFilter = key || '';
+  // 只换 class 和表格体，不重新拉接口也不重建整块：重建会把滚动位置和他正在看的行抹掉
+  markLedgerFilterActive();
+  renderContactLedger();
 }
 
 function ledgerKindHtml(kind) {
@@ -4157,6 +4587,24 @@ function ledgerKindHtml(kind) {
   var cls = kind === '给了号码' || kind === '卡片已同意' ? 'num'
           : kind === '发起交换请求' ? 'ask' : 'plain';
   return '<span class="ledger-kind ' + cls + '" title="' + escAttr(kind) + '">' + escAttr(kind) + '</span>';
+}
+
+function ledgerNameHtml(r) {
+  var names = r.wechat_names || [];
+  if (!names.length) {
+    var why = r.wechat_name_note || (r.wechat_given ? '卡片上没印微信名' : '这一行没有微信号卡片');
+    return '<span style="color:var(--fg-4th)" title="' + escAttr(why) + '">—</span>';
+  }
+  // 微信里那串名字和 BOSS 会话名不一样时，正是"加了微信不知道是谁"的那种，标出来。
+  // 名字是 BOSS 那边来的外部文本，可能带引号：所以不拼进 onclick 的字符串里，
+  // 改成 data-copy + 一处委托（escAttr 不转义单引号，拼进去会让这句 JS 直接坏掉）
+  var 对不上 = names.indexOf(r.chat_name) < 0;
+  return names.map(function(n) {
+    var tip = 对不上 ? ('微信里叫「' + n + '」，BOSS 会话名是「' + r.chat_name + '」——点可复制')
+                     : '点可复制';
+    return '<span class="ledger-name' + (对不上 ? ' ledger-name-diff' : '') + '" title="' + escAttr(tip)
+      + '" data-copy="' + escAttr(n) + '">' + escAttr(n) + '</span>';
+  }).join('<br>');
 }
 
 function copyLedgerContact(text) {
@@ -4168,17 +4616,36 @@ function copyLedgerContact(text) {
   }
 }
 
-function renderContactLedger(rows) {
+function renderContactLedger() {
   var body = document.getElementById('contactTableBody');
   var table = document.getElementById('contactTable');
   var empty = document.getElementById('contactEmpty');
   var badge = document.getElementById('contactTabCount');
-  if (badge) badge.textContent = rows.length;
+  if (badge) badge.textContent = contactLedgerRows.length;
   if (!body) return;
+  var scoped = contactLedgerFilter
+    ? contactLedgerRows.filter(function(r) { return r.ledger_bucket === contactLedgerFilter; })
+    : contactLedgerRows;
+  var rows = contactLedgerSearch
+    ? scoped.filter(function(r) { return ledgerSearchText(r).indexOf(contactLedgerSearch) >= 0; })
+    : scoped;
+  markLedgerHit(!!contactLedgerSearch, rows.length, scoped.length);
   if (!rows.length) {
-    body.innerHTML = '';
-    if (table) table.style.display = 'none';
-    if (empty) empty.style.display = 'block';
+    if (!contactLedgerRows.length) {
+      body.innerHTML = '';
+      if (table) table.style.display = 'none';
+      if (empty) empty.style.display = 'block';
+      return;
+    }
+    if (table) table.style.display = '';
+    if (empty) empty.style.display = 'none';
+    var 没中 = contactLedgerSearch
+      ? '「' + escAttr(contactLedgerSearch) + '」在' + (contactLedgerFilter ? escAttr(contactLedgerFilter) : '全部台账')
+        + ' ' + scoped.length + ' 行里没命中——不是没捞到，是这串名字不在台账里'
+      : escAttr(contactLedgerFilter) + '：这一档现在 0 条（台账一共 '
+        + contactLedgerRows.length + ' 行，不是没捞到）';
+    body.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--fg-3rd);padding:24px">'
+      + 没中 + '</td></tr>';
     return;
   }
   if (table) table.style.display = '';
@@ -4194,21 +4661,949 @@ function renderContactLedger(rows) {
     var resume = r.resume_sent ? '<span class="ledger-resume-sent">已发</span>'
       : r.resume_asked ? '<span class="ledger-resume-owed" title="对方要过简历，存档里没找到发送记录">要过·未发</span>' : dash;
     var link = r.job_url ? '<a class="ledger-link" href="' + escAttr(r.job_url) + '" target="_blank" rel="noopener" title="在 BOSS 上看这个岗位"><i data-ki="link"></i></a>' : '';
-    var pay = [可信薪资(r.salary), r.city].filter(Boolean).join(' · ') || dash;
+    // 薪资和城市挤在一格里：薪资是这一行的主信息，城市降成第二行小字。
+    // 读不出的薪资要写明「读不出」，不许和"没写薪资"共用 —（见 薪资格子）
+    var 薪 = 薪资成文(r.salary);
+    var 城 = String(r.city || '').trim();
+    var pay = (薪
+      ? '<span class="salary-val" title="BOSS 上原样：' + escAttr(String(r.salary)) + '">' + escHtml(薪) + '</span>'
+      : (r.salary
+        ? '<span class="salary-bad" title="读不出，原值「' + escAttr(String(r.salary)) + '」">薪资读不出</span>'
+        : dash))
+      + (城 ? '<div class="cell-city-sub" title="' + escAttr(城) + '">' + escHtml(城) + '</div>' : '');
     return '<tr>'
       + '<td title="' + escAttr(r.last_activity) + '">' + escAttr((r.last_activity || '').slice(5, 16)) + '</td>'
       + '<td title="' + escAttr(accName) + '">' + escAttr(String(Number(r.account_index) + 1)) + '</td>'
       + '<td title="' + escAttr(r.chat_name + ' · ' + r.company) + '">' + escAttr(r.chat_name) + '<br><span style="color:var(--fg-3rd);font-size:11px">' + escAttr(r.company) + '</span></td>'
       + '<td title="' + escAttr(r.job_name) + '">' + escAttr(r.job_title || r.job_name) + link + '</td>'
-      + '<td>' + escAttr(pay) + '</td>'
+      + '<td>' + pay + '</td>'
       + '<td>' + ledgerKindHtml(r.contact_kind) + '</td>'
+      + '<td>' + ledgerNameHtml(r) + '</td>'
       + '<td>' + numHtml + '</td>'
       + '<td>' + resume + '</td>'
       + '<td class="ledger-quote" title="' + escAttr(r.matched_quote || r.hr_last_message) + '">' + escAttr(r.matched_quote || r.hr_last_message) + '</td>'
       + '</tr>';
   }).join('');
   if (window.KIcon) KIcon.createIcons(body);
+  markLedgerFilterActive();
 }
+
+// ── 岗位候选池 ──
+// 抓来的岗位先进池、由他勾哪条投哪条（2026-10-19 定的口径）。这一层只写状态，
+// 点「立即沟通」仍然是打招呼线程的活（UnifiedBotLoop._drain_apply_queue）：
+// HTTP 线程当场去开详情页会和抓取线程抢同一张搜索页，抢输的那边整条腿冻住。
+// 池按号分开存文件：「全部账号」把两号并成一张表看（行上带着 account_index），
+// 切到具体某个号就只读那一份。
+const POOL_STATUS = [['new', '待选'], ['selected', '已勾待投'], ['applied', '已投'], ['rejected', '不投']];
+let poolRows = [];
+let poolSelected = {};      // "号|id" -> true（同一条链接在两号下 id 一样，键必须带号）；重画后照这份重新打勾
+let poolBusy = 0;           // 在飞的保存请求数：保存没落地就重画会先看到旧值
+let poolPendingRefresh = false;
+let poolShownSig = null;    // 屏上这份表是按哪一份数据画的（轮询内容没变就不重画）
+let poolRenderGen = 0;      // 每重画一次加一：分批铺行的旧批次看见它变了就停手
+let poolFilterTimer = null;
+let poolAiDocHash = null;   // 接口上次告诉我们的「当前筛选要求」指纹（''=还没保存过）
+
+function poolTabActive() {
+  var el = document.getElementById('poolTabContent');
+  return !!(el && el.classList.contains('active'));
+}
+
+function poolAccount() {
+  return dataScope === 'all' ? null : Number(dataScope);
+}
+
+// 「全部账号」下两号的池并在一起看，写回时仍要落到这一行自己的号：
+// 池文件按号分开存，拿全局范围去写就会"看着账号2、勾进主账号"（两个号岗位名一样，发现不了）
+function poolRowAccount(r) {
+  var n = Number(r && r.account_index);
+  return isFinite(n) ? n : poolAccount();
+}
+
+function poolRowKey(r) {
+  return String(poolRowAccount(r)) + '|' + String((r && r.id) || '');
+}
+
+// 手工加/批量在「全部账号」下要挑一个号落盘：挑第一个启用的，并在提示里说清落到了谁家
+function poolFirstAccount() {
+  var accs = config.accounts || [];
+  for (var i = 0; i < accs.length; i++) if (accs[i].enabled !== false) return i;
+  return 0;
+}
+
+function poolAccountName(号) {
+  var a = (config.accounts || [])[Number(号)] || {};
+  return a.name || ('账号' + (Number(号) + 1));
+}
+
+// 正在池子里敲字/开下拉时不许重画：整块 innerHTML 会把光标和已打的字一起冲掉
+function poolIsEditing() {
+  var a = document.activeElement;
+  if (!a || !a.closest || !a.closest('#poolTableBody')) return false;
+  var tag = String(a.tagName || '');
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+}
+
+function poolVal(id, def) {
+  var el = document.getElementById(id);
+  return el ? (el.value || def || '') : (def || '');
+}
+
+// 表头那一行每一格 = 一个 query 参数，判据全在 job_pool.筛行 那一份里。
+// 加一格就要在这里带上、在 resetPoolFilter 里清掉、在后端 筛行 里认——
+// tests/test_job_pool_filters.py 有一道门逐格比这三处，漏一处当场红（"界面有框、后端不认"
+// 那种事他遇到过，见 README「每个输入框都要真实生效」）。
+var POOL_FILTERS = [
+  {id: 'poolFilterStatus', qs: 'status'},
+  {id: 'poolFilterQ', qs: 'q'},
+  {id: 'poolFilterCity', qs: 'city'},
+  {id: 'poolFilterJob', qs: 'job'},
+  {id: 'poolFilterCompany', qs: 'company'},
+  {id: 'poolFilterNote', qs: 'note'},
+  {id: 'poolFilterAiReason', qs: 'ai_reason'},
+  {id: 'poolFilterSalaryK', qs: 'salary_min_k'},
+  {id: 'poolFilterAiState', qs: 'ai_state'},
+  {id: 'poolFilterGateState', qs: 'gate_state'},
+  {id: 'poolFilterFresh', qs: 'captured_within'}
+];
+
+function poolFilterQs() {
+  var 串 = POOL_FILTERS.map(function (f) {
+    return '&' + f.qs + '=' + encodeURIComponent(poolVal(f.id));
+  }).join('');
+  return 串 + '&sort=' + encodeURIComponent(poolVal('poolFilterSort', '分降'));
+}
+
+// 分页单独一条串，不混进 poolFilterQs：那一串的参数集合要跟表头那几格一一对得上
+// （tests/test_job_pool_filters.py 逐格比这三处），混进来就等于多两格没人筛的框
+var POOL页 = {每页: 200, 偏移: 0, 总数: 0};
+
+function pool页Qs() {
+  return '&limit=' + POOL页.每页 + '&offset=' + POOL页.偏移;
+}
+
+function pool页翻(方向) {
+  var 新 = POOL页.偏移 + 方向 * POOL页.每页;
+  if (新 < 0 || 新 >= POOL页.总数) return;
+  POOL页.偏移 = 新;
+  loadJobPool(true);
+}
+
+// 「第 1–200 条 / 共 3151 条」：不写这一句，他会以为池里只有屏上这 200 条
+// （局部名用 ASCII：静态门扫"行首是中文"的行，中文变量打头的语句会被当成漏了 // 的注释）
+function pool画分页() {
+  var box = document.getElementById('poolPager');
+  var txt = document.getElementById('poolPagerText');
+  if (!box || !txt) return;
+  var 有 = POOL页.总数 > POOL页.每页;
+  box.style.display = 有 ? 'inline-flex' : 'none';
+  if (!有) { txt.textContent = ''; return; }
+  var 头 = POOL页.偏移 + 1;
+  var 尾 = Math.min(POOL页.偏移 + POOL页.每页, POOL页.总数);
+  txt.textContent = '第 ' + 头 + '–' + 尾 + ' 条 / 共 ' + POOL页.总数 + ' 条';
+}
+
+// 当前是不是有一组筛选在生效（排序不算：它永远有个值，筛不筛跟它无关）
+function poolFilterOn() {
+  return POOL_FILTERS.some(function (f) {
+    return !!String(poolVal(f.id) || '').trim();
+  });
+}
+
+function applyPoolFilter() { POOL页.偏移 = 0; loadJobPool(true); }
+
+// 打字的时候别一个字一个请求
+function applyPoolFilterDebounce() {
+  if (poolFilterTimer) clearTimeout(poolFilterTimer);
+  poolFilterTimer = setTimeout(function () { poolFilterTimer = null; applyPoolFilter(); }, 500);
+}
+
+function resetPoolFilter() {
+  // 逐列那几格由 POOL_FILTERS 这一张表兜着清：加一格忘了清，重置就不彻底
+  POOL_FILTERS.forEach(function (f) {
+    var el = document.getElementById(f.id); if (el) el.value = '';
+  });
+  var t = document.getElementById('poolFilterSort'); if (t) t.value = '分降';
+  POOL页.偏移 = 0;
+  loadJobPool(true);
+}
+
+// 城市下拉：选项按整池现算（接口给的 cities），选中的那个不能因为重拉一次就丢。
+// 下拉正开着的时候不重建——重建会把展开的选项一起冲掉，点都点不下去。
+function poolFillCities(城市们) {
+  var sel = document.getElementById('poolFilterCity');
+  if (!sel) return;
+  var picked = sel.value || '';
+  var names = [], counts = {};
+  (城市们 || []).forEach(function (c) {
+    var nm = String((c && c.city) || '');
+    if (!nm) return;
+    names.push(nm);
+    counts[nm] = Number(c.count) || 0;
+  });
+  if (picked && names.indexOf(picked) < 0) names.push(picked);   // 这一轮没出现的旧选择也别悄悄清掉
+  var now = [];
+  for (var i = 0; i < sel.options.length; i++) now.push(sel.options[i].value);
+  var same = now.length === names.length + 1
+    && names.every(function (m, j) { return now[j + 1] === m; });
+  if (same) return;
+  if (document.activeElement === sel) return;
+  sel.innerHTML = '<option value="">全部城市</option>' + names.map(function (m) {
+    return '<option value="' + escAttr(m) + '">' + escAttr(m) + '（' + (counts[m] || 0) + '）</option>';
+  }).join('');
+  sel.value = picked;
+}
+
+// ── AI 自定义筛选 ──
+// 要求文件存 data/ai_screen_doc.json（一份，全局），每行结论里带着这份文件的指纹：
+// 换了文件旧结论就不算数，所以「只看 AI 匹配」永远只认当前这一份。
+// 重判跑在后台线程（boss_bot/screen_runner.py），这里只管进度、停下来、刷新表。
+var aiScreenOpen = true;
+var aiScreenTimer = null;
+var aiScreenLast = null;      // 上一次拿到的运行状态：判 running→false 那一下要重拉表
+var aiScreenJudged = -1;      // 上次为看新结论重拉表时的 judged 数
+var aiScreenPoolAt = 0;
+var aiScreenFilled = false;   // 已保存的正文只首次灌进框里，别夺他正在敲的字
+var aiScreenPickedName = '';
+
+function aiScreenFocus() {
+  if (!aiScreenOpen) toggleAiScreenPanel();
+  var p = document.getElementById('aiScreenPanel');
+  if (p && p.scrollIntoView) p.scrollIntoView({ block: 'nearest' });
+  var ta = document.getElementById('aiScreenText');
+  if (ta) ta.focus();
+  loadAiScreenDoc();
+}
+
+function toggleAiScreenPanel() {
+  aiScreenOpen = !aiScreenOpen;
+  var body = document.getElementById('aiScreenBody');
+  var btn = document.getElementById('aiScreenCollapse');
+  if (body) body.style.display = aiScreenOpen ? '' : 'none';
+  if (btn) btn.textContent = aiScreenOpen ? '收起' : '展开';
+  if (aiScreenOpen) loadAiScreenDoc();
+}
+
+function aiScreenPickFile() {
+  var inp = document.getElementById('aiScreenFile');
+  var f = inp && inp.files && inp.files[0];
+  if (!f) return;
+  if (f.size > 4 * 1024 * 1024) {
+    toast('这个文件超过 4MB，先精简一下再传', 'err');
+    inp.value = '';
+    return;
+  }
+  var fd = new FormData();
+  fd.append('file', f);
+  toast('正在读「' + f.name + '」…', 'info');
+  fetch('/api/ai_screen_doc/parse', { method: 'POST', body: fd })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (!d || d.status !== 'ok') {
+        toast('读不了这个文件：' + ((d && d.message) || '接口没回话'), 'err');
+        return;
+      }
+      var ta = document.getElementById('aiScreenText');
+      if (ta) ta.value = d.text || '';
+      aiScreenPickedName = d.name || f.name || '';
+      aiScreenFilled = true;
+      var n = document.getElementById('aiScreenDocName');
+      if (n) {
+        n.textContent = '已读入：' + aiScreenPickedName + '（' + (Number(d.chars) || 0) + ' 字，还没保存）';
+        n.title = '';
+      }
+      toast('读进来了 ' + (Number(d.chars) || 0) + ' 字，核对一下再点「保存并匹配」', 'ok');
+    })
+    .catch(function (e) { toast('读文件失败：' + e.message, 'err'); })
+    .then(function () { inp.value = ''; });
+}
+
+function aiScreenSave() {
+  var ta = document.getElementById('aiScreenText');
+  var 文 = String((ta && ta.value) || '').trim();
+  if (!文) {
+    toast('框里还是空的：先把你的筛选要求粘贴进来，或选一个文件', 'warn');
+    if (ta) ta.focus();
+    return;
+  }
+  var btn = document.getElementById('aiScreenSave');
+  if (btn && btn.disabled) return;
+  if (btn) btn.disabled = true;
+  fetch('/api/ai_screen_doc', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: aiScreenPickedName || '我的筛选要求', text: 文 })
+  })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (!d || d.status !== 'ok') {
+        toast('保存失败：' + ((d && d.message) || '接口没回话'), 'err');
+        return;
+      }
+      aiScreenPickedName = String((d.doc && d.doc.name) || aiScreenPickedName || '');
+      aiScreenFilled = true;
+      aiScreenRender(d);
+      // 后端保存后就直接开跑了；它说没开（比如上一轮还在跑）就照实说，别弹个绿了事
+      toast(d.started ? (d.message || '已保存，开始匹配')
+                      : ('要求已保存；' + (d.message || '这一轮没开起来')),
+            d.started ? 'ok' : 'warn');
+      if (d.started) startAiScreenPoll(2000);
+      loadJobPool();
+    })
+    .catch(function (e) { toast('保存失败：' + e.message, 'err'); })
+    .then(function () { if (btn) btn.disabled = false; });
+}
+
+function aiScreenRun() {
+  fetch('/api/ai_screen_doc/run', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}'
+  })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (!d || d.status !== 'ok') {
+        toast('开不起来：' + ((d && d.message) || '接口没回话'), 'err');
+        return;
+      }
+      toast(d.message || '开始匹配', 'ok');
+      startAiScreenPoll(2000);
+    })
+    .catch(function (e) { toast('开不起来：' + e.message, 'err'); });
+}
+
+function aiScreenStop() {
+  fetch('/api/ai_screen_doc/stop', { method: 'POST' })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      toast((d && d.message) || '已让它停下来', 'info');
+      startAiScreenPoll(1000);
+    })
+    .catch(function (e) { toast('停不下来：' + e.message, 'err'); });
+}
+
+function startAiScreenPoll(延迟) {
+  if (aiScreenTimer) return;
+  aiScreenTimer = setTimeout(function () { aiScreenTimer = null; loadAiScreenDoc(); }, 延迟 || 5000);
+}
+
+function aiScreenDur(秒) {
+  var n = Math.max(0, Math.round(Number(秒) || 0));
+  if (n < 60) return n + ' 秒';
+  var m = Math.floor(n / 60), s = n % 60;
+  if (m < 60) return m + ' 分' + (s ? ' ' + s + ' 秒' : '');
+  return Math.floor(m / 60) + ' 小时' + (m % 60 ? ' ' + (m % 60) + ' 分' : '');
+}
+
+function aiScreenRender(d) {
+  d = d || {};
+  var doc = d.doc || {}, stats = d.stats || {}, run = d.run || {};
+  var 哈希 = String(doc.hash || '');
+  var n = document.getElementById('aiScreenDocName');
+  if (n) {
+    n.textContent = 哈希
+      ? ('当前要求：' + (doc.name || '未命名') + '（' + (Number(doc.chars) || 0) + ' 字）')
+      : '还没有要求文件';
+    n.title = 哈希 ? ('保存于 ' + (doc.updated_at || '—') + '，指纹 ' + 哈希) : '';
+  }
+  var ta = document.getElementById('aiScreenText');
+  if (ta && !aiScreenFilled && 哈希 && doc.text) {
+    ta.value = String(doc.text);
+    aiScreenPickedName = String(doc.name || '');
+    aiScreenFilled = true;
+  }
+  var st = document.getElementById('aiScreenStat');
+  if (st) {
+    if (!哈希) st.textContent = '';
+    else st.innerHTML = '按这份要求：已判 <b>' + (Number(stats.judged) || 0) + '</b>，待判 <b>'
+      + (Number(stats.pending) || 0) + '</b>，匹配 <b>' + (Number(stats.matched) || 0) + '</b>'
+      + '（本地粗筛已否、不用再问 AI 的 ' + (Number(stats.skipped) || 0) + ' 条）';
+  }
+  var rt = document.getElementById('aiScreenRunText');
+  var stopBtn = document.getElementById('aiScreenStop');
+  if (rt) {
+    rt.className = 'ai-screen-run';
+    if (run.running) {
+      rt.classList.add('is-on');
+      rt.textContent = '正在匹配：已判 ' + (Number(run.judged) || 0) + ' / ' + (Number(run.total) || 0)
+        + '，还剩 ' + (Number(run.left) || 0) + (run.last ? '（' + String(run.last) + '）' : '');
+    } else if (run.finished_at) {
+      if (run.error) rt.classList.add('is-bad');
+      rt.textContent = (run.stopped ? '已停止' : (run.error ? '上一轮中断' : '上一轮跑完'))
+        + '：判了 ' + (Number(run.judged) || 0) + ' 条，其中匹配 ' + (Number(run.matched) || 0)
+        + ' 条，没判成 ' + (Number(run.failed) || 0) + ' 条（用时 '
+        + aiScreenDur(Number(run.finished_at) - Number(run.started_at)) + '）'
+        + (run.error ? '。' + String(run.error) : '');
+    } else {
+      rt.textContent = 哈希 ? '还没开始匹配' : '未开始';
+    }
+  }
+  if (stopBtn) stopBtn.style.display = run.running ? '' : 'none';
+}
+
+function loadAiScreenDoc() {
+  fetch('/api/ai_screen_doc')
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (!d || d.status !== 'ok') {
+        if (aiScreenLast && aiScreenLast.running) startAiScreenPoll(10000);
+        return;
+      }
+      var 上轮 = aiScreenLast || {};
+      aiScreenLast = d.run || {};
+      aiScreenRender(d);
+      var 在跑 = !!(d.run && d.run.running);
+      if (上轮.running && !在跑) loadJobPool();      // 刚跑完：表里的结论得重拉才看得见
+      if (在跑) {
+        // 跑的时候结论一行行在写：最多 60 秒拉一次表，别让三千行每 5 秒重排一遍
+        var 判了 = Number(d.run.judged || 0);
+        if (poolTabActive() && 判了 !== aiScreenJudged && Date.now() - aiScreenPoolAt > 60000) {
+          aiScreenJudged = 判了;
+          aiScreenPoolAt = Date.now();
+          loadJobPool();
+        }
+        startAiScreenPoll();
+      }
+    })
+    .catch(function () {
+      if (aiScreenLast && aiScreenLast.running) startAiScreenPoll(10000);
+    });
+}
+
+// 池里两号合起来近三千行，innerHTML 整个重建一次要好几秒。轮询回来的内容一个字没变
+// 就别重画——不然他在看表，每 20 秒跳一次、还卡一下。抓到时按 5 分钟一档，
+// 「×N」这类计数靠它慢慢跟上，真改了状态/备注/AI 结论时立刻重画。
+function poolRowsSig(行s) {
+  var parts = [];
+  for (var i = 0; i < 行s.length; i++) {
+    var r = 行s[i] || {}, ai = r.ai || {}, 投 = r['投递'] || {};
+    parts.push([r.account_index, r.id, r.status, r.pinned ? 1 : 0, r.note || '',
+             ai['分'], ai['判于'], 投['时间'] || '', 投['原因'] || '',
+             Math.floor(Number(r.last_seen_at || 0) / 300)].join('\u0001'));
+  }
+  return 行s.length + '#' + parts.join('\u0002');
+}
+
+function loadJobPool(force, 补过一次) {
+  var body = document.getElementById('poolTableBody');
+  if (!body) return;
+  // 「全部账号」也照样拉：后端把两号的池并成一张表，行上带着 account_index
+  var 号 = dataScope === 'all' ? 'all' : Number(dataScope);
+  if (!force && (poolIsEditing() || poolBusy > 0)) { poolPendingRefresh = true; return; }
+  poolPendingRefresh = false;
+  poolBusy++;
+  // 表还空着的时候先说一句在读：几千条要读几秒，空白页面看着就像"一条都没抓到"
+  if (!poolRows.length) {
+    poolShowNotice('正在读取岗位池…', '「全部账号」把两个号的池并成一张表，几千条要读几秒。');
+  }
+  fetch('/api/job_pool?account=' + 号 + poolFilterQs() + pool页Qs())
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (!data || data.status !== 'ok') {
+        poolShowNotice('岗位池读取失败', (data && data.message) || '接口没回话');
+        return;
+      }
+      var 行s = data.rows || [];
+      // 勾了「只看 AI 匹配」但一份要求文件都还没有：这一勾永远是空表，先把勾去掉、
+      // 把话说明白，再按没勾的样子重拉一次（否则他看到的就是一张"空池"）
+      var 要求哈希 = String((data.ai_doc && data.ai_doc.hash) || '');
+      poolAiDocHash = 要求哈希;
+      var aim = document.getElementById('poolFilterAiState');
+      if (aim && aim.value === '合' && !要求哈希) {
+        aim.value = '';
+        poolPendingRefresh = true;
+        toast('还没有筛选要求文件：先在「AI 自定义筛选」里保存一份，再按「判成合」筛', 'warn');
+        return;
+      }
+      var 签名 = poolRowsSig(行s);
+      var 要重画 = !!force || 签名 !== poolShownSig || !document.querySelector('#poolTableBody tr');
+      // 停在第 3 页时把这一页删空、或筛窄到不足三页：这一页一条没有，但池里还有货。
+      // 这时候照下面那句「没有符合当前筛选的岗位」就是假话——退回第一页重拉一次。
+      if (!行s.length && (Number(data.total) || 0) > 0 && POOL页.偏移 > 0) {
+        POOL页.偏移 = 0;
+        POOL页.总数 = Number(data.total) || 0;
+        poolPendingRefresh = true;
+        return;
+      }
+      poolRows = 行s;
+      poolFillCities(data.cities);
+      renderJobPoolStats(data.stats || {});
+      // 表是分批铺的，可勾条数与按钮状态不能等最后一批铺完才更新（几千行要几十秒）
+      poolSyncSelection();
+      if (要重画) {
+        poolShownSig = 签名;
+        renderJobPool();
+      }
+      var n = document.getElementById('poolFilterCount');
+      if (n) n.textContent = '筛出 ' + (Number(data.total) || 0) + ' 条';
+      // 分页条要拿服务端给的 total 才知道还有没有下一页；offset 回填是因为
+      // 20 秒轮询会自己重拉，拉完得停在原来那一页，不能每次都跳回第一页
+      POOL页.总数 = Number(data.total) || 0;
+      POOL页.偏移 = Number(data.offset) || 0;
+      pool画分页();
+    })
+    .catch(function (e) {
+      poolShowNotice('岗位池读取异常', e.message);
+      // 面板刚起来那几秒偶发一次连不上：补一次就够，不补界面会一直空到 20 秒后的轮询
+      if (!补过一次) setTimeout(function () { if (poolTabActive()) loadJobPool(true, true); }, 2000);
+    })
+    .then(function () { poolBusy = Math.max(0, poolBusy - 1); })
+    .then(function () {
+      // 请求在飞的时候来的那一次被跳过了（上面那个 early return 只记了记号）：
+      // 这里把它补上，否则刚点开 tab 正好撞上在飞的那次，表会一直空到下一个 20 秒
+      if (poolPendingRefresh && poolBusy === 0 && !poolIsEditing() && poolTabActive()) loadJobPool(true);
+    });
+}
+
+function poolShowNotice(title, hint) {
+  var body = document.getElementById('poolTableBody');
+  var table = document.getElementById('poolTable');
+  var empty = document.getElementById('poolEmpty');
+  var t = document.getElementById('poolEmptyMsg');
+  var h = document.getElementById('poolEmptyHint');
+  if (t) t.textContent = title;
+  if (h) h.textContent = hint || '';
+  if (body) body.innerHTML = '';
+  if (table) table.style.display = 'none';
+  if (empty) empty.style.display = 'block';
+  poolRows = [];
+  // 表都清空了，分页条上的「第 1–200 条 / 共 3151 条」就成了假数字
+  POOL页.总数 = 0;
+  pool画分页();
+}
+
+function renderJobPoolStats(s) {
+  var el = document.getElementById('poolStats');
+  if (el) {
+    el.innerHTML = POOL_STATUS.map(function (p) {
+      var v = Number(s[p[0]]) || 0;
+      return '<span' + (p[0] === 'selected' && v ? ' class="pool-on"' : '') + ' title="这个号的池里现在'
+        + p[1] + ' ' + v + ' 条">' + p[1] + ' <b>' + v + '</b></span>';
+    }).join('') + '<span>今日抓到 <b>' + (Number(s['今日新增']) || 0) + '</b></span>'
+                + '<span>池内共 <b>' + (Number(s['总数']) || 0) + '</b> 条</span>'
+                + (s['AI匹配'] !== undefined
+                    ? '<span title="这一池里按当前那份筛选要求判成『合』的条数（换了文件旧结论不算）">AI 匹配 <b>'
+                      + (Number(s['AI匹配']) || 0) + '</b></span>' : '')
+                + (dataScope === 'all' ? '<span style="color:var(--fg-4th)">（两个号合计）</span>' : '');
+  }
+  var badge = document.getElementById('poolTabCount');
+  if (badge) badge.textContent = Number(s['总数']) || 0;
+}
+
+function poolAgo(sec) {
+  var n = Number(sec || 0);
+  if (!n) return '—';
+  var d = Math.max(0, Date.now() / 1000 - n);
+  if (d < 60) return '刚刚';
+  if (d < 3600) return Math.floor(d / 60) + ' 分前';
+  if (d < 86400) return Math.floor(d / 3600) + ' 小时前';
+  return Math.floor(d / 86400) + ' 天前';
+}
+
+function poolAiCell(ai) {
+  var 分 = ai['分'];
+  var 判了 = ai['判于'] || (分 !== undefined && 分 !== null && 分 !== '');
+  if (!判了) return '<span class="pool-tag idle">未判</span><div class="pool-sub">还没轮到精筛</div>';
+  var 合 = !!ai['合'];
+  var 异常 = !!ai['接口异常'];
+  var badge = '<span class="greet-ai-badge' + (合 && !异常 ? '' : ' greet-ai-badge-nomatch') + '">'
+    + escAttr(String(分 === undefined || 分 === null ? '—' : 分)) + '分 '
+    + (异常 ? '没判成' : (合 ? '像能投' : '不合')) + '</span>';
+  var sub = [];
+  if (ai['接口']) sub.push(escAttr(String(ai['接口'])));
+  if (ai['否决']) sub.push('硬否决：' + escAttr(String(ai['否决'])));
+  if (ai['判于']) sub.push('判于 ' + escAttr(poolAgo(ai['判于'])));
+  return badge + (sub.length ? '<div class="pool-sub">' + sub.join(' · ') + '</div>' : '');
+}
+
+function poolGateCell(gate) {
+  var 标 = [];
+  if (gate['方向命中'] === true) 标.push('<span class="pool-tag pass">方向命中</span>');
+  else if (gate['方向命中'] === false) 标.push('<span class="pool-tag veto">方向不合</span>');
+  var 否 = String(gate['否决命中'] || '');
+  if (否) 标.push('<span class="pool-tag veto" title="' + escAttr(否) + '">否：' + escAttr(否.length > 8 ? 否.slice(0, 8) + '…' : 否) + '</span>');
+  if (gate['词表没读到']) 标.push('<span class="pool-tag idle" title="否决词表一份都没读到，这条压根没过本地粗筛——不是『没命中』">词表没读到</span>');
+  if (gate['标题词表为空']) 标.push('<span class="pool-tag idle" title="岗位类型否决词（普工/老师/家教这一遍）盘上是空的：标题这一遍一条都没参与——是他清的空，不是这岗干净">标题词表为空</span>');
+  if (gate['要人看一眼']) 标.push('<span class="pool-tag idle" title="方向是他要的，只是标题里撞了一个修饰型的否决词（销售/住宿/坐班这一类）。机器不替他删也不替他留，勾上「只看本地没否过的」这条还在——这一族要他自己点头">要人看一眼</span>');
+  if (!标.length) 标.push('<span class="pool-tag idle">没判过</span>');
+  if (gate['依据']) 标.push('<div class="pool-sub">' + escAttr(String(gate['依据'])) + '</div>');
+  return 标.join('');
+}
+
+// 行内图标直接写成成品 svg：KIcon.createIcons 是逐个 <i> 换节点，三千行就是
+// 近六千次 DOM 替换，实测要好几秒。这里一次 innerHTML 就带出来，颜色照样走 currentColor。
+var POOL_SPRITE = '/static/icons/ui-sprite.svg';
+function poolIcon(name) {
+  return '<svg class="ki" aria-hidden="true"><use href="' + POOL_SPRITE + '#i-' + name + '"></use></svg>';
+}
+
+function renderJobPool() {
+  var body = document.getElementById('poolTableBody');
+  var table = document.getElementById('poolTable');
+  var empty = document.getElementById('poolEmpty');
+  if (!body) return;
+  if (!poolRows.length) {
+    // 池里明明有货、只是这组条件一条都过不了：再说「池子还是空的」就是撒谎，
+    // 他会以为抓取腿没干活（真实原因在筛选栏里）
+    if (poolFilterOn()) {
+      poolShowNotice('没有符合当前筛选的岗位',
+        '池子里的岗位还在，是这组条件一条都过不了：放宽一点，或点筛选栏的「重置」看全部。');
+    } else {
+      poolShowNotice(dataScope === 'all' ? '两个号的池子都还是空的' : '这个号的池子还是空的',
+        '点上方「启动」，线程每搜一轮就把抓到的岗位放进这里 —— 投哪条你来勾。');
+    }
+    poolSyncSelection();
+    return;
+  }
+  if (table) table.style.display = '';
+  if (empty) empty.style.display = 'none';
+  var dash = '<span style="color:var(--fg-4th)">—</span>';
+  var 容器 = document.getElementById('poolTabContent');
+  var 顶 = 容器 ? 容器.scrollTop : 0;
+  var 代 = ++poolRenderGen;
+  var 游标 = 0, 批 = 60;
+  // 近三千行一次性塞进去，实测整表排版要好几秒、页面点不动。先铺头一批让表出来，
+  // 剩下的趁浏览器空闲往上补；每批之间主线程是空的，滚动和点击都不卡。
+  // 批大小按实测定的：一批 60 行的插入本身只要十几毫秒，贵的是随后那次排版
+  // （约 100~180ms，偶尔 700ms）。批越小，单次卡顿越短，总时长基本不变。
+  function 一行(r, i) {
+    var id = String(r.id || '');
+    var 键 = poolRowKey(r);
+    var ai = r.ai || {}, gate = r.gate || {}, 投 = r['投递'] || {}, 痕 = r['勾选'] || {};
+    var 状态 = String(r.status || 'new');
+    var 勾 = !!poolSelected[键];
+    // 城市单独一格之后，岗位名下面这行只留经验/学历；池里老行没有 city 才回落到 location
+    var 城 = r.city || r.location || '';
+    var 况 = [r.experience, r.education].filter(Boolean).join(' · ');
+    var 链 = r.url ? '<a class="ledger-link" href="' + escAttr(r.url) + '" target="_blank" rel="noopener" title="在 BOSS 上看这个岗位">' + poolIcon('link') + '</a>' : '';
+    var 结局 = '';
+    if (投['成']) 结局 = '<div class="pool-sub">已投 · ' + escAttr(poolAgo(投['时间'])) + '</div>';
+    else if (投['原因']) {
+      // 「投不出」= 这条岗位本身投不了（BOSS 侧已有这条会话）；「上次没投出去」= 这一刻这句话
+      // 过不了发送闸门，他改完画像/招呼语下一轮自己会投走，不许说成判死
+      var 可重试 = !!投['可重试'];
+      if (可重试) 结局 = '<div class="pool-retry" title="' + escAttr(String(投['原因']) + '（改了话术下一轮会自动再试）') + '">上次没投出去：' + escAttr(String(投['原因'])) + '</div>';
+      else 结局 = '<div class="pool-fail" title="' + escAttr(String(投['原因'])) + '">投不出：' + escAttr(String(投['原因'])) + '</div>';
+    }
+    var 选s = POOL_STATUS.map(function (p) {
+      return '<option value="' + p[0] + '"' + (p[0] === 状态 ? ' selected' : '') + '>' + p[1] + '</option>';
+    }).join('');
+    return '<tr' + (r.pinned ? ' class="pool-pinned"' : '') + ' data-id="' + escAttr(id) + '">'
+      + '<td class="pool-sel"><label><input type="checkbox" class="pool-acc" data-key="' + escAttr(键) + '"'
+      + (勾 ? ' checked' : '') + ' onclick="poolRowCheck(' + i + ', this.checked, event)" aria-label="勾选这条岗位"></label></td>'
+      + '<td>' + (dataScope === 'all' ? '<span class="pool-acc-tag" title="这条在哪个号的池里">'
+        + escAttr(poolAccountName(poolRowAccount(r))) + '</span>' : '')
+      + '<b>' + escAttr(String(r.job_name || '')) + '</b>' + 链
+      + (况 ? '<div class="pool-sub">' + escAttr(况) + '</div>' : '')
+      + (r.query ? '<div class="pool-sub">来自搜索「' + escAttr(String(r.query)) + '」×' + (Number(r.seen_count) || 1) + '</div>' : '')
+      + 结局 + '</td>'
+      + '<td title="' + escAttr(String(r.company || '')) + '">' + escAttr(String(r.company || '')) + '</td>'
+      + '<td>' + 城市格(城) + '</td>'
+      + '<td>' + 薪资格子(r.salary) + '</td>'
+      + '<td>' + poolAiCell(ai) + '</td>'
+      + '<td class="pool-reason" title="' + escAttr(String(ai['理由'] || '')) + '"><div>'
+      + (ai['理由'] ? escAttr(String(ai['理由'])) : dash) + '</div></td>'
+      + '<td>' + poolGateCell(gate) + '</td>'
+      + '<td><select class="pool-status" onchange="poolRowStatus(' + i + ', this.value)" title="改成「已勾待投」= 让线程下一轮投这条">' + 选s + '</select>'
+      // 谁动的这一行、什么时候动的：10-19 进池以来 selected/applied 全是 0，
+      // 光一个 status 答不出"是他没勾过"还是"勾了没投"（口径④）
+      + (痕['时间'] ? '<div class="pool-sub" title="' + escAttr(String(痕['来源'] || '')) + '">'
+        + escAttr(String(痕['动作'] || '动过')) + ' · ' + escAttr(poolAgo(痕['时间'])) + '</div>' : '') + '</td>'
+      + '<td><input class="pool-note-input" value="' + escAttr(String(r.note || '')) + '" placeholder="为什么留/不要"'
+      + ' onchange="poolRowNote(' + i + ', this.value)"></td>'
+      + '<td title="抓到 ' + escAttr(String(r.captured_at ? new Date(Number(r.captured_at) * 1000).toLocaleString() : '')) + '">'
+      + escAttr(poolAgo(r.last_seen_at || r.captured_at)) + '</td>'
+      + '<td><span class="pool-act">'
+      + '<button class="btn btn-ghost btn-sm" style="padding:1px 5px;font-size:10px" onclick="poolRowPin(' + i + ')" title="'
+      + (r.pinned ? '取消置顶（置顶只是排前面、看得清楚，机器不会因此多动它）' : '置顶（盯住这条）') + '">'
+      + (r.pinned ? '已置顶' : '置顶') + '</button>'
+      + '<button class="btn btn-ghost btn-sm" style="padding:1px 5px;font-size:10px" onclick="poolRowDelete(' + i + ')" title="从池里删掉这条">' + poolIcon('delete') + '</button>'
+      + '</span></td></tr>';
+  }
+  function fillRest() {
+    if (代 !== poolRenderGen) return;   // 期间又换了一批数据：这一轮的残片不许再往上贴
+    var html = '', 到 = Math.min(poolRows.length, 游标 + 批);
+    for (; 游标 < 到; 游标++) html += 一行(poolRows[游标], 游标);
+    body.insertAdjacentHTML('beforeend', html);
+    if (游标 < poolRows.length) {
+      (window.requestIdleCallback || function (f) { setTimeout(f, 16); })(fillRest, { timeout: 200 });
+      return;
+    }
+    poolSyncSelection();
+    // 用户没往下滚（清表会把它归零）就把他原来那一屏还回去
+    if (容器 && 顶 && !容器.scrollTop) 容器.scrollTop = 顶;
+  }
+  body.innerHTML = '';
+  fillRest();
+}
+
+function poolSelectedIds() {
+  return Object.keys(poolSelected).filter(function (k) { return poolSelected[k]; });
+}
+
+// 勾上的行按号分组：写接口一次只认一个号（池文件按号分开存，混着发就会
+// 「看着账号2、勾进主账号」——两个号岗位名一样，发现不了）
+function poolGroupSelected() {
+  var 组 = {};
+  poolSelectedIds().forEach(function (k) {
+    var 切 = String(k).split('|');
+    var 号 = Number(切[0]), id = 切.slice(1).join('|');
+    if (!isFinite(号) || !id) return;
+    (组[号] = 组[号] || []).push(id);
+  });
+  return 组;
+}
+
+function poolGroupCount(组) {
+  return Object.keys(组).reduce(function (n, k) { return n + 组[k].length; }, 0);
+}
+
+var poolLastCheckIdx = -1;   // Shift 连续勾的锚点：上一次点过的行号
+
+// 只改已有的勾选框，不重建表格：三千行重画要几十秒，勾一条不该等这么久。
+function poolPaintChecks() {
+  var boxes = document.querySelectorAll('#poolTableBody input.pool-acc');
+  for (var i = 0; i < boxes.length; i++) {
+    var k = boxes[i].getAttribute('data-key') || '';
+    boxes[i].checked = !!poolSelected[k];
+  }
+}
+
+// 表头那颗三态勾（全选/部分选/没选）+ 已勾条数 + 批量按钮亮不亮。
+// 成熟表格都是这一套：缺了就会出现"按钮亮着、点下去说没勾上"的假按钮；
+// 勾一半时表头既不能显示全选、也不能显示没选，否则下一次点它是反的。
+function poolSyncSelection() {
+  var total = poolSelectedIds().length;
+  var rows = poolRows || [], hit = 0;
+  for (var i = 0; i < rows.length; i++) if (poolSelected[poolRowKey(rows[i])]) hit++;
+  // 分页以后表头那一勾只管本页：话要说成「本页这 200 条」，说「当前筛出的」
+  // 会让他以为一次勾走了筛出来的 3151 条（勾了就等于判过了，说错比不说更坏）
+  var 全部筛出 = Number(POOL页.总数 || 0);
+  var 还有下页 = 全部筛出 > rows.length;
+  var all = document.getElementById('poolCheckAll');
+  if (all) {
+    all.checked = rows.length > 0 && hit === rows.length;
+    all.indeterminate = hit > 0 && hit < rows.length;
+    if (all.parentNode) {
+      var 这页 = '本页这 ' + rows.length + ' 条' + (还有下页 ? '（筛出 ' + 全部筛出 + ' 条，勾完翻页再勾下一页）' : '');
+      all.parentNode.title = rows.length
+        ? (hit === rows.length ? '取消全选' + 这页 : '全选' + 这页 + (hit ? '，本页已勾 ' + hit + ' 条' : ''))
+        : '这一页没有可勾选的行';
+    }
+  }
+  var chip = document.getElementById('poolSelCount');
+  if (chip) {
+    // 勾上的行可能跨页、跨筛选条件：真实条数照报，本页那部分单独说一句，
+    // 免得他以为"已经没勾了、删一下没关系"（批量只认勾上的）
+    chip.innerHTML = total
+      ? '已勾 <b>' + total + '</b> 条' + (hit !== total ? '（本页勾了 ' + hit + ' 条）' : '')
+      : '未勾选';
+  }
+  ['poolBatchSelected', 'poolBatchNew', 'poolBatchRejected', 'poolDeleteSelected', 'poolClearChecked']
+    .forEach(function (id) {
+      var b = document.getElementById(id);
+      if (b) b.disabled = total === 0;
+    });
+}
+
+function poolRowCheck(i, on, ev) {
+  var r = poolRows[i]; if (!r) return;
+  var k = poolRowKey(r);
+  // Shift+点：把上一次点的行到这一行整段设成同一状态（和文件管理器、邮箱一个手感）
+  if (ev && ev.shiftKey && poolLastCheckIdx >= 0 && poolLastCheckIdx !== i) {
+    var a = Math.min(i, poolLastCheckIdx), b = Math.max(i, poolLastCheckIdx);
+    for (var j = a; j <= b; j++) {
+      var x = poolRows[j]; if (!x) continue;
+      if (on) poolSelected[poolRowKey(x)] = true; else delete poolSelected[poolRowKey(x)];
+    }
+  } else if (on) poolSelected[k] = true; else delete poolSelected[k];
+  poolLastCheckIdx = i;
+  poolPaintChecks();
+  poolSyncSelection();
+}
+
+function poolCheckAll(on) {
+  for (var j = 0; j < poolRows.length; j++) {
+    var r = poolRows[j];
+    if (!r || !r.id) continue;
+    if (on) poolSelected[poolRowKey(r)] = true; else delete poolSelected[poolRowKey(r)];
+  }
+  poolLastCheckIdx = -1;
+  poolPaintChecks();
+  poolSyncSelection();
+}
+
+function poolClearChecked() {
+  poolSelected = {};
+  poolLastCheckIdx = -1;
+  poolPaintChecks();
+  poolSyncSelection();
+  toast('已取消勾选（池里的状态一个字没动）', 'info');
+}
+
+function poolPost(path, 体, 成了, 号) {
+  if (号 === undefined || 号 === null) 号 = poolAccount();
+  if (号 === null) 号 = poolFirstAccount();
+  var payload = {};
+  Object.keys(体).forEach(function (k) { payload[k] = 体[k]; });
+  payload.account = 号;
+  poolBusy++;
+  fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+    .then(function (r) {
+      return r.json().then(function (d) { return d; },
+        function () { return { status: 'error', message: '接口回的不是 JSON（HTTP ' + r.status + '）' }; });
+    })
+    .then(function (data) {
+      if (!data || data.status !== 'ok') {
+        var 话 = (data && data.message) || '接口没回话';
+        addLog('ERROR', path + ' 失败: ' + 话);
+        toast('没改成：' + 话, 'err');
+        if (成了) 成了(data || {}, false);
+        return;
+      }
+      addLog('SUCCESS', (data.message || '') + '（' + path + '）');
+      if (成了) 成了(data, true);
+    })
+    .catch(function (e) {
+      addLog('ERROR', path + ' 异常: ' + e.message);
+      toast('操作异常：' + e.message, 'err');
+      // 失败了也要回报一声：成批发的时候有人不回来，收尾那个计数就一直等下去
+      if (成了) 成了({ status: 'error', message: e.message }, false);
+    })
+    .then(function () {
+      poolBusy = Math.max(0, poolBusy - 1);
+      if (poolPendingRefresh && poolBusy === 0 && !poolIsEditing()) loadJobPool(true);
+    });
+}
+
+// 勾上的行可能跨两个号：接口一次只认一个号（池文件按号分开存，混着发就会
+// 「看着账号2、勾进主账号」——两个号岗位名一样，发现不了），按号拆成几次发、全回来再收口
+function poolPostGroups(path, 组, 体, done) {
+  var keys = Object.keys(组);
+  var left = keys.length, 话s = [], 全成 = true;
+  keys.forEach(function (k) {
+    var b = {};
+    Object.keys(体).forEach(function (x) { b[x] = 体[x]; });
+    b.ids = 组[k];
+    poolPost(path, b, function (data, 成) {
+      if (!成) 全成 = false;
+      else if (data && data.message) 话s.push(data.message);
+      left--;
+      if (left > 0) return;
+      done && done(话s.filter(Boolean).join('；'), 全成);
+    }, Number(k));
+  });
+}
+
+function poolBatch(状态) {
+  var 组 = poolGroupSelected();
+  var 共 = poolGroupCount(组);
+  if (!共) { toast('先在左边勾上要处理的行', 'warn'); return; }
+  poolPostGroups('/api/job_pool/batch', 组, { status: 状态 }, function (话, 成) {
+    if (!成) return;
+    var msg = 话 || ('已改 ' + 共 + ' 条');
+    if (状态 === 'selected') {
+      // 勾是"我要投这条"，但动作不在这个线程里：不说明去哪一步了，就是"点了没反应"
+      msg += scopeRunning() ? '，线程下一轮按冷却投出去'
+                            : '，但机器人当前没启动，点「启动」后才会真的投';
+    }
+    toast(msg, 'ok');
+    poolSelected = {};
+    loadJobPool(true);
+  });
+}
+
+function poolDeleteSelected() {
+  var 组 = poolGroupSelected();
+  var 共 = poolGroupCount(组);
+  if (!共) { toast('先在左边勾上要删的行', 'warn'); return; }
+  var 哪 = Object.keys(组).map(function (k) { return poolAccountName(k); }).join('、');
+  if (!confirm('确定从「' + 哪 + '」的池里删掉这 ' + 共 + ' 条？\n删掉只是移出候选池，已经投出去的打招呼记录不受影响；但备注会一起没了。')) return;
+  poolPostGroups('/api/job_pool/delete', 组, {}, function (话, 成) {
+    if (!成) return;
+    toast(话 || ('删了 ' + 共 + ' 条'), 'info');
+    poolSelected = {};
+    loadJobPool(true);
+  });
+}
+
+function poolAddManual() {
+  var url = poolVal('poolAddUrl').trim();
+  if (!url) { toast('要加进池至少得有岗位链接', 'warn'); return; }
+  var 号 = poolAccount();
+  var 自动挑 = 号 === null;
+  if (自动挑) 号 = poolFirstAccount();
+  poolPost('/api/job_pool/add', {
+    url: url,
+    job_name: poolVal('poolAddName').trim(),
+    company: poolVal('poolAddCompany').trim(),
+    salary: poolVal('poolAddSalary').trim()
+  }, function (data, 成) {
+    if (!成) return;
+    toast((data.message || '已加进池子')
+          + (自动挑 ? '（「全部账号」下默认加进' + poolAccountName(号) + '的池，要加到另一个号先切过去）' : ''), 'ok');
+    ['poolAddUrl', 'poolAddName', 'poolAddCompany', 'poolAddSalary'].forEach(function (id) {
+      var el = document.getElementById(id); if (el) el.value = '';
+    });
+    loadJobPool(true);
+  }, 号);
+}
+
+function poolRowStatus(i, v) {
+  var r = poolRows[i]; if (!r) return;
+  poolPost('/api/job_pool/update', { id: String(r.id), status: v }, function (data, 成) {
+    if (!成) return;
+    r.status = v;
+    var 标 = POOL_STATUS.filter(function (p) { return p[0] === v; })[0];
+    toast('这条改成「' + ((标 || ['', v])[1]) + '」', 'ok');
+  }, poolRowAccount(r));
+}
+
+function poolRowNote(i, v) {
+  var r = poolRows[i]; if (!r) return;
+  var 新 = String(v || '');
+  if (新 === String(r.note || '')) return;      // 只是失焦，没改字就别写盘
+  poolPost('/api/job_pool/update', { id: String(r.id), note: 新 }, function (data, 成) {
+    if (!成) return;
+    r.note = 新;
+    toast('备注已存', 'ok');
+  }, poolRowAccount(r));
+}
+
+function poolRowPin(i) {
+  var r = poolRows[i]; if (!r) return;
+  poolPost('/api/job_pool/update', { id: String(r.id), pinned: !r.pinned }, function (data, 成) {
+    if (成 && data.row) r.pinned = !!data.row.pinned;
+    loadJobPool(true);
+  }, poolRowAccount(r));
+}
+
+function poolRowDelete(i) {
+  var r = poolRows[i]; if (!r) return;
+  if (!confirm('确定删掉「' + (r.job_name || r.company || r.id) + '」这条？备注会一起没了，已投出去的记录不受影响。')) return;
+  poolPost('/api/job_pool/delete', { ids: [String(r.id)] }, function (data, 成) {
+    if (!成) return;
+    delete poolSelected[poolRowKey(r)];
+    loadJobPool(true);
+  }, poolRowAccount(r));
+}
+
+// 敲完字离开这一格，才补上被推迟的那一次重画
+document.addEventListener('focusout', function (e) {
+  if (!poolPendingRefresh || poolBusy > 0) return;
+  var t = e && e.target;
+  if (!t || !t.closest || !t.closest('#poolTableBody')) return;
+  setTimeout(function () {
+    if (poolPendingRefresh && poolBusy === 0 && !poolIsEditing()) loadJobPool(true);
+  }, 250);
+});
+
+// 轮询兜底：抓取腿每轮都在往池里加行，不能等他自己点刷新
+setInterval(function () {
+  try { if (poolTabActive()) loadJobPool(); } catch (e) {}
+  // AI 重判那条线程可能比他打开面板还早就在跑：轮询断了就在这一拍接回去
+  try {
+    if (aiScreenLast && aiScreenLast.running && !aiScreenTimer) startAiScreenPoll(1000);
+  } catch (e) {}
+}, 20000);
 
 function buildGreetRowHtml(data) {
   var st = greetStatusMap[data.status] || {label:data.status, cls:'greet-status-skip'};
@@ -4267,9 +5662,8 @@ function buildGreetRowHtml(data) {
   return '<td title="'+escAttr(timeFull)+'">'+escHtml(timeDisplay)+'</td>'
     +'<td title="'+escAttr(data.job_name||'')+'">'+escHtml(data.job_name||'—')+'</td>'
     +'<td title="'+escAttr(data.company||'')+'">'+escHtml(data.company||'—')+'</td>'
-    +'<td'+(data.salary && !可信薪资(data.salary)
-      ? ' title="薪资没读全：BOSS 的反爬字体有个段位解码不出来"' : '')
-      +'>'+escHtml(可信薪资(data.salary)||'—')+'</td>'
+    +'<td>'+城市格(data.city)+'</td>'
+    +'<td>'+薪资格子(data.salary)+'</td>'
     +'<td>'+statusHtml+'</td>'
     +'<td style="white-space:normal;word-break:break-word">'+skipReasonHtml+'</td>'
     +'<td>'+aiBadge+'</td>';
@@ -4293,7 +5687,10 @@ function toGreetRow(data) {
   } else if (st === 'already') {
     feStatus = 'already';
   } else if (data.is_skipped || st === 'skip' || st === 'skipped') {
-    if (reason.indexOf('AI') >= 0 || reason.indexOf('不匹配') >= 0) feStatus = 'ai_skip';
+    // AI 那一档只认后端真写下的两种原判据（reply_record.ai_skip_text 那两句话）。
+    // 拿裸「AI」或「不匹配」去猜会冤枉人：「JD 命中否决词「坐班」｜数据标注/AI训练师」
+    // 里的 AI 是岗位名带来的，画成"AI不匹配"看着像模型判过这条岗，其实是本地词表拦的。
+    if (reason.indexOf('AI判定不匹配') >= 0 || reason.indexOf('AI 接口这次没给出判断') >= 0) feStatus = 'ai_skip';
     else if (reason.indexOf('已沟通') >= 0) feStatus = 'already';
     else feStatus = 'skip';
   } else {
@@ -4308,6 +5705,7 @@ function toGreetRow(data) {
     job_name: data.job_name || '',
     company: data.company || '',
     salary: data.salary || '',
+    city: data.city || '',
     url: data.job_url || data.url || '',
     time: ts,
     timestamp: ts,
@@ -4350,6 +5748,8 @@ let activeBossChat = null;  // 当前选中的聊天会话身份（姓名+岗位
 // 引擎自记标记（[简历已发送] 这类线上没有的条目）默认不显示，
 // 默认视图要和 BOSS 聊天页一致；勾上开关才把它们带出来
 let showEngineMarks = false;
+// 这几个来源的引擎标记默认就显示：拒绝是他要看见的结果，不是内部记账
+const 默认可见的引擎来源 = {reject_contact: 1, policy: 1};
 
 function formatChatTime(ts) {
   // 从 ISO 时间戳中提取 HH:MM:SS
@@ -4618,13 +6018,29 @@ function selectBossChat(key) {
   });
   // 渲染右侧聊天内容
   renderBossChatDetail(key);
+  // 列表那份不带正文（15.3 MB 那一处撤掉之后），点开哪一路才取哪一路的气泡。
+  // 先按 records 把能画的画出来，取回来再重画——慢的那一下从"点任何会话都要等
+  // 整包"变成"只有这一路的头一次要点一下"
+  var 这一路 = replyChatCache[key];
+  if (这一路 && !这一路.messages) refreshBossChatDetail(key);
   // 标记已读
   fetch('/api/chats/'+encodeURIComponent(displayChatName(key))+'/mark_read'+chatParams(key), {method:'POST'}).then(function(){
-    // 更新未读数
+    // 只清这一行的红点。以前这里按缓存把 2795 行列表整张重画，一次要 3~5 秒；
+    // 机器一忙（2026-10-29 实测）第二次点会话就把主线程拖到 60 秒超时，
+    // 界面看着像卡死。点开哪个会话只影响那一行的未读数，不必动整张表。
     var g = replyChatCache[key];
     if (g) {
       g.unread_count = 0;
-      renderBossChatList(Object.keys(replyChatCache).map(function(k){return replyChatCache[k];}));
+      var rows = document.querySelectorAll('.boss-chat-item');
+      for (var i = 0; i < rows.length; i++) {
+        if (rows[i].getAttribute('data-chat-key') !== key) continue;
+        var badge = rows[i].querySelector('.boss-chat-item-badge');
+        if (badge) {
+          badge.className = 'boss-chat-item-badge badge-zero';
+          badge.textContent = '';
+        }
+        break;
+      }
     }
   }).catch(function(){});
 }
@@ -4679,7 +6095,13 @@ function renderBossChatDetail(key) {
     // 默认不显示，勾上才出现 —— 这样默认视图就是 BOSS 的样子。
     var visibleMsgs = messages.filter(function(msg) {
       if (showEngineMarks) return true;
-      return (msg.kind || '') !== 'action';
+      if ((msg.kind || '') === 'action') {
+        // 拒绝类动作（点卡片「拒绝」、点平台「拒绝」）在线上只有一条系统提示，
+        // 没有气泡；用户 10-07 明确要求"该拒绝的也要显示到前端"，这几类默认就画。
+        // 其余引擎自记条目（[简历已发送] 这类）仍旧勾上才出现，默认视图和 BOSS 一致。
+        return !!默认可见的引擎来源[msg.reply_source || msg.source || ''];
+      }
+      return true;
     });
     if (visibleMsgs.length === 0) {
       html += '<div class="boss-chat-messages-empty"><i data-ki="empty-chat"></i>暂无消息</div>';
@@ -4781,9 +6203,15 @@ function renderBossMessageBubble(msg, chatName) {
   if (!content.trim() && !cardText.trim()) return '';
 
   if (kind === 'action') {
-    // 线上没有这条气泡，画成居中小字，不伪装成对话内容
+    // 线上没有这条气泡，画成居中小字，不伪装成对话内容；
+    // 来源角标照挂，"拒绝交换联系方式"这类结果要能在会话里一眼看到
+    var aSrc = msg.reply_source || msg.source || '';
+    var aLabel = getReplySourceLabel(aSrc);
+    var aBadge = (aSrc && aLabel && aLabel !== '—')
+      ? '<span class="boss-msg-source ' + getReplySourceClass(aSrc) + '">' + escHtml(aLabel) + '</span>'
+      : '';
     return '<div class="boss-msg-row engine-mark"><div class="boss-msg-mark">'
-         + escHtml(content || cardText) + '</div></div>';
+         + escHtml(content || cardText) + aBadge + '</div></div>';
   }
   if (kind === 'system') {
     return '<div class="boss-msg-row system"><div class="boss-msg-bubble">'
@@ -5015,26 +6443,29 @@ function addReplyRecord(data){
       last_time: timestamp,
       last_message: receivedMsg,
       last_reply: replyMsg,
-      records: [newRecord],
-      messages: []
+      records: [newRecord]
+      // 这里不放 messages：正文要么由点开时那一次 /api/chats/<名> 取回来，要么就没有。
+      // 拿一条实时事件凭空造出个"只有两个气泡"的 messages，点开这路就再也不会去取历史了
     };
     replyChatCache[key] = g;
   }
 
-  // 实时更新消息列表（用于右侧聊天对话气泡渲染）
-  if (!g.messages) g.messages = [];
-  // 线上气泡的时间是"10:43"这种，事件给的是完整时间戳，截成分段标签保持一致
-  var hhmm = (timestamp || '').slice(11, 16) || timestamp;
-  // 添加HR消息气泡
-  if (receivedMsg) {
-    g.messages.push({text: receivedMsg, content: receivedMsg, is_mine: false, kind: 'bubble',
-                     time: hhmm, timestamp: timestamp, sender: 'hr'});
-  }
-  // 添加我方回复气泡
-  if (replyMsg) {
-    g.messages.push({text: replyMsg, content: replyMsg, is_mine: true, kind: 'bubble',
-                     time: hhmm, timestamp: timestamp, sender: 'me',
-                     reply_source: replySource});
+  // 已经取过正文的这一路，实时气泡就地接上（右侧正开着时看得见）
+  if (g.messages) {
+    // 线上气泡的时间是"10:43"这种，事件给的是完整时间戳，截成分段标签保持一致
+    var hhmm = (timestamp || '').slice(11, 16) || timestamp;
+    if (receivedMsg) {
+      g.messages.push({text: receivedMsg, content: receivedMsg, is_mine: false, kind: 'bubble',
+                       time: hhmm, timestamp: timestamp, sender: 'hr'});
+    }
+    if (replyMsg) {
+      g.messages.push({text: replyMsg, content: replyMsg, is_mine: true, kind: 'bubble',
+                       time: hhmm, timestamp: timestamp, sender: 'me',
+                       reply_source: replySource});
+    }
+  } else if (activeBossChat === key) {
+    // 正开着这一路却还没取过正文：直接去取，别只显示事件里那两条
+    refreshBossChatDetail(key);
   }
 
   // 同步更新 allReplyGroups 缓存
@@ -5042,7 +6473,7 @@ function addReplyRecord(data){
   for (var i = 0; i < allReplyGroups.length; i++) {
     if (chatKey(allReplyGroups[i]) === key || allReplyGroups[i].chat_name === chatName) {
       allReplyGroups[i].records = g.records;
-      allReplyGroups[i].messages = g.messages;
+      if (g.messages) allReplyGroups[i].messages = g.messages;
       allReplyGroups[i].last_time = g.last_time;
       allReplyGroups[i].message_count = g.message_count;
       foundInAll = true;
@@ -5066,17 +6497,23 @@ function addReplyRecord(data){
 
 
 // 清空范围文案：默认只清当前账号，选"全部账号"时才会清所有号
+// 措辞按后端真实行为写：整份先落进 data/kept/ 再清表，不是"不可撤销"的删除
+// （10-23 改的口径——原来这里说"此操作不可撤销"，同时后端确实在硬删，两头都对不上）
 function clearScopeWarn(kind) {
   if (dataScope === 'all')
-    return '确定要清空【所有账号】的' + kind + '吗？两个号的记录存在同一个文件里，这一下会全没，且不可撤销。';
+    return '确定要清空【所有账号】的' + kind + '吗？两个号的记录存在同一个文件里，这一趟会把整份记录挪进 data/kept/ 存档，面板上不再显示。';
   return '确定要清空账号「' + ((config.accounts[Number(dataScope)] || {}).name
          || ('账号' + (Number(dataScope) + 1))) +
-         '」的' + kind + '吗？另一个号的记录不受影响。此操作不可撤销。';
+         '」的' + kind + '吗？另一个号的记录不受影响。整份会先在 data/kept/ 留底，要拿回来从那里取。';
 }
 
 function clearGreetTable(){
   if (!confirm(clearScopeWarn('打招呼记录'))) return;
-  fetch('/api/greet_records/clear' + scopeQs(), {method: 'POST'})
+  fetch('/api/greet_records/clear' + scopeQs(), {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({confirm: '挪走'})
+      })
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.status === 'ok') {
@@ -5107,7 +6544,11 @@ function clearCurrentRecordTab(){
 // 清空回复记录（按当前数据范围，调用后端 API 同步删除磁盘数据）
 function clearReplyRecords(){
   if (!confirm(clearScopeWarn('回复记录'))) return;
-  fetch('/api/reply_records/clear' + scopeQs(), {method: 'POST'})
+  fetch('/api/reply_records/clear' + scopeQs(), {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({confirm: '挪走'})
+      })
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.status === 'ok') {
@@ -5153,13 +6594,68 @@ function 可信薪资(s) {
   return v;
 }
 
-// 解析薪资数值（如 "10-15K·13薪" → 10）
-function parseSalaryMin(salary) {
-  var s = 可信薪资(salary);   // 残缺值返回 0：读不出不能冒充过线
-  if (!s) return 0;
-  // 匹配第一个数字
-  var m = s.match(/(\d+)/);
-  return m ? parseInt(m[1]) : 0;
+// 把读全的薪资写成一眼能认的口径：
+// 破折号统一成 –（BOSS 上用 - 和 ~ 混着写），「15-23K」「1.5-3万」这种没跟单位的补 /月——
+// 否则和「31-36元/时」「211-221元/天」并排看，时薪和月薪长得一模一样。·13薪 原样留在后面。
+function 薪资成文(s) {
+  var v = 可信薪资(s);
+  if (!v) return '';
+  var 段 = v.split('·');
+  var 主 = (段.shift() || '').replace(/\s+/g, '').replace(/[-–—~]/g, '–');
+  if (/[Kk]$/.test(主) || /万$/.test(主)) 主 += '/月';
+  return 段.length ? 主 + ' · ' + 段.join(' · ') : 主;
+}
+
+// 薪资格子：读全的给粗体数字，读不全的写明「读不出」并把原值放 title，
+// 空的是 —。三种样子要分得开——以前读不出的和没写的都画成「—」，
+// 看着像"这岗位没写薪资"，其实是我方解码丢了数字。
+function 薪资格子(s) {
+  var 原 = (s == null ? '' : String(s)).trim();
+  var 文 = 薪资成文(原);
+  if (文) {
+    return '<span class="salary-val" title="BOSS 上原样：' + escAttr(原) + '">'
+      + escHtml(文) + '</span>';
+  }
+  if (原) {
+    return '<span class="salary-bad" title="BOSS 的反爬字体把这个数字编成认不出的码位，'
+      + '读不全就不当数用：原值「' + escAttr(原) + '」">读不出</span>';
+  }
+  return '<span class="salary-none" title="BOSS 卡片上没写薪资">—</span>';
+}
+
+// BOSS 的城市串是「长沙·岳麓区·望城坡」：第一段是城市，后面是区/商圈。
+// 表窄，格子只画城市，区放第二行；整串留在 title 里，商圈还是看得到。
+function 城市两段(city) {
+  var v = (city == null ? '' : String(city)).trim();
+  if (!v) return {城: '', 区: ''};
+  var 段 = v.split('·').map(function (x) { return x.trim(); }).filter(Boolean);
+  return {城: 段[0] || '', 区: 段.slice(1).join('·')};
+}
+
+function 城市格(city) {
+  var 两 = 城市两段(city);
+  if (!两.城) return '<span class="salary-none">—</span>';
+  return '<span class="cell-city" title="' + escAttr(String(city)) + '">'
+    + escHtml(两.城) + '</span>'
+    + (两.区 ? '<div class="cell-city-sub">' + escHtml(两.区) + '</div>' : '');
+}
+
+// 薪资折成「元/月」，折不出返回 null（面议、读不全的、认不出单位的一律不参与筛选）。
+// 判据与 boss_bot/job_pool.薪资折月 逐字同一套，tests/test_salary_decode.py 拿同一批值
+// 两端各跑一遍逐值比。以前这一格只看第一个数字、不看单位：
+// 「31-36元/时」数成 31，拿去比"≥20K"就把时薪岗当成两万月薪放进了结果表。
+function 薪资折月(salary) {
+  var 文 = 可信薪资(salary);   // 残缺值返回空串：读不出不能冒充过线
+  if (!文) return null;
+  var m = 文.match(/(\d+(?:\.\d+)?)/);
+  if (!m) return null;         // "面议"这种没数字的合法写法
+  var 低 = parseFloat(m[1]);
+  if (文.indexOf('元/时') >= 0 || 文.indexOf('元/小时') >= 0) return Math.round(低 * 8 * 22);
+  if (文.indexOf('元/天') >= 0 || 文.indexOf('元/日') >= 0) return Math.round(低 * 22);
+  if (文.indexOf('万') >= 0) return Math.round(低 * 10000);
+  if (文.indexOf('千') >= 0 || /k/i.test(文)) return Math.round(低 * 1000);
+  if (文.indexOf('元/月') >= 0) return Math.round(低);
+  return null;                 // 认不出的写法不参与：宁可筛不出，不许筛错
 }
 
 // 从时间字符串中提取日期部分 YYYY-MM-DD
@@ -5184,10 +6680,10 @@ function applyGreetFilter() {
     var recDate = extractDate(rec.timestamp || rec.time || '');
     if (dateStart && recDate && recDate < dateStart) return false;
     if (dateEnd && recDate && recDate > dateEnd) return false;
-    // 最低薪资筛选
+    // 最低薪资筛选：输入框是 K/月，比较用折月后的元/月；读不出的不算够
     if (salaryMin > 0) {
-      var sal = parseSalaryMin(rec.salary || '');
-      if (sal < salaryMin) return false;
+      var sal = 薪资折月(rec.salary || '');
+      if (sal === null || sal < salaryMin * 1000) return false;
     }
     // 岗位关键词筛选
     if (jobKw) {
@@ -5267,30 +6763,32 @@ function applyReplyFilter() {
       }
       return true;
     });
-    // 筛选 messages
-    var filteredMessages = (g.messages || []).filter(function(msg) {
-      var recDate = extractDate(msg.timestamp || msg.time || '');
-      if (dateStart && recDate && recDate < dateStart) return false;
-      if (dateEnd && recDate && recDate > dateEnd) return false;
-      if (jobKw) {
-        var jobName = (g.job_name || '').toLowerCase();
-        if (jobName.indexOf(jobKw) < 0) return false;
-      }
-      if (sourceFilter) {
-        // 只筛选我方回复消息
-        if (msg.is_mine || msg.sender === 'bot' || msg.sender === 'me') {
-          var src = msg.reply_source || msg.source || '';
-          if (src !== sourceFilter) return false;
+    // 正文不在列表那份里（15.3 MB 那份已经撤掉），只有这一路已经点开过、
+    // 缓存里有气泡时才按气泡筛；否则靠 records 与 full_message_count 决定留不留
+    if (g.messages) {
+      newG.messages = (g.messages || []).filter(function(msg) {
+        var recDate = extractDate(msg.timestamp || msg.time || '');
+        if (dateStart && recDate && recDate < dateStart) return false;
+        if (dateEnd && recDate && recDate > dateEnd) return false;
+        if (jobKw) {
+          var jobName = (g.job_name || '').toLowerCase();
+          if (jobName.indexOf(jobKw) < 0) return false;
         }
-      }
-      if (statusFilter === 'skipped') {
-        if (msg.sender !== 'system' && !msg.is_skipped) return true; // HR消息保留
-        return msg.sender === 'system' || msg.is_skipped;
-      }
-      return true;
-    });
+        if (sourceFilter) {
+          // 只筛选我方回复消息
+          if (msg.is_mine || msg.sender === 'bot' || msg.sender === 'me') {
+            var src = msg.reply_source || msg.source || '';
+            if (src !== sourceFilter) return false;
+          }
+        }
+        if (statusFilter === 'skipped') {
+          if (msg.sender !== 'system' && !msg.is_skipped) return true; // HR消息保留
+          return msg.sender === 'system' || msg.is_skipped;
+        }
+        return true;
+      });
+    }
     newG.records = filteredRecords;
-    newG.messages = filteredMessages;
     newG.message_count = filteredRecords.length;
     // 来源/状态筛的是"我们回过什么"，而 HR 的消息上面一律保留着，
     // 光靠"分组非空"根本挡不住：实测筛 family_filter 时 1606 个会话还剩 1002 个，
@@ -5300,8 +6798,10 @@ function applyReplyFilter() {
     return newG;
   }).filter(function(g) {
     if (g._要匹配记录) return (g.records || []).length > 0;
-    // 过滤掉空分组
-    return (g.records && g.records.length > 0) || (g.messages && g.messages.length > 0);
+    // 过滤掉空分组：没回复过的那一路 records 是空的，靠"存了几条"判定它真有对话
+    return (g.records && g.records.length > 0)
+        || (g.messages && g.messages.length > 0)
+        || (g.full_message_count || 0) > 0;
   });
 
   // 重新渲染
@@ -5782,11 +7282,6 @@ socket.on('scheduler_status', function(data) {
 socket.on('bot_login', function() {
   var btn = document.getElementById('btnConfirmLogin');
   if (btn) btn.disabled = false;
-});
-
-socket.on('login_result', function(data) {
-  if (data.success) addLog('SUCCESS', '登录状态正常');
-  else addLog('ERROR', '未登录');
 });
 
 socket.on('connected', function(data) {});

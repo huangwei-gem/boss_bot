@@ -2,7 +2,7 @@
   "chat_name": "涂林达",
   "chat_id": "涂林达#中山市羊咩咩活动策划",
   "account_index": 0,
-  "job_name": "兼职·线上运营专员50-70元/时中山查看职位",
+  "job_name": "兼职·线上运营专员50-70元/时中山",
   "company": "中山市羊咩咩活动策划",
   "messages": [
     {
@@ -16,7 +16,75 @@
       "sender": "me",
       "kind": "bubble",
       "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "加我",
+      "time": "06:52",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398586484957952",
+      "block": "06:52 加我",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "加我"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398586497635072",
+      "block": "我想要和您交换微信，您是否同意 为保障您的安全建议在平台内沟通，微信沟通中需特别保护您的个人信息，谨防受骗。 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换微信，您是否同意 为保障您的安全建议在平台内沟通，微信沟通中需特别保护您的个人信息，谨防受骗。 拒绝 同意"
+    },
+    {
+      "sender": "bot",
+      "content": "[已同意交换联系方式]",
+      "text": "[已同意交换联系方式]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "contact",
+      "timestamp": "2026-10-21 10:41:55",
+      "time": "10:41",
+      "job_name": "兼职·线上运营专员50-70元/时中山查看职位",
+      "isFriend": false
+    },
+    {
+      "text": "",
+      "time": "10:41",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398996762698506",
+      "block": "LW1906851 涂林达的微信号 LW1906851 复制微信号",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "LW1906851 涂林达的微信号 LW1906851 复制微信号"
+    },
+    {
+      "sender": "bot",
+      "content": "微信号我记下了哈，我现在加您。",
+      "text": "微信号我记下了哈，我现在加您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-23 16:10:44",
+      "time": "16:10",
+      "job_name": "兼职·线上运营专员50-70元/时中山查看职位",
+      "isFriend": false,
+      "mid": "399785346130691"
     }
   ],
-  "updated_at": "2026-10-08 03:11:20"
+  "updated_at": "2026-10-25 02:06:10",
+  "unread_on_boss": 0
 }

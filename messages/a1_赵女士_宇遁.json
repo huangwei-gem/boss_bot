@@ -1,0 +1,36 @@
+{
+  "chat_name": "赵女士",
+  "chat_id": "赵女士#宇遁",
+  "account_index": 1,
+  "job_name": "采购助理（家居百货、数据分析）7-10K上海查看职位",
+  "company": "宇遁",
+  "messages": [
+    {
+      "text": "",
+      "time": "10:33",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397932907045376",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据标注与AI辅助标注流程，看到贵司线上兼职岗位与我的技能匹配，方便的话我把简历发您细聊",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397933085880832",
+      "block": "送达 您好，我是统计学专业在读生，擅长数据标注与AI辅助标注流程，看到贵司线上兼职岗位与我的技能匹配，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据标注与AI辅助标注流程，看到贵司线上兼职岗位与我的技能匹配，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 13:48:06"
+}

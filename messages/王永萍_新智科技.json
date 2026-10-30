@@ -1,0 +1,79 @@
+{
+  "chat_name": "王永萍",
+  "chat_id": "王永萍#新智科技",
+  "account_index": 0,
+  "job_name": "兼职·舆情监测专员（舆情数据整理员+远程办公）4000-4500元/月西安",
+  "company": "新智科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "12:55",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397967960650498",
+      "block": "12:55 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "亲，简历中没有乙方舆情监测和舆情日周报经验吧？抱歉哈",
+      "time": "昨天 14:53",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398350692270849",
+      "block": "昨天 14:53 亲，简历中没有乙方舆情监测和舆情日周报经验吧？抱歉哈",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "亲，简历中没有乙方舆情监测和舆情日周报经验吧？抱歉哈"
+    },
+    {
+      "sender": "bot",
+      "content": "好嘞，谢谢您哈，祝招聘顺利",
+      "text": "好嘞，谢谢您哈，祝招聘顺利",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 17:43:13",
+      "time": "17:43",
+      "job_name": "兼职·舆情监测专员（舆情数据整理员+远程办公）4000-4500元/月西安查看职位",
+      "isFriend": false,
+      "mid": "398746403943170"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您告知，祝您早日招到合适的人",
+      "text": "好的，谢谢您告知，祝您早日招到合适的人",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 18:03:53",
+      "time": "18:03",
+      "job_name": "兼职·舆情监测专员（舆情数据整理员+远程办公）4000-4500元/月西安查看职位",
+      "isFriend": false,
+      "mid": "398751483073282"
+    },
+    {
+      "sender": "bot",
+      "content": "嗯，那就不打扰您了哈。",
+      "text": "嗯，那就不打扰您了哈。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-25 07:05:12",
+      "time": "07:05",
+      "job_name": "兼职·舆情监测专员（舆情数据整理员+远程办公）4000-4500元/月西安",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-25 07:05:12",
+  "unread_on_boss": 0
+}

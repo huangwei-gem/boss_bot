@@ -1,0 +1,22 @@
+{
+  "chat_name": "雷云",
+  "chat_id": "雷云#咕泡科技",
+  "account_index": 0,
+  "job_name": "数据增长分析4-8K长沙",
+  "company": "咕泡科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "16:49",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397671554155267",
+      "block": "16:49 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-25 02:37:47"
+}

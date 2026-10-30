@@ -2,7 +2,7 @@
   "chat_name": "高先生",
   "chat_id": "高先生#海口龙华番之茄网___",
   "account_index": 0,
-  "job_name": "兼职·数据分析50-500元/时海口查看职位",
+  "job_name": "兼职·数据分析50-500元/时海口",
   "company": "海口龙华番之茄网...",
   "messages": [
     {
@@ -76,7 +76,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "393474882274050",
-      "block": "昨天 20:13 pmgaogao 高先生的微信号 pmgaogao 复制微信号",
+      "block": "pmgaogao 高先生的微信号 pmgaogao 复制微信号",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -126,8 +126,53 @@
       "job_name": "兼职·数据分析50-500元/时海口查看职位",
       "isFriend": false,
       "mid": "394072152797953"
+    },
+    {
+      "sender": "bot",
+      "content": "高先生您好，海口龙华番之茄网...这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "高先生您好，海口龙华番之茄网...这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 09:33:06",
+      "time": "09:33",
+      "job_name": "兼职·数据分析50-500元/时海口查看职位",
+      "isFriend": false,
+      "mid": "395087004570374"
+    },
+    {
+      "sender": "bot",
+      "content": "高先生您好，海口龙华番之茄网...这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "高先生您好，海口龙华番之茄网...这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 11:10:57",
+      "time": "11:10",
+      "job_name": "兼职·数据分析50-500元/时海口查看职位",
+      "isFriend": false,
+      "mid": "397588313613057"
+    },
+    {
+      "sender": "bot",
+      "content": "简历我发您微信了，方便时约个线上面试？",
+      "text": "简历我发您微信了，方便时约个线上面试？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-18 10:40:11",
+      "time": "10:40",
+      "job_name": "兼职·数据分析50-500元/时海口查看职位",
+      "isFriend": false,
+      "mid": "397934643802883"
     }
   ],
-  "updated_at": "2026-10-09 11:38:31",
+  "updated_at": "2026-10-25 02:32:35",
   "unread_on_boss": 0
 }

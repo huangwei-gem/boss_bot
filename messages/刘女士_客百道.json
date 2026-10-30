@@ -1,0 +1,22 @@
+{
+  "chat_name": "刘女士",
+  "chat_id": "刘女士#客百道",
+  "account_index": 0,
+  "job_name": "兼职·数据标注员20-40元/时重庆",
+  "company": "客百道",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "14:19",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397988536472322",
+      "block": "14:19 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-29 13:00:01"
+}

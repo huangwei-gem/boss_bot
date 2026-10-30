@@ -1,0 +1,50 @@
+{
+  "chat_name": "何女士",
+  "chat_id": "何女士#广州甜音鹿网络科技",
+  "account_index": 1,
+  "job_name": "兼职·游戏陪玩 线上 自由 兼职100-300元/天长沙查看职位",
+  "company": "广州甜音鹿网络科技",
+  "messages": [
+    {
+      "text": "有的，我做过标注、数据处理这类项目：文本/图像/语音标注都做过，数据整理和分析也用 Excel/SQL/Python 跑过，AI 工具日常都在用。方便的话我发份简历给您细聊~",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395150175892226",
+      "block": "已读 有的，我做过标注、数据处理这类项目：文本/图像/语音标注都做过，数据整理和分析也用 Excel/SQL/Python 跑过，AI 工具日常都在用。方便的话我发份简历给您细聊~",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "有的，我做过标注、数据处理这类项目：文本/图像/语音标注都做过，数据整理和分析也用 Excel/SQL/Python 跑过，AI 工具日常都在用。方便的话我发份简历给您细聊~",
+      "reply_source": "intent"
+    },
+    {
+      "text": "很高兴收到您的应聘，但您的技能组合和我们目前项目的需求不完全吻合。祝您在BOSS直聘找到更好的机会！",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395150249263875",
+      "block": "很高兴收到您的应聘，但您的技能组合和我们目前项目的需求不完全吻合。祝您在BOSS直聘找到更好的机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "很高兴收到您的应聘，但您的技能组合和我们目前项目的需求不完全吻合。祝您在BOSS直聘找到更好的机会！"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "text": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-10 17:00:02",
+      "time": "17:00",
+      "job_name": "兼职·游戏陪玩 线上 自由 兼职100-300元/天长沙查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-16 01:29:53",
+  "unread_on_boss": 0
+}

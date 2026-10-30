@@ -2,7 +2,7 @@
   "chat_name": "徐亚学",
   "chat_id": "徐亚学#孩子王",
   "account_index": 0,
-  "job_name": "孩子王管培生3-4K长沙查看职位",
+  "job_name": "孩子王管培生3-4K长沙",
   "company": "孩子王",
   "messages": [
     {
@@ -94,7 +94,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394030812500737",
-      "block": "09:55 您是否接受此工作地点? 孩子王(长沙奥特莱斯店)(长沙望城区孩子王(长沙奥特莱斯店)砂之船3楼) 暂不考虑可以接受",
+      "block": "您是否接受此工作地点? 孩子王(长沙奥特莱斯店)(长沙望城区孩子王(长沙奥特莱斯店)砂之船3楼) 暂不考虑可以接受",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -198,8 +198,23 @@
       "sender": "hr",
       "kind": "bubble",
       "content": "感谢您的投递，很遗憾我们刚刚与其他候选人进入了后续沟通环节。祝您在BOSS直聘找到更适合您的工作！"
+    },
+    {
+      "sender": "bot",
+      "content": "好嘞，谢谢告知，祝顺利。",
+      "text": "好嘞，谢谢告知，祝顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-23 11:12:54",
+      "time": "11:12",
+      "job_name": "孩子王管培生3-4K长沙查看职位",
+      "isFriend": false,
+      "mid": "399712151757571"
     }
   ],
-  "updated_at": "2026-10-10 06:48:33",
+  "updated_at": "2026-10-25 02:06:48",
   "unread_on_boss": 0
 }

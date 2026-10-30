@@ -129,13 +129,23 @@ class Test写法不许再退回去:
                                            'with open(OVERRIDES_FILE, "w"'],
             "flask-version/app.py": ['with open(BOT_CONFIG_FILE, "w"',
                                      'with open(OVERRIDES_FILE, "w"',
-                                     'with open(USER_PROFILE_FILE, "w"',
-                                     'with open(_NOTIFICATIONS_FILE, "w"'],
+                                     'with open(USER_PROFILE_FILE, "w"'],
         }
         for 文件, 片段表 in 禁.items():
             源 = self._源(文件)
             for 片段 in 片段表:
                 assert 片段 not in 源, f"{文件} 还在裸写：{片段}"
+
+    def test_通知写走原子入口且路径只有一个出处(self):
+        """通知那份 10-29 前住在根目录、路径还在 app.py 里另拼一份。
+
+        拼第二份的代价不是难看，是 e2e_api 把 C.NOTIFY_FILE 顶到临时目录之后
+        罩不住 app.py 这一路——100 项测试一直在往仓库根写 notifications.json。
+        """
+        源 = self._源("flask-version/app.py")
+        assert "write_json_atomic(_通知文件()" in 源, "通知写没走原子入口"
+        assert "NOTIFY_FILE" in 源, "app.py 不再从 config 取通知路径＝第二份出处回来了"
+        assert 'os.path.join(os.path.dirname(__file__), "..", "notifications.json")' not in 源
 
     def test_原子写真的用上了(self):
         assert "write_json_atomic" in self._源("boss_bot/self_evolve.py"), \

@@ -1,0 +1,22 @@
+{
+  "chat_name": "张锦怡",
+  "chat_id": "张锦怡#三一重工",
+  "account_index": 0,
+  "job_name": "督办经理（市场分析）（驻沙特阿拉伯）12-24K长沙",
+  "company": "三一重工",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "15:38",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397654146708226",
+      "block": "15:38 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-25 02:40:02"
+}

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""把本机 5000 面板甩到一个公网 https 地址，断了自动重连。
+"""把本机面板甩到一个公网 https 地址，断了自动重连。
 
 python tools/public_panel.py                      # 默认 cloudflared
 python tools/public_panel.py --backend localhost-run
@@ -26,9 +26,11 @@ import sys
 import time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT)
+from boss_bot.unified_config import 面板端口 as _面板端口  # 端口只有一个出处
 LOG = os.path.join(ROOT, "logs", "public_panel.log")
 URL_FILE = os.path.join(ROOT, "logs", "public_url.txt")
-本地端口 = 5000
+本地端口 = _面板端口()
 隧道目标 = "nokey@localhost.run"
 
 # 只认带 scheme 的：localhost.run 的横幅里既有裸域名 f30d...lhr.life，也有它自己的

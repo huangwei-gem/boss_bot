@@ -9,7 +9,7 @@
 U+E030–U+E039（0–9），**其余私用区字符一律 `continue` 直接丢掉**。段位一挪，
 "15-23K" 的前两位被无声吃掉，剩下 `-23K`——界面读起来像个负数，而且这个值还会
 往三个地方去：AI 判分提示词（`薪资：-23K`）、薪资格子、以及"薪资≥"筛选
-（parseSalaryMin("-23K") 数到 23，残缺值冒充过线岗）。
+（旧那份解析把 "-23K" 数到 23，残缺值冒充过线岗；现在这一格叫 薪资折月）。
 
 两头都要堵：
 - 解码层：读不出的字符改成 `?` 占位，绝不静默删。占位让"这里没读全"可见，
@@ -128,7 +128,7 @@ class 界面那一格Test:
         if shutil.which("node") is None:
             pytest.skip("需要 node 才能真跑前端函数")
         src = INDEX_HTML.read_text(encoding="utf-8")
-        # parseSalaryMin 要用可信薪资，单抽一个函数会 ReferenceError：
+        # 薪资折月 要用可信薪资，单抽一个函数会 ReferenceError：
         # 依赖表在这里只有一层，写死比造通用解析器诚实
         要抽 = (["可信薪资", 函数名] if 函数名 != "可信薪资" else [函数名])
         js = "const V = %s;\n%s\nconsole.log(JSON.stringify(V.map(%s)));\n" % (
@@ -139,7 +139,10 @@ class 界面那一格Test:
             f.write(js)
             路径 = f.name
         try:
-            进程 = subprocess.run(["node", 路径], capture_output=True, text=True, timeout=30)
+            # 不写 encoding 的话 Windows 按 GBK 解 node 的 UTF-8 输出，
+            # 中文一到就 UnicodeDecodeError、stdout 变 None（跟"函数写错"长得一模一样）
+            进程 = subprocess.run(["node", 路径], capture_output=True, text=True,
+                                encoding="utf-8", timeout=30)
         finally:
             Path(路径).unlink(missing_ok=True)
         assert 进程.returncode == 0, 进程.stderr
@@ -155,9 +158,24 @@ class 界面那一格Test:
         assert self.跑("可信薪资", ["22-K"]) == [""]
 
     def test_薪资筛选不认残缺值(self):
-        """parseSalaryMin("-23K") 以前数到 23：残缺值冒充过线岗"""
-        assert self.跑("parseSalaryMin", ["-23K", "??-23K"]) == [0, 0]
-        assert self.跑("parseSalaryMin", ["22-29K", "15K·14薪"]) == [22, 15]
+        """残缺值不许冒充过线岗：折月要给出 null，不是 0 也不是 23000"""
+        assert self.跑("薪资折月", ["-23K", "??-23K", "面议", ""]) == [None, None, None, None]
+        assert self.跑("薪资折月", ["22-29K", "15K·14薪"]) == [22000, 15000]
+
+    def test_折月要认单位(self):
+        """以前只看第一个数字：「31-36元/时」数成 31，比"≥20K"就混进来了。
+        口径写死在两端各自那份里（时薪 8h×22 天、日薪 22 天），界面上那句 title 要一致。"""
+        assert self.跑("薪资折月", ["31-36元/时", "211-221元/天", "4111-4611元/月"]) == \
+            [5456, 4642, 4111]
+
+    def test_两端折月对同一批值要给一样的答案(self):
+        """岗位池那格是 Python 筛（服务端），打招呼记录那格是 JS 筛（前端）：
+        两份实现漂了，同一句"≥8K"在两张表里就不是同一个意思"""
+        from boss_bot.job_pool import 薪资折月 as 折月Python
+        样本 = ["22-29K", "15K·14薪", "31-36元/时", "211-221元/天", "4111-4611元/月",
+                "1.5万-3万", "10K", "面议", "-23K", "-24K·26薪", "??-23K", "22-K",
+                "8-K", "23K-", "—23K", "", "300元/小时", "8千/月"]
+        assert self.跑("薪资折月", 样本) == [折月Python(x) for x in 样本]
 
     def test_两端判据对同一批值要给一样的答案(self):
         """判分那头是 Python、界面这头是 JS：两份实现必须逐值相同，
@@ -170,8 +188,61 @@ class 界面那一格Test:
     def test_薪资格子与筛选都走这个判据(self):
         源 = INDEX_HTML.read_text(encoding="utf-8")
         assert 源.count("可信薪资(") >= 3, "打招呼记录或台账那一格还在直接印 salary"
-        筛选源 = re.sub(r"\s+", "", _抽函数(源, "parseSalaryMin"))
+        筛选源 = re.sub(r"\s+", "", _抽函数(源, "薪资折月"))
         assert "可信薪资(salary)" in 筛选源, "薪资筛选没接残缺判定"
+        assert "parseSalaryMin" not in 源, "旧那份只看第一个数字的解析还在被谁用"
+
+
+class 薪资写成一句话Test:
+    """他 2026-10-28 的原话：「现在那个薪资感觉不是很明确」。
+    时薪、日薪、月薪在表里长得一模一样，读不全的又和"没写"共用 —，都得分开。"""
+
+    def 跑(self, 值列表):
+        return 界面那一格Test.跑(self, "薪资成文", 值列表)
+
+    def test_没跟单位的区间补上月薪(self):
+        assert self.跑(["15-23K", "1.5万-3万", "10-15K·13薪"]) == \
+            ["15–23K/月", "1.5万–3万/月", "10–15K/月 · 13薪"]
+
+    def test_本来就带单位的原样保留(self):
+        """反向哨兵：时薪日薪不许被当成月薪再补一次"""
+        assert self.跑(["31-36元/时", "211-221元/天", "4111-4611元/月", "面议"]) == \
+            ["31–36元/时", "211–221元/天", "4111–4611元/月", "面议"]
+
+    def test_破折号统一但残缺值仍然不写(self):
+        assert self.跑(["22~29K", "-23K", "??-23K", ""]) == ["22–29K/月", "", "", ""]
+
+
+class 城市格Test:
+    def 跑(self, 值列表):
+        return 界面那一格Test.跑(self, "城市两段", 值列表)
+
+    def test_城市与区拆开(self):
+        assert self.跑(["长沙·岳麓区·望城坡", "上海", "", "长沙·岳麓区"]) == [
+            {"城": "长沙", "区": "岳麓区·望城坡"},
+            {"城": "上海", "区": ""},
+            {"城": "", "区": ""},
+            {"城": "长沙", "区": "岳麓区"},
+        ]
+
+
+class 三张表的格子都走同一套Test:
+    def test_打招呼与岗位池的薪资不再裸印(self):
+        源 = INDEX_HTML.read_text(encoding="utf-8")
+        打招呼 = _抽函数(源, "buildGreetRowHtml")
+        池 = _抽函数(源, "renderJobPool")
+        assert "薪资格子(data.salary)" in 打招呼, "打招呼记录还在直接印 salary"
+        assert "薪资格子(r.salary)" in 池, "岗位池还在直接印 salary"
+        assert "城市格(data.city)" in 打招呼 and "城市格(城)" in 池
+
+    def test_打招呼记录表头与格子数对齐(self):
+        """少一格整行向右错位：薪资列会印上状态"""
+        源 = INDEX_HTML.read_text(encoding="utf-8")
+        表头 = 源[源.index('<table class="greet-table" id="greetTable">'):
+                源.index('<tbody id="greetTableBody">')]
+        列 = len(re.findall(r"<th[\s>]", 表头))
+        assert 列 == _抽函数(源, "buildGreetRowHtml").count("'<td"), (列, "表头")
+        assert 列 == 8, 列
 
 
 if __name__ == "__main__":

@@ -1,0 +1,22 @@
+{
+  "chat_name": "刘女士",
+  "chat_id": "刘女士#绝味食品",
+  "account_index": 1,
+  "job_name": "数据产品经理14-18K·15薪长沙查看职位",
+  "company": "绝味食品",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 13:54",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394797397725960",
+      "block": "昨天 13:54 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-10 18:31:45"
+}

@@ -1,0 +1,22 @@
+{
+  "chat_name": "曹艳华",
+  "chat_id": "曹艳华#创昱达信息",
+  "account_index": 0,
+  "job_name": "中级数据开发工程师9-11K长沙",
+  "company": "创昱达信息",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "16:03",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397660165735169",
+      "block": "16:03 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-25 02:38:47"
+}

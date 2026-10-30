@@ -2,7 +2,7 @@
   "chat_name": "张先生",
   "chat_id": "张先生#天盛传媒",
   "account_index": 0,
-  "job_name": "兼职·线上短视频剪辑100-300元/时长沙查看职位",
+  "job_name": "兼职·线上短视频剪辑100-300元/时长沙",
   "company": "天盛传媒",
   "messages": [
     {
@@ -436,9 +436,24 @@
       "sender": "me",
       "kind": "bubble",
       "content": "视频发不出来"
+    },
+    {
+      "sender": "bot",
+      "content": "张先生好，关于剪辑需求您看是否合适？我这边有数据分析经验，适合线上协作。",
+      "text": "张先生好，关于剪辑需求您看是否合适？我这边有数据分析经验，适合线上协作。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-19 13:47:12",
+      "time": "13:47",
+      "job_name": "兼职·线上短视频剪辑100-300元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "398334498272001"
     }
   ],
-  "updated_at": "2026-10-10 07:04:17",
+  "updated_at": "2026-10-25 02:14:08",
   "unread_on_boss": 0,
-  "pinned": true
+  "pinned": false
 }

@@ -1,0 +1,96 @@
+{
+  "chat_name": "黎先生",
+  "chat_id": "黎先生#冷水江市福顺通文___",
+  "account_index": 1,
+  "job_name": "短剧编剧6-11K娄底查看职位",
+  "company": "冷水江市福顺通文...",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "10-04 21:47",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393144178217733",
+      "block": "10-04 21:47 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "你好",
+      "time": "10-05 13:54",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393381885264644",
+      "block": "10-05 13:54 你好",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好"
+    },
+    {
+      "text": "目前还招一名",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393381950108418",
+      "block": "目前还招一名",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "目前还招一名"
+    },
+    {
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "time": "10-05 20:22",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393477151949569",
+      "block": "10-05 20:22 已读 好的，感谢您的消息，我会尽快回复您。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "reply_source": "default"
+    },
+    {
+      "text": "黎先生您好，之前聊的短剧编剧6-11K娄底查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "time": "10-07 08:35",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394011100095233",
+      "block": "10-07 08:35 已读 黎先生您好，之前聊的短剧编剧6-11K娄底查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "黎先生您好，之前聊的短剧编剧6-11K娄底查看职位我很有兴趣，时间也灵活，方便约个面试细聊吗？"
+    },
+    {
+      "text": "黎先生您好，之前聊的短剧编剧6-11K娄底查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "time": "10-08 08:08",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394358502454016",
+      "block": "10-08 08:08 已读 黎先生您好，之前聊的短剧编剧6-11K娄底查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "黎先生您好，之前聊的短剧编剧6-11K娄底查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？"
+    },
+    {
+      "text": "你好",
+      "time": "10-08 10:58",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394400193340163",
+      "block": "10-08 10:58 你好",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好"
+    }
+  ],
+  "updated_at": "2026-10-10 19:59:01",
+  "unread_on_boss": 0
+}

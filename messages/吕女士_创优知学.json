@@ -117,19 +117,6 @@
       "mid": "394977045234433"
     },
     {
-      "text": "",
-      "time": "08:59",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "395078747329287",
-      "block": "08:59",
-      "sender": "hr",
-      "kind": "card",
-      "content": "",
-      "card_text": ""
-    },
-    {
       "text": "是你自己问了才回的哈",
       "time": "",
       "isFriend": true,
@@ -152,8 +139,23 @@
       "sender": "hr",
       "kind": "bubble",
       "content": "很抱歉，经过我们的评估，您的技能和经验与我们当前的职位要求不完全匹配。祝您在BOSS直聘找到满意的工作！"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的反馈，祝您招聘顺利~",
+      "text": "理解，感谢您的反馈，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-10 19:56:18",
+      "time": "19:56",
+      "job_name": "兼职·初高数理化英教师（线上兼职）65-90元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "395240159183617"
     }
   ],
-  "updated_at": "2026-10-10 09:13:18",
+  "updated_at": "2026-10-23 14:25:52",
   "unread_on_boss": 0
 }

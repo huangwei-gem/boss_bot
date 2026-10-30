@@ -1,0 +1,22 @@
+{
+  "chat_name": "邓女士",
+  "chat_id": "邓女士#锐仕方达",
+  "account_index": 0,
+  "job_name": "HR数据产品经理（人力+BI)（猎头职位）25-40K长沙查看职位",
+  "company": "锐仕方达",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "11:30",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397593150079744",
+      "block": "11:30 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-23 14:10:01"
+}

@@ -14,6 +14,7 @@ Cookie 文件；回复侧连判 3 次就停下来等人工，不再空刷。
 import io
 import json
 import os
+import re
 import sys
 import time
 import unittest
@@ -26,7 +27,9 @@ if hasattr(sys.stdout, "reconfigure"):
 
 import boss_bot.unified_config as UC
 from boss_bot.main_loop import (UnifiedBotLoop, login_state_of,
-                                has_live_auth_cookie, archive_cookie_file)
+                                has_live_auth_cookie, archive_cookie_file,
+                                BOSS_LOGIN_URL, 登录复验窗口秒, 登录复验间隔秒,
+                                登录导航冷却秒)
 
 
 def _auth_cookie(**over):
@@ -245,11 +248,27 @@ class UncertainHandlingTest(unittest.TestCase):
         loop._discard_stale_cookies = MagicMock()
         loop._save_cookies_if_logged_in = MagicMock(return_value=True)
         loop._wait_for_login = MagicMock(return_value=False)
+        # 复验的"一眼"有两条腿：只读的 `_login_state_read` 和导航之后读的
+        # `_login_state_now`。2026-10-22 起启动复验以只读为主（导航 60 秒一次），
+        # 所以这里两条腿共用一个队列——测试给的是"这一串眼依次读到什么"，
+        # 不管中间是哪条腿读的；`_settle_url` 打桩成中性页，免得真等 8 秒×18 眼。
+        loop.眼队列 = []
+        loop.读眼 = []
+        loop.导航眼 = []
+
+        def _取():
+            loop.读眼.append(1)
+            return loop.眼队列.pop(0) if loop.眼队列 else "uncertain"
+
+        loop._login_state_read = lambda inst, 早收=True: _取()
+        loop._login_state_now = lambda inst: loop.导航眼.append(inst) or _取()
+        loop._settle_url = lambda inst, timeout=None, 早收=True: ""
+        loop._has_live_auth_cookie = lambda inst: False
         # 登录窗口这一层现在由 show_login_window 管（无头时要重开成有头），
         # 这里记成"摆了几次窗口、各自动没动页面"，下面按这个断言
         loop.摆窗口 = []
 
-        def _窗口(url, navigate=True):
+        def _窗口(url, navigate=True, **kw):
             loop.摆窗口.append((url, navigate))
             return {"relaunched": False, "windows": 1,
                     "url_shown": url if navigate else "", "error": ""}
@@ -265,7 +284,7 @@ class UncertainHandlingTest(unittest.TestCase):
         inst = MagicMock()
         loop.browser_manager.get_instance.return_value = inst
         seen = ["uncertain", "logged_in"]
-        loop._login_state_now = lambda i: seen.pop(0)
+        loop.眼队列 = seen
         assert loop._handle_login() is True
         assert not any("/web/user" in u for u in self._urls_touched(inst)), \
             "复核到第二次就登录了，还把人家的页面导航到登录页做什么"
@@ -276,7 +295,6 @@ class UncertainHandlingTest(unittest.TestCase):
         loop = self._loop()
         inst = MagicMock()
         loop.browser_manager.get_instance.return_value = inst
-        loop._login_state_now = lambda i: "uncertain"
         assert loop._handle_login() is False
         assert not any(n for _, n in loop.摆窗口), \
             "看不准时可以把窗口摆出来让人自己看，但不许把页面导航走"
@@ -287,7 +305,7 @@ class UncertainHandlingTest(unittest.TestCase):
         loop = self._loop()
         inst = MagicMock()
         loop.browser_manager.get_instance.return_value = inst
-        loop._login_state_now = lambda i: "login_wall"
+        loop.眼队列 = ["login_wall"]
         assert loop._handle_login() is False
         assert any("/web/user" in u and n for u, n in loop.摆窗口), \
             f"确认是登录墙，却没把登录页摆出来: {loop.摆窗口}"
@@ -297,9 +315,209 @@ class UncertainHandlingTest(unittest.TestCase):
         """面板那句"请在浏览器中登录"在无头形态下做不到——必须先有窗口"""
         loop = self._loop()
         loop.browser_manager.get_instance.return_value = MagicMock()
-        loop._login_state_now = lambda i: "login_wall"
+        loop.眼队列 = ["login_wall"]
         loop._handle_login()
         assert loop.browser_manager.show_login_window.called
+
+
+class 自动登录要自己撑住Test(UncertainHandlingTest):
+    """他要的是"Cookie 在就自己登进去"，不是每次都伸手点「我已登录」。
+
+    10-20 14:30 实测：主账号光访问主站就用了 56 秒，会话页那一眼很容易读到
+    中间态；旧代码只复核一次（等 4 秒）就判"看不准 → 要人工登录"，于是界面摆出
+    登录弹窗，他看到的就是"未登录、点我已登录也没用"。慢不等于坏，
+    所以复验要在一个有界窗口里多次读，读出来就自己往下走。
+    """
+
+    def test_慢几眼之后登进去了就不许再喊人工(self):
+        loop = self._loop()
+        loop._interruptible_sleep = lambda s: None
+        inst = MagicMock()
+        loop.browser_manager.get_instance.return_value = inst
+        seen = ["uncertain", "uncertain", "uncertain", "logged_in"]
+        loop.眼队列 = seen
+        assert loop._handle_login() is True, \
+            "复验窗口里明明后来读到了登录态，却还是判成要人工登录"
+        assert loop._needs_login is False, "自动登录成功了还留着要人工登录的标记"
+        loop.browser_manager.show_login_window.assert_not_called()
+        loop._discard_stale_cookies.assert_not_called()
+
+    def test_复验有上界且不导航人正在用的页面(self):
+        """看不准要收敛：读满窗口就停手，页面一张都不许拽走。
+
+        上界要按次数算，不能只按墙钟——以前只写"还剩几秒"，把真瞌睡打桩之后
+        这个循环会在 90 秒里空转几百万次去反复读页面（测试跑一条要 90 秒就是
+        它的现场证据），线上要是哪个线程把时间卡住，它就是拿浏览器做压力测试。
+        """
+        loop = self._loop()
+        睡过 = []
+        loop._interruptible_sleep = lambda s: 睡过.append(s)
+        inst = MagicMock()
+        loop.browser_manager.get_instance.return_value = inst
+        assert loop._handle_login() is False
+        上限 = int(登录复验窗口秒 // 登录复验间隔秒)
+        assert len(loop.读眼) <= 上限, \
+            f"复验没有次数上界：读了 {len(loop.读眼)} 眼（窗口 {登录复验窗口秒}s / 间隔 {登录复验间隔秒}s）"
+        assert len(睡过) <= 上限, f"复验没有上界，睡了 {len(睡过)} 轮"
+        assert len(loop.导航眼) <= 2, \
+            f"复验发了 {len(loop.导航眼)} 次整页导航：一眼一次就是 09:19~09:21 那 15 次（窗口 {登录复验窗口秒}s / 冷却 {登录导航冷却秒}s）"
+        assert inst.get.call_count <= 2, \
+            f"启动复验往页面上发了 {inst.get.call_count} 次整页加载: %r" % (self._urls_touched(inst),)
+        assert loop._needs_login is True
+        assert loop._login_reason == "login_uncertain"
+        assert not any(n for _, n in loop.摆窗口), "看不准不该把页面导航走"
+        loop._discard_stale_cookies.assert_not_called()
+
+    def test_复验途中被叫停不许摆登录窗口(self):
+        """停止信号不等于掉登录：这时候喊"请在浏览器中登录"就是狼来了"""
+        loop = self._loop()
+        loop._interruptible_sleep = lambda s: None
+        loop.browser_manager.get_instance.return_value = MagicMock()
+        loop._stop_event.set()
+        assert loop._handle_login() is False
+        assert loop._needs_login is False, "只是被叫停，却标成了要人工登录"
+        loop.browser_manager.show_login_window.assert_not_called()
+
+    def test_Cookie文件不在但浏览器还登着要算登进去并把会话补回盘(self):
+        """10-20 号2 一天要人工登三次的那条根因：会话在浏览器用户目录里，
+        文件却不在了（被判错一次就归档走）。只看文件就喊人工，等于把还登着的
+        会话白白扔掉，然后逼他去点那一一下「我已登录」。"""
+        loop = self._loop()
+        loop._cookie_file = lambda: ""
+        loop._save_cookies_if_logged_in = MagicMock(return_value=True)
+        loop.browser_manager.get_instance.return_value = MagicMock()
+        loop.眼队列 = ["logged_in"]
+        assert loop._handle_login() is True, "浏览器里明明登着，却因为 Cookie 文件不在就喊人工"
+        loop._save_cookies_if_logged_in.assert_called_once_with(
+            loop.browser_manager.get_instance.return_value)
+        loop.browser_manager.show_login_window.assert_not_called()
+        loop._discard_stale_cookies.assert_not_called()
+        assert loop._login_reason == ""
+
+    def test_补不回盘也算登进去不许谎称要人工(self):
+        """浏览器是登录态的第一现场：落盘失败只说明下一轮还要再看一眼，
+        不能把这一轮已经登着的号推去等人"""
+        loop = self._loop()
+        loop._cookie_file = lambda: ""
+        loop._save_cookies_if_logged_in = MagicMock(return_value=False)
+        loop.browser_manager.get_instance.return_value = MagicMock()
+        loop.眼队列 = ["logged_in"]
+        assert loop._handle_login() is True
+        assert loop._needs_login is False
+
+    def test_Cookie注不进去且页面也是登录墙才要人工(self):
+        loop = self._loop()
+        loop.browser_manager.load_cookies.return_value = False
+        loop.browser_manager.get_instance.return_value = MagicMock()
+        loop.眼队列 = ["login_wall"]
+        assert loop._handle_login() is False
+        assert loop._login_reason == "cookie_expired", loop._login_reason
+        assert loop._needs_login is True
+        loop._discard_stale_cookies.assert_called_once()
+        assert (BOSS_LOGIN_URL, True) in loop.摆窗口, \
+            f"确认是墙却没导航到登录页: {loop.摆窗口}"
+
+    def test_全新账号要说没登录过而不是过期(self):
+        """文件根本不存在 + 页面是登录墙：这是第一次用，不是会话掉了。
+        界面这两句话给人的动作不一样，说错了他会去找"过期的 Cookie"。"""
+        loop = self._loop()
+        loop._cookie_file = lambda: "zhipin_cookies_这个账号还没登录过.json"
+        loop.browser_manager.load_cookies.return_value = False
+        loop.browser_manager.get_instance.return_value = MagicMock()
+        loop.眼队列 = ["login_wall"]
+        assert loop._handle_login() is False
+        assert loop._login_reason == "no_cookie", loop._login_reason
+        assert (BOSS_LOGIN_URL, True) in loop.摆窗口, "新账号更要把登录页摆出来让人登"
+
+    def test_确认是登录墙就早点收工不必撑满窗口(self):
+        """坏消息随到随收：撑窗口只会让他多等一分钟才看到真正要他做的事"""
+        loop = self._loop()
+        睡过 = []
+        loop._interruptible_sleep = lambda s: 睡过.append(s)
+        loop.browser_manager.get_instance.return_value = MagicMock()
+        loop.眼队列 = ["login_wall"]
+        assert loop._handle_login() is False
+        assert len(睡过) <= 2, f"已经确认登录墙还在原地等: 等了 {len(睡过)} 次"
+
+    def test_自动登录进行中界面要报在验登录而不是卡住(self):
+        """phase 里没有这一档，界面就只能拿 starting/未登录 糊他"""
+        loop = self._loop()
+        loop._running = True
+        loop._logged_in = False
+        loop._needs_login = False
+        loop._checking_login = True
+        assert loop.phase == "checking_login", loop.phase
+        状态 = loop.get_status()
+        assert 状态["needs_login"] is False
+        assert 状态["logged_in"] is False
+
+
+class 界面不许有永远报喜的登录检查Test(unittest.TestCase):
+    """socket 那条 check_login 以前直接 emit success:True——没人调、调了必绿。"""
+
+    def test_面板里没有假成功的登录检查(self):
+        import io
+        import os
+        根 = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        文本 = io.open(os.path.join(根, "flask-version", "app.py"),
+                       encoding="utf-8").read()
+        assert 'emit("login_result", {"success": True})' not in 文本, \
+            "check_login 又变回永远报喜了——这条路径要么真判，要么删掉"
+        页面 = io.open(os.path.join(根, "flask-version", "templates", "index.html"),
+                       encoding="utf-8").read()
+        assert "addLog('ERROR', '未登录')" not in 页面, \
+            "前端还留着给假成功事件印'未登录'的死监听，出问题时它会说反话"
+
+
+
+class 自动登录那一档要真画出来Test(unittest.TestCase):
+    """checking_login 是后端新加的一档。前端 accDotClass 不认它的话，函数会一路
+    走到最后的 `return 'running'`——自动登录进行中的号被画成绿点"运行"，正是他
+    最恨的那种假绿。这一族改动最容易漏的就是"后端加了档、前端当没看见"，
+    所以门要同时盯住分支、颜色、字和悬浮说明四端。
+    """
+
+    def setUp(self):
+        根 = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.页面 = io.open(os.path.join(根, "flask-version", "templates",
+                                        "index.html"), encoding="utf-8").read()
+
+    def _accDotClass体(self, 页面=None):
+        页面 = 页面 if 页面 is not None else self.页面
+        起 = 页面.index("function accDotClass(st)")
+        止 = 页面.index("function accTitle", 起)
+        return 页面[起:止]
+
+    def _自动登录类名(self, 页面=None):
+        体 = self._accDotClass体(页面)
+        匹 = re.search(r"st\.phase === 'checking_login'\)\s*return '([a-z_]+)';", 体)
+        return 匹.group(1) if 匹 else ""
+
+    def test_分支存在且不许落到绿点(self):
+        类名 = self._自动登录类名()
+        assert 类名, ("accDotClass 里没有 checking_login 分支：后端这一档会被画成 "
+                      "函数末尾那个 return 'running'（绿点=运行），自动登录中看着像跑好了")
+        assert 类名 != "running", f"自动登录中不许是绿点，拿到了 {类名}"
+
+    def test_类名要有颜色有字有悬浮说明(self):
+        类名 = self._自动登录类名()
+        assert 类名
+        assert f".acc-status-dot.{类名}{{" in self.页面, \
+            f"CSS 里没有 .acc-status-dot.{类名}，点会退回默认（没底色），看不出一个号在干什么"
+        字典 = re.search(r"var ACC_STATE_WORD = \{(.*?)\};", self.页面, re.S).group(1)
+        assert re.search(rf"\b{类名}\s*:", 字典), \
+            f"ACC_STATE_WORD 里没有 {类名}，账号条上的字会是空白"
+        标签 = re.search(r"var PHASE_LABEL = \{(.*?)\};", self.页面, re.S).group(1)
+        assert re.search(r"\bchecking_login\s*:\s*'([^']+)'", 标签), \
+            "PHASE_LABEL 缺 checking_login，悬浮标题会说成'未启动'"
+
+    def test_漏掉分支这条门真的会红(self):
+        """变异哨兵：把分支那一行删掉，上面两条判据必须当场抓出来"""
+        体 = self._accDotClass体()
+        删干净 = re.sub(r"[^\n]*st\.phase === 'checking_login'[^\n]*\n", "", 体, count=1)
+        assert 删干净 != 体, "变异没生效：分支行根本匹配不到，这条门是假的"
+        页面 = self.页面.replace(体, 删干净, 1)
+        assert self._自动登录类名(页面) == "", "删掉分支后仍然读得出类名，门形同虚设"
 
 
 class ReplyLoginGuardTest(unittest.TestCase):
@@ -424,7 +642,12 @@ class CookieBackupTest(unittest.TestCase):
             self.assertEqual(json.load(io.open(got, encoding="utf-8"))[0]["value"], "旧会话")
             self.assertTrue(os.path.exists(target), "备份不能把原文件搬走")
 
-    def test_只保留最近几份(self):
+    def test_超出份数只挪走不删(self):
+        """10-23 定的口径：备份轮换=挪进 `bk/kept/`，一条都不许消失。
+
+        这一条原来断的是"目录里只剩 5 个文件"——那等于把"删用户唯一登录凭据"钉成规矩；
+        实际后果是 `data/cookie_backups/` 里 git 跟踪的 7 份旧备份已经没了。
+        """
         import tempfile
         from boss_bot.browser_launcher import backup_cookie_file, COOKIE_BACKUP_KEEP
         with tempfile.TemporaryDirectory() as td:
@@ -434,10 +657,36 @@ class CookieBackupTest(unittest.TestCase):
                 with io.open(target, "w", encoding="utf-8") as f:
                     json.dump([_auth_cookie(value=str(i))], f)
                 backup_cookie_file(target, bk)
-            names = sorted(os.listdir(bk))
-            self.assertEqual(len(names), COOKIE_BACKUP_KEEP)
-            last = json.load(io.open(os.path.join(bk, names[-1]), encoding="utf-8"))
+            热 = sorted(n for n in os.listdir(bk) if n.endswith(".json"))
+            留档 = sorted(os.listdir(os.path.join(bk, "kept")))
+            self.assertEqual(len(热), COOKIE_BACKUP_KEEP)
+            self.assertEqual(len(热) + len(留档), COOKIE_BACKUP_KEEP + 3, "有备份不见了")
+            last = json.load(io.open(os.path.join(bk, 热[-1]), encoding="utf-8"))
             self.assertEqual(last[0]["value"], str(COOKIE_BACKUP_KEEP + 2))
+            # 挪走的那几份要还能读回来（这才是"当时里面到底是什么"的用途）
+            最早 = json.load(io.open(os.path.join(bk, "kept", 留档[0]), encoding="utf-8"))
+            self.assertEqual(最早[0]["value"], "0")
+
+    def test_主账号存盘不许动账号1的备份(self):
+        """反向哨兵：备份按前缀 glob 会把 `zhipin_cookies_1_*` 也算进主账号的名下，
+        于是主账号每存一次盘，账号1 就少一份备份。改按名字形状收口之后要盯住这条。"""
+        import tempfile
+        from boss_bot.browser_launcher import backup_cookie_file, COOKIE_BACKUP_KEEP
+        with tempfile.TemporaryDirectory() as td:
+            bk = os.path.join(td, "bk")
+            os.makedirs(bk)
+            别人 = os.path.join(bk, "zhipin_cookies_1_20261019_140120_0076.json")
+            with io.open(别人, "w", encoding="utf-8") as f:
+                json.dump([_auth_cookie(value="账号1的会话")], f)
+            for i in range(COOKIE_BACKUP_KEEP + 2):
+                target = os.path.join(td, "zhipin_cookies.json")
+                with io.open(target, "w", encoding="utf-8") as f:
+                    json.dump([_auth_cookie(value="主账号%d" % i)], f)
+                backup_cookie_file(target, bk)
+            self.assertTrue(os.path.exists(别人), "账号1 的备份被动过了")
+            self.assertNotIn(os.path.basename(别人),
+                             os.listdir(os.path.join(bk, "kept")) if os.path.isdir(
+                                 os.path.join(bk, "kept")) else [])
 
     def test_save_cookies落盘前先备份(self):
         """覆盖写是今天真正丢会话的那一步，必须留底"""

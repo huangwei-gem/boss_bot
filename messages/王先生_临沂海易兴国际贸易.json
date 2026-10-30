@@ -1,0 +1,89 @@
+{
+  "chat_name": "王先生",
+  "chat_id": "王先生#临沂海易兴国际贸易",
+  "account_index": 0,
+  "job_name": "兼职·数据标注专员100-150元/天临沂",
+  "company": "临沂海易兴国际贸易",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "14:19",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397988652729089",
+      "block": "14:19 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "3D拉框了解吗",
+      "time": "17:23",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398741614330626",
+      "block": "17:23 3D拉框了解吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "3D拉框了解吗"
+    },
+    {
+      "sender": "bot",
+      "content": "有做过哈，3D点云拉框标注，配合激光雷达和相机数据对齐做过几个批次，可以接。",
+      "text": "有做过哈，3D点云拉框标注，配合激光雷达和相机数据对齐做过几个批次，可以接。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 17:29:06",
+      "time": "17:29",
+      "job_name": "兼职·数据标注专员100-150元/天临沂查看职位",
+      "isFriend": false,
+      "mid": "398742936646400"
+    },
+    {
+      "text": "好",
+      "time": "昨天 20:31",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "399141640147713",
+      "block": "昨天 20:31 好",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好"
+    },
+    {
+      "text": "一天能做几个小时",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "399141684220672",
+      "block": "一天能做几个小时",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "一天能做几个小时"
+    },
+    {
+      "sender": "bot",
+      "content": "我时间比较灵活，正常一天能做6-8小时，工作日也能配合哈。",
+      "text": "我时间比较灵活，正常一天能做6-8小时，工作日也能配合哈。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-24 12:13:21",
+      "time": "12:13",
+      "job_name": "兼职·数据标注专员100-150元/天临沂查看职位",
+      "isFriend": false,
+      "mid": "400080906781441"
+    }
+  ],
+  "updated_at": "2026-10-25 02:03:38",
+  "unread_on_boss": 0
+}

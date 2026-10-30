@@ -1,0 +1,36 @@
+{
+  "chat_name": "蒋立珍",
+  "chat_id": "蒋立珍#临港实验室",
+  "account_index": 1,
+  "job_name": "真实世界数据：数据分析-机器学习工程师10-15K上海查看职位",
+  "company": "临港实验室",
+  "messages": [
+    {
+      "text": "",
+      "time": "10:56",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397938678702080",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据分析和AI辅助标注流程搭建，看到贵司数据分析岗位需求，方便的话我把简历发您细聊",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397938850365446",
+      "block": "送达 您好，我是统计学专业在读生，擅长数据分析和AI辅助标注流程搭建，看到贵司数据分析岗位需求，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据分析和AI辅助标注流程搭建，看到贵司数据分析岗位需求，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 13:47:33"
+}

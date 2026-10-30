@@ -9,16 +9,17 @@
 
 使用方式：
     python app.py
-    # 访问 http://localhost:5000
+    # 起来后终端打出访问地址；默认口只有一个出处（boss_bot/unified_config.py 的 面板默认端口），
+    # BOSS_PANEL_PORT 能顶掉它。
 """
 
 import os
 import sys
 import io
+import gzip
 import json
 import uuid
 import shutil
-import tempfile
 import logging
 import warnings
 from logging.handlers import TimedRotatingFileHandler
@@ -38,8 +39,6 @@ if sys.stderr.encoding != 'utf-8':
 
 from flask import Flask, render_template, jsonify, request, send_file, abort
 from flask_socketio import SocketIO, emit
-from access_guard import COOKIE名 as _COOKIE名, 放行 as _放行
-from access_guard import 已有面板在跑 as _已有面板在跑
 
 # 抑制警告
 warnings.filterwarnings("ignore", category=UserWarning, module="urllib3")
@@ -51,22 +50,33 @@ logging.getLogger('werkzeug').setLevel(logging.ERROR)
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+# access_guard 现在要从 boss_bot 取"面板默认口"这一个数，所以这三行必须排在
+# sys.path 那行后面（排在前面就是 ImportError，面板根本起不来）。
+from access_guard import COOKIE名 as _COOKIE名, 放行 as _放行          # noqa: E402
+from access_guard import 已有面板在跑 as _已有面板在跑                  # noqa: E402
+from access_guard import 默认面板端口 as _默认面板端口                   # noqa: E402
+
 # 必须排在 sys.path 那一行后面：app.py 是直接在 flask-version/ 下跑的，
 # 提前 import boss_bot.* 会 ModuleNotFoundError，面板起都起不来（实测踩过）
 from boss_bot.safe_log import SafeTimedRotatingFileHandler
 
 from boss_bot.unified_config import (
     account_file,
-    UnifiedConfig, BASE_DIR, BOT_CONFIG_FILE, USER_PROFILE_FILE,
-    OVERRIDES_FILE,
+    UnifiedConfig, BASE_DIR,
     load_config, save_config, save_overrides, validate_config,
     ACCOUNT_OVERLAY_LOCKED, ACCOUNT_OVERLAY_SECTIONS, diff_against,
     write_json_atomic,
 )
+# 路径必须按 uc.<名> 现取，不能 from ... import BOT_CONFIG_FILE 这样按值绑进本模块：
+# 实测实例会把这几个常量顶到临时目录（BOSS_BOT_CONFIG 也是同一处开关），
+# 按值绑的那份还指着仓库根，于是 /api/rules、/api/templates 明明跑在沙箱里，
+# 却把用户真正的 bot_config.json 写了（10-20 实测脚本复现：12 条重要关键词被抹成空）
+from boss_bot import unified_config as uc
 from boss_bot.judgement_review import apply_suggestion, build_review
 from boss_bot.greet_engine import account_greeting_ready, account_greeting_mode
 from boss_bot.greeting import compose_account_default, ensure_account_default
-from boss_bot.main_loop import UnifiedBotLoop, MultiAccountManager, apply_headless_config
+from boss_bot.main_loop import (UnifiedBotLoop, MultiAccountManager, apply_headless_config,
+                                挪走过期归档, 归档盒, 过期归档去处名)
 from boss_bot.self_evolve import SelfEvolveEngine
 from boss_bot.browser_launcher import browser_mode, detect_available_browsers
 from boss_bot.reply_record import (
@@ -75,13 +85,26 @@ from boss_bot.reply_record import (
     _get_reply_store, _get_greet_store,
 )
 from boss_bot.message_store import MessageStore
-from boss_bot.contact_ledger import contact_rows
+from boss_bot.contact_ledger import contact_rows, contact_stats
+from boss_bot import ai_screen_doc
+from boss_bot import screen_runner
 
 # ===================== 日志缓冲区 =====================
 
 MAX_LOGS = 200
 log_buffer = []
 log_buffer_lock = threading.Lock()
+
+
+def _now() -> str:
+    """bot_log 事件里的时间戳。
+
+    这八个调用点（start_all / stop_all / confirm_login）以前用的是一个从来没
+    定义过的 `_now()`：谁发这几个事件，第一句 emit 就 NameError，界面收不到任何
+    回执——「我已登录」的 socket 那条路正是这样哑掉的。名字留着、定义补上，
+    两条回执路径（HTTP 和 socket）才都活着。
+    """
+    return datetime.now().strftime("%H:%M:%S")
 
 
 class WebLogHandler(logging.Handler):
@@ -127,6 +150,18 @@ file_handler.setFormatter(logging.Formatter(
 # 根日志级别设为 DEBUG，让文件处理器能收到所有日志
 root_logger = logging.getLogger()
 root_logger.setLevel(logging.DEBUG)
+# 但第三方不许跟着一起灌。现测 logs/boss_bot.log（10-25 那趟，40188 行）：
+#   "Converted retries value: 0 -> Retry(total=0…"   6236 行 15.5%
+#   "Starting new HTTP connection (1): 127.0.0.1"    3118 行  7.8%
+#   'http://127.0.0.1:9222 "GET /json HTTP/1.1" 200' 3109 行  7.7%
+# 三条合起来 31% 的日志是 urllib3/requests 在播报"我又连了一次 CDP 端口"——
+# DrissionPage 每轮都走这个端口，它自己就是 HTTP 客户端。主日志要回答的是
+# "谁把投递停了"，这种流水既挤掉真话（10-23 那次 20MB 截断先淹的就是人看的行），
+# 也把 grep 变成大海捞针。自己的 boss_bot.*/boss-web 仍然留 DEBUG；
+# DrissionPage 自己没量过，不动它——只钉实测在刷屏的这一族。
+for _闹的在 in ("urllib3", "requests", "httpcore", "httpx", "hpack",
+                "selenium", "websocket", "charset_normalizer"):
+    logging.getLogger(_闹的在).setLevel(logging.WARNING)
 # 关键修复：避免重复添加 handler 导致日志重复输出。
 # 检查是否已存在相同类型的 handler，存在则不重复添加。
 _has_web_handler = any(isinstance(h, WebLogHandler) for h in root_logger.handlers)
@@ -227,8 +262,47 @@ def _记住访客口令(response):
                             max_age=30 * 86400)
     return response
 
-# ===================== 全局状态 =====================
 
+# 岗位池一次要吐 3151 行、2.9 MB（2026-10-30 现测），首页那份 HTML 431 KB：
+# 本机带宽从来不是瓶颈，瓶颈是浏览器要把这几兆解析完再铺进 DOM——他点一下等好几秒，
+# 那就是"卡"。压缩是一条零语义改动的路：浏览器透明解压，前端一行都不用改。
+_可压类型 = ("application/json", "text/html", "text/css", "javascript")
+_压缩最小字节 = 2048
+
+
+@app.after_request
+def _压文本响应(响应):
+    """只压面板自己看的文本：文件下载（direct_passthrough / Content-Disposition）、
+    已经编码过的、小的、非 200 的一律原样发。压不动（比原文还长）就发原文，不硬来。
+
+    Content-Disposition 这一条不是保险起见：导出 Excel 那六个口是 send_file 发的，
+    带 Range 的部分请求—— gzip 之后再按字节范围切就对不上，压坏了没人报错。
+    """
+    try:
+        if (响应.direct_passthrough or 响应.status_code != 200
+                or "gzip" not in (request.headers.get("Accept-Encoding") or "")
+                or "Content-Encoding" in 响应.headers
+                or "Content-Disposition" in 响应.headers):
+            return 响应
+        类型 = (响应.headers.get("Content-Type") or "").lower()
+        if not any(t in 类型 for t in _可压类型):
+            return 响应
+        正文 = 响应.get_data()
+        if len(正文) < _压缩最小字节:
+            return 响应
+        压 = gzip.compress(正文, 6)
+        if len(压) >= len(正文):
+            return 响应
+        响应.set_data(压)
+        响应.headers["Content-Encoding"] = "gzip"
+        响应.headers["Content-Length"] = str(len(压))
+        响应.headers["Vary"] = "Accept-Encoding"
+    except Exception as e:
+        # 压不成不拦路：原样发出去，宁可大一点也不要白屏
+        logger.debug("响应压缩没做成，原样发出: %s" % e)
+    return 响应
+
+# ===================== 全局状态 =====================
 _multi_manager: Optional[MultiAccountManager] = None
 _config: Optional[UnifiedConfig] = None
 # 已加载那份配置对应的文件指纹，用来发现"文件被别处改了"
@@ -249,6 +323,55 @@ COOKIE_DIR = PROJECT_ROOT / "data"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 DASHBOARD_DIR.mkdir(parents=True, exist_ok=True)
 
+# ===================== 清空/删除类出口的统一留底 =====================
+# 他对用户数据只认一条口径：**只挪走，不删**（data/archive_kept/、logs/kept/、
+# data/cookie_backups/kept/ 都是这一族）。面板上那几个"清空"以前是真删：
+# 记录文件被 clear_all() 重写成空表、图片直接 unlink、日志 write_text("")——
+# 事后想查"那几天到底投了什么"就没了。下面两个函数是这些出口唯一的公共动作：
+# 先把整份数据落进 data/kept/，再按各自语义清空/搬走；并且**必须带 confirm** 才动手。
+留档根 = DATA_DIR / "kept"
+清空口令 = "挪走"
+
+
+def _先留一份(路径, 类别="记录"):
+    """把即将被动到的数据文件整份复制进 data/kept/，返回留档路径（没留成返回 ""）。
+
+    复制而不是移动：主日志、记录文件都被进程自己开着，Windows 下搬走会立刻 WinError 32。
+    """
+    try:
+        源 = Path(str(路径))
+        if not 源.exists() or not 源.is_file():
+            return ""
+        留档根.mkdir(parents=True, exist_ok=True)
+        章 = time.strftime("%Y%m%d_%H%M%S")
+        落 = 留档根 / ("%s_%s_%s" % (类别, 章, 源.name))
+        序 = 0
+        while 落.exists():
+            序 += 1
+            落 = 留档根 / ("%s_%s_%s_%d" % (类别, 章, 源.name, 序))
+        shutil.copy2(str(源), str(落))
+        return str(落)
+    except OSError as e:
+        logger.warning("留底失败（%s: %s）：%s —— 宁可不执行清空，也不能把数据清没了又没留底",
+                       type(e).__name__, str(e)[:60], 路径)
+        return ""
+
+
+def _要挪走() -> bool:
+    """清空类接口必须显式带 {"confirm": "挪走"}。
+
+    理由不是防机器人，是防"顺手点一下"：这些按钮清的是他求职全过程的记录。
+    没带口令就当误操作回 400，并把该发什么写在 message 里。
+    """
+    收 = request.get_json(silent=True) or {}
+    return str(收.get("confirm") or "").strip() == 清空口令
+
+
+def _没带口令的答复():
+    return jsonify({"status": "error",
+                    "message": "这一步会把数据挪进 data/kept/，需要显式确认："
+                               "请求体带 {\"confirm\": \"%s\"} 才执行" % 清空口令}), 400
+
 # ===================== 风控通知持久化 =====================
 
 # 全局通知列表（最新的在前），每条通知结构：
@@ -256,8 +379,15 @@ DASHBOARD_DIR.mkdir(parents=True, exist_ok=True)
 _notifications: list[dict] = []
 # 通知列表最大容量，超过自动删除最旧的
 _MAX_NOTIFICATIONS = 200
-# 通知持久化文件路径
-_NOTIFICATIONS_FILE = os.path.join(os.path.dirname(__file__), "..", "notifications.json")
+# 通知持久化文件：路径只有一个出处（boss_bot/config.py 的 NOTIFY_FILE，落 data/），
+# 而且每次用到都现读。以前这里自己拼 "flask-version/../notifications.json"，
+# 于是 e2e_api 里那句 `C.NOTIFY_FILE = tmp / "notifications.json"` 罩不住这条出口——
+# 那 100 项一直在往仓库根写通知（根目录那份 28KB 的 notifications.json 就是这么来的）。
+def _通知文件() -> str:
+    from boss_bot import config as _bot_config
+    return str(_bot_config.NOTIFY_FILE)
+
+
 # 通知列表读写锁，避免并发写入冲突
 _notifications_lock = threading.Lock()
 
@@ -265,9 +395,10 @@ _notifications_lock = threading.Lock()
 def _load_notifications():
     """启动时从 notifications.json 加载持久化通知。"""
     global _notifications
+    路径 = _通知文件()
     try:
-        if os.path.exists(_NOTIFICATIONS_FILE):
-            with open(_NOTIFICATIONS_FILE, "r", encoding="utf-8") as f:
+        if os.path.exists(路径):
+            with open(路径, "r", encoding="utf-8") as f:
                 data = json.load(f)
             if isinstance(data, list):
                 _notifications = data
@@ -278,7 +409,7 @@ def _load_notifications():
 def _save_notifications():
     """将当前通知列表持久化到 notifications.json。"""
     try:
-        write_json_atomic(_NOTIFICATIONS_FILE, _notifications)
+        write_json_atomic(_通知文件(), _notifications)
     except Exception:
         pass
 
@@ -314,26 +445,45 @@ def _add_notification(ntype: str, message: str,
         _save_notifications()
 
 
-def _config_stamp():
-    """bot_config.json 的 (修改时间, 大小)，读不到返回 None。"""
+def _配置文件清单():
+    """配置是三份文件合起来的：bot_config + user_profile + config_overrides。
+
+    2026-10-20 只盯着 bot_config 一份，实测脚本把 config_overrides 里的
+    importance_keywords 清成 []、我从 git 恢复之后面板仍报 0 条——覆盖层动了不触发重读，
+    「收到重要消息就暂停回复」就一直用启动时那份脏值。
+    """
     import boss_bot.unified_config as uc
-    try:
-        st = os.stat(uc.BOT_CONFIG_FILE)
-        return (st.st_mtime_ns, st.st_size)
-    except OSError:
+    return (uc.BOT_CONFIG_FILE, uc.USER_PROFILE_FILE, uc.OVERRIDES_FILE)
+
+
+def _config_stamp():
+    """每份配置文件的 (修改时间, 大小)；三份都读不到才返回 None。"""
+    指纹 = []
+    for 路径 in _配置文件清单():
+        try:
+            st = os.stat(路径)
+            指纹.append((st.st_mtime_ns, st.st_size))
+        except OSError:
+            指纹.append(None)
+    if all(x is None for x in 指纹):
         return None
+    return tuple(指纹)
 
 
 def _config_file_parses() -> bool:
-    """文件现在能不能解析。UnifiedConfig.load() 读不动时会静默退回默认值，
-    直接拿它覆盖内存里那份好配置，界面就会突然变成出厂设置。"""
-    import boss_bot.unified_config as uc
-    try:
-        with open(uc.BOT_CONFIG_FILE, "r", encoding="utf-8") as f:
-            json.load(f)
-        return True
-    except Exception:
-        return False
+    """每一份都能解析才算好。UnifiedConfig.load() 读不动哪一份就静默跳过哪一份，
+    覆盖层或画像坏了会退回出厂默认值，直接拿它覆盖内存里那份好配置，
+    界面就会突然变成出厂设置。
+    """
+    for 路径 in _配置文件清单():
+        if not os.path.exists(str(路径)):
+            continue
+        try:
+            with open(路径, "r", encoding="utf-8") as f:
+                json.load(f)
+        except Exception:
+            return False
+    return True
 
 
 def _ensure_config() -> UnifiedConfig:
@@ -351,9 +501,9 @@ def _ensure_config() -> UnifiedConfig:
     elif stamp is not None and stamp != _config_stamp_cached:
         if _config_file_parses():
             _config = UnifiedConfig.load()
-            logger.info("检测到 bot_config.json 被外部改动，已重新加载")
+            logger.info("检测到配置文件被外部改动，已重新加载")
         else:
-            logger.warning("bot_config.json 被改动但当前内容解析不了，"
+            logger.warning("配置文件被改动但当前内容解析不了，"
                            "暂继续用内存里那份配置")
         _config_stamp_cached = stamp
     if _ensure_greeting_defaults(_config):
@@ -575,10 +725,64 @@ def api_debug_stacks():
             {"Content-Type": "text/plain; charset=utf-8"})
 
 
+# /api/status 每一次都要答"这台浏览器此刻在不在跑"，而这一问在端口没人应答的时候
+# 要等两秒。2026-10-30 现测：主账号 9222 没起，`curl /api/status` 稳定 2.024s，
+# 单独探那个端口 2.022s——整个接口的耗时就是那一次 urlopen；账号2 的 9223 答话只花
+# 6 毫秒。这个接口是界面点一下就要问的（启动/停止/切号/确认登录之后都问），
+# 慢两秒就是他说的"卡"。所以：答案按端口缓存几秒，过期了**先给旧的那份**，
+# 另起一个线程去问新的——HTTP 这条路一次都不等浏览器。
+# 代价说清楚：状态点最多晚 5 秒才变（原来每问一次都要等两秒，也谈不上更准）。
+_形态缓存 = {}
+_形态在刷 = set()
+_形态锁 = threading.Lock()
+_形态TTL秒 = 5.0
+
+
+def _刷形态(端口: int) -> None:
+    """后台线程里去问一次真的，问完把答案放回缓存。"""
+    try:
+        结果 = browser_mode(端口)
+        with _形态锁:
+            _形态缓存[端口] = (time.time(), 结果)
+    except Exception as e:
+        logger.debug("后台刷新端口 %s 的浏览器形态失败: %s" % (端口, e))
+    finally:
+        with _形态锁:
+            _形态在刷.discard(端口)
+
+
+def _浏览器形态(端口: int) -> dict:
+    """给 /api/status 用的"现成答案"：绝不在请求线程里等浏览器。
+
+    面板刚起来那一次没有旧答案可给，那一次只能自己等——之后就再也不会。
+    """
+    现在 = time.time()
+    with _形态锁:
+        旧 = _形态缓存.get(端口)
+        if 旧 and 现在 - 旧[0] < _形态TTL秒:
+            return dict(旧[1])
+        抢到 = 端口 not in _形态在刷
+        if 抢到:
+            _形态在刷.add(端口)
+    if 旧:
+        if 抢到:
+            threading.Thread(target=_刷形态, args=(端口,), daemon=True).start()
+        return dict(旧[1])
+    try:
+        结果 = dict(browser_mode(端口))
+    finally:
+        if 抢到:
+            with _形态锁:
+                _形态在刷.discard(端口)
+    with _形态锁:
+        _形态缓存[端口] = (time.time(), 结果)
+    return 结果
+
+
 def _enrich_status(data: dict) -> dict:
     """给每个账号补 cookie 字段，前端状态点因此能随轮询自己更新。
 
-    browser 那一栏补的是**此刻真跑着的是什么**（在不在、是不是无头、哪个端口）：
+    browser 那一栏补的是**最近一次探到的**是什么（在不在、是不是无头、哪个端口）：
     "无头"开关说的只是配置，浏览器是启动那一刻定型的，两者可以不一致
     （改完没重启、或者那个端口上根本是别人的浏览器）。
     """
@@ -592,7 +796,7 @@ def _enrich_status(data: dict) -> dict:
             try:
                 # 端口按配置算，别写死 9222：改过 debug_port 之后形态和端口就都对不上了
                 # （按号覆盖里的 debug_port 是被锁住的，端口只能由基准 + 账号序号算）
-                acc["browser"] = browser_mode(基准端口 + int(idx))
+                acc["browser"] = _浏览器形态(基准端口 + int(idx))
             except Exception as e:
                 logger.debug(f"读账号{idx}浏览器形态失败: {e}")
     except Exception:
@@ -603,15 +807,17 @@ def _enrich_status(data: dict) -> dict:
 # ===================== 启动/停止 API =====================
 
 def _control_trace():
-    """是谁按的启动/停止：来源 IP、UA、数据范围。
+    """是谁按的启动/停止/形态切换：来源 IP、数据范围、UA、referer。
 
     2026-10-04 20:44 两个号的投递轮被一次停止打断，事后查不到是谁发的
     （werkzeug 的访问日志不进 boss_bot.log），只能靠这条留痕。
+    scope 也带上：同一个浏览器里点了哪个数据范围，出事时要能分清是号1 还是全部。
     """
-    ua = (request.headers.get("User-Agent") or "")[:90]
-    return (f"来源={request.remote_addr} scope={request.args.get('scope')}"
-            f" referer={(request.headers.get('Referer') or '')[-40:]}"
-            f" ua={ua}")
+    return "%s scope=%s ua=%s referer=%s" % (
+        request.remote_addr,
+        request.args.get("scope"),
+        (request.headers.get("User-Agent") or "-")[:60],
+        (request.headers.get("Referer") or "-")[:60])
 
 
 def _ensure_status_pusher():
@@ -623,18 +829,6 @@ def _ensure_status_pusher():
     _status_stop.clear()
     _status_thread = threading.Thread(target=_status_pusher, daemon=True)
     _status_thread.start()
-
-
-def _control_trace():
-    """启停这种"会把投递打断"的动作，必须能从日志里回溯到是谁发的。
-
-    2026-10-04 20:44 两个号的轮次被一次停止请求打断，事后查不到来源，
-    只能靠 werkzeug 的访问日志（默认没进 boss_bot.log）。这里补一条。
-    """
-    return "%s ua=%s referer=%s" % (
-        request.remote_addr,
-        (request.headers.get("User-Agent") or "-")[:60],
-        (request.headers.get("Referer") or "-")[:60])
 
 
 @app.route("/api/start", methods=["POST"])
@@ -952,13 +1146,33 @@ def api_account_check_cookie(idx: int):
                 "cookie_file": cookie_file_name,
             })
 
+        # 这个号的浏览器正在跑：直接问它，绝不再另起一台多撞两次整页加载。
+        # 探测那一路要发 主站 + 会话页 两发，而两个号本来就挤在同一个出口 IP 上
+        # （10-23~10-25 三天日志里能数出来的整页加载共 792 次），所以"检测登录态"
+        # 这件本来只读的事，不该变成替风控多记两笔异常访问。
+        live = _live_login_state(idx)
+        if live:
+            说法 = {"logged_in": ("浏览器实测：页面在 BOSS 内页且登录项未过期", True),
+                    "need_login": ("浏览器实测：这个浏览器现在停在登录页，登录态已失效", False),
+                    }.get(live, ("浏览器实测：地址与登录项两路证据对不上，看不准", None))
+            return jsonify({
+                "status": "ok",
+                "valid": 说法[1],
+                "logged_in": 说法[1] is True,
+                "reason": 说法[0],
+                "current_url": "",
+                "checks": {"live_browser": True},
+                "cookie_file": cookie_file_name,
+                "source": live,
+            })
+
         # 启动浏览器做完整检测。
         # 端口和 profile 都必须另开一份：留空会让 DrissionPage 退回默认的 9222，
         # 于是"点一下检测账号2的Cookie"其实是连进主账号正在投递的浏览器里翻页面，
         # 顺手把 Cookie 文件里的旧会话注进去。检测环境还要跟生产一致（headless
         # 照抄配置），否则无头被 BOSS 拦出来的假"失效"会把好 Cookie 判死。
         browser_cfg = cfg.browser
-        probe_profile = tempfile.mkdtemp(prefix="boss_cookie_check_")
+        probe_profile = str(uc.新建临时目录("cookie_check"))
         try:
             result = check_cookie_valid(
                 cookie_file=cookie_file_path,
@@ -1144,16 +1358,10 @@ def api_get_config():
         "resume_duplicate_reply": cfg.templates.resume_duplicate_reply,
         "resume_unavailable_reply": cfg.templates.resume_unavailable_reply,
     }
-    # 添加 greet.rate_limit 字段，兼容前端 config.greet.rate_limit 访问路径
-    # （to_dict() 顶层已有 rate_limit，但前端部分代码会读写 config.greet.rate_limit）
-    if "greet" not in config_dict:
-        config_dict["greet"] = {}
-    config_dict["greet"]["rate_limit"] = {
-        "enabled": cfg.greet.rate_limit.enabled,
-        "max_per_hour": cfg.greet.rate_limit.max_per_hour,
-        "max_per_day": cfg.greet.rate_limit.max_per_day,
-    }
-    config_dict["greet"]["enabled"] = cfg.greet.enabled
+    # greet 段（enabled / capture_only）to_dict() 已经发在顶层，这里不再另造一份
+    # 镜像：以前多写的那个 config.greet.rate_limit 界面读得到、加载器根本不读，
+    # 结果「每小时最多打招呼」有两颗输入框、只有一颗管用。每小时上限的
+    # 唯一出口是顶层 config.rate_limit.max_per_hour。
     return jsonify({"status": "ok", "config": config_dict})
 
 
@@ -1266,22 +1474,23 @@ def api_logs_file():
         date_str = request.args.get("date", datetime.now().strftime("%Y-%m-%d"))
         lines = request.args.get("lines", 200, type=int)
 
-        # 构造日志文件路径
-        if date_str == datetime.now().strftime("%Y-%m-%d"):
-            log_file = LOG_DIR / "boss_bot.log"
-        else:
-            log_file = LOG_DIR / f"boss_bot.log.{date_str}"
+        # 构造日志文件路径：出窗口的已经挪进 logs/kept/（还被压过一轮），按死路径找
+        # 会把"换了地方"报成"这天没日志"，按纯文本读会把 .gz 读成一片乱码
+        from log_retention import 日志文件, 读日志文本
 
-        if not log_file.exists():
+        今天 = datetime.now().strftime("%Y-%m-%d")
+        log_file = 日志文件(LOG_DIR, None if date_str == 今天 else date_str)
+
+        if log_file is None or not log_file.exists():
             return jsonify({
                 "status": "ok",
                 "date": date_str,
                 "lines": [],
-                "message": f"日志文件不存在: {log_file.name}",
+                "message": f"logs/ 和 logs/kept/ 里都没有这天的日志: {date_str}",
             })
 
         # 读取最后 N 行
-        all_lines = log_file.read_text(encoding="utf-8").splitlines()
+        all_lines = 读日志文本(log_file).splitlines()
         recent_lines = all_lines[-lines:] if len(all_lines) > lines else all_lines
 
         return jsonify({
@@ -1289,6 +1498,7 @@ def api_logs_file():
             "date": date_str,
             "lines": recent_lines,
             "total": len(all_lines),
+            "所在": str(log_file.relative_to(LOG_DIR)),
         })
     except Exception as e:
         logger.exception("读取文件日志失败")
@@ -1297,22 +1507,62 @@ def api_logs_file():
 
 @app.route("/api/logs/clear", methods=["POST"])
 def api_logs_clear():
-    """清空日志文件和前端日志缓冲。"""
+    """清掉前端日志缓冲和日志文件——内容先整份落进 logs/kept/，一个字节都不丢。
+
+    两条实现细节都是踩过坑的：
+    ① 正在写的那份不能 `shutil.move`（进程自己握着句柄，Windows 报 WinError 32），
+       只能复制一份进 kept/ 再截断；
+    ② 截断必须让 handler **关掉再重开自己的流**，否则它的写偏移还停在旧长度上，
+       下一行会把文件撑成一片 NUL——那份日志就再也读不动了。
+    """
+    if not _要挪走():
+        return _没带口令的答复()
     try:
-        # 清空前端日志缓冲
         with log_buffer_lock:
             log_buffer.clear()
-        # 清空日志文件内容（不删除文件本身）
-        for log_file in LOG_DIR.iterdir():
-            if log_file.is_file() and log_file.name.endswith(".log"):
-                try:
-                    log_file.write_text("", encoding="utf-8")
-                except Exception:
-                    pass
-        logger.info("日志已清空")
-        return jsonify({"status": "ok", "message": "日志已清空"})
+        留档 = LOG_DIR / "kept"
+        留档.mkdir(parents=True, exist_ok=True)
+        章 = time.strftime("%Y%m%d_%H%M%S")
+        清了 = 搬了 = 0
+        for 文 in sorted(LOG_DIR.iterdir()):
+            if not 文.is_file() or ".log" not in 文.name:
+                continue
+            落 = 留档 / ("%s_%s" % (章, 文.name))
+            try:
+                if 文.name.endswith(".log"):
+                    shutil.copy2(str(文), str(落))
+                    _截断并重开(文)
+                    清了 += 1
+                else:
+                    shutil.move(str(文), str(落))     # dated 归档没人握句柄，直接挪走
+                    搬了 += 1
+            except OSError as e:
+                logger.warning("日志留底失败（%s：%s），这一份原样留着不动",
+                               文.name, str(e)[:60])
+        logger.info("日志清空：清空 %d 份、挪走 %d 份归档，整份留在 %s", 清了, 搬了, 留档)
+        return jsonify({"status": "ok",
+                        "message": "日志已清空：%d 份内容留在 logs/kept/，%d 份归档已挪走"
+                                   % (清了, 搬了),
+                        "kept_dir": str(留档), "cleared": 清了, "moved": 搬了})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+def _截断并重开(文):
+    """截断之前先把握着这个文件的 handler 流关掉，截完再重开。"""
+    for h in list(logging.getLogger().handlers):
+        基 = getattr(h, "baseFilename", None)
+        if 基 and Path(基).resolve() == Path(文).resolve():
+            try:
+                if getattr(h, "stream", None):
+                    h.stream.close()
+            except OSError:
+                pass
+    Path(文).write_text("", encoding="utf-8")
+    for h in list(logging.getLogger().handlers):
+        基 = getattr(h, "baseFilename", None)
+        if 基 and Path(基).resolve() == Path(文).resolve() and hasattr(h, "_open"):
+            h.stream = h._open()
 
 
 # ===================== 统计 API =====================
@@ -1404,8 +1654,11 @@ def api_cookies_delete():
             # 界面点"删除"也不许真删：Cookie 是用户唯一的登录会话凭据，
             # 删错了连"当时里面是什么"都查不回来（2026-09-29 就是这么丢的）
             from boss_bot.main_loop import archive_cookie_file
+            # 归档目录必须现算：以前这里写的是裸 resolve_path(...)，而这个文件里
+            # 从来没导入过它——点一下"删除"就 NameError，被 except 包成
+            # "name 'resolve_path' is not defined" 回给界面，看着像归档功能坏了
             dest = archive_cookie_file(str(cookie_path),
-                                       str(resolve_path(Path("data") / "stale_cookies")),
+                                       str(uc.resolve_path(Path("data") / "stale_cookies")),
                                        "界面删除_" + Path(safe_name).stem)
             return jsonify({"status": "ok",
                             "message": f"{safe_name} 已归档到 "
@@ -1515,7 +1768,7 @@ def api_save_profile():
         profile_data = data["profile"]
 
         # 保存到 user_profile.json
-        write_json_atomic(USER_PROFILE_FILE, profile_data)
+        write_json_atomic(uc.USER_PROFILE_FILE, profile_data)
 
         # 重新加载配置
         _config = UnifiedConfig.load()
@@ -1814,8 +2067,8 @@ def api_get_ai_prompts():
     """
     try:
         overrides = {}
-        if OVERRIDES_FILE.exists():
-            with open(OVERRIDES_FILE, "r", encoding="utf-8") as f:
+        if uc.OVERRIDES_FILE.exists():
+            with open(uc.OVERRIDES_FILE, "r", encoding="utf-8") as f:
                 overrides = json.load(f)
         prompts = {
             "system_rules": overrides.get("system_rules", "") or _DEFAULT_SYSTEM_RULES,
@@ -1841,8 +2094,8 @@ def api_save_ai_prompts():
         prompts = data.get("prompts", data)
 
         overrides = {}
-        if OVERRIDES_FILE.exists():
-            with open(OVERRIDES_FILE, "r", encoding="utf-8") as f:
+        if uc.OVERRIDES_FILE.exists():
+            with open(uc.OVERRIDES_FILE, "r", encoding="utf-8") as f:
                 overrides = json.load(f)
 
         if "system_rules" in prompts:
@@ -1850,7 +2103,7 @@ def api_save_ai_prompts():
         if "user_prompt_template" in prompts:
             overrides["user_prompt_template"] = prompts["user_prompt_template"]
 
-        write_json_atomic(OVERRIDES_FILE, overrides)
+        write_json_atomic(uc.OVERRIDES_FILE, overrides)
 
         return jsonify({"status": "ok", "message": "AI 提示词已保存"})
     except Exception as e:
@@ -2299,10 +2552,354 @@ def api_contact_ledger():
             chats = [c for c in chats if c.get("account_index") == account]
         rows = contact_rows(chats, _greet_rows_with_archive())
         return jsonify({"status": "ok", "total": len(rows),
-                        "account": account, "rows": rows})
+                        "account": account,
+                        "stats": contact_stats(rows), "rows": rows})
     except Exception as e:
         logger.exception("获取联系与简历台账失败")
         return jsonify({"status": "error", "message": str(e)}), 500
+
+
+def _池号(体: dict) -> int:
+    """池按号分开存，写接口必须说清是哪一号；说不清就拒，别默认主账号。
+
+    默认成 0 的话，他在界面上看着账号2 却把勾写进了主账号的池 —— 这类"改错了号"
+    比改错了字段难发现得多（两个号的岗位名是一样的）。
+    """
+    原 = (体 or {}).get("account")
+    if 原 is None or str(原).strip() == "":
+        raise ValueError("没给 account：池是按号分开存的，不能猜要改哪个号")
+    号 = int(原)
+    if 号 < 0:
+        raise ValueError("account 不能为负")
+    return 号
+
+
+def _匹配数(行s, 文档哈希: str) -> int:
+    """这份文件下判成「合」的行数——顶部那个「AI匹配」数字。
+
+    判据跟表头「判成合」那一格是同一句（`job_pool.AI匹配数`）：两处各写一套的话，
+    他会看见"AI匹配 12 条、筛出来 10 行"，然后花时间猜哪边在骗人。
+    """
+    from boss_bot.job_pool import AI匹配数
+    return AI匹配数(行s, 文档哈希)
+
+
+# 岗位池表头下面那一行：一格 = 一个 query 参数 = job_pool.筛行 的一个形参。
+# 这张表是界面、HTTP、判据三处唯一的对照面——漏一格要么"界面上有框、后端不认"，
+# 要么"后端认、界面上根本没有那个入口"（死参数）。逐格的门在
+# tests/test_job_pool_filters.py::界面后端与判据三处逐格对得上Test。
+_池筛参数 = (("status", "状态"), ("q", "关键字"), ("city", "城市"),
+             ("job", "岗位"), ("company", "公司"), ("note", "备注"),
+             ("ai_reason", "判分理由"), ("salary_min_k", "薪资下限K"),
+             ("ai_state", "AI档"), ("gate_state", "粗筛档"),
+             ("captured_within", "抓到天内"))
+
+
+@app.route("/api/job_pool")
+def api_job_pool():
+    """岗位候选池：抓来的岗位、本地粗筛标签、AI 精筛结论，加一份状态计数。
+
+    ?account=N 只看那一个号；不给（也就是界面的「全部账号」）就把各号的池并成一张表。
+    以前这一档直接回 400，而面板开机时数据范围就停在「全部账号」——他点完启动打开
+    这张表，看到的是一句"没有对应的那一份文件"，跟"一条都没抓到"长得一模一样。
+
+    筛条件在 `job_pool.筛行` 那一份里：单号与合并视图共用，两处各写一套的话，
+    同一条岗位换个数据范围筛出来的结果就不一样。城市清单和 AI 匹配数都按**整池**算，
+    不受当前筛选影响——下拉里得能选到每个城市。
+    """
+    try:
+        from boss_bot.job_pool import 岗位池, 排序行, 合计统计, 筛行, 城市清单
+        文档 = ai_screen_doc.当前()
+        文档哈希 = str(文档.get("hash") or "")
+        筛 = {中: request.args.get(英, "").strip() for 英, 中 in _池筛参数}
+        筛["文档指纹"] = 文档哈希        # 不算表头的一格：那是"现在按哪份要求判的"
+        排序 = request.args.get("sort", "分降")
+        # 一页就够：两号并起来 3151 行、2.9 MB（2026-10-30 现测），前端把三千行铺进
+        # DOM 之后每滚一下都要重排——那就是他说的"卡"。limit=0 才给全部（体检脚本用）。
+        # 这两个数是地址栏和脚本里拼出来的：读不懂就当没给，不能把整个接口顶成 500。
+        def _整数(名, 默认):
+            try:
+                return int(str(request.args.get(名) or 默认))
+            except (TypeError, ValueError):
+                return 默认
+
+        每页 = max(0, _整数("limit", 200))
+        偏移 = max(0, _整数("offset", 0))
+        ai_doc = {"name": 文档.get("name") or "", "hash": 文档哈希,
+                  "chars": int(文档.get("chars") or 0)}
+        号 = _account_arg()
+        if 号 is not None:
+            池 = 岗位池(account_index=号)
+            全 = 池.列表()
+            份 = 池.统计()
+            if 文档哈希:
+                份["AI匹配"] = _匹配数(全, 文档哈希)
+            行s = 筛行(全, **筛)
+            排序行(行s, 排序)
+            return jsonify({"status": "ok", "account": 号, "total": len(行s),
+                            "rows": 行s[偏移:偏移 + 每页] if 每页 else 行s[偏移:],
+                            "offset": 偏移, "limit": 每页,
+                            "stats": 份, "cities": 城市清单(全),
+                            "ai_doc": ai_doc,
+                            "per_account": {str(号): 份}})
+        全行, 各号 = [], {}
+        for i, _ in enumerate(_ensure_config().greet.accounts):
+            池 = 岗位池(account_index=i)
+            行s0 = 池.列表()
+            全行.extend(行s0)
+            份 = 池.统计()
+            if 文档哈希:
+                份["AI匹配"] = _匹配数(行s0, 文档哈希)
+            各号[i] = 份
+        行s = 筛行(全行, **筛)
+        排序行(行s, 排序)
+        return jsonify({"status": "ok", "account": None, "total": len(行s),
+                        "rows": 行s[偏移:偏移 + 每页] if 每页 else 行s[偏移:],
+                        "offset": 偏移, "limit": 每页,
+                        "stats": 合计统计(各号.values()),
+                        "cities": 城市清单(全行), "ai_doc": ai_doc,
+                        "per_account": {str(i): 份 for i, 份 in 各号.items()}})
+    except Exception as e:
+        logger.exception("读岗位池失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/job_pool/update", methods=["POST"])
+def api_job_pool_update():
+    """改一条：状态 / 备注 / 置顶。写完由池自己回读，回读不到就不回 ok。
+
+    状态这一路走 标状态()（和「投递选中的」同一份留痕逻辑）：他一行一行点勾、
+    和成批点「投递选中的」得留下同一种痕迹（谁、什么时候、勾成了什么），
+    否则事后只能看到一个 status，分不清是他没勾过还是勾了没投。
+    """
+    try:
+        from boss_bot.job_pool import 岗位池
+        体 = request.get_json(silent=True) or {}
+        池 = 岗位池(account_index=_池号(体))
+        编号 = str(体.get("id") or "")
+        字段 = {键: 体[键] for 键 in ("note", "pinned") if 键 in 体}
+        if "status" not in 体 and not 字段:
+            return jsonify({"status": "error", "message": "没说要改哪个字段"}), 400
+        话s = []
+        if "status" in 体:
+            成, 话 = 池.标状态([编号], str(体["status"]))
+            if not 成:
+                return jsonify({"status": "error", "message": 话}), 400
+            话s.append(话)
+        if 字段:
+            成, 话 = 池.改(编号, **字段)
+            if not 成:
+                return jsonify({"status": "error", "message": 话}), 400
+            话s.append(话)
+        return jsonify({"status": "ok", "message": "；".join(话s),
+                        "row": 池.取(编号)})
+    except (ValueError, TypeError) as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+    except Exception as e:
+        logger.exception("改岗位池一条失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/job_pool/batch", methods=["POST"])
+def api_job_pool_batch():
+    """成批改状态 —— 界面那条「勾选投递」就是 status=selected 走这里。
+
+    只改状态，不在这里点「立即沟通」：投递由打招呼线程排空（见
+    UnifiedBotLoop._drain_apply_queue），HTTP 线程当场去开详情页会和抓取线程
+    抢同一张搜索页。
+    """
+    try:
+        from boss_bot.job_pool import 岗位池
+        体 = request.get_json(silent=True) or {}
+        池 = 岗位池(account_index=_池号(体))
+        编号s = [str(x) for x in (体.get("ids") or []) if str(x).strip()]
+        if not 编号s:
+            return jsonify({"status": "error", "message": "没给 ids"}), 400
+        成, 话 = 池.标状态(编号s, str(体.get("status") or ""))
+        if not 成:
+            return jsonify({"status": "error", "message": 话}), 400
+        return jsonify({"status": "ok", "message": 话, "stats": 池.统计()})
+    except (ValueError, TypeError) as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+    except Exception as e:
+        logger.exception("批量改岗位池失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/job_pool/delete", methods=["POST"])
+def api_job_pool_delete():
+    """删掉不要的行。删之前先回读确认，删不成要说删不成。"""
+    try:
+        from boss_bot.job_pool import 岗位池
+        体 = request.get_json(silent=True) or {}
+        池 = 岗位池(account_index=_池号(体))
+        编号s = [str(x) for x in (体.get("ids") or []) if str(x).strip()]
+        if not 编号s:
+            return jsonify({"status": "error", "message": "没给 ids"}), 400
+        成, 话 = 池.删(编号s)
+        if not 成:
+            return jsonify({"status": "error", "message": 话}), 400
+        return jsonify({"status": "ok", "message": 话, "stats": 池.统计()})
+    except (ValueError, TypeError) as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+    except Exception as e:
+        logger.exception("删岗位池失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/job_pool/add", methods=["POST"])
+def api_job_pool_add():
+    """手工补一条（在别处看到的岗位，粘个链接进来）。"""
+    try:
+        from boss_bot.job_pool import 岗位池
+        体 = request.get_json(silent=True) or {}
+        池 = 岗位池(account_index=_池号(体))
+        岗 = {"url": str(体.get("url") or "").strip(),
+              "job_name": str(体.get("job_name") or "").strip(),
+              "company": str(体.get("company") or "").strip(),
+              "salary": str(体.get("salary") or "").strip()}
+        成, 话 = 池.增(岗)
+        if not 成:
+            return jsonify({"status": "error", "message": 话}), 400
+        return jsonify({"status": "ok", "message": 话, "stats": 池.统计()})
+    except (ValueError, TypeError) as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+    except Exception as e:
+        logger.exception("手工加岗位进池失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+def _筛选账号们() -> list:
+    """池是按号存的：AI 自定义筛选要覆盖每个号的池（包括暂时没启用的号）。"""
+    return list(range(len(_ensure_config().greet.accounts)))
+
+
+def _筛选引擎(号: int):
+    """面板侧判分引擎：只做 AI 判分，不碰浏览器。
+
+    复用 GreetEngine 而不是另写一套 AI 客户端：容灾链、冷却表、体检跳过、
+    文档注入、缓存键都只住那一份，另写一套就会出现"面板判的和线程判的不一样"。
+    """
+    from boss_bot.greet_engine import GreetEngine
+    cfg = _ensure_config().apply_account(号)
+    if not cfg.ai.enabled:
+        raise RuntimeError("AI 没启用：先在左侧 AI 设置里打开")
+    if not (cfg.ai.providers or cfg.ai.api_key):
+        raise RuntimeError("一个 AI 接口都没有：先加接口")
+    return GreetEngine(None, cfg, account_index=号,
+                       log_callback=lambda m: logger.info("[AI筛选] %s", m))
+
+
+def _ai_screen_统计(哈希: str) -> dict:
+    """按"当前这份文件"计：判过 / 匹配 / 还待判 / 本地粗筛已否跳过。"""
+    from boss_bot.job_pool import 岗位池
+    出 = {"total": 0, "judged": 0, "matched": 0, "pending": 0, "skipped": 0}
+    for 号 in _筛选账号们():
+        for r in 岗位池(account_index=号).列表():
+            出["total"] += 1
+            判 = r.get("ai") or {}
+            粗 = r.get("gate") or {}
+            本版 = (bool(判.get("判于")) and not 判.get("接口异常")
+                    and str(判.get("doc") or "") == str(哈希 or ""))
+            if 本版:
+                出["judged"] += 1
+                if 判.get("合") is True:
+                    出["matched"] += 1
+            elif str(粗.get("否决命中") or "").strip() or 粗.get("方向命中") is False:
+                出["skipped"] += 1
+            else:
+                出["pending"] += 1
+    return 出
+
+
+@app.route("/api/ai_screen_doc")
+def api_ai_screen_doc_get():
+    """他给的那份筛选要求：存了什么、按它判了多少、匹配多少、还在跑没有。"""
+    try:
+        文档 = ai_screen_doc.当前()
+        哈希 = str(文档.get("hash") or "")
+        stats = _ai_screen_统计(哈希) if 哈希 else {
+            "total": 0, "judged": 0, "matched": 0, "pending": 0, "skipped": 0}
+        return jsonify({"status": "ok", "doc": 文档, "stats": stats,
+                        "run": screen_runner.状态()})
+    except Exception as e:
+        logger.exception("读 AI 筛选要求失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/ai_screen_doc/parse", methods=["POST"])
+def api_ai_screen_doc_parse():
+    """先把文件读成文字给他看一眼（不保存）——扫描版 PDF 那种读不出来要当场说。"""
+    try:
+        上 = request.files.get("file")
+        if 上 is None or not str(上.filename or "").strip():
+            return jsonify({"status": "error", "message": "没收到文件"}), 400
+        内容 = 上.read(4 * 1024 * 1024 + 1)
+        if len(内容) > 4 * 1024 * 1024:
+            return jsonify({"status": "error",
+                            "message": "文件超过 4MB：这份要求不该有这么大，先精简一下"}), 400
+        文 = ai_screen_doc.解析上传(上.filename, 内容)
+        return jsonify({"status": "ok", "name": 上.filename, "text": 文,
+                        "chars": len(文)})
+    except ValueError as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+    except Exception as e:
+        logger.exception("解析筛选要求文件失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/ai_screen_doc", methods=["POST"])
+def api_ai_screen_doc_save():
+    """存这份要求，并立刻按它开始匹配池里的岗位（他上传完就该看到结果）。"""
+    try:
+        名 = "我的筛选要求"
+        文 = ""
+        上 = request.files.get("file")
+        if 上 is not None and str(上.filename or "").strip():
+            名 = 上.filename
+            内容 = 上.read(4 * 1024 * 1024 + 1)
+            if len(内容) > 4 * 1024 * 1024:
+                return jsonify({"status": "error",
+                                "message": "文件超过 4MB：先精简一下再传"}), 400
+            文 = ai_screen_doc.解析上传(名, 内容)
+        体 = request.get_json(silent=True) or {}
+        if not 文:
+            文 = str(体.get("text") or "")
+            名 = str(体.get("name") or 名)
+        文档 = ai_screen_doc.存(名, 文)
+        起, 话 = screen_runner.起(_筛选账号们(), _筛选引擎)
+        return jsonify({"status": "ok", "doc": 文档, "started": 起,
+                        "message": 话, "run": screen_runner.状态(),
+                        "stats": _ai_screen_统计(文档["hash"])})
+    except ValueError as e:
+        return jsonify({"status": "error", "message": str(e)}), 400
+    except Exception as e:
+        logger.exception("保存筛选要求失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/ai_screen_doc/run", methods=["POST"])
+def api_ai_screen_doc_run():
+    """按现在这份要求，把池里还没按它判过的岗位再判一批（已有结论的不重复烧 AI）。"""
+    try:
+        体 = request.get_json(silent=True) or {}
+        try:
+            上限 = int(体.get("limit") or 0)
+        except (TypeError, ValueError):
+            上限 = 0
+        起, 话 = screen_runner.起(_筛选账号们(), _筛选引擎, 上限=max(0, 上限))
+        return jsonify({"status": "ok" if 起 else "error", "message": 话,
+                        "run": screen_runner.状态()}), (200 if 起 else 400)
+    except Exception as e:
+        logger.exception("启动 AI 自定义筛选失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route("/api/ai_screen_doc/stop", methods=["POST"])
+def api_ai_screen_doc_stop():
+    screen_runner.停()
+    return jsonify({"status": "ok", "message": "已让这一轮在下一行之前停下",
+                    "run": screen_runner.状态()})
 
 
 def _normalize_ts(ts: str) -> str:
@@ -2339,6 +2936,11 @@ def _chat_id_for_record(chat_index, msg_store, record) -> str:
     岗位能唯一对上；对不上时（同名多路且岗位都不匹配）只能退回按岗位自己拼一个
     身份，绝不能塞进同名会话里 —— 那正是界面顺序和内容对不上 BOSS 的来历。
 
+    岗位对不上时先看原话：同一个 HR 会挂着两家公司的会话，两路岗位名又几乎一样
+    （实测 蒋旭冉 两路都写"兼职·居家电商客服…"），按岗位挑会挑中不相干的那一路，
+    点开只剩一段没有「拒绝交换联系方式」角标的对话。回复正文在存档里逐字出现，
+    是唯一一路的硬证据，优先于岗位名。
+
     chat_index 由调用方一次建好（(姓名, 账号) -> 会话列表），逐条记录查表，
     免得每条记录都重扫一遍 messages 目录。
     """
@@ -2347,6 +2949,13 @@ def _chat_id_for_record(chat_index, msg_store, record) -> str:
     cands = chat_index.get((name, int(record.account_index or 0)), [])
     if len(cands) == 1:
         return cands[0]["chat_id"]
+    reply = (record.reply_content or "").strip()
+    if reply:
+        hits = [c for c in cands
+                if any((m.get("content") or m.get("text") or "").strip() == reply
+                       for m in (c.get("messages") or []))]
+        if len(hits) == 1:
+            return hits[0]["chat_id"]
     if job:
         hits = [c for c in cands
                 if job in (c.get("job_name") or "") or (c.get("job_name") or "") in job]
@@ -2405,10 +3014,16 @@ def api_reply_records_grouped():
     - last_message: 最新收到的消息
     - last_reply: 最新回复的内容
     - records: 该聊天对象的所有记录列表（按时间正序）
-    - messages: 该聊天对象的完整对话消息列表（来自 message_store，含HR消息和bot回复）
+    - full_message_count: 这一路在 message_store 里存了几条（正文不在这份里，见下）
+
+    正文（messages）从这里撤掉了：2779 路会话全带着气泡进这一份是 15.3 MB 的 JSON
+    （10-30 现测 /api/reply_records/grouped 解压后 15,279,539 字节），浏览器要先
+    JSON.parse 完再建 DOM，主线程一停就是几秒——那才是"面板很卡"最大的一处。
+    左侧列表要的是名字/公司/岗位/最后一条/未读，这些都在；点开哪一路才要哪一路的
+    正文，走 /api/chats/<会话名>（前端 refreshBossChatDetail 早就是这一条路）。
 
     返回的分组列表按 last_time 倒序排列（最新的在前）。
-    ?account=N 只看某个账号的会话（记录 + message_store 里的完整对话）。
+    ?account=N 只看某个账号的会话（记录 + message_store 里的会话元数据）。
     """
     try:
         store = _ensure_reply_store()
@@ -2448,7 +3063,6 @@ def api_reply_records_grouped():
                     "last_message": "",
                     "last_reply": "",
                     "records": [],
-                    "messages": full.get("messages", []) or [],
                     "job_name": full.get("job_name", ""),
                     "full_message_count": full.get("message_count", 0),
                     "unread_count": full.get("unread_count", 0),
@@ -2479,14 +3093,12 @@ def api_reply_records_grouped():
                     "last_message": full.get("last_message", ""),
                     "last_reply": "",
                     "records": [],
-                    "messages": full.get("messages", []),
                     "job_name": full.get("job_name", ""),
                     "full_message_count": full.get("message_count", 0),
                     "unread_count": full.get("unread_count", 0),
                     "pinned": bool(full.get("pinned")),
                 }
                 continue
-            g["messages"] = full.get("messages", []) or g["messages"]
             g["job_name"] = full.get("job_name", "") or g.get("job_name", "")
             g["company"] = full.get("company", "") or g.get("company", "")
             # message_store 的时间更新就用它，消息数以 message_store 为准（更准确）
@@ -2701,14 +3313,19 @@ def api_greet_records():
 
 @app.route("/api/greet_records/clear", methods=["POST", "DELETE"])
 def api_clear_greet_records():
-    """清空打招呼记录。
+    """清空打招呼记录——清之前整份落进 data/kept/，一条都不许凭空消失。
 
     同时清空内存单例和磁盘文件，确保刷新页面后记录不再出现。
     ?account=N 只清该账号的记录——两个号共用一份记录文件，不带账号
-    在看账号2 时点"清空"会把主账号的历史一起删掉。
+    在看账号2 时点"清空"会把主账号的历史一起弄没。
     """
+    if not _要挪走():
+        return _没带口令的答复()
     try:
         store = _ensure_greet_store()
+        留底 = _先留一份(store.path, "打招呼记录")
+        if 留底 == "" and Path(str(store.path)).exists():
+            return jsonify({"status": "error", "message": "留底没成功，这一趟不清"}), 500
         account = _account_arg()
         if account is None:
             store.clear_all()
@@ -2716,8 +3333,10 @@ def api_clear_greet_records():
         else:
             deleted = store.delete_account(account)
         return jsonify({"status": "ok", "deleted": deleted, "account": account,
-                        "message": f"账号{account} 的打招呼记录已清空" if account is not None
-                                   else "打招呼记录已清空"})
+                        "kept": 留底,
+                        "message": ("账号%d 的打招呼记录已清空（整份留在 %s）" % (account, 留底 or "留底没成功"))
+                                   if account is not None
+                                   else "打招呼记录已清空（整份留在 %s）" % (留底 or "留底没成功")})
     except Exception as e:
         logger.exception("清空打招呼记录失败")
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -2725,13 +3344,18 @@ def api_clear_greet_records():
 
 @app.route("/api/reply_records/clear", methods=["POST", "DELETE"])
 def api_clear_reply_records():
-    """清空回复记录。
+    """清空回复记录——清之前整份落进 data/kept/，理由同打招呼记录。
 
     同时清空内存单例和磁盘文件，确保刷新页面后记录不再出现。
     ?account=N 只清该账号的记录，理由同打招呼记录。
     """
+    if not _要挪走():
+        return _没带口令的答复()
     try:
         store = _ensure_reply_store()
+        留底 = _先留一份(store.path, "回复记录")
+        if 留底 == "" and Path(str(store.path)).exists():
+            return jsonify({"status": "error", "message": "留底没成功，这一趟不清"}), 500
         account = _account_arg()
         if account is None:
             store.clear_all()
@@ -2739,8 +3363,10 @@ def api_clear_reply_records():
         else:
             deleted = store.delete_account(account)
         return jsonify({"status": "ok", "deleted": deleted, "account": account,
-                        "message": f"账号{account} 的回复记录已清空" if account is not None
-                                   else "回复记录已清空"})
+                        "kept": 留底,
+                        "message": ("账号%d 的回复记录已清空（整份留在 %s）" % (account, 留底 or "留底没成功"))
+                                   if account is not None
+                                   else "回复记录已清空（整份留在 %s）" % (留底 or "留底没成功")})
     except Exception as e:
         logger.exception("清空回复记录失败")
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -2784,15 +3410,18 @@ def api_archive_list():
     try:
         archive_dir = _get_archive_dir()
         result = []
-        for subdir in sorted(archive_dir.iterdir(), reverse=True):
-            if not subdir.is_dir():
-                continue
+
+        def 算一盒(subdir, 在窗口外: bool):
+            """统计这一盒的记录数和大小。
+
+            窗口外（data/archive_kept/）的也照样列出来并标上：零点把过期盒挪出窗口
+            只是换了地方，历史数据面板不许因此变成"这几天没数据"。
+            """
             try:
                 from datetime import date as _date
-                _date.fromisoformat(subdir.name)  # 验证目录名是有效日期
+                _date.fromisoformat(subdir.name.split(".")[0])  # 目录名应为日期（挪走两次的带后缀）
             except ValueError:
-                continue
-            # 统计该日期的记录数和大小
+                return
             greet_count = 0
             reply_count = 0
             total_size = 0
@@ -2807,12 +3436,21 @@ def api_archive_list():
                         reply_count = len(data.get("records", []))
                 except Exception:
                     pass
-            result.append({
-                "date": subdir.name,
-                "greet_count": greet_count,
-                "reply_count": reply_count,
-                "size_kb": round(total_size / 1024, 1),
-            })
+            条 = {"date": subdir.name, "greet_count": greet_count,
+                  "reply_count": reply_count, "size_kb": round(total_size / 1024, 1)}
+            if 在窗口外:
+                条["移出窗口"] = True
+            result.append(条)
+
+        for subdir in sorted(archive_dir.iterdir(), reverse=True):
+            if subdir.is_dir():
+                算一盒(subdir, False)
+        去处根 = archive_dir.parent / 过期归档去处名
+        if 去处根.is_dir():
+            for subdir in sorted(去处根.iterdir(), reverse=True):
+                if subdir.is_dir():
+                    算一盒(subdir, True)
+        result.sort(key=lambda x: x["date"], reverse=True)
         return jsonify({"status": "ok", "archives": result})
     except Exception as e:
         logger.exception("获取归档列表失败")
@@ -2831,8 +3469,8 @@ def api_archive_download(date: str):
     """
     try:
         archive_dir = _get_archive_dir()
-        subdir = archive_dir / date
-        if not subdir.exists():
+        subdir = 归档盒(archive_dir, date)
+        if not subdir:
             return jsonify({"status": "error", "message": f"归档日期 {date} 不存在"}), 404
 
         result = {"date": date, "greet_records": [], "reply_records": []}
@@ -2847,15 +3485,12 @@ def api_archive_download(date: str):
                 except Exception:
                     pass
 
-        # 写入临时文件并返回下载
-        import tempfile
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False,
-                                         encoding="utf-8") as tmp:
-            json.dump(result, tmp, ensure_ascii=False, indent=2)
-            tmp_path = tmp.name
-
+        # 直接在内存里拼好再吐给浏览器。以前落一个 NamedTemporaryFile(delete=False)，
+        # 每下载一次归档就在 %TEMP% 里留一个 tmpXXXX.json——谁也不知道它是谁家的，
+        # 更没人收（2026-10-26 盘账：项目外面那些找不到的文件就是这么攒起来的）。
+        报文 = io.BytesIO(json.dumps(result, ensure_ascii=False, indent=2).encode("utf-8"))
         return send_file(
-            tmp_path,
+            报文,
             as_attachment=True,
             download_name=f"archive_{date}.json",
             mimetype="application/json",
@@ -2877,8 +3512,8 @@ def api_archive_view(date: str):
     """
     try:
         archive_dir = _get_archive_dir()
-        subdir = archive_dir / date
-        if not subdir.exists():
+        subdir = 归档盒(archive_dir, date)
+        if not subdir:
             return jsonify({"status": "error", "message": f"归档日期 {date} 不存在"}), 404
 
         result = {"date": date, "greet_records": [], "reply_records": []}
@@ -2900,34 +3535,27 @@ def api_archive_view(date: str):
 
 @app.route("/api/archive/auto_clean", methods=["POST"])
 def api_archive_auto_clean():
-    """手动触发清理超过10天的归档数据。"""
+    """把超过窗口的归档整盒挪进 data/archive_kept/（**不删**）。
+
+    以前这里直接 shutil.rmtree：点一下"自动清理"就把 10 天前的投递/回复存档连底删掉，
+    和 00:00 轮换里那份同逻辑的清理一起，10-20 早上吃掉 09-30~10-09 共 18 份真实存档。
+    窗口只管面板默认摆哪几天，不管数据还在不在（红线同 Cookie：只归档不删除）。
+    """
     try:
         archive_dir = _get_archive_dir()
-        from datetime import date as _date, timedelta
+        from datetime import date as _date
         retention_days = 10
-        today = _date.today()
-        cleaned = []
-        for subdir in archive_dir.iterdir():
-            if not subdir.is_dir():
-                continue
-            try:
-                archive_date = _date.fromisoformat(subdir.name)
-                age_days = (today - archive_date).days
-                if age_days > retention_days:
-                    shutil.rmtree(str(subdir))
-                    cleaned.append({"date": subdir.name, "age_days": age_days})
-            except ValueError:
-                continue
-            except Exception as e:
-                logger.warning(f"清理归档 {subdir.name} 失败: {e}")
+        cleaned = 挪走过期归档(archive_dir, retention_days, 今天=_date.today())
         return jsonify({
             "status": "ok",
-            "message": f"已清理 {len(cleaned)} 个过期归档",
+            "message": ("已挪走 %d 盒过期归档到 %s/，一条没删" % (len(cleaned), 过期归档去处名))
+                       if cleaned else "没有超过 %d 天的归档，什么都没动" % retention_days,
             "cleaned": cleaned,
             "retention_days": retention_days,
+            "去处": str(archive_dir.parent / 过期归档去处名),
         })
     except Exception as e:
-        logger.exception("清理归档失败")
+        logger.exception("挪走过期归档失败")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
@@ -3261,9 +3889,16 @@ def api_get_images():
 
 @app.route("/api/images/delete", methods=["POST"])
 def api_delete_image():
-    """删除指定图片，接收 {filename}。"""
+    """把指定图片从面板目录挪进 static/dashboard/kept/——不 unlink。
+
+    这张图可能是某条岗位的证据（他查"当时界面长什么样"就靠它）；
+    界面上现在没有调这个接口的按钮（10-23 核过），留着是给脚本用的，
+    所以更要按"只挪走 + 要口令"办。
+    """
+    if not _要挪走():
+        return _没带口令的答复()
     try:
-        data = request.get_json() or {}
+        data = request.get_json(silent=True) or {}
         filename = data.get("filename", "")
 
         safe_name = os.path.basename(filename)
@@ -3274,10 +3909,14 @@ def api_delete_image():
         if not file_path.exists() or not file_path.is_file():
             return jsonify({"status": "error", "message": "文件不存在"}), 404
 
-        file_path.unlink()
-        return jsonify({"status": "ok", "message": f"图片「{safe_name}」已删除"})
+        留档 = DASHBOARD_DIR / "kept"
+        留档.mkdir(parents=True, exist_ok=True)
+        落 = 留档 / ("%s_%s" % (time.strftime("%Y%m%d_%H%M%S"), safe_name))
+        shutil.move(str(file_path), str(落))
+        return jsonify({"status": "ok", "kept": str(落),
+                        "message": f"图片「{safe_name}」已挪进 static/dashboard/kept/"})
     except Exception as e:
-        logger.exception("删除图片失败")
+        logger.exception("挪走图片失败")
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
@@ -3350,9 +3989,9 @@ def api_save_rules():
 
         # 2. 持久化到 config_overrides.json
         overrides = {}
-        if OVERRIDES_FILE.exists():
+        if uc.OVERRIDES_FILE.exists():
             try:
-                with open(OVERRIDES_FILE, "r", encoding="utf-8") as f:
+                with open(uc.OVERRIDES_FILE, "r", encoding="utf-8") as f:
                     overrides = json.load(f)
             except Exception:
                 overrides = {}
@@ -3360,11 +3999,11 @@ def api_save_rules():
             overrides["reply_rules"] = dict(rules_data["reply_rules"])
         if "importance_keywords" in rules_data and isinstance(rules_data["importance_keywords"], list):
             overrides["importance_keywords"] = list(rules_data["importance_keywords"])
-        write_json_atomic(OVERRIDES_FILE, overrides)
+        write_json_atomic(uc.OVERRIDES_FILE, overrides)
 
         # 3. 同步写入 bot_config.json，保持三端一致
         try:
-            with open(BOT_CONFIG_FILE, "r", encoding="utf-8") as f:
+            with open(uc.BOT_CONFIG_FILE, "r", encoding="utf-8") as f:
                 bot_cfg = json.load(f)
             if not isinstance(bot_cfg, dict):
                 bot_cfg = {}
@@ -3374,7 +4013,7 @@ def api_save_rules():
             bot_cfg["reply_rules"] = dict(rules_data["reply_rules"])
         if "importance_keywords" in rules_data and isinstance(rules_data["importance_keywords"], list):
             bot_cfg["importance_keywords"] = list(rules_data["importance_keywords"])
-        write_json_atomic(BOT_CONFIG_FILE, bot_cfg)
+        write_json_atomic(uc.BOT_CONFIG_FILE, bot_cfg)
 
         # 4. 重新加载配置以保持一致性
         _config = UnifiedConfig.load()
@@ -3442,9 +4081,9 @@ def api_save_templates():
 
         # 2. 持久化到 config_overrides.json（reply_templates 大写键）
         overrides = {}
-        if OVERRIDES_FILE.exists():
+        if uc.OVERRIDES_FILE.exists():
             try:
-                with open(OVERRIDES_FILE, "r", encoding="utf-8") as f:
+                with open(uc.OVERRIDES_FILE, "r", encoding="utf-8") as f:
                     overrides = json.load(f)
             except Exception:
                 overrides = {}
@@ -3467,11 +4106,11 @@ def api_save_templates():
         if "resume_unavailable_reply" in templates_data:
             rt["RESUME_UNAVAILABLE_REPLY"] = str(templates_data["resume_unavailable_reply"])
         overrides["reply_templates"] = rt
-        write_json_atomic(OVERRIDES_FILE, overrides)
+        write_json_atomic(uc.OVERRIDES_FILE, overrides)
 
         # 3. 同步写入 bot_config.json（templates 小写键），保持三端一致
         try:
-            with open(BOT_CONFIG_FILE, "r", encoding="utf-8") as f:
+            with open(uc.BOT_CONFIG_FILE, "r", encoding="utf-8") as f:
                 bot_cfg = json.load(f)
             if not isinstance(bot_cfg, dict):
                 bot_cfg = {}
@@ -3495,7 +4134,7 @@ def api_save_templates():
         if "resume_unavailable_reply" in templates_data:
             bt["resume_unavailable_reply"] = str(templates_data["resume_unavailable_reply"])
         bot_cfg["templates"] = bt
-        write_json_atomic(BOT_CONFIG_FILE, bot_cfg)
+        write_json_atomic(uc.BOT_CONFIG_FILE, bot_cfg)
 
         # 4. 重新加载配置以保持一致性
         _config = UnifiedConfig.load()
@@ -4056,83 +4695,152 @@ def on_confirm_login():
                      "message": 消息})
 
 
-@socketio.on("check_login")
-def on_check_login():
-    """检查登录状态。"""
-    logger.info("收到 check_login 事件")
-    emit("login_result", {"success": True})
+# 这里以前挂着两个 socket 处理器："check_login"（不管三七二十一 emit
+# login_result success:true）和 "stop_login_modal"（只打一行日志）。
+# 前端从不发这两个事件，收到也只会被那句假成功骗——真要看登录态走
+# /api/accounts/<idx>/check_cookie，那条才会回真话。
 
 
-@socketio.on("stop_login_modal")
-def on_stop_login_modal():
-    """关闭登录弹窗。"""
-    logger.info("收到 stop_login_modal 事件")
-
-
-# ===================== 日志清理 =====================
+# ===================== 日志留痕 =====================
 
 def cleanup_old_logs():
-    """清理旧日志文件 — 删除超过7天的日志和临时flask日志。"""
-    import time
-    from pathlib import Path
+    """出窗口的日志挪进 logs/kept/（顺手压成 .gz），超 20MB 的先整份备份再截断，
+    最后过一遍体积闸。
 
-    log_dir = PROJECT_ROOT / "logs"
-    if not log_dir.exists():
-        return
+    10-30 加的那一支是"归档压缩"：日志是纯文本，本机现测 15.8 MB 那份压成 2.29 MB
+    （6.9 倍），kept/ 里 26.5 MB 那份压成 3.16 MB（8.4 倍）——而 logs/ 已经堆到
+    115 MB（今天现数）。压缩不改内容：`_压走` 要把 .gz 解回来逐字节比过才删原件，
+    比不过就原样留着并报一条"压失败"。
 
-    now = time.time()
-    max_age_seconds = 7 * 24 * 3600  # 7天
-    cleaned = 0
+    这一支以前是"删除超过7天的日志和临时flask日志"，而且启动时也跑一次
+    （下面 main 里那句）。2026-10-21 对账：logs/boss_bot.log.2026-10-03~10-06
+    四个文件在 HEAD 里、工作区已经没了，那四天的投递与回复过程再也翻不出来；
+    同一时刻主日志 16.7MB，再写一天就撞上 write_text("") 那一条。判据挪进
+    log_retention.清理日志()（tests/test_log_retention.py 能真跑红），
+    临时面板日志 flask_e2e*/flask_output* 照旧删——那是测试自己造的垃圾。
 
-    for f in log_dir.iterdir():
-        if not f.is_file():
-            continue
-        # 删除超过7天的日志文件
-        try:
-            file_age = now - f.stat().st_mtime
-            if file_age > max_age_seconds:
-                f.unlink()
-                cleaned += 1
-                continue
-        except Exception:
-            pass
+    10-23 两处改动：①窗口原来钉死 7 天，而配置里 `log.log_retention_days` 写的是
+    14——那个键等于没人读，现在按配置传进去；②挪走之后再加一道体积闸
+    （space_retention.清理超期历史）：data/+logs/ 涨到 history_cleanup_mb 才动手，
+    删的是 history_keep_days 以外的按天条目。没到线照实说一句"一条不删"。
+    """
+    from log_retention import 清理日志
+    from boss_bot.space_retention import 清理超期历史
 
-        # 删除临时 flask 日志文件（flask_e2e*.log, flask_output*.log）
-        if f.name.startswith("flask_e2e") or f.name.startswith("flask_output"):
-            try:
-                f.unlink()
-                cleaned += 1
-            except Exception:
-                pass
+    配置 = UnifiedConfig.load()
+    结果 = 清理日志(PROJECT_ROOT / "logs",
+                   保留天数=配置.log.log_retention_days)
+    动了 = len(结果["挪走"]) + len(结果["截断"]) + len(结果["删除临时"]) + len(结果["压缩"])
+    if 结果["挪走"]:
+        logger.info("日志留痕: %d 个出窗口（窗口 %d 天，读自配置 log_retention_days），"
+                    "整份挪进 logs/kept/，一条没删：%s"
+                    % (len(结果["挪走"]), 配置.log.log_retention_days,
+                       "、".join("%s(%d天前,%d字节%s)" % (
+                           x["name"], x["天数"], x["字节"],
+                           "→压成%d字节" % x["压后字节"] if x.get("压后字节") else "")
+                           for x in 结果["挪走"])))
+    for x in 结果["截断"]:
+        logger.info("日志留痕: %s 涨到 %d 字节，已整份备份到 %s 后截断"
+                    % (x["name"], x["字节"], x["去处"]))
+    if 结果["删除临时"]:
+        logger.info("日志清理: 删掉 %d 个测试临时面板日志" % len(结果["删除临时"]))
+    # 归档压成 .gz 不是删：_压走 回读比过字节才动原件，日志里也报"省了多少"
+    if 结果["压缩"]:
+        logger.info("日志归档压缩: 本轮压 %d 份（kept/ 里的存量），%.1f MB → %.1f MB，"
+                    "解压回来逐字节相同；还剩 %d 份没压，下一轮接着收"
+                    % (len(结果["压缩"]),
+                       sum(x["字节"] for x in 结果["压缩"]) / 1048576.0,
+                       sum(x["压后字节"] for x in 结果["压缩"]) / 1048576.0,
+                       结果.get("存量剩余", 0)))
+    for x in 结果.get("压失败", []):
+        logger.warning("日志归档压缩: %s（%d 字节）没压成——%s，原件原样留着，下一轮再试"
+                       % (x["name"], x["字节"], x["错"]))
+    # 压完不比原来大不是故障（几十字节的散件才会撞上）：单独一句、info 一级，
+    # 混进"压失败"就会变成每 6 小时响一次的假警报
+    if 结果.get("压不动"):
+        logger.info("日志归档压缩: %d 份压完不比原来大（%s），原样留着不压"
+                    % (len(结果["压不动"]),
+                       "、".join(x["name"] for x in 结果["压不动"][:5])))
 
-        # 大文件截断：超过20MB的日志文件清空内容
-        try:
-            if f.stat().st_size > 20 * 1024 * 1024:
-                f.write_text("", encoding="utf-8")
-                cleaned += 1
-        except Exception:
-            pass
+    体积 = 清理超期历史(PROJECT_ROOT, 阈值MB=配置.log.history_cleanup_mb,
+                        保留天数=配置.log.history_keep_days)
+    # 到没到线都要念一句：不出声就等于"没人知道这台机器会不会哪天把底账删了"
+    logger.info("历史数据体积闸: %s（阈值 %d MB / 留 %d 天）"
+                % (体积["原因"], 体积["阈值MB"], 体积["保留天数"]))
+    if 体积["触发"] and 体积["删的"]:
+        logger.info("历史数据体积闸: 删掉 %d 项、省 %.1f MB%s%s"
+                    % (len(体积["删的"]), 体积["释放字节"] / 1048576.0,
+                       "，台账 %s" % 体积["台账"] if 体积["台账"] else "，台账没写成",
+                       "；删完仍超线，剩下的都在窗口内" if 体积["仍超线"] else ""))
+    for x in 体积["失败"]:
+        logger.warning("历史数据体积闸: %s 删不掉（%s）——原样留着，不当已删"
+                       % (x["路径"], x["错"]))
+    return 动了 + len(体积["删的"])
 
-    if cleaned > 0:
-        logger.info(f"日志清理: 已清理 {cleaned} 个文件")
+
+def 历史数据体检(项目根=None) -> dict:
+    """给面板那行"历史数据现在多少 / 什么时候动手"用：只数不删。"""
+    from boss_bot.space_retention import 历史体积, 清理超期历史
+    根 = Path(str(项目根 or PROJECT_ROOT))
+    配置 = UnifiedConfig.load()
+    量 = 历史体积(根)
+    预演 = 清理超期历史(根, 阈值MB=配置.log.history_cleanup_mb,
+                           保留天数=配置.log.history_keep_days, 干跑=True)
+    明细 = sorted(((k, v) for k, v in 量["按目录"].items() if v > 1048576),
+                  key=lambda kv: -kv[1])[:12]
+    return {
+        "字节": 量["字节"], "MB": round(量["字节"] / 1048576.0, 1),
+        "文件数": 量["文件数"],
+        "按目录": ["%s %.1f MB" % (k, v / 1048576.0) for k, v in 明细],
+        "阈值MB": 配置.log.history_cleanup_mb,
+        "保留天数": 配置.log.history_keep_days,
+        "到线": 预演["触发"],
+        "本回合会删几项": len(预演["清单"]),
+        "本回合会省MB": round(sum(c["字节"] for c in 预演["清单"]) / 1048576.0, 1),
+        "说法": 预演["原因"],
+    }
+
+
+@app.route("/api/retention", methods=["GET"])
+def api_retention():
+    """历史数据现在多大、到没到线、到线会删几项——只数不删。"""
+    try:
+        return jsonify({"ok": True, "data": 历史数据体检()})
+    except Exception as e:
+        logger.error("体积体检失败: %s", e)
+        return jsonify({"ok": False, "message": "体积体检失败：%s" % str(e)[:120]}), 500
 
 
 def _log_cleanup_loop():
-    """后台线程：每天清理一次旧日志。"""
+    """后台线程：每 6 小时收一轮日志（出窗口的挪走、kept/ 的存量压一份）。
+
+    先睡再干活：下面 main 里已经同步跑过一次了（那句留着是为了"启动就把出窗口的
+    日志挪走"这件事在日志里有个确定的位置）。线程一起来就跑，等于同一趟盘扫两遍、
+    留两行一模一样的「历史数据体积闸」——10-24 10:59:01 实测两行差 2 毫秒。
+
+    原来是 24 小时一轮。启动那一轮同步跑、又有界（一轮最多 30 个 / 24 MB），
+    为的就是别把"双击 start.bat 到面板能点"再拖长；kept/ 里压不完的存量就靠这一支
+    一轮一轮收，所以周期从一天缩到 6 小时——他 10-30 要的是"定时清理"，
+    一天一轮配上"面板活不过几小时"（#276）等于经常一轮都不跑。
+
+    异常不许 pass 掉：这一支静默过一次，四天日志就没了还没人知道（10-21 那笔账）。
+    """
     import time
     while True:
+        time.sleep(6 * 3600)
         try:
             cleanup_old_logs()
-        except Exception:
-            pass
-        time.sleep(24 * 3600)  # 24小时执行一次
+        except Exception as e:
+            logger.warning("定时清理日志这一轮没做成（%s）——原样留着，下一轮再试"
+                           % str(e)[:120])
 
 
 # ===================== 主入口 =====================
 
 # 监听口和"有没有第二个副本"的探测口共用这一个数：写死两遍，早晚会有一天探 A 听 B，
-# 门形同虚设还看不出来。
-面板端口 = 5000
+# 门形同虚设还看不出来。默认口住在 access_guard 一处（现在是 5001，理由是 5000 常被
+# 别的项目的 app.py 占着，面板一起来就绑不上），这里只引用、不再自己算一遍。
+面板端口 = _默认面板端口
 
 
 def _面板探一次(地址):
@@ -4170,10 +4878,21 @@ def _拒绝第二个面板():
 
 def main():
     """启动 Flask 应用。"""
+    # 第一件事就得把 stdout/stderr 接住：面板无声没掉的时候（10-25 那次是整台机器
+    # 断电，Kernel-Power 41 + EventLog 6008），控制台窗口上滚过的字一句都没留下，
+    # data/panel_stderr.log 还是 10-23 另一次拉起来时的 0KB 旧文件——空着看着像
+    # "没报错"，其实等于没装表。排在 logger 横幅前面是有意的：起不来多半是
+    # import/建句柄阶段就抛，那时候 logging 这条路还没通，只有 stderr 还在。
+    from panel_io import 接管 as _接管标准输出
+    面板留档 = _接管标准输出()
     logger.info("=" * 50)
     logger.info("BOSS 统一机器人 Web 管理界面")
+    # 把自己是谁写进主日志：10-19 和 10-23 两次面板凭空没了，事后只能靠进程表和
+    # stderr 的 mtime 倒推。有这一行，日志最后一行是哪个号在写、进程活着多久，当场就能对上。
+    logger.info(f"进程 PID={os.getpid()} 启动时刻={datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info(f"标准输出/报错落盘: {面板留档}")
     logger.info(f"项目根目录: {PROJECT_ROOT}")
-    logger.info(f"配置文件: {BOT_CONFIG_FILE}")
+    logger.info(f"配置文件: {uc.BOT_CONFIG_FILE}")
     logger.info("=" * 50)
 
     # 排在一切副作用之前：日志清理线程、浏览器、通知都建起来之后才发现端口已有人占，

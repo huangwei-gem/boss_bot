@@ -206,8 +206,35 @@
       "job_name": "兼职·数据采集15-25元/时开封查看职位",
       "isFriend": false,
       "mid": "394419279811074"
+    },
+    {
+      "sender": "bot",
+      "content": "石丽丽您好，数盈科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "石丽丽您好，数盈科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 10:06:15",
+      "time": "10:06",
+      "job_name": "兼职·数据采集15-25元/时开封查看职位",
+      "isFriend": false,
+      "mid": "395095152325120"
+    },
+    {
+      "text": "苹果的可以给到22",
+      "time": "10-10 23:52",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395298164417024",
+      "block": "10-10 23:52 黄维: 理解，苹果机型的价格我看到了。我这边暂时是安卓手机，想问下这个岗位是必须用苹果12Pro以上机型吗，还是安卓也可以做但单价不同？ 苹果的可以给到22",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "苹果的可以给到22"
     }
   ],
-  "updated_at": "2026-10-09 14:59:08",
+  "updated_at": "2026-10-23 15:03:34",
   "unread_on_boss": 0
 }

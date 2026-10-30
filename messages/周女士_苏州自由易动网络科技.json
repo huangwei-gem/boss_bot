@@ -1,0 +1,35 @@
+{
+  "chat_name": "周女士",
+  "chat_id": "周女士#苏州自由易动网络科技",
+  "account_index": 0,
+  "job_name": "兼职·数据标注员/可实习，双休五险一金150-160元/天长沙查看职位",
+  "company": "苏州自由易动网络科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:17",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394965198799619",
+      "block": "01:17 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394965198832385",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    }
+  ],
+  "updated_at": "2026-10-21 09:30:11"
+}

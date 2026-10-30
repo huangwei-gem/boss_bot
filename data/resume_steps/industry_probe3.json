@@ -1,0 +1,5 @@
+[
+  {"do": "open"},
+  {"do": "realclick", "css": "div[ka=resume_form_edit_industryName]", "wait": 3.0},
+  {"do": "js", "limit": 6000, "code": "(() => {\n  const clean = (s) => (s || '').trim();\n  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };\n  const hit = [...document.querySelectorAll('*')].filter((e) => vis(e) && clean(e.innerText).length > 8 && clean(e.innerText).length < 3000 && (getComputedStyle(e).position === 'fixed' || getComputedStyle(e).position === 'absolute') && e.getBoundingClientRect().width > 150);\n  const out = hit.map((e) => ({cls: (e.className || '').toString().slice(0, 70), z: getComputedStyle(e).zIndex, text: clean(e.innerText).slice(0, 400), inputs: [...e.querySelectorAll('input')].map((i) => (i.placeholder || '') + '|ro=' + !!i.readOnly).slice(0, 4)}));\n  out.sort((a, b) => a.text.length - b.text.length);\n  return {几个: out.length, 层: out.slice(0, 4), 行业框现值: clean(([...document.querySelectorAll('input')].find((x) => (x.placeholder || '').includes('选择所属行业')) || {}).value)};\n})()"}
+]

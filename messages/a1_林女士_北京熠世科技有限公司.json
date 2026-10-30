@@ -1,0 +1,25 @@
+{
+  "chat_name": "林女士",
+  "chat_id": "林女士#北京熠世科技有限公司",
+  "account_index": 1,
+  "job_name": "兼职·内容运营（线上兼职）20-100元/时北京查看职位",
+  "company": "北京熠世科技有限公司",
+  "messages": [
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-10 19:31:31",
+      "time": "19:31",
+      "job_name": "兼职·内容运营（线上兼职）20-100元/时北京查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-16 01:29:53",
+  "unread_on_boss": 0
+}

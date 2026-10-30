@@ -161,3 +161,15 @@ def test_全部账号下撞车身份要挂账号标记():
     assert "boss-chat-item-acc" in body, "列表行里没有账号标记"
     assert "dataScope === 'all'" in body, "标记不分范围，单账号下也会挂出噪声"
     assert ".boss-chat-item-acc{" in HTML, "账号标记没有样式，会跟正文糊在一起"
+
+
+def test_点开一个会话只清那一行的红点_不许整表重画():
+    """selectBossChat 的 mark_read 回调曾经按缓存把 2795 行列表整张重画。
+
+    一次 3~5 秒（2026-10-29 实测），第二次点会话就把页面主线程拖到 60 秒超时，
+    看着像界面卡死。点开哪个会话只影响那一行的未读数，重画整表是白烧。
+    """
+    body = HTML[HTML.index("function selectBossChat"):HTML.index("// 昵称还是路由参数")]
+    assert "renderBossChatList" not in body, "点开一个会话又把整张列表重画了"
+    assert "boss-chat-item-badge" in body, "没把那一行的红点清掉"
+

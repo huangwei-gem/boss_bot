@@ -1,0 +1,90 @@
+{
+  "chat_name": "梁新宇",
+  "chat_id": "梁新宇#承德承磐数字科技",
+  "account_index": 1,
+  "job_name": "兼职·数据采集30-40元/时承德查看职位",
+  "company": "承德承磐数字科技",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据标注和分析，有AI训练数据质检经验。看到贵司数据采集岗位，想确认是否为线上兼职？方便的话我把简历发您细聊",
+      "time": "11:47",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397951119278337",
+      "block": "11:47 已读 您好，我是统计学专业在读生，擅长数据标注和分析，有AI训练数据质检经验。看到贵司数据采集岗位，想确认是否为线上兼职？方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据标注和分析，有AI训练数据质检经验。看到贵司数据采集岗位，想确认是否为线上兼职？方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "你好啊，可以聊一聊~",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397951172124933",
+      "block": "你好啊，可以聊一聊~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好啊，可以聊一聊~"
+    },
+    {
+      "text": "你好咱们的工作就是佩戴大疆设备按执行参考拍摄手部视频（要求自备百度网盘会员18元将拍摄视频共享给审核员）",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397951256842498",
+      "block": "你好咱们的工作就是佩戴大疆设备按执行参考拍摄手部视频（要求自备百度网盘会员18元将拍摄视频共享给审核员）",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好咱们的工作就是佩戴大疆设备按执行参考拍摄手部视频（要求自备百度网盘会员18元将拍摄视频共享给审核员）"
+    },
+    {
+      "sender": "bot",
+      "content": "我主要找线上数据分析这类的，这个不太合适哈。",
+      "text": "我主要找线上数据分析这类的，这个不太合适哈。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-18 11:51:24",
+      "time": "11:51",
+      "job_name": "兼职·数据采集30-40元/时承德查看职位",
+      "isFriend": false,
+      "mid": "397952142946565"
+    },
+    {
+      "text": "非常感谢您的投递，但我们目前需要一个与当前项目周期更吻合的候选人。祝您在BOSS直聘找到合适的职位！",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397952199536897",
+      "block": "非常感谢您的投递，但我们目前需要一个与当前项目周期更吻合的候选人。祝您在BOSS直聘找到合适的职位！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "非常感谢您的投递，但我们目前需要一个与当前项目周期更吻合的候选人。祝您在BOSS直聘找到合适的职位！"
+    },
+    {
+      "sender": "bot",
+      "content": "嗯好嘞，也祝您工作顺利哈！",
+      "text": "嗯好嘞，也祝您工作顺利哈！",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 19:12:05",
+      "time": "19:12",
+      "job_name": "兼职·数据采集30-40元/时承德查看职位",
+      "isFriend": false,
+      "mid": "398768247386372"
+    }
+  ],
+  "updated_at": "2026-10-23 13:13:24",
+  "unread_on_boss": 0
+}

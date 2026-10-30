@@ -1,0 +1,17 @@
+[
+ {"do": "open"},
+ {"do": "insert", "specs": [{"ph": "北京华品博睿", "value": "天鹅到家"}], "wait": 3.0},
+ {"do": "mark", "at": {"ph": "例如：产品部", "覆盖": true}, "wait": 0.5},
+ {"do": "realclick", "css": "[data-orca-tag=hit]", "wait": 1.5},
+ {"do": "js", "limit": 400, "code": "(() => { const clean = (s) => ((s || '') + '').trim(); const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; }; const inp = [...document.querySelectorAll('input')].find((x) => vis(x) && (x.placeholder || '').includes('北京华品博睿')); const box = [...document.querySelectorAll('.ui-suggest')].filter(vis)[0]; return {公司值: clean(inp ? inp.value : 'NO'), 联想条数: box ? box.querySelectorAll('.ui-dropmenu-list-item').length : 0}; })()"},
+ {"do": "mark", "at": {"ph": "选择职位名称", "覆盖": true}, "wait": 0.5},
+ {"do": "realclick", "css": "[data-orca-tag=hit]", "wait": 2.5},
+ {"do": "js", "limit": 800, "code": "(() => { const clean = (s) => ((s || '') + '').trim(); const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; }; const d = [...document.querySelectorAll('[class*=dialog]')].filter(vis); return {浮层: d.map((x) => ((x.className || '') + '').slice(0, 40)).slice(0, 4), 类目前: !!document.querySelector('.position-category-wrap'), 正文: d.length ? clean(d[d.length - 1].innerText).slice(0, 160) : ''}; })()"},
+ {"do": "js", "limit": 300, "code": "(() => { const clean = (s) => ((s || '') + '').trim(); const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; }; const dlg = [...document.querySelectorAll('.position-dialog')].filter(vis)[0]; if (!dlg) return '职位弹层没开'; const x = [...dlg.querySelectorAll('span,a,div')].filter((e) => clean(e.innerText) === '确定' && vis(e))[0]; if (x) { x.click(); return '关了(点确定)'; } return '开着但没确定'; })()"},
+ {"do": "wait", "sec": 1.5},
+ {"do": "openfield", "field": {"ph": "选择在职时间", "nth": 0}, "wait": 2.5},
+ {"do": "js", "limit": 900, "code": "(() => { const clean = (s) => ((s || '') + '').trim(); const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 1 && r.height > 1; }; const cells = [...document.querySelectorAll('.cell')]; const 时间框 = [...document.querySelectorAll('input')].filter((x) => vis(x) && (x.placeholder || '').includes('在职时间')); const body门 = [...document.body.children].filter(vis).map((e) => ((e.className || '') + '').slice(0, 34)).filter(Boolean); return {cell总数: cells.length, 可见cell: cells.filter(vis).length, cell样本: cells.filter(vis).slice(0, 14).map((c) => clean(c.innerText)), 时间框数: 时间框.length, body门: body门.slice(-8)}; })()"},
+ {"do": "mark", "at": {"want": "2026", "tag": "span.cell", "覆盖": true}, "试几次": 3, "wait": 0.5},
+ {"do": "realclick", "css": "[data-orca-tag=hit]", "wait": 2.0},
+ {"do": "js", "limit": 900, "code": "(() => { const clean = (s) => ((s || '') + '').trim(); const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 1 && r.height > 1; }; const cells = [...document.querySelectorAll('.cell')].filter(vis); const 时间框 = [...document.querySelectorAll('input')].filter((x) => vis(x) && (x.placeholder || '').includes('在职时间')); return {可见cell数: cells.length, 样本: cells.slice(0, 30).map((c) => clean(c.innerText).slice(0, 8) + '/' + ((c.className || '') + '').replace('cell', '').slice(0, 12)), 开始值: clean(时间框[0] ? 时间框[0].value : 'NO')}; })()"}
+]

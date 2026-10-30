@@ -1,0 +1,23 @@
+{
+  "chat_name": "徐梦",
+  "chat_id": "徐梦#科锐国际",
+  "account_index": 1,
+  "job_name": "数据分析师（大厂 核心自研 ）（猎头职位）15-30K·14薪上海查看职位",
+  "company": "科锐国际",
+  "messages": [
+    {
+      "text": "您好，我是在校统计学本科生，有数据分析和数据标注经验，熟悉SQL/Python和AI工具，看到贵司数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "time": "13:41",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397625380577793",
+      "block": "13:41 送达 您好，我是在校统计学本科生，有数据分析和数据标注经验，熟悉SQL/Python和AI工具，看到贵司数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是在校统计学本科生，有数据分析和数据标注经验，熟悉SQL/Python和AI工具，看到贵司数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:34:52"
+}

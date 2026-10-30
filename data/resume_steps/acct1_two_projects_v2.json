@@ -1,0 +1,34 @@
+[
+ {"do": "open"},
+ {"do": "insert", "specs": [
+   {"ph": "直聘网", "value": "用户画像及行为分析(RFM 分群)"},
+   {"ph": "UI 设计师", "value": "数据分析"},
+   {"ph": "描述该项目", "value": "项目描述：短期快速提高销售额，做一个「黑五活动」方案，针对行业常见指标对用户进行分类，为运营部门提供数据支持，从用户消费行为特征分析如何优化运营和销售策略，帮助运营部门实现精细化运营。\n客户画像：\n➢ 从运营部门获取用户行为数据进行数据清洗；\n➢ 用户消费特征（整体消费，个人消费）；\n➢ 用户消费周期分析（购买周期，生命周期）；\n➢ 用户价值度分析（RFM 模型），通过用户画像，挖掘高价值用户，实现精准引流；\n行为分析：\n➢ 用户活跃度分析（分析单位时间下用户组成的变化），如新用户、活跃用户、回流用户、不活跃用户；\n➢ 用户行为分析，从用户的留存率、回购率和复购率等方面进行分析，提供策略提高用户的转化率，减少流失率；\n➢ 用户贡献率分析，较少用户贡献率较大的 KPI；\n项目结论与成果：\n➢ 对于八类客户给到不同的活动方案，用户领取率百分之 80，变现转化率百分之 20。\n相关技术：Pandas、Numpy、Matplotlib、Seaborn、Python、RFM 用户价值模型、K-Means 等。"}
+ ], "wait": 1.5},
+ {"do": "focus", "field": 3, "wait": 1.5},
+ {"do": "clicktext", "text": "2024", "wait": 1.5},
+ {"do": "clicktext", "text": "七月", "wait": 2.0},
+ {"do": "focus", "field": 4, "wait": 1.5},
+ {"do": "clicktext", "text": "2025", "wait": 1.5},
+ {"do": "clicktext", "text": "一月", "wait": 2.0},
+ {"do": "js", "limit": 500, "code": "(() => { const clean = (s) => ((s || '') + '').trim(); const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; }; const 找 = (p) => [...document.querySelectorAll('input,textarea')].filter((x) => vis(x) && (x.placeholder || '').includes(p)); const 名 = 找('直聘网'), 角色 = 找('UI 设计师'), 时间 = 找('选择年月'), 描述 = 找('描述该项目'); return {名: clean(名[0] ? 名[0].value : 'NO'), 角色: clean(角色[0] ? 角色[0].value : 'NO'), 起: clean(时间[0] ? 时间[0].value : 'NO'), 止: clean(时间[1] ? 时间[1].value : 'NO'), 描述字: 描述[0] ? 描述[0].value.length : -1}; })()"},
+ {"do": "js", "limit": 400, "code": "(() => { const clean = (s) => ((s || '') + '').trim(); const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; }; const 找 = (p) => [...document.querySelectorAll('input,textarea')].filter((x) => vis(x) && (x.placeholder || '').includes(p)); const 名 = 找('直聘网'), 角色 = 找('UI 设计师'), 时间 = 找('选择年月'), 描述 = 找('描述该项目'); const 问 = []; if (!名.length || clean(名[0].value) !== '用户画像及行为分析(RFM 分群)') 问.push('名称=' + (名.length ? clean(名[0].value) : '空')); if (!角色.length || !clean(角色[0].value)) 问.push('角色=空'); if (时间.length < 2 || clean(时间[0].value) !== '2024-07' || clean(时间[1].value) !== '2025-01') 问.push('时间=' + 时间.map((x) => clean(x.value)).join('~')); if (!描述.length || 描述[0].value.length < 200) 问.push('描述=' + (描述.length ? 描述[0].value.length : 0) + '字'); if (问.length) return '不保存，缺：' + 问.join('；'); const ok = [...document.querySelectorAll('[ka$=\"_ok\"]')].filter(vis)[0]; if (!ok) return '全对但没找到完成按钮'; ok.click(); return '闸门全过，已点完成 ka=' + (ok.getAttribute('ka') || '按文字'); })()"},
+ {"do": "js", "limit": 500, "code": "(() => { const clean = (s) => ((s || '') + '').trim(); const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; }; const 框 = [...document.querySelectorAll('input')].filter((x) => vis(x) && (x.placeholder || '').includes('直聘网'))[0]; const 报错 = [...document.querySelectorAll('[class*=error]')].filter(vis).map((x) => clean(x.innerText)).filter((t) => t && t.length < 40).slice(0, 5); return {表单还开着: !!框, 报错: 报错}; })()", "wait": 5.0},
+
+ {"do": "open"},
+ {"do": "insert", "specs": [
+   {"ph": "直聘网", "value": "用户搜索关键词分析"},
+   {"ph": "UI 设计师", "value": "数据分析"},
+   {"ph": "描述该项目", "value": "项目描述：通过分析用户的搜索内容分析用户喜好，改善自己产品信息的关键字，提高曝光率，让自己的产品链接更容易被客户搜索。\n项目技术与职责：\n➢ 从数据库获取数据，并且利用 numpy、pandas 进行数据清洗、筛选；\n➢ 针对用户的网站搜索关键词，以及筛选条件、各界面的停留时长等，有针对性地发布更受用户喜爱的标题及内容，例如根据搜索关键词分析，将搜索频率高的进行加大投放；\n➢ 利用 matplotlib、Tableau 等可视化工具生成可视化分析报告。\n项目结论与成果：\n➢ 通过大量数据，得知了用户更喜爱的搜索方式，从而进行产品标题关键字的修改，从而提高客户点击概率；\n➢ 根据停留时长的分析，进行版块的填充以及扩展，从而提升客户购买的概率。"}
+ ], "wait": 1.5},
+ {"do": "focus", "field": 3, "wait": 1.5},
+ {"do": "clicktext", "text": "2024", "wait": 1.5},
+ {"do": "clicktext", "text": "七月", "wait": 2.0},
+ {"do": "focus", "field": 4, "wait": 1.5},
+ {"do": "clicktext", "text": "2025", "wait": 1.5},
+ {"do": "clicktext", "text": "一月", "wait": 2.0},
+ {"do": "js", "limit": 400, "code": "(() => { const clean = (s) => ((s || '') + '').trim(); const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; }; const 找 = (p) => [...document.querySelectorAll('input,textarea')].filter((x) => vis(x) && (x.placeholder || '').includes(p)); const 名 = 找('直聘网'), 角色 = 找('UI 设计师'), 时间 = 找('选择年月'), 描述 = 找('描述该项目'); const 问 = []; if (!名.length || clean(名[0].value) !== '用户搜索关键词分析') 问.push('名称=' + (名.length ? clean(名[0].value) : '空')); if (!角色.length || !clean(角色[0].value)) 问.push('角色=空'); if (时间.length < 2 || clean(时间[0].value) !== '2024-07' || clean(时间[1].value) !== '2025-01') 问.push('时间=' + 时间.map((x) => clean(x.value)).join('~')); if (!描述.length || 描述[0].value.length < 150) 问.push('描述=' + (描述.length ? 描述[0].value.length : 0) + '字'); if (问.length) return '不保存，缺：' + 问.join('；'); const ok = [...document.querySelectorAll('[ka$=\"_ok\"]')].filter(vis)[0]; if (!ok) return '全对但没找到完成按钮'; ok.click(); return '闸门全过，已点完成 ka=' + (ok.getAttribute('ka') || '按文字'); })()"},
+ {"do": "js", "limit": 500, "code": "(() => { const clean = (s) => ((s || '') + '').trim(); const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; }; const 框 = [...document.querySelectorAll('input')].filter((x) => vis(x) && (x.placeholder || '').includes('直聘网'))[0]; const 报错 = [...document.querySelectorAll('[class*=error]')].filter(vis).map((x) => clean(x.innerText)).filter((t) => t && t.length < 40).slice(0, 5); return {表单还开着: !!框, 报错: 报错}; })()", "wait": 5.0},
+ {"do": "reload", "sec": 8},
+ {"do": "js", "limit": 1200, "code": "(() => { const clean = (s) => (s || '').replace(/\\u00a0/g, ' ').trim(); const b = document.getElementById('project'); return b ? clean(b.innerText).slice(0, 1200) : 'NO BLOCK'; })()"}
+]

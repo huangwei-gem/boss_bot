@@ -2,7 +2,7 @@
   "chat_name": "张先生",
   "chat_id": "张先生#颜知数源",
   "account_index": 0,
-  "job_name": "兼职·【远程兼职】各科医生专家+医疗AI数据标注60-200元/时上海查看职位",
+  "job_name": "兼职·【远程兼职】各科医生专家+医疗AI数据标注60-200元/时上海",
   "company": "颜知数源",
   "messages": [
     {
@@ -58,8 +58,23 @@
       "job_name": "兼职·【远程兼职】各科医生专家+医疗AI数据标注60-200元/时上海查看职位",
       "isFriend": false,
       "mid": "394752507761410"
+    },
+    {
+      "sender": "bot",
+      "content": "张先生，这个标注岗我挺合适的，您方便时我们线上聊几句？",
+      "text": "张先生，这个标注岗我挺合适的，您方便时我们线上聊几句？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-19 09:08:25",
+      "time": "09:08",
+      "job_name": "兼职·【远程兼职】各科医生专家+医疗AI数据标注60-200元/时上海查看职位",
+      "isFriend": false,
+      "mid": "398265977950977"
     }
   ],
-  "updated_at": "2026-10-10 07:05:38",
+  "updated_at": "2026-10-25 02:17:11",
   "unread_on_boss": 0
 }

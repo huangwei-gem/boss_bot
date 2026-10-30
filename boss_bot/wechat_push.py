@@ -51,13 +51,19 @@ def load_creds(path=CREDS_PATH):
     return creds
 
 
-def get_token(appid, secret, cache_path=TOKEN_CACHE, now=None):
+def get_token(appid, secret, cache_path=None, now=None):
     """取 access_token，命中缓存就不重复要。
 
     测试号的 token 每日上限 2000 次、有效 7200 秒。每次发送都新取一个，
     一是慢，二是会把上限烧在取 token 上；提前 5 分钟过期是为了避开
     "发的时候刚好过期"这种半路失败。
+
+    缓存路径要**用的这一刻**才定：写成 `cache_path=TOKEN_CACHE` 那种默认值，
+    值在 def 那一刻就焊死了，测试再怎么 `monkeypatch.setattr(wp, "TOKEN_CACHE", ...)`
+    都改不动它——实测就是这条：一趟 pytest 把仓库里 `data/wechat_token.json`
+    刷成 `{"token": "TOK"}`（假 token），真 token 就这么被盖掉了。
     """
+    cache_path = cache_path or TOKEN_CACHE
     now = time.time() if now is None else now
     try:
         with open(cache_path, encoding="utf-8") as f:

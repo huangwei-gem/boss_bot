@@ -1,0 +1,63 @@
+{
+  "chat_name": "文先生",
+  "chat_id": "文先生#新佳宜便利店",
+  "account_index": 0,
+  "job_name": "数据分析师15-30K·14薪长沙",
+  "company": "新佳宜便利店",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "00:08",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394948235510531",
+      "block": "00:08 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394948235535104",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会！",
+      "time": "11:34",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395116931363588",
+      "block": "11:34 对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会！"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-10 11:37:50",
+      "time": "11:37",
+      "job_name": "数据分析师15-20K·13薪长沙查看职位",
+      "isFriend": false,
+      "mid": "395117660685059"
+    }
+  ],
+  "updated_at": "2026-10-25 07:48:44",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,51 @@
+{
+  "chat_name": "宋伟",
+  "chat_id": "宋伟#上海嘉驰信息技术咨询",
+  "account_index": 1,
+  "job_name": "数据运营-广告、电商零售行业数据分析优先10-11K上海查看职位",
+  "company": "上海嘉驰信息技术咨询",
+  "messages": [
+    {
+      "text": "您好，我是统计学本科在读，有数据标注、AI语料清洗和数据分析的实际项目经验，熟练使用SQL、Python和Excel，对电商零售行业的数据运营很感兴趣。方便的话我把简历发您细聊",
+      "time": "02:13",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394978982199811",
+      "block": "02:13 已读 您好，我是统计学本科在读，有数据标注、AI语料清洗和数据分析的实际项目经验，熟练使用SQL、Python和Excel，对电商零售行业的数据运营很感兴趣。方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据标注、AI语料清洗和数据分析的实际项目经验，熟练使用SQL、Python和Excel，对电商零售行业的数据运营很感兴趣。方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "感谢您对我们的关注，但是您的简历与我们当前的职位要求并不完全匹配。祝您在BOSS直聘找到更合适的职位！",
+      "time": "09:26",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395085271421442",
+      "block": "09:26 感谢您对我们的关注，但是您的简历与我们当前的职位要求并不完全匹配。祝您在BOSS直聘找到更合适的职位！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢您对我们的关注，但是您的简历与我们当前的职位要求并不完全匹配。祝您在BOSS直聘找到更合适的职位！"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的反馈，祝您招聘顺利~",
+      "text": "理解，感谢您的反馈，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-10 09:42:19",
+      "time": "09:42",
+      "job_name": "数据运营-广告、电商零售行业数据分析优先10-15K上海查看职位",
+      "isFriend": false,
+      "mid": "395089268523520"
+    }
+  ],
+  "updated_at": "2026-10-24 11:43:53",
+  "unread_on_boss": 0
+}

@@ -2,7 +2,7 @@
   "chat_name": "熊凯",
   "chat_id": "熊凯#厦门精研万佳",
   "account_index": 0,
-  "job_name": "兼职·线上运营（居家办公、无经验可培）200-300元/天厦门查看职位",
+  "job_name": "兼职·线上运营（居家办公、无经验可培）200-300元/天厦门",
   "company": "厦门精研万佳",
   "messages": [
     {
@@ -206,8 +206,23 @@
       "job_name": "兼职·线上运营（居家办公、无经验可培）200-300元/天厦门查看职位",
       "isFriend": false,
       "mid": "394815199805442"
+    },
+    {
+      "sender": "bot",
+      "content": "微信暂不方便哈，咱们先线上把任务量和结算对下？",
+      "text": "微信暂不方便哈，咱们先线上把任务量和结算对下？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-20 16:20:05",
+      "time": "16:20",
+      "job_name": "兼职·线上运营（居家办公、无经验可培）200-300元/天厦门查看职位",
+      "isFriend": false,
+      "mid": "398725972672512"
     }
   ],
-  "updated_at": "2026-10-10 01:19:41",
+  "updated_at": "2026-10-25 02:13:12",
   "unread_on_boss": 0
 }

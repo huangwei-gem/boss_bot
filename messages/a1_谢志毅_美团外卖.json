@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "394715824087044",
-      "block": "08:22 此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+      "block": "此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
       "sender": "hr",
       "kind": "system",
       "content": "此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
@@ -280,9 +280,10 @@
       "timestamp": "2026-10-10 07:08:04",
       "time": "07:08",
       "job_name": "送餐员！有车住！5-7元/单长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395051360432129"
     }
   ],
-  "updated_at": "2026-10-10 07:08:04",
+  "updated_at": "2026-10-23 15:16:41",
   "unread_on_boss": 0
 }

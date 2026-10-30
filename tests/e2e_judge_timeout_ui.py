@@ -25,6 +25,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+from tests.conftest import mk测试临时目录  # noqa: E402
 from boss_bot.platform_compat import 终止进程
 
 sys.path.insert(0, str(PROJECT_ROOT / "tests"))
@@ -103,7 +104,7 @@ def type_into(page, value):
 
 
 def main():
-    tmp = Path(tempfile.mkdtemp(prefix="boss_judge_to_ui_"))
+    tmp = mk测试临时目录("boss_judge_to_ui")
     src = json.loads((PROJECT_ROOT / "bot_config.json").read_text(encoding="utf-8"))
     src.setdefault("ai", {})["judge_timeout"] = 12
     (tmp / "bot_config.json").write_text(

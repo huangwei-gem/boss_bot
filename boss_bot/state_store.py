@@ -54,21 +54,35 @@ class StateStore:
             "last_reply_at": "",
             "last_action": "",
             "resume_sent": False,
+            "handled_hashes": [],
         })
 
     # ---------- 消息处理去重 ----------
 
+    # 一个会话记住最近处理过几条。只记最后一条会重复回复：先回了 A，HR 又发 B，
+    # 我们回了 B，这时存档（比线上薄一轮）把 A 当成欠回复重新端上来，
+    # last_msg_hash 已经是 B 的哈希，于是 A 又被回一次。
+    # 盘上 52 组"同一会话对同一句发了≥2 条回复"、涉及 112 条就是这么来的。
+    已处理保留条数 = 8
+
     def was_handled(self, chat_name: str, message: str) -> bool:
-        """该会话的该条消息是否已处理过"""
+        """该会话的该条消息是否已处理过（最近 已处理保留条数 条内都算）"""
         with self._lock:
             h = self._hash(chat_name, message)
-            return self._chat(chat_name).get("last_msg_hash") == h
+            chat = self._chat(chat_name)
+            if chat.get("last_msg_hash") == h:
+                return True
+            return h in (chat.get("handled_hashes") or [])
 
     def mark_handled(self, chat_name: str, message: str, action: str):
         """记录已处理的消息"""
         with self._lock:
             chat = self._chat(chat_name)
-            chat["last_msg_hash"] = self._hash(chat_name, message)
+            h = self._hash(chat_name, message)
+            记 = list(chat.get("handled_hashes") or [])
+            记.append(h)
+            chat["handled_hashes"] = 记[-self.已处理保留条数:]
+            chat["last_msg_hash"] = h
             chat["last_msg"] = message[:100]
             chat["last_reply_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             chat["last_action"] = action

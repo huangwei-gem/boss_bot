@@ -8,6 +8,7 @@
 """
 from types import SimpleNamespace
 
+import json
 import pytest
 
 from boss_bot.self_evolve import (
@@ -172,15 +173,26 @@ class SnapshotRollbackTest:
         e = _engine(tmp_path)
         assert e.rollback_evolution_data() is False
 
-    def test_快照只保留最近5份(self, tmp_path):
+    def test_快照热区只留最近5份其余挪进kept一份不删(self, tmp_path):
+        """超额的快照是"挪走"不是"删掉"：这些文件是提示词演进的底账。"""
         import time
         e = _engine(tmp_path)
         for i in range(8):
             e.record_gate_block(f"原因{i}", "草稿", {})
             e.snapshot_evolution_data(f"第{i}次")
             time.sleep(0.01)
-        snaps = sorted((tmp_path / "evolution_snapshots").glob("*.json"))
-        assert len(snaps) == 5
+        目录 = tmp_path / "evolution_snapshots"
+        热 = sorted(目录.glob("*.json"))
+        留 = sorted((目录 / "kept").glob("*.json"))
+        assert len(热) == 5, [p.name for p in 热]
+        assert len(留) == 3, "超额那 3 份既不在热区也没进 kept/ —— 就是被删了"
+        assert len(热) + len(留) == 8
+        # 留档的那几份必须还能读回真数据，不能是空壳
+        assert any(json.loads(p.read_text(encoding="utf-8")).get("reply_records")
+                   for p in 留), "kept/ 里的快照读不回记录"
+        # 回滚仍然回到最新那份，不受挪走旧份影响
+        assert e.rollback_evolution_data() is True
+        assert len(e._reply_records) == 8
 
 
 class PersistenceTest:

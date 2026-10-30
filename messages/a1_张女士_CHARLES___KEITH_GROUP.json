@@ -1,0 +1,36 @@
+{
+  "chat_name": "张女士",
+  "chat_id": "张女士#CHARLES___KEITH_GROUP",
+  "account_index": 1,
+  "job_name": "Charles&Keith_数据分析师10-15K上海查看职位",
+  "company": "CHARLES & KEITH GROUP",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:47",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397597203874305",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学本科在读，有数据分析与数据标注经验，看到贵司数据分析师岗位，方便的话我把简历发您细聊？",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397597336183297",
+      "block": "送达 您好，我是统计学本科在读，有数据分析与数据标注经验，看到贵司数据分析师岗位，方便的话我把简历发您细聊？",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据分析与数据标注经验，看到贵司数据分析师岗位，方便的话我把简历发您细聊？",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:41:44"
+}

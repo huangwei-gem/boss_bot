@@ -1,0 +1,22 @@
+{
+  "chat_name": "吴江",
+  "chat_id": "吴江#湖南钒谷新能源",
+  "account_index": 0,
+  "job_name": "仿真分析工程师12-24K·14薪长沙",
+  "company": "湖南钒谷新能源",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "13:49",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397981216936705",
+      "block": "13:49 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-25 02:24:40"
+}

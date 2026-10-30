@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "393891167248896",
-      "block": "00:27 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -211,9 +211,22 @@
       "timestamp": "2026-10-10 05:11:00",
       "time": "05:11",
       "job_name": "兼职·语音数据标注助理（居家兼职）10-25元/时菏泽查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395022587572737"
+    },
+    {
+      "text": "都可以 我也可以给你安排",
+      "time": "10-12 15:46",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395886548201985",
+      "block": "10-12 15:46 都可以 我也可以给你安排",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "都可以 我也可以给你安排"
     }
   ],
-  "updated_at": "2026-10-10 05:11:00",
-  "unread_on_boss": 0
+  "updated_at": "2026-10-23 15:00:41",
+  "unread_on_boss": 1
 }

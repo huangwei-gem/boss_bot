@@ -36,9 +36,10 @@ from boss_bot.greeting import (account_greeting_mode, effective_account_greeting
                                sanitize_ai_greeting)
 from boss_bot.unified_config import strip_default_greeting
 from boss_bot.browser_launcher import (
-    BrowserManager, 页面被踢到哪, 是风控验证页)
+    BrowserManager, 页面被踢到哪, 是风控验证页, 准整页加载, 风控去向后缀)
 from boss_bot.reply_record import (GreetRecord, classify_greet_skip,
                                    _get_greet_store)
+from boss_bot.untrusted import injection_hint, sanitize_untrusted, untrusted_note
 
 # ─────────────────────────────────────────────
 # 路径常量
@@ -406,6 +407,19 @@ def jd_gate(keywords, job: dict, thin_chars: int = JD_THIN_CHARS,
             job.get("job_name"), target_keywords):
         return f"{JD_THIN_REASON}（正文仅 {len(body)} 字，门槛 {thin_chars} 字）"
     return ""
+
+
+勾选标记 = "_由勾选投递"
+
+
+def 勾选投递的(job) -> bool:
+    """这一条是不是他在候选池里点名勾出来的。
+
+    这个键由排空勾选队列那一腿打上（UnifiedBotLoop._drain_apply_queue），
+    抓取腿自己搜到的岗位没有它 —— 所以"勾了的不再复核"只落在他点名的那几条，
+    关掉只抓不投时旧行为一个字都不变。
+    """
+    return bool(isinstance(job, dict) and job.get(勾选标记))
 
 
 
@@ -886,6 +900,34 @@ def reset_shared_cooldown() -> None:
         _SHARED_COOLDOWN.clear()
 
 
+# ── 岗位详情页打开节流：这一条钉在"真被挡的那一页"上 ──
+# 8 天主日志里被 BOSS 甩到验证页/风控页共 112 处，其中 111 处的上一条动作是打开
+# job_detail 岗位详情页（点卡片开详情、进详情找「立即沟通」都算）；反过来，
+# 10-20+10-21 两天纯搜索页整页加载 381 次、只有 1 处被挡，还是启动那一瞬间读到一张
+# 早就停在风控页上的旧标签。所以节流要摊平的是**打开详情的频率**，不是搜索页——
+# 搜索页拖慢了直接少出货，却没有实测收益。
+# 和按服务商共享的冷却表同理（见上）：风控按 IP 算，不按号算，这一份整个进程共用。
+_SHARED_JOB_PAGE_STATE = {"上次": 0.0}
+_JOB_PAGE_LOCK = threading.Lock()
+
+
+def 打开要等秒(上次: float, 现在: float, 间隔: float) -> float:
+    """距离下一次准打开岗位详情页还差几秒。间隔填 0（或负）就是不节流。
+
+    上次=0 是"这个进程还没打开过详情页"，第一趟绝不许等——那是纯函数的哨兵，
+    真按 0 + 间隔 - 现在 算会算出一个天文数字，投递腿当场冻死。
+    """
+    if 间隔 <= 0 or 上次 <= 0:
+        return 0.0
+    return max(0.0, 上次 + float(间隔) - float(现在))
+
+
+def reset_job_page_throttle() -> None:
+    """清掉节流计时（测试用；也用于"改了间隔就当场按新的来"）。"""
+    with _JOB_PAGE_LOCK:
+        _SHARED_JOB_PAGE_STATE["上次"] = 0.0
+
+
 # ── 判分复盘：AI 说"不符合"之后追问它到底卡在哪一条 ──
 # 口径见 docs/superpowers/specs/2026-09-29-reject-reason-followup-design.md：
 # 只问 AI 不问 HR、只追边界带、每号每轮限量、原因只出建议。
@@ -1062,12 +1104,23 @@ class AIAnalyzerChain:
         self._unhealthy_cache = None
 
     HEALTH_STALE_SECONDS = 24 * 3600
+    # 一条"这接口打不通"的结论只管半小时。以前按整份文件的时间算、24 小时不重审：
+    # 2026-10-23 16:33 那次体检把 15 个接口划死 12 个，之后一整天没人再探，
+    # 容灾链就按那份旧名单跳——10-23 白天每小时 2000+ 条「暂无可用 AI 接口」，
+    # 10-24 上午重启后盘上还是那份（18.7 小时前的），池里 710 条一直没结论。
+    # 半小时这个数取自 COOLDOWN_AUTH_SECONDS：真挂着的接口由运行时回写续这条（2 次
+    # 超时/截断就重新划出去），所以重审的代价最多是白等一次 30s，不是天天饿着。
+    体检重审秒 = 30 * 60
 
     def _unhealthy_names(self) -> set:
-        """体检在 24h 内明确标记"不可用"的接口名（按文件版本缓存，避免每岗位读盘）。
+        """体检半小时内明确标记"不可用"的接口名（按文件版本缓存，避免每岗位读盘）。
 
         容灾链的相对顺序不变，只是不再把 30s 预算浪费在已知打不通的接口上；
         全部接口都被标记不可用时不生效（宁可慢，也不能完全不筛岗位）。
+
+        年龄按**每一条自己的 `checked_at`** 算，不按整份文件的 `updated_at` 算：
+        任何一次运行时回写都会把 `updated_at` 推到当下，用文件时间续命就等于
+        一条新证据替一屋子旧结论再判一天。
 
         缓存按体检文件的 mtime+大小失效，不按时间：两个号是两条独立的容灾链，
         按 5 分钟时间缓存时账号1 刚体检完"25/27 可用"，账号2 仍拿着旧清单
@@ -1089,16 +1142,30 @@ class AIAnalyzerChain:
             updated = data.get("updated_at") or ""
             try:
                 from datetime import datetime as _dt
-                age = time.time() - _dt.strptime(updated, "%Y-%m-%d %H:%M:%S").timestamp()
-            except ValueError:
-                age = self.HEALTH_STALE_SECONDS + 1  # 没有时间戳就当作过期
+                文件年龄 = time.time() - _dt.strptime(
+                    str(updated), "%Y-%m-%d %H:%M:%S").timestamp()
+            except (ValueError, TypeError):
+                文件年龄 = self.HEALTH_STALE_SECONDS + 1  # 没有时间戳就当作过期
+
+            def 这条几小时前(条目):
+                写于 = str((条目 or {}).get("checked_at") or "")
+                if not 写于:
+                    return 文件年龄      # 老条目没有逐条时刻，照文件那份时间走
+                try:
+                    from datetime import datetime as _dt
+                    return max(0.0, time.time() - _dt.strptime(
+                        写于, "%Y-%m-%d %H:%M:%S").timestamp())
+                except (ValueError, TypeError):
+                    return 文件年龄
+
             results = data.get("results") or {}
-            if age <= self.HEALTH_STALE_SECONDS and results:
+            if results:
                 for p in self.providers:
                     entry = {"api_base": p.api_base, "model": p.model, "name": p.name}
                     hit = results.get(provider_key(entry)) or results.get(
                         provider_key(dict(entry, api_base=entry["api_base"] + "/")))
-                    if hit and hit.get("status") == STATUS_UNAVAILABLE:
+                    if hit and hit.get("status") == STATUS_UNAVAILABLE and \
+                            这条几小时前(hit) <= self.体检重审秒:
                         names.add(p.name)
             self._unhealthy_cache = (version, names)
         except Exception as e:
@@ -1332,9 +1399,10 @@ class AIAnalyzerChain:
             f"技能：{', '.join(resume.get('skills', []))}\n"
             f"工作经验：{resume.get('experience', '')}\n\n"
             "【岗位】\n"
-            f"岗位名称：{job.get('job_name', '')}\n"
-            f"任职要求：{job.get('requirements', '')}\n"
-            f"岗位描述：{job.get('description', '')}\n\n"
+            f"岗位名称：{sanitize_untrusted(job.get('job_name', ''), limit=200)}\n"
+            f"任职要求：{sanitize_untrusted(job.get('requirements', ''), limit=2000)}\n"
+            f"岗位描述：{sanitize_untrusted(job.get('description', ''), limit=3000)}\n\n"
+            + untrusted_note(f"{job.get('requirements', '')}\n{job.get('description', '')}") + "\n\n"
             "请按以下 JSON 格式返回（不要包含其他内容）：\n"
             '{\n'
             '  "blocking_requirement": "没过的那一条硬性要求，尽量用任职要求里的原文",\n'
@@ -1563,6 +1631,32 @@ class AIAnalyzerChain:
                 "这只是一条方向参照，不是放行理由——命中任何否决条件照样判不匹配，"
                 "也不要因为岗位像严选就编造简历里没有的经验。"
             )
+        # 他自己上传/粘贴的那份「筛选要求」（data/ai_screen_doc.json，全局一份）。
+        # 每次现读：面板上换了文件，下一单就按新文件判，不用重启；文档指纹也进了
+        # 缓存键，不会命中旧文件下判出来的旧结论。
+        try:
+            from boss_bot import ai_screen_doc as _筛选文件
+            要求 = _筛选文件.当前()
+        except Exception:
+            要求 = {}
+        有要求 = bool(str(要求.get("text") or "").strip())
+        if 有要求:
+            system_msg += (
+                "\n\n【用户提供的筛选要求】\n" + 要求["text"] + "\n\n"
+                "上面这份文件是他自己写的筛选口径，判断「这条岗位要不要」时以它为主："
+                "文件里写明必须满足的条件，没满足就 is_match=false，并把命中的那条"
+                "原样写进 veto_hit；文件里明确不要的方向也按否决处理。"
+                "文件没提到的方面按你自己的判断补，但不要因为文件没提就放宽"
+                "【用户硬性筛选条件】里的任何一条；也不要编造文件或简历里没有的事实。"
+            )
+        # JD 是网页上抄下来的外部文本：进提示词前先剥掉零宽/双向/tag 字符，
+        # 里面夹着的"忽略以上指令"只当资料（来源卫生），并在末尾把边界说清。
+        岗位描述 = sanitize_untrusted(job.get('description', ''), limit=3000)
+        任职要求 = sanitize_untrusted(job.get('requirements', ''), limit=2000)
+        可疑 = (injection_hint(job.get('description', ''))
+                or injection_hint(job.get('requirements', '')))
+        if 可疑:
+            self._log("WARN", f"岗位原文里出现越权话术「{可疑}」，按资料判分，不执行")
         user_msg = (
             "【求职者简历】\n"
             f"教育背景：{resume.get('school', '')} "
@@ -1572,12 +1666,17 @@ class AIAnalyzerChain:
             f"工作经验：{resume.get('experience', '')}\n"
             f"求职意向：{resume.get('target_position', '')}\n\n"
             "【招聘岗位】\n"
-            f"岗位名称：{job.get('job_name', '')}\n"
+            f"岗位名称：{sanitize_untrusted(job.get('job_name', ''), limit=200)}\n"
             f"薪资：{薪资可信(job.get('salary', ''))}\n"
-            f"岗位描述：{job.get('description', '')}\n"
-            f"任职要求：{job.get('requirements', '')}\n"
-            f"公司：{job.get('company', '')}\n\n"
+            f"城市/地点：{sanitize_untrusted(job.get('city') or job.get('location') or '', limit=80)}\n"
+            f"经验要求：{sanitize_untrusted(job.get('experience', ''), limit=80)}\n"
+            f"学历要求：{sanitize_untrusted(job.get('education', ''), limit=80)}\n"
+            f"岗位描述：{岗位描述}\n"
+            f"任职要求：{任职要求}\n"
+            f"公司：{sanitize_untrusted(job.get('company', ''), limit=120)}\n\n"
+            + untrusted_note(f"{岗位描述}\n{任职要求}") + "\n\n"
         )
+
         if self.custom_filter_keywords:
             keywords_str = "、".join(self.custom_filter_keywords)
             user_msg += (
@@ -1589,7 +1688,7 @@ class AIAnalyzerChain:
                 "命中否决条件时不要因为薪资或其它方面不错而加分放行。\n\n"
             )
         veto_field = ('  "veto_hit": "命中的否决条件原文，没有则留空",\n'
-                      if self.custom_filter_keywords else "")
+                      if (self.custom_filter_keywords or 有要求) else "")
         user_msg += (
             "请分析匹配度，按以下 JSON 格式返回（不要包含其他内容）：\n"
             '{\n  "score": 0-100,\n  "is_match": true/false,\n'
@@ -1611,12 +1710,18 @@ class AIAnalyzerChain:
     def _make_cache_key(self, job_url: str, resume_hash: str) -> str:
         # 口径必须进键：只按"岗位URL+简历"缓存的话，改了判分提示词/阈值/否决词
         # 还是命中旧结论，等于改了不生效（2026-10-04 一轮 62 次判分 54 次是缓存）
+        try:
+            from boss_bot import ai_screen_doc as _筛选文件
+            文件指纹 = _筛选文件.当前指纹()
+        except Exception:
+            文件指纹 = ""
         rule = "|".join([
             str(self.match_threshold),
             str(self.veto_only_match),
             ",".join(self.pinned_job_examples),
             str(self.custom_scoring_prompt or ""),
             ",".join(self.custom_filter_keywords or []),
+            str(文件指纹),
         ])
         raw = f"{job_url}:{resume_hash}:{rule}"
         return hashlib.md5(raw.encode("utf-8")).hexdigest()
@@ -1653,6 +1758,45 @@ class AIAnalyzerChain:
             "providers_total": len(self.providers),
             "providers_valid": sum(1 for p in self.providers if p.is_valid()),
         }
+
+
+# ─────────────────────────────────────────────
+# 去重库：BOSS 侧已经有这条会话的岗位，抓取腿/投递腿/池子清理三处都读这一份
+# ─────────────────────────────────────────────
+
+def 读去重库() -> set:
+    """BOSS 侧已经有这条会话的岗位 URL，两个号共用 `data/chatted_jobs.json` 一份。
+
+    读不出来按"谁都没沟通过"处理：宁可多招呼一次，也不能把整池静默判成"都投过了"
+    ——那正好是他看到的"池子里全是投不出去的"那一族。
+    """
+    urls = set()
+    try:
+        if CHATTED_DB_FILE.exists():
+            with open(CHATTED_DB_FILE, "r", encoding="utf-8") as f:
+                urls = set(json.load(f) or [])
+    except Exception as e:
+        _file_logger.warning("读取去重库失败，按未沟通过处理: %s", e)
+        return set()
+    return urls
+
+
+def 沟通身份集(urls=None) -> set:
+    """把去重库折成"岗位身份"——和池子里那一行的 id 用同一份算法（job_pool.行id）。
+
+    为什么折一层而不是直接比整串 URL：BOSS 会在同一条岗位上换追踪参数和锚点，
+    整串一比就变成"这条没投过"，同一个 HR 于是收到两条一模一样的招呼。
+    """
+    from boss_bot.job_pool import 行id
+    return {行id(u) for u in (urls if urls is not None else 读去重库())}
+
+
+def 这条沟通过了(url, 身份库) -> bool:
+    """这一条岗位是不是 BOSS 侧已经有了；没有链接就判不了，按"没沟通过"走。"""
+    if not str(url or "").strip() or not 身份库:
+        return False
+    from boss_bot.job_pool import 行id
+    return 行id(url) in 身份库
 
 
 # ─────────────────────────────────────────────
@@ -1714,6 +1858,7 @@ class GreetEngine:
         self._login_event = threading.Event()
         # 已沟通岗位集合的进程内缓存（首次使用时读盘）
         self._chatted_cache = None
+        self._chatted_ids = set()
         self._chatted_loaded_at = 0.0
 
         # 统计
@@ -1888,6 +2033,10 @@ class GreetEngine:
         self._max_per_hour = rl.max_per_hour
         self._max_per_day = rl.max_per_day
         self._retry_max_attempts = self.config.greet.retry.max_attempts
+        # 退避的两个旋钮也要跟着重读：只在构造时快照的话，界面上把 2 秒改成 8 秒
+        # 得等下一次启动才看得见，而这条链下一轮就要用
+        self._retry_base_delay = self.config.greet.retry.base_delay
+        self._retry_backoff_factor = self.config.greet.retry.backoff_factor
 
         # 从 greet.accounts 读取本账号的默认任务参数
         acc = self._account()
@@ -1996,6 +2145,8 @@ class GreetEngine:
                 "job_name": job.get("job_name", ""),
                 "company": job.get("company", "") or job.get("company_location", ""),
                 "salary": job.get("salary", ""),
+                # 池里那行带 city，搜索页解析出来的是 location；两个来源同一件事
+                "city": job.get("city", "") or job.get("location", ""),
                 "status": status,
                 "ai_score": ai.get("score", 0),
                 "ai_reason": ai_reason,
@@ -2068,6 +2219,7 @@ class GreetEngine:
                 auto_greet_note=job.get("_auto_greet_note"),
                 company=job.get("company", job.get("company_location", "")),
                 salary=job.get("salary", ""),
+                city=job.get("city", "") or job.get("location", ""),
                 job_description=job.get("jd_description", job.get("description", "")),
                 job_requirements=job.get("jd_requirements", job.get("requirements", "")),
                 ai_score=ai_result.get("score", 0),
@@ -2358,6 +2510,54 @@ class GreetEngine:
             url += f"&jobType={type_code}"
         return url
 
+    def _节流岗位详情打开(self) -> float:
+        """打开下一张岗位详情页之前先等够最小间隔，返回实际等了多久。
+
+        等的是墙上时钟，不是"少开几张"：每个岗位的详情各不相同，跳过打开就会拿着
+        上一张详情页去点「立即沟通」——那比慢更糟（投错人）。
+        间隔从配置现读，界面改了下一趟就按新的来（见 memory「改了必须生效」）。
+        """
+        间隔 = 0
+        try:
+            间隔 = int(getattr(self.config.greet.rate_limit,
+                               "job_detail_min_interval", 0) or 0)
+        except Exception:
+            间隔 = 0
+        现在 = time.time()
+        with _JOB_PAGE_LOCK:
+            要等 = 打开要等秒(_SHARED_JOB_PAGE_STATE["上次"], 现在, 间隔)
+        if 要等 > 0 and self.running:
+            time.sleep(min(要等, 间隔 + 5.0))
+        with _JOB_PAGE_LOCK:
+            _SHARED_JOB_PAGE_STATE["上次"] = time.time()
+        等成了 = max(0.0, _SHARED_JOB_PAGE_STATE["上次"] - 现在)
+        if 等成了 >= 10:
+            self._log("INFO", f"岗位详情节流：8 天日志里被甩验证页的 111/112 处都出在"
+                              f"打开详情页这一步，把连续打开摊平到 {间隔} 秒以上，"
+                              f"这一趟等了 {等成了:.0f} 秒（不是卡住）")
+        return 等成了
+
+    def _等岗位卡片挂出来(self, instance, 上限秒: int = 12) -> bool:
+        """有界地等列表渲染出来，返回有没有等到。
+
+        为什么现在需要这一句：加载模式改成 eager（DOM 就绪就返回，不等图片和统计
+        脚本）之后，整页加载从实测 126 秒掉到 1.6 秒，可 BOSS 的岗位列表是脚本
+        渲染的，回来得太早一张卡片都读不到——那就把"变快"做成"变空"了。
+        等不到不报错也不停腿：0 卡片那一路本来就有机器暂停与下一轮重试兜着，
+        这里只负责把"再给它几秒"这件事说清楚。
+        """
+        开 = time.time()
+        while time.time() - 开 < 上限秒:
+            try:
+                if instance.eles(SELECTOR_JOB_NAME):
+                    return True
+            except Exception:
+                return False        # 页面断开那一类：多等也不会自己好，交给上层重连
+            time.sleep(0.5)
+        self._log("WARN", f"搜索页等了 {上限秒} 秒还没挂出岗位卡片，按现状往下走"
+                          f"（空搜索、页面被挡都可能是这个样子）")
+        return False
+
     def _parse_job_list(self):
         """解析岗位列表。"""
         instance = self.browser_manager.get_instance()
@@ -2372,6 +2572,11 @@ class GreetEngine:
         self._log("INFO", f"访问搜索页面: {search_url}")
         instance.get(search_url)
         self._random_delay(3, 6)
+        # 加载模式改成 eager（DOM 就绪就走，不等图片和统计脚本）之后，这一发的
+        # 实测耗时从 126 秒掉到 1.6 秒——快是快了，但 BOSS 的岗位列表是脚本渲染出来
+        # 的，回来得太早会一张卡片都读不到。所以这里自己等有界地等它挂出来，
+        # 上限 12 秒；等不到照原样往下走（0 卡片那一路已有机器暂停与重试兜着）。
+        self._等岗位卡片挂出来(instance)
 
         self._log("INFO", f"开始滚动 {self._scroll_pages} 次...")
         for i in range(self._scroll_pages):
@@ -2513,7 +2718,11 @@ class GreetEngine:
                         "query": self._query,
                     })
                 except Exception as e:
-                    self._log("WARN", f"解析卡片 {idx} 失败: {e}")
+                    # 有些 DrissionPage 异常 str() 是空串，只打 `{e}` 会留下一条
+                    # 「解析卡片 N 失败: 」——10-24 半小时就念了 52 条这样的，
+                    # 看着像"卡片坏了"，其实连是超时还是取不到元素都分不出来。
+                    self._log("WARN", "解析卡片 %s 失败: %s: %s"
+                              % (idx, type(e).__name__, str(e) or repr(e)))
                     # 失败时用链接兜底
                     if idx < len(full_job_urls):
                         processed_jobs.append({
@@ -2712,6 +2921,12 @@ class GreetEngine:
         ai_job = {
             "job_name": job.get("job_name", ""),
             "salary": job.get("salary", ""),
+            # 城市/经验/学历是真判据：只给标题的话，"地点不对""三年经验"这种
+            # 他明说过的条件 AI 根本看不见，只能靠猜
+            "city": job.get("city", "") or job.get("location", ""),
+            "location": job.get("location", ""),
+            "experience": job.get("experience", ""),
+            "education": job.get("education", ""),
             "description": job.get("description", job.get("jd_description", "")),
             "requirements": job.get("requirements", job.get("jd_requirements", "")),
             "company": job.get("company", job.get("company_location", "")),
@@ -2970,6 +3185,11 @@ class GreetEngine:
         # 已经带上同一句话，两边各打一行会让日志行数变成记录条数的两倍
         greeting, greeting_source = self._greeting_for(job)
         if not (greeting or "").strip():
+            # 招呼语被发送闸门拦下时，原因串（话术不可用：报了学历档次…）直接交给
+            # 上层那句"⏭️ 跳过: 岗位（原因:…）"，别一律糊成"未配置招呼语"——
+            # 配置里有字却被拦，和没配置是两件不同的事，他要看到才知道去哪儿改。
+            if str(greeting_source or "").startswith("话术不可用"):
+                return False, greeting_source
             return False, GREETING_MISSING_REASON
         # 来源一取到就记上：抽屉路径和「平台自动发」那条路径都要能说出这句是哪来的
         job["_greeting_source"] = greeting_source
@@ -3003,9 +3223,15 @@ class GreetEngine:
                     return False, "导航前页面断开且恢复失败"
                 instance = self.browser_manager.get_instance()
 
+            self._节流岗位详情打开()
             for _retry in range(self._retry_max_attempts):
                 try:
                     self._log("INFO", f"导航到: {url}")
+                    # 这一发走的是 JS 改 location，不经过 BrowserInstance.get，
+                    # 所以那份地板要在这里自己踩一下：打开岗位详情是实测头号成因
+                    # （8 天日志 111/112 处被甩验证页），它自己已有 30 秒间隔，但要
+                    # 紧的是别让另一条腿在同一秒再发一发（两号一个出口 IP）。
+                    准整页加载(url, lambda m: self._log("DEBUG", m))
                     # json.dumps 生成的是转义好的 JS 字符串字面量：岗位 URL 里出现
                     # 单引号时手工拼 '...' 会截断语句，等于把页面 DOM 内容当代码执行
                     instance.run_js(f"window.location.href = {json.dumps(url)}")
@@ -3014,7 +3240,7 @@ class GreetEngine:
                     break
                 except Exception as _e:
                     self._log("WARN", f"页面加载重试: {_e}")
-                    self._random_delay(2, 4)
+                    self._退避重试等待(_retry)
             else:
                 self._log("WARN", "页面加载失败，跳过此岗位")
                 return False, "页面加载失败"
@@ -3029,7 +3255,8 @@ class GreetEngine:
                 踢到哪 = self._落地后判性(instance)
                 if 踢到哪 == "risk":
                     self._log("WARN", "岗位页被 BOSS 风控验证页挡住（要人工滑一下，"
-                                      "不是登录失效，Cookie 原封不动）: %s" % current_url[:70])
+                                      "不是登录失效，Cookie 原封不动）: %s%s"
+                              % (current_url[:70], 风控去向后缀(current_url)))
                     if not self._captcha_handoff():
                         return False, CAPTCHA_REASON
                 elif 踢到哪 == "login_wall":
@@ -3092,13 +3319,18 @@ class GreetEngine:
             self._log("INFO", f"JD 描述长度: {len(job_description)} 字符")
 
             # ── 3.5 JD 到手后再判一次，拦在点「立即沟通」之前 ──
-            blocked = jd_gate(self._ai_custom_filter_keywords, job,
-                              title_keywords=self._ai_title_veto_keywords,
-                              target_keywords=self.方向词表())
-            if blocked:
-                reason = f"{blocked}｜{job.get('job_name', '')}"
-                self._log("WARN", f"⛔ JD 闸门跳过: {reason}")
-                return False, reason
+            # 他在池里勾过的不判（见 勾选投递那条岗位）：这一路"先选再投"，
+            # 勾这个动作本身就是决定，再拿否决词/方向词把点名的岗位弹回去，
+            # 等于机器推翻他刚做的选择——2026-10-29 那行「数据标注/AI训练师」
+            # 就是他勾的，被「JD 命中否决词『坐班』」弹了回来。
+            if not 勾选投递的(job):
+                blocked = jd_gate(self._ai_custom_filter_keywords, job,
+                                  title_keywords=self._ai_title_veto_keywords,
+                                  target_keywords=self.方向词表())
+                if blocked:
+                    reason = f"{blocked}｜{job.get('job_name', '')}"
+                    self._log("WARN", f"⛔ JD 闸门跳过: {reason}")
+                    return False, reason
 
             # ── 4. 点击立即沟通 ──
             self._log("INFO", "开始点击沟通按钮...")
@@ -3713,6 +3945,15 @@ class GreetEngine:
             job["_recorded"] = False
             self._log("WARN", f"即时记录投递结果失败，改由收尾路径补记: {e}")
 
+    def _退避重试等待(self, 第几次: int):
+        """按 retry.base_delay × retry.backoff_factor^第几次 退避，带 ±20% 抖动。
+
+        这两个旋钮以前只被赋值、从没被读过：面板上填 5 秒和填 2 秒，代码里
+        走的都是同一句 _random_delay(2, 4)。
+        """
+        秒 = self._retry_base_delay * (self._retry_backoff_factor ** max(0, int(第几次)))
+        self._random_delay(秒 * 0.8, 秒 * 1.2)
+
     def _random_delay(self, min_sec: float, max_sec: float):
         """随机延迟（反爬策略）—— 走可打断的等待。
 
@@ -3760,8 +4001,24 @@ class GreetEngine:
         account_text = effective_account_greeting(acc, resume, profile) if acc else ""
         ai_text = sanitize_ai_greeting(job.get("_ai_suggested_greeting")
                                        or (job.get("_ai_result") or {}).get("suggested_greeting"))
-        return pick_greeting(job.get("greeting_message", ""),
-                             account_text, DEFAULT_GREETING, ai_text)
+        选, 来源 = pick_greeting(job.get("greeting_message", ""),
+                                 account_text, DEFAULT_GREETING, ai_text)
+        # AI 现编那一路在 sanitize_ai_greeting 里已经过了发送闸门；配置里手写的这两段
+        # 以前是直接发——2026-10-23 查 messages/ 存档，「我是双一流的本科」就是这么发出去
+        # 218 条（那时画像只写「本科在读（统计学）」，画像里没有的档次不许机器替他报），
+        # 其中 13 条对面回的就是「不太合适」。手写的也要过同一道闸，拦下的照实报原因。
+        # 2026-10-29 用户明确「我就是双一流」，画像 education 已写成「本科在读（统计学），双一流」，
+        # 这句现在过得了闸；闸门本身照留——画像里没有的档次仍然拦。
+        if 选 and 来源 != "AI 按岗位定制":
+            try:
+                from boss_bot.reply_engine import reply_rejection
+                拒 = reply_rejection(选)
+            except Exception:
+                拒 = ""
+            if 拒:
+                self._log("WARN", "招呼语过不了发送闸门（来源=%s）：%s" % (来源, 拒))
+                return "", "话术不可用：%s" % 拒
+        return 选, 来源
 
     def _auto_greet_dialog(self, instance) -> dict:
         """页面上有没有 BOSS"已自动发送"的弹窗；有就带回它的现场文本和按钮。"""
@@ -4058,26 +4315,18 @@ class GreetEngine:
         """
         now = time.time()
         if self._chatted_cache is None or (now - self._chatted_loaded_at) > self.CHATTED_REFRESH_SECONDS:
-            urls = set()
-            try:
-                if CHATTED_DB_FILE.exists():
-                    with open(CHATTED_DB_FILE, "r", encoding="utf-8") as f:
-                        urls = set(json.load(f))
-            except Exception as e:
-                self._log("WARN", f"读取去重库失败，按未沟通过处理: {e}")
-                urls = set()
+            urls = 读去重库()
             # 本地已标记但还没落盘成功的，不能因为重读又丢了
             urls |= (self._chatted_cache or set())
             self._chatted_cache = urls
+            self._chatted_ids = 沟通身份集(urls)
             self._chatted_loaded_at = now
         return self._chatted_cache
 
     def _is_already_chatted(self, job: dict) -> bool:
         """检查是否已沟通过。"""
-        url = job.get("url", "")
-        if not url:
-            return False
-        return url in self._load_chatted()
+        self._load_chatted()      # 头一次用要先把盘上那份读进来
+        return 这条沟通过了(job.get("url", ""), self._chatted_ids)
 
     def _mark_chatted(self, job: dict):
         """标记岗位为已沟通。
@@ -4089,7 +4338,8 @@ class GreetEngine:
         url = job.get("url", "")
         if not url:
             return
-        if url in self._load_chatted():
+        库 = self._load_chatted()
+        if url in 库 or 这条沟通过了(url, 沟通身份集(库)):
             return
         with GreetEngine._chatted_lock:
             try:
@@ -4101,6 +4351,7 @@ class GreetEngine:
                 merged.add(url)
                 write_json_atomic(CHATTED_DB_FILE, sorted(merged))
                 self._chatted_cache = merged
+                self._chatted_ids = 沟通身份集(merged)
             except Exception as e:
                 # 写失败必须报出来：静默丢一条就等于下次重复打招呼
                 self._log("WARN", f"写入去重库失败，可能重复打招呼: {e}")

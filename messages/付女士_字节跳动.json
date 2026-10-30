@@ -2,7 +2,7 @@
   "chat_name": "付女士",
   "chat_id": "付女士#字节跳动",
   "account_index": 0,
-  "job_name": "商家BD-万葭灯火（抖音生活服务旗下品牌）190-200元/天长沙查看职位",
+  "job_name": "商家BD-万葭灯火（抖音生活服务旗下品牌）190-200元/天长沙",
   "company": "字节跳动",
   "messages": [
     {
@@ -73,8 +73,113 @@
       "job_name": "商家BD-万葭灯火（抖音生活服务旗下品牌）190-200元/天长沙查看职位",
       "isFriend": false,
       "mid": "395049838473473"
+    },
+    {
+      "text": "可以发一份你的简历过来",
+      "time": "09:41",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395089125769472",
+      "block": "09:41 可以发一份你的简历过来",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "可以发一份你的简历过来"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "395089415893250",
+      "block": "附件简历请求已发送",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "附件简历请求已发送"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "395089415958788",
+      "block": "数据分析简历-黄维.docx 点击预览附件简历",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "数据分析简历-黄维.docx 点击预览附件简历"
+    },
+    {
+      "sender": "bot",
+      "content": "[简历已发送]",
+      "text": "[简历已发送]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "rule",
+      "action": "resume",
+      "timestamp": "2026-10-10 09:42:56",
+      "time": "09:42",
+      "job_name": "商家BD-万葭灯火（抖音生活服务旗下品牌）190-200元/天长沙查看职位",
+      "isFriend": false
+    },
+    {
+      "text": "对方已同意，您的附件简历已发送给对方",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "395089437180167",
+      "block": "对方已同意，您的附件简历已发送给对方",
+      "sender": "hr",
+      "kind": "system",
+      "content": "对方已同意，您的附件简历已发送给对方",
+      "card_text": "对方已同意，您的附件简历已发送给对方"
+    },
+    {
+      "text": "对方已查看了您的附件简历",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "395089442341128",
+      "block": "对方已查看了您的附件简历",
+      "sender": "hr",
+      "kind": "system",
+      "content": "对方已查看了您的附件简历",
+      "card_text": "对方已查看了您的附件简历"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-16 13:21:34",
+      "time": "13:21",
+      "job_name": "商家BD-万葭灯火（抖音生活服务旗下品牌）190-200元/天长沙查看职位",
+      "isFriend": false,
+      "mid": "397266516300035"
+    },
+    {
+      "text": "好的",
+      "time": "14:23",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397281783238915",
+      "block": "14:23 好的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的"
     }
   ],
-  "updated_at": "2026-10-10 09:15:07",
+  "updated_at": "2026-10-25 02:58:44",
   "unread_on_boss": 0
 }

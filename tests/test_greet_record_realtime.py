@@ -65,6 +65,14 @@ out.push_success = toGreetRow({status: 'success', is_skipped: false,
 out.hist_applied = toGreetRow({status: 'applied', is_greeted: true}).status;
 out.hist_already = toGreetRow({status: 'skipped', is_skipped: true,
                                skip_reason: '已沟通过'}).status;
+// 4. 「AI不匹配」只认后端真写下的那两句判据。拿裸「AI」/「不匹配」去猜，
+//    岗位名里带 AI 的否决词跳过会被画成模型判过这条岗（2026-10-29 实测就是这个样子）
+out.veto_with_ai_name = toGreetRow({status: 'skipped', is_skipped: true,
+                                    skip_reason: 'JD 命中否决词「坐班」｜数据标注/AI训练师'}).status;
+out.thin_with_ai_name = toGreetRow({status: 'skipped', is_skipped: true,
+                                    skip_reason: 'JD 没写具体工作内容（正文太短），按疑似诈骗/中介引流跳过（正文仅 6 字，门槛 80 字）｜AI训练师'}).status;
+out.ai_iface_down = toGreetRow({status: 'skipped', is_skipped: true,
+                                 skip_reason: 'AI 接口这次没给出判断: 连接超时，按配置跳过'}).status;
 out.push_account = allGreetRecords[0].account_index;
 console.log(JSON.stringify(out));
 '''
@@ -241,6 +249,15 @@ class GreetRowModelTest(unittest.TestCase):
     def test_AI不匹配两种来源判定一致(self):
         self.assertEqual(self.out["push_ai_skip"], "ai_skip")
         self.assertEqual(self.out["hist_ai_skip"], "ai_skip")
+        self.assertEqual(self.out["ai_iface_down"], "ai_skip",
+                         "接口没答上来也归 AI 那一档（后端那句原文带「AI 接口」）")
+
+    def test_岗位名里的AI不许把否决词跳过滤成AI不匹配(self):
+        """「JD 命中否决词「坐班」｜数据标注/AI训练师」是本地词表拦的，
+        不是模型判过这条岗。以前按裸「AI」猜，这一行被画成"AI不匹配"，
+        他在筛选里挑"AI不匹配"就捞出一堆根本没走过 AI 的岗位。"""
+        self.assertEqual(self.out["veto_with_ai_name"], "skip")
+        self.assertEqual(self.out["thin_with_ai_name"], "skip")
 
     def test_失败已沟通已投递判定(self):
         self.assertEqual(self.out["push_error"], "error")

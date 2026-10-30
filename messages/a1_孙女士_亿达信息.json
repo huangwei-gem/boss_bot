@@ -1,0 +1,64 @@
+{
+  "chat_name": "孙女士",
+  "chat_id": "孙女士#亿达信息",
+  "account_index": 1,
+  "job_name": "数据分析师（大厂外包\\英语好\\数据分析)10-13K上海查看职位",
+  "company": "亿达信息",
+  "messages": [
+    {
+      "text": "",
+      "time": "03:59",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397128482980353",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学本科在读，有数据分析和数据标注经验，熟练使用SQL/Python/Excel，看到贵司数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397128603288064",
+      "block": "送达 您好，我是统计学本科在读，有数据分析和数据标注经验，熟练使用SQL/Python/Excel，看到贵司数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据分析和数据标注经验，熟练使用SQL/Python/Excel，看到贵司数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "09:14",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397205736739330",
+      "block": "09:14 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "text": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-16 09:15:02",
+      "time": "09:15",
+      "job_name": "数据分析师（大厂外包\\英语好\\数据分析)10-13K上海查看职位",
+      "isFriend": false,
+      "mid": "397205928436226"
+    }
+  ],
+  "updated_at": "2026-10-24 11:30:00",
+  "unread_on_boss": 0
+}

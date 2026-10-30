@@ -138,8 +138,38 @@
       "sender": "hr",
       "kind": "bubble",
       "content": "货柜审核兼职项目 长期有单（随时可做）白天3分晚上5分 做满一个月每月单量达到9000 第二个月白天4分晚上6分 错误有返修机会返修再不过扣罚一元全职做夜"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-10 14:40:59",
+      "time": "14:40",
+      "job_name": "兼职·数据标注/AI训练师10-35元/时枣庄查看职位",
+      "isFriend": false,
+      "mid": "395162671391489"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-10 15:01:52",
+      "time": "15:01",
+      "job_name": "兼职·数据标注/AI训练师10-35元/时枣庄查看职位",
+      "isFriend": false,
+      "mid": "395167803142914"
     }
   ],
-  "updated_at": "2026-10-10 09:13:52",
+  "updated_at": "2026-10-23 14:36:25",
   "unread_on_boss": 0
 }

@@ -2,7 +2,7 @@
   "chat_name": "刘女士",
   "chat_id": "刘女士#苏州自由易动网络科技",
   "account_index": 0,
-  "job_name": "兼职·数据标注员——AI涂鸦参考20-25元/时长沙查看职位",
+  "job_name": "兼职·数据标注员——AI涂鸦参考20-25元/时长沙",
   "company": "苏州自由易动网络科技",
   "messages": [
     {
@@ -27,7 +27,8 @@
       "block": "16:46 方便发一份简历过来吗？",
       "sender": "hr",
       "kind": "bubble",
-      "content": "方便发一份简历过来吗？"
+      "content": "方便发一份简历过来吗？",
+      "is_read": true
     },
     {
       "text": "",
@@ -40,7 +41,8 @@
       "sender": "hr",
       "kind": "card",
       "content": "",
-      "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意"
+      "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -67,7 +69,8 @@
       "sender": "hr",
       "kind": "card",
       "content": "",
-      "card_text": "您的附件简历 数据分析简... 已发送给Boss点击查看附件"
+      "card_text": "您的附件简历 数据分析简... 已发送给Boss点击查看附件",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -96,9 +99,40 @@
       "timestamp": "2026-10-10 02:39:49",
       "time": "02:39",
       "job_name": "兼职·数据标注员——AI涂鸦参考20-25元/时长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394985432535808"
+    },
+    {
+      "sender": "bot",
+      "content": "刘女士您好，之前聊的兼职·数据标注员——AI涂鸦参考20-25元/时长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "刘女士您好，之前聊的兼职·数据标注员——AI涂鸦参考20-25元/时长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 16:35:33",
+      "time": "16:35",
+      "job_name": "兼职·数据标注员——AI涂鸦参考20-25元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "395190826603266"
+    },
+    {
+      "sender": "bot",
+      "content": "如果您需要补充项目细节或作品集，随时告诉我。本工作日下午可以线上视频沟通，您看哪天方便？",
+      "text": "如果您需要补充项目细节或作品集，随时告诉我。本工作日下午可以线上视频沟通，您看哪天方便？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 16:21:43",
+      "time": "16:21",
+      "job_name": "兼职·数据标注员——AI涂鸦参考20-25元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "397664681292545"
     }
   ],
-  "updated_at": "2026-10-10 02:39:49",
+  "updated_at": "2026-10-29 13:00:12",
   "unread_on_boss": 0
 }

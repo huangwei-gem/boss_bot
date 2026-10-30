@@ -2,7 +2,7 @@
   "chat_name": "吕女士",
   "chat_id": "吕女士#伍字节",
   "account_index": 0,
-  "job_name": "兼职·ai数据标注员（安庆方言）55-85元/时安庆查看职位",
+  "job_name": "兼职·ai数据标注员（安庆方言）55-85元/时安庆",
   "company": "伍字节",
   "messages": [
     {
@@ -43,8 +43,93 @@
       "job_name": "兼职·ai数据标注员（安庆方言）55-85元/时安庆查看职位",
       "isFriend": false,
       "mid": "394762568679426"
+    },
+    {
+      "sender": "bot",
+      "content": "方便的话我把简历发您看下，合适的话工作日下午可以线上细聊。",
+      "text": "方便的话我把简历发您看下，合适的话工作日下午可以线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-19 09:40:28",
+      "time": "09:40",
+      "job_name": "兼职·ai数据标注员（安庆方言）55-85元/时安庆查看职位",
+      "isFriend": false,
+      "mid": "398273858899972"
+    },
+    {
+      "sender": "bot",
+      "content": "吕女士您好，伍字节这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "吕女士您好，伍字节这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-20 18:43:35",
+      "time": "18:43",
+      "job_name": "兼职·ai数据标注员（安庆方言）55-85元/时安庆查看职位",
+      "isFriend": false,
+      "mid": "398761240223746"
+    },
+    {
+      "text": "吕女士撤回了一条消息",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "399426812448769",
+      "block": "吕女士撤回了一条消息",
+      "sender": "hr",
+      "kind": "system",
+      "content": "吕女士撤回了一条消息",
+      "card_text": "吕女士撤回了一条消息"
+    },
+    {
+      "text": "招的，工作时间可以保证吗",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "399426896629763",
+      "block": "招的，工作时间可以保证吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "招的，工作时间可以保证吗"
+    },
+    {
+      "sender": "bot",
+      "content": "工作时间能保证，我这边工作日下午时间比较灵活，每天兼职2小时没问题。",
+      "text": "工作时间能保证，我这边工作日下午时间比较灵活，每天兼职2小时没问题。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-23 15:16:49",
+      "time": "15:16",
+      "job_name": "兼职·ai数据标注员（安庆方言）55-85元/时安庆查看职位",
+      "isFriend": false,
+      "mid": "399772093915140"
+    },
+    {
+      "sender": "bot",
+      "content": "可以的，工作日下午时间灵活，每天2小时没问题。",
+      "text": "可以的，工作日下午时间灵活，每天2小时没问题。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-24 12:04:14",
+      "time": "12:04",
+      "job_name": "兼职·ai数据标注员（安庆方言）55-85元/时安庆查看职位",
+      "isFriend": false,
+      "mid": "400078667759621"
     }
   ],
-  "updated_at": "2026-10-10 00:14:57",
+  "updated_at": "2026-10-25 02:04:14",
   "unread_on_boss": 0
 }

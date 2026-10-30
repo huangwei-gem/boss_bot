@@ -69,7 +69,8 @@
       "block": "12:51 直播可以吗",
       "sender": "hr",
       "kind": "bubble",
-      "content": "直播可以吗"
+      "content": "直播可以吗",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -96,7 +97,8 @@
       "block": "19:48 线上线下都可以",
       "sender": "hr",
       "kind": "bubble",
-      "content": "线上线下都可以"
+      "content": "线上线下都可以",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -154,9 +156,10 @@
       "sender": "hr",
       "kind": "system",
       "content": "刘女士撤回了一条消息",
-      "card_text": "刘女士撤回了一条消息"
+      "card_text": "刘女士撤回了一条消息",
+      "is_read": true
     }
   ],
-  "updated_at": "2026-10-10 07:24:05",
+  "updated_at": "2026-10-29 13:00:42",
   "unread_on_boss": 0
 }

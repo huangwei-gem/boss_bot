@@ -1,0 +1,35 @@
+{
+  "chat_name": "黄先生",
+  "chat_id": "黄先生#牛约堡",
+  "account_index": 1,
+  "job_name": "数据分析师8-10K上海查看职位",
+  "company": "牛约堡",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 10:56",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397230794412545",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel/SQL/Python。看到贵司在招数据分析师，想应聘线上兼职，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397230904930816",
+      "block": "已读 您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel/SQL/Python。看到贵司在招数据分析师，想应聘线上兼职，方便的话我把简历发您细聊。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel/SQL/Python。看到贵司在招数据分析师，想应聘线上兼职，方便的话我把简历发您细聊。"
+    }
+  ],
+  "updated_at": "2026-10-23 14:50:30"
+}

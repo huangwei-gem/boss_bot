@@ -206,7 +206,7 @@
       "is_mine": true,
       "is_system": false,
       "mid": "394086448558593",
-      "block": "昨天 13:41 拒绝了面试邀请",
+      "block": "拒绝了面试邀请",
       "sender": "me",
       "kind": "card",
       "content": "",
@@ -281,9 +281,25 @@
       "timestamp": "2026-10-10 01:52:58",
       "time": "01:52",
       "job_name": "剪辑（小白有人带不加班法定会休）3-4K长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394973920326144"
+    },
+    {
+      "sender": "bot",
+      "content": "请问这个岗位是纯线上协作还是需要到长沙现场？线上可做的我能配合。",
+      "text": "请问这个岗位是纯线上协作还是需要到长沙现场？线上可做的我能配合。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-21 17:30:56",
+      "time": "17:30",
+      "job_name": "剪辑（小白有人带不加班法定会休）3-4K长沙查看职位",
+      "isFriend": false,
+      "mid": "399097267933696"
     }
   ],
-  "updated_at": "2026-10-10 01:52:58",
+  "updated_at": "2026-10-23 13:08:09",
   "unread_on_boss": 0
 }

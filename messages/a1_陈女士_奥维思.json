@@ -1,0 +1,35 @@
+{
+  "chat_name": "陈女士",
+  "chat_id": "陈女士#奥维思",
+  "account_index": 1,
+  "job_name": "数据分析7-8K上海查看职位",
+  "company": "奥维思",
+  "messages": [
+    {
+      "text": "",
+      "time": "昨天 11:19",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397236396785665",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学本科在读，有数据分析与数据标注经验，熟练使用Excel/SQL/Python，看到贵司数据分析岗位，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397236506144769",
+      "block": "已读 您好，我是统计学本科在读，有数据分析与数据标注经验，熟练使用Excel/SQL/Python，看到贵司数据分析岗位，方便的话我把简历发您细聊。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据分析与数据标注经验，熟练使用Excel/SQL/Python，看到贵司数据分析岗位，方便的话我把简历发您细聊。"
+    }
+  ],
+  "updated_at": "2026-10-23 14:49:54"
+}

@@ -1,0 +1,103 @@
+{
+  "chat_name": "李先生",
+  "chat_id": "李先生#北京智榜科技有限公司",
+  "account_index": 0,
+  "job_name": "分析师30-50K长沙",
+  "company": "北京智榜科技有限公司",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:31",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394968552174339",
+      "block": "01:31 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394968552198913",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "IDC/沙利文 以及他们的报告 熟悉吗",
+      "time": "18:06",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395213210354436",
+      "block": "18:06 IDC/沙利文 以及他们的报告 熟悉吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "IDC/沙利文 以及他们的报告 熟悉吗"
+    },
+    {
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395213336244994",
+      "block": "已读 好的，感谢您的消息，我会尽快回复您。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "reply_source": "default"
+    },
+    {
+      "text": "毕业了吗",
+      "time": "18:12",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395214722126596",
+      "block": "18:12 毕业了吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "毕业了吗"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-10 18:13:09",
+      "time": "18:13",
+      "job_name": "分析师30-50K长沙查看职位",
+      "isFriend": false,
+      "mid": "395214815404800"
+    },
+    {
+      "sender": "bot",
+      "content": "李先生您好，之前聊的分析师30-50K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "李先生您好，之前聊的分析师30-50K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 17:32:26",
+      "time": "17:32",
+      "job_name": "分析师30-50K长沙查看职位",
+      "isFriend": false,
+      "mid": "397682062234370"
+    }
+  ],
+  "updated_at": "2026-10-25 02:35:26",
+  "unread_on_boss": 0
+}

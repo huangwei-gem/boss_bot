@@ -1,0 +1,65 @@
+{
+  "chat_name": "刘宇熙",
+  "chat_id": "刘宇熙#弘新医疗",
+  "account_index": 1,
+  "job_name": "兼职·兼职数据标注4000-5000元/月北京查看职位",
+  "company": "弘新医疗",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业学生，有AI训练数据质检和多模态标注经验，熟悉大模型提示词编写与效果评估。看到贵司招聘兼职数据标注岗位，方便的话我把简历发您细聊。",
+      "time": "10-18 12:20",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397959228117506",
+      "block": "10-18 12:20 已读 您好，我是统计学专业学生，有AI训练数据质检和多模态标注经验，熟悉大模型提示词编写与效果评估。看到贵司招聘兼职数据标注岗位，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业学生，有AI训练数据质检和多模态标注经验，熟悉大模型提示词编写与效果评估。看到贵司招聘兼职数据标注岗位，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "你好啊，可以聊一聊~",
+      "time": "昨天 09:41",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398274118726149",
+      "block": "昨天 09:41 你好啊，可以聊一聊~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好啊，可以聊一聊~"
+    },
+    {
+      "sender": "bot",
+      "content": "好嘞，我把简历发您看下哈。",
+      "text": "好嘞，我把简历发您看下哈。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 14:42:47",
+      "time": "14:42",
+      "job_name": "兼职·兼职数据标注4000-5000元/月北京查看职位",
+      "isFriend": false,
+      "mid": "398702066012679"
+    },
+    {
+      "sender": "bot",
+      "content": "哈，简历发过去了吗需要我重新发一次不？",
+      "text": "哈，简历发过去了吗需要我重新发一次不？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 13:19:24",
+      "time": "13:19",
+      "job_name": "兼职·兼职数据标注4000-5000元/月北京查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-24 13:19:24",
+  "unread_on_boss": 0
+}

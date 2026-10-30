@@ -1,0 +1,36 @@
+{
+  "chat_name": "李女士",
+  "chat_id": "李女士#晖致",
+  "account_index": 1,
+  "job_name": "HR数据分析师（第三方）8-12K上海查看职位",
+  "company": "晖致",
+  "messages": [
+    {
+      "text": "您好，我是统计学本科在读，熟悉Python/SQL/Excel，做过数据标注和AI训练数据质检，想应聘贵司HR数据分析师兼职，若岗位支持远程我可灵活配合，方便的话我把简历发您细聊",
+      "time": "04:00",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395005147431425",
+      "block": "04:00 送达 您好，我是统计学本科在读，熟悉Python/SQL/Excel，做过数据标注和AI训练数据质检，想应聘贵司HR数据分析师兼职，若岗位支持远程我可灵活配合，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，熟悉Python/SQL/Excel，做过数据标注和AI训练数据质检，想应聘贵司HR数据分析师兼职，若岗位支持远程我可灵活配合，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "理解，感谢您的反馈，祝您招聘顺利~",
+      "time": "11:35",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395117046325761",
+      "block": "11:35 送达 理解，感谢您的反馈，祝您招聘顺利~",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "理解，感谢您的反馈，祝您招聘顺利~",
+      "reply_source": "rejection"
+    }
+  ],
+  "updated_at": "2026-10-23 15:08:41"
+}

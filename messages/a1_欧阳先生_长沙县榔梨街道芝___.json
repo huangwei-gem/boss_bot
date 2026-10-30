@@ -15,7 +15,8 @@
       "block": "19:54 你好，我们这边有个岗位感觉和你还蛮匹配的，想和你沟通一下。",
       "sender": "hr",
       "kind": "bubble",
-      "content": "你好，我们这边有个岗位感觉和你还蛮匹配的，想和你沟通一下。"
+      "content": "你好，我们这边有个岗位感觉和你还蛮匹配的，想和你沟通一下。",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -42,7 +43,8 @@
       "block": "19:33 您这边有过剪辑相关工作经验吗？",
       "sender": "hr",
       "kind": "bubble",
-      "content": "您这边有过剪辑相关工作经验吗？"
+      "content": "您这边有过剪辑相关工作经验吗？",
+      "is_read": true
     },
     {
       "text": "有，这个是线上的吗",
@@ -66,7 +68,8 @@
       "block": "不是",
       "sender": "hr",
       "kind": "bubble",
-      "content": "不是"
+      "content": "不是",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -82,19 +85,6 @@
       "job_name": "短视频剪辑6-11K长沙查看职位",
       "isFriend": false,
       "mid": "393476385579520"
-    },
-    {
-      "text": "",
-      "time": "20:09",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "393827869446656",
-      "block": "20:09",
-      "sender": "hr",
-      "kind": "card",
-      "content": "",
-      "card_text": ""
     },
     {
       "sender": "bot",
@@ -121,7 +111,8 @@
       "block": "19:13 能接受调动吗",
       "sender": "hr",
       "kind": "bubble",
-      "content": "能接受调动吗"
+      "content": "能接受调动吗",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -148,7 +139,8 @@
       "block": "把你安排湖南之外其他省份的店铺进行入职，前期在湖南就近学习，工资正常发放，培养出来后再安排其他省份新店",
       "sender": "hr",
       "kind": "bubble",
-      "content": "把你安排湖南之外其他省份的店铺进行入职，前期在湖南就近学习，工资正常发放，培养出来后再安排其他省份新店"
+      "content": "把你安排湖南之外其他省份的店铺进行入职，前期在湖南就近学习，工资正常发放，培养出来后再安排其他省份新店",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -164,8 +156,135 @@
       "job_name": "短视频剪辑6-11K长沙查看职位",
       "isFriend": false,
       "mid": "395008286941697"
+    },
+    {
+      "text": "一定要面谈吗",
+      "time": "10-10 18:43",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395222244639233",
+      "block": "10-10 18:43 一定要面谈吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "一定要面谈吗",
+      "is_read": true
+    },
+    {
+      "sender": "bot",
+      "content": "不一定，可以先线上简单沟通；我目前更倾向线上兼职的数据标注、数据分析或线上运营助理，剪辑线下调动岗位可能不太匹配。",
+      "text": "不一定，可以先线上简单沟通；我目前更倾向线上兼职的数据标注、数据分析或线上运营助理，剪辑线下调动岗位可能不太匹配。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-16 04:02:07",
+      "time": "04:02",
+      "job_name": "短视频剪辑6-11K长沙查看职位",
+      "isFriend": false,
+      "mid": "397129023627776"
+    },
+    {
+      "text": "OK",
+      "time": "昨天 11:10",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397234391732737",
+      "block": "昨天 11:10 OK",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "OK",
+      "is_read": true
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢欧阳先生的时间，如果后续有线上兼职相关岗位，欢迎随时联系我。",
+      "text": "好的，感谢欧阳先生的时间，如果后续有线上兼职相关岗位，欢迎随时联系我。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-17 11:08:42",
+      "time": "11:08",
+      "job_name": "短视频剪辑6-11K长沙查看职位",
+      "isFriend": false,
+      "mid": "397587766305281"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，后续有合适的线上兼职岗位欢迎联系。",
+      "text": "好的，后续有合适的线上兼职岗位欢迎联系。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-18 12:04:09",
+      "time": "12:04",
+      "job_name": "短视频剪辑6-11K长沙查看职位",
+      "isFriend": false,
+      "mid": "397955272995329"
+    },
+    {
+      "sender": "bot",
+      "content": "还在吗？线上远程兼职这块方便聊聊吗？",
+      "text": "还在吗？线上远程兼职这块方便聊聊吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 12:46:43",
+      "time": "12:46",
+      "job_name": "短视频剪辑6-11K长沙查看职位",
+      "isFriend": false,
+      "mid": "399735214047744"
+    },
+    {
+      "text": "不兼职喔",
+      "time": "10:21",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "400053334942208",
+      "block": "10:21 不兼职喔",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不兼职喔"
+    },
+    {
+      "sender": "bot",
+      "content": "行，那不打扰您了",
+      "text": "行，那不打扰您了",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-24 11:24:49",
+      "time": "11:24",
+      "job_name": "短视频剪辑6-11K长沙查看职位",
+      "isFriend": false,
+      "mid": "400068979778048"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，那就不打扰了。",
+      "text": "好的，那就不打扰了。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-24 12:21:53",
+      "time": "12:21",
+      "job_name": "短视频剪辑6-11K长沙查看职位",
+      "isFriend": false
     }
   ],
-  "updated_at": "2026-10-10 05:40:02",
+  "updated_at": "2026-10-24 12:21:53",
   "unread_on_boss": 0
 }

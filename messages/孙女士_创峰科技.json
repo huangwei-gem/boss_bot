@@ -2,7 +2,7 @@
   "chat_name": "孙女士",
   "chat_id": "孙女士#创峰科技",
   "account_index": 0,
-  "job_name": "兼职·Ai人工智能标注70-200元/天日照查看职位",
+  "job_name": "兼职·Ai人工智能标注70-200元/天日照",
   "company": "创峰科技",
   "messages": [
     {
@@ -169,7 +169,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394436543476227",
-      "block": "13:26 s125xh 孙女士的微信号 s125xh 复制微信号",
+      "block": "s125xh 孙女士的微信号 s125xh 复制微信号",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -214,9 +214,70 @@
       "timestamp": "2026-10-09 22:39:08",
       "time": "22:39",
       "job_name": "兼职·Ai人工智能标注70-200元/天日照查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394926279303682"
+    },
+    {
+      "sender": "bot",
+      "content": "孙女士您好，之前聊的兼职·Ai人工智能标注70-200元/天日照查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "孙女士您好，之前聊的兼职·Ai人工智能标注70-200元/天日照查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 09:50:09",
+      "time": "09:50",
+      "job_name": "兼职·Ai人工智能标注70-200元/天日照查看职位",
+      "isFriend": false,
+      "mid": "395091195482627"
+    },
+    {
+      "sender": "bot",
+      "content": "孙女士您好，之前聊的兼职·Ai人工智能标注70-200元/天日照查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "孙女士您好，之前聊的兼职·Ai人工智能标注70-200元/天日照查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 11:26:45",
+      "time": "11:26",
+      "job_name": "兼职·Ai人工智能标注70-200元/天日照查看职位",
+      "isFriend": false,
+      "mid": "397592190878210"
+    },
+    {
+      "sender": "bot",
+      "content": "加您微信了，方便的话，这个岗线上能面试吗？",
+      "text": "加您微信了，方便的话，这个岗线上能面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-18 10:54:05",
+      "time": "10:54",
+      "job_name": "兼职·Ai人工智能标注70-200元/天日照查看职位",
+      "isFriend": false,
+      "mid": "397938057687556"
+    },
+    {
+      "sender": "bot",
+      "content": "孙女士您好，创峰科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "孙女士您好，创峰科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-19 12:59:16",
+      "time": "12:59",
+      "job_name": "兼职·Ai人工智能标注70-200元/天日照查看职位",
+      "isFriend": false,
+      "mid": "398322711347712"
     }
   ],
-  "updated_at": "2026-10-09 22:39:08",
+  "updated_at": "2026-10-25 02:15:21",
   "unread_on_boss": 0
 }

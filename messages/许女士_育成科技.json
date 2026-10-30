@@ -1,0 +1,22 @@
+{
+  "chat_name": "许女士",
+  "chat_id": "许女士#育成科技",
+  "account_index": 0,
+  "job_name": "高斯数据库高级运维工程师11-15K长沙",
+  "company": "育成科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "13:54",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397982277960450",
+      "block": "13:54 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-25 02:24:03"
+}

@@ -72,6 +72,50 @@ class DashboardConfigReloadTest:
         assert app._ensure_config() is good, "配置写坏时界面应该继续用上一份好的"
 
 
+class 覆盖层热重载Test:
+    """指纹只算 bot_config.json 一份，可配置是三份文件合起来的。
+
+    2026-10-20：实测脚本把 config_overrides.json 里的 importance_keywords 清成了 []，
+    我从 git 恢复了那三份文件，线上面板却还报 0 条——因为覆盖层动了不会触发重读，
+    面板一直用启动时读到的那份脏值。后果是「收到重要消息就暂停回复」悄悄不暂停：
+    暂停原因永远匹配不上空词表，_maybe_auto_resume_reply 当场把它自动恢复了。
+    """
+
+    def _写关键词(self, path, 词表):
+        path.write_text(json.dumps({"importance_keywords": 词表}, ensure_ascii=False),
+                        encoding="utf-8")
+        st = path.stat()
+        os.utime(path, ns=(st.st_atime_ns + 10 ** 9, st.st_mtime_ns + 10 ** 9))
+
+    def test_只改overrides层也必须重读(self, flask_app):
+        app, tmp = flask_app
+        _write(tmp / "bot_config.json", ["A"])
+        (tmp / "config_overrides.json").write_text(
+            json.dumps({"importance_keywords": ["offer"]}, ensure_ascii=False),
+            encoding="utf-8")
+        assert app._ensure_config().rules.importance_keywords == ["offer"]
+        self._写关键词(tmp / "config_overrides.json", ["面试邀请"])
+        cfg = app._ensure_config()
+        assert cfg.rules.importance_keywords == ["面试邀请"], \
+            "config_overrides.json 被外部改了但面板不重读——界面显示和保存的都还是旧词表"
+
+    def test_只改画像文件也必须重读(self, flask_app):
+        app, tmp = flask_app
+        _write(tmp / "bot_config.json", ["A"])
+        p = tmp / "user_profile.json"
+        p.write_text(json.dumps({"position": "数据分析"}, ensure_ascii=False),
+                     encoding="utf-8")
+        app._ensure_config()
+        p.write_text(json.dumps({"position": "AI 产品经理"}, ensure_ascii=False),
+                     encoding="utf-8")
+        st = p.stat()
+        os.utime(p, ns=(st.st_atime_ns + 10 ** 9, st.st_mtime_ns + 10 ** 9))
+        assert app._ensure_config().user_profile.position == "AI 产品经理", \
+            "user_profile.json 被外部改了但面板不重读：回复里还会用旧画像"
+
+
+
+
 class 外部记账接口Test:
     """工具/脚本记的账必须经过在线面板，不能自己去写 reply_records.json。
 

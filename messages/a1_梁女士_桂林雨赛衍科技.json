@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "392987774890241",
-      "block": "11:11 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -209,9 +209,49 @@
       "timestamp": "2026-10-09 14:54:43",
       "time": "14:54",
       "job_name": "兼职·数据标注专员60-100元/时嘉兴查看职位",
+      "isFriend": false,
+      "mid": "394812141478152"
+    },
+    {
+      "text": "梁女士您好，之前聊的兼职·数据标注员60-100元/时绍兴查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "time": "13:01",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395138326880513",
+      "block": "13:01 送达 梁女士您好，之前聊的兼职·数据标注员60-100元/时绍兴查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "梁女士您好，之前聊的兼职·数据标注员60-100元/时绍兴查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "reply_source": "followup"
+    },
+    {
+      "sender": "bot",
+      "content": "梁女士您好，之前聊的兼职·数据标注员60-100元/时绍兴查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "梁女士您好，之前聊的兼职·数据标注员60-100元/时绍兴查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 18:22:41",
+      "time": "18:22",
+      "job_name": "兼职·数据标注员60-100元/时绍兴查看职位",
       "isFriend": false
+    },
+    {
+      "text": "您好！我们是做ai数据标注和采集有兴趣可以加下企业微信【腾讯文档】请复制到浏览器打开，扫描二维码添加微信https://docs.qq.com/doc/DZGt1V0NYWmptR1ds",
+      "time": "10-11 23:11",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395641990590722",
+      "block": "10-11 23:11 您好！我们是做ai数据标注和采集 有兴趣可以加下企业微信 【腾讯文档】请复制到浏览器打开，扫描二维码添加微信 https://docs.qq.com/doc/DZGt1V0NYWmptR1ds",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好！我们是做ai数据标注和采集有兴趣可以加下企业微信【腾讯文档】请复制到浏览器打开，扫描二维码添加微信https://docs.qq.com/doc/DZGt1V0NYWmptR1ds"
     }
   ],
-  "updated_at": "2026-10-09 14:54:43",
-  "unread_on_boss": 0
+  "updated_at": "2026-10-23 15:02:34",
+  "unread_on_boss": 1
 }

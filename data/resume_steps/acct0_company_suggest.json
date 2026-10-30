@@ -1,0 +1,7 @@
+[
+  {"do": "open"},
+  {"do": "realclick", "field": {"ph": "北京华品博睿"}, "wait": 1.0},
+  {"do": "type", "text": "天鹅到家", "wait": 2.5},
+  {"do": "js", "limit": 2500, "code": "(() => {\n  const clean = (s) => ((s || '') + '').trim();\n  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };\n  const box = [...document.querySelectorAll('.ui-suggest')].filter(vis)[0];\n  const 公司 = [...document.querySelectorAll('input')].find((x) => (x.placeholder || '').includes('北京华品博睿'));\n  return {\n    公司值: 公司 ? clean(公司.value) : '没框',\n    建议框文字: box ? clean(box.innerText).slice(0, 600) : '没弹建议框',\n    条目: box ? [...box.querySelectorAll('li,div')].map((x) => x.tagName + '.' + (x.className || '').toString().slice(0, 26) + ':' + clean(x.innerText).slice(0, 40)).filter((t) => t.length > 8).slice(0, 14) : []\n  };\n})()"},
+  {"do": "clickka", "ka": "resume_form_work_cancel", "wait": 1.5}
+]

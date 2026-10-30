@@ -1,0 +1,23 @@
+{
+  "chat_name": "张先生",
+  "chat_id": "张先生#天盛传媒",
+  "account_index": 1,
+  "job_name": "兼职·线上短视频剪辑100-300元/时长沙查看职位",
+  "company": "天盛传媒",
+  "messages": [
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394535156519680",
+      "block": "已读",
+      "sender": "me",
+      "kind": "card",
+      "content": "",
+      "card_text": "已读"
+    }
+  ],
+  "updated_at": "2026-10-16 01:29:53"
+}

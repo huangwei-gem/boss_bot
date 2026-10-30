@@ -2,7 +2,7 @@
   "chat_name": "刘女士",
   "chat_id": "刘女士#创响教育",
   "account_index": 0,
-  "job_name": "兼职·线上兼职—视频剪辑100-200元/天长沙查看职位",
+  "job_name": "兼职·线上兼职—视频剪辑100-200元/天长沙",
   "company": "创响教育",
   "messages": [
     {
@@ -28,7 +28,8 @@
       "sender": "hr",
       "kind": "card",
       "content": "",
-      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "is_read": true
     },
     {
       "text": "感谢你的回复~期待您找到满意的工作",
@@ -40,7 +41,8 @@
       "block": "14:44 感谢你的回复~期待您找到满意的工作",
       "sender": "hr",
       "kind": "bubble",
-      "content": "感谢你的回复~期待您找到满意的工作"
+      "content": "感谢你的回复~期待您找到满意的工作",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -69,9 +71,25 @@
       "timestamp": "2026-10-09 14:53:14",
       "time": "14:53",
       "job_name": "兼职·线上兼职—视频剪辑100-200元/天长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394811776557827"
+    },
+    {
+      "sender": "bot",
+      "content": "我主要找数据标注、数据分析这类的，视频剪辑不太对口哈，之前那个岗位还招人吗？",
+      "text": "我主要找数据标注、数据分析这类的，视频剪辑不太对口哈，之前那个岗位还招人吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-20 15:33:06",
+      "time": "15:33",
+      "job_name": "兼职·线上兼职—视频剪辑100-200元/天长沙查看职位",
+      "isFriend": false,
+      "mid": "398714432410373"
     }
   ],
-  "updated_at": "2026-10-09 14:53:14",
+  "updated_at": "2026-10-29 12:59:56",
   "unread_on_boss": 0
 }

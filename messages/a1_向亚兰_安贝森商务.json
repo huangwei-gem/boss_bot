@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394422773469697",
-      "block": "昨天 12:30 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -30,7 +30,20 @@
       "kind": "bubble",
       "content": "您好，看到贵司招聘数据标注专员，我在文本/图像/语音标注、AI语料清洗及标注流程优化方面有完整项目经验，曾独立完成多批次平台交付任务，期待进一步沟通合作机会",
       "reply_source": "greet"
+    },
+    {
+      "text": "兼职吗",
+      "time": "10-12 16:37",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395899180491275",
+      "block": "10-12 16:37 兼职吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "兼职吗"
     }
   ],
-  "updated_at": "2026-10-09 22:55:37"
+  "updated_at": "2026-10-23 15:00:26",
+  "unread_on_boss": 1
 }

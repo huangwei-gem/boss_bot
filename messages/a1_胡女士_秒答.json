@@ -41,9 +41,67 @@
       "timestamp": "2026-10-10 02:58:58",
       "time": "02:58",
       "job_name": "兼职·标书制作专员（线上兼职）200-500元/天长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394990137074177"
+    },
+    {
+      "sender": "bot",
+      "content": "胡女士您好，之前聊的兼职·标书制作专员（线上兼职）200-500元/天长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "胡女士您好，之前聊的兼职·标书制作专员（线上兼职）200-500元/天长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-16 11:23:41",
+      "time": "11:23",
+      "job_name": "兼职·标书制作专员（线上兼职）200-500元/天长沙查看职位",
+      "isFriend": false,
+      "mid": "397237544296960"
+    },
+    {
+      "sender": "bot",
+      "content": "标书这块我没做过，不过做事细心，线上聊下您看合不合适？",
+      "text": "标书这块我没做过，不过做事细心，线上聊下您看合不合适？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-18 12:21:49",
+      "time": "12:21",
+      "job_name": "兼职·标书制作专员（线上兼职）200-500元/天长沙查看职位",
+      "isFriend": false,
+      "mid": "397959615197698"
+    },
+    {
+      "text": "不合适",
+      "time": "昨天 09:07",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398265863430661",
+      "block": "昨天 09:07 不合适",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不合适"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-20 16:17:59",
+      "time": "16:17",
+      "job_name": "兼职·标书制作专员（线上兼职）200-500元/天长沙查看职位",
+      "isFriend": false,
+      "mid": "398725464715778"
     }
   ],
-  "updated_at": "2026-10-10 02:58:58",
+  "updated_at": "2026-10-23 13:22:30",
   "unread_on_boss": 0
 }

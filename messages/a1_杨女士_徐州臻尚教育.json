@@ -1,0 +1,90 @@
+{
+  "chat_name": "杨女士",
+  "chat_id": "杨女士#徐州臻尚教育",
+  "account_index": 1,
+  "job_name": "兼职·数据标注20-25元/时徐州查看职位",
+  "company": "徐州臻尚教育",
+  "messages": [
+    {
+      "text": "您好，我有数据标注和AI训练数据质检经验，做过文本/图像/语音多模态标注，熟悉平台交付流程。方便的话我把简历发您细聊。",
+      "time": "10-18 12:41",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397964462268417",
+      "block": "10-18 12:41 已读 您好，我有数据标注和AI训练数据质检经验，做过文本/图像/语音多模态标注，熟悉平台交付流程。方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我有数据标注和AI训练数据质检经验，做过文本/图像/语音多模态标注，熟悉平台交付流程。方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "兼职，有电脑就可以",
+      "time": "昨天 09:28",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398270890999808",
+      "block": "昨天 09:28 兼职，有电脑就可以",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "兼职，有电脑就可以"
+    },
+    {
+      "text": "微信同号，加我",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398270896095236",
+      "block": "微信同号，加我",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "微信同号，加我"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398270912462848",
+      "block": "我想要和您交换联系方式，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换联系方式，您是否同意 拒绝 同意"
+    },
+    {
+      "sender": "bot",
+      "content": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "text": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-20 14:43:01",
+      "time": "14:43",
+      "job_name": "兼职·数据标注20-25元/时徐州查看职位",
+      "isFriend": false,
+      "mid": "398702116306952"
+    },
+    {
+      "sender": "bot",
+      "content": "微信号记下了，您方便时通过下，咱们把岗位细节聊下。",
+      "text": "微信号记下了，您方便时通过下，咱们把岗位细节聊下。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 13:21:29",
+      "time": "13:21",
+      "job_name": "兼职·数据标注20-25元/时徐州查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-24 13:21:29",
+  "unread_on_boss": 0
+}

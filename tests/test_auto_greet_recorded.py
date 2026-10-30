@@ -37,6 +37,16 @@ class RecordFieldTest:
         r = GreetRecord(job_name="a", company="b", auto_greet_note="洞" * 5000)
         assert len(r.auto_greet_note) <= MAX_AI_PROBE_LEN
 
+    def test_城市随记录一起落盘读回(self):
+        """界面 2026-10-28 新增城市列：字段不落盘，重启后那一列全是 —"""
+        r = GreetRecord(job_name="数据分析师", company="某公司", city="长沙·岳麓区·望城坡")
+        d = r.to_dict()
+        assert d["city"] == "长沙·岳麓区·望城坡"
+        assert GreetRecord.from_dict(d).city == r.city
+
+    def test_没给城市时是空串(self):
+        assert GreetRecord(job_name="a", company="b").to_dict()["city"] == ""
+
 
 class GreetEnginePlumbingTest:
     def _engine(self):
@@ -73,6 +83,28 @@ class GreetEnginePlumbingTest:
         got = rows[0].auto_greet_note if not isinstance(rows[0], dict) \
             else rows[0]["auto_greet_note"]
         assert got == job["_auto_greet_note"]
+
+    def test_城市两个来源都写进记录与推送(self):
+        """搜索页解析出来的是 location，池里那行叫 city；同一个东西两个名字，
+        漏接哪个都会让城市列空着。推送和落库各走一遍真函数。"""
+        from boss_bot.reply_record import _get_greet_store
+        eng = self._engine()
+        推 = []
+        # _engine() 把 _emit_greet_event 换成了只记事件的替身；这里要的就是真函数
+        del eng._emit_greet_event
+        eng._greet_event_cb = 推.append
+        eng._event_ts = "2026-10-28 10:00:00"
+        for 键, 值, url in (("location", "长沙·岳麓区", "https://x/job_detail/2.html"),
+                            ("city", "上海", "https://x/job_detail/3.html")):
+            job = {"job_name": "数据分析师", "url": url, 键: 值}
+            eng._record_greet(job, is_greeted=True)
+            eng._emit_greet_event(job, "success")
+            rows = [r for r in _get_greet_store().get_all()
+                    if (r.get("job_url") if isinstance(r, dict) else r.job_url) == url]
+            assert rows, "%s 那一路记录没落库" % 键
+            got = rows[0].city if not isinstance(rows[0], dict) else rows[0]["city"]
+            assert got == 值, got
+        assert [x["city"] for x in 推] == ["长沙·岳麓区", "上海"]
 
 
 class UnverifiedDialogCountsAsSentTest:

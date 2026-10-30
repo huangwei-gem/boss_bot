@@ -43,7 +43,7 @@ class Test启动接线:
     @pytest.fixture
     def recorded(self, monkeypatch):
         """把 DrissionPage 的两个入口换成记录器，再给 minimize 装个探针。"""
-        calls = {"minimize": [], "page": []}
+        calls = {"minimize": [], "page": [], "load_mode": []}
 
         class FakeOptions:
             def __init__(self):
@@ -57,6 +57,16 @@ class Test启动接线:
 
             def set_local_port(self, p):
                 pass
+
+            def set_timeouts(self, base=None, page_load=None, script=None):
+                # _launch_windows 启动时要把配置里的 browser.page_load_timeout 交进去，
+                # 替身得跟真 ChromiumOptions 一样收得住这个调用
+                self.timeouts = {"base": base, "page_load": page_load, "script": script}
+
+            def set_load_mode(self, mode):
+                # 同上：现在还要把 browser.load_mode 交进去（eager 是那一发
+                # 126 秒掉到 1.6 秒的东西），替身不收就当场炸给看
+                calls["load_mode"].append(mode)
 
             def set_user_agent(self, ua):
                 pass
@@ -105,6 +115,16 @@ class Test启动接线:
         args = recorded["page"][0]
         for flag in BACKGROUND_FLAGS:
             assert flag in args, f"{flag} 没带上，窗口一收起投递就卡死"
+
+    def test_加载模式要交到浏览器参数里(self, recorded):
+        """默认 eager：那一发整页加载从实测 126~135 秒降到 1.6~4.8 秒，靠的就是
+        "DOM 就绪就走，不等图片与统计脚本"。填 normal 则要能原样传下去。"""
+        self._launch(recorded, headless=True, background=True)
+        assert recorded["load_mode"] == ["eager"]
+        self._launch(recorded, headless=True, background=True, load_mode="normal")
+        assert recorded["load_mode"][-1] == "normal"
+        self._launch(recorded, headless=True, background=True, load_mode="eggar")
+        assert recorded["load_mode"][-1] == "eager", "填错一个字母不该悄悄换行为"
 
     def test_无头时不启动浏览器进程外的多余参数(self, recorded):
         """headless 只由用户配置决定，不许被后台开关偷偷带成默认无头 ——

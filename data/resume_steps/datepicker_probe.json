@@ -1,0 +1,5 @@
+[
+  {"do": "open"},
+  {"do": "openfield", "field": {"ph": "选择在职时间", "nth": 0}, "wait": 2.5},
+  {"do": "js", "limit": 5000, "code": "(() => {\n  const clean = (s) => (s || '').replace(/\\u00a0/g, ' ').trim();\n  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };\n  const dp = [...document.querySelectorAll('div')].filter((e) => /datepicker|date-panel|picker/i.test((e.className || '').toString()) && vis(e) && clean(e.innerText).length > 3);\n  return dp.map((e) => ({cls: (e.className || '').toString().slice(0, 60), text: clean(e.innerText).slice(0, 260),\n    cells: [...e.querySelectorAll('*')].filter((x) => vis(x) && x.children.length === 0 && clean(x.innerText).length > 0 && clean(x.innerText).length < 8)\n      .map((x) => x.tagName + '.' + (x.className || '').toString().slice(0, 30) + ':' + clean(x.innerText)).slice(0, 45)})).slice(0, 4)\n})()"}
+]

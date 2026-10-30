@@ -1,0 +1,7 @@
+[
+  {"do": "open"},
+  {"do": "set", "fields": {"0": "AIGC 营销素材生成项目", "1": "产品经理"}},
+  {"do": "focus", "field": 3},
+  {"do": "show"},
+  {"do": "shot"}
+]

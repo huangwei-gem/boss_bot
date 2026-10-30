@@ -69,8 +69,21 @@
       "sender": "hr",
       "kind": "bubble",
       "content": "你好，方便的话加个微信，我把详细资料发给你，这上面回复的不及时"
+    },
+    {
+      "text": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "time": "12:56",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395136864785154",
+      "block": "12:56 送达 方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "reply_source": "intent"
     }
   ],
-  "updated_at": "2026-10-10 07:14:32",
+  "updated_at": "2026-10-16 01:29:53",
   "unread_on_boss": 0
 }

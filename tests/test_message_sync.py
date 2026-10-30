@@ -15,17 +15,18 @@
    而 `[简历已发送]` 这种 bot 自记条目混进气泡序列，线上根本没有这条。
 """
 import json
-import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
+from tests.conftest import mk测试临时目录
+
 
 @pytest.fixture
 def store():
     from boss_bot.message_store import MessageStore
-    return MessageStore(base_dir=tempfile.mkdtemp(), account_index=0)
+    return MessageStore(base_dir=str(mk测试临时目录("message_sync")), account_index=0)
 
 
 @pytest.fixture(autouse=True)

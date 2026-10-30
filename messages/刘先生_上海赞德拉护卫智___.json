@@ -2,7 +2,7 @@
   "chat_name": "刘先生",
   "chat_id": "刘先生#上海赞德拉护卫智___",
   "account_index": 0,
-  "job_name": "兼职·电商中控6000-6500元/月铜陵查看职位",
+  "job_name": "兼职·电商中控6000-6500元/月铜陵",
   "company": "上海赞德拉护卫智...",
   "messages": [
     {
@@ -127,8 +127,68 @@
       "job_name": "兼职·电商中控6000-6500元/月铜陵查看职位",
       "isFriend": false,
       "mid": "394495549272323"
+    },
+    {
+      "sender": "bot",
+      "content": "刘先生您好，之前聊的兼职·电商中控6000-6500元/月铜陵查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "刘先生您好，之前聊的兼职·电商中控6000-6500元/月铜陵查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 14:04:01",
+      "time": "14:04",
+      "job_name": "兼职·电商中控6000-6500元/月铜陵查看职位",
+      "isFriend": false,
+      "mid": "395153589608705"
+    },
+    {
+      "sender": "bot",
+      "content": "刘先生您好，上海赞德拉护卫智...这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "刘先生您好，上海赞德拉护卫智...这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 14:22:49",
+      "time": "14:22",
+      "job_name": "兼职·电商中控6000-6500元/月铜陵查看职位",
+      "isFriend": false,
+      "mid": "397635461755137"
+    },
+    {
+      "sender": "bot",
+      "content": "刘先生，电商中控这个岗要是还缺人，我主要找线上数据分析这类的，您那边有合适的可以跟我说一声。",
+      "text": "刘先生，电商中控这个岗要是还缺人，我主要找线上数据分析这类的，您那边有合适的可以跟我说一声。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 12:50:40",
+      "time": "12:50",
+      "job_name": "兼职·电商中控6000-6500元/月铜陵查看职位",
+      "isFriend": false,
+      "mid": "399736178426112"
+    },
+    {
+      "sender": "bot",
+      "content": "刘先生您好，电商中控岗若已招满，您那边是否有数据分析类线上兼职机会？我擅长Excel/SQL/Python，可随时远程协作。",
+      "text": "刘先生您好，电商中控岗若已招满，您那边是否有数据分析类线上兼职机会？我擅长Excel/SQL/Python，可随时远程协作。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 13:18:19",
+      "time": "13:18",
+      "job_name": "兼职·电商中控6000-6500元/月铜陵查看职位",
+      "isFriend": false,
+      "mid": "400096877183232"
     }
   ],
-  "updated_at": "2026-10-09 15:04:48",
+  "updated_at": "2026-10-25 02:01:07",
   "unread_on_boss": 0
 }

@@ -98,9 +98,37 @@
       "timestamp": "2026-10-09 13:10:01",
       "time": "13:10",
       "job_name": "兼职·线上英语教师35-80元/时长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394786419294978"
+    },
+    {
+      "text": "对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会",
+      "time": "昨天 21:24",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394907891315457",
+      "block": "昨天 21:24 对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "对不起，看了你的简历以后觉得不太合适，希望你早日找到满意的工作机会"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-10 13:25:11",
+      "time": "13:25",
+      "job_name": "兼职·线上英语教师35-80元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "395144043152129"
     }
   ],
-  "updated_at": "2026-10-09 13:10:01",
+  "updated_at": "2026-10-23 14:37:10",
   "unread_on_boss": 0
 }

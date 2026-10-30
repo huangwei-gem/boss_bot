@@ -72,9 +72,39 @@
       "timestamp": "2026-10-10 07:34:10",
       "time": "07:34",
       "job_name": "财务数据分析师15-25K上海查看职位",
+      "isFriend": false,
+      "mid": "395057774227968"
+    },
+    {
+      "sender": "bot",
+      "content": "陈一鸣您好，岗位若不匹配也理解，只找线上远程兼职，方便告知是否有合适机会吗？",
+      "text": "陈一鸣您好，岗位若不匹配也理解，只找线上远程兼职，方便告知是否有合适机会吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 15:51:37",
+      "time": "15:51",
+      "job_name": "财务数据分析师15-25K上海查看职位",
+      "isFriend": false,
+      "mid": "397657283281412"
+    },
+    {
+      "sender": "bot",
+      "content": "嗯，理解，后续有合适机会我再主动关注。",
+      "text": "嗯，理解，后续有合适机会我再主动关注。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 14:36:56",
+      "time": "14:36",
+      "job_name": "财务数据分析师15-25K上海查看职位",
       "isFriend": false
     }
   ],
-  "updated_at": "2026-10-10 07:34:10",
+  "updated_at": "2026-10-24 14:36:56",
   "unread_on_boss": 0
 }

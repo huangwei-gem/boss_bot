@@ -15,6 +15,7 @@ import threading
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from boss_bot.unified_config import 面板端口 as _面板端口  # 端口只有一个出处
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
@@ -25,7 +26,7 @@ BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CLOAK = 破解版路径(BASE)
 PORT = 9399
 SHOT = os.path.join(BASE, "tools", "verify_dashboard.png")
-URL = "http://127.0.0.1:5000"
+URL = "http://127.0.0.1:%s" % _面板端口()
 
 out = {"checks": [], "errors": []}
 
@@ -41,7 +42,8 @@ def start_flask():
     import app as A
     A._open_dashboard = lambda *a, **k: None
     A._auto_ai_health = lambda *a, **k: None
-    kwargs = {"host": "127.0.0.1", "port": 5000, "debug": False, "use_reloader": False}
+    kwargs = {"host": "127.0.0.1", "port": _面板端口(), "debug": False,
+            "use_reloader": False}
     if A._socketio_kwargs.get("async_mode") == "threading":
         kwargs["allow_unsafe_werkzeug"] = True
     t = threading.Thread(target=lambda: A.socketio.run(A.app, **kwargs), daemon=True)

@@ -1,0 +1,37 @@
+{
+  "chat_name": "陈女士",
+  "chat_id": "陈女士#长沙铭熙培文化传媒",
+  "account_index": 1,
+  "job_name": "Com's厂牌原创打歌唱跳艺人（包住包服装）9-13K长沙查看职位",
+  "company": "长沙铭熙培文化传媒",
+  "messages": [
+    {
+      "text": "此boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+      "time": "10-10 14:59",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "395167122825990",
+      "block": "此boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+      "sender": "hr",
+      "kind": "system",
+      "content": "此boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+      "card_text": "此boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395167122899717",
+      "block": "我想要一份您的附件简历，您是否同意 拒绝 同意 或者发送 电话号码 微信号码",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意 或者发送 电话号码 微信号码"
+    }
+  ],
+  "updated_at": "2026-10-24 14:42:29",
+  "unread_on_boss": 0
+}

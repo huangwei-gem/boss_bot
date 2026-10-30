@@ -44,14 +44,15 @@ from boss_bot.prompts import 历史原始行上限
 from boss_bot.intent import veto_hit_anywhere
 from boss_bot.contact_ledger import CONTACT_DECLINED_MARK
 from boss_bot.page_handler import BossChatHandler, pinned_key, 认行
-from boss_bot.pending_resume import pending_resume_asks, resume_already_sent
+from boss_bot.pending_resume import (pending_resume_asks, resume_already_sent,
+                                     简历承诺, 简历已获准)
 from boss_bot.state_store import StateStore
 from boss_bot.stats import Stats
 from boss_bot.notify import Notifier
 from boss_bot.message_store import MessageStore
 from boss_bot.reply_queue import (chat_state, inbound_body, is_pinned, owed_replies,
                                   followup_due, mark_followed,
-                                  worth_following_up)
+                                  worth_following_up, 拒过这单, 问过还招吗)
 from boss_bot.self_evolve import SelfEvolveEngine
 from boss_bot.reply_record import ai_should_probe, ai_skip_text
 from boss_bot.metrics import get_metrics
@@ -139,7 +140,7 @@ _ARCHIVE_LOCK = threading.Lock()
 # 这两个名字继续从这里导出，README 和老调用点用的还是同一份判据。
 from boss_bot.browser_launcher import (          # noqa: F401  (对外导出)
     LOGIN_WALL_MARKS, CHAT_PAGE_MARKS, login_state_of, has_live_auth_cookie,
-    是风控验证页, 是登不进去的地址)
+    是风控验证页, 是登不进去的地址, 设置整页加载地板, 风控去向后缀)
 
 # 回复侧连续判这么多次登录失效就停这个号，等人工——不再每 30 秒空刷
 REPLY_LOGIN_FAIL_LIMIT = 3
@@ -147,6 +148,37 @@ REPLY_LOGIN_FAIL_LIMIT = 3
 # 好消息要撑满这个窗口才算数——BOSS 的 SPA 会先渲染会话页再跳走，
 # 跳转经常晚于"连续两次读到同一个地址"（见 tests/test_login_settle_late_redirect.py）
 URL_SETTLE_SECONDS = 8
+# 启动时用 Cookie 自动登录的复验窗口：光访问主站就可能吃掉一分钟（10-20 14:30
+# 实测 56 秒），只复核一次就把号推去"等人工登录"，他看到的就是登录弹窗 +
+# "点我已登录还是不能登录"。看不准就在这段时间里隔几秒再读一眼，
+# 读出来自己往下走；确认是登录墙则立刻收工，不撑窗口。
+登录复验窗口秒 = 90
+登录复验间隔秒 = 5
+
+
+def 这一眼该不该导航(页面: str, 上次导航: float, 现在: float,
+                    登录页也问一次: bool = False) -> bool:
+    """"读一眼登录态"到底要不要发一次整页加载——启动复验和等人工登录共用这一份。
+
+    默认不导航：验证滑完 BOSS 自己会跳走，会话页 + 浏览器里有登录项这两路证据
+    用只读的一眼就够（`_login_state_read`）。导航只留给"这一眼定不了论"的现场，
+    而且 登录导航冷却秒 内最多一次。
+
+    `登录页也问一次` 是启动自动登录那一侧的例外：Cookie 在、页面却停在登录页，
+    是"两路证据互相矛盾"，只有把会话页加载一次才裁得开；不裁就只能把他推去点
+    「我已登录」——他要的是不用动手。等人工登录那一侧不传这个参数：那一页上
+    有二维码、有他填到一半的手机号，跳走一次就是清掉一次。
+
+    为什么钉得这么死：2026-10-22 09:19 重启实测，启动复验每一眼都 `get(会话页)`，
+    一个号 19 次整页加载、两个号同一个出口 IP 共 37 次全挤在 130 秒里，
+    而那一页本来就是 verify.html——每导航一次既是把他正在滑的那一页掀掉
+    （「我在安全验证就不要刷新」），也是给这个 IP 再记一次异常访问。
+    """
+    if 是风控验证页(页面):
+        return False
+    if 是登不进去的地址(页面) and not 登录页也问一次:
+        return False
+    return 现在 - 上次导航 >= 登录导航冷却秒
 
 
 def archive_cookie_file(path: str, archive_dir: str, label: str = "") -> str:
@@ -184,6 +216,64 @@ def _should_show_frontend(level: str, msg: str) -> bool:
     if level_upper == "DEBUG":
         return False
     return True
+
+
+过期归档去处名 = "archive_kept"
+
+
+def 挪走过期归档(归档目录, 保留天数, 今天=None) -> list:
+    """把超出窗口的归档整盒**挪走**，一个字都不删。
+
+    第一版这条写的是 `shutil.rmtree`：每天 00:00 轮换完就悄悄把 10 天前的整盒删掉，
+    2026-10-20 早上这么没了 09-30~10-09 共 18 份真实投递/回复存档——那是他找工作
+    全过程唯一的底。红线和 Cookie 一样是"只归档不删除"（见 README 与 task #46）：
+    窗口只该管"面板上默认摆在哪儿"，不该管"数据还在不在"。
+
+    目录名不是日期的（unmix_backup 那一类）一律不碰——那是别的流程留下的证据。
+    返回 [{"date","age_days","去处"}]，调用方要把它念到日志/接口里，不许静默。
+    """
+    归档目录 = Path(str(归档目录))
+    今天 = 今天 or date.today()
+    动了 = []
+    if not 归档目录.is_dir():
+        return 动了
+    去处根 = 归档目录.parent / 过期归档去处名
+    for 子 in sorted(归档目录.iterdir()):
+        if not 子.is_dir():
+            continue
+        try:
+            天数 = (今天 - date.fromisoformat(子.name)).days
+        except ValueError:
+            continue
+        if 天数 <= 保留天数:
+            continue
+        去处根.mkdir(parents=True, exist_ok=True)
+        目标 = 去处根 / 子.name
+        if 目标.exists():
+            # 同一天挪两次（手点一次 + 零点一次）不能把第一份盖掉
+            目标 = 去处根 / ("%s.挪走于%s" % (子.name, time.strftime("%Y%m%d%H%M%S")))
+        shutil.move(str(子), str(目标))
+        动了.append({"date": 子.name, "age_days": 天数, "去处": str(目标)})
+    return 动了
+
+
+def 归档盒(归档目录, 日期: str):
+    """找某一天的归档盒：窗口内的先算，没有就去看被挪走的那份。
+
+    零点把过期盒挪出窗口以后，面板上「历史数据」按日期点开还得能读到 —— 数据
+    换了地方，不能跟着换成"这天没数据"。
+    """
+    归档目录 = Path(str(归档目录))
+    去处根 = 归档目录.parent / 过期归档去处名
+    for 根 in (归档目录, 去处根):
+        盒 = 根 / 日期
+        if 盒.is_dir():
+            return 盒
+    if 去处根.is_dir():
+        for 盒 in sorted(去处根.glob(日期 + ".*")):
+            if 盒.is_dir():
+                return 盒
+    return None
 
 
 class UnifiedBotLoop:
@@ -226,6 +316,13 @@ class UnifiedBotLoop:
         self._running = False
         self._logged_in = False
         self._needs_login = False
+        # 正在拿 Cookie 验登录的这段时间单独一档：没有它，界面在浏览器起来到
+        # 验出结果之间那一分钟只能显示"启动中/未登录"，看着就像卡住了
+        self._checking_login = False
+        # 这一轮"要人工"到底是哪一种：页面真被踢回登录页（该把登录页摆出来），
+        # 还是只看不准（不许动人家的页面）。拿 login_reason 字符串猜会把
+        # "这个号从来没登录过"（no_cookie）误判成"不许导航"，新账号就等不到登录页
+        self._确认登录墙 = False
         # 这一次掉登录有没有已经把浏览器窗口摆到用户眼前。无头形态下不摆，
         # 用户看到的就是"让我去浏览器登录，可我根本没有浏览器"（2026-10-09 截图）
         self._login_window_shown = False
@@ -235,6 +332,10 @@ class UnifiedBotLoop:
         self._login_headed_temp = False
         # 停在安全验证页那句提醒只说一遍：等登录每 5 秒轮一次，不说就刷成一片
         self._验证页已说 = False
+        # 开轮前那一眼（全标签页）：这一场验证提示说过没有、验证是几点过完的
+        self._验证页挡着说过 = False
+        self._验证结束时刻 = 0.0
+        self._验证后冷却说过 = False
         # 需要登录的原因，供前端状态点说明"为什么是黄的"
         self._login_reason = ""
         self._greet_paused = False
@@ -574,15 +675,17 @@ class UnifiedBotLoop:
 
     @property
     def phase(self) -> str:
-        """账号当前阶段：stopped / starting / waiting_login / running。
+        """账号当前阶段：stopped / starting / checking_login / waiting_login / running。
 
         _running 在 start() 第一时间就置真，浏览器还没起来时前端已经显示"运行中"，
-        绿点骗人；这里把初始化中、等登录、真在跑分开。
+        绿点骗人；这里把初始化中、正在拿 Cookie 验登录、等人工登录、真在跑分开。
         """
         if not self._running:
             return "stopped"
         if self._needs_login:
             return "waiting_login"
+        if self._checking_login:
+            return "checking_login"
         if not self._logged_in or self._current_mode == "idle":
             return "starting"
         return "running"
@@ -762,30 +865,37 @@ class UnifiedBotLoop:
                 self._log("WARN", f"清空 {label} 失败: {e}")
 
     def _clean_old_archives(self):
-        """清理超过保留天数的归档数据。"""
-        try:
-            if not self._archive_dir.exists():
-                return
-            today = date.today()
-            retention = self._archive_retention_days
+        """把超出窗口的归档挪进 data/archive_kept/，再过一遍体积闸（10-23 加的）。
 
-            for subdir in self._archive_dir.iterdir():
-                if not subdir.is_dir():
-                    continue
-                try:
-                    # 目录名应为 YYYY-MM-DD
-                    archive_date = date.fromisoformat(subdir.name)
-                    age_days = (today - archive_date).days
-                    if age_days > retention:
-                        shutil.rmtree(str(subdir))
-                        self._log("INFO", f"已清理过期归档: {subdir.name}（{age_days}天前）")
-                except ValueError:
-                    # 目录名不是有效日期，跳过
-                    continue
-                except Exception as e:
-                    self._log("WARN", f"清理归档 {subdir.name} 失败: {e}")
+        窗口只管"面板默认摆在哪儿"（挪走，一条不删）；体积闸管"占多少地方"：
+        data/+logs/ 涨到 config.log.history_cleanup_mb（他定 500）才动手，
+        删的是 history_keep_days（他定 3）以外的按天条目。判据一份写在
+        boss_bot/space_retention.py，面板那支调的是同一个函数。
+        """
+        try:
+            动了 = 挪走过期归档(self._archive_dir, self._archive_retention_days)
+            for 项 in 动了:
+                self._log("INFO", f"📦 归档 {项['date']} 出窗口（{项['age_days']}天前），"
+                                  f"整盒挪到 {过期归档去处名}/，一条没删")
+            if 动了:
+                self._log("WARN", "这次挪走 %d 盒：%s"
+                          % (len(动了), "、".join(x["date"] for x in 动了)))
         except Exception as e:
-            self._log("WARN", f"清理过期归档异常: {e}")
+            self._log("WARN", f"挪走过期归档异常: {type(e).__name__}: {e}")
+
+        try:
+            from boss_bot.space_retention import 清理超期历史
+            日志 = getattr(self.config, "log", None)
+            体积 = 清理超期历史(
+                Path(BASE_DIR),
+                阈值MB=getattr(日志, "history_cleanup_mb", 500),
+                保留天数=getattr(日志, "history_keep_days", 3))
+            self._log("INFO", "🧹 历史数据体积闸: %s（阈值 %d MB / 留 %d 天）"
+                      % (体积["原因"], 体积["阈值MB"], 体积["保留天数"]))
+            for x in 体积["失败"]:
+                self._log("WARN", "体积闸: %s 删不掉（%s）——原样留着" % (x["路径"], x["错"]))
+        except Exception as e:
+            self._log("WARN", f"历史数据体积闸异常: {type(e).__name__}: {e}")
 
     def get_archive_list(self) -> list:
         """获取所有归档日期列表（用于前端展示）。
@@ -864,6 +974,12 @@ class UnifiedBotLoop:
     def _init_and_run(self):
         """初始化线程：登录 → 创建标签页 → 启动双线程。"""
         self._claim_run()
+        总开 = time.time()
+        # 地板要在第一发整页加载之前就装好：启动这一分钟正是两个号各发好几发的时候
+        # （10-22 09:19 现场 37 次挤在 130 秒里），而 _hot_reload_config 要等第一轮才跑，
+        # 装晚了等于最该摊平的那一段没人管。
+        设置整页加载地板(
+            getattr(self.config.greet.rate_limit, "page_load_min_interval", 3))
         try:
             self._log("INFO", "=" * 50)
             self._log("INFO", "BOSS 统一机器人启动（双标签页并行架构）")
@@ -874,7 +990,12 @@ class UnifiedBotLoop:
             # 13:23:12 账号2 就是这么停在"未启动"，他把那扇窗口关掉之后什么都没有发生。
             # 只有人叫停才算这个号不干了；等端口空出来这一趟自己接着往下走。
             第几趟 = 0
-            while not self._init_browser(安静=第几趟 > 0):
+            起好了 = False
+            while not 起好了:
+                起好了 = self._计时("启动浏览器", self._init_browser,
+                                   安静=第几趟 > 0, 级别="DEBUG" if 第几趟 else "INFO")
+                if 起好了:
+                    break
                 if self._stop_event.is_set() or not self._running:
                     self._log("WARN", "等端口期间被人叫停，退出初始化")
                     self._running = False
@@ -904,13 +1025,13 @@ class UnifiedBotLoop:
 
             # 3. 创建两个标签页
             self._log("INFO", "正在创建双标签页...")
-            search_page = self.browser_manager.get_search_page()
-            chat_page = self.browser_manager.get_chat_page()
+            search_page = self._计时("开搜索标签页", self.browser_manager.get_search_page)
+            chat_page = self._计时("开会话标签页", self.browser_manager.get_chat_page)
             self._log("DEBUG", f"搜索标签页: {search_page}, 聊天标签页: {chat_page}")
             self._log("INFO", "✅ 双标签页已创建：搜索标签页 + 聊天标签页")
 
             # 4. 初始化引擎
-            self._init_engines()
+            self._计时("初始化引擎", self._init_engines)
 
             # 5. 并行启动打招呼线程和回复线程
             self._greet_thread = threading.Thread(
@@ -924,6 +1045,7 @@ class UnifiedBotLoop:
             self._reply_thread.start()
 
             self._log("INFO", "✅ 打招呼线程和回复线程已并行启动")
+            self._log("INFO", "⏱ 启动到两条腿开跑共 %.1f 秒" % (time.time() - 总开))
 
             # 等待停止信号
             while self._running and not self._stop_event.is_set():
@@ -1036,7 +1158,7 @@ class UnifiedBotLoop:
         先开搜索页会让 BOSS 在未登录的页面上弹登录墙；引擎必须在标签页
         建回来之后再初始化（见 _try_reconnect_browser 里 2026-09-30 那段取证）。
         """
-        前后 = self.browser_manager.recycle()
+        前后 = self._计时("重开浏览器", self.browser_manager.recycle)
         cookie_file = self._cookie_file()
         if cookie_file:
             try:
@@ -1044,11 +1166,61 @@ class UnifiedBotLoop:
                     self._log("WARN", "重开浏览器后 Cookie 加载未成功，可能需要重新登录")
             except Exception as e:
                 self._log("WARN", f"重开浏览器后 Cookie 加载异常: {e}")
-        搜索页 = self.browser_manager.get_search_page()
+        # 还没登进去的时候，重开完只钉句柄、不发整页加载：未登录的搜索页和会话页
+        # 每一张都会被踢成 verify.html，于是同一个号凭空多出两张一模一样的安全验证页
+        # （10-21 那三条「重开后已接回搜索标签页: …/security.html」就是这么来的）。
+        # 页先留着，抓取腿每次查询本来就自己导航，回复腿来要页时 get_chat_page() 补上。
+        先登着 = not self._needs_login
+        搜索页 = self._计时("接回搜索页",
+                           self.browser_manager.get_search_page, 导航=先登着)
         self._log("INFO", "重开后已接回搜索标签页: "
-                          f"{getattr(搜索页, 'url', '') or '（读不到 URL）'}")
-        self._init_engines()
+                          f"{getattr(搜索页, 'url', '') or '（读不到 URL）'}"
+                          + ("" if 先登着 else "（这一趟在等登录，没有额外发整页加载）"))
+        self._init_engines(开页=先登着)
         return 前后
+
+    def _计时(self, 什么事, 干, *args, 级别: str = "INFO", **kwargs):
+        """念一句"这一步花了几秒"。
+
+        启动到第一轮开工 6分41 秒这件事已经查清是哪几趟整页加载占的，
+        但没量到每一趟各吃掉多少（三次各约 128 秒那种数是猜的），
+        没有这份数就没法定"要不要降 retry"——先把表填上。
+
+        级别要能降：端口被别人占着时启动那一趟每 60 秒重试一次，
+        每次都上 INFO 就是一天 1400 行同话，真出事那行反而找不到
+        （2026-10-21 为同样的病把 strikes 计数改成只报第一趟）。
+        """
+        开 = time.time()
+        try:
+            return 干(*args, **kwargs)
+        finally:
+            self._log(级别, "⏱ %s: %.1f 秒" % (什么事, time.time() - 开))
+
+    def _浏览器现场(self) -> str:
+        """进程没了那一下能留下的现场证据——事后重开就查不到了（10-24 25 分钟里没了两次）。
+
+        只做只读查询，一条都不许动手：杀进程、quit、导航都不在这个函数里。
+        查不到就返回空串——现场是诊断，不能反过来把重开这条自救路挡住。
+        """
+        try:
+            from boss_bot import browser_launcher as BL
+            端口 = int(getattr(self.browser_manager, "_debug_port", 0) or 0)
+            本profile = str(getattr(self.browser_manager, "_user_data_dir", "") or "")
+            在 = BL._browser_owners() or []
+            同端口 = [f"pid={b.get('pid')}({'无头' if b.get('headless') else '带窗'})"
+                      for b in 在 if int(b.get("port") or 0) == 端口]
+            同档案 = [f"pid={b.get('pid')}(端口{b.get('port')})"
+                      for b in 在 if BL.same_profile(str(b.get("user_data_dir") or ""), 本profile)]
+            return ("端口%s上%s；机器上还活着的调试端口浏览器=%d台；"
+                    "本号profile(%s)还有%s；面板进程=%d" % (
+                        端口 or 0,
+                        ("没人听（拒连）" if not 同端口 else "有人：" + "、".join(同端口)),
+                        len(在),
+                        os.path.basename(本profile.rstrip("/\\")) or "（未记录）",
+                        "、".join(同档案) or "没有一台",
+                        os.getpid()))
+        except Exception as e:
+            return "现场没取到: %s: %s" % (type(e).__name__, str(e).strip()[:60])
 
     def _浏览器没了就重开(self) -> bool:
         """端口上没人听了就当场重开——这一趟不等冷却。
@@ -1077,7 +1249,8 @@ class UnifiedBotLoop:
         if not self._进程没了已报:
             self._进程没了已报 = True
             self._log("WARN", "这个号的浏览器进程不在了（调试端口拒连），"
-                              "当场重开一次，不等内存回收那 30 分钟")
+                              "当场重开一次，不等内存回收那 30 分钟｜现场：%s"
+                              % self._浏览器现场())
         self._try_reconnect_browser()
         return True
 
@@ -1093,6 +1266,17 @@ class UnifiedBotLoop:
         阈值 = int(getattr(self.config.browser, "memory_recycle_mb", 0) or 0)
         if 阈值 <= 0 or self._login_headed_temp:
             # 扫码登录那一下是临时借的有头，别在回收里把它按回无头
+            return False
+        撞上的 = self._扫验证页()
+        if 撞上的:
+            # 回收=拆掉整个浏览器进程重开，那张要滑的验证页跟着没了：他正滑到一半
+            # 就前功尽弃，重开完 BOSS 只当没做过，于是"刷新太频繁，我根本就登录不了"
+            # （11:45 现场：2526 MB 触发回收，同一分钟那张 security.html 就消失了）。
+            # 内存等得起下一轮，这一页等不起。
+            if not self._回收受阻已报:
+                self._回收受阻已报 = True
+                self._log("WARN", "有 %d 张标签停在安全验证页，内存回收先不做"
+                          "（重开会把你正在滑的那一页拆掉）" % len(撞上的))
             return False
         量的 = self.browser_manager.memory_mb()
         if 量的 < 阈值:
@@ -1155,14 +1339,16 @@ class UnifiedBotLoop:
             self._log("ERROR", f"{侧}登录窗口没弄出来：{果['error']}")
             return False
         if 果.get("relaunched"):
-            self._init_engines()
+            self._init_engines(开页=False)
             # 记一笔：这一趟是为了登录才临时换成有头的，登完要换回配置里的形态
             self._login_headed_temp = True
+        # 那句"并停在登录页"只能照 manager 真做了什么来说：重开后那一页本来就是
+        # 验证页/登录页时它不会导航，这时候说"停在登录页"就是狼来了
         self._log("WARN",
                   f"{侧}已把「{self.account_name}」的浏览器窗口放到桌面上"
                   f"（{果.get('windows', 0)} 个窗口）"
-                  + ("并停在登录页，" if 导航 else "，当前那一页原样不动，")
-                  + f"请扫码或手机号+验证码登录，登进去后这一轮自己继续")
+                  + ("并停在登录页，" if 果.get("url_shown") else "，当前那一页原样不动，")
+                  + "请扫码或手机号+验证码登录，登进去后这一轮自己继续")
         return True
 
     def _finish_login_window(self):
@@ -1184,6 +1370,153 @@ class UnifiedBotLoop:
             self._log("INFO", "登录完成，已把「%s」的浏览器换回配置里的无头模式"
                               "（桌面上那个登录窗口跟着收掉）" % self.account_name)
 
+    def _自动登录尝试(self, instance) -> bool:
+        """拿 Cookie 自己把登录态验出来：看不准就在有界窗口里多读几眼。
+
+        旧写法只复核一次（等 4 秒）就判"要人工登录"。可这一分钟里页面常常只是
+        还没跳完——10-20 14:30 实测主账号光访问主站就用了 56 秒。慢不等于坏，
+        把他推到登录弹窗前面却什么都不让他做，就是"点我已登录还是不能登录"。
+
+        返回真 = 已经登录着（Cookie 注进去验过的、或浏览器用户目录里本来就登着的）；
+        返回假 = 要么页面真是登录墙（cookie_expired / no_cookie，_确认登录墙 为真，
+        该把登录页摆出来），要么复验穷尽仍看不准（login_uncertain，_确认登录墙 为假，
+        不动页面也不动 Cookie 文件）。
+
+        **复验也不缺导航。** 这一串每一轮都 `get(会话页)` 是 2026-10-22 重启撞验证页
+        的实测来路：一个号 19 次整页加载、两个号同一个出口 IP 共 37 次全挤在 130 秒里
+        （`_wait_for_login` 10-19 就改成只读优先了，启动这一条漏了）。现在按
+        ``这一眼该不该导航`` 走：只读的一眼为主，导航是 60 秒一次的例外，
+        页面本来就停在安全验证页时一次都不发。
+        """
+        起手页 = ""
+        try:
+            起手页 = str(instance.url or "")
+        except Exception:
+            起手页 = ""
+        if 是风控验证页(起手页):
+            # 重开浏览器时 Chrome 会把上次那页带回来（同一份用户目录）。这一页
+            # 是他要滑的、也是我们看不出登录态的那一页：既不许掀，也没必要再问。
+            self._确认登录墙 = False
+            self._验证页已说 = True
+            self._login_reason = "login_uncertain"
+            self._log("WARN", "浏览器一开就停在安全验证页：这一页不刷新，"
+                              "复验一次整页加载都不发（多导航一次=你刚滑的验证白做，"
+                              "也是给同一个 IP 再记一次异常访问），滑完它自己跳走")
+            return False
+        if not 起手页.startswith("https://www.zhipin.com"):
+            try:
+                self._log("DEBUG", "正在访问主站 https://www.zhipin.com")
+                self._计时("开主站", instance.get, "https://www.zhipin.com")
+                time.sleep(2)
+                self._log("DEBUG", f"主站访问完成，当前URL: {instance.url}")
+            except Exception as e:
+                self._log("WARN", f"访问主站异常: {e}")
+        else:
+            # 已经站在 zhipin 的某一页上（会话恢复、或上一段流程留下的页），
+            # 再加载一遍主站只是多一次整页请求，读不到新东西
+            self._log("DEBUG", f"页面已在 BOSS 站内的 {起手页[:60]}，不重复加载主站")
+
+        cookie_file = self._cookie_file()
+        self._log("DEBUG", f"Cookie 文件路径: {cookie_file}")
+        self._确认登录墙 = False
+        会话文件不在 = not cookie_file or not os.path.exists(cookie_file)
+        注入了 = False
+        if not 会话文件不在:
+            try:
+                注入了 = bool(self.browser_manager.load_cookies(cookie_file))
+            except Exception as e:
+                self._log("WARN", f"Cookie 加载异常: {e}")
+        if not 注入了:
+            # 文件不在 / 注不进去 ≠ 这个号掉登录了。会话常常还留在浏览器自己的
+            # 用户目录里（10-20 账号2 一天要人工登三次就是这个形状：Cookie 文件
+            # 被判错一次归档走了，窗口里明明还登着）。以前这里直接 return False，
+            # 等于把还登着的号推去那一一下「我已登录」；现在照旧读页面，
+            # 读出来登着就把会话补回盘，下一轮重启也不用再喊人。
+            self._log("INFO", "Cookie 文件不在或没注进去，先读页面看浏览器自己登没登着")
+
+        self._log("DEBUG", "正在核对聊天页面验证登录态（只读为主，导航是例外）...")
+        截止 = time.monotonic() + 登录复验窗口秒
+        # 次数上限和时间上限都要有：只按墙钟收敛的话，任何不打真瞌睡的调用
+        # （测试、或被别的线程拖住）会在这里空转上百万次去反复读页面
+        第几眼上限 = max(1, int(登录复验窗口秒 // 登录复验间隔秒))
+        第几眼 = 0
+        上次导航 = 0.0
+        导航次数 = 0
+        while 第几眼 < 第几眼上限:
+            第几眼 += 1
+            页面 = self._settle_url(instance, 早收=True)
+            if 是风控验证页(页面):
+                # 撞墙了还继续按 5 秒一眼导航，就是 09:19~09:21 那 15 次整页加载：
+                # 既把他正在滑的那一页掀掉，也一次次给这个 IP 记异常访问
+                self._验证页已说 = True
+                # 认成 login_uncertain 而不是 cookie_expired：验证页只说明"这一 IP
+                # 现在要看人滑一下"，两路证据没矛盾，没资格去动用户的会话文件
+                self._login_reason = "login_uncertain"
+                self._log("WARN", "复验到第 %d 眼看见浏览器停在安全验证页："
+                                  "剩下的窗口只读不导航，等人工滑完" % 第几眼)
+                return False
+            if 这一眼该不该导航(页面, 上次导航, time.time(),
+                                登录页也问一次=self._has_live_auth_cookie(instance)):
+                上次导航 = time.time()
+                导航次数 += 1
+                state = self._login_state_now(instance)
+            else:
+                # 刚导航过的那一眼要盯晚到的跳转，所以这里也撑满窗口，只是不发请求
+                state = self._login_state_read(instance, 早收=False)
+            if state == "logged_in":
+                self._logged_in = True
+                # 上一轮判成"要等登录"留下的标记必须在这里抹掉：
+                # 16:11 主账号 Cookie 注入成功、页面也验过登进去了、两条腿都在跑，
+                # /api/status 还写着 needs_login=true / phase=waiting_login，
+                # 界面就摆出一副"这个号卡住了"的样子（他被这种假红骗过好几回）
+                self._needs_login = False
+                self._login_reason = ""
+                self._确认登录墙 = False
+                if not 注入了:
+                    回了 = False
+                    try:
+                        回了 = bool(self._save_cookies_if_logged_in(instance))
+                    except Exception as e:
+                        self._log("WARN", f"会话回灌落盘异常: {e}")
+                    # 回灌失败也算这一轮登进去了：浏览器才是登录态的第一现场，
+                    # 把它谎称成"要人工登录"就是逼他去多点那一一下
+                    self._log("WARN" if not 回了 else "SUCCESS",
+                              "会话在浏览器里、不在文件里，"
+                              + ("已补回盘（下一轮重启不用再喊人工）" if 回了
+                                 else "补盘没成功，下一轮还要再读一次页面"))
+                    self._log("SUCCESS", f"浏览器里还登着，已自动登录（第 {第几眼} 眼读实）")
+                else:
+                    self._log("SUCCESS", f"Cookie 有效，已自动登录（第 {第几眼} 眼读实）")
+                return True
+            if state == "login_wall":
+                self._确认登录墙 = True
+                # "从来没登录过"和"会话掉了"给人的动作不一样，别一句话糊过去
+                if 会话文件不在:
+                    self._login_reason = "no_cookie"
+                    self._log("WARN", "这个账号还没有登录过（没有 Cookie 文件，"
+                                      "页面是登录页），把登录页摆出来登一次就行")
+                else:
+                    self._login_reason = "cookie_expired"
+                    self._log("WARN", "确认是登录墙（页面被踢回登录页且浏览器里没有"
+                                      "登录 Cookie），需要重新登录")
+                    self._discard_stale_cookies("启动时确认登录墙")
+                return False
+            # 看不准 ≠ 失效：它只表示"这一眼不够"，绝不能拿它当
+            # "Cookie 过期"去动用户的会话文件
+            还剩 = int(截止 - time.monotonic())
+            if 还剩 <= 0 or 第几眼 >= 第几眼上限:
+                self._login_reason = "login_uncertain"
+                self._log("WARN", f"复验 {第几眼} 眼仍看不准（整页导航 {导航次数} 次，"
+                                  f"页面与 Cookie 两路证据矛盾），"
+                                  f"按需要人工登录处理，Cookie 文件原样保留")
+                return False
+            self._log("DEBUG", f"第 {第几眼} 眼定不了论，{登录复验间隔秒} 秒后再读一次"
+                              f"（窗口内还剩 {还剩} 秒，已整页导航 {导航次数} 次）")
+            self._interruptible_sleep(登录复验间隔秒)
+            if self._stop_event.is_set():
+                self._login_reason = "login_uncertain"
+                return False
+
     def _handle_login(self) -> bool:
         """处理登录流程。先尝试 Cookie 自动登录，失败则等待用户手动登录。"""
         instance = self.browser_manager.get_instance()
@@ -1192,64 +1525,26 @@ class UnifiedBotLoop:
             return False
 
         self._log("INFO", "正在检查登录状态...")
-
-        # 先访问主站
+        self._checking_login = True
         try:
-            self._log("DEBUG", "正在访问主站 https://www.zhipin.com")
-            instance.get("https://www.zhipin.com")
-            time.sleep(2)
-            self._log("DEBUG", f"主站访问完成，当前URL: {instance.url}")
-        except Exception as e:
-            self._log("WARN", f"访问主站异常: {e}")
-
-        # 使用账号特定的 Cookie 文件（优先账号配置，其次全局配置）
-        cookie_file = self._cookie_file()
-        self._log("DEBUG", f"Cookie 文件路径: {cookie_file}")
-        if cookie_file:
-            try:
-                if self.browser_manager.load_cookies(cookie_file):
-                    self._log("DEBUG", "正在访问聊天页面验证登录态...")
-                    state = self._login_state_now(instance)
-                    if state == "uncertain":
-                        # 两路矛盾多半是 SPA 还在跳转。先复核一次再决定，别急着把
-                        # 一个本来就登录着的号推去登录页（23:01 实测白等 80 秒）
-                        self._log("DEBUG", "页面与 Cookie 两路证据矛盾，等页面稳定后复核一次...")
-                        self._interruptible_sleep(4)
-                        state = self._login_state_now(instance)
-                    if state == "logged_in":
-                        self._logged_in = True
-                        # 上一轮判成"要等登录"留下的标记必须在这里抹掉：
-                        # 16:11 主账号 Cookie 注入成功、页面也验过登进去了、两条腿都在跑，
-                        # /api/status 还写着 needs_login=true / phase=waiting_login，
-                        # 界面就摆出一副"这个号卡住了"的样子（他被这种假红骗过好几回）
-                        self._needs_login = False
-                        self._login_reason = ""
-                        self._log("SUCCESS", "Cookie 有效，已自动登录")
-                        return True
-                    if state == "login_wall":
-                        self._login_reason = "cookie_expired"
-                        self._log("WARN", "确认是登录墙（页面被踢回登录页且浏览器里没有"
-                                          "登录 Cookie），需要重新登录")
-                        self._discard_stale_cookies("启动时确认登录墙")
-                    else:
-                        # 看不准 ≠ 失效：它只表示"这一眼不够"，绝不能拿它当
-                        # "Cookie 过期"去动用户的会话文件
-                        self._login_reason = "login_uncertain"
-                        self._log("WARN", "复核后仍看不准（页面与 Cookie 两路证据矛盾），"
-                                          "按需要人工登录处理，Cookie 文件原样保留")
-                else:
-                    self._login_reason = "no_cookie"
-                    self._log("INFO", "无 Cookie 文件或加载失败")
-            except Exception as e:
-                self._login_reason = "cookie_error"
-                self._log("WARN", f"Cookie 加载异常: {e}")
-        else:
-            self._login_reason = "no_cookie"
+            登上了 = self._计时("登录复验", self._自动登录尝试, instance)
+        finally:
+            self._checking_login = False
+        if 登上了:
+            return True
+        if self._stop_event.is_set():
+            # 复验是被叫停打断的，不是这个号真掉了登录。这时候标 needs_login
+            # 再摆一扇"请在浏览器中登录"，等于在关机过程中喊人起床
+            self._log("INFO", "复验期间收到停止，不摆登录窗口直接收工")
+            return False
 
         # 只有确认是登录墙才把页面导航到登录页：本来就登录着的时候跳过去，
-        # 会把会话页弄脏，回复侧随后就读到"登录墙"，自己把自己绊停
+        # 会把会话页弄脏，回复侧随后就读到"登录墙"，自己把自己绊停。
+        # 判据用 _确认登录墙（页面真被踢回登录页），不用 login_reason——
+        # "这个号从来没登录过"(no_cookie) 同样要把登录页摆出来，
+        # 拿 reason 猜会把新账号看成"不许动页面"，他就永远等不到那一页
         self._needs_login = True
-        是登录墙 = self._login_reason == "cookie_expired"
+        是登录墙 = self._确认登录墙
         if 是登录墙:
             self._log("WARN", "需要手动登录，准备把浏览器窗口摆到桌面")
         else:
@@ -1265,6 +1560,10 @@ class UnifiedBotLoop:
         # "登进去后这一轮自己继续"，05:23 却按超时把两条腿撤了；他随后真登了进去，
         # 没人在等 → 主账号 running=false 挂到 10:12、当天 0 单。
         第几轮 = 0
+        # Cookie 路径要在用到的这一刻现取：以前它是这段流程开头算好的局部变量，
+        # 把复验抽成 _自动登录尝试 之后这里读不到它，一等到人工登录就 NameError
+        # 把整条腿炸掉（tests/test_login_state.py 8 条同时红）
+        cookie_file = self._cookie_file()
         while not self._wait_for_login(instance, cookie_file):
             第几轮 += 1
             if self._stop_event.is_set() or not self._running:
@@ -1477,7 +1776,7 @@ class UnifiedBotLoop:
             if self._login_state_read(instance, 早收=False) == "logged_in":
                 self._log("SUCCESS", "检测到登录成功，自动继续（无需手动点击）")
                 return True
-            if time.time() - 上次导航 >= 登录导航冷却秒:
+            if 这一眼该不该导航(页面, 上次导航, time.time()):
                 # 这一眼定不了论（页面停在一个中性地址）才值得导航去问一次
                 上次导航 = time.time()
                 if self._login_state_now(instance) == "logged_in":
@@ -1534,7 +1833,8 @@ class UnifiedBotLoop:
         再跳登录页，早收就等于拿一个转瞬即逝的好消息当定论。
         """
         try:
-            instance.get("https://www.zhipin.com/web/geek/chat")
+            self._计时("导航会话页", instance.get,
+                       "https://www.zhipin.com/web/geek/chat")
         except Exception as e:
             # 有些 DrissionPage 异常 str() 是空串：只打 `{e}` 会留下一条
             # 「访问会话页异常: 」，看不出是标签页没了还是导航超时，
@@ -1662,12 +1962,19 @@ class UnifiedBotLoop:
         """登录态恢复正常，计数清零。"""
         self._login_fail_streak = 0
 
-    def _init_engines(self):
-        """初始化打招呼引擎和回复相关组件。"""
+    def _init_engines(self, 开页: bool = True):
+        """初始化打招呼引擎和回复相关组件。
+
+        开页=假 只给"为了登录而重开浏览器、引擎句柄要跟着重建"那一趟用：这时候
+        还没有会话，`new_tab(会话页)` 那张页当场被踢成 verify.html，等于给一个号
+        多造一张一模一样的安全验证页（2026-10-22 09:21:18 实测）。句柄照建，
+        页先留空白，回复腿真来要页的时候 `get_chat_page()` 自己补导航。
+        """
         self._log("INFO", "正在初始化引擎...")
 
         # 初始化回复相关组件 — 使用聊天标签页
-        chat_page = self.browser_manager.get_chat_page()
+        chat_page = self._计时("开会话页",
+                               self.browser_manager.get_chat_page, 导航=开页)
         self._log("DEBUG", "正在初始化回复组件（BossChatHandler, ReplyEngine, StateStore...）")
         self._chat_handler = BossChatHandler(
             browser_manager=self.browser_manager,
@@ -1762,6 +2069,13 @@ class UnifiedBotLoop:
                     # 因到达每日上限而暂停时，跨过零点要在暂停分支里自己醒过来：
                     # 这一分支不会走到 _run_greet_round，放在轮次里永远执行不到
                     self._maybe_auto_resume_greet()
+                    self._stop_event.wait(timeout=10)
+                    continue
+
+                if self._被验证页挡着():
+                    self._stop_event.wait(timeout=10)
+                    continue
+                if self._验证后冷却中():
                     self._stop_event.wait(timeout=10)
                     continue
 
@@ -1868,6 +2182,234 @@ class UnifiedBotLoop:
         self._greet_engine._emit_greet_event(job, ui_status, skip_reason=reason)
         self._greet_engine._record_greet(job, is_skipped=True, skip_reason=reason)
 
+    # ── 候选池：只抓不投（2026-10-19 定的口径）─────────────────
+
+    def _job_pool(self):
+        """本号的岗位池，懒建一次复用。"""
+        池 = getattr(self, "_pool", None)
+        if 池 is None:
+            from boss_bot.job_pool import 岗位池
+            池 = 岗位池(account_index=self.account_index)
+            self._pool = 池
+        return 池
+
+    def _capture_only(self) -> bool:
+        return bool(getattr(self.config.greet, "capture_only", True))
+
+    def _否决词表(self):
+        """粗筛用的两份词表：自定义否决词 + 岗位类型标题否决词（都从现盘配置读）。
+
+        以前这里写的是 `getattr(引擎, "custom_filter_keywords", None) or []`——那两个名字
+        住在 AIAnalyzerChain 上，GreetEngine 上根本没有，`or []` 把它悄悄兜成空表，
+        于是 1623 条池子的粗筛没有一条判过"否决命中"，而标题里明晃晃写着
+        「兼职在线打字客服」「线上兼职主播」「5K居家线上客服」的 16 条按现盘词表能命中 14 条
+        （2026-10-21 实测）。
+
+        兜默认表只兜"这个键压根不存在"（老配置文件、半截构造的 config）。
+        空表不当成口径，先回读盘上那一份：2026-10-22 一致性门抓到两行漏标
+        （「一对一线上高薪家教」「带背单词英语老师」），形状是"自定义非空、标题表为空"——
+        热重载赶上 bot_config.json 的半截 ai 段，内存里就成了 []，而 [] 当时被当成
+        "他把标题否决词清空了"静默放行，蓝领/老师/家教这一整遍标题词一条都没参与。
+        他写的原文在文件里，不在那次坏读取的内存快照里；文件也空才算他清空，
+        那种情况由 `_粗筛标记` 亮 `标题词表为空` 一格，不许静默等于"没命中"。
+        """
+        ai = getattr(self.config, "ai", None)
+        自定义 = list(getattr(ai, "custom_filter_keywords", None) or [])
+        标题 = getattr(ai, "title_veto_keywords", None)
+        if 标题 is None:
+            from boss_bot.greet_engine import TITLE_VETO_KEYWORDS_DEFAULT
+            标题 = list(TITLE_VETO_KEYWORDS_DEFAULT)
+        标题 = list(标题)
+        if not 标题:
+            盘上 = []
+            try:
+                from boss_bot.unified_config import load_config
+                盘上 = list((load_config().get("ai") or {}).get("title_veto_keywords") or [])
+            except Exception as e:
+                self._log("WARN", f"标题否决词表回读盘上那份失败: {type(e).__name__}: {e}")
+            if 盘上:
+                标题 = 盘上
+        return 自定义, 标题
+
+    def _粗筛标记(self, job: dict) -> dict:
+        """卡片阶段就能判的两条本地闸：命中了哪条否决词、方向有没有命中。
+
+        抓下来时**不拿它们删人，只贴标签**。删了就等于回到"他看不见为什么没投"，
+        而这一层存在的全部理由就是让他看得见、并且能反过来勾"这条我偏要"。
+        方向词仍然从引擎现拿，不在这儿抄第二份（见 greet_engine.方向词表）。
+        """
+        标 = {}
+        引擎 = self._greet_engine
+        try:
+            from boss_bot.greet_engine import target_job_hit, veto_keyword_hit
+            自定义, 标题表 = self._否决词表()
+            if not 自定义 and not 标题表:
+                标["词表没读到"] = True
+            else:
+                if not 标题表:
+                    # 盘上那份也空——是他清的空，但"标题这一遍没参与"必须看得见
+                    标["标题词表为空"] = True
+                命中 = veto_keyword_hit(自定义, job, title_keywords=标题表)
+                if 命中:
+                    标["否决命中"] = 命中
+            词表 = 引擎.方向词表() if hasattr(引擎, "方向词表") else []
+            if 词表:
+                标["方向命中"] = bool(target_job_hit(词表, job))
+            # 方向命中又只撞了软否决词（销售/住宿/坐班这一类修饰词）：不删不藏，
+            # 标一行"要人看一眼"——判据住在 job_pool.要人看一眼 那一份，这里不抄第二套。
+            from boss_bot.job_pool import 要人看一眼
+            if 要人看一眼(标.get("方向命中"), 标.get("否决命中", "")):
+                标["要人看一眼"] = True
+            标["依据"] = "卡片(未开JD)"
+        except Exception as e:
+            # 判不成不能让抓取腿断：这条留白，界面上就是"没判过"，他自己在勾
+            self._log("WARN", f"粗筛没判成（{job.get('job_name', '')}）: {e}")
+        return 标
+
+    def _精筛一条(self, 池, row: dict) -> str:
+        """把一条池里的岗位送给 AI 判分，结论写回这一行。返回一句给人看的话。
+
+        判分与落盘住在 boss_bot/screen_judge.py 那一份：面板上的「按这份文件重判」
+        走的是同一个函数，两处各写一套就会一边把"没判成"写成"不合"。
+        """
+        from boss_bot.screen_judge import 判分写回
+        return 判分写回(池, self._greet_engine, row)[0]
+
+    def _重贴粗筛标(self, 池) -> None:
+        """每轮抓取开头都把整池的粗筛标签按现在的词表重算一遍。
+
+        不重贴的话"自定义筛选"只有今天新抓的岗位认：他把「客服」加进否决词，
+        刷新界面看见的还是改之前那 722 条老标签，跟没加一样（2026-10-21 就是这个样子）。
+        10-22 又把"只在词表变过那一轮动手"改掉了：那一次内存里的标题表被读成空，
+        「一对一线上高薪家教」「带背单词英语老师」两行就这么静默漏了标，而键没变、
+        再没人回去修——一致性门第二天早上把它抓成红的。整池重算实测 0.12 秒/917 行，
+        换"盘上标签永远等于现算"是划算的。
+        """
+        try:
+            改了 = 池.重贴粗筛标(lambda 行: self._粗筛标记(行))
+        except Exception as e:
+            self._log("WARN", f"粗筛标签没重贴成（池文件读不成？）: {e}")
+            return
+        if 改了:
+            self._log("INFO", f"🔁 池里 {改了} 条行的粗筛标签已按现词表重贴")
+
+    def _capture_jobs(self, jobs: list) -> None:
+        """一轮抓到的岗位：全部进池 → 贴本地粗筛标签 → 按限额送 AI 精筛。
+
+        精筛挑"池里还没有 AI 结论的行"，不是只挑本轮新增的：某轮接口全挂了，
+        那批行得在下一轮自动补判，不然会永远空着。限额（ai.screen_max_per_round）
+        卡的是每号每轮送多少次判分——一抓就是几十条，不设闸会把这一轮拖到十几分钟，
+        回复腿跟着挨饿。
+        """
+        池 = self._job_pool()
+        self._重贴粗筛标(池)
+        # BOSS 侧已经有这条会话的岗位不进池：它投不出去，留在表里只是挡路
+        # （判据跟投递腿同一份——沟通身份集/这条沟通过了，见 greet_engine）
+        from boss_bot.greet_engine import 沟通身份集, 这条沟通过了
+        身份库 = 沟通身份集()
+        抓到 = [j for j in (jobs or []) if isinstance(j, dict)]
+        可投 = [j for j in 抓到 if not 这条沟通过了(j.get("url"), 身份库)]
+        if len(抓到) != len(可投):
+            self._log("INFO", "⏭️ 本轮 %d 条 BOSS 侧已有会话，没进池（池里只留投得出去的）"
+                      % (len(抓到) - len(可投)))
+        结果 = 池.收(可投)
+        挪了, 挪话 = 池.挪走已沟通(身份库)
+        if 挪了:
+            self._log("INFO", "🧹 池子收干净：%s" % 挪话)
+        放回, 放回话 = 池.放回可重试()
+        if 放回:
+            self._log("INFO", "🔁 %s" % 放回话)
+        for 编号 in 结果["新增编号"]:
+            行 = 池.取(编号)
+            if 行:
+                标 = self._粗筛标记(行)
+                if 标:
+                    池.改(编号, gate=标)
+        待筛 = [r for r in 池.列表(排序="新抓的在前") if not (r.get("ai") or {}).get("判于")]
+        try:
+            限额 = int(self.config.ai.screen_max_per_round)
+        except (TypeError, ValueError):
+            限额 = 0
+        限额 = max(0, 限额)
+        本轮 = 待筛[:限额]
+        筛了 = 0
+        for 行 in 本轮:
+            if not self._running or self._greet_paused:
+                break
+            话 = self._精筛一条(池, 行)
+            筛了 += 1
+            self._log("INFO", f"🧪 精筛 {行.get('job_name', '')[:24]}: {话}")
+        自 = f" 无链接{结果['无URL']}" if 结果.get("无URL") else ""
+        self._log("INFO", f"📥 进池 新增{结果['新增']} 见过{结果['见过']}{自}"
+                          f" 池内{结果['总数']}；本轮精筛 {筛了}/{len(待筛)} 条"
+                          f"（限额 {限额}，剩下的下轮接着判）")
+
+    def _drain_apply_queue(self) -> int:
+        """把他在池里勾成「已选」的岗位投掉，返回这一轮投了几条。
+
+        为什么由打招呼线程投、不由 HTTP 线程投：面板接口背后那个线程要是直接
+        去开岗位详情页点「立即沟通」，就和抓取线程抢同一张搜索页 —— 抢赢了一次
+        导航把对方的句柄换掉，抢输了页面断开，两边都记成失败（项目里为这个
+        修过一轮，见 README「投递腿冻住的四种表现」）。所以接口只入队标状态，
+        动作留在这里，一轮里按冷却/额度自己收手。
+        """
+        from boss_bot.job_pool import 岗位行成抓取, 状态已投, 状态不投, 状态已选
+        from boss_bot.greet_engine import 勾选标记
+        池 = self._job_pool()
+        待投 = 池.列表(状态=状态已选)
+        if not 待投:
+            return 0
+        投了 = 0
+        for 行 in 待投:
+            if not self._running or self._greet_paused:
+                break
+            if self._greet_engine.greet_cooldown_left() > 0:
+                因 = self._greet_engine.greet_cooldown_reason() or "打招呼在冷却"
+                self._log("WARN", f"⏸️ 勾了的先不投：{因}，留在池里等下一轮")
+                break
+            job = 岗位行成抓取(行)
+            # 「先选再投」：他能勾这条，就说明这条已经过过眼了。投递腿于是
+            # 不再拿否决词/方向词复核（见 greet_engine.勾选投递的），只留三道
+            # 机械闸门——BOSS 侧已有会话、页面/风控、这句话此刻发不出去。
+            job[勾选标记] = True
+            机器痕 = {"来源": "打招呼线程", "时间": time.time()}
+            if self._greet_engine._is_already_chatted(job):
+                池.改(行.get("id", ""), status=状态不投,
+                     投递={"成": False, "原因": "已沟通过（BOSS 侧已有这条会话）",
+                           "时间": time.time()},
+                     勾选={**机器痕, "动作": "机器判已沟通过"})
+                continue
+            成, 话 = self._greet_engine._greeting_for(job)
+            if not 成:
+                # 这一类不是"这条岗位不能投"，是"这一刻这句话不能发"：他把画像或招呼语改对，
+                # 下一轮就该自己投出去。判成永久不投就会出现"改了还是不投"——2026-10-29 那行
+                # 「报了学历档次『双一流』」是 01:38 留的红，画像 12:39 就补上了双一流，
+                # 行上的红字到晚上还在，看着像闸门坏了。所以留在「已勾待投」，只记最近一次原因。
+                池.改(行.get("id", ""),
+                     投递={"成": False, "原因": 话 or "招呼语取不到", "时间": time.time(),
+                           "可重试": True},
+                     勾选={**机器痕, "动作": "机器判招呼语不可用，留在队列里下一轮再试"})
+                continue
+            self._greet_engine.begin_event_ts()
+            if self._dry_run("本应投递勾选项",
+                             f"{job.get('job_name', '')} @ {job.get('company', '')}"):
+                break
+            成否 = self._greet_engine.send_greeting(job)
+            池.改(行.get("id", ""),
+                 status=状态已投 if 成否 else 状态已选,
+                 投递={"成": bool(成否), "时间": time.time(),
+                       "原因": "" if 成否 else "点了沟通但没成（详见打招呼记录）"},
+                 勾选={**机器痕, "动作": "机器投出去了" if 成否 else "机器试投没成"})
+            if 成否:
+                投了 += 1
+                self._stats_dict["greet_applied"] += 1
+                self._metrics.bump(self.account_index, "greet_sent")
+            else:
+                self._stats_dict["greet_skipped"] += 1
+        if 投了:
+            self._log("INFO", f"📤 按勾选投出 {投了} 条")
+        return 投了
+
     def _run_greet_round(self) -> bool:
         """执行一轮打招呼任务。返回 True 如果有岗位被处理，False 如果所有搜索都为空。"""
         self._log("INFO", "━━━ 开始打招呼轮次 ━━━")
@@ -1893,6 +2435,15 @@ class UnifiedBotLoop:
             self._log("INFO", f"⏸️ 打招呼冷却中，本轮不搜索不建记录"
                               f"（剩 {int(cooldown_left // 60) + 1} 分钟，{why}）")
             return True
+
+        # 他勾过的先投掉，再出去搜新的：勾是"我现在就要这条"，排在搜索后面
+        # 等于最快也要等下一轮才动，界面点了没反应就是他要问的那种"没生效"
+        try:
+            self._drain_apply_queue()
+        except Exception as e:
+            # 池这一侧读不成（文件坏、配置还没落到本号）不能把搜索腿一起带走：
+            # 带走的表象是"一整轮什么都没抓到"，和投递腿冻住长得一模一样
+            self._log("WARN", f"勾选队列这一轮没排空: {type(e).__name__}: {e}")
 
         try:
             tasks = self._build_greet_tasks()
@@ -1925,6 +2476,20 @@ class UnifiedBotLoop:
                 any_jobs_found = True
                 self._log("INFO", f"找到 {len(jobs)} 个岗位，开始打招呼...")
                 self._log("DEBUG", f"岗位列表前5个: {[j.get('title', j.get('job_name', '未知')) for j in jobs[:5]]}")
+
+                if self._capture_only():
+                    # 只抓不投：这一轮搜到的岗位全进池，一条都不点「立即沟通」。
+                    # 投哪条由他在面板上勾，勾完由打招呼线程取走（见 _drain_apply_queue）
+                    self._capture_jobs(jobs)
+                    # 每个搜索任务收尾再排空一次勾队列：一轮里几个搜索任务串下来要跑
+                    # 十几分钟，只在轮头排空的话，他中途勾的那几条得等整轮跑完才动——
+                    # 界面点了没反应就是他要问的那种"没生效"。队列空的时候这里只读一次
+                    # 池文件，不产生任何导航。
+                    try:
+                        self._drain_apply_queue()
+                    except Exception as e:
+                        self._log("WARN", f"搜索任务之间没排空勾选: {type(e).__name__}: {e}")
+                    continue
 
                 for job in jobs:
                     if not self._running or self._greet_paused:
@@ -2140,6 +2705,13 @@ class UnifiedBotLoop:
                     self._stop_event.wait(timeout=10)
                     continue
 
+                if self._被验证页挡着():
+                    self._stop_event.wait(timeout=10)
+                    continue
+                if self._验证后冷却中():
+                    self._stop_event.wait(timeout=10)
+                    continue
+
                 # 热重载所有运行时可变配置（AI/频率/间隔/开关等）
                 self._hot_reload_config()
 
@@ -2296,6 +2868,12 @@ class UnifiedBotLoop:
                         self._msg_store.get_all_chats_detail())
                 except Exception as e:
                     self._log("WARN", f"排空待评估失败（不影响本轮回复）: {e}")
+                try:
+                    # 周期性 nudge：闸门拦截攒够一批就自己复盘一次（自带双门限，
+                    # 大部分轮次只回 idle，不会真跑）
+                    self._self_evolve.nudge_lessons()
+                except Exception as e:
+                    self._log("WARN", f"自动复盘检查失败（不影响本轮回复）: {e}")
 
             if not candidates:
                 self._log("DEBUG", "无未读消息")
@@ -2538,8 +3116,12 @@ class UnifiedBotLoop:
         容灾链全挂了才发它，一轮最多 6 个会话，AI 那条路的钱花得起。
         """
         tpl = FOLLOWUP_LINES[min(int(item.get("times") or 0), len(FOLLOWUP_LINES) - 1)]
+        # 兜底那句里只放岗位名：整串抓下来的标题带着薪资、城市和「查看职位」，
+        # 照抄进正文就是机器粘上去的那句话（实测发出去过 4 条，见 contact_ledger.洗岗位标题）
+        from boss_bot.contact_ledger import split_job_title, 洗岗位标题
+        岗位名 = (split_job_title(洗岗位标题(job_name or "")).get("title") or "").strip()
         兜底 = tpl.format(boss=boss,
-                          job=(job_name or "").strip() or "这个岗位",
+                          job=岗位名 or "这个岗位",
                           company=(item.get("company") or "").strip() or "贵公司")
         return self._reply_engine.现编跟进(对话 or [], boss, job_name, 兜底句=兜底)
 
@@ -2642,9 +3224,22 @@ class UnifiedBotLoop:
         if conversation_rejected(live):
             self._log("INFO", f"⏭️ 跟进跳过 [{name}]：HR 已拒绝，再追是骚扰")
             return False
+        # 页面上刚读到的这一段重新比一遍候选闸门那两条：存档可能比线上薄一轮
+        这一路 = {"messages": live, "company": company, "job_name": job_name}
+        if 拒过这单(这一路):
+            self._log("INFO", f"⏭️ 跟进跳过 [{name}]：这一段里我们已经拒过这一单了")
+            return False
+        if 问过还招吗(这一路):
+            self._log("INFO", f"⏭️ 跟进跳过 [{name}]：「还在招吗」已经问过一句、对方没回，不问第二遍")
+            return False
 
         # 对话取页面上刚读到的这份（live），不是凭存档旧账——现编要看得见的就是刚才那几眼
         text = self._followup_text(item, name, job_name, live)
+        if not text:
+            # 空串是引擎在说"这句我们在这段对话里已经发过了"。发出去就是当着 HR 的面
+            # 把同一句再说一遍——他被认出来用 AI 的那一路就是这么来的。
+            self._log("INFO", f"⏭️ 跟进跳过 [{name}]：现编那句这段对话里已经说过，不重发")
+            return False
         self._reply_engine.begin_event_ts()
         if self._dry_run("本应跟进", f"[{name}] {text}"):
             return False
@@ -3199,6 +3794,32 @@ class UnifiedBotLoop:
         except Exception as e:
             self._log("DEBUG", f"[{name}] 卡片落存档失败，证据等下一次采集: {e}")
 
+    def _简历承诺要升格(self, content, name, job_name, chat_company,
+                       latest_other_msg) -> bool:
+        """这句文字许了发简历、对方也确实要了吗？是就把这一单改走真实发送动作。
+
+        存档里那句「我这就把简历发您哈」后面一次 `send_resume()` 都没调过，
+        是因为发简历的闸门只认"对方那句是索要"——「可以滴」这种应声不在里面。
+        读不到存档就只按对方那句判：宁可少升一单，也不要凭半截上下文把简历甩出去。
+        """
+        说法 = 简历承诺(content)
+        if not 说法:
+            return False
+        try:
+            对话 = list(self._msg_store.get_messages(name, job_name, chat_company) or [])
+        except Exception as e:
+            self._log("DEBUG", f"[{name}] 承诺升格前读存档没读成: {type(e).__name__}")
+            对话 = []
+        末条正文 = ((对话[-1].get("text") or 对话[-1].get("card_text") or "")
+                    if 对话 else "")
+        if latest_other_msg and 末条正文 != latest_other_msg:
+            # 刚读回来的那句还没进存档，得补在最后，否则"对方最新一句"判成上一轮的话
+            对话.append({"text": latest_other_msg, "is_mine": False})
+        if not 简历已获准(对话):
+            return False
+        self._log("INFO", f"[{name}] 文字里许了发简历（{说法}），改走真实发送动作")
+        return True
+
     def _handle_reply_action(self, action, content, meta, name, job_name,
                              latest_other_msg, chat_company="",
                              hr_recent: str = "") -> bool:
@@ -3208,6 +3829,19 @@ class UnifiedBotLoop:
         发送成功与发送失败两条路都要落记录：以前只有 socket 实时推送，刷新一次
         界面那条回复就没了，回复记录和 BOSS 端消息列表对不上。
         """
+        # 话里许了"发简历"，动作却停在 text —— 这单就永远悬着。
+        # 2026-10-23 17:00:33 何女士说「可以滴」，机器回「好的，我这就把简历发您哈」，
+        # 之后一次 `send_resume()` 都没调；盘上 46 条这样许过的回复，
+        # 对应会话从头到尾一张简历卡片都没有（2602 个存档会话里 142 个有卡片）。
+        # 改成走真动作：发不出去时由下面那条降级话术说实话，不让那句承诺独自留在存档里。
+        # 只在对方真索要或真应了声的时候升格，不许机器自己找理由把简历甩出去。
+        if action == "text" and content and self._简历承诺要升格(
+                content, name, job_name, chat_company, latest_other_msg):
+            action, content = "resume", ""
+            meta = dict(meta or {})
+            meta["source"] = meta.get("source") or "ai"
+            meta["promise_kept"] = True
+
         # 简历去重降级：判据是"存档里有没有 BOSS 的简历卡片"，不是那个会自己骗自己的标记
         if action == "resume" and self.config.reply.resume_send_once and \
            self._resume_delivered(name, job_name, chat_company):
@@ -3240,7 +3874,9 @@ class UnifiedBotLoop:
                     reply_content="[简历已发送]",
                     reply_source=meta.get("source", ""),
                     reply_intent=meta.get("intent", ""),
-                    reply_reason="HR索要简历，已发送附件简历",
+                    reply_reason=("文字里许过发简历，已按承诺发送附件简历"
+                                  if meta.get("promise_kept")
+                                  else "HR索要简历，已发送附件简历"),
                 )
                 self._emit_reply_event(
                     contact_name=name, job_name=job_name,
@@ -3488,6 +4124,7 @@ class UnifiedBotLoop:
 
         从配置文件重新加载，并同步到各运行引擎和主循环属性。
         覆盖范围（只写引擎真正读取的属性，避免"改了没生效"）：
+          0. 兼容层 boss_bot.config 里的话术常量与画像（reply_engine 按属性现取）
           1. 打招呼引擎的账号级参数（话术/简历图片/间隔/频率限制/重试次数）
           2. AI 配置（打招呼侧受 ai.enabled 控制，回复侧始终启用）
           3. 回复侧：延迟区间、每小时回复上限、max_tokens、失败兜底、限流等待
@@ -3500,11 +4137,27 @@ class UnifiedBotLoop:
             # 于是运行 10 秒后账号级阈值就被全局基准冲掉，表现为"独立配置改了没生效"
             self.config = UnifiedConfig.load().apply_account(self.account_index)
 
+            # 话术模板、画像、规则话术还有一份住在兼容层 boss_bot.config 的模块常量里
+            # （reply_engine 发句子、notify/self_evolve 打标都读那几个名字）：不跟着热重载，
+            # 面板上改了话术就只有重启才生效。现在写回常量 + 调用点现取。
+            from boss_bot import config as _兼容层
+            _兼容层.刷新兼容层(self.config)
+
             # 0. 引擎与主循环共用同一份新 config，并按新 config 重读
             #    频率限制/话术/简历图片/账号参数（否则前端改了要重启才生效）
             if self._greet_engine:
                 self._greet_engine.config = self.config
                 self._greet_engine.reload_runtime_settings()
+
+            # 0.5 整页加载地板：面板改了秒数，下一轮就按新的踩（和详情节流同一个口径，
+            #     都是"改了必须生效"）。装的是进程级那一份——两个号走同一个出口 IP，
+            #     风控算的是 IP 不是号，所以不能按号各装一份。
+            地板 = 设置整页加载地板(
+                getattr(self.config.greet.rate_limit, "page_load_min_interval", 3))
+            if getattr(self, "_整页地板秒", None) != 地板:
+                self._整页地板秒 = 地板
+                self._log("INFO", f"整页加载地板已装：两次整页换页之间至少隔 {地板:.0f} 秒"
+                                  f"（两号共用一个出口 IP；填 0 = 关掉）")
 
             # 1. AI 配置热重载
             # 注意：ai.enabled 仅控制打招呼的AI岗位解析，不控制自动回复AI
@@ -3553,6 +4206,15 @@ class UnifiedBotLoop:
                     self.config.ai.title_veto_keywords)
                 self._reply_engine._body_veto_keywords = list(
                     self.config.ai.custom_filter_keywords)
+                # 规则话术（面板上那张「关键词→回复」表）以前只在构造时读一次：
+                # RuleEngine 用 `from boss_bot.config import REPLY_RULES`，那个名字
+                # 在 rules.py 里是 import 时绑死的，改配置常量也不会传进去。
+                # 所以这里按新配置重建一个，下一句就按新表判。
+                from boss_bot.rules import RuleEngine
+                新表 = dict(self.config.rules.reply_rules or {})
+                if 新表 != getattr(self._reply_engine.rule_engine, "rules", None):
+                    self._reply_engine.rule_engine = RuleEngine(新表)
+                    self._log("INFO", "回复规则话术已按新配置重建（%d 条）" % len(新表))
             if self._self_evolve:
                 self._self_evolve.enabled = self.config.self_evolve_enabled
 
@@ -3677,6 +4339,82 @@ class UnifiedBotLoop:
             self._log("DEBUG", f"实测登录态读不到: {e}")
             return None
 
+    def _扫验证页(self) -> list:
+        """这个号的浏览器里现在停在验证页的那几张标签（读不到就是空列表）。
+
+        只有一份出口，两条腿的开轮闸和健康检查都用它。返回值必须逐条验明是 dict：
+        句柄没建好、端口挂了、或者调用方给回来一个占位对象时，绝不能因为"东西是真值"
+        就判成有验证页——那等于两条腿当场停死，界面上还写着"等你滑验证"。
+        """
+        try:
+            结 = self.browser_manager.验证页标签()
+        except Exception as e:
+            logger.debug("全标签页验证扫描没做成（按没挡住处理）: %s" % e)
+            return []
+        if not isinstance(结, list):
+            return []
+        return [t for t in 结 if isinstance(t, dict) and t.get("url")]
+
+    def _被验证页挡着(self) -> bool:
+        """现在有没有一张标签停在安全验证页。有 → 这一轮两条腿都不许碰任何页面。
+
+        这一条只管"别动手 + 告诉他"，判据本身用遍全部标签页（见 BrowserManager.验证页标签）：
+        以前只有钉住的那张页会被看，验证页在另一张上等着，两条腿照原来的频率继续撞，
+        他那句话就变成「你刷新太频繁了，我根本就登录不了」。
+        提示只在每一场的第一次上：这条每个开轮都要问一遍，说一遍就够，说一片就是狼来了。
+        """
+        撞上的 = self._扫验证页()
+        if not 撞上的:
+            if self._验证页挡着说过:
+                self._验证结束时刻 = time.time()
+                self._验证码窗口已摆 = False
+            self._验证页挡着说过 = False
+            return False
+        if not self._验证页挡着说过:
+            self._验证页挡着说过 = True
+            # 每张验证页都带着"滑完该回哪一步"，把去向着出来才答得上"这回又是哪一步招的"
+            去向 = []
+            for t in 撞上的:
+                后 = 风控去向后缀(t.get("url") or "")
+                if 后 and 后 not in 去向:
+                    去向.append(后)
+            self._log("WARN", "浏览器里有标签停在安全验证页：这一轮不碰任何页面"
+                              "（刷一次你刚滑的验证就白做），滑完它自己会跳走"
+                              + "".join(去向))
+            if not self._验证码窗口已摆:
+                # 导航=False：要他把这一页滑完，就得让这张页留在原地被看见
+                self._验证码窗口已摆 = bool(
+                    self._ensure_login_window("验证侧", 导航=False))
+            self._emit_wind("BOSS 触发了安全验证（当前 IP 地址可能存在异常访问行为），"
+                            "请在浏览器窗口里把验证滑完"
+                            "；机器在验证期间不碰任何页面，滑完自动继续", "captcha")
+        return True
+
+    def _验证后冷却中(self) -> bool:
+        """刚过完验证的那一阵别再动页：照原来的频率立刻回去撞，等于再要一张验证页。
+
+        填 0 就是不等（界面能改，见 rate_limit.after_verify_cooldown）。
+        """
+        冷却 = 0
+        try:
+            冷却 = int(getattr(self.config.greet.rate_limit,
+                               "after_verify_cooldown", 0) or 0)
+        except Exception:
+            冷却 = 0
+        if 冷却 <= 0 or not self._验证结束时刻:
+            return False
+        if time.time() - self._验证结束时刻 < 冷却:
+            if not self._验证后冷却说过:
+                self._验证后冷却说过 = True
+                self._log("INFO",
+                          "验证刚过完，先歇 %d 秒再碰页面——刚滑完就照原样回去开详情页，"
+                          "等于再要一张验证页（8 天日志里被挡 111/112 处开在详情这一步）"
+                          % 冷却)
+            return True
+        self._验证结束时刻 = 0.0
+        self._验证后冷却说过 = False
+        return False
+
     def _check_health(self, side: str = "reply", 安静: bool = False) -> str:
         """健康检查：检测登录态和验证码拦截。side 决定读哪张标签页。
 
@@ -3692,6 +4430,18 @@ class UnifiedBotLoop:
                     else self.browser_manager.get_instance())
         if instance is None:
             return "browser_disconnected"
+
+        # 先遍历全部标签页再读自己那一张：验证页常常是点「沟通」时 _blank 新开的岗位页，
+        # 两条腿谁都不钉那张。2026-10-21 线上就是这么漏的——9222/9223 各有一张停在
+        # verify.html，一天里 1057 条「会话页判据=ok」对 1 条 captcha，既不提示也没摆窗口。
+        撞上的 = self._扫验证页()
+        if 撞上的:
+            那页 = 撞上的[0].get("url") or ""
+            self._health_why = ("全标签页扫到 %d 张安全验证页（%s%s）"
+                                % (len(撞上的), 那页[:70], 风控去向后缀(那页)))
+            if not 安静:
+                self._log("WARN", f"页面判据=captcha（{self._health_why}）")
+            return "captcha"
 
         try:
             _ = instance.url
@@ -3720,10 +4470,16 @@ class UnifiedBotLoop:
             verdict = classify_health(url, probe)
             _is_c, why = captcha_evidence(probe)
             self._health_why = why or "无挑战证据"
-            # 判据写进日志：以后再说"页面没有验证码"，能当场看出是哪条判据响的
+            # 判据写进日志：以后再说"页面没有验证码"，能当场看出是哪条判据响的。
+            # 光记 URL 前 90 字不够：风控页的 URL 长这样
+            #   https://www.zhipin.com/web/user/verify.html?callbackUrl=https%3A%2F%2F...
+            # 真正说明"我们当时要去干哪一步"的信息全在 callbackUrl 里，截到 90 字
+            # 就把它切没了——10-28 想统计"风控到底是谁招来的"，134 次里只有 15 次
+            # 定得了因，其余 119 次日志里根本没有那一步的名字。
             if not 安静:
                 self._log("DEBUG" if verdict != "captcha" else "WARN",
-                          f"页面判据={verdict}（{self._health_why}）URL={url[:90]}")
+                          f"页面判据={verdict}（{self._health_why}）URL={url[:90]}"
+                          + 风控去向后缀(url))
             return verdict
         except Exception as e:
             self._log("DEBUG", f"健康检查（无聊天处理器）失败: {e}")
@@ -3771,6 +4527,11 @@ class UnifiedBotLoop:
             if self._check_health(side=pause_field, 安静=True) != "captcha":
                 self._captcha_strikes = 0
                 self._验证码窗口已摆 = False
+                # 这一场几点过完的必须记下来：健康检查这一路认出的验证页（今天 11:13
+                # 两台浏览器各一张，就是这条）以前过完就立刻照原速回去开页，冷却只挂在
+                # 全标签页那道闸上——两条路要共用同一份结束时刻。
+                self._验证结束时刻 = time.time()
+                self._验证页挡着说过 = False
                 if 摆过:
                     # 验证过了就把借来的有头还回配置里的形态，别让窗口一直挂着
                     self._finish_login_window()

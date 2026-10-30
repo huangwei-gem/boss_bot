@@ -46,8 +46,50 @@
       "job_name": "大学生兼职代理150-300元/天长沙查看职位",
       "isFriend": false,
       "mid": "395049965478659"
+    },
+    {
+      "sender": "bot",
+      "content": "孙先生您好，长沙友华驾校这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "孙先生您好，长沙友华驾校这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-16 15:09:36",
+      "time": "15:09",
+      "job_name": "大学生兼职代理150-300元/天长沙查看职位",
+      "isFriend": false,
+      "mid": "397293070181133"
+    },
+    {
+      "text": "哪个大学的呀",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397293314507524",
+      "block": "哪个大学的呀",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "哪个大学的呀"
+    },
+    {
+      "sender": "bot",
+      "content": "孙先生您好，我是统计学专业本科在读，之前做过数据标注和分析的线上兼职，想问问这个岗位具体需要哪些技能呢？",
+      "text": "孙先生您好，我是统计学专业本科在读，之前做过数据标注和分析的线上兼职，想问问这个岗位具体需要哪些技能呢？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-17 11:37:36",
+      "time": "11:37",
+      "job_name": "大学生兼职代理150-300元/天长沙查看职位",
+      "isFriend": false,
+      "mid": "397594858132225"
     }
   ],
-  "updated_at": "2026-10-10 09:15:00",
+  "updated_at": "2026-10-23 14:09:01",
   "unread_on_boss": 0
 }

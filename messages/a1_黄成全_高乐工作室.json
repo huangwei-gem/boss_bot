@@ -72,8 +72,23 @@
       "job_name": "兼职·WB3数据分析师1500-3500元/月厦门查看职位",
       "isFriend": false,
       "mid": "394122938217218"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，明白，那就不打扰您了，祝好。",
+      "text": "好的，明白，那就不打扰您了，祝好。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 17:51:12",
+      "time": "17:51",
+      "job_name": "兼职·WB3数据分析师1500-3500元/月厦门查看职位",
+      "isFriend": false,
+      "mid": "397686674621184"
     }
   ],
-  "updated_at": "2026-10-10 00:18:23",
+  "updated_at": "2026-10-21 15:52:59",
   "unread_on_boss": 0
 }

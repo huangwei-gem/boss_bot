@@ -1,0 +1,83 @@
+│面板启动│ pid=46264 时间=2026-10-27 18:05:15
+ * Serving Flask app 'app'
+ * Debug mode: off
+│面板启动│ pid=35996 时间=2026-10-28 00:42:15
+ * Serving Flask app 'app'
+ * Debug mode: off
+│面板启动│ pid=22800 时间=2026-10-28 10:27:23
+ * Serving Flask app 'app'
+ * Debug mode: off
+│面板启动│ pid=40316 时间=2026-10-28 10:29:09
+│面板退出│ pid=40316 时间=2026-10-28 10:29:09
+│面板启动│ pid=18972 时间=2026-10-28 10:29:23
+ * Serving Flask app 'app'
+ * Debug mode: off
+│面板启动│ pid=6800 时间=2026-10-28 10:32:31
+ * Serving Flask app 'app'
+ * Debug mode: off
+│面板启动│ pid=47464 时间=2026-10-28 11:05:52
+ * Serving Flask app 'app'
+ * Debug mode: off
+│面板启动│ pid=27196 时间=2026-10-28 14:34:19
+ * Serving Flask app 'app'
+ * Debug mode: off
+│面板启动│ pid=33476 时间=2026-10-28 14:39:16
+ * Serving Flask app 'app'
+ * Debug mode: off
+│面板启动│ pid=52116 时间=2026-10-28 19:37:04
+ * Serving Flask app 'app'
+ * Debug mode: off
+│面板启动│ pid=41064 时间=2026-10-28 19:40:05
+ * Serving Flask app 'app'
+ * Debug mode: off
+ * Serving Flask app 'app'
+ * Debug mode: off
+Invalid transport for session kZDUn9LOS-cPhfo_AAAA (further occurrences of this error will be logged with level INFO)
+ * Serving Flask app 'app'
+ * Debug mode: off
+Invalid transport for session NmTPRHR9hblxjh4gAAAA (further occurrences of this error will be logged with level INFO)
+ * Serving Flask app 'app'
+ * Debug mode: off
+Invalid transport for session EfdStq4eiD2a7SuIAAAD (further occurrences of this error will be logged with level INFO)
+ * Serving Flask app 'app'
+ * Debug mode: off
+Exception in thread Thread-5917 (_handle_event_loop):
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\threading.py", line 1043, in _bootstrap_inner
+    self.run()
+    ~~~~~~~~^^
+  File "C:\ProgramData\anaconda3\Lib\threading.py", line 994, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_base\driver.py", line 121, in _handle_event_loop
+    function(**event['params'])
+    ~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_pages\chromium_base.py", line 202, in _onDomContentEventFired
+    if self._get_document(self._load_end_time - perf_counter() - .1):
+       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_pages\chromium_base.py", line 165, in _get_document
+    r = self._run_cdp('Page.getFrameTree', _ignore=PageDisconnectedError)
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_pages\chromium_base.py", line 389, in _run_cdp
+    return r if __ERROR__ not in r else raise_error(r, self.browser, ignore)
+                                        ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\35796\AppData\Roaming\Python\Python313\site-packages\DrissionPage\_functions\tools.py", line 199, in raise_error
+    raise r
+TimeoutError: 
+超时，可能是浏览器卡了。
+详情: timeout
+方法: Page.getFrameTree
+参数: {'_timeout': 30}
+版本: 4.1.1.4
+etFrameTree
+参数: {'_timeout': 30}
+版本: 4.1.1.4
+│面板启动│ pid=34384 时间=2026-10-29 13:09:28
+ * Serving Flask app 'app'
+ * Debug mode: off
+│面板启动│ pid=20956 时间=2026-10-29 13:32:32
+│面板启动│ pid=13608 时间=2026-10-29 19:14:28
+│面板启动│ pid=39004 时间=2026-10-29 20:10:40
+│面板启动│ pid=31000 时间=2026-10-29 20:15:21
+│面板启动│ pid=39956 时间=2026-10-29 21:42:14
+│面板启动│ pid=46068 时间=2026-10-30 09:21:02
+│面板启动│ pid=22052 时间=2026-10-30 10:34:42

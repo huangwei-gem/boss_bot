@@ -300,6 +300,7 @@ class GreetRecord:
         job_url: 岗位链接
         company: 公司名称
         salary: 薪资
+        city: 城市/商圈（BOSS 卡片上的「长沙·岳麓区·麓谷」整串）
         job_description: 岗位描述
         job_requirements: 任职要求
         ai_score: AI匹配评分 (0-100)
@@ -330,6 +331,7 @@ class GreetRecord:
         job_url: str = "",
         company: str = "",
         salary: str = "",
+        city: str = "",
         job_description: str = "",
         job_requirements: str = "",
         ai_score: int = 0,
@@ -362,6 +364,7 @@ class GreetRecord:
         self.job_url = job_url
         self.company = company
         self.salary = salary
+        self.city = str(city or "")[:80]
         self.job_description = _truncate(job_description, MAX_JOB_DESCRIPTION_LEN)
         self.job_requirements = _truncate(job_requirements, MAX_JOB_REQUIREMENTS_LEN)
         self.ai_score = ai_score
@@ -428,6 +431,7 @@ class GreetRecord:
             "job_url": self.job_url,
             "company": self.company,
             "salary": self.salary,
+            "city": self.city,
             "job_description": self.job_description,
             "job_requirements": self.job_requirements,
             "ai_score": self.ai_score,
@@ -463,6 +467,7 @@ class GreetRecord:
             job_url=data.get("job_url", ""),
             company=data.get("company", ""),
             salary=data.get("salary", ""),
+            city=data.get("city", ""),
             job_description=data.get("job_description", ""),
             job_requirements=data.get("job_requirements", ""),
             ai_score=data.get("ai_score", 0),
@@ -993,7 +998,7 @@ def _export_greet_records_excel(
 
     # 表头
     headers = [
-        "时间", "岗位名称", "岗位链接", "公司", "薪资",
+        "时间", "岗位名称", "岗位链接", "公司", "城市", "薪资",
         "岗位描述", "任职要求", "AI评分", "是否匹配",
         "AI理由", "优势", "劣势", "AI建议打招呼",
         "AI模型", "AI原始返回", "实际打招呼", "是否已打招呼",
@@ -1005,7 +1010,7 @@ def _export_greet_records_excel(
     # 数据行
     for r in records:
         ws.append([
-            r.timestamp, r.job_name, r.job_url, r.company, r.salary,
+            r.timestamp, r.job_name, r.job_url, r.company, r.city, r.salary,
             r.job_description or "", r.job_requirements or "",
             r.ai_score, "是" if r.ai_is_match else "否",
             r.ai_reason or "",
@@ -1105,6 +1110,7 @@ def record_greet(
     job_url: str = "",
     company: str = "",
     salary: str = "",
+    city: str = "",
     job_description: str = "",
     job_requirements: str = "",
     ai_score: int = 0,
@@ -1137,6 +1143,7 @@ def record_greet(
         job_url=job_url,
         company=company,
         salary=salary,
+        city=city,
         job_description=job_description,
         job_requirements=job_requirements,
         ai_score=ai_score,

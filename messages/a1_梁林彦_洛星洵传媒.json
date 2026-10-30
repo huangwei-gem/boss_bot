@@ -1,0 +1,25 @@
+{
+  "chat_name": "梁林彦",
+  "chat_id": "梁林彦#洛星洵传媒",
+  "account_index": 1,
+  "job_name": "兼职·读文打字日结110+45-60元/时长沙查看职位",
+  "company": "洛星洵传媒",
+  "messages": [
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。不过我这边只找线上远程就能做的兼职，这个岗位不太合适，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。不过我这边只找线上远程就能做的兼职，这个岗位不太合适，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "scam_filter",
+      "action": "text",
+      "timestamp": "2026-10-10 17:42:29",
+      "time": "17:42",
+      "job_name": "兼职·读文打字日结110+45-60元/时长沙查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-16 01:29:53",
+  "unread_on_boss": 0
+}

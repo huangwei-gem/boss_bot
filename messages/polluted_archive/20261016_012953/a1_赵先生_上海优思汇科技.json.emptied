@@ -1,0 +1,111 @@
+{
+  "chat_name": "赵先生",
+  "chat_id": "赵先生#上海优思汇科技",
+  "account_index": 1,
+  "job_name": "兼职·大学生兼职线上一对一辅导老师45-100元/时长沙查看职位",
+  "company": "上海优思汇科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "10-07 01:10",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393901750419458",
+      "block": "10-07 01:10 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "老师您好，我们是做小初高线上全科辅导的，方便发份简历过来吗？",
+      "time": "10-07 21:43",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394204868386816",
+      "block": "10-07 21:43 老师您好，我们是做小初高线上全科辅导的，方便发份简历过来吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "老师您好，我们是做小初高线上全科辅导的，方便发份简历过来吗？"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394204877656066",
+      "block": "我想要一份您的附件简历，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意"
+    },
+    {
+      "text": "您好，简历刚刚已经发您了，您看一下，有任何问题随时沟通~",
+      "time": "10-07 21:54",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394207436648449",
+      "block": "10-07 21:54 已读 您好，简历刚刚已经发您了，您看一下，有任何问题随时沟通~",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，简历刚刚已经发您了，您看一下，有任何问题随时沟通~",
+      "reply_source": "intent"
+    },
+    {
+      "text": "您好，简历刚刚已经发您了，您看一下，有任何问题随时沟通~",
+      "time": "10-08 03:12",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394285689020416",
+      "block": "10-08 03:12 已读 您好，简历刚刚已经发您了，您看一下，有任何问题随时沟通~",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，简历刚刚已经发您了，您看一下，有任何问题随时沟通~",
+      "reply_source": "intent"
+    },
+    {
+      "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "time": "10-08 09:41",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394381197979649",
+      "block": "10-08 09:41 已读 您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~"
+    },
+    {
+      "text": "非常感谢您的应聘，但是我们在寻找的候选人与您工作背景不完全相符。祝您在BOSS直聘找到更好的机会！",
+      "time": "10-08 14:59",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394459486740483",
+      "block": "10-08 14:59 非常感谢您的应聘，但是我们在寻找的候选人与您工作背景不完全相符。祝您在BOSS直聘找到更好的机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "非常感谢您的应聘，但是我们在寻找的候选人与您工作背景不完全相符。祝您在BOSS直聘找到更好的机会！"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "394747380989953",
+      "block": "您的附件简历 数据分析简... 已发送给Boss点击查看附件",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "您的附件简历 数据分析简... 已发送给Boss点击查看附件"
+    }
+  ],
+  "updated_at": "2026-10-10 19:31:56",
+  "unread_on_boss": 0
+}

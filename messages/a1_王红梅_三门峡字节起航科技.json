@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "393202842529793",
-      "block": "昨天 01:46 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -128,8 +128,34 @@
       "job_name": "兼职·数据标注专员20-30元/时三门峡查看职位",
       "isFriend": false,
       "mid": "394949482184705"
+    },
+    {
+      "text": "",
+      "time": "10-11 08:45",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395429198278658",
+      "block": "我想要和您交换联系方式，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换联系方式，您是否同意 拒绝 同意"
+    },
+    {
+      "text": "",
+      "time": "10-12 13:13",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395848899469319",
+      "block": "我想要和您交换微信，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换微信，您是否同意 拒绝 同意"
     }
   ],
-  "updated_at": "2026-10-10 09:15:58",
-  "unread_on_boss": 0
+  "updated_at": "2026-10-23 15:02:01",
+  "unread_on_boss": 2
 }

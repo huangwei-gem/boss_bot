@@ -27,6 +27,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+from tests.conftest import mk测试临时目录, 挑空闲端口  # noqa: E402
 from boss_bot.platform_compat import 终止进程
 
 sys.path.insert(0, str(PROJECT_ROOT / "tests"))
@@ -35,7 +36,7 @@ import e2e_greet_records_ui as ui  # noqa: E402
 from e2e_greet_records_ui import check, close_browser, open_browser  # noqa: E402
 
 results = ui.results
-TEST_PORT = int(os.environ.get("BOSS_REFUSE_UI_PORT", "5059"))
+TEST_PORT = 挑空闲端口(int(os.environ.get("BOSS_REFUSE_UI_PORT", "5059")), "拒绝标签实测")
 PROBE_PORT = int(os.environ.get("BOSS_REFUSE_PROBE_PORT", "9347"))
 URL = f"http://127.0.0.1:{TEST_PORT}"
 
@@ -128,8 +129,12 @@ def pick_filter(page, src):
         return 1;
     """)
     time.sleep(1.8)
-    return json.loads(page.run_js("""
-        (function () {
+    # DrissionPage 的 run_js 是把这段代码塞进一个函数里执行的，所以顶层写
+    # `(function(){...})()` 这种表达式语句，返回值会被丢掉拿到 None（实测）。
+    # 原来这里用 `or "[0, 0, []]"` 兜住 None，于是"JS 没读到值"被印成
+    # "页面自算 0 个会话"——产品明明是 4 条，红了三次都查不到东西。
+    raw = page.run_js("""
+        var 结果 = (function () {
             var 行 = document.querySelectorAll('#replyTabContent .boss-chat-item').length;
             var 组 = allReplyGroups.filter(function (g) {
                 return (g.records || []).some(function (r) {
@@ -140,12 +145,16 @@ def pick_filter(page, src):
             var els = document.querySelectorAll('.boss-msg-source');
             for (var i = 0; i < els.length; i++) 标.push((els[i].textContent || '').trim());
             return JSON.stringify([行, 组, 标]);
-        })()
-    """.replace("arguments0", json.dumps(src))) or "[0, 0, []]")
+        })();
+        return 结果;
+    """.replace("arguments0", json.dumps(src)))
+    if raw is None:
+        raise AssertionError("run_js 没回值：这段筛文件的 JS 没跑成，不许当成「页面筛出 0 条」")
+    return json.loads(raw)
 
 
 def main():
-    tmp = Path(tempfile.mkdtemp(prefix="boss_refuse_ui_"))
+    tmp = mk测试临时目录("boss_refuse_ui")
     src_cfg = json.loads((PROJECT_ROOT / "bot_config.json").read_text(encoding="utf-8"))
     (tmp / "bot_config.json").write_text(
         json.dumps(src_cfg, ensure_ascii=False, indent=2), encoding="utf-8")

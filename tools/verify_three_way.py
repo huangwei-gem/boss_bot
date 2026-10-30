@@ -23,6 +23,7 @@ import threading
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from boss_bot.unified_config import 面板端口 as _面板端口  # 端口只有一个出处
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
@@ -32,7 +33,7 @@ from boss_bot.platform_compat import 破解版路径
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CLOAK = 破解版路径(BASE)
 PORT = 9401
-DASH = "http://127.0.0.1:5000"
+DASH = "http://127.0.0.1:%s" % _面板端口()
 CHAT_URL = "https://www.zhipin.com/web/geek/chat"
 
 # BOSS 线上会话列表：昵称 + 岗位（岗位在右侧头部，列表里没有）
@@ -98,6 +99,9 @@ JS_UI_BUBBLES = '''(
     var rows=box.querySelectorAll(".boss-msg-row");
     var out=[];
     for(var i=0;i<rows.length;i++){
+      // 引擎自记条目（[已拒绝交换联系方式] 这类）线上本来就没有，不算进气泡比对，
+      // 否则拒绝类动作默认显示后会多出一行，把"三端条数一致"判成不一致
+      if(/(^|\\s)engine-mark(\\s|$)/.test(rows[i].className)) continue;
       // 方向看 class 里的 me 这个词："system" 也含 me，用 indexOf 会把系统条算成我方
       var mine=/(^|\\s)me(\\s|$)/.test(rows[i].className);
       var b=rows[i].querySelector(".boss-msg-bubble")
@@ -145,7 +149,7 @@ def same_text(a, b):
 
 
 def start_flask():
-    """前端这一腿要有个面板：线上面板已经起着就直接用，别再绑一个 5000。
+    """前端这一腿要有个面板：线上面板已经起着就直接用，别再绑一个同口的。
 
     Windows 允许两个进程同时 bind 同一端口，请求会被随机分到其中一边——
     之前在这里又起一个实例，界面读到的就是"半真半假"的面板，
@@ -161,13 +165,14 @@ def start_flask():
             return False
 
     if alive():
-        print("   复用已在运行的面板，不再另起 5000 实例")
+        print("   复用已在运行的面板，不再另起同端口实例")
         import app as A
         return A
     import app as A
     A._open_dashboard = lambda *a, **k: None
     A._auto_ai_health = lambda *a, **k: None
-    kwargs = {"host": "127.0.0.1", "port": 5000, "debug": False, "use_reloader": False}
+    kwargs = {"host": "127.0.0.1", "port": _面板端口(), "debug": False,
+            "use_reloader": False}
     if A._socketio_kwargs.get("async_mode") == "threading":
         kwargs["allow_unsafe_werkzeug"] = True
     threading.Thread(target=lambda: A.socketio.run(A.app, **kwargs), daemon=True).start()

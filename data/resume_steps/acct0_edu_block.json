@@ -1,0 +1,5 @@
+[
+  {"do": "open"},
+  {"do": "js", "limit": 5000, "code": "(() => {\n  const clean = (s) => (s || '').replace(/\\u00a0/g, ' ').trim();\n  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };\n  const blk = document.getElementById('education');\n  if (!blk) return 'NO BLOCK';\n  return {\n    text: clean(blk.innerText).slice(0, 500),\n    btns: [...blk.querySelectorAll('span,a,button,div[class*=btn]')].filter(vis).map(b => clean(b.innerText)).filter(t => t && t.length < 14).slice(0, 30),\n    kas: [...blk.querySelectorAll('[ka]')].map(e => e.getAttribute('ka') + '|' + clean(e.innerText).slice(0,10) + '|w=' + Math.round(e.getBoundingClientRect().width)).slice(0, 30),\n    fields: [...blk.querySelectorAll('input,textarea,[contenteditable=true]')].map((e,i)=>({i, vis: vis(e), ph: (e.placeholder||'').slice(0,30), val: clean(e.value||e.innerText).slice(0,40)})).slice(0,20)\n  };\n})()"},
+  {"do": "shot"}
+]

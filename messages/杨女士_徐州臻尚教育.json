@@ -1,0 +1,103 @@
+{
+  "chat_name": "杨女士",
+  "chat_id": "杨女士#徐州臻尚教育",
+  "account_index": 0,
+  "job_name": "兼职·数据标注20-25元/时徐州",
+  "company": "徐州臻尚教育",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "10:41",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397934968557569",
+      "block": "10:41 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397934968582146",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "兼职，有电脑就可以",
+      "time": "09:27",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398270611161088",
+      "block": "09:27 兼职，有电脑就可以",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "兼职，有电脑就可以"
+    },
+    {
+      "text": "微信同号，加我",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398270619332610",
+      "block": "微信同号，加我",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "微信同号，加我"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398270630555649",
+      "block": "我想要和您交换联系方式，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换联系方式，您是否同意 拒绝 同意"
+    },
+    {
+      "sender": "bot",
+      "content": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "text": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-19 09:38:10",
+      "time": "09:38",
+      "job_name": "兼职·数据标注20-25元/时徐州查看职位",
+      "isFriend": false,
+      "mid": "398273292832772"
+    },
+    {
+      "sender": "bot",
+      "content": "杨女士您好，之前聊的兼职·数据标注20-25元/时徐州查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "杨女士您好，之前聊的兼职·数据标注20-25元/时徐州查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-20 18:27:04",
+      "time": "18:27",
+      "job_name": "兼职·数据标注20-25元/时徐州查看职位",
+      "isFriend": false,
+      "mid": "398757181579267"
+    }
+  ],
+  "updated_at": "2026-10-25 02:10:08",
+  "unread_on_boss": 0
+}

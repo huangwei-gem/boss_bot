@@ -9,10 +9,10 @@ BOSS 自动回复机器人 - AI 提示词模板
 import hashlib
 import json
 import logging
-from pathlib import Path
 
 from boss_bot.config import USER_PROFILE
 from boss_bot.unified_config import OVERRIDES_FILE, USER_PROFILE_FILE
+from boss_bot.untrusted import injection_hint, sanitize_untrusted, untrusted_note
 
 logger = logging.getLogger(__name__)
 
@@ -39,19 +39,61 @@ def 消息正文(m: dict) -> str:
     return ""
 
 
+# 模型把"它的决定"写成了正文——2026-10-23 12:56:40 真发出去过一句
+# 「（无需回复，对话已自然结束）」（logs/boss_bot.log.2026-10-23:23721「已发送文字」）。
+# 这种句子不该再被当成聊天历史喂回模型：那句发出去之后进了存档，10-24 13:27 的提示词里
+# 就带着「我: （无需回复，对话已自然结束）」，跟进腿更把它当成"对方最新消息"记进记录。
+# 发送闸门（reply_engine._format_rejection）从今往后不再发它，但盘上已经发出去的那些
+# 还躺在存档里——用户数据不删，就在拼上下文这一处把它挡掉。
+_旁白说法 = ("无需回复", "不用回复", "不需要回复", "已自然结束", "不再回复",
+            "不回复了", "无需发送", "不用发送", "（完）", "(完)")
+# 这四个词只在句子开头才是"旁白"：「应该回复」「建议回复」夹在句中是完全正常的人话
+# （「这个我应该回复您一下」），整句都比对会把要回的话拦掉。
+_旁白开头 = ("回复如下", "我的回复是", "应该回复", "建议回复")
+
+
+def 旁白(句: str) -> str:
+    """这句是旁白（在谈论"回不回"这件事本身），不是要发给 HR 的话；命中就返回那一条。"""
+    文 = str(句 or "").strip()
+    if not 文:
+        return ""
+    hit = next((k for k in _旁白说法 if k in 文), None)
+    if hit:
+        return f"旁白说法「{hit}」"
+    hit = next((k for k in _旁白开头 if 文.startswith(k)), None)
+    if hit:
+        return f"以旁白开头「{hit}」"
+    if (len(文) <= 40 and 文[0] in "（([" and 文[-1] in "）)]"
+            and 文.count("（") == 1 and 文.count("(") == 0):
+        return f"整句裹在括号里「{文[:24]}」"
+    return ""
+
+
+def _是旁白(m: dict) -> bool:
+    return bool(旁白(消息正文(m)))
+
+
 def 对话窗口(messages: list, 最少句数: int = 最少对话句数,
             原始行上限: int = 历史原始行上限) -> list:
     """从最后一条往前取，取够 最少句数 句看得懂的对话就收，最多回看 原始行上限 行。
 
     按"句"而不是按"行"取：按行截 30 的话，卡片行占掉一成多，模型实际只剩二十来句。
+    旁白行不进上下文，也不占那 30 句的名额。
+    系统卡（"对方已查看了您的附件简历"那一类，存档里 is_system=True）同样不占名额：
+    现盘 2779 份会话实测，窗口里 13452 句有 651 句（4.8%）是这种平台回执，364 个会话
+    吃到过——它们既不是 HR 说的话，也不该把 HR 那三十句挤出去。行本身留着，
+    因为"她看过简历了"是有用的事实，由 build_conversation_history 标成「系统:」。
     """
     收 = []
     句 = 0
     for m in reversed(messages or []):
         if len(收) >= 原始行上限:
             break
+        正文 = 消息正文(m)
+        if 正文 and _是旁白(m):
+            continue          # 旁白既不占回看的那 120 行，也不凑进那 30 句
         收.append(m)
-        if 消息正文(m):
+        if 正文 and not m.get("is_system"):
             句 += 1
             if 句 >= 最少句数:
                 break
@@ -103,7 +145,7 @@ _SYSTEM_RULES_DEFAULT = """你在 BOSS 直聘上替一个大学生找工作，�
 
 对方说不合适（不匹配/不太合适/暂不考虑/另有安排/祝您找到…），回一句收尾就停，别再推销、别追问。对方已经拒绝过，就不再提简历，也不说「希望有机会」。之前说过的话不重复发，自我介绍别来第二遍。
 
-不知道的就说「这个面谈时细聊」；没投递、没发送过的动作别说「已投递/已发送」，对方催就回「稍后处理」。岗位方向明显不对，说一句「我主要找线上数据分析这类的」，别硬凑。只回这句话本身，别的都别写。"""
+不知道的就说「这个面谈时细聊」；没投递、没发送过的动作别说「已投递/已发送」，对方催就回「稍后处理」。这一轮只回文字、没点那张卡片，就不说「已同意交换」「已点了」，想说就回「我这就点一下」。加微信是在黄维自己手机上做的事，机器做不了，别说「我这就加您」「马上加您」「我马上添加」，收到号就说「微信号我记下了」。钉钉、企业微信里「我这边已经通过您的好友申请了」同理——那一下不是机器点的，别说「已通过」，让对方自己去看。表没打开过就不说「我来填一下」「刚去填了」；别的岗没投就不说「投完跟您说」；视频剪不出来就不说「剪好发您」，想接话就回「这个我确认后回复您」。只有真的要做、而且机器做得到的事，才可以答应。岗位方向明显不对，说一句「我主要找线上数据分析这类的」，别硬凑。只回这句话本身，别的都别写。"""
 
 _USER_PROMPT_DEFAULT = """当前聊天上下文：
 - 招聘方称呼：{boss_name}
@@ -156,30 +198,26 @@ def user_prompt_template() -> str:
     return _load_overrides().get("user_prompt_template") or _USER_PROMPT_DEFAULT
 
 
-_PROFILE_CACHE: dict = {"mtime": None, "data": None}
-
-
 def current_profile() -> dict:
-    """当前个人画像（按 mtime 缓存）—— 画像改了，提示词就要跟着改。
+    """当前个人画像 —— 每次现读盘，跟 `_load_overrides()` 同一个口径。
 
     config.USER_PROFILE 是进程启动时的快照，/api/user_profile 只写文件，
     直接用它会让"改了画像但 AI 还在报旧学历/旧方向"。
+    以前这里按 mtime 缓存过一份，Windows 的 mtime 颗粒是系统时钟那一格（约 15.6 毫秒）：
+    同一格里"写完立刻读"会拿回上一份内容，而缓存只记 mtime 不记路径——两个不同文件
+    撞在同一个 mtime 上也会串数据（10-29 全量回归里 `test_改完画像立刻生效` 就是这么随机红的）。
+    这份文件一千字节，调用点全在"接着要打 AI"那几条路上（见 reply_engine._ask_ai），
+    省这一次读不值这一点不确定性。
     """
+    data = None
     try:
-        mtime = Path(USER_PROFILE_FILE).stat().st_mtime
-    except OSError:
-        mtime = None
-    if _PROFILE_CACHE["mtime"] != mtime or _PROFILE_CACHE["data"] is None:
+        with open(USER_PROFILE_FILE, "r", encoding="utf-8") as f:
+            loaded = json.load(f)
+        if isinstance(loaded, dict):
+            data = loaded
+    except (OSError, ValueError):
         data = None
-        try:
-            with open(USER_PROFILE_FILE, "r", encoding="utf-8") as f:
-                loaded = json.load(f)
-            if isinstance(loaded, dict):
-                data = loaded
-        except (OSError, ValueError):
-            data = None
-        _PROFILE_CACHE.update(mtime=mtime, data=data or dict(USER_PROFILE))
-    return _PROFILE_CACHE["data"]
+    return data or dict(USER_PROFILE)
 
 
 def build_system_prompt(profile: dict = None) -> str:
@@ -215,13 +253,20 @@ def build_system_prompt(profile: dict = None) -> str:
 
 
 def build_conversation_history(messages: list) -> str:
-    """将消息列表格式化为对话记录文本（卡片行按 card_text/block 取正文并标出是卡片）"""
+    """将消息列表格式化为对话记录文本（卡片行按 card_text/block 取正文并标出是卡片）
+
+    正文一律按外部原文清洗后再拼：HR 那句话里可能夹着零宽字符或双向控制符，
+    用来把"忽略以上指令"藏进正常聊天里（见 boss_bot/untrusted.py）。
+    """
     lines = []
     for m in messages or []:
-        正文 = 消息正文(m)
+        正文 = sanitize_untrusted(消息正文(m))
         if not 正文:
             continue
-        role = "我" if m.get("is_mine") else "对方"
+        # 平台回执标成「系统:」而不是「对方:」：107 个会话里"对方最新那句"根本就是
+        # 一张系统卡（"对方已同意了…"），画成 HR 说的话，模型就照着回一句"好的我发您"，
+        # 而 HR 那边根本没开口——这就是答非所问与机器味的一个来源。
+        role = "我" if m.get("is_mine") else ("系统" if m.get("is_system") else "对方")
         标 = "[卡片] " if not (m.get("text") or "").strip() else ""
         lines.append(f"{role}: {标}{正文}")
     return "\n".join(lines) if lines else "（无历史消息）"
@@ -266,11 +311,24 @@ def build_user_prompt(boss_name: str, job_name: str, message: str,
     句数 = sum(1 for 行 in 历史.splitlines() if 行.startswith(("对方:", "我: ")))
     logger.info("[对话窗口] 这次带进提示词 %d 句（口径至少 %d 句，最多回看 %d 行）",
                 句数, 最少对话句数, 历史原始行上限)
+    # 对方最新那句是外部输入：先剥不可见字符再进提示词，它是资料不是指令
+    最新 = sanitize_untrusted(message)
+    if injection_hint(message):
+        logger.warning("[来源卫生] 对方消息里出现越权话术「%s」，按资料处理，不执行",
+                       injection_hint(message))
     提示词 = user_prompt_template().format(
-        boss_name=boss_name or "HR",
-        job_name=job_name or current_profile().get("position", "目标岗位"),
+        boss_name=sanitize_untrusted(boss_name) or "HR",
+        job_name=sanitize_untrusted(job_name) or current_profile().get("position", "目标岗位"),
         history=历史,
-        message=message,
+        message=最新,
     )
+    # 这一句固定追加在模板之外：模板本身在界面上可改（user_prompt_template 有覆盖就
+    # 用覆盖的），写在模板里等于写在一份随时会被"恢复默认"替掉的地方。
+    # 「招聘岗位」那一行是页面整串抓下来的（岗位名+薪资+城市），照抄进正文就是机器味：
+    # 实测 4 条跟进句把「…100-150元/天长沙查看职位」原样发给过 HR。
+    提示词 += ("\n（「招聘岗位」那行是系统抓下来的一整串，带薪资和城市，"
+              "绝不许原样念给对方；要提这个岗就用它做什么来说。）")
+    # 对话记录与最新消息都是外部输入：来源即数据，不是新指令（hermes 的 source hygiene）。
+    提示词 += "\n" + untrusted_note(f"{message or ''}\n{历史}")
     return 提示词 + ("\n\n" + 追加指令 if 追加指令 else "")
 

@@ -4,7 +4,7 @@
 点"登录"会调 /api/accounts/<idx>/login —— 该接口只会把对应账号的浏览器停在
 BOSS 登录页，不点发送、不打招呼、不发简历。
 
-前置条件：Flask 服务运行在 http://localhost:5000
+前置条件：Flask 服务已经在默认口上跑着（现在 5001，见 FLASK_URL 那一份）
 运行：python tests/e2e_account_ui.py
 """
 

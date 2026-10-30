@@ -165,9 +165,54 @@
       "timestamp": "2026-10-10 04:30:16",
       "time": "04:30",
       "job_name": "兼职·抖音运营兼职100-150元/天厦门查看职位",
+      "isFriend": false,
+      "mid": "395012576322048"
+    },
+    {
+      "sender": "bot",
+      "content": "全先生您好，之前聊的兼职·抖音运营兼职100-150元/天厦门查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "全先生您好，之前聊的兼职·抖音运营兼职100-150元/天厦门查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 13:57:00",
+      "time": "13:57",
+      "job_name": "兼职·抖音运营兼职100-150元/天厦门查看职位",
+      "isFriend": false,
+      "mid": "397629116789248"
+    },
+    {
+      "sender": "bot",
+      "content": "明白，那就不多占用您时间了，祝顺利。",
+      "text": "明白，那就不多占用您时间了，祝顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-20 15:13:07",
+      "time": "15:13",
+      "job_name": "兼职·抖音运营兼职100-150元/天厦门查看职位",
+      "isFriend": false,
+      "mid": "398709516128774"
+    },
+    {
+      "sender": "bot",
+      "content": "那就不打扰您了，回见。",
+      "text": "那就不打扰您了，回见。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 13:51:45",
+      "time": "13:51",
+      "job_name": "兼职·抖音运营兼职100-150元/天厦门查看职位",
       "isFriend": false
     }
   ],
-  "updated_at": "2026-10-10 04:30:16",
+  "updated_at": "2026-10-24 13:51:45",
   "unread_on_boss": 0
 }

@@ -1,0 +1,67 @@
+{
+  "chat_name": "顾先生",
+  "chat_id": "顾先生#煜聘教育",
+  "account_index": 1,
+  "job_name": "数据分析师（银行）6-8K上海查看职位",
+  "company": "煜聘教育",
+  "messages": [
+    {
+      "text": "你好，这个岗位不招实习生，如果需要，可以给你推荐一个招实习生的国企电销岗，地址：卡园三路，车险电销岗，谢谢",
+      "time": "昨天 14:51",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397288632185600",
+      "block": "昨天 14:51 你好，这个岗位不招实习生，如果需要，可以给你推荐一个招实习生的国企电销岗，地址：卡园三路，车险电销岗，谢谢",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，这个岗位不招实习生，如果需要，可以给你推荐一个招实习生的国企电销岗，地址：卡园三路，车险电销岗，谢谢"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的推荐，不过电销岗和我的求职方向不太一致，我主要想找数据标注、数据分析类的线上远程工作。如果您这边有相关岗位，欢迎再联系我。",
+      "text": "感谢您的推荐，不过电销岗和我的求职方向不太一致，我主要想找数据标注、数据分析类的线上远程工作。如果您这边有相关岗位，欢迎再联系我。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-17 14:58:20",
+      "time": "14:58",
+      "job_name": "数据分析师（银行）6-8K上海查看职位",
+      "isFriend": false,
+      "mid": "397644191154944"
+    },
+    {
+      "sender": "bot",
+      "content": "想问下贵司还有其他数据标注或数据分析的岗位在招吗？",
+      "text": "想问下贵司还有其他数据标注或数据分析的岗位在招吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 13:37:42",
+      "time": "13:37",
+      "job_name": "数据分析师（银行）6-8K上海查看职位",
+      "isFriend": false,
+      "mid": "399747739419394"
+    },
+    {
+      "sender": "bot",
+      "content": "不打扰您啦，后面有合适的数据岗随时喊我，工作日下午都能线上",
+      "text": "不打扰您啦，后面有合适的数据岗随时喊我，工作日下午都能线上",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 13:49:39",
+      "time": "13:49",
+      "job_name": "数据分析师（银行）6-8K上海查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-24 13:49:39",
+  "unread_on_boss": 0
+}

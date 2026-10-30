@@ -1,0 +1,96 @@
+{
+  "chat_name": "黄雨婷",
+  "chat_id": "黄雨婷#小蘑菇科技",
+  "account_index": 1,
+  "job_name": "兼职·云南话数据标注/AI训练师2000-2500元/月曲靖查看职位",
+  "company": "小蘑菇科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "10-07 00:23",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393890204451076",
+      "block": "10-07 00:23 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "393890204512513",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好！还在招的，请问招聘要求都是符合的对吗?",
+      "time": "10-08 09:31",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394378768273666",
+      "block": "10-08 09:31 您好！还在招的，请问招聘要求都是符合的对吗?",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好！还在招的，请问招聘要求都是符合的对吗?"
+    },
+    {
+      "text": "您好，我的数据标注和AI工具使用经验与岗位要求匹配，可以胜任任务规范执行和多模态标注工作。",
+      "time": "10-08 12:07",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394417075888389",
+      "block": "10-08 12:07 已读 您好，我的数据标注和AI工具使用经验与岗位要求匹配，可以胜任任务规范执行和多模态标注工作。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我的数据标注和AI工具使用经验与岗位要求匹配，可以胜任任务规范执行和多模态标注工作。"
+    },
+    {
+      "text": "好的，计件多劳多得，由于每个项目不同，薪资会有项目部统一通知",
+      "time": "10-08 14:11",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394447614361863",
+      "block": "10-08 14:11 好的，计件多劳多得，由于每个项目不同，薪资会有项目部统一通知",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的，计件多劳多得，由于每个项目不同，薪资会有项目部统一通知"
+    },
+    {
+      "text": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+      "time": "10-08 16:05",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394475523977483",
+      "block": "10-08 16:05 已读 我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+      "reply_source": "rule"
+    },
+    {
+      "text": "计件多劳多得，由于每个项目不同，薪资会有项目部统一通知",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394476725604613",
+      "block": "计件多劳多得，由于每个项目不同，薪资会有项目部统一通知",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "计件多劳多得，由于每个项目不同，薪资会有项目部统一通知"
+    }
+  ],
+  "updated_at": "2026-10-10 19:14:11"
+}

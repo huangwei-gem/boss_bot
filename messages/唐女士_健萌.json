@@ -1,0 +1,80 @@
+{
+  "chat_name": "唐女士",
+  "chat_id": "唐女士#健萌",
+  "account_index": 0,
+  "job_name": "AI数据中台产品经理15-25K长沙查看职位",
+  "company": "健萌",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "14:30",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397637431898884",
+      "block": "14:30 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "感谢您的投递！很遗憾，虽然您非常优秀，但与我们目前的需求不是很匹配。祝您尽快找到合适满意的工作！",
+      "time": "09:37",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398273208840961",
+      "block": "09:37 感谢您的投递！很遗憾，虽然您非常优秀，但与我们目前的需求不是很匹配。祝您尽快找到合适满意的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢您的投递！很遗憾，虽然您非常优秀，但与我们目前的需求不是很匹配。祝您尽快找到合适满意的工作！"
+    },
+    {
+      "sender": "bot",
+      "content": "嗯好嘞，那就不打扰了哈",
+      "text": "嗯好嘞，那就不打扰了哈",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 18:57:01",
+      "time": "18:57",
+      "job_name": "AI数据中台产品经理15-25K长沙查看职位",
+      "isFriend": false,
+      "mid": "398764541825792"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，也祝您早日找到合适的人哈",
+      "text": "好的，也祝您早日找到合适的人哈",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-21 07:51:07",
+      "time": "07:51",
+      "job_name": "AI数据中台产品经理15-25K长沙查看职位",
+      "isFriend": false,
+      "mid": "398954790929153"
+    },
+    {
+      "sender": "bot",
+      "content": "嗯，您先忙，后续有需要随时联系我就行哈",
+      "text": "嗯，您先忙，后续有需要随时联系我就行哈",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-21 16:13:07",
+      "time": "16:13",
+      "job_name": "AI数据中台产品经理15-25K长沙查看职位",
+      "isFriend": false,
+      "mid": "399078141371137"
+    }
+  ],
+  "updated_at": "2026-10-23 12:58:19",
+  "unread_on_boss": 0
+}

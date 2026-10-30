@@ -1,0 +1,65 @@
+{
+  "chat_name": "刘女士",
+  "chat_id": "刘女士#试试咨询",
+  "account_index": 0,
+  "job_name": "（头部大厂）AI数据标注主管（双休福利好）（代招职位）14-21K长沙",
+  "company": "试试咨询",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "11:23",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397591323104006",
+      "block": "11:23 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397591323136771",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "is_read": true
+    },
+    {
+      "text": "这个岗位需要有数据标注的管理经验的，目前还不太合适哈，谢谢您的关注",
+      "time": "13:27",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397621932864257",
+      "block": "13:27 这个岗位需要有数据标注的管理经验的，目前还不太合适哈，谢谢您的关注",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "这个岗位需要有数据标注的管理经验的，目前还不太合适哈，谢谢您的关注",
+      "is_read": true
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "text": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-17 13:40:35",
+      "time": "13:40",
+      "job_name": "（头部大厂）AI数据标注主管（双休福利好）（代招职位）14-21K长沙查看职位",
+      "isFriend": false,
+      "mid": "397625082188546"
+    }
+  ],
+  "updated_at": "2026-10-29 13:00:19",
+  "unread_on_boss": 0
+}

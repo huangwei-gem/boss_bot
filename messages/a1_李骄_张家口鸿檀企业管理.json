@@ -81,9 +81,40 @@
       "timestamp": "2026-10-10 01:45:52",
       "time": "01:45",
       "job_name": "兼职·数据采集兼职60-80元/天张家口查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394972175127041"
+    },
+    {
+      "sender": "bot",
+      "content": "这个岗要线下坐班，我主要找线上远程的，就不占您时间了哈。",
+      "text": "这个岗要线下坐班，我主要找线上远程的，就不占您时间了哈。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-21 17:29:28",
+      "time": "17:29",
+      "job_name": "兼职·数据采集兼职60-80元/天张家口查看职位",
+      "isFriend": false,
+      "mid": "399096904524290"
+    },
+    {
+      "sender": "bot",
+      "content": "李骄您好，张家口鸿檀企业管理这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "李骄您好，张家口鸿檀企业管理这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 11:10:04",
+      "time": "11:10",
+      "job_name": "兼职·数据采集兼职60-80元/天张家口查看职位",
+      "isFriend": false,
+      "mid": "399711454892550"
     }
   ],
-  "updated_at": "2026-10-10 01:45:52",
+  "updated_at": "2026-10-23 12:58:38",
   "unread_on_boss": 0
 }

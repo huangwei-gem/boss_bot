@@ -82,8 +82,32 @@
       "sender": "hr",
       "kind": "bubble",
       "content": "你是白天有其他工作嘛？还是什么"
+    },
+    {
+      "text": "你好，请问还在找工作吗？",
+      "time": "09:32",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395086961029892",
+      "block": "09:32 你好，请问还在找工作吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，请问还在找工作吗？"
+    },
+    {
+      "text": "要买什么型号的手机才能收到你的回复。",
+      "time": "10-13 10:37",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396164437480194",
+      "block": "10-13 10:37 要买什么型号的手机才能收到你的回复。",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "要买什么型号的手机才能收到你的回复。"
     }
   ],
-  "updated_at": "2026-10-10 07:09:01",
+  "updated_at": "2026-10-23 14:23:25",
   "unread_on_boss": 0
 }

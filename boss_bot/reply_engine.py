@@ -27,16 +27,14 @@ from typing import Optional, Tuple
 import boss_bot.config as config
 from boss_bot.config import (
     MIN_DELAY, MAX_DELAY,
-    SALARY_REPLY, INTERVIEW_TIME_REPLY, JOB_CONTENT_REPLY,
-    GREETING_REPLY,
-    USER_PROFILE, render_template,
+    render_template,
 )
 from boss_bot.rules import RuleEngine
 from boss_bot.unified_config import TITLE_VETO_KEYWORDS_DEFAULT
 from boss_bot.intent import (classify, classify_interview_invite, is_contact_exchange_card,
                              is_resume_request, veto_hit_anywhere)
 from boss_bot.prompts import (build_system_prompt, build_user_prompt, 历史原始行上限,
-                              对话指纹, 消息正文, 机器人腔)
+                              对话指纹, 消息正文, 机器人腔, 旁白 as 旁白判据)
 from boss_bot.reply_record import ReplyRecord, ReplyRecordStore, _get_reply_store
 
 logger = logging.getLogger(__name__)
@@ -84,18 +82,35 @@ EXPERIENCE_REPLY = (
     "有的，我做过标注、数据处理这类项目：文本/图像/语音标注都做过，数据整理和分析也用 "
     "Excel/SQL/Python 跑过，AI 工具日常都在用。方便的话我发份简历给您细聊~")
 
-# 意图 -> 动作/话术模板（从个人画像渲染占位符）
-INTENT_REPLIES = {
-    "ask_salary": ("text", SALARY_REPLY),
-    "ask_resume": ("resume", None),
-    "ask_interview": ("text", INTERVIEW_TIME_REPLY),
-    "invite_interview": ("text", INTERVIEW_TIME_REPLY),
-    "ask_job_content": ("text", JOB_CONTENT_REPLY),
-    "ask_experience": ("text", EXPERIENCE_REPLY),
-    "greeting": ("text", GREETING_REPLY),
-    "contact_request": ("text", "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~"),
-    "tell_salary": ("text", "报价我这边看下哈，有消息我跟您说～"),
+# 意图 -> 动作/话术模板（从个人画像渲染占位符）。
+# 面板里那几格话术是配置项，所以模板那几条**用的时候现取**：直接写
+# `SALARY_REPLY` 这种 import 进来的值，等于把它冻在进程启动那一刻——
+# 他在界面上改了话术，运行中的回复轮照样发旧的那句（10-23 盘的"半生效"项）。
+# 现在走 `config.SALARY_REPLY` 属性写法，主循环每轮热重载调 config.刷新兼容层() 就跟着变新。
+_模板常量 = {
+    "ask_salary": "SALARY_REPLY",
+    "ask_interview": "INTERVIEW_TIME_REPLY",
+    "invite_interview": "INTERVIEW_TIME_REPLY",
+    "ask_job_content": "JOB_CONTENT_REPLY",
+    "greeting": "GREETING_REPLY",
 }
+
+
+def 意图话术表() -> dict:
+    """按当前配置现取一份 意图 -> (动作, 话术) 表。"""
+    表 = {
+        "ask_resume": ("resume", None),
+        "ask_experience": ("text", EXPERIENCE_REPLY),
+        "contact_request": ("text", "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~"),
+        "tell_salary": ("text", "报价我这边看下哈，有消息我跟您说～"),
+    }
+    for 意图, 常量 in _模板常量.items():
+        表[意图] = ("text", getattr(config, 常量))
+    return 表
+
+
+# 进程启动那一刻的快照，只给"看形状"的调用方（测试/巡检）用；发的那一路走 意图话术表()
+INTENT_REPLIES = 意图话术表()
 
 # ─────────────────────────────────────────────
 # HR 拒绝意图检测（不调用 AI，直接命中即返回礼貌接受）
@@ -126,8 +141,34 @@ _PROMPT_TELLTALES = (
     "招聘方称呼", "招聘岗位", "最近对话记录", "对方最新消息", "对话历史",
     "分析：", "我需要分析", "首先，分析", "根据要求", "用户是求职者", "规则说",
     "Let me analyze", "I previously",
+    # 2026-10-23 从 messages/ 存档里捞出来、当时真发出去的三句漏网形状：
+    # 「我们只需要输出回复内容。根据对话历史，对方最初拒绝，我发送了自我介绍（但规则说如…」
+    # 「抱歉，我这边无法实际操作微信通过好友申请，我是AI语言模型没有个人微信账号…」
+    # 后者当着 HR 自曝是 AI——比模板腔严重得多，一句都不许漏出去。
+    "输出回复内容", "根据对话历史", "语言模型", "我是AI", "我是 AI",
+    "作为人工智能", "作为助手", "任务拆解", "梳理一下",
 )
+
+# 学校/学历档次标签：画像里没有这一句就不许替他说。
+# 起因：默认招呼语里那句「我是双一流的本科」（initial commit 带来的上游文案）
+# 在存档里真发出去过 218 条，那时画像只写「本科在读（统计学）」、没报档次——
+# HR 回「不太合适」之前那句是它的有 13 条。
+# 2026-10-29 用户自己确认「我就是双一流」，画像 education 已带上「双一流」，
+# 这一句现在是照画像说事实；判据不变：画像里没写的档次，机器一律不许报。
+_学校标签 = ("双一流", "985", "211", "C9", "常春藤", "QS前100", "世界名校", "国内名校")
+
+
+def _学历标签泄漏(text: str, 画像文本: str) -> str:
+    """报了画像里没有的学校档次标签就返回原因；画像里写了就放行。"""
+    for 标签 in _学校标签:
+        if 标签 in text and 标签 not in 画像文本:
+            return f"报了学历档次「{标签}」，画像里只写了「{画像文本[:24] or '没填'}」"
+    return ""
 _NUMBERED = re.compile(r"^\d+[\.、)]\s*\S")
+# 中文回复里冒出谚文或假名＝模型串了语种。2026-10-21 10:57:07 对王小川真发出去过
+# 一句「嗯，这个 주로做哪类标注，任务怎么领取…」，HR 一眼就看出不是本人打的。
+# 他面的是中文标注/数据分析岗，历史 4249 条里这种只有那 1 条（0.02%），拦它没有代价。
+_外语字符 = re.compile(r"[가-힣぀-ヿ]")
 
 # ── 事实这一关 ────────────────────────────────────────────────────
 # 上面那几条管的是"像不像一句人话"，下面这几条管的是"这句话是不是真的"。
@@ -153,6 +194,9 @@ def _fact_leak(text: str, profile: dict) -> str:
     撞 = [w for w in _STAGE_WORDS if w in text and w not in 学历]
     if 撞:
         return f"报了学历阶段「{撞[0]}」，画像里只写了「{学历 or '没填'}」"
+    报的 = _学历标签泄漏(text, 学历 + " " + str(p.get("school") or ""))
+    if 报的:
+        return 报的
     m = _YEARS_RE.search(text)
     if m:
         return f"报了工作年限「{m.group(0)}」，画像里没这条"
@@ -163,11 +207,14 @@ def _fact_leak(text: str, profile: dict) -> str:
 
 
 def _format_rejection(t: str) -> str:
-    """形式检查：能不能当成聊天正文发出去（长度、思考痕迹、markdown）。"""
+    """形式检查：能不能当成聊天正文发出去（长度、思考痕迹、markdown、旁白）。"""
     if not t:
         return "空回复"
     if len(t) > _REPLY_MAX_CHARS:
         return f"长度 {len(t)} 字，超过聊天回复上限 {_REPLY_MAX_CHARS}"
+    旁白 = 旁白判据(t)
+    if 旁白:
+        return f"是旁白不是要发给 HR 的话（{旁白}）"
     hit = next((k for k in _PROMPT_TELLTALES if k in t), None)
     if hit:
         return f"含提示词脚手架/思考痕迹「{hit}」"
@@ -175,6 +222,9 @@ def _format_rejection(t: str) -> str:
         s = line.strip()
         if s.startswith(("-", "*", "#")) or _NUMBERED.match(s) or "**" in s or "```" in s:
             return "是 markdown/列表结构，不是聊天正文"
+    串 = _外语字符.search(t)
+    if 串:
+        return f"中文回复里串进了别的语种字符「{串.group()}」"
     return ""
 
 
@@ -185,12 +235,72 @@ def _format_rejection(t: str) -> str:
 # （拦下是抛错换下一个接口，不是"降级发出去"）。
 _已完成动作说法 = ("已发送", "已经发送", "已发您", "已经发您", "已发给你", "我发了", "刚发了",
                   "已提交", "已经提交", "已上传", "已经上传", "已报名", "已经报名",
-                  "已完成课程", "已经学完", "已加好友", "已经加好友")
+                  "已完成课程", "已经学完", "已加好友", "已经加好友",
+                  # 2026-10-21 12:43:05 线上真发出去的一句：HR 说「是感兴趣可以点交换」，
+                  # 机器回「好嘞，已同意交换，稍后把简历发您」。这一轮走的是 action=text，
+                  # `accept_contact_exchange()` 一次都没调——真点过同意的会话存档里都有
+                  # 「[已同意交换联系方式]」那一行（白艺竹、吕女士、张女士），这条没有。
+                  # 点卡片是另一条动作路自己会做的事，文字这边不许替它认领结果。
+                  # 「已点」盖住「已点击换微信」那一类（吕女士会话里也发过一句「我已点击换微信」）。
+                  # 「已添加」是同一个洞的另一种说法：10-21 10:42「已添加您微信」、10-16「已添加，
+                  # 请您通过一下」——一次都没加过。「刚去填了」是 13:48 对罗先生的内推链接表说的，
+                  # 那张表根本没打开过。
+                  "已同意", "已经同意", "同意啦", "已点", "已经点", "已交换", "已经交换",
+                  "交换好了", "已添加", "已经添加", "刚去填",
+                  # 「已通过」是站外平台上"我点了通过好友申请"：10-21 连着四句
+                  # （10:44 陈先生「钉钉这边已经通过您的好友申请了」、10:58「已通过啦」、
+                  # 11:01「我这边显示已通过了」，另有历史上「我已经通过您的微信添加请求了」）。
+                  # 钉钉/微信里的通过动作在黄维自己手机上，机器一次也点不了；
+                  # 4249 条历史里这一族 11 条，逐条看过没有一条真做过。
+                  # 「麻烦您通过一下好友申请」是请对方做事，不在这族里（测试有反向哨兵）。
+                  "已通过", "已经通过",
+                  # 10:37:45 对王小川发出去的一句「好嘞，加上啦~」——加谁了？一次都没加。
+                  "加上啦")
 _站外承诺说法 = ("微信加也可以", "加我微信", "我加您微信", "我加你微信", "方便留个微信",
                 "留个微信", "加个微信", "稍后加您微信", "稍后添加您微信",
                 # 15:16 线上真把这句发出去了（HR: 加一下飞书联系吧）——换一个平台名
                 # 还是同一个兑现不了的动作，不能因为词表只写了"微信"就放行
-                "我来添加您", "我添加您", "留个飞书", "加个飞书", "飞书加也可以")
+                "我来添加您", "我添加您", "留个飞书", "加个飞书", "飞书加也可以",
+                # 「我这就加」是 10-21 一天里真发出去的四句同一个形状：「我这就加你～」
+                # 「我这就加您，下午培训我时间都可以」「微信号收到了，我这就加您」「我这就加哈」；
+                # 「我这就去加」「加您微信」是 11:22 王飞和 10:50 王女士那两句。
+                # 上面那一串都带着"微信"两个字，换成「我这就加您」就过去了——加微账在黄维
+                # 自己手机上，机器一次也做不了，只能把"去加"这个动作本身认下来拦掉。
+                # 「我记下了/收到了」是真的，不在这一族里。
+                "我这就加", "我这就去加", "这就去加", "这就加您", "这就加你",
+                "加您微信", "加你微信", "添加您微信", "添加你微信",
+                "马上加您", "马上加你",
+                "稍后加您", "稍后加你", "回头加您", "一会儿加您",
+                # 裸一句「我加您」也照样是那句谎：10:46 冯先生「您发下微信号我加您」、
+                # 11:05 谭珍「那您微信号发我一下，我加您细聊」、11:19 王飞「我直接加您
+                # 发的那个号就行哈」；「马上添加」是 10-17 那句「好的，我马上添加，
+                # 添加后跟您说一声」，同一个动作换个动词。
+                "我加您", "我加你", "马上添加",
+                # 填表/投别的岗这一族是"我去做一件机器没有腿的事"：11:43:58 刘先生
+                # 「好嘞，我来填一下个人信息。」、11:29:29 田先生「投完跟您说一声」
+                # （说的还是产品/运营——他自己写进否决词的那类岗）。
+                "我来填", "我去填", "投完跟您说", "投完告诉您",
+                # 10:15:57 鲍女士要的是剪辑作品，机器回「我用电脑打开看看，剪好发您哈」、
+                # 11:03:07「剪完我发给您」——剪片子这件事机器做不了，画像里也没这项交付。
+                "剪好发您", "剪完我发")
+
+# 10-24 朱微那句「是用ai插件主动投递的吗老师？能教教我么」之后，机器当场回了
+# 「没用插件哈，就是自己发的。」——这一族不是"许了做不到的事"，是**替他当面撒一句假话**：
+# 号是机器在登、招呼语是机器在发，说"自己发的"每一字都是假的，而且 HR 已经看出来了，
+# 撒谎只会把"用了工具"变成"用了工具还骗人"（当天他本人不得不自己出来圆：
+# 「这个不能外传的，我还得优化优化，竟然被看出来了」）。
+# 这一族一律不自动发，被闸门拦下走已有的留痕出口，等他人工回。
+_投递方式否认说法 = ("没用插件", "没用什么插件", "不是插件", "没使用插件", "没有用插件",
+                  "就是自己发的", "都是自己发的", "就是我自己发的", "自己一个个发的",
+                  "一条条自己发", "都是手动发", "手动一个个", "自己投的哈",
+                  # 带"投/发"这个动作才认，否则「我不是AI方向的」这种实话也会被误伤
+                  "不是ai投", "不是用ai", "没用ai投", "没有用ai投", "不是机器投",
+                  "不是自动投", "没自动投", "都是手动投")
+
+
+def _denied_how_he_applied(t: str) -> str:
+    hit = next((k for k in _投递方式否认说法 if k in t.lower()), None)
+    return f"替他否认了投递方式「{hit}」——这句是假话，不自动发" if hit else ""
 
 
 def _unkept_promise(t: str) -> str:
@@ -206,7 +316,7 @@ def reply_rejection(text: str, profile: dict = None) -> str:
     profile 不传就现读画像（面板上改了年龄/学历，下一句就得按新的判）。
     """
     t = (text or "").strip()
-    bad = _format_rejection(t) or _unkept_promise(t)
+    bad = _format_rejection(t) or _unkept_promise(t) or _denied_how_he_applied(t)
     if bad:
         return bad
     if profile is None:
@@ -568,6 +678,15 @@ class ReplyEngine:
 
         meta = {"source": "", "intent": "", "important": False}
 
+        if not latest and isinstance(messages, list) and messages:
+            # 这一段的最新那句根本不是对方说的话（是平台回执，或者整段没有可读的
+            # 对方气泡）。空 message 交给 AI，它会自己去"猜该说什么"，猜出来的就是
+            # "稍后把简历发您"那种凭空承诺——现盘 2779 份会话里 107 份是这个形状。
+            logger.info("[回复] 这段没有对方说的话要回（最新那句是平台回执），跳过")
+            meta["source"] = "system_notice"
+            self._log_decision(chat_name, latest, meta, "none", decision_start)
+            return ("none", None, meta)
+
         if latest:
             meta["intent"] = classify(latest)
             # ask_resume 宽到连"简历已收到"都命中，而它下游是真实的发送动作：
@@ -726,12 +845,19 @@ class ReplyEngine:
                 return ("text", 文, meta)
 
         # ── 1. 关键词规则直通（最高优先级）──
+        # 配置里的句子被闸门拦下时，原因要留着：一路让到第 4 级都没人可发，
+        # 最后落进回复记录的那句理由必须说"是这句被拦了"，不能写成"没命中"
+        闸下 = ""
         if latest:
             result = self.rule_engine.match(latest)
             if result and result[0] == "resume" and not is_resume_request(latest):
                 # 规则表按子串匹配，键就是"简历"两个字，所以"简历已收到""看过你的简历"
                 # 都会命中直通动作。发简历是真实动作，判错收不回来，让给意图/AI 按上下文回
                 result = None
+            if result and result[0] == "text":
+                闸下 = self._配置句过闸(result[1], "规则话术", boss_name, job_name)
+                if 闸下:
+                    result = None
             if result:
                 action, content = result
                 # 重复发送检测：如果即将发送的内容与历史高度重复，跳过
@@ -774,51 +900,56 @@ class ReplyEngine:
                 return action, content, meta
 
         # ── 2. 意图识别回复 ──
-        if meta["intent"] in INTENT_REPLIES:
-            action, template = INTENT_REPLIES[meta["intent"]]
+        话术表 = 意图话术表()
+        if meta["intent"] in 话术表:
+            action, template = 话术表[meta["intent"]]
             # 交换微信/电话那张卡片是平台给的"同意/拒绝"两个按钮，回一段话等于没处理；
             # HR 顺口提微信、平台的安全提示都不是卡片，仍走原来的平台内沟通话术
             if meta["intent"] == "contact_request" and is_contact_exchange_card(latest):
                 action, template = "contact", None
-            content = render_template(template, USER_PROFILE) if template else None
-            # 重复发送检测
-            if action == "text" and content and \
-                    _is_duplicate_reply(content, history):
-                logger.info(f"[重复检测] 意图命中但与历史重复，跳过: {content[:30]}")
-                meta["source"] = "duplicate"
-                self._log_decision(chat_name, latest, meta, "none", decision_start)
+            content = (render_template(template, config.USER_PROFILE)
+                       if template else None)
+            闸下 = self._配置句过闸(content, "意图话术「%s」" % meta["intent"],
+                                boss_name, job_name)
+            if not 闸下:
+                # 重复发送检测
+                if action == "text" and content and \
+                        _is_duplicate_reply(content, history):
+                    logger.info(f"[重复检测] 意图命中但与历史重复，跳过: {content[:30]}")
+                    meta["source"] = "duplicate"
+                    self._log_decision(chat_name, latest, meta, "none", decision_start)
+                    self._add_record(
+                        chat_name=chat_name, job_name=job_name,
+                        received_message=latest, reply_content=None,
+                        reply_source="skip", reply_intent=meta["intent"],
+                        reply_reason="意图命中但与历史已发内容重复，跳过避免骚扰",
+                        is_skipped=True, skip_reason="意图命中但内容重复",
+                    )
+                    return ("none", None, meta)
+                # 自我介绍重复检测：如果意图是打招呼且已发过自我介绍，跳过
+                if meta["intent"] == "greeting" and content and \
+                        _is_self_intro(content) and self._has_sent_self_intro(history):
+                    logger.info(f"[重复检测] 已发过自我介绍，跳过打招呼")
+                    meta["source"] = "duplicate"
+                    self._log_decision(chat_name, latest, meta, "none", decision_start)
+                    self._add_record(
+                        chat_name=chat_name, job_name=job_name,
+                        received_message=latest, reply_content=None,
+                        reply_source="skip", reply_intent=meta["intent"],
+                        reply_reason="已发过自我介绍，跳过避免重复",
+                        is_skipped=True, skip_reason="已发过自我介绍",
+                    )
+                    return ("none", None, meta)
+                logger.info(f"[意图匹配] intent={meta['intent']} -> 动作={action}")
+                meta["source"] = "intent"
+                self._log_decision(chat_name, latest, meta, action, decision_start)
+                self._record_to_evolve(action, content, meta, chat_name, boss_name, job_name)
                 self._add_record(
-                    chat_name=chat_name, job_name=job_name,
-                    received_message=latest, reply_content=None,
-                    reply_source="skip", reply_intent=meta["intent"],
-                    reply_reason="意图命中但与历史已发内容重复，跳过避免骚扰",
-                    is_skipped=True, skip_reason="意图命中但内容重复",
+                    chat_name=chat_name, job_name=job_name, received_message=latest,
+                    reply_content=content, reply_source="intent", reply_intent=meta["intent"],
+                    reply_reason=f"意图识别匹配: {meta['intent']}，动作={action}",
                 )
-                return ("none", None, meta)
-            # 自我介绍重复检测：如果意图是打招呼且已发过自我介绍，跳过
-            if meta["intent"] == "greeting" and content and \
-                    _is_self_intro(content) and self._has_sent_self_intro(history):
-                logger.info(f"[重复检测] 已发过自我介绍，跳过打招呼")
-                meta["source"] = "duplicate"
-                self._log_decision(chat_name, latest, meta, "none", decision_start)
-                self._add_record(
-                    chat_name=chat_name, job_name=job_name,
-                    received_message=latest, reply_content=None,
-                    reply_source="skip", reply_intent=meta["intent"],
-                    reply_reason="已发过自我介绍，跳过避免重复",
-                    is_skipped=True, skip_reason="已发过自我介绍",
-                )
-                return ("none", None, meta)
-            logger.info(f"[意图匹配] intent={meta['intent']} -> 动作={action}")
-            meta["source"] = "intent"
-            self._log_decision(chat_name, latest, meta, action, decision_start)
-            self._record_to_evolve(action, content, meta, chat_name, boss_name, job_name)
-            self._add_record(
-                chat_name=chat_name, job_name=job_name, received_message=latest,
-                reply_content=content, reply_source="intent", reply_intent=meta["intent"],
-                reply_reason=f"意图识别匹配: {meta['intent']}，动作={action}",
-            )
-            return action, content, meta
+                return action, content, meta
 
         # 3. AI 生成回复（带多轮历史）
         # 注意：自动回复AI始终开启，不受 ai.enabled 开关控制
@@ -869,7 +1000,13 @@ class ReplyEngine:
             logger.warning("[AI回复] 主备 API 均失败")
 
         # 4. 兜底
-        if self._ai_fail_action == "default":
+        # DEFAULT_REPLY 同样是配置里的原文（面板「默认回复」那一栏可改、热重载生效），
+        # 和上面两条直通路共用一道闸。兜底这一级下面没有下一级可让，拦下就落到 skip：
+        # 编不出合规的一句，就不发。
+        兜底拦 = (self._配置句过闸(config.DEFAULT_REPLY, "兜底话术 DEFAULT_REPLY",
+                                 boss_name, job_name)
+                 if self._ai_fail_action == "default" else "")
+        if self._ai_fail_action == "default" and not 兜底拦:
             logger.info("[默认回复] 使用兜底话术")
             meta["source"] = "default"
             self._log_decision(chat_name, latest, meta, "text", decision_start)
@@ -883,14 +1020,20 @@ class ReplyEngine:
             return ("text", config.DEFAULT_REPLY, meta)
 
         # skip：宁可不回复，不发驴唇不对马嘴的话
-        logger.info("[跳过回复] 无规则/意图命中且 AI 未响应，跳过")
+        被拦 = 兜底拦 or 闸下
+        logger.info("[跳过回复] %s" % (
+            "配置里那句被发送闸门拦下（%s），且没有下一级可让" % 被拦
+            if 被拦 else "无规则/意图命中且 AI 未响应，跳过"))
         meta["source"] = "default"
         self._log_decision(chat_name, latest, meta, "none", decision_start)
         self._add_record(
             chat_name=chat_name, job_name=job_name, received_message=latest,
             reply_content=None, reply_source="skip", reply_intent=meta["intent"],
-            reply_reason="无规则/意图命中且AI未响应或未启用，跳过回复",
-            is_skipped=True, skip_reason="无规则/意图命中且AI未响应或未启用",
+            reply_reason=("无规则/意图命中且AI未响应或未启用，跳过回复" +
+                          ("；配置里那句被发送闸门拦下：" + 被拦 if 被拦 else "")),
+            is_skipped=True,
+            skip_reason=("配置里的话术被发送闸门拦下" if 被拦
+                         else "无规则/意图命中且AI未响应或未启用"),
         )
         return ("none", None, meta)
 
@@ -967,6 +1110,12 @@ class ReplyEngine:
         for msg in reversed(messages):
             if msg.get("is_mine"):
                 continue
+            if msg.get("is_system"):
+                # 平台回执不是"对方刚说了一句"：现盘 2779 份会话里有 107 个会话
+                # 最新那句就是这种卡（"对方已查看了您的附件简历"），照原来的走法
+                # 机器会对着它回一句"稍后发您"，而 HR 那边根本没开口。
+                # 判据与 reply_queue.inbound_body、contact_ledger 同一份：is_system。
+                continue
             body = 消息正文(msg)
             if body:
                 latest = body
@@ -981,7 +1130,11 @@ class ReplyEngine:
         "1. 不许重复上面任何一句「我:」已经说过的话，也不要再来一遍自我介绍\n"
         "2. 对方最后提过一件事（要作品、要简历、问过能不能来、给了微信/电话），先接住那件事，再提下一步\n"
         "3. 对方已经明确拒绝或说「以后再说」，只回一句礼貌收尾，不许再推销\n"
-        "4. 一句话，别超过 40 字；【你的背景】里没有的数字不许编"
+        "4. 一句话，别超过 40 字；【你的背景】里没有的数字不许编\n"
+        "5. 上面「我:」里已经说过这个岗不投了/不考虑的，这次不许改口说有兴趣——"
+        "要么换个话头，要么就只回一句收尾\n"
+        "6. 只写要发给对方看的那句话：不要写括号里的批注，也不要说「无需回复」「对话已结束」"
+        "这类判断本身（那种写法 10-23 12:56 真发给过 HR 一句「（无需回复，对话已自然结束）」）"
     )
 
     # 生成出来是模板腔时换说法重问一次用的追加指令
@@ -990,21 +1143,52 @@ class ReplyEngine:
         "聊了什么，别用「您好/感谢您的」这类开头，像平时打字那样直接回一句人话。）"
     )
 
+    # 跟进第一稿与这段对话里已发过的某句重复时，重问一句用的追加指令。
+    # 不写在 跟进指令 里：那句是每次跟进都要吃的，这条只在"第一句撞了"之后才补。
+    跟进重问指令 = (
+        "\n（注意：上面那种说法我们在这段对话里已经发过一次了，这句不许再发。"
+        "换一句完全不同的：先接住对方最后提的那件事，再提下一步，别再来一遍自我介绍。）"
+    )
+
     def 现编跟进(self, 对话: list, boss_name: str, job_name: str, 兜底句: str) -> str:
         """主动跟进那句：按这段对话现编；容灾链全挂了才退回固定模板。
 
         以前跟进只在那三条模板里轮着发（要追的就是"能不能约面试"这一句），于是对方刚问完
         "请问有作品吗"、刚说"麻烦把手机号发我"，机器回过去还是"这个岗位还在招吗"——
         他 10-17 说的"很多消息没参考上下文、乱回答"，六成就是这一条（今天 134 条里 80 条是跟进）。
+
+        返回空串 = 这一单这次别追。被动回复那条腿早有 `_is_duplicate_reply` 拦重复，
+        跟进这条腿是拿一句直接 send_text 出去的，谁也没拦：现盘 2779 份会话里
+        1136 个有两级以上我方气泡，163 个出现过重复句、共 329 句，按来源分
+        跟进 27 / 补发 51 / 诈骗筛 18 / 意图 16 / 换联系方式 9 / AI 3。
+        同一句隔几小时再发一遍，就是 HR 一眼认出插件的那件事（朱微 10-24 问的那句）。
         """
         句 = (self._ask_ai("（对方这条之后没有再回复，这条是我方主动跟进）",
                            boss_name, job_name, 对话,
                            指令=self.跟进指令, 用缓存=False) or "").strip()
         if not 句:
+            句 = (兜底句 or "").strip()
+            if not 句:
+                logger.info("[跟进] AI 没答上来，兜底句也是空的，这一单不追")
+                return ""
+            if _is_duplicate_reply(句, 对话):
+                logger.info("[跟进] AI 没答上来，而兜底那句这段对话里已经说过，不追")
+                return ""
             logger.info("[跟进] AI 没答上来，退回固定话术")
-            return 兜底句
-        logger.info("[跟进] 按这段对话现编: %s", 句[:40])
-        return 句
+            return 句
+        if not _is_duplicate_reply(句, 对话):
+            logger.info("[跟进] 按这段对话现编: %s", 句[:40])
+            return 句
+        换 = (self._ask_ai("（对方这条之后没有再回复，这条是我方主动跟进）",
+                           boss_name, job_name, 对话,
+                           指令=self.跟进指令 + self.跟进重问指令,
+                           用缓存=False) or "").strip()
+        if 换 and not _is_duplicate_reply(换, 对话):
+            logger.info("[跟进] 第一句和已发过的重复，换成重问出来的那句: %s", 换[:40])
+            return 换
+        logger.info("[跟进] 现编的两句都和这段对话重复，这一单不追"
+                    "（再发一遍同一句，对面看到的就是机器人）: %s", 句[:30])
+        return ""
 
     @staticmethod
     def _is_rate_limit_error(e: Exception) -> bool:
@@ -1149,9 +1333,11 @@ class ReplyEngine:
                                         追加指令=指令)
         # 每次现取：前端改了 system_rules 或个人画像，下一条回复就该用新的
         system_prompt = build_system_prompt()
-        # 经验补充只做增量追加，不重写基础提示词（Continual Harness：小范围更新）
+        # 经验补充只做增量追加，不重写基础提示词（Continual Harness：小范围更新）；
+        # 带上这一轮的岗位+最新消息做上下文，只挑最相关的几条，不把全部经验都塞进去
         if self._self_evolve and self._self_evolve.enabled:
-            supplement = self._self_evolve.get_prompt_supplement()
+            supplement = self._self_evolve.get_prompt_supplement(
+                context=f"{job_name or ''}\n{message or ''}")
             if supplement:
                 system_prompt = system_prompt + "\n\n" + supplement
         response = client.chat.completions.create(
@@ -1185,6 +1371,37 @@ class ReplyEngine:
         self._last_ai_model = model
         self._last_ai_raw_response = raw_content
         return text
+
+    def _配置句过闸(self, 句, 来源: str,
+                   boss_name: str = "", job_name: str = "") -> str:
+        """配置里手写的这句能不能直接发给 HR；能发返回空串，不能发返回原因。
+
+        发送闸门以前只长在 AI 那一路（_call_chat），规则直通和意图话术两条路是把
+        bot_config 里的字原样发出去。2026-10-23 查存档，手写的招呼语就是这么发出
+        218 条「我是双一流的本科」（那时画像只写本科在读、没报档次；10-29 用户确认
+        自己是双一流、画像已写上，这句现在照画像说得通），
+        其中 13 条对面回的就是「不太合适」；同一族谎话写进 reply_rules 一样会漏出去。
+        10-27 现测：他现在这 17 条 reply_rules、9 条意图话术，闸门一句都不拦——
+        所以这不是补已有的锅，是把"下一版配置里写一句谎"这条路也堵上。
+
+        判据本身出错时按"能发"处理，跟招呼语那一路（greet_engine）保持一致：
+        闸门坏了不该把所有回复都憋死，坏在日志里看得见。
+        """
+        if not 句:
+            return ""
+        try:
+            why = reply_rejection(句)
+        except Exception as e:
+            logger.debug(f"配置句过闸失败（按能发处理）: {e}")
+            return ""
+        if why:
+            self._record_gate_block(f"这句不能发给 HR（{why}）", 句,
+                                    boss_name=boss_name, job_name=job_name)
+            logger.warning(f"[发送闸门] {来源}不能发（{why}）：{句[:40]}")
+            # 带回"哪一栏的哪句为什么"：这条字符串还会拼进回复记录的跳过理由，
+            # 只有 why 的话他看不出该去面板上改哪一格
+            return f"{来源}：{why}"
+        return ""
 
     def _record_gate_block(self, reason: str, draft: str,
                            boss_name: str = "", job_name: str = ""):

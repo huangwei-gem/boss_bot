@@ -124,9 +124,37 @@
       "timestamp": "2026-10-10 02:17:51",
       "time": "02:17",
       "job_name": "无责5200/早9晚6/来面即过/5A写字楼10-12K长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394980035625217"
+    },
+    {
+      "text": "我们非常感谢您的投递，但是很遗憾，我们的职位需要一些与您不完全匹配的技能和经验。祝您在BOSS直聘找到更适合您的工作！",
+      "time": "09:40",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395088712089863",
+      "block": "09:40 我们非常感谢您的投递，但是很遗憾，我们的职位需要一些与您不完全匹配的技能和经验。祝您在BOSS直聘找到更适合您的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "我们非常感谢您的投递，但是很遗憾，我们的职位需要一些与您不完全匹配的技能和经验。祝您在BOSS直聘找到更适合您的工作！"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-10 09:41:55",
+      "time": "09:41",
+      "job_name": "无责5200/早9晚6/来面即过/5A写字楼10-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "395089170219264"
     }
   ],
-  "updated_at": "2026-10-10 02:17:51",
+  "updated_at": "2026-10-24 11:43:44",
   "unread_on_boss": 0
 }

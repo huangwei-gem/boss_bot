@@ -1,0 +1,22 @@
+{
+  "chat_name": "姜先生",
+  "chat_id": "姜先生#得物App",
+  "account_index": 0,
+  "job_name": "数据仓库-长沙15-30K·14薪长沙",
+  "company": "得物App",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "12:20",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397959400825603",
+      "block": "12:20 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-25 02:28:27"
+}

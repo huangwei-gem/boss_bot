@@ -367,24 +367,14 @@ class MessageStore:
         当成"今天"，按它重排必然把昨天的消息排到今天之后。mid 是雪花 id，
         同一会话内自上而下单调递增（实测三组会话全部验证）。
         没有 mid 的（老数据、自记标记）沿用上一条有 mid 消息的位置，保持稳定。
+
+        规则本体在 reply_queue.排序位置 那一份，判"卡在谁手上"和这里写回顺序必须
+        是同一套：两边各写一份曾经错开过（自记气泡没 mid 被排到整段最前面，
+        于是"我们已经回过了"被读成"还欠着 HR 一句"，同一句被反复回）。
         """
-        first = 0
-        for m in msgs:
-            mid = cls._mid_of(m)
-            if mid.isdigit():
-                first = int(mid)
-                break
-        last = 0
-        keyed = []
-        for idx, m in enumerate(msgs):
-            mid = cls._mid_of(m)
-            if mid.isdigit():
-                last = int(mid)
-                keyed.append((last, idx))
-            else:
-                keyed.append(((last or first) if (last or first) else 0, idx))
-        order = sorted(range(len(msgs)), key=lambda i: keyed[i])
-        return [msgs[i] for i in order]
+        from boss_bot.reply_queue import 排序位置
+        键 = 排序位置(msgs)
+        return [msgs[i] for i in sorted(range(len(msgs)), key=lambda i: 键[i])]
 
     @staticmethod
     def _msg_key(msg: dict) -> str:

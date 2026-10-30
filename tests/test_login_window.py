@@ -173,14 +173,18 @@ class TestShowLoginWindow:
         assert m._launched_for_test[-1]["headless"] is False
         assert 果["error"] == ""
 
-    def test_重开后搜索标签页要重建(self, monkeypatch):
-        """close() 会把 _search_tab 置空，不重建下一轮打招呼拿的就是旧句柄"""
+    def test_重开后搜索标签页要重建但不发整页加载(self, monkeypatch):
+        """close() 会把 _search_tab 置空，不重建下一轮打招呼拿的就是旧句柄。
+        重建只要钉句柄：2026-10-22 09:21:15 这里是 `get_search_page()`，
+        无头换有头那一趟先把搜索页整页加载一遍、紧接着又把同一张页导航去登录页，
+        白撞一次安全验证（test_verify_startup_burst.py 有整条账）。"""
         m = _mgr(monkeypatch, headless_launched=True)
         建的 = []
-        monkeypatch.setattr(m, "get_search_page", lambda: 建的.append(1))
+        monkeypatch.setattr(m, "get_search_page", lambda **kw: 建的.append(kw))
         果 = m.show_login_window("https://x")
         assert 果["relaunched"] is True
         assert 建的, "重开完没重建搜索标签页"
+        assert 建的[-1].get("导航") is False, 建的
 
 
 class TestMainLoopCallsIt:

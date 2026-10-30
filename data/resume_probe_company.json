@@ -1,0 +1,7 @@
+[
+ {"do": "open"},
+ {"do": "mark", "at": {"ph": "北京华品博睿"}, "wait": 0.6},
+ {"do": "realclick", "css": "[data-orca-tag=hit]", "wait": 1.5},
+ {"do": "typein", "css": "[data-orca-tag=hit]", "text": "天鹅到家", "wait": 3.0},
+ {"do": "js", "limit": 6000, "code": "(() => { const clean = (s) => (s || '').replace(/\\u00a0/g, ' ').trim(); const panes = [...document.querySelectorAll('[class*=dropmenu],[class*=suggest],[class*=dropdown]')].filter((e) => { const r = e.getBoundingClientRect(); return r.width > 40 && r.height > 20; }); return panes.map((p) => ({cls: ((p.className || '') + '').slice(0, 60), h: Math.round(p.getBoundingClientRect().height), txt: clean(p.innerText).slice(0, 1200)})).slice(0, 4); })()"}
+]

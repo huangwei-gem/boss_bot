@@ -2,7 +2,7 @@
   "chat_name": "王鹏军",
   "chat_id": "王鹏军#念之间智能",
   "account_index": 0,
-  "job_name": "兼职·数据标注/ai训练师（医疗金融法律）900-1200元/天泉州查看职位",
+  "job_name": "兼职·数据标注/ai训练师（医疗金融法律）10000-13000元/月泉州查看职位",
   "company": "念之间智能",
   "messages": [
     {
@@ -51,7 +51,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394092946907906",
-      "block": "14:08 我想要一份您的附件简历，您是否同意 拒绝 同意",
+      "block": "我想要一份您的附件简历，您是否同意 拒绝 同意",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -121,7 +121,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "394403430970112",
-      "block": "11:11 对方已查看了您的附件简历",
+      "block": "对方已查看了您的附件简历",
       "sender": "hr",
       "kind": "system",
       "content": "对方已查看了您的附件简历",
@@ -229,7 +229,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394962449597184",
-      "block": "01:06 ajun469898587 王鹏军的微信号 ajun469898587 复制微信号",
+      "block": "ajun469898587 王鹏军的微信号 ajun469898587 复制微信号",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -249,8 +249,23 @@
       "job_name": "兼职·数据标注/ai训练师（医疗金融法律）900-1200元/天泉州查看职位",
       "isFriend": false,
       "mid": "394983560770304"
+    },
+    {
+      "sender": "bot",
+      "content": "王鹏军您好，念之间智能这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "王鹏军您好，念之间智能这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 16:35:18",
+      "time": "16:35",
+      "job_name": "兼职·数据标注/ai训练师（医疗金融法律）900-1200元/天泉州查看职位",
+      "isFriend": false,
+      "mid": "395190766752517"
     }
   ],
-  "updated_at": "2026-10-10 03:31:22",
+  "updated_at": "2026-10-23 14:29:41",
   "unread_on_boss": 0
 }

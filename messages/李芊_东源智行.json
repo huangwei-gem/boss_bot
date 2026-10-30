@@ -74,7 +74,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "388487734207232",
-      "block": "09-21 18:00 我想要一份您的附件简历，您是否同意 拒绝 同意",
+      "block": "我想要一份您的附件简历，您是否同意 拒绝 同意",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -186,9 +186,10 @@
       "timestamp": "2026-10-09 12:07:39",
       "time": "12:07",
       "job_name": "AI数据大模型训练师200-250元/天长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394771083019010"
     }
   ],
-  "updated_at": "2026-10-09 12:07:39",
+  "updated_at": "2026-10-18 13:39:13",
   "unread_on_boss": 0
 }

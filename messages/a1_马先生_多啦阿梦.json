@@ -1,0 +1,23 @@
+{
+  "chat_name": "马先生",
+  "chat_id": "马先生#多啦阿梦",
+  "account_index": 1,
+  "job_name": "Tiktok跨境策略数据分析师8-13K上海查看职位",
+  "company": "多啦阿梦",
+  "messages": [
+    {
+      "text": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel/SQL/Python，对Tiktok跨境策略数据分析方向很感兴趣。方便的话我把简历发您细聊",
+      "time": "10-10 05:02",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395020418699777",
+      "block": "10-10 05:02 送达 您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel/SQL/Python，对Tiktok跨境策略数据分析方向很感兴趣。方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel/SQL/Python，对Tiktok跨境策略数据分析方向很感兴趣。方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 15:18:36"
+}

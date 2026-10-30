@@ -21,13 +21,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+from boss_bot.unified_config import 面板端口 as _面板端口  # 端口只有一个出处
 
 from boss_bot.browser_launcher import BrowserInstance  # noqa: E402
 from boss_bot.message_store import MessageStore  # noqa: E402
 from boss_bot.page_handler import BossChatHandler  # noqa: E402
 
 CHAT_URL = "https://www.zhipin.com/web/geek/chat"
-PANEL = "http://127.0.0.1:5000"
+PANEL = "http://127.0.0.1:%s" % _面板端口()
 
 # 实测 9 个"面试"会话里，只有这三单真的约到了线下、而且我们口头应过：
 #   姬广凯｜湖南九片云：HR"我安排明天下午三点面试"+给了写字楼地址，我们回"我会准时到达"
@@ -158,21 +159,22 @@ def committed_targets():
     """
     import re
     from boss_bot.contact_ledger import _message_text
-    from boss_bot.reply_queue import order_key
+    from boss_bot.reply_queue import 排序位置
 
     应约 = re.compile(r"准时到|准时到达|准时过去|我确定来|按约定准时|可以过去|我按时到")
     已拒 = re.compile(r"不占用您的时间|先放弃|拒绝了面试邀请|只找线上")
     out = []
     for c in MessageStore().get_all_chats_detail() or []:
-        msgs = sorted([m for m in (c.get("messages") or []) if _message_text(m)],
-                      key=order_key)
+        原文 = [m for m in (c.get("messages") or []) if _message_text(m)]
+        键 = 排序位置(原文)
+        msgs = [原文[i] for i in sorted(range(len(原文)), key=lambda i: 键[i])]
         mine = [i for i, m in enumerate(msgs)
                 if m.get("is_mine") and 应约.search(_message_text(m))]
         if not mine:
             continue
         # 这一会话里我们任何时候说过拒绝话术就算结了——不按"应约之后"判断：
-        # 工具补写的那条拒绝消息没有 data-mid，order_key 排 0，会被_sort_到最前面，
-        # 按位置判断就会把已经拒过的 王女士/王博/迟女士 又列一遍（实测 14:35 复现）。
+        # 工具补写的那条拒绝消息在存档里可能落在任何位置，按位置判断就会把
+        # 已经拒过的 王女士/王博/迟女士 又列一遍（实测 14:35 复现）。
         if any(m.get("is_mine") and 已拒.search(_message_text(m)) for m in msgs):
             continue
         company = (c.get("company") or "").strip()

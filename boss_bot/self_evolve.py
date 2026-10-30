@@ -61,6 +61,52 @@ LESSON_RETIRE_NEGATIVE = 2     # 连续 2 次负效果确认 → 自动退役
 LESSON_MAX_ACTIVE = 5          # 提示补充最多带 5 条，别把基础提示词挤没了
 SNAPSHOT_KEEP = 5              # 快照保留份数，错了能退回去
 
+# ── 按上下文取经验（hermes 的"检索而不是全量注入"）──
+LESSON_SUMMARY_MAX = 60        # 每条经验一句摘要的上限（hermes 的 description ≤60 字符）
+LESSON_PROMPT_TOP_N = 3        # 这次对话最多带几条最相关的经验
+# ── 周期性 nudge：闸门拦截攒够一批就自己复盘一次，不等人工点 /refine ──
+LESSON_NUDGE_BLOCK_STEP = 5    # 新增拦截 ≥5 条才值得复盘
+LESSON_NUDGE_MIN_INTERVAL_SEC = 6 * 3600   # 两次自动复盘至少隔 6 小时
+
+
+def _lesson_summary(text: str) -> str:
+    """一句摘要：取第一句，超过 60 字符就截断加省略号。
+
+    经验原文可以写到 200 字，但塞进提示词时一开始就摆一段长文，模型会把它当
+    背景资料而不是"这条该怎么做"。摘要当索引，原文放"做法"里。
+    """
+    文 = re.split(r"[。！？；\n]", (text or "").strip(), maxsplit=1)[0].strip()
+    if len(文) <= LESSON_SUMMARY_MAX:
+        return 文
+    return 文[:LESSON_SUMMARY_MAX - 1] + "…"
+
+
+def _tokens(text: str) -> set:
+    """粗粒度词元：ASCII 词 + 中文二元组。
+
+    不引第三方分词：经验文本本来就在 200 字内，二元组重合足够挑出"这条是讲
+    回复长度还是讲闸门拦截的"，而且两个号、两种 python 环境都能跑。
+    """
+    t = (text or "").lower()
+    out = {w for w in re.findall(r"[a-z0-9_]{2,}", t)}
+    for run in re.findall(r"[\u4e00-\u9fff]+", t):
+        if len(run) == 1:
+            out.add(run)
+        out.update(run[i:i + 2] for i in range(len(run) - 1))
+    return out
+
+
+def _lesson_relevance(context_tokens: set, lesson: dict) -> float:
+    """上下文与一条经验的词面重合度；按经验长度开方归一，长文本不靠字数取胜。"""
+    if not context_tokens:
+        return 0.0
+    text = " ".join(str(lesson.get(k) or "") for k in
+                    ("text", "summary", "scene", "trigger"))
+    toks = _tokens(text)
+    if not toks:
+        return 0.0
+    return len(context_tokens & toks) / (len(toks) ** 0.5)
+
 
 def _reason_class(reason: str) -> str:
     """把闸门原因折成"同一件事"的一类，用来分组沉淀经验。
@@ -210,6 +256,8 @@ class SelfEvolveEngine:
         self._gate_block_count = 0
         # 经验沉淀：从真实发送记录里复盘出来的做事方法，追加进提示词（不重写基础提示）
         self._lessons: List[Dict[str, Any]] = []
+        # 自动复盘的进度（沿用 hermes 的 periodic nudge）：上次跑到多少条拦截、什么时候跑的
+        self._lesson_nudge: Dict[str, Any] = {"blocks": 0, "at": 0}
 
         # ── 自进化质量评分数据结构 ──
         # 回复评分历史：[{id, received_message, reply_content, reply_source,
@@ -1125,8 +1173,14 @@ class SelfEvolveEngine:
             dest = self._snapshot_dir / f"evolution-{stamp}.json"
             shutil.copy2(self._data_file, dest)
             snaps = sorted(self._snapshot_dir.glob("evolution-*.json"))
+            # 超出份数的快照挪进 kept/ 而不是删掉：这些快照是"提示词为什么长这样"的
+            # 唯一底账，回滚只能回到还在热区里的那几份，早于它的改动就得能查回来。
             for old in snaps[:-SNAPSHOT_KEEP]:
-                old.unlink()
+                try:
+                    (self._snapshot_dir / "kept").mkdir(parents=True, exist_ok=True)
+                    shutil.move(str(old), str(self._snapshot_dir / "kept" / old.name))
+                except OSError:
+                    self._log("WARNING", f"旧快照挪进 kept/ 失败，原样留着：{old.name}")
             self._log("INFO", f"进化数据快照已留档（{reason or '未注明原因'}）：{dest.name}")
             return str(dest)
         except Exception as e:
@@ -1147,8 +1201,15 @@ class SelfEvolveEngine:
         return True
 
     def add_lesson(self, text: str, trigger: str = "", evidence_count: int = 0,
-                   samples: Optional[List[str]] = None, source: str = "manual") -> Dict[str, Any]:
-        """沉淀一条经验。证据不足、空文本、在库已满都会拒绝而不是静默放过。"""
+                   samples: Optional[List[str]] = None, source: str = "manual",
+                   scene: str = "", verify: str = "") -> Dict[str, Any]:
+        """沉淀一条经验。证据不足、空文本、在库已满都会拒绝而不是静默放过。
+
+        scene / verify 是 hermes 的"结构化经验"里最有用的两栏：
+        - scene：什么时候用得上（触发场景），检索时按它挑经验；
+        - verify：事后怎么验证这条仍然成立，退役时也有据可依。
+        两栏都可缺省——存量经验和老调用方不用改。
+        """
         text = (text or "").strip()
         if not text:
             raise ValueError("经验文本为空")
@@ -1162,6 +1223,10 @@ class SelfEvolveEngine:
             if existing:
                 existing["evidence_count"] = max(existing["evidence_count"],
                                                  int(evidence_count))
+                if scene and not existing.get("scene"):
+                    existing["scene"] = scene[:120]
+                if verify and not existing.get("verify"):
+                    existing["verify"] = verify[:200]
                 self._save_internal()
                 return {**existing, "created": False}
             active_n = sum(1 for x in self._lessons if x["status"] == "active")
@@ -1172,6 +1237,9 @@ class SelfEvolveEngine:
             lesson = {
                 "id": max((x["id"] for x in self._lessons), default=0) + 1,
                 "text": text[:200],
+                "summary": _lesson_summary(text),
+                "scene": (scene or "")[:120],
+                "verify": (verify or "")[:200],
                 "trigger": (trigger or "")[:200],
                 "evidence_count": int(evidence_count),
                 "samples": [str(s)[:100] for s in (samples or [])[:3]],
@@ -1219,17 +1287,47 @@ class SelfEvolveEngine:
         self._log("INFO", f"经验 #{lesson_id} 已退役：{lesson['retire_reason'][:60]}")
         return dict(lesson)
 
-    def get_prompt_supplement(self) -> str:
-        """把在库经验渲染成提示补充块。追加用，绝不替换基础提示词；没有经验就空串。"""
+    def get_prompt_supplement(self, context: str = "") -> str:
+        """把在库经验渲染成提示补充块。追加用，绝不替换基础提示词；没有经验就空串。
+
+        context 给了就按词面重合挑最相关的几条（hermes：按需检索，而不是把全部
+        经验塞进每一次提示词）；没给或者一条都不重合，才退回全量/按证据量取前几条，
+        老调用方的行为不变。
+        """
         if not self.enabled:
             return ""
         with self._lock:
-            active = [x for x in self._lessons if x["status"] == "active"]
+            active = [dict(x) for x in self._lessons if x["status"] == "active"]
         if not active:
             return ""
-        lines = ["【沉淀经验】回复时参考这些从真实发送记录里验证过的做法："]
-        for i, x in enumerate(active, 1):
-            lines.append(f"{i}. {x['text']}")
+        picked = active
+        if context and context.strip():
+            ctx = _tokens(context)
+            scored = sorted(
+                ((_lesson_relevance(ctx, x), i, x) for i, x in enumerate(active)),
+                key=lambda t: (-t[0], t[1]))
+            hit = [x for score, _, x in scored if score > 0][:LESSON_PROMPT_TOP_N]
+            if hit:
+                picked = hit
+            else:
+                # 一条都对不上时别把五条全塞进去：按证据量/新旧取前几条，
+                # 既不占满上下文，也不至于"这次什么都不给"。
+                picked = sorted(active,
+                                key=lambda x: (x.get("evidence_count") or 0,
+                                               x.get("created_at") or ""),
+                                reverse=True)[:LESSON_PROMPT_TOP_N]
+        lines = ["【沉淀经验】从真实发送/拦截记录里复盘出来的做法"
+                 "（只做参考；与上面的红线、身份事实冲突时一律以红线为准）："]
+        for i, x in enumerate(picked, 1):
+            summary = x.get("summary") or _lesson_summary(x.get("text", ""))
+            lines.append(f"{i}. {summary}")
+            text = (x.get("text") or "").strip()
+            if text and text != summary:
+                lines.append(f"   做法：{text}")
+            if x.get("scene"):
+                lines.append(f"   什么时候用得上：{x['scene']}")
+            if x.get("verify"):
+                lines.append(f"   怎么验证还有效：{x['verify']}")
         return "\n".join(lines)
 
     def refine_lessons(self) -> Dict[str, int]:
@@ -1265,13 +1363,52 @@ class SelfEvolveEngine:
             self.snapshot_evolution_data("refine 沉淀前")
         for text, reason, g in planned:
             try:
-                self.add_lesson(text, trigger=f"闸门拦截复盘：{reason[:80]}",
-                                evidence_count=g["count"], samples=g["samples"],
-                                source="refine")
+                self.add_lesson(
+                    text, trigger=f"闸门拦截复盘：{reason[:80]}",
+                    evidence_count=g["count"], samples=g["samples"],
+                    source="refine",
+                    scene=f"写回复草稿时会碰到：{reason[:60]}",
+                    verify=("下一批复盘里「%s」这类拦截的条数应当下降；"
+                            "仍在连续出现就说明这条经验没落地，先查它有没有进提示词"
+                            % reason[:40]))
                 created += 1
             except ValueError as e:
                 self._log("WARN", f"经验沉淀被拒：{e}")
         return {"created": created, "patterns_seen": len(groups)}
+
+    def nudge_lessons(self, now: Optional[float] = None) -> Dict[str, Any]:
+        """周期性 nudge：闸门拦截攒够一批就自己复盘一次，不等人工点「复盘」。
+
+        以前沉淀只发生在人工点 /refine 的那一刻：线上累计拦了几百条，经验条却
+        一直是 0——自进化等于没跑过（hermes 的 periodic nudge 就是解决这个）。
+        双门限：新增拦截 ≥ LESSON_NUDGE_BLOCK_STEP，且距上次自动复盘 ≥ 6 小时。
+        """
+        if not self.enabled:
+            return {"status": "disabled"}
+        now = time.time() if now is None else float(now)
+        with self._lock:
+            blocks = int(self._gate_block_count or 0)
+            last_blocks = int((self._lesson_nudge or {}).get("blocks") or 0)
+            last_at = float((self._lesson_nudge or {}).get("at") or 0)
+        if blocks < last_blocks:
+            last_blocks = blocks       # 累计数被复位过：以当前值为基线，别永远差一截
+        since_last = blocks - last_blocks
+        if since_last < LESSON_NUDGE_BLOCK_STEP:
+            return {"status": "idle", "blocks": blocks, "since_last": since_last}
+        if last_at and now - last_at < LESSON_NUDGE_MIN_INTERVAL_SEC:
+            return {"status": "throttled", "blocks": blocks,
+                    "next_at": last_at + LESSON_NUDGE_MIN_INTERVAL_SEC}
+        try:
+            out = self.refine_lessons()
+        except Exception as e:
+            self._log("WARN", f"自动复盘失败（不影响本轮回复）: {e}")
+            return {"status": "error", "error": str(e), "blocks": blocks}
+        with self._lock:
+            self._lesson_nudge = {"blocks": blocks, "at": now}
+            self._save_internal()
+        self._log("INFO",
+                  f"自动复盘：新增 {since_last} 条闸门拦截，沉淀出 {out.get('created', 0)} 条经验")
+        return {"status": "ran", "blocks": blocks, "since_last": since_last, **out}
 
     def get_evolution_report(self) -> Dict[str, Any]:
         """获取进化报告。
@@ -1365,6 +1502,9 @@ class SelfEvolveEngine:
                 "lessons": {
                     "active": [
                         {"id": x["id"], "text": x["text"], "source": x["source"],
+                         "summary": x.get("summary") or _lesson_summary(x["text"]),
+                         "scene": x.get("scene", ""),
+                         "verify": x.get("verify", ""),
                          "evidence_count": x["evidence_count"],
                          "effect_positive": x["effect_positive"],
                          "effect_negative": x["effect_negative"],
@@ -1374,6 +1514,7 @@ class SelfEvolveEngine:
                         {"id": x["id"], "text": x["text"],
                          "retire_reason": x["retire_reason"]}
                         for x in self._lessons if x["status"] == "retired"][-5:],
+                    "nudge": dict(self._lesson_nudge),
                 },
                 "enabled": self.enabled,
             }
@@ -1414,6 +1555,7 @@ class SelfEvolveEngine:
                 "reply_records": self._reply_records[-self.明细保留条数:],
                 "gate_blocks": self._gate_block_count,
                 "lessons": list(self._lessons),
+                "lesson_nudge": dict(self._lesson_nudge),
                 "last_saved": datetime.now().isoformat(),
             }
             write_json_atomic(self._data_file, data)
@@ -1439,6 +1581,10 @@ class SelfEvolveEngine:
                 self._reply_records = data.get("reply_records", [])
                 self._gate_block_count = data.get("gate_blocks", 0)
                 self._lessons = data.get("lessons", [])
+                nudge = data.get("lesson_nudge")
+                if isinstance(nudge, dict):
+                    self._lesson_nudge = {"blocks": int(nudge.get("blocks") or 0),
+                                          "at": float(nudge.get("at") or 0)}
 
                 self._log("INFO",
                           f"进化数据已加载: {self._reply_stats['total_replies']} 条回复记录, "

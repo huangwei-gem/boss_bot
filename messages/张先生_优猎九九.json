@@ -1,0 +1,22 @@
+{
+  "chat_name": "张先生",
+  "chat_id": "张先生#优猎九九",
+  "account_index": 0,
+  "job_name": "车联网产品经理（ IoT平台大数据 AI商业化（猎头职位）60-65K·14薪长沙查看职位",
+  "company": "优猎九九",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "02:43",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394986423522049",
+      "block": "02:43 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-23 14:53:15"
+}

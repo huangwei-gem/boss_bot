@@ -1,0 +1,78 @@
+{
+  "chat_name": "肖先生",
+  "chat_id": "肖先生#咪咪兔科技",
+  "account_index": 0,
+  "job_name": "数据分析师(电商) 接受小白8-10K长沙",
+  "company": "咪咪兔科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "12:39",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "398317792895750",
+      "block": "12:39 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398317792924420",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "同学，目前您在读，我们岗位需要拿到毕业证的之后才可以申请。",
+      "time": "13:37",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398332007916291",
+      "block": "13:37 同学，目前您在读，我们岗位需要拿到毕业证的之后才可以申请。",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "同学，目前您在读，我们岗位需要拿到毕业证的之后才可以申请。"
+    },
+    {
+      "sender": "bot",
+      "content": "我主要找线上数据分析这类的哈",
+      "text": "我主要找线上数据分析这类的哈",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-21 17:30:59",
+      "time": "17:30",
+      "job_name": "数据分析师(电商) 接受小白8-10K长沙查看职位",
+      "isFriend": false,
+      "mid": "399097278477057"
+    },
+    {
+      "sender": "bot",
+      "content": "好嘞，那我先不打扰了。",
+      "text": "好嘞，那我先不打扰了。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-21 17:51:00",
+      "time": "17:51",
+      "job_name": "数据分析师(电商) 接受小白8-10K长沙查看职位",
+      "isFriend": false,
+      "mid": "399102199907076"
+    }
+  ],
+  "updated_at": "2026-10-25 02:07:16",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,84 @@
+{
+  "chat_name": "高女士",
+  "chat_id": "高女士#兼职_数据标注_AI训练师15_25元_时湖州",
+  "account_index": 0,
+  "job_name": "兼职·数据标注/AI训练师15-25元/时湖州查看职位",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "10-07 03:11",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "393931624137474",
+      "block": "10-07 03:11 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "方便发一份简历过来吗？",
+      "time": "11:02",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397232255820552",
+      "block": "11:02 方便发一份简历过来吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "方便发一份简历过来吗？"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397232256058113",
+      "block": "我想要一份您的附件简历，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意"
+    },
+    {
+      "text": "我们是国企城投集团合资的子公司，客户是京东集团，目前主要做人工智能数据数据标注",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397232266384130",
+      "block": "我们是国企城投集团合资的子公司，客户是京东集团，目前主要做人工智能数据数据标注",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "我们是国企城投集团合资的子公司，客户是京东集团，目前主要做人工智能数据数据标注"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397232270521092",
+      "block": "您是否接受此工作地点? 湖州南太湖新区科技创新综合体(湖州吴兴区湖州南太湖新区科技创新综合体11幢9楼综合管理部) 暂不考虑可以接受",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "您是否接受此工作地点? 湖州南太湖新区科技创新综合体(湖州吴兴区湖州南太湖新区科技创新综合体11幢9楼综合管理部) 暂不考虑可以接受"
+    },
+    {
+      "text": "理解，感谢您的反馈，祝您招聘顺利~",
+      "time": "11:25",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397237889442562",
+      "block": "11:25 已读 理解，感谢您的反馈，祝您招聘顺利~",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "理解，感谢您的反馈，祝您招聘顺利~",
+      "reply_source": "rejection"
+    }
+  ],
+  "updated_at": "2026-10-23 14:17:59"
+}

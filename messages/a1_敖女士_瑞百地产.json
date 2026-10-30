@@ -72,8 +72,39 @@
       "timestamp": "2026-10-10 07:32:43",
       "time": "07:32",
       "job_name": "数据分析师（房地产业务推进方向）10-12K上海查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395057418969602"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，不打扰您了，后续如有合适机会欢迎联系，祝工作顺利。",
+      "text": "好的，不打扰您了，后续如有合适机会欢迎联系，祝工作顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 15:48:17",
+      "time": "15:48",
+      "job_name": "数据分析师（房地产业务推进方向）10-12K上海查看职位",
+      "isFriend": false,
+      "mid": "397656469799426"
+    },
+    {
+      "sender": "bot",
+      "content": "敖女士，我主要找线上数据分析这类的，要是您那边有合适的远程岗位，随时招呼我一声哈。",
+      "text": "敖女士，我主要找线上数据分析这类的，要是您那边有合适的远程岗位，随时招呼我一声哈。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 13:55:22",
+      "time": "13:55",
+      "job_name": "数据分析师（房地产业务推进方向）10-12K上海查看职位",
+      "isFriend": false,
+      "mid": "399752080036354"
     }
   ],
-  "updated_at": "2026-10-10 07:32:43"
+  "updated_at": "2026-10-23 14:04:25"
 }

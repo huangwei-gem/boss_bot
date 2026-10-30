@@ -126,8 +126,23 @@
       "job_name": "美团小象  户外地推  月入8K+  晋升快9-14K长沙查看职位",
       "isFriend": false,
       "mid": "393862387646721"
+    },
+    {
+      "sender": "bot",
+      "content": "王芳您好，美团这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "王芳您好，美团这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 12:37:30",
+      "time": "12:37",
+      "job_name": "美团小象  户外地推  月入8K+  晋升快9-14K长沙查看职位",
+      "isFriend": false,
+      "mid": "395132322533637"
     }
   ],
-  "updated_at": "2026-10-08 01:33:16",
+  "updated_at": "2026-10-23 14:38:10",
   "unread_on_boss": 0
 }

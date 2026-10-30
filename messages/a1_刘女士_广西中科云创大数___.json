@@ -82,9 +82,40 @@
       "timestamp": "2026-10-10 02:02:40",
       "time": "02:02",
       "job_name": "兼职·兼职轨迹标注员100-200元/天南宁查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394976304112129"
+    },
+    {
+      "sender": "bot",
+      "content": "微信号我记下了，轨迹标注能先线上试标吗？",
+      "text": "微信号我记下了，轨迹标注能先线上试标吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-21 17:34:36",
+      "time": "17:34",
+      "job_name": "兼职·兼职轨迹标注员100-200元/天南宁查看职位",
+      "isFriend": false,
+      "mid": "399098166833664"
+    },
+    {
+      "sender": "bot",
+      "content": "刘女士，标注规范方便先发我看看吗？要是必须线下试标，那我就不打扰了。",
+      "text": "刘女士，标注规范方便先发我看看吗？要是必须线下试标，那我就不打扰了。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 11:13:13",
+      "time": "11:13",
+      "job_name": "兼职·兼职轨迹标注员100-200元/天南宁查看职位",
+      "isFriend": false,
+      "mid": "399712227049989"
     }
   ],
-  "updated_at": "2026-10-10 02:02:40",
+  "updated_at": "2026-10-23 12:58:15",
   "unread_on_boss": 0
 }

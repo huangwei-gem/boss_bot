@@ -1,0 +1,85 @@
+{
+  "chat_name": "张女士",
+  "chat_id": "张女士#徐州臻尚教育",
+  "account_index": 0,
+  "job_name": "兼职·数据标注20-25元/时徐州查看职位",
+  "company": "徐州臻尚教育",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "10-18 14:13",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397987059323653",
+      "block": "10-18 14:13 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "工作内容就是用电脑利用无人机影像跟遥感影像进行一个图斑的标注",
+      "time": "10-20 09:03",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398618749747970",
+      "block": "10-20 09:03 工作内容就是用电脑利用无人机影像跟遥感影像进行一个图斑的标注",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "工作内容就是用电脑利用无人机影像跟遥感影像进行一个图斑的标注"
+    },
+    {
+      "text": "我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。",
+      "time": "10-20 18:18",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "398754943005442",
+      "block": "10-20 18:18 已读 我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "我了解这个岗位主要负责数据分析相关工作，我，相信能快速上手。",
+      "reply_source": "rule"
+    },
+    {
+      "text": "我们会进行培训的 试采通过就可以正式工作了",
+      "time": "昨天 09:15",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398975522689794",
+      "block": "昨天 09:15 我们会进行培训的 试采通过就可以正式工作了",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "我们会进行培训的 试采通过就可以正式工作了"
+    },
+    {
+      "text": "好嘞，那试采大概什么时候安排呀？我这时间挺灵活的，随时可以开始。",
+      "time": "昨天 10:16",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "398990449869572",
+      "block": "昨天 10:16 已读 好嘞，那试采大概什么时候安排呀？我这时间挺灵活的，随时可以开始。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "好嘞，那试采大概什么时候安排呀？我这时间挺灵活的，随时可以开始。",
+      "reply_source": "ai"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398991461487360",
+      "block": "我想要和您交换联系方式，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换联系方式，您是否同意 拒绝 同意"
+    }
+  ],
+  "updated_at": "2026-10-22 22:27:58"
+}

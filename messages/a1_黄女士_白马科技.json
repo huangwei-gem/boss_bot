@@ -1,0 +1,23 @@
+{
+  "chat_name": "黄女士",
+  "chat_id": "黄女士#白马科技",
+  "account_index": 1,
+  "job_name": "IT数据分析师(A01354)20-25K·13薪上海查看职位",
+  "company": "白马科技",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，擅长Python/SQL数据分析和AI训练数据质检，看到贵司IT数据分析师岗位与我的技能方向匹配，方便的话我把简历发您细聊",
+      "time": "14:34",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397638396293634",
+      "block": "14:34 送达 您好，我是统计学专业在读生，擅长Python/SQL数据分析和AI训练数据质检，看到贵司IT数据分析师岗位与我的技能方向匹配，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长Python/SQL数据分析和AI训练数据质检，看到贵司IT数据分析师岗位与我的技能方向匹配，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:19:12"
+}

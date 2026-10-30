@@ -44,8 +44,20 @@
       "job_name": "日结 山姆配送零食饮料优选驻店包住8-9K长沙查看职位",
       "isFriend": false,
       "mid": "395052747842048"
+    },
+    {
+      "text": "好的",
+      "time": "10:11",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395096339980802",
+      "block": "10:11 好的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的"
     }
   ],
-  "updated_at": "2026-10-10 07:35:19",
+  "updated_at": "2026-10-24 14:28:41",
   "unread_on_boss": 0
 }

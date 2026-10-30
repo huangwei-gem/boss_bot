@@ -94,7 +94,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394164111413761",
-      "block": "18:57 我想要和您交换微信，您是否同意 拒绝 同意",
+      "block": "我想要和您交换微信，您是否同意 拒绝 同意",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -176,9 +176,50 @@
       "timestamp": "2026-10-10 04:33:48",
       "time": "04:33",
       "job_name": "兼职·全国线上剪辑师500-1000元/周长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395013447197185"
+    },
+    {
+      "sender": "bot",
+      "content": "袁滔您好，长沙千里良驹咨询管理这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "袁滔您好，长沙千里良驹咨询管理这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 13:58:09",
+      "time": "13:58",
+      "job_name": "兼职·全国线上剪辑师500-1000元/周长沙查看职位",
+      "isFriend": false,
+      "mid": "397629399376384"
+    },
+    {
+      "text": "",
+      "time": "昨天 23:52",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398837234799105",
+      "block": "我想要和您交换微信，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换微信，您是否同意 拒绝 同意"
+    },
+    {
+      "text": "那我们加个微信，我给你介绍下吧",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398837330346497",
+      "block": "那我们加个微信，我给你介绍下吧",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "那我们加个微信，我给你介绍下吧"
     }
   ],
-  "updated_at": "2026-10-10 04:33:48",
+  "updated_at": "2026-10-24 14:44:04",
   "unread_on_boss": 0
 }

@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "395060171760128",
-      "block": "07:43 此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
+      "block": "此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
       "sender": "hr",
       "kind": "system",
       "content": "此Boss正在急招该职位，系统自动向您匹配该职位，若感兴趣您可以直接投递",
@@ -42,9 +42,10 @@
       "timestamp": "2026-10-10 07:44:17",
       "time": "07:44",
       "job_name": "美团站点直聘外卖员5-8元/单长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395060259246600"
     }
   ],
-  "updated_at": "2026-10-10 07:44:17",
+  "updated_at": "2026-10-23 15:16:33",
   "unread_on_boss": 0
 }

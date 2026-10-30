@@ -91,13 +91,13 @@
       "is_mine": false,
       "is_system": true,
       "mid": "394925776720640",
-      "block": "昨天 22:37 对方已查看了您的附件简历",
+      "block": "对方已查看了您的附件简历",
       "sender": "hr",
       "kind": "system",
       "content": "对方已查看了您的附件简历",
       "card_text": "对方已查看了您的附件简历"
     }
   ],
-  "updated_at": "2026-10-10 07:10:25",
+  "updated_at": "2026-10-18 13:45:45",
   "unread_on_boss": 0
 }

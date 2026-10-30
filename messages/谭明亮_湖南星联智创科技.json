@@ -2,7 +2,7 @@
   "chat_name": "谭明亮",
   "chat_id": "谭明亮#湖南星联智创科技",
   "account_index": 0,
-  "job_name": "数据分析师7-12K长沙查看职位",
+  "job_name": "数据分析师7-12K长沙",
   "company": "湖南星联智创科技",
   "messages": [
     {
@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "390828317278466",
-      "block": "08:44 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -74,7 +74,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "394756070465802",
-      "block": "11:06 附件简历请求已发送",
+      "block": "附件简历请求已发送",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -131,9 +131,55 @@
       "timestamp": "2026-10-10 00:39:07",
       "time": "00:39",
       "job_name": "数据分析师7-12K长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394955774030083"
+    },
+    {
+      "sender": "bot",
+      "content": "谭明亮您好，之前聊的数据分析师7-12K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "谭明亮您好，之前聊的数据分析师7-12K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 15:18:53",
+      "time": "15:18",
+      "job_name": "数据分析师7-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "395171984670978"
+    },
+    {
+      "sender": "bot",
+      "content": "谭明亮您好，湖南星联智创科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "谭明亮您好，湖南星联智创科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 14:53:34",
+      "time": "14:53",
+      "job_name": "数据分析师7-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "397643025215746"
+    },
+    {
+      "sender": "bot",
+      "content": "简历已发，您看是否符合要求？方便安排线上面试吗？",
+      "text": "简历已发，您看是否符合要求？方便安排线上面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 14:21:07",
+      "time": "14:21",
+      "job_name": "数据分析师7-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "400112306364677"
     }
   ],
-  "updated_at": "2026-10-10 00:39:07",
+  "updated_at": "2026-10-25 01:57:25",
   "unread_on_boss": 0
 }

@@ -162,7 +162,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "393078495474435",
-      "block": "昨天 17:20 对方已查看了您的附件简历",
+      "block": "对方已查看了您的附件简历",
       "sender": "hr",
       "kind": "system",
       "content": "对方已查看了您的附件简历",
@@ -265,9 +265,10 @@
       "timestamp": "2026-10-09 22:43:07",
       "time": "22:43",
       "job_name": "AI数字运营6-11K长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394927258518273"
     }
   ],
-  "updated_at": "2026-10-09 22:43:07",
+  "updated_at": "2026-10-18 17:11:12",
   "unread_on_boss": 0
 }

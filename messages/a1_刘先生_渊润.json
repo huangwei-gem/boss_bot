@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "393893942542848",
-      "block": "00:38 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -55,9 +55,79 @@
       "timestamp": "2026-10-10 02:19:02",
       "time": "02:19",
       "job_name": "兼职·客家话AI方言标注/AI训练师30-35元/时蚌埠查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394980325974528"
+    },
+    {
+      "text": "好的",
+      "time": "09:26",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395085362332162",
+      "block": "09:26 好的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，理解岗位要求与我的背景不匹配。祝您招聘顺利，如果有其他合适机会欢迎再联系",
+      "text": "感谢您的时间，理解岗位要求与我的背景不匹配。祝您招聘顺利，如果有其他合适机会欢迎再联系",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 09:36:50",
+      "time": "09:36",
+      "job_name": "兼职·客家话AI方言标注/AI训练师30-35元/时蚌埠查看职位",
+      "isFriend": false,
+      "mid": "395087921938945"
+    },
+    {
+      "text": "也祝您早日找到顺心的工作！",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395087995200001",
+      "block": "也祝您早日找到顺心的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "也祝您早日找到顺心的工作！"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间与反馈，祝您工作顺利！",
+      "text": "感谢您的时间与反馈，祝您工作顺利！",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 09:41:19",
+      "time": "09:41",
+      "job_name": "兼职·客家话AI方言标注/AI训练师30-35元/时蚌埠查看职位",
+      "isFriend": false,
+      "mid": "395089022947846"
+    },
+    {
+      "sender": "bot",
+      "content": "谢谢您，也祝您一切顺利，有需要再联系。",
+      "text": "谢谢您，也祝您一切顺利，有需要再联系。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 16:13:34",
+      "time": "16:13",
+      "job_name": "兼职·客家话AI方言标注/AI训练师30-35元/时蚌埠查看职位",
+      "isFriend": false,
+      "mid": "397662679953921"
     }
   ],
-  "updated_at": "2026-10-10 02:19:02",
-  "unread_on_boss": 0
+  "updated_at": "2026-10-23 13:29:28",
+  "unread_on_boss": 1
 }

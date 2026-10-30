@@ -1,0 +1,39 @@
+{
+  "chat_name": "余先生",
+  "chat_id": "余先生#友客公寓",
+  "account_index": 1,
+  "job_name": "仅6人 8000+不打电话 不坐班 公寓租房管家8-13K长沙查看职位",
+  "company": "友客公寓",
+  "messages": [
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-10 18:28:56",
+      "time": "18:28",
+      "job_name": "仅6人 8000+不打电话 不坐班 公寓租房管家8-13K长沙查看职位",
+      "isFriend": false,
+      "mid": "395218691780871"
+    },
+    {
+      "text": "",
+      "time": "19:29",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395233446015232",
+      "block": "19:29",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": ""
+    }
+  ],
+  "updated_at": "2026-10-16 01:29:53",
+  "unread_on_boss": 0
+}

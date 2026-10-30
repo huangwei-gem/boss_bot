@@ -1,0 +1,8 @@
+[
+  {"do": "open"},
+  {"do": "setph", "specs": [{"ph": "北京华品博睿", "value": "天鹅到家"}]},
+  {"do": "wait", "sec": 2.0},
+  {"do": "js", "limit": 2500, "code": "(() => {\n  const clean = (s) => (s || '').replace(/\\u00a0/g, ' ').trim();\n  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };\n  const inp = [...document.querySelectorAll('input')].filter((e) => vis(e) && !(e.getAttribute('ka') || '').match(/position|industry/));\n  const drop = [...document.querySelectorAll('body *')].filter((e) => /suggest|dropdown|option|list-item/i.test((e.className || '').toString()) && vis(e));\n  return {\n    company: clean((inp[0] || {}).value),\n    drops: drop.map((e) => (e.className || '').toString().slice(0, 40) + ' >> ' + clean(e.innerText).slice(0, 120)).slice(0, 8)\n  };\n})()"},
+  {"do": "openfield", "field": {"ka": "resume_form_edit_position"}, "wait": 3.0},
+  {"do": "js", "limit": 4000, "code": "(() => {\n  const clean = (s) => (s || '').replace(/\\u00a0/g, ' ').trim();\n  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };\n  const layers = [...document.querySelectorAll('body > div')].filter((e) => vis(e) && clean(e.innerText).length > 4 && clean(e.innerText).length < 3000);\n  return {\n    posVal: clean((document.querySelector('input[ka=resume_form_edit_position]') || {}).value),\n    layers: layers.map((e) => ({cls: (e.className || '').toString().slice(0, 60), text: clean(e.innerText).slice(0, 300), inputs: [...e.querySelectorAll('input')].filter(vis).map((i) => (i.placeholder || '') + '=' + clean(i.value)).slice(0, 6)})).slice(0, 8)\n  };\n})()"}
+]

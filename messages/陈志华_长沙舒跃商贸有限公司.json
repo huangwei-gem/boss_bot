@@ -58,18 +58,6 @@
       "card_text": "我想要和您交换微信，您是否同意 拒绝 同意"
     },
     {
-      "text": "",
-      "time": "",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "394137712018176",
-      "block": "",
-      "sender": "hr",
-      "kind": "bubble",
-      "content": ""
-    },
-    {
       "sender": "bot",
       "content": "[已同意交换联系方式]",
       "text": "[已同意交换联系方式]",
@@ -208,6 +196,6 @@
       "mid": "394805538808578"
     }
   ],
-  "updated_at": "2026-10-10 00:50:49",
+  "updated_at": "2026-10-18 13:33:53",
   "unread_on_boss": 0
 }

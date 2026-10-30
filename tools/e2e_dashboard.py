@@ -12,10 +12,12 @@
 import argparse
 import json
 import os
+import re
 import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from boss_bot.unified_config import 面板端口 as _面板端口  # 端口只有一个出处
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
@@ -25,11 +27,11 @@ from boss_bot.platform_compat import 破解版路径
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CLOAK = 破解版路径(BASE)
 PORT = 9402
-DASH = os.environ.get("BOSS_PANEL_URL", "http://127.0.0.1:5000")
+DASH = os.environ.get("BOSS_PANEL_URL", "http://127.0.0.1:%s" % _面板端口())
 # 本脚本会真点「启动/停止/暂停」按钮：对着线上面板点下去就是把投递轮打断
 # （2026-10-04 20:44 两个号的轮次就被这么停过一次）。要么走
 # tests/run_dashboard_on_temp_panel.py 起临时面板，要么显式 BOSS_E2E_ALLOW_LIVE=1。
-if ":5000" in DASH and os.environ.get("BOSS_E2E_ALLOW_LIVE") != "1":
+if (":%s" % _面板端口()) in DASH and os.environ.get("BOSS_E2E_ALLOW_LIVE") != "1":
     raise SystemExit(
         f"拒绝对着线上面板跑实测（{DASH}）：本脚本会点启停按钮。\n"
         f"请用 python tests/run_dashboard_on_temp_panel.py")
@@ -226,8 +228,12 @@ def main():
         for m in msgs:
             if m.get("kind") == "action":
                 continue
-            text = ((m.get("text") or m.get("content") or m.get("card_text") or "")
-                    .replace("\n", " ").strip())
+            # 空白归一必须和前端 ui_rows 用同一把尺子：那边是 /\s+/g 压成一个空格，
+            # 这里只换 \n 就会把存档里本来就有的双空格（实测 账号2 第33条
+            # 「游戏打手  可兼职」）报成"界面与存档不一致"，其实是同一个字。
+            text = re.sub(r"\s+", " ",
+                          (m.get("text") or m.get("content") or m.get("card_text") or "")
+                          ).strip()
             out.append({"mine": bool(m.get("is_mine")), "text": text,
                         "time": (m.get("time") or "").strip()})
         return out
@@ -422,9 +428,18 @@ def main():
           ("真判分" in quality or "暂无记录" in quality), quality[:60])
     qapi = js(page, '''(function(){var x=new XMLHttpRequest();
       x.open("GET","/api/ai/quality",false);x.send();return JSON.parse(x.responseText);})()''')
-    check("AI", "判分质量接口给出兜底率", qapi.get("status") == "ok" and
-          "fallback_rate" in qapi and qapi.get("total", 0) >= 1,
-          {k: qapi.get(k) for k in ("total", "judged", "fallback", "fallback_rate")})
+    # 只抓不投（10-19 起）之后，打招呼记录本来就少、历史那几条也没有 AI 字段，
+    # 所以分母 0 是照实说，不是接口坏了。要钉的是"算得对"：有分母时兜底率必须等于
+    # 兜底/总数，没分母时兜底率必须是 0 且把没追踪的条数一并报出来。
+    qapi_ok = qapi.get("status") == "ok" and "fallback_rate" in qapi
+    qn = qapi.get("total", 0) or 0
+    if qn >= 1:
+        qapi_ok = qapi_ok and abs(qapi["fallback_rate"] - qapi["fallback"] / qn) < 1e-4
+    else:
+        qapi_ok = qapi_ok and qapi.get("fallback_rate") == 0 and "untracked" in qapi
+    check("AI", "判分质量接口给出兜底率", qapi_ok,
+          {k: qapi.get(k) for k in ("total", "judged", "fallback",
+                                    "fallback_rate", "untracked")})
 
     # 「恢复默认」必须用引擎那份 20 条的默认规则，不是前端抄本
     js(page, 'typeof DEFAULT_SYSTEM_RULES')
@@ -436,9 +451,14 @@ def main():
     js(page, 'resetPromptModal()')
     time.sleep(1.0)
     sys_rules = js(page, 'document.getElementById("promptSystem").value') or ""
+    # 不再钉死某句原话：默认规则会随"要有人味"这类口径改写（10-23 整份重写过一次）。
+    # 该钉的是"弹窗里那份 == 引擎 /api/ai/prompts 里 defaults 那一份"。
+    defaults = js(page, '''(function(){var x=new XMLHttpRequest();
+      x.open("GET","/api/ai/prompts",false);x.send();return JSON.parse(x.responseText);})()''')
+    sys_default = (((defaults or {}).get("defaults") or {}).get("system_rules") or "")
     check("AI", "恢复默认拿到的是引擎默认规则",
-          "必须根据完整对话上下文回复" in sys_rules and "语气专业" in sys_rules,
-          f"{len(sys_rules)} 字")
+          len(sys_default) > 200 and sys_rules.strip() == sys_default.strip(),
+          f"弹窗 {len(sys_rules)} 字 / 引擎默认 {len(sys_default)} 字")
     # 只读校验，不点保存：用户改过的提示词不能被测试覆盖
     js(page, 'closePromptModal()')
 
@@ -599,8 +619,12 @@ def main():
     st_a1, d_a1 = api_get("/api/greet_records?account=1")
     st_a0, d_a0 = api_get("/api/greet_records?account=0")
     st_all, d_all = api_get("/api/greet_records")
+    # 按号分不是"每一号都必须少于合计"：只抓不投之后打招呼记录只落在主号，
+    # 账号2 天然是 0 条，拿 `<` 去比会把"主号 3 条 = 合计 3 条"报成串号。
+    # 能钉死的是"两号相加 == 合计"，以及各号只回自己那几条（下一条）。
     check("多账号", "打招呼记录接口按账号分",
-          st_a1 == 200 and d_a1["total"] < d_all["total"] and d_a0["total"] < d_all["total"],
+          st_a1 == 200 and st_a0 == 200 and
+          d_a1["total"] + d_a0["total"] == d_all["total"],
           f"全部{d_all['total']} 主{d_a0['total']} 二号{d_a1['total']}")
     check("多账号", "记录里的账号字段正确",
           all(r.get("account_index") == 1 for r in d_a1["records"]) and

@@ -1,0 +1,36 @@
+{
+  "chat_name": "朱永辉",
+  "chat_id": "朱永辉#卡客轮语",
+  "account_index": 1,
+  "job_name": "经营数据分析师10-12K上海查看职位",
+  "company": "卡客轮语",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:35",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397594298737153",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学本科在读，有数据分析经验，熟悉Excel、SQL、Python和可视化看板，看到贵司经营数据分析师岗位，想了解一下，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397594410570242",
+      "block": "送达 您好，我是统计学本科在读，有数据分析经验，熟悉Excel、SQL、Python和可视化看板，看到贵司经营数据分析师岗位，想了解一下，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据分析经验，熟悉Excel、SQL、Python和可视化看板，看到贵司经营数据分析师岗位，想了解一下，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:42:46"
+}

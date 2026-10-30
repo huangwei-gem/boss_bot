@@ -1,0 +1,38 @@
+{
+  "chat_name": "严先生",
+  "chat_id": "严先生#湘森恒昌科技",
+  "account_index": 1,
+  "job_name": "产品运营助理+底薪4500+奖金+免费住宿4-8K长沙查看职位",
+  "company": "湘森恒昌科技",
+  "messages": [
+    {
+      "text": "想与你沟通一下，我们现在招的这个职位现在方便吗？",
+      "time": "15:01",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397645009781248",
+      "block": "15:01 想与你沟通一下，我们现在招的这个职位现在方便吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "想与你沟通一下，我们现在招的这个职位现在方便吗？"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-17 15:06:14",
+      "time": "15:06",
+      "job_name": "产品运营助理+底薪4500+奖金+免费住宿4-8K长沙查看职位",
+      "isFriend": false,
+      "mid": "397646130790912"
+    }
+  ],
+  "updated_at": "2026-10-23 14:06:18",
+  "unread_on_boss": 0
+}

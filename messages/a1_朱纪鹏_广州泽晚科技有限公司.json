@@ -1,0 +1,52 @@
+{
+  "chat_name": "朱纪鹏",
+  "chat_id": "朱纪鹏#广州泽晚科技有限公司",
+  "account_index": 1,
+  "job_name": "兼职·短视频剪辑50-500元/时上海查看职位",
+  "company": "广州泽晚科技有限公司",
+  "messages": [
+    {
+      "text": "你好，线上兼职感兴趣吗",
+      "time": "17:15",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397677857075715",
+      "block": "17:15 你好，线上兼职感兴趣吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，线上兼职感兴趣吗"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，我对数据标注、数据分析类线上兼职更感兴趣，请问贵司有相关岗位吗？",
+      "text": "您好，我对数据标注、数据分析类线上兼职更感兴趣，请问贵司有相关岗位吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-17 17:17:08",
+      "time": "17:17",
+      "job_name": "兼职·短视频剪辑50-500元/时上海查看职位",
+      "isFriend": false,
+      "mid": "397678300918272"
+    },
+    {
+      "sender": "bot",
+      "content": "线上兼职我确实感兴趣，不过更想做数据标注或数据分析这类。你们有对口的岗吗？",
+      "text": "线上兼职我确实感兴趣，不过更想做数据标注或数据分析这类。你们有对口的岗吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 14:12:51",
+      "time": "14:12",
+      "job_name": "兼职·短视频剪辑50-500元/时上海查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-23 14:12:51",
+  "unread_on_boss": 0
+}

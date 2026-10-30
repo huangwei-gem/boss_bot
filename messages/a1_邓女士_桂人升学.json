@@ -83,9 +83,66 @@
       "timestamp": "2026-10-10 03:30:21",
       "time": "03:30",
       "job_name": "兼职·专业课-资料整理兼职（线上）1000-3000元/月长沙查看职位",
+      "isFriend": false,
+      "mid": "394997851435520"
+    },
+    {
+      "text": "嗯嗯 您可以发一下  谢谢",
+      "time": "09:48",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395090863829505",
+      "block": "09:48 嗯嗯 您可以发一下 谢谢",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "嗯嗯 您可以发一下  谢谢"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，我整理好数据标注处理和数据分析报表的样例截图后发您，请稍等~",
+      "text": "好的，我整理好数据标注处理和数据分析报表的样例截图后发您，请稍等~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 09:54:27",
+      "time": "09:54",
+      "job_name": "兼职·专业课-资料整理兼职（线上）1000-3000元/月长沙查看职位",
+      "isFriend": false,
+      "mid": "395092250640899"
+    },
+    {
+      "sender": "bot",
+      "content": "邓女士您好，标注样例和报表看板已整理好，是否方便查看？期待您的反馈，如有疑问我随时沟通。",
+      "text": "邓女士您好，标注样例和报表看板已整理好，是否方便查看？期待您的反馈，如有疑问我随时沟通。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 16:46:03",
+      "time": "16:46",
+      "job_name": "兼职·专业课-资料整理兼职（线上）1000-3000元/月长沙查看职位",
+      "isFriend": false,
+      "mid": "397670663082500"
+    },
+    {
+      "sender": "bot",
+      "content": "邓女士您好，桂人升学这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "邓女士您好，桂人升学这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 14:12:21",
+      "time": "14:12",
+      "job_name": "兼职·专业课-资料整理兼职（线上）1000-3000元/月长沙查看职位",
       "isFriend": false
     }
   ],
-  "updated_at": "2026-10-10 03:30:21",
+  "updated_at": "2026-10-23 14:12:21",
   "unread_on_boss": 0
 }

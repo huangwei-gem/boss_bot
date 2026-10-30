@@ -2,7 +2,7 @@
   "chat_name": "叶明轩",
   "chat_id": "叶明轩#长沙顺安无忧驾培管理",
   "account_index": 0,
-  "job_name": "汽车陪练6-9K长沙查看职位",
+  "job_name": "汽车陪练6-9K长沙",
   "company": "长沙顺安无忧驾培管理",
   "messages": [
     {
@@ -44,8 +44,93 @@
       "job_name": "汽车陪练6-9K长沙查看职位",
       "isFriend": false,
       "mid": "394090593722880"
+    },
+    {
+      "sender": "bot",
+      "content": "叶明轩您好，之前聊的汽车陪练6-9K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "叶明轩您好，之前聊的汽车陪练6-9K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 10:05:36",
+      "time": "10:05",
+      "job_name": "汽车陪练6-9K长沙查看职位",
+      "isFriend": false,
+      "mid": "395094989734401"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395096094999041",
+      "block": "我想要和您交换联系方式，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换联系方式，您是否同意 拒绝 同意"
+    },
+    {
+      "sender": "bot",
+      "content": "叶明轩您好，之前聊的汽车陪练6-9K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "叶明轩您好，之前聊的汽车陪练6-9K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 11:27:41",
+      "time": "11:27",
+      "job_name": "汽车陪练6-9K长沙查看职位",
+      "isFriend": false,
+      "mid": "397592416997889"
+    },
+    {
+      "sender": "bot",
+      "content": "叶明轩您好，方便的话我们直接视频聊一下？",
+      "text": "叶明轩您好，方便的话我们直接视频聊一下？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-18 10:54:27",
+      "time": "10:54",
+      "job_name": "汽车陪练6-9K长沙查看职位",
+      "isFriend": false,
+      "mid": "397938142212608"
+    },
+    {
+      "text": "不方便",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397938267980288",
+      "block": "不方便",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不方便"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，祝您找到合适人选！",
+      "text": "好的，祝您找到合适人选！",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-18 17:45:56",
+      "time": "17:45",
+      "job_name": "汽车陪练6-9K长沙查看职位",
+      "isFriend": false,
+      "mid": "398039270547969"
     }
   ],
-  "updated_at": "2026-10-09 11:33:50",
+  "updated_at": "2026-10-25 02:18:35",
   "unread_on_boss": 0
 }

@@ -8,11 +8,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+from tests.conftest import mk测试临时目录  # noqa: E402
 sys.path.insert(0, str(ROOT / "tests"))
 
 import e2e_account_scope_ui as E  # noqa: E402
 
-tmp = Path(tempfile.mkdtemp(prefix="boss_panel_"))
+tmp = mk测试临时目录("boss_panel")
 proc = None
 try:
     E.seed(tmp)

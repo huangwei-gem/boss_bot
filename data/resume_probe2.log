@@ -1,0 +1,14 @@
+开编辑: clicked user-resume-add-workexp
+真打字: 北京华品博睿=4字/insertText=true
+打标: 打上了  候选=1 是=INPUT.input
+真点了元素 [data-orca-tag=hit]
+JS: {"公司值": "五八到家有限公司", "联想条数": 10}
+打标: 打上了  候选=1 是=INPUT.input
+真点了元素 [data-orca-tag=hit]
+JS: {"浮层": ["dialog-wrap position-dialog v-transfer-d", "dialog-layer", "dialog-container", "dialog-body"], "类目前": true, "正文": "请添加职位名称\n确定\n互联网/AI\n电子/电气/通信\n产品\n客服/运营\n销售\n人力/行政/法务\n财务/审计/税务\n技工/普工\n生产制造\n零售/生活服务\n餐饮\n酒店/旅游\n教育培训\n设计\n房地产/建筑\n直播\n影视/传媒\n市场/公关/广告\n物流/仓储/司机\n采购/贸易\n汽车\n医疗健康\n金融\n项目管理\n咨询/翻译/法律\n能源"}
+JS: "关了(点确定)"
+点开字段: 点开 第0个 选择在职时间 当前值=
+JS: {"cell总数": 44, "可见cell": 10, "cell样本": ["2020", "2021", "2022", "2023", "2024", "2025", "2026", "2027", "2028", "2029"], "时间框数": 2, "body门": ["page-resume has-header has-footer", "zp-side-entry", "dialog-wrap position-dialog v-tran"]}
+打标: 打上了 2026 候选=1 是=SPAN.cell year
+真点了元素 [data-orca-tag=hit]
+JS: {"可见cell数": 10, "样本": ["2020/ year", "2021/ year", "2022/ year", "2023/ year", "2024/ year", "2025/ year", "2026/ year", "2027/ year disabl", "2028/ year disabl", "2029/ year disabl"], "开始值": ""}

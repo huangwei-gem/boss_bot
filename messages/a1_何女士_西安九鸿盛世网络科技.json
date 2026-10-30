@@ -28,7 +28,8 @@
       "block": "08:19 这边需要先核对基础用工条件，麻烦说下年龄，我先做首轮筛选",
       "sender": "hr",
       "kind": "bubble",
-      "content": "这边需要先核对基础用工条件，麻烦说下年龄，我先做首轮筛选"
+      "content": "这边需要先核对基础用工条件，麻烦说下年龄，我先做首轮筛选",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -55,7 +56,8 @@
       "block": "你好，我们公司招聘【兼职 可居家办公】+【周结】招聘【线上代练打手】，主要招崩铁，三角洲，原神、鸣潮，绝区零，异环，洛克，终末地，伊莫 这几个游戏的打手，请问你擅长哪几个游戏呢？",
       "sender": "hr",
       "kind": "bubble",
-      "content": "你好，我们公司招聘【兼职 可居家办公】+【周结】招聘【线上代练打手】，主要招崩铁，三角洲，原神、鸣潮，绝区零，异环，洛克，终末地，伊莫 这几个游戏的打手，请问你擅长哪几个游戏呢？"
+      "content": "你好，我们公司招聘【兼职 可居家办公】+【周结】招聘【线上代练打手】，主要招崩铁，三角洲，原神、鸣潮，绝区零，异环，洛克，终末地，伊莫 这几个游戏的打手，请问你擅长哪几个游戏呢？",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -82,7 +84,8 @@
       "block": "【原神】发下米游社全部地图探索度长截图",
       "sender": "hr",
       "kind": "bubble",
-      "content": "【原神】发下米游社全部地图探索度长截图"
+      "content": "【原神】发下米游社全部地图探索度长截图",
+      "is_read": true
     },
     {
       "text": "【崩铁】发下米游社主页截图（可以看见战利品开启总数的）",
@@ -94,7 +97,8 @@
       "block": "【崩铁】发下米游社主页截图（可以看见战利品开启总数的）",
       "sender": "hr",
       "kind": "bubble",
-      "content": "【崩铁】发下米游社主页截图（可以看见战利品开启总数的）"
+      "content": "【崩铁】发下米游社主页截图（可以看见战利品开启总数的）",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -121,7 +125,8 @@
       "block": "好的",
       "sender": "hr",
       "kind": "bubble",
-      "content": "好的"
+      "content": "好的",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -148,7 +153,8 @@
       "block": "嗯嗯",
       "sender": "hr",
       "kind": "bubble",
-      "content": "嗯嗯"
+      "content": "嗯嗯",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -175,7 +181,8 @@
       "block": "看截图哦",
       "sender": "hr",
       "kind": "bubble",
-      "content": "看截图哦"
+      "content": "看截图哦",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -202,7 +209,8 @@
       "block": "嗯嗯",
       "sender": "hr",
       "kind": "bubble",
-      "content": "嗯嗯"
+      "content": "嗯嗯",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -229,7 +237,8 @@
       "block": "好的",
       "sender": "hr",
       "kind": "bubble",
-      "content": "好的"
+      "content": "好的",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -256,7 +265,8 @@
       "block": "需要先看截图哦",
       "sender": "hr",
       "kind": "bubble",
-      "content": "需要先看截图哦"
+      "content": "需要先看截图哦",
+      "is_read": true
     },
     {
       "text": "等你方便了再来吧",
@@ -268,7 +278,8 @@
       "block": "等你方便了再来吧",
       "sender": "hr",
       "kind": "bubble",
-      "content": "等你方便了再来吧"
+      "content": "等你方便了再来吧",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -295,7 +306,8 @@
       "block": "好的",
       "sender": "hr",
       "kind": "bubble",
-      "content": "好的"
+      "content": "好的",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -337,9 +349,291 @@
       "block": "08:03 好的",
       "sender": "hr",
       "kind": "bubble",
-      "content": "好的"
+      "content": "好的",
+      "is_read": true
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的理解。同时想说明一下，我的求职方向主要是数据标注、数据分析和线上运营助理，如果您这边有相关岗位，我很乐意继续沟通。祝您招聘顺利~",
+      "text": "感谢您的理解。同时想说明一下，我的求职方向主要是数据标注、数据分析和线上运营助理，如果您这边有相关岗位，我很乐意继续沟通。祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 12:30:46",
+      "time": "12:30",
+      "job_name": "兼职·线上兼职游戏打手  可兼职可居家15-35元/时武汉查看职位",
+      "isFriend": false,
+      "mid": "395130666696705"
+    },
+    {
+      "text": "你好，我们公司招聘【兼职 可居家办公】+【周结】招聘【线上代练打手】，主要招崩铁，三角洲，原神、鸣潮，绝区零，异环，洛克，终末地，伊莫 这几个游戏的打手，请问你擅长哪几个游戏呢？",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395130750337027",
+      "block": "你好，我们公司招聘【兼职 可居家办公】+【周结】招聘【线上代练打手】，主要招崩铁，三角洲，原神、鸣潮，绝区零，异环，洛克，终末地，伊莫 这几个游戏的打手，请问你擅长哪几个游戏呢？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，我们公司招聘【兼职 可居家办公】+【周结】招聘【线上代练打手】，主要招崩铁，三角洲，原神、鸣潮，绝区零，异环，洛克，终末地，伊莫 这几个游戏的打手，请问你擅长哪几个游戏呢？",
+      "is_read": true
+    },
+    {
+      "text": "这边需要先核对基础用工条件，麻烦说下年龄，我先做首轮筛选",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395130758832129",
+      "block": "这边需要先核对基础用工条件，麻烦说下年龄，我先做首轮筛选",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "这边需要先核对基础用工条件，麻烦说下年龄，我先做首轮筛选",
+      "is_read": true
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的关注。我的求职方向是数据标注和数据分析，与游戏打手岗位不太匹配。如果贵司有相关岗位，我很乐意沟通，祝您招聘顺利。",
+      "text": "您好，感谢您的关注。我的求职方向是数据标注和数据分析，与游戏打手岗位不太匹配。如果贵司有相关岗位，我很乐意沟通，祝您招聘顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-16 05:54:38",
+      "time": "05:54",
+      "job_name": "兼职·线上兼职游戏打手  可兼职可居家15-35元/时武汉查看职位",
+      "isFriend": false,
+      "mid": "397156674887680"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，我之前报的年龄有误，我实际是21岁，现在是在校本科在读。请问这个对筛选有影响吗？",
+      "text": "您好，我之前报的年龄有误，我实际是21岁，现在是在校本科在读。请问这个对筛选有影响吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-16 07:34:27",
+      "time": "07:34",
+      "job_name": "兼职·线上兼职游戏打手  可兼职可居家15-35元/时武汉查看职位",
+      "isFriend": false,
+      "mid": "397181206900736"
+    },
+    {
+      "text": "你好，我们公司招聘【兼职 可居家办公】+【周结】招聘【线上代练打手】，主要招崩铁，三角洲，原神、鸣潮，绝区零，异环，洛克，终末地，伊莫 这几个游戏的打手，请问你擅长哪几个游戏呢？",
+      "time": "08:02",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397188094619648",
+      "block": "08:02 你好，我们公司招聘【兼职 可居家办公】+【周结】招聘【线上代练打手】，主要招崩铁，三角洲，原神、鸣潮，绝区零，异环，洛克，终末地，伊莫 这几个游戏的打手，请问你擅长哪几个游戏呢？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，我们公司招聘【兼职 可居家办公】+【周结】招聘【线上代练打手】，主要招崩铁，三角洲，原神、鸣潮，绝区零，异环，洛克，终末地，伊莫 这几个游戏的打手，请问你擅长哪几个游戏呢？",
+      "is_read": true
+    },
+    {
+      "sender": "bot",
+      "content": "您好，我的求职方向是数据标注和数据分析，与游戏打手岗位不太匹配。如果贵司有相关岗位，我很乐意进一步沟通。祝您招聘顺利~",
+      "text": "您好，我的求职方向是数据标注和数据分析，与游戏打手岗位不太匹配。如果贵司有相关岗位，我很乐意进一步沟通。祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-16 08:03:43",
+      "time": "08:03",
+      "job_name": "兼职·线上兼职游戏打手  可兼职可居家15-35元/时武汉查看职位",
+      "isFriend": false,
+      "mid": "397188402290689"
+    },
+    {
+      "sender": "bot",
+      "content": "何女士您好，之前聊的兼职·线上兼职游戏打手  可兼职可居家15-35元/时武汉查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "何女士您好，之前聊的兼职·线上兼职游戏打手  可兼职可居家15-35元/时武汉查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 20:58:13",
+      "time": "20:58",
+      "job_name": "兼职·线上兼职游戏打手  可兼职可居家15-35元/时武汉查看职位",
+      "isFriend": false,
+      "mid": "397732640882691"
+    },
+    {
+      "text": "你玩什么游戏呢",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397732743237634",
+      "block": "你玩什么游戏呢",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你玩什么游戏呢",
+      "is_read": true
+    },
+    {
+      "text": "【原神】发下米游社全部地图探索度长截图",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397732869361665",
+      "block": "【原神】发下米游社全部地图探索度长截图",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "【原神】发下米游社全部地图探索度长截图",
+      "is_read": true
+    },
+    {
+      "text": "【崩铁】发下米游社主页截图（可以看见战利品开启总数的）",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397732886175748",
+      "block": "【崩铁】发下米游社主页截图（可以看见战利品开启总数的）",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "【崩铁】发下米游社主页截图（可以看见战利品开启总数的）",
+      "is_read": true
+    },
+    {
+      "sender": "bot",
+      "content": "好的，那先这样，有需要我再联系您。",
+      "text": "好的，那先这样，有需要我再联系您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-21 10:47:18",
+      "time": "10:47",
+      "job_name": "兼职·线上兼职游戏打手  可兼职可居家15-35元/时武汉查看职位",
+      "isFriend": false,
+      "mid": "398998086303745"
+    },
+    {
+      "text": "嗯嗯",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398998170218505",
+      "block": "嗯嗯",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "嗯嗯",
+      "is_read": true
+    },
+    {
+      "sender": "bot",
+      "content": "好嘞，先不打扰您。",
+      "text": "好嘞，先不打扰您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-21 14:12:59",
+      "time": "14:12",
+      "job_name": "兼职·线上兼职游戏打手  可兼职可居家15-35元/时武汉查看职位",
+      "isFriend": false,
+      "mid": "399048633966592"
+    },
+    {
+      "text": "好的",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "399048686157825",
+      "block": "好的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的",
+      "is_read": true
+    },
+    {
+      "sender": "bot",
+      "content": "嗯嗯，您忙~",
+      "text": "嗯嗯，您忙~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-21 14:14:03",
+      "time": "14:14",
+      "job_name": "兼职·线上兼职游戏打手  可兼职可居家15-35元/时武汉查看职位",
+      "isFriend": false,
+      "mid": "399048897966081"
+    },
+    {
+      "sender": "bot",
+      "content": "游戏这块我不玩，截图给不了哈。我主要找线上数据标注、数据分析这类的，有这类岗跟我说一声",
+      "text": "游戏这块我不玩，截图给不了哈。我主要找线上数据标注、数据分析这类的，有这类岗跟我说一声",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 12:47:54",
+      "time": "12:47",
+      "job_name": "兼职·线上兼职游戏打手  可兼职可居家15-35元/时武汉查看职位",
+      "isFriend": false,
+      "mid": "400089398550528"
+    },
+    {
+      "text": "嗯嗯",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "400089871462400",
+      "block": "嗯嗯",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "嗯嗯",
+      "is_read": true
+    },
+    {
+      "sender": "bot",
+      "content": "嗯嗯，那您有合适的岗再喊我~",
+      "text": "嗯嗯，那您有合适的岗再喊我~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-24 12:50:43",
+      "time": "12:50",
+      "job_name": "兼职·线上兼职游戏打手  可兼职可居家15-35元/时武汉查看职位",
+      "isFriend": false,
+      "mid": "400090089103363"
+    },
+    {
+      "sender": "bot",
+      "content": "好嘞，先不打扰您了，有需要再联系~",
+      "text": "好嘞，先不打扰您了，有需要再联系~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-24 13:11:03",
+      "time": "13:11",
+      "job_name": "兼职·线上兼职游戏打手  可兼职可居家15-35元/时武汉查看职位",
+      "isFriend": false
     }
   ],
-  "updated_at": "2026-10-10 08:05:43",
+  "updated_at": "2026-10-29 12:59:47",
   "unread_on_boss": 0
 }

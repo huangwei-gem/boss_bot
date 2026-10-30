@@ -68,8 +68,77 @@
       "job_name": "兼职·莆田方言 ASR 标注兼职（线上办公）15-25元/时莆田查看职位",
       "isFriend": false,
       "mid": "394424035553792"
+    },
+    {
+      "sender": "bot",
+      "content": "周先生您好，之前聊的兼职·莆田方言 ASR 标注兼职（线上办公）15-25元/时莆田查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "周先生您好，之前聊的兼职·莆田方言 ASR 标注兼职（线上办公）15-25元/时莆田查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 12:38:47",
+      "time": "12:38",
+      "job_name": "兼职·莆田方言 ASR 标注兼职（线上办公）15-25元/时莆田查看职位",
+      "isFriend": false,
+      "mid": "395132636582403"
+    },
+    {
+      "text": "您掌握方言吗？",
+      "time": "10-10 12:59",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395137765372417",
+      "block": "10-10 12:59 您掌握方言吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您掌握方言吗？"
+    },
+    {
+      "text": "莆田目前需求莆仙兴化片：荔城、城厢、涵江、秀屿、仙游，不知道您是否满足需求",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395137778418176",
+      "block": "莆田目前需求莆仙兴化片：荔城、城厢、涵江、秀屿、仙游，不知道您是否满足需求",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "莆田目前需求莆仙兴化片：荔城、城厢、涵江、秀屿、仙游，不知道您是否满足需求"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您详细说明区域需求。我确实不掌握莆田方言，无法满足核心的诵读要求。理解您的岗位需要，祝您尽快招到合适的候选人。",
+      "text": "您好，感谢您详细说明区域需求。我确实不掌握莆田方言，无法满足核心的诵读要求。理解您的岗位需要，祝您尽快招到合适的候选人。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-16 04:10:01",
+      "time": "04:10",
+      "job_name": "兼职·莆田方言 ASR 标注兼职（线上办公）15-25元/时莆田查看职位",
+      "isFriend": false,
+      "mid": "397130963153409"
+    },
+    {
+      "sender": "bot",
+      "content": "周先生您好，重庆沐晨人工智能科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "周先生您好，重庆沐晨人工智能科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 13:56:27",
+      "time": "13:56",
+      "job_name": "兼职·莆田方言 ASR 标注兼职（线上办公）15-25元/时莆田查看职位",
+      "isFriend": false,
+      "mid": "397628981056004"
     }
   ],
-  "updated_at": "2026-10-09 22:54:37",
+  "updated_at": "2026-10-23 14:30:07",
   "unread_on_boss": 0
 }

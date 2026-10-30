@@ -1,0 +1,22 @@
+{
+  "chat_name": "龙维",
+  "chat_id": "龙维#抱朴园",
+  "account_index": 0,
+  "job_name": "高级数据开发工程师10-15K长沙查看职位",
+  "company": "抱朴园",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "14:37",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397638958007043",
+      "block": "14:37 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-23 14:03:49"
+}

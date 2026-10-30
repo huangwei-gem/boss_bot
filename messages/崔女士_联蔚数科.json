@@ -2,7 +2,7 @@
   "chat_name": "崔女士",
   "chat_id": "崔女士#联蔚数科",
   "account_index": 0,
-  "job_name": "兼职·数据分析师/汽车7000-14000元/月上海查看职位",
+  "job_name": "兼职·数据分析师/汽车7000-14000元/月上海",
   "company": "联蔚数科",
   "messages": [
     {
@@ -16,7 +16,35 @@
       "sender": "me",
       "kind": "bubble",
       "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "您不太适合我这个职位，希望您早日找到满意的工作。",
+      "time": "11:35",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395116954723075",
+      "block": "11:35 您不太适合我这个职位，希望您早日找到满意的工作。",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您不太适合我这个职位，希望您早日找到满意的工作。"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，祝您招聘顺利~",
+      "text": "好的，感谢您的时间，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-10 11:37:39",
+      "time": "11:37",
+      "job_name": "兼职·数据分析师/汽车7000-14000元/月上海查看职位",
+      "isFriend": false,
+      "mid": "395117615600386"
     }
   ],
-  "updated_at": "2026-10-08 15:22:41"
+  "updated_at": "2026-10-25 07:48:51",
+  "unread_on_boss": 0
 }

@@ -98,8 +98,20 @@
       "job_name": "零售管培生2027届3-4K长沙查看职位",
       "isFriend": false,
       "mid": "394510222180865"
+    },
+    {
+      "text": "好的，没事",
+      "time": "11:03",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395109134287361",
+      "block": "11:03 好的，没事",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的，没事"
     }
   ],
-  "updated_at": "2026-10-10 01:59:35",
+  "updated_at": "2026-10-24 14:33:20",
   "unread_on_boss": 0
 }

@@ -1,0 +1,35 @@
+{
+  "chat_name": "胡女士",
+  "chat_id": "胡女士#百胜",
+  "account_index": 1,
+  "job_name": "加盟业务数据分析15-20K上海查看职位",
+  "company": "百胜",
+  "messages": [
+    {
+      "text": "",
+      "time": "10-10 01:10",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "394963503596033",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我对加盟业务数据分析岗位很感兴趣。我有统计学本科背景，熟练使用Excel、SQL和Python进行数据分析，也有数据标注和AI训练经验。方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394963612275200",
+      "block": "送达 您好，我对加盟业务数据分析岗位很感兴趣。我有统计学本科背景，熟练使用Excel、SQL和Python进行数据分析，也有数据标注和AI训练经验。方便的话我把简历发您细聊。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我对加盟业务数据分析岗位很感兴趣。我有统计学本科背景，熟练使用Excel、SQL和Python进行数据分析，也有数据标注和AI训练经验。方便的话我把简历发您细聊。"
+    }
+  ],
+  "updated_at": "2026-10-23 15:39:07"
+}

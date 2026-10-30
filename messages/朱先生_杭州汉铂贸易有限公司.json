@@ -101,9 +101,52 @@
       "timestamp": "2026-10-09 11:45:44",
       "time": "11:45",
       "job_name": "兼职·达播商务BD（可线上）3000-7000元/月杭州查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394765695685377"
+    },
+    {
+      "sender": "bot",
+      "content": "朱先生您好，杭州汉铂贸易有限公司这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "朱先生您好，杭州汉铂贸易有限公司这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 11:52:00",
+      "time": "11:52",
+      "job_name": "兼职·达播商务BD（可线上）3000-7000元/月杭州查看职位",
+      "isFriend": false,
+      "mid": "395121141060353"
+    },
+    {
+      "text": "非常感谢您的应聘，但是我们在寻找的候选人与您工作背景不完全相符。祝您在BOSS直聘找到更好的机会！",
+      "time": "昨天 09:19",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396853139604228",
+      "block": "昨天 09:19 非常感谢您的应聘，但是我们在寻找的候选人与您工作背景不完全相符。祝您在BOSS直聘找到更好的机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "非常感谢您的应聘，但是我们在寻找的候选人与您工作背景不完全相符。祝您在BOSS直聘找到更好的机会！"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-16 10:47:09",
+      "time": "10:47",
+      "job_name": "兼职·达播商务BD（可线上）3000-7000元/月杭州查看职位",
+      "isFriend": false,
+      "mid": "397228567692032"
     }
   ],
-  "updated_at": "2026-10-09 11:45:44",
+  "updated_at": "2026-10-23 14:19:38",
   "unread_on_boss": 0
 }

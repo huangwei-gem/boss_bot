@@ -1,0 +1,92 @@
+{
+  "chat_name": "邓女士",
+  "chat_id": "邓女士#景得科技有限公司",
+  "account_index": 1,
+  "job_name": "兼职·AI评测标注员（网页交互方向｜线上兼职）50-75元/时南宁查看职位",
+  "company": "景得科技有限公司",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，有AI训练数据质检和多模态标注经验，熟悉提示词优化与标注流程搭建，这个网页交互方向标注岗位与我的技能很契合，方便的话我把简历发您细聊",
+      "time": "11:53",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397952541086209",
+      "block": "11:53 送达 您好，我是统计学专业在读生，有AI训练数据质检和多模态标注经验，熟悉提示词优化与标注流程搭建，这个网页交互方向标注岗位与我的技能很契合，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，有AI训练数据质检和多模态标注经验，熟悉提示词优化与标注流程搭建，这个网页交互方向标注岗位与我的技能很契合，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "请问有做过代码标注的工作吗？",
+      "time": "昨天 07:42",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398244769751553",
+      "block": "昨天 07:42 请问有做过代码标注的工作吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "请问有做过代码标注的工作吗？"
+    },
+    {
+      "sender": "bot",
+      "content": "有的，我做过标注、数据处理这类项目：文本/图像/语音标注都做过，数据整理和分析也用 Excel/SQL/Python 跑过，AI 工具日常都在用。方便的话我发份简历给您细聊~",
+      "text": "有的，我做过标注、数据处理这类项目：文本/图像/语音标注都做过，数据整理和分析也用 Excel/SQL/Python 跑过，AI 工具日常都在用。方便的话我发份简历给您细聊~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-20 16:17:14",
+      "time": "16:17",
+      "job_name": "兼职·AI评测标注员（网页交互方向｜线上兼职）50-75元/时南宁查看职位",
+      "isFriend": false,
+      "mid": "398725283435013"
+    },
+    {
+      "text": "非常抱歉，暂时该项目遇到了点问题，暂未启动，如有需要我再联系您！感谢",
+      "time": "昨天 19:23",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "399478879371777",
+      "block": "昨天 19:23 非常抱歉，暂时该项目遇到了点问题，暂未启动，如有需要我再联系您！感谢",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "非常抱歉，暂时该项目遇到了点问题，暂未启动，如有需要我再联系您！感谢"
+    },
+    {
+      "sender": "bot",
+      "content": "好嘞，有需要再联系哈~",
+      "text": "好嘞，有需要再联系哈~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-23 11:18:39",
+      "time": "11:18",
+      "job_name": "兼职·AI评测标注员（网页交互方向｜线上兼职）50-75元/时南宁查看职位",
+      "isFriend": false,
+      "mid": "399713572536833"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，那我先不打扰啦，后续有需要您随时找我。",
+      "text": "好的，那我先不打扰啦，后续有需要您随时找我。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 12:01:58",
+      "time": "12:01",
+      "job_name": "兼职·AI评测标注员（网页交互方向｜线上兼职）50-75元/时南宁查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-24 12:01:58",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,8 @@
+[
+  {"do": "open"},
+  {"do": "set", "fields": {"2": "风景园林"}},
+  {"do": "js", "limit": 1200, "code": "(() => {\n  const clean = (s) => (s || '').replace(/\\u00a0/g, ' ').trim();\n  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };\n  return [...document.querySelectorAll('input,textarea,[contenteditable=true]')].filter(vis)\n    .map((e,i) => i + ':' + (e.placeholder||'').slice(0,18) + '=' + clean(e.value||e.innerText).slice(0,40)).slice(0,12);\n})()"},
+  {"do": "clickka", "ka": "resume_form_education_ok", "wait": 3.0},
+  {"do": "reload", "sec": 8},
+  {"do": "js", "limit": 900, "code": "(() => {\n  const clean = (s) => (s || '').replace(/\\u00a0/g, ' ').trim();\n  const b = document.getElementById('education');\n  return b ? clean(b.innerText).slice(0, 300) : 'NO BLOCK';\n})()"}
+]

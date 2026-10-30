@@ -1,0 +1,51 @@
+{
+  "chat_name": "张婷婷",
+  "chat_id": "张婷婷#合合信息",
+  "account_index": 1,
+  "job_name": "27届校招-AI数据分析师18-22K·16薪上海查看职位",
+  "company": "合合信息",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业学生，有数据标注和AI辅助分析经验，熟悉大模型提示词设计与效果评估，方便的话我把简历发您细聊",
+      "time": "14:37",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397639122473475",
+      "block": "14:37 送达 您好，我是统计学专业学生，有数据标注和AI辅助分析经验，熟悉大模型提示词设计与效果评估，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业学生，有数据标注和AI辅助分析经验，熟悉大模型提示词设计与效果评估，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "很抱歉，经过我们的评估，您的技能和经验与我们当前的职位要求不完全匹配。祝您在BOSS直聘找到满意的工作！",
+      "time": "10-18 23:29",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398123682460160",
+      "block": "10-18 23:29 很抱歉，经过我们的评估，您的技能和经验与我们当前的职位要求不完全匹配。祝您在BOSS直聘找到满意的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "很抱歉，经过我们的评估，您的技能和经验与我们当前的职位要求不完全匹配。祝您在BOSS直聘找到满意的工作！"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-20 16:17:03",
+      "time": "16:17",
+      "job_name": "27届校招-AI数据分析师18-22K·16薪上海查看职位",
+      "isFriend": false,
+      "mid": "398725229961730"
+    }
+  ],
+  "updated_at": "2026-10-23 13:25:02",
+  "unread_on_boss": 0
+}

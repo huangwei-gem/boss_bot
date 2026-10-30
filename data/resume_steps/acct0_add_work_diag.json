@@ -1,0 +1,111 @@
+[
+ {
+  "do": "open"
+ },
+ {
+  "do": "setph",
+  "wait": 1.5,
+  "specs": [
+   {
+    "ph": "北京华品博睿",
+    "value": "天鹅到家"
+   },
+   {
+    "lbl": "工作内容",
+    "value": "核心工作\n1.参与全链路智能招聘管理系统从0到1设计与落地，覆盖岗位发布、简历收集、AI解析匹配、AI能力维度初筛（0-5分打分）、面试评估、Offer发放、入职与试用期管理全流程；负责AI初筛规则、简历智能筛选、批量重新评估等产品方案设计。\n2.将招聘、绩效考核、试用期管理、薪资定级、离职流程等人事业务线上化、智能化，设计并沉淀招聘沟通话术库，参与AI外呼产品方案与话术设计，推动“人事+AI”场景落地。\n3.设计飞书多维表格数据同步、机器人卡片消息（面试提醒、招聘日报）等集成方案，实现招聘数据双源聚合与招聘日报自动生成。\n4.负责JD生成、简历解析、AI初筛、招聘日报等AI提示词模板的设计与持续优化，参与模型选型与多层降级方案设计（DeepSeek / Llama 等）。\n关键成果\n1.招聘管理系统已在生产环境稳定运行，AI初筛实现批量自动化评估（单批覆盖数百份简历）。\n2.构建7级招聘漏斗与HRBP效能看板（周报/月报），支撑招聘决策。\n3.面试提醒、招聘日报等机器人消息与业务筛选链接（面试官专属、Token鉴权）上线，实现招聘流程线上闭环。"
+   }
+  ]
+ },
+ {
+  "do": "openfield",
+  "field": {
+   "ph": "选择职位名称"
+  },
+  "wait": 3.0
+ },
+ {
+  "do": "js",
+  "limit": 600,
+  "code": "(() => {\n  const e = document.querySelector('.position-dialog input') || [...document.querySelectorAll('input')].find((x) => (x.placeholder || '').includes('请输入职位关键词'));\n  if (!e) return 'NO PANEL SEARCH INPUT';\n  e.focus();\n  const s = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;\n  s.call(e, ''); e.dispatchEvent(new Event('input', {bubbles: true}));\n  s.call(e, '人事实习生'); e.dispatchEvent(new Event('input', {bubbles: true}));\n  return '筛了 ' + e.value;\n})()",
+  "wait": 2.5
+ },
+ {
+  "do": "js",
+  "limit": 600,
+  "code": "(() => {\n  const clean = (s) => (s || '').trim();\n  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };\n  const li = [...document.querySelectorAll('.position-dialog li, li.ui-dropmenu-list-item')].filter((x) => vis(x) && clean(x.innerText).includes('人事实习生'))[0];\n  if (!li) return 'NO OPTION 人事实习生';\n  li.click();\n  return '点了选项: ' + clean(li.innerText).replace(/\\n/g, ' ').slice(0, 50);\n})()",
+  "wait": 2.0
+ },
+ {
+  "do": "js",
+  "limit": 600,
+  "code": "(() => {\n  const clean = (s) => (s || '').trim();\n  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };\n  const inp = document.querySelector('input[ka=resume_form_edit_position]');\n  if (inp && clean(inp.value)) return '职位名已选中: ' + clean(inp.value);\n  const d = [...document.querySelectorAll('.position-dialog')].filter(vis)[0];\n  const btn = d && [...d.querySelectorAll('*')].filter((x) => clean(x.innerText) === '确定' && vis(x) && x.children.length === 0)[0];\n  if (!btn) return '职位名还是空，且没找到确定按钮';\n  btn.click();\n  return '点了确定，现值=' + (inp ? clean(inp.value) : '读不到');\n})()",
+  "wait": 2.0
+ },
+ {
+  "do": "openfield",
+  "field": {
+   "ph": "选择在职时间",
+   "nth": 0
+  },
+  "wait": 2.0
+ },
+ {
+  "do": "js",
+  "limit": 400,
+  "code": "(() => {\n  const clean = (s) => (s || '').replace(/\\s/g, '');\n  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };\n  const c = [...document.querySelectorAll('.cell')].filter((x) => vis(x) && clean(x.innerText) === '2026' && !/disabled/.test(x.className))[0];\n  if (!c) return 'NO YEAR 2026';\n  c.click(); return '点了年 2026';\n})()",
+  "wait": 1.5
+ },
+ {
+  "do": "js",
+  "limit": 400,
+  "code": "(() => {\n  const clean = (s) => (s || '').replace(/\\s/g, '');\n  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };\n  const c = [...document.querySelectorAll('.cell')].filter((x) => vis(x) && ['五月', '5月'].includes(clean(x.innerText)) && !/disabled/.test(x.className))[0];\n  if (!c) return 'NO MONTH 五月';\n  c.click(); return '点了月 五月';\n})()",
+  "wait": 2.0
+ },
+ {
+  "do": "openfield",
+  "field": {
+   "ph": "选择在职时间",
+   "nth": 1
+  },
+  "wait": 2.0
+ },
+ {
+  "do": "js",
+  "limit": 400,
+  "code": "(() => {\n  const clean = (s) => (s || '').replace(/\\s/g, '');\n  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };\n  const c = [...document.querySelectorAll('.cell')].filter((x) => vis(x) && clean(x.innerText) === '2026' && !/disabled/.test(x.className))[0];\n  if (!c) return 'NO YEAR 2026';\n  c.click(); return '点了年 2026';\n})()",
+  "wait": 1.5
+ },
+ {
+  "do": "js",
+  "limit": 400,
+  "code": "(() => {\n  const clean = (s) => (s || '').replace(/\\s/g, '');\n  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };\n  const c = [...document.querySelectorAll('.cell')].filter((x) => vis(x) && ['九月', '9月'].includes(clean(x.innerText)) && !/disabled/.test(x.className))[0];\n  if (!c) return 'NO MONTH 九月';\n  c.click(); return '点了月 九月';\n})()",
+  "wait": 2.0
+ },
+ {
+  "do": "checkph",
+  "field": {
+   "lbl": "本段经历是实习经历"
+  }
+ },
+ {
+  "do": "js",
+  "limit": 800,
+  "code": "(() => {\n  const clean = (s) => (s || '').trim();\n  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };\n  const all = [...document.querySelectorAll('input,textarea')].filter(vis);\n  const 问 = [];\n  const 公司 = all.find((x) => (x.placeholder || '').includes('北京华品博睿'));\n  const 职位 = all.find((x) => (x.placeholder || '').includes('选择职位名称'));\n  const 时间 = all.filter((x) => (x.placeholder || '').includes('选择在职时间'));\n  const 内容 = all.filter((x) => x.tagName === 'TEXTAREA')[0];\n  const 勾 = [...document.querySelectorAll('input[type=checkbox]')].find((x) => (((x.closest('div[class*=form-item]') || x.parentElement || {}).innerText) || '').includes('实习经历'));\n  if (!公司 || clean(公司.value) !== '天鹅到家') 问.push('公司=' + (公司 ? clean(公司.value) : '没有这个框'));\n  if (!职位 || !clean(职位.value)) 问.push('职位名=空');\n  if (时间.length < 2 || !clean(时间[0].value) || !clean(时间[1].value)) 问.push('时间=' + 时间.map((x) => clean(x.value)).join('~'));\n  if (!内容 || 内容.value.length < 100) 问.push('工作内容=' + (内容 ? 内容.value.length : 0) + '字');\n  if (!勾 || !勾.checked) 问.push('实习经历没勾');\n  if (问.length) return '不保存，缺：' + 问.join('；') + '｜已读到：职位=' + (职位 ? clean(职位.value) : '') + ' 时间=' + 时间.map((x) => clean(x.value)).join('~');\n  const ok = document.querySelector('[ka=resume_form_work_ok]');\n  if (!ok) return '全对但没找到完成按钮';\n  ok.click();\n  return '闸门全过，已点完成：' + clean(公司.value) + ' / ' + clean(职位.value) + ' / ' + clean(时间[0].value) + '-' + clean(时间[1].value) + ' / 正文' + 内容.value.length + '字 / 实习已勾';\n})()",
+  "wait": 4.0
+ },
+ {
+  "do": "js",
+  "limit": 3000,
+  "wait": 2.0,
+  "code": "(() => {\n  const clean = (s) => (s || '').trim();\n  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };\n  const buzz = [...document.querySelectorAll('div,span,p')].filter((x) => /toast|msg|error|tip|warn|dialog/i.test((x.className||'').toString()) && vis(x) && clean(x.innerText).length > 0 && clean(x.innerText).length < 120 && x.children.length === 0);\n  const seen = []; const out = [];\n  for (const x of buzz) { const t = clean(x.innerText); if (seen.includes(t)) continue; seen.push(t); out.push((x.className||'').toString().slice(0,26) + ':' + t); }\n  const 公司框 = [...document.querySelectorAll('input')].filter((x) => vis(x) && (x.placeholder||'').includes('北京华品博睿'))[0];\n  const 建议 = [...document.querySelectorAll('.ui-dropmenu-list-item')].filter(vis).map((x)=>clean(x.innerText).slice(0,30)).slice(0,6);\n  const b = document.getElementById('history');\n  return {提示: out.slice(0,10), 表单还开着: !!公司框, 公司框现值: 公司框 ? 公司框.value : '(没了)', 联想还挂着: 建议, 板块文本: b ? clean(b.innerText).slice(0,420) : 'NO BLOCK'};\n})()"
+ },
+ {
+  "do": "reload",
+  "sec": 8
+ },
+ {
+  "do": "js",
+  "limit": 900,
+  "code": "(() => {\n  const clean = (s) => (s || '').replace(/\\u00a0/g, ' ').trim();\n  const b = document.getElementById('history');\n  return b ? clean(b.innerText).slice(0, 700) : 'NO BLOCK';\n})()"
+ }
+]

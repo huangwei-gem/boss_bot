@@ -92,7 +92,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "393392556229123",
-      "block": "14:38 对方已查看了您的附件简历",
+      "block": "对方已查看了您的附件简历",
       "sender": "hr",
       "kind": "system",
       "content": "对方已查看了您的附件简历",
@@ -152,9 +152,38 @@
       "timestamp": "2026-10-10 07:34:40",
       "time": "07:34",
       "job_name": "兼职·线上国际学科/教师国际竞赛教师100-300元/时东营查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395057897157120"
+    },
+    {
+      "text": "",
+      "time": "昨天 15:38",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396946245472771",
+      "block": "我想要一份您的附件简历，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-16 04:59:26",
+      "time": "04:59",
+      "job_name": "兼职·线上国际学科/教师国际竞赛教师100-300元/时东营查看职位",
+      "isFriend": false,
+      "mid": "397143109603840"
     }
   ],
-  "updated_at": "2026-10-10 07:34:40",
+  "updated_at": "2026-10-23 14:54:49",
   "unread_on_boss": 0
 }

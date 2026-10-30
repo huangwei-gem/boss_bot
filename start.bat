@@ -1,91 +1,31 @@
 @echo off
-chcp 65001 >nul
-title Boss直聘智能投递助手
-
-echo ============================================
-echo   Boss直聘智能投递助手 - 一键启动
-echo ============================================
-echo.
-
+REM ===================================================================
+REM Keep this file ASCII-only. Measured 2026-10-23 on this machine:
+REM once the console is on codepage 65001, cmd mis-advances through a
+REM UTF-8 .bat that contains Chinese ANYWHERE - even inside REM lines.
+REM SYMPTOMS SEEN: "set PYTHONUTF8=1" executed as 'YTHONUTF8', fragments of
+REM comments ran as commands ("'lai, bing hui du...' is not recognized"),
+REM and "goto" landed on the wrong label, so the launcher died at step 2/5
+REM and the panel never started.
+REM All Chinese messages and all decisions live in
+REM tools\start_accounts.py (UTF-8, launched with PYTHONUTF8=1).
+REM ===================================================================
+title BOSS Zhipin Bot
 cd /d "%~dp0"
+set PYTHONUTF8=1
 
-echo [1/6] 检查 Python 环境...
-python --version >nul 2>&1
-if errorlevel 1 (
-    echo ✗ 未找到 Python，请先安装 Python 3.10+
-    echo   下载地址: https://www.python.org/downloads/
-    pause
-    exit /b 1
-)
-python --version
+where python >nul 2>&1
+if not errorlevel 1 goto run
+echo Python was not found. Install Python 3.10+ first:
+echo   https://www.python.org/downloads/
+goto end
 
+:run
+REM No kill_port here on purpose: it force-kills whatever owns the panel port.
+REM The panel already has a single-instance guard, so the launcher only
+REM checks whether someone answers on that port and never touches it.
+python tools\start_accounts.py --launch
+
+:end
 echo.
-echo [2/6] 检查依赖包...
-python -c "import flask, flask_socketio, DrissionPage, openai, openpyxl" 2>nul
-if errorlevel 1 (
-    echo ⚠ 缺少依赖包，正在安装...
-    pip install -r requirements.txt
-    if errorlevel 1 (
-        echo ✗ 依赖安装失败，请手动运行: pip install -r requirements.txt
-        pause
-        exit /b 1
-    )
-)
-echo ✓ 依赖包完整
-
-echo.
-echo [3/6] 初始化配置...
-if not exist "bot_config.json" (
-    echo ⚠ 首次运行，创建默认配置...
-    python -c "from boss_bot.unified_config import UnifiedConfig; UnifiedConfig.load().save()"
-)
-if not exist "user_profile.json" (
-    echo ⚠ 创建默认用户画像...
-    python -c "import json; json.dump({}, open('user_profile.json','w',encoding='utf-8'))"
-)
-echo ✓ 配置就绪
-
-echo.
-echo [4/6] 检查端口占用...
-python kill_port.py 5000
-if errorlevel 1 (
-    echo ✗ 端口 5000 无法释放，请手动关闭后重试
-    pause
-    exit /b 1
-)
-echo ✓ 端口 5000 可用
-
-echo.
-echo [5/6] 检查项目结构...
-if not exist "flask-version\app.py" (
-    echo ✗ 未找到 flask-version\app.py，项目结构不完整
-    echo   请确保 flask-version 目录存在且包含 app.py
-    pause
-    exit /b 1
-)
-echo ✓ 项目结构完整
-
-echo.
-echo [6/6] 启动 Web 界面...
-echo.
-echo ============================================
-echo   访问地址: http://localhost:5000
-echo   按 Ctrl+C 停止服务
-echo ============================================
-echo.
-
-REM 浏览器由 app.py 启动后自行打开（webbrowser），不再额外开一个 cmd 窗口
-cd flask-version
-python app.py
-
-REM Flask正常退出（Ctrl+C）的errorlevel是1，不是真正的错误
-if errorlevel 2 (
-    echo.
-    echo ✗ 应用启动失败，请检查错误信息
-    pause
-) else (
-    echo.
-    echo 服务已停止
-)
-
 pause

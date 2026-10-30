@@ -2,7 +2,7 @@
   "chat_name": "彭秀丽",
   "chat_id": "彭秀丽#塔业咨询",
   "account_index": 0,
-  "job_name": "兼职·线上初高中数理化英一对一老师50-100元/时长沙查看职位",
+  "job_name": "兼职·线上初高中数理化英一对一老师50-100元/时长沙",
   "company": "塔业咨询",
   "messages": [
     {
@@ -76,7 +76,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "394755811435266",
-      "block": "11:05 附件简历请求已发送",
+      "block": "附件简历请求已发送",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -148,6 +148,6 @@
       "content": "您是否有单独带过学生授课的经验呢？"
     }
   ],
-  "updated_at": "2026-10-10 06:52:13",
+  "updated_at": "2026-10-25 08:17:35",
   "unread_on_boss": 0
 }

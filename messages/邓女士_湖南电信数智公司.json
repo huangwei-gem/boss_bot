@@ -1,0 +1,50 @@
+{
+  "chat_name": "邓女士",
+  "chat_id": "邓女士#湖南电信数智公司",
+  "account_index": 0,
+  "job_name": "大数据开发工程师（数据仓库方向）13-18K·13薪长沙查看职位",
+  "company": "湖南电信数智公司",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "03:56",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395004165350147",
+      "block": "03:56 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "不好意思，这个岗位需要3年以上经验，您的简历与我们的岗位不太匹配，祝您早日找到满意的工作。",
+      "time": "10:36",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395102459155203",
+      "block": "10:36 不好意思，这个岗位需要3年以上经验，您的简历与我们的岗位不太匹配，祝您早日找到满意的工作。",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，这个岗位需要3年以上经验，您的简历与我们的岗位不太匹配，祝您早日找到满意的工作。"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的反馈，祝您招聘顺利~",
+      "text": "理解，感谢您的反馈，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-16 13:22:02",
+      "time": "13:22",
+      "job_name": "大数据开发工程师（数据仓库方向）13-18K·13薪长沙查看职位",
+      "isFriend": false,
+      "mid": "397266633261829"
+    }
+  ],
+  "updated_at": "2026-10-23 14:17:30",
+  "unread_on_boss": 0
+}

@@ -2,7 +2,7 @@
   "chat_name": "李先生",
   "chat_id": "李先生#青岛云裁智能科技",
   "account_index": 0,
-  "job_name": "兼职·数据标注-居家办公兼职20-40元/时青岛查看职位",
+  "job_name": "兼职·数据标注-居家办公兼职20-40元/时青岛",
   "company": "青岛云裁智能科技",
   "messages": [
     {
@@ -27,7 +27,8 @@
       "block": "01:14 方便发一份简历过来吗？",
       "sender": "hr",
       "kind": "bubble",
-      "content": "方便发一份简历过来吗？"
+      "content": "方便发一份简历过来吗？",
+      "is_read": true
     },
     {
       "text": "",
@@ -40,7 +41,8 @@
       "sender": "hr",
       "kind": "card",
       "content": "",
-      "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意"
+      "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -67,7 +69,8 @@
       "sender": "hr",
       "kind": "card",
       "content": "",
-      "card_text": "您的附件简历 数据分析简... 已发送给Boss点击查看附件"
+      "card_text": "您的附件简历 数据分析简... 已发送给Boss点击查看附件",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -94,19 +97,8 @@
       "block": "12:20 这个是相关培训网站，面试前先完成新手课程与图片标注内容，3D课程尽量完成。你什么时候方便面试？",
       "sender": "hr",
       "kind": "bubble",
-      "content": "这个是相关培训网站，面试前先完成新手课程与图片标注内容，3D课程尽量完成。你什么时候方便面试？"
-    },
-    {
-      "text": "",
-      "time": "",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "394066379784961",
-      "block": "",
-      "sender": "hr",
-      "kind": "bubble",
-      "content": ""
+      "content": "这个是相关培训网站，面试前先完成新手课程与图片标注内容，3D课程尽量完成。你什么时候方便面试？",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -133,7 +125,8 @@
       "block": "18:33 明天下午方便吗",
       "sender": "hr",
       "kind": "bubble",
-      "content": "明天下午方便吗"
+      "content": "明天下午方便吗",
+      "is_read": true
     },
     {
       "text": "",
@@ -146,7 +139,8 @@
       "sender": "hr",
       "kind": "card",
       "content": "",
-      "card_text": "青岛云裁智能科技邀请您现场面试，前往查看，确认是否接受 立即查看"
+      "card_text": "青岛云裁智能科技邀请您现场面试，前往查看，确认是否接受 立即查看",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -169,7 +163,7 @@
       "is_mine": true,
       "is_system": false,
       "mid": "394161484026625",
-      "block": "18:47 拒绝了面试邀请",
+      "block": "拒绝了面试邀请",
       "sender": "me",
       "kind": "card",
       "content": "",
@@ -185,7 +179,8 @@
       "block": "还有什么问题",
       "sender": "hr",
       "kind": "bubble",
-      "content": "还有什么问题"
+      "content": "还有什么问题",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -212,7 +207,8 @@
       "block": "你是在长沙？",
       "sender": "hr",
       "kind": "bubble",
-      "content": "你是在长沙？"
+      "content": "你是在长沙？",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -239,7 +235,8 @@
       "block": "可以",
       "sender": "hr",
       "kind": "bubble",
-      "content": "可以"
+      "content": "可以",
+      "is_read": true
     },
     {
       "text": "那就明天下午线上面试可以吗",
@@ -251,7 +248,8 @@
       "block": "那就明天下午线上面试可以吗",
       "sender": "hr",
       "kind": "bubble",
-      "content": "那就明天下午线上面试可以吗"
+      "content": "那就明天下午线上面试可以吗",
+      "is_read": true
     },
     {
       "text": "",
@@ -264,7 +262,8 @@
       "sender": "hr",
       "kind": "card",
       "content": "",
-      "card_text": "青岛云裁智能科技邀请您线上面试，前往查看，确认是否接受 立即查看"
+      "card_text": "青岛云裁智能科技邀请您线上面试，前往查看，确认是否接受 立即查看",
+      "is_read": true
     },
     {
       "text": "",
@@ -273,11 +272,12 @@
       "is_mine": false,
       "is_system": true,
       "mid": "394444806099714",
-      "block": "昨天 14:00 面试超时未接受",
+      "block": "面试超时未接受",
       "sender": "hr",
       "kind": "card",
       "content": "",
-      "card_text": "面试超时未接受"
+      "card_text": "面试超时未接受",
+      "is_read": true
     },
     {
       "text": "这边什么时间方便",
@@ -289,7 +289,8 @@
       "block": "昨天 22:44 这边什么时间方便",
       "sender": "hr",
       "kind": "bubble",
-      "content": "这边什么时间方便"
+      "content": "这边什么时间方便",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -318,9 +319,216 @@
       "timestamp": "2026-10-10 02:03:51",
       "time": "02:03",
       "job_name": "兼职·数据标注-居家办公兼职20-40元/时青岛查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394976593142529"
+    },
+    {
+      "sender": "bot",
+      "content": "李先生您好，之前聊的兼职·数据标注-居家办公兼职20-40元/时青岛查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "李先生您好，之前聊的兼职·数据标注-居家办公兼职20-40元/时青岛查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 16:19:55",
+      "time": "16:19",
+      "job_name": "兼职·数据标注-居家办公兼职20-40元/时青岛查看职位",
+      "isFriend": false,
+      "mid": "395186988032770"
+    },
+    {
+      "text": "可以进行线上面试",
+      "time": "18:30",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395219021009667",
+      "block": "18:30 可以进行线上面试",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "可以进行线上面试",
+      "is_read": true
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395219181269761",
+      "block": "青岛云裁智能科技邀请您线上面试，前往查看，确认是否接受 立即查看",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "青岛云裁智能科技邀请您线上面试，前往查看，确认是否接受 立即查看",
+      "is_read": true
+    },
+    {
+      "text": "工作日下午都可以安排面试，您看哪个时间段方便？",
+      "time": "10-10 18:36",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395220509729537",
+      "block": "10-10 18:36 已读 工作日下午都可以安排面试，您看哪个时间段方便？",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "工作日下午都可以安排面试，您看哪个时间段方便？",
+      "reply_source": "rule"
+    },
+    {
+      "text": "12日下午方便吗",
+      "time": "10-10 18:44",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395222438822657",
+      "block": "10-10 18:44 12日下午方便吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "12日下午方便吗",
+      "is_read": true
+    },
+    {
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "time": "10-10 19:01",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395226754638598",
+      "block": "10-10 19:01 已读 好的，感谢您的消息，我会尽快回复您。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "reply_source": "default"
+    },
+    {
+      "text": "明天时间方便吗",
+      "time": "10-11 21:53",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395622884098817",
+      "block": "10-11 21:53 明天时间方便吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "明天时间方便吗",
+      "is_read": true
+    },
+    {
+      "text": "",
+      "time": "10-12 11:00",
+      "isFriend": false,
+      "is_mine": false,
+      "is_system": true,
+      "mid": "395816169878275",
+      "block": "面试超时未接受",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "面试超时未接受",
+      "is_read": true
+    },
+    {
+      "text": "",
+      "time": "10-12 18:06",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395920898265858",
+      "block": "我想要和您交换微信，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换微信，您是否同意 拒绝 同意",
+      "is_read": true
+    },
+    {
+      "text": "目前有一个短期视频评分项目，内容比较简单，可以居家兼职办公，可以加我微信了解一下",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395920901300997",
+      "block": "目前有一个短期视频评分项目，内容比较简单，可以居家兼职办公，可以加我微信了解一下",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "目前有一个短期视频评分项目，内容比较简单，可以居家兼职办公，可以加我微信了解一下",
+      "is_read": true
+    },
+    {
+      "sender": "bot",
+      "content": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "text": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-16 10:51:27",
+      "time": "10:51",
+      "job_name": "兼职·数据标注-居家办公兼职20-40元/时青岛查看职位",
+      "isFriend": false,
+      "mid": "397229623026434"
+    },
+    {
+      "sender": "bot",
+      "content": "李先生您好，青岛云裁智能科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "李先生您好，青岛云裁智能科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 11:43:22",
+      "time": "11:43",
+      "job_name": "兼职·数据标注-居家办公兼职20-40元/时青岛查看职位",
+      "isFriend": false,
+      "mid": "397596274918152"
+    },
+    {
+      "text": "",
+      "time": "17:08",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397676062864128",
+      "block": "我想要和您交换微信，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换微信，您是否同意 拒绝 同意",
+      "is_read": true
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397676070085376",
+      "block": "我想要一份您的附件简历，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要一份您的附件简历，您是否同意 拒绝 同意",
+      "is_read": true
+    },
+    {
+      "text": "可以的，加一下我微信吧",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397676113654532",
+      "block": "可以的，加一下我微信吧",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "可以的，加一下我微信吧",
+      "is_read": true
     }
   ],
-  "updated_at": "2026-10-10 02:03:51",
+  "updated_at": "2026-10-29 12:59:45",
   "unread_on_boss": 0
 }

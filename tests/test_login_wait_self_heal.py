@@ -11,7 +11,6 @@ zhipin_cookies.json 的 mtime 是登录成功那一下存下的），可是没�
 把人睡着的 5 分钟当成放弃整条腿的理由，就是把这句话变成了空头承诺。
 """
 import sys
-import tempfile
 import threading
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -20,6 +19,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from tests.conftest import mk测试临时目录  # noqa: E402
 
 
 def _造循环(monkeypatch, account_index=0):
@@ -38,15 +38,19 @@ def _造循环(monkeypatch, account_index=0):
     # Cookie 路径必须落在临时目录：这条链路一旦判成登录墙就会把 Cookie 文件归档搬走，
     # 写真的文件名等于把用户那次人工登录的会话搬进 data/stale_cookies/
     # （2026-10-17 16:16 就搬走了主账号那份，靠归档原样拷回才没逼人重新登录）。
-    假cookie = Path(tempfile.mkdtemp(prefix="boss_test_cookie_")) / "zhipin_cookies.json"
+    假cookie = mk测试临时目录("cookie") / "zhipin_cookies.json"
     假cookie.write_text("[]", encoding="utf-8")
     monkeypatch.setattr(lp, "_cookie_file", lambda: str(假cookie))
     monkeypatch.setattr(lp, "_discard_stale_cookies", lambda *a, **k: None)
     monkeypatch.setattr(lp, "_ensure_login_window", lambda *a, **k: True)
     monkeypatch.setattr(lp, "_save_cookies_if_logged_in", lambda *a, **k: True)
     monkeypatch.setattr(lp, "_finish_login_window", lambda: None)
-    # 走到等待之前那段"读 Cookie 文件 + 复核会话页"要跳过：这条测试只管等待
+    # 走到等待之前那段"读 Cookie 文件 + 复核会话页"要跳过：这条测试只管等待。
+    # 2026-10-22 起复验以只读的一眼为主，所以两条读法都要打桩，`_settle_url` 也要
+    # ——不然每一眼都真等 8 秒看页面稳不稳，18 眼就是两分半（这条曾经 30 秒跑完）。
     monkeypatch.setattr(lp, "_login_state_now", lambda instance: "uncertain")
+    monkeypatch.setattr(lp, "_login_state_read", lambda instance, 早收=True: "uncertain")
+    monkeypatch.setattr(lp, "_settle_url", lambda instance, timeout=None, 早收=True: "")
     monkeypatch.setattr(lp, "_has_live_auth_cookie", lambda instance: False)
     monkeypatch.setattr(lp, "_interruptible_sleep", lambda s: None)
     return lp
@@ -102,6 +106,9 @@ class 退出等待的只有这两种Test:
     """等待只在"人叫停了"或"浏览器真没了"时结束，别的情况都得继续等。"""
 
     def test_收到停止信号立刻退出(self, monkeypatch):
+        """叫停之后一轮都不该开：2026-10-20 起复验阶段就查这个信号，
+        连"摆登录窗口 + 进等待"都省了——停机过程中喊人起床是第二种狼来了。
+        以前这里是"进等待一轮再退"，因为复验不看停止信号；现在是"根本不进等待"。"""
         lp = _造循环(monkeypatch)
         lp._stop_event.set()
         轮次 = []
@@ -109,7 +116,10 @@ class 退出等待的只有这两种Test:
                             lambda i, c: (轮次.append(1), False)[1])
 
         assert lp._handle_login() is False
-        assert len(轮次) == 1, "叫停了还要再开一轮等待就是在空转"
+        assert len(轮次) == 0, f"叫停了还要再开等待就是在空转: {len(轮次)} 轮"
+        assert lp._needs_login is False, "被叫停不该被记成这个号要人工登录"
+        assert not [m for _, m in lp.日志 if "请在浏览器中登录" in m], \
+            "停机的路上不要把登录窗口摆到桌面上"
 
     def test_运行标志被撤也要退出(self, monkeypatch):
         """面板点停止后 _running 变假，等待线程必须跟着收，不然停不干净"""
@@ -193,11 +203,10 @@ class 等的必须是自己那台浏览器Test:
         assert 结["归属"] == "说不准", 结
 
     def test_管理器把归属翻成现场(self):
-        import tempfile
         from pathlib import Path
         from boss_bot.browser_launcher import BrowserManager
         m = BrowserManager(config=None, account_index=1, port=9223,
-                           user_data_dir=str(Path(tempfile.mkdtemp()) / "account_1"))
+                           user_data_dir=str(mk测试临时目录("login_wait") / "account_1"))
         现场 = m.等登录现场(owners=[{"pid": 45228, "port": 9223,
                                     "user_data_dir": r"C:\other\temp\9223"}])
         assert 现场[0] == "窗口被别人占了", 现场
@@ -245,10 +254,9 @@ class 等的必须是自己那台浏览器Test:
     def test_配置那行要说这个号真正用的端口(self):
         """12:31:27 日志写 `[账号2] 浏览器配置: ... debug_port=9222`——那是全局偏移量。
         照着它去查"账号2 连到了哪台浏览器"会一路追到主账号身上。"""
-        import tempfile
         from boss_bot.browser_launcher import BrowserManager
         m = BrowserManager(config=None, account_index=1, port=9223,
-                           user_data_dir=str(Path(tempfile.mkdtemp()) / "account_1"))
+                           user_data_dir=str(mk测试临时目录("login_wait") / "account_1"))
         现场 = m.启动现场()
         assert "9223" in 现场 and "account_1" in 现场, 现场
         源 = (ROOT / "boss_bot" / "main_loop.py").read_text(encoding="utf-8")

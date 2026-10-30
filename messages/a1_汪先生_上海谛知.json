@@ -121,9 +121,40 @@
       "timestamp": "2026-10-10 01:56:27",
       "time": "01:56",
       "job_name": "兼职·线上兼职运营100-150元/天芜湖查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394974772777473"
+    },
+    {
+      "sender": "bot",
+      "content": "汪先生您好，之前聊的兼职·线上兼职运营100-150元/天芜湖查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "汪先生您好，之前聊的兼职·线上兼职运营100-150元/天芜湖查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-21 17:33:52",
+      "time": "17:33",
+      "job_name": "兼职·线上兼职运营100-150元/天芜湖查看职位",
+      "isFriend": false,
+      "mid": "399097988891137"
+    },
+    {
+      "sender": "bot",
+      "content": "汪先生您好，我已了解岗位需求，数据处理经验与灵活时间能很好匹配，方便安排线上面试吗？",
+      "text": "汪先生您好，我已了解岗位需求，数据处理经验与灵活时间能很好匹配，方便安排线上面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 11:10:40",
+      "time": "11:10",
+      "job_name": "兼职·线上兼职运营100-150元/天芜湖查看职位",
+      "isFriend": false,
+      "mid": "399711612322307"
     }
   ],
-  "updated_at": "2026-10-10 01:56:27",
+  "updated_at": "2026-10-23 12:58:31",
   "unread_on_boss": 0
 }

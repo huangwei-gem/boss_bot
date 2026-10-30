@@ -2,7 +2,7 @@
   "chat_name": "冯立娟",
   "chat_id": "冯立娟#数慧云图",
   "account_index": 0,
-  "job_name": "查看职位",
+  "job_name": "兼职·数据标注（低精地图导航）可居家4000-7000元/月廊坊",
   "company": "数慧云图",
   "messages": [
     {
@@ -165,9 +165,70 @@
       "timestamp": "2026-10-10 00:34:51",
       "time": "00:34",
       "job_name": "查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394954730701568"
+    },
+    {
+      "sender": "bot",
+      "content": "冯立娟您好，之前聊的兼职·数据标注（低精地图导航）可居家4000-7000元/月廊坊查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "冯立娟您好，之前聊的兼职·数据标注（低精地图导航）可居家4000-7000元/月廊坊查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 15:18:11",
+      "time": "15:18",
+      "job_name": "兼职·数据标注（低精地图导航）可居家4000-7000元/月廊坊查看职位",
+      "isFriend": false,
+      "mid": "395171814499074"
+    },
+    {
+      "sender": "bot",
+      "content": "冯立娟您好，数慧云图这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "冯立娟您好，数慧云图这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 14:38:49",
+      "time": "14:38",
+      "job_name": "兼职·数据标注（低精地图导航）可居家4000-7000元/月廊坊查看职位",
+      "isFriend": false,
+      "mid": "397639394476803"
+    },
+    {
+      "sender": "bot",
+      "content": "冯立娟好，数慧云图这岗还招吗？我这边时间灵活，全程远程能做，方便线上聊几句吗？",
+      "text": "冯立娟好，数慧云图这岗还招吗？我这边时间灵活，全程远程能做，方便线上聊几句吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 13:06:30",
+      "time": "13:06",
+      "job_name": "兼职·数据标注（低精地图导航）可居家4000-7000元/月廊坊查看职位",
+      "isFriend": false,
+      "mid": "399740069683970"
+    },
+    {
+      "sender": "bot",
+      "content": "嗯，那就不打扰您了，祝工作顺利。",
+      "text": "嗯，那就不打扰您了，祝工作顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 13:35:51",
+      "time": "13:35",
+      "job_name": "兼职·数据标注（低精地图导航）可居家4000-7000元/月廊坊查看职位",
+      "isFriend": false,
+      "mid": "400101181575936"
     }
   ],
-  "updated_at": "2026-10-10 00:34:51",
+  "updated_at": "2026-10-25 02:00:14",
   "unread_on_boss": 0
 }

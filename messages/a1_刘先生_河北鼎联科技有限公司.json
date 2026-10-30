@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "393539454308610",
-      "block": "00:36 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -78,7 +78,7 @@
       "is_mine": true,
       "is_system": false,
       "mid": "393712354464000",
-      "block": "昨天 12:19 拒绝了面试邀请",
+      "block": "拒绝了面试邀请",
       "sender": "me",
       "kind": "card",
       "content": "",
@@ -175,7 +175,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394957836738817",
-      "block": "00:47 MMSQBB0212 刘先生的微信号 MMSQBB0212 复制微信号",
+      "block": "MMSQBB0212 刘先生的微信号 MMSQBB0212 复制微信号",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -208,9 +208,10 @@
       "timestamp": "2026-10-10 05:50:33",
       "time": "05:50",
       "job_name": "兼职·数据标记员15-40元/时安顺查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395032307486977"
     }
   ],
-  "updated_at": "2026-10-10 05:50:33",
+  "updated_at": "2026-10-23 15:17:17",
   "unread_on_boss": 0
 }

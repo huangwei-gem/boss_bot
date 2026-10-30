@@ -2,7 +2,7 @@
   "chat_name": "薛龙敬",
   "chat_id": "薛龙敬#晨虹数智",
   "account_index": 0,
-  "job_name": "兼职·ai智能训练师3000-5000元/月牡丹江查看职位",
+  "job_name": "兼职·ai智能训练师3000-5000元/月牡丹江",
   "company": "晨虹数智",
   "messages": [
     {
@@ -16,7 +16,77 @@
       "sender": "me",
       "kind": "bubble",
       "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "你好 只招本地的",
+      "time": "17:14",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395200299586305",
+      "block": "17:14 你好 只招本地的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好 只招本地的"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-10 17:16:14",
+      "time": "17:16",
+      "job_name": "兼职·ai智能训练师3000-5000元/月牡丹江查看职位",
+      "isFriend": false,
+      "mid": "395200825398021"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，我是外地在校生，求职方向是线上兼职，请问是否有远程岗位或相关机会？",
+      "text": "您好，我是外地在校生，求职方向是线上兼职，请问是否有远程岗位或相关机会？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 17:08:25",
+      "time": "17:08",
+      "job_name": "兼职·ai智能训练师3000-5000元/月牡丹江查看职位",
+      "isFriend": false,
+      "mid": "397676159775488"
+    },
+    {
+      "text": "不好意思我这现在只招线下的",
+      "time": "17:46",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397685616464643",
+      "block": "17:46 不好意思我这现在只招线下的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思我这现在只招线下的"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "text": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-17 17:51:45",
+      "time": "17:51",
+      "job_name": "兼职·ai智能训练师3000-5000元/月牡丹江查看职位",
+      "isFriend": false,
+      "mid": "397686808605441"
     }
   ],
-  "updated_at": "2026-10-09 14:02:38"
+  "updated_at": "2026-10-25 02:35:19",
+  "unread_on_boss": 0
 }

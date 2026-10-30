@@ -2,7 +2,7 @@
   "chat_name": "骆女士",
   "chat_id": "骆女士#上海嘉驰信息技术咨询",
   "account_index": 0,
-  "job_name": "双休【AI数据服务主管】大模型方向，有餐补10-15K·14薪长沙查看职位",
+  "job_name": "双休【AI数据服务主管】大模型方向，有餐补10-15K·14薪长沙",
   "company": "上海嘉驰信息技术咨询",
   "messages": [
     {
@@ -89,7 +89,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "394794155787008",
-      "block": "昨天 13:41 对方已查看了您的附件简历",
+      "block": "对方已查看了您的附件简历",
       "sender": "hr",
       "kind": "system",
       "content": "对方已查看了您的附件简历",
@@ -149,9 +149,10 @@
       "timestamp": "2026-10-10 09:23:01",
       "time": "09:23",
       "job_name": "双休【AI数据服务主管】大模型方向，有餐补10-15K·14薪长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395084524417795"
     }
   ],
-  "updated_at": "2026-10-10 09:23:01",
+  "updated_at": "2026-10-25 07:17:36",
   "unread_on_boss": 0
 }

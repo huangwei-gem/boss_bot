@@ -1,0 +1,59 @@
+{
+  "chat_name": "何女士",
+  "chat_id": "何女士#文案助力_可线上办公_文职2_3K长沙",
+  "account_index": 0,
+  "job_name": "文案助力（可线上办公）文职2-3K长沙",
+  "messages": [
+    {
+      "text": "您好！我是长沙松觅的招聘人事，我们咋横在招聘小红书文案助理jianzhi,线上办公，不需要经验，方便和您聊聊吗？",
+      "time": "10-21 10:28",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398993507214086",
+      "block": "10-21 10:28 您好！我是长沙松觅的招聘人事，我们咋横在招聘小红书文案助理jianzhi,线上办公，不需要经验，方便和您聊聊吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好！我是长沙松觅的招聘人事，我们咋横在招聘小红书文案助理jianzhi,线上办公，不需要经验，方便和您聊聊吗？"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398993507255048",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "我主要想找线上数据标注、数据分析这类的，文案岗不太对口哈。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "398994008539908",
+      "block": "已读 我主要想找线上数据标注、数据分析这类的，文案岗不太对口哈。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "我主要想找线上数据标注、数据分析这类的，文案岗不太对口哈。"
+    },
+    {
+      "text": "嗯，那有数据标注或分析类岗位随时找我哈。",
+      "time": "昨天 11:46",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "400074204881664",
+      "block": "昨天 11:46 已读 嗯，那有数据标注或分析类岗位随时找我哈。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "嗯，那有数据标注或分析类岗位随时找我哈。",
+      "reply_source": "followup"
+    }
+  ],
+  "updated_at": "2026-10-25 02:05:33"
+}

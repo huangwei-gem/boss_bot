@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "393901369786880",
-      "block": "01:08 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -82,9 +82,52 @@
       "timestamp": "2026-10-10 02:30:38",
       "time": "02:30",
       "job_name": "兼职·宁夏方言采集 线上30-40元/时银川查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394983174091265"
+    },
+    {
+      "text": "目前没有，有的话再联系你",
+      "time": "09:28",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395085870498308",
+      "block": "09:28 目前没有，有的话再联系你",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "目前没有，有的话再联系你"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的回复，期待后续有合适机会时联系我，祝您招聘顺利。",
+      "text": "好的，感谢您的回复，期待后续有合适机会时联系我，祝您招聘顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 09:32:39",
+      "time": "09:32",
+      "job_name": "兼职·宁夏方言采集 线上30-40元/时银川查看职位",
+      "isFriend": false,
+      "mid": "395086891962884"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，理解目前没有合适岗位，祝您招聘顺利。",
+      "text": "感谢您的时间，理解目前没有合适岗位，祝您招聘顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 16:11:42",
+      "time": "16:11",
+      "job_name": "兼职·宁夏方言采集 线上30-40元/时银川查看职位",
+      "isFriend": false,
+      "mid": "397662221898243"
     }
   ],
-  "updated_at": "2026-10-10 02:30:38",
+  "updated_at": "2026-10-23 14:00:38",
   "unread_on_boss": 0
 }

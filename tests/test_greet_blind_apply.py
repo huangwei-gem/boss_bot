@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from boss_bot.unified_config import AIConfig, UnifiedConfig
+from tests.conftest import mk测试临时目录  # noqa: E402
 
 
 class 投递兜底开关Test:
@@ -34,12 +35,11 @@ class 投递兜底开关Test:
         assert AIConfig().fail_action == "skip"
 
     def test_配置读写往返(self):
-        import tempfile
         cfg = UnifiedConfig()
         cfg.ai.greet_fail_action = "default"
         d = cfg.to_dict()
         assert d["ai"]["greet_fail_action"] == "default"
-        path = tempfile.mkdtemp() + "/bot_config.json"
+        path = str(mk测试临时目录("greet_blind") / "bot_config.json")
         cfg.save(path)
         assert UnifiedConfig.load(path).ai.greet_fail_action == "default"
 

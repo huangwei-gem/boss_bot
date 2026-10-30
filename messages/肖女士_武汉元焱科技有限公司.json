@@ -1,0 +1,78 @@
+{
+  "chat_name": "肖女士",
+  "chat_id": "肖女士#武汉元焱科技有限公司",
+  "account_index": 0,
+  "job_name": "Al数据主管/双休不加班/14薪10-15K长沙",
+  "company": "武汉元焱科技有限公司",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "02:35",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394984455152384",
+      "block": "02:35 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "经过认真考虑，我们认为您的经验与我们的职位需求并不完全一致。祝您在BOSS直聘找到您理想的工作！",
+      "time": "10:32",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395101636813571",
+      "block": "10:32 经过认真考虑，我们认为您的经验与我们的职位需求并不完全一致。祝您在BOSS直聘找到您理想的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "经过认真考虑，我们认为您的经验与我们的职位需求并不完全一致。祝您在BOSS直聘找到您理想的工作！"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "text": "感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 10:51:31",
+      "time": "10:51",
+      "job_name": "Al数据主管/双休不加班/14薪10-15K长沙查看职位",
+      "isFriend": false,
+      "mid": "395106274681609"
+    },
+    {
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395106517820163",
+      "block": "送达 好的，感谢您的消息，我会尽快回复您。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "reply_source": "default"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的回复，祝您一切顺利。",
+      "text": "好的，感谢您的回复，祝您一切顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 16:16:21",
+      "time": "16:16",
+      "job_name": "Al数据主管/双休不加班/14薪10-15K长沙查看职位",
+      "isFriend": false,
+      "mid": "397663364346624"
+    }
+  ],
+  "updated_at": "2026-10-25 02:38:16",
+  "unread_on_boss": 0
+}

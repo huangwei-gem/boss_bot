@@ -1,28 +1,71 @@
 """判分复盘的真机点击测试（task #55）。
 
-只打开 http://localhost:5000：不碰 BOSS 页面，不点任何发送/打招呼/发简历按钮。
+自己起一个临时面板（配置与打招呼记录都指向临时副本），种三条带追问的记录；
+不碰线上面板、不碰 BOSS 页面，也不点任何发送/打招呼/发简历按钮。
 用项目内置 cloakbrowser 起独立实例（独立端口 + 临时用户目录），
 不干扰投递用的两个浏览器。
 
-前置条件：Flask 服务运行在 http://localhost:5000，且至少有一条带追问结果的打招呼记录
-          （跑一轮 dry_run 就会攒出来：AI 判"不符合"且分数在边界带里的岗位会被追问）
+以前这里只打线上面板，且要求盘上真有一条追问结果——线上记录清空后就没法测了
+（10-23 清掉 172 条旧记录，复盘数据随之归零）。改成自带种子后，测的是渲染与
+"采纳才写配置"这两条契约，不依赖线上有没有跑过 dry_run。
+
 运行：python tests/e2e_judgement_review_ui.py
 """
 
 import json
+import os
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "tests"))
+from boss_bot.platform_compat import 终止进程  # noqa: E402
 
 import e2e_greet_records_ui as harness  # noqa: E402
 from e2e_greet_records_ui import (  # noqa: E402
-    FLASK_URL, check, click_until_alive, close_browser, open_browser)
+    check, click_until_alive, close_browser, open_browser, 种一份临时配置, 起临时面板)
+from tests.conftest import mk测试临时目录, 挑空闲端口  # noqa: E402
 
 results = harness.results
+TEST_PORT = 挑空闲端口(int(os.environ.get("BOSS_JUDGE_REVIEW_PORT", "5063")), "判分复盘实测")
+FLASK_URL = "http://127.0.0.1:%s" % TEST_PORT
+
+
+def _今日(hhmmss):
+    return datetime.now().strftime("%Y-%m-%d ") + hhmmss
+
+
+# 三条带追问的种子记录：账号0 两条同一硬性要求（凑够"出现两次才给建议"），
+# 账号1 一条（切范围后复盘数字要跟着切）
+种子记录 = [
+    {"timestamp": _今日("10:00:00"), "job_name": "复盘实测-数据分析", "company": "种子公司A",
+     "salary": "8-12K", "ai_score": 62, "ai_is_match": False,
+     "is_skipped": True, "status": "skipped",
+     "skip_reason": "AI判定不匹配: 缺少 SQL 数据仓库项目证据",
+     "ai_probe": {"blocking_requirement": "需要 3 年以上 SQL 数据仓库经验",
+                  "evidence_missing": "SQL 数据仓库项目经历",
+                  "fixable_by_resume": True, "score_if_fixed": 78},
+     "account_index": 0, "account_name": "主账号"},
+    {"timestamp": _今日("10:30:00"), "job_name": "复盘实测-数据标注", "company": "种子公司B",
+     "salary": "7-10K", "ai_score": 58, "ai_is_match": False,
+     "is_skipped": True, "status": "skipped",
+     "skip_reason": "AI判定不匹配: 缺少 SQL 数据仓库项目证据",
+     "ai_probe": {"blocking_requirement": "需要 3 年以上 SQL 数据仓库经验",
+                  "evidence_missing": "SQL 数据仓库项目经历",
+                  "fixable_by_resume": True, "score_if_fixed": 75},
+     "account_index": 0, "account_name": "主账号"},
+    {"timestamp": _今日("11:00:00"), "job_name": "复盘实测-算法岗", "company": "种子公司C",
+     "salary": "15-25K", "ai_score": 40, "ai_is_match": False,
+     "is_skipped": True, "status": "skipped",
+     "skip_reason": "AI判定不匹配: 只要 985/211 学历",
+     "ai_probe": {"blocking_requirement": "只要 985/211 学历",
+                  "evidence_missing": "", "fixable_by_resume": False,
+                  "score_if_fixed": 0},
+     "account_index": 1, "account_name": "账号2"},
+]
 
 
 def _api(path, payload=None):
@@ -35,22 +78,34 @@ def _api(path, payload=None):
 
 
 def main():
+    tmp_dir = mk测试临时目录("boss_judge_review_ui")
+    种一份临时配置(tmp_dir, 种子记录)
+    panel = 起临时面板(tmp_dir, TEST_PORT)
+    try:
+        return _run()
+    finally:
+        终止进程(panel.pid)
+        import shutil
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
+def _run():
     try:
         _api("/api/status")
     except Exception as e:
-        print(f"Flask 未运行（{e}），先启动面板再跑本脚本")
+        print(f"临时面板没起来（{e}）")
         return 2
 
     before = _api("/api/config")["config"]
     review_api = _api("/api/ai/judgement_review")
     print("=" * 60)
-    print("  判分复盘 — 真机点击测试")
+    print("  判分复盘 — 真机点击测试（临时面板 %d）" % TEST_PORT)
     print(f"  后端复盘数据：追问 {review_api.get('probed')} 条 / "
           f"今日 {review_api.get('today_probed')} 条 / "
           f"建议 {len(review_api.get('suggestions') or [])} 条")
     print("=" * 60)
     if not review_api.get("probed"):
-        print("还没有追问结果可看：先用 BOSS_BOT_DRY_RUN=1 跑一轮再测。")
+        print("种的三条记录后端一条追问都没读到：复盘接口或记录格式变了。")
         return 3
 
     page, proc = open_browser()

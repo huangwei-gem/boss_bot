@@ -1,0 +1,79 @@
+{
+  "chat_name": "任咪",
+  "chat_id": "任咪#携程集团",
+  "account_index": 1,
+  "job_name": "数据分析实习生250-300元/天上海查看职位",
+  "company": "携程集团",
+  "messages": [
+    {
+      "text": "",
+      "time": "10:58",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397585191637504",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学本科在读，有数据分析与数据标注经验，看到贵司数据分析实习生岗位很感兴趣，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397585311371777",
+      "block": "送达 您好，我是统计学本科在读，有数据分析与数据标注经验，看到贵司数据分析实习生岗位很感兴趣，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据分析与数据标注经验，看到贵司数据分析实习生岗位很感兴趣，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "感谢您的应聘，但很遗憾，您的简历和该职位的需求不完全一致。祝您在BOSS直聘找到理想的职位！",
+      "time": "昨天 23:25",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397768727978496",
+      "block": "昨天 23:25 感谢您的应聘，但很遗憾，您的简历和该职位的需求不完全一致。祝您在BOSS直聘找到理想的职位！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢您的应聘，但很遗憾，您的简历和该职位的需求不完全一致。祝您在BOSS直聘找到理想的职位！"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢告知。",
+      "text": "好的，谢谢告知。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 18:25:19",
+      "time": "18:25",
+      "job_name": "数据分析实习生250-300元/天上海查看职位",
+      "isFriend": false,
+      "mid": "398756753666562"
+    },
+    {
+      "sender": "bot",
+      "content": "嗯，好的，谢谢您的反馈。",
+      "text": "嗯，好的，谢谢您的反馈。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 18:45:20",
+      "time": "18:45",
+      "job_name": "数据分析实习生250-300元/天上海查看职位",
+      "isFriend": false,
+      "mid": "398761673245185"
+    }
+  ],
+  "updated_at": "2026-10-23 13:14:29",
+  "unread_on_boss": 0
+}

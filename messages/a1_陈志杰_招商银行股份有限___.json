@@ -69,8 +69,77 @@
       "time": "08:14",
       "job_name": "内勤数据分析岗8-13K上海查看职位",
       "isFriend": false
+    },
+    {
+      "text": "收藏一下岗位，您的简历我们收到了，通过的话1到3个工作日内会再有同事联系您的~",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395067872723459",
+      "block": "收藏一下岗位，您的简历我们收到了，通过的话1到3个工作日内会再有同事联系您的~",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "收藏一下岗位，您的简历我们收到了，通过的话1到3个工作日内会再有同事联系您的~"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，我稍后收藏一下岗位，感谢您的时间，期待后续的消息，祝您工作顺利。",
+      "text": "好的，我稍后收藏一下岗位，感谢您的时间，期待后续的消息，祝您工作顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-16 06:03:51",
+      "time": "06:03",
+      "job_name": "内勤数据分析岗8-13K上海查看职位",
+      "isFriend": false,
+      "mid": "397158940230144"
+    },
+    {
+      "sender": "bot",
+      "content": "收到，简历已确认收到，如果需要补充任何信息请随时告知，我随时可以配合进一步沟通。",
+      "text": "收到，简历已确认收到，如果需要补充任何信息请随时告知，我随时可以配合进一步沟通。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 19:23:27",
+      "time": "19:23",
+      "job_name": "内勤数据分析岗8-13K上海查看职位",
+      "isFriend": false,
+      "mid": "397709347201536"
+    },
+    {
+      "text": "嗯嗯",
+      "time": "20:01",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397718736519680",
+      "block": "20:01 嗯嗯",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "嗯嗯"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，后续请保持联系~",
+      "text": "好的，感谢您的时间，后续请保持联系~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-17 20:02:59",
+      "time": "20:02",
+      "job_name": "内勤数据分析岗8-13K上海查看职位",
+      "isFriend": false,
+      "mid": "397719063208451"
     }
   ],
-  "updated_at": "2026-10-10 08:14:32",
+  "updated_at": "2026-10-23 13:58:42",
   "unread_on_boss": 0
 }

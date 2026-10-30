@@ -31,6 +31,34 @@ BOT_CONFIG_FILE = BASE_DIR / "bot_config.json"
 USER_PROFILE_FILE = BASE_DIR / "user_profile.json"
 OVERRIDES_FILE = BASE_DIR / "config_overrides.json"
 
+# 用完就该丢的东西一律落在项目里的 .scratch/。2026-10-26 盘账：以前退到
+# %TEMP% 和 C:\tmp，散在外面他在项目里找不到、也不敢删，攒了两千多个空壳。
+SCRATCH_DIR = BASE_DIR / ".scratch"
+
+# 面板默认口。**这台机器上只有这一处写死这个数**：面板自己（flask-version/access_guard.py）、
+# 一键启动器（tools/start_accounts.py）、三端一致性脚本、每个实测工具都从这里取。
+# 10-28 从 5000 换成 5001：5000 长期被另一个项目的 `app.py` 占着（本轮实测 PID 37940，
+# /api/status 回的是 `{"errorCode":1006}` 那种别人的报文，首页是 TikTok），BOSS 面板一起来
+# 就绑不上，"看一眼前端统计"变成"得先去关掉别的程序"。
+# 分成两处各写各的，就会有一天"面板听 5001、启动器还在等 5000"——门形同虚设还看不出来。
+面板默认端口 = 5001
+
+
+def 面板端口() -> int:
+    """面板实际听哪个口：`BOSS_PANEL_PORT` 能顶掉默认值，填了非数字就退回默认。"""
+    try:
+        return int(os.environ.get("BOSS_PANEL_PORT") or 面板默认端口)
+    except (TypeError, ValueError):
+        return 面板默认端口
+
+
+
+def 新建临时目录(用途: str) -> Path:
+    """在项目内建一个临时目录（浏览器探测 profile、导出中转文件用）。用完自己收。"""
+    import tempfile
+    SCRATCH_DIR.mkdir(parents=True, exist_ok=True)
+    return Path(tempfile.mkdtemp(prefix="%s_" % 用途, dir=str(SCRATCH_DIR)))
+
 
 def write_json_atomic(path, data) -> None:
     """原子写入 JSON：先写同目录临时文件，再 os.replace 覆盖目标。
@@ -83,6 +111,51 @@ def write_json_atomic(path, data) -> None:
 _原子写序号 = 0
 替换重试次数 = 6
 替换重试间隔秒 = 0.2
+
+# 覆盖写之前那一份的落点：住子目录、限量、超出的只挪不删。
+备份子目录 = "config_backups"
+备份保留份数 = 20
+
+
+def 备份旧配置(path, data) -> Path:
+    """把"即将被覆盖的那一份"存进 <配置文件所在目录>/config_backups/。
+
+    为什么不再摊在根目录：2026-10-29 清点时有 79 份 bot_config.json.bak-*（1.0 MB）堆在
+    项目根上——一次保存一份，界面上点几下就几十份，而根目录本该只有入口和当前配置。
+    为什么仍然留备份：10-04 那次整份配置被默认值盖掉，靠的就是这些 .bak 回滚的；
+    砍掉的是"落在根目录"和"不限数量"，不是留档本身。
+    """
+    from datetime import datetime
+    target = Path(str(path))
+    目录 = target.parent / 备份子目录
+    名字 = "%s.bak-%s" % (target.name, datetime.now().strftime("%Y%m%d-%H%M%S"))
+    去 = 目录 / 名字
+    第次 = 0
+    while 去.exists():    # 同一秒里保存两次是常事（面板连着点），撞名就加序号，不许盖掉前一份
+        第次 += 1
+        去 = 目录 / ("%s.%d" % (名字, 第次))
+    write_json_atomic(去, data)
+    挪走超出的备份(目录, target.name)
+    return 去
+
+
+def 挪走超出的备份(目录, 配置名) -> int:
+    """同一份配置的备份只留最近 备份保留份数 个，更早的挪进 kept/，一个都不删。"""
+    目录 = Path(str(目录))
+    全部 = sorted(目录.glob("%s.bak-*" % 配置名))
+    要多 = len(全部) - 备份保留份数
+    if 要多 <= 0:
+        return 0
+    留档 = 目录 / "kept"
+    留档.mkdir(parents=True, exist_ok=True)
+    挪了 = 0
+    for 份 in 全部[:要多]:
+        try:
+            份.replace(留档 / 份.name)
+            挪了 += 1
+        except OSError:
+            break     # 挪不动就原地留着，下一趟再挪（跟归档盒、日志留档一个口径）
+    return 挪了
 
 
 def account_file(path, account_index: int) -> str:
@@ -150,12 +223,33 @@ ACCOUNT_OVERLAY_LOCKED = {"browser": {"debug_port", "user_data_dir"}}
 ACCOUNT_GLOBAL_ONLY = ("resume", "user_profile", "reply_rules", "importance_keywords")
 
 
-# 默认打招呼话术
+# 默认打招呼话术。
+# 2026-10-23 把「我是双一流的本科」撤下来过：那时画像只写「本科在读（统计学）」，
+# 机器替他报了一个画像里没有的学校标签，这句在存档里真发出去过 218 条（10-04 起，
+# 10-23 还有 33 个会话带它），HR 回「不太合适」之前那句就是它的占 13 条。
+# 2026-10-29 用户明确「我就是双一流，全部改成双一流」，画像 education 已写成
+# 「本科在读（统计学），双一流」，这句重新可用。闸门本身不动：画像里没写档次，
+# 手写的招呼语照样被 reply_rejection 拦下（tests/test_greeting_fact_gate.py 盯着）。
 DEFAULT_GREETING = (
-    "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，"
+    "您好，我是双一流的统计学专业本科在读，应聘数据分析岗位。在校系统学习数据分析相关知识，"
     "掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，"
     "愿意踏实积累。十分认可贵公司，希望能获得面试机会。"
 )
+
+# 历史上对外发过的那几版默认文案：盘上/岗位里还是它们时一律当"没写"，
+# 否则改了常量之后旧串会被当成"他手写的招呼语"重新用起来。
+历史默认招呼语 = (
+    DEFAULT_GREETING,
+    "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，"
+    "掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，"
+    "愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+    # 10-23 到 10-29 那一版（把档次词摘掉后的默认串）：10-29 画像补上双一流、默认串
+    # 又换了一次，这一串得继续当"没写"，不能因为常量变了就被当成他手写的招呼语捡回来。
+    "您好，我是统计学专业本科在读，应聘数据分析岗位。在校系统学习数据分析相关知识，"
+    "掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，"
+    "愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
+)
+
 
 def strip_default_greeting(text) -> str:
     """岗位上的招呼语若就是那段历史默认文案，视作"没写"。
@@ -164,8 +258,8 @@ def strip_default_greeting(text) -> str:
     覆盖掉），而界面输入框里却显示着有字——于是日志一片"未配置招呼语，跳过"，
     用户看不出哪里没配。加载时就把它清成空，输入框和引擎判的才是同一件事。
     """
-    raw = str(text or "")
-    return "" if raw.strip() == DEFAULT_GREETING.strip() else raw
+    raw = str(text or "").strip()
+    return "" if any(raw == str(旧).strip() for 旧 in 历史默认招呼语) else raw
 
 
 # 话术模板占位符 → 画像字段映射
@@ -315,6 +409,12 @@ class BrowserConfig:
     viewport_width: int = 1280
     viewport_height: int = 800
     page_load_timeout: int = 30          # auto_boss: page_load_timeout
+    # 整页加载等到哪一步才算完：normal=连图片统计脚本一起等（DrissionPage 的默认），
+    # eager=DOM 就绪就走，none=发完导航立刻走。默认 eager 的依据是 10-24 11:01~11:09
+    # 实测：启动一趟四次整页加载各 126~135 秒，527 秒里 508 秒都花在"等挂件加载完"，
+    # 而抓取/回复本来就是各自的自适应等待在盯元素，不需要浏览器替它们等。
+    # 界面改了要重启这个号才换（这是浏览器启动参数，不是每趟读的频率）。
+    load_mode: str = "eager"
     page_timeout: int = 30               # 兼容 browser_launcher.py 已有接口
     custom_user_agent: str = ""
     proxy: str = ""
@@ -338,6 +438,21 @@ class RateLimitConfig:
     enabled: bool = True
     max_per_hour: int = 30
     max_per_day: int = 100
+    # 两次打开岗位详情页（job_detail）之间的最小间隔（秒，全进程共用一份——风控看的是
+    # IP 不是号）。8 天主日志里被甩验证页共 112 处，111 处的上一条动作就是打开详情页；
+    # 反过来两天 381 次搜索页整页加载只出过 1 处（还是启动那一眼读到旧标签）。
+    # 默认 30 秒：每小时 30 单的额度本来就是 120 秒一单，这条只在连着抢的时候摊平。
+    # 填 0 = 关掉节流。上限夹到 600：再大就不是节流而是把投递腿停掉。
+    job_detail_min_interval: int = 30
+    # 整个进程里两次"把一张页整页换掉"之间的最小间隔（秒）。已装的详情节流管的是
+    # job_detail，这一条管剩下那些没人管的加载：回复腿会话页地址一漂就重刷、抓取腿
+    # 每趟刷搜索页、断线重连/内存回收重开浏览器、界面「检测 Cookie」那趟两次加载。
+    # 10-23~10-25 三天日志共 792 次整页加载，其中 11 个"同一秒两号各发一发"——
+    # 风控算出口 IP，两个号在同一个家宽 IP 上，所以地板按进程算，不按号算。
+    # 默认 3 秒：抓取腿几分钟一趟，摊不慢它，只把同一秒三四发隔开。填 0 = 关掉。
+    page_load_min_interval: int = 3
+    # 人工把验证页滑完之后再歇多久才准碰页面（秒）。填 0 = 不等。
+    after_verify_cooldown: int = 300
 
 
 @dataclass
@@ -389,6 +504,9 @@ class GreetConfig:
     accounts: list = field(default_factory=lambda: [AccountConfig()])
     rate_limit: RateLimitConfig = field(default_factory=RateLimitConfig)
     retry: RetryConfig = field(default_factory=RetryConfig)
+    # 只抓不投：搜索腿抓到的岗位全部进候选池，一条招呼都不自动发；
+    # 他勾了哪几条，下一轮才投哪几条（2026-10-19 用户口径「先抓岗位，然后用户选择性投递」）
+    capture_only: bool = True
 
 
 @dataclass
@@ -524,6 +642,16 @@ TITLE_VETO_KEYWORDS_DEFAULT = [
     # TITLE_VETO_EXEMPT_KEYWORDS 里撤掉。只查标题：JD 里"本岗位非客服"这种
     # 反例一进正文表就误杀。
     "客服",
+    # 2026-10-29 岗位池口径①（人事/行政族漏放）。盘上现算（两份池文件 3182 行、
+    # 去重 1880 个标题，用 title_veto_hit 逐条跑）：加这五个词新拦 6 条，
+    # 「人事兼职线上办公时间灵活」「人事档案整理」「人事档案整理专员」
+    # 「干部人事档案整理」「成都人事档案整理专员」「线上人事专员—员工关系」；
+    # 其中被职业白名单救回后又改判的 0 条——这 6 个标题一个职业词都不带。
+    # 刻意不进 NO_EXEMPT：跟"信贷"同一个道理，「人事数据分析」里人事是被分析的
+    # 业务域，那份工还是数据分析，得让"数据/分析"白名单救得回来。
+    # 同一趟还量过"文员/招聘/猎头"：三个词新拦 0 条（「猎头顾问助理」被"助理"
+    # 白名单盖住、"文员/招聘"那些标题里已经有别的否决词），所以不往表里塞空词。
+    "人事", "人力资源", "HR", "行政", "员工关系",
 ]
 
 # 只投这些方向（正向门槛）：标题或 JD 里一个都没命中就不点「立即沟通」。
@@ -633,6 +761,10 @@ class AIConfig:
     # 判分复盘：AI 判"不符合"后追问它卡在哪一条，每号每轮最多几条。
     # 一次追问≈一次判分（实测中位 5.4 秒），所以默认给 5；填 0 等于关掉。
     probe_max_per_round: int = 5
+    # 候选池：岗位抓进池子时顺手送 AI 精筛一次（每号每轮最多几条）。
+    # 判分本身和以前一模一样，只是从"投之前"挪到"进池时"，这样他在界面看到的
+    # 每一行都已经带着分和理由。填 0 = 只跑本地粗筛，AI 结论等手点「再筛一次」。
+    screen_max_per_round: int = 40
 
 
 @dataclass
@@ -702,6 +834,10 @@ class LogConfig:
     log_level: str = "INFO"
     log_retention_days: int = 14
     event_log_enabled: bool = True
+    # 10-23 他定的体积闸：历史数据（data/ + logs/）涨到这么多 MB 才开始删，
+    # 删的时候只留最近这么多天。0 = 不看体积，每轮都把出窗口的删掉。
+    history_cleanup_mb: int = 500
+    history_keep_days: int = 3
 
 
 _FILTER_SEP_RE = re.compile("[，,、;；\\n]+")
@@ -952,6 +1088,11 @@ class UnifiedConfig:
             if "page_load_timeout" in browser:
                 self.browser.page_load_timeout = int(browser["page_load_timeout"])
                 self.browser.page_timeout = self.browser.page_load_timeout
+            if "load_mode" in browser:
+                # 只认三个词，认不了不改：填错一个字母不该把启动行为悄悄换掉
+                值 = str(browser["load_mode"] or "").strip().lower()
+                if 值 in ("normal", "eager", "none"):
+                    self.browser.load_mode = 值
             if "custom_user_agent" in browser:
                 self.browser.custom_user_agent = str(browser["custom_user_agent"])
             if "proxy" in browser:
@@ -987,6 +1128,16 @@ class UnifiedConfig:
                 self.greet.rate_limit.max_per_hour = int(rl["max_per_hour"])
             if "max_per_day" in rl:
                 self.greet.rate_limit.max_per_day = int(rl["max_per_day"])
+            if "job_detail_min_interval" in rl:
+                # 夹住而不是照收：填 99999 就是投递腿永远等不到放行
+                self.greet.rate_limit.job_detail_min_interval = max(
+                    0, min(600, int(rl["job_detail_min_interval"])))
+            if "page_load_min_interval" in rl:
+                self.greet.rate_limit.page_load_min_interval = max(
+                    0, min(60, int(rl["page_load_min_interval"])))
+            if "after_verify_cooldown" in rl:
+                self.greet.rate_limit.after_verify_cooldown = max(
+                    0, min(3600, int(rl["after_verify_cooldown"])))
 
         # 重试配置
         retry = data.get("retry", {})
@@ -1023,6 +1174,11 @@ class UnifiedConfig:
                 # 夹住而不是照收：界面填 999 就是每号每轮 999 次额外 AI 调用
                 self.ai.probe_max_per_round = max(
                     0, min(20, int(ai["probe_max_per_round"])))
+            if "screen_max_per_round" in ai:
+                # 进池即精筛的每号每轮上限。一轮抓上百条，全送 AI 会撞 rpm/日额度，
+                # 把回复腿的接口一起拖死（见 memory「并发下 AI 限流互踩」）
+                self.ai.screen_max_per_round = max(
+                    0, min(400, int(ai["screen_max_per_round"])))
             if "fail_action" in ai and ai["fail_action"]:
                 self.ai.fail_action = str(ai["fail_action"])
             if ai.get("greet_fail_action"):
@@ -1080,6 +1236,10 @@ class UnifiedConfig:
         greet_enabled_explicit = isinstance(greet_block, dict) and "enabled" in greet_block
         if greet_enabled_explicit:
             self.greet.enabled = bool(greet_block["enabled"])
+        if isinstance(greet_block, dict) and "capture_only" in greet_block:
+            # 只抓不投：抓到岗位进候选池，投哪条由他在面板上勾（2026-10-19 定的口径）。
+            # 读不到这个键时保持默认 True —— 默认自动投等于用他的账号做他没批准的事
+            self.greet.capture_only = bool(greet_block["capture_only"])
 
         # 账号/打招呼配置
         accounts = data.get("accounts", [])
@@ -1165,6 +1325,10 @@ class UnifiedConfig:
                 self.log.log_level = str(log["log_level"]).upper()
             if "log_retention_days" in log:
                 self.log.log_retention_days = int(log["log_retention_days"])
+            if "history_cleanup_mb" in log:
+                self.log.history_cleanup_mb = max(0, int(log["history_cleanup_mb"]))
+            if "history_keep_days" in log:
+                self.log.history_keep_days = max(1, int(log["history_keep_days"]))
             if "event_log_enabled" in log:
                 self.log.event_log_enabled = bool(log["event_log_enabled"])
 
@@ -1439,14 +1603,13 @@ class UnifiedConfig:
 
         两道防出厂设置的闸，都来自 2026-10-04 那次覆盖事故（2 账号 / 12 个 AI
         接口 / 17 条规则的配置被一份 3644 字节的默认值盖掉）：
-          1. 覆盖写之前先把旧文件存成 <name>.bak-<时间>，出事了能原地回滚；
+          1. 覆盖写之前先把旧文件存进 config_backups/<name>.bak-<时间>，出事了能原地回滚；
           2. "账号变少"且"AI 接口清空"同时出现时拒绝写盘 —— 单独删账号或单独
              清空接口都是用户在界面上的正常操作，只有加载失败退回默认值才会
              两个一起缩水。
         Args:
             config_path: 保存路径，默认为 bot_config.json
         """
-        from datetime import datetime
         path = Path(config_path) if config_path else BOT_CONFIG_FILE
         data = self.to_dict()
         existing = None
@@ -1465,9 +1628,8 @@ class UnifiedConfig:
                 f"落盘会覆盖已有的账号/接口/简历/岗位。先排查加载为什么退回了默认值。")
             return
         if existing:
-            stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
             try:
-                write_json_atomic(path.with_name(f"{path.name}.bak-{stamp}"), existing)
+                备份旧配置(path, existing)
             except OSError as e:
                 logger.warning(f"备份 {path.name} 失败: {e}")
             for key, value in existing.items():
@@ -1484,6 +1646,7 @@ class UnifiedConfig:
                 "viewport_width": self.browser.viewport_width,
                 "viewport_height": self.browser.viewport_height,
                 "page_load_timeout": self.browser.page_load_timeout,
+                "load_mode": self.browser.load_mode,
                 "custom_user_agent": self.browser.custom_user_agent,
                 "proxy": self.browser.proxy,
                 "browser_type": self.browser.browser_type,
@@ -1502,6 +1665,12 @@ class UnifiedConfig:
                 "enabled": self.greet.rate_limit.enabled,
                 "max_per_hour": self.greet.rate_limit.max_per_hour,
                 "max_per_day": self.greet.rate_limit.max_per_day,
+                "job_detail_min_interval":
+                    self.greet.rate_limit.job_detail_min_interval,
+                "page_load_min_interval":
+                    self.greet.rate_limit.page_load_min_interval,
+                "after_verify_cooldown":
+                    self.greet.rate_limit.after_verify_cooldown,
             },
             "retry": {
                 "max_attempts": self.greet.retry.max_attempts,
@@ -1518,6 +1687,7 @@ class UnifiedConfig:
                 "analyze_max_tokens": self.ai.analyze_max_tokens,
                 "judge_timeout": self.ai.judge_timeout,
                 "probe_max_per_round": self.ai.probe_max_per_round,
+                "screen_max_per_round": self.ai.screen_max_per_round,
                 "fail_action": self.ai.fail_action,
                 "greet_fail_action": self.ai.greet_fail_action,
                 "custom_filter_keywords": list(self.ai.custom_filter_keywords),
@@ -1575,6 +1745,7 @@ class UnifiedConfig:
             # bot_config.json 里的 greet 段整体抹掉，下次启动又自动变成启用
             "greet": {
                 "enabled": self.greet.enabled,
+                "capture_only": self.greet.capture_only,
             },
             "reply": {
                 "enabled": self.reply.enabled,
@@ -1604,6 +1775,8 @@ class UnifiedConfig:
                 "log_level": self.log.log_level,
                 "log_retention_days": self.log.log_retention_days,
                 "event_log_enabled": self.log.event_log_enabled,
+                "history_cleanup_mb": self.log.history_cleanup_mb,
+                "history_keep_days": self.log.history_keep_days,
             },
             "reply_rules": dict(self.rules.reply_rules),
             "importance_keywords": list(self.rules.importance_keywords),

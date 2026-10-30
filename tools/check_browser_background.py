@@ -11,7 +11,6 @@ import hashlib
 import os
 import shutil
 import sys
-import tempfile
 import time
 from pathlib import Path
 
@@ -23,6 +22,7 @@ from boss_bot.browser_launcher import (  # noqa: E402
     launch_browser,
 )
 from boss_bot.unified_config import UnifiedConfig, resolve_path  # noqa: E402
+from boss_bot.unified_config import 新建临时目录  # noqa: E402
 
 
 def browser_windows(pid: int) -> list:
@@ -50,7 +50,7 @@ def main() -> int:
     ck = cookie_file(a.account)
     sha_before = hashlib.sha256(ck.read_bytes()).hexdigest()[:16] if ck.is_file() else "<缺失>"
 
-    profile = Path(tempfile.mkdtemp(prefix="boss_bg_probe_"))
+    profile = 新建临时目录("boss_bg_probe_")
     # 焦点先给记事本一样的东西：直接在终端里跑，前台就是终端自己
     fg_before = current_foreground_window()
     print(f"启动前前台窗口 = {fg_before}")

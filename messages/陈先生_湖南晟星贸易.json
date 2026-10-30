@@ -1,0 +1,65 @@
+{
+  "chat_name": "陈先生",
+  "chat_id": "陈先生#湖南晟星贸易",
+  "account_index": 0,
+  "job_name": "储备干部（收入高+晋升快）7-12K长沙",
+  "company": "湖南晟星贸易",
+  "messages": [
+    {
+      "text": "你好，黄维，在考虑新的工作机会吗？",
+      "time": "23:30",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397770069906177",
+      "block": "23:30 你好，黄维，在考虑新的工作机会吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，黄维，在考虑新的工作机会吗？"
+    },
+    {
+      "sender": "bot",
+      "content": "在的哈。我主要找线上数据分析这类的，这个岗不太对口。",
+      "text": "在的哈。我主要找线上数据分析这类的，这个岗不太对口。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-17 23:34:51",
+      "time": "23:34",
+      "job_name": "储备干部（收入高+晋升快）7-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "397771133514497"
+    },
+    {
+      "text": "感谢您对我们的关注，但是您的简历与我们当前的职位要求并不完全匹配。祝您在BOSS直聘找到更合适的职位！",
+      "time": "09:04",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397911179518721",
+      "block": "09:04 感谢您对我们的关注，但是您的简历与我们当前的职位要求并不完全匹配。祝您在BOSS直聘找到更合适的职位！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢您对我们的关注，但是您的简历与我们当前的职位要求并不完全匹配。祝您在BOSS直聘找到更合适的职位！"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-18 17:08:58",
+      "time": "17:08",
+      "job_name": "储备干部（收入高+晋升快）7-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "398030186238725"
+    }
+  ],
+  "updated_at": "2026-10-25 02:19:13",
+  "unread_on_boss": 0
+}

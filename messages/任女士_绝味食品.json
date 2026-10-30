@@ -1,0 +1,50 @@
+{
+  "chat_name": "任女士",
+  "chat_id": "任女士#绝味食品",
+  "account_index": 0,
+  "job_name": "财务数据产品经理13-18K·15薪长沙",
+  "company": "绝味食品",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "13:55",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397982731522817",
+      "block": "13:55 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "感谢您的关注，很遗憾不能与您共事。祝您在BOSS直聘上找到更匹配的工作机会",
+      "time": "09:03",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398264785830659",
+      "block": "09:03 感谢您的关注，很遗憾不能与您共事。祝您在BOSS直聘上找到更匹配的工作机会",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢您的关注，很遗憾不能与您共事。祝您在BOSS直聘上找到更匹配的工作机会"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "text": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-20 19:00:24",
+      "time": "19:00",
+      "job_name": "财务数据产品经理13-18K·15薪长沙查看职位",
+      "isFriend": false,
+      "mid": "398765375992578"
+    }
+  ],
+  "updated_at": "2026-10-25 02:09:31",
+  "unread_on_boss": 0
+}

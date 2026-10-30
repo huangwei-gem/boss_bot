@@ -1,0 +1,25 @@
+{
+  "chat_name": "贾先生",
+  "chat_id": "贾先生#盒马鲜生",
+  "account_index": 1,
+  "job_name": "长沙急招年轻人！欢迎新手小白加入！6-8K长沙查看职位",
+  "company": "盒马鲜生",
+  "messages": [
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-10 18:49:42",
+      "time": "18:49",
+      "job_name": "长沙急招年轻人！欢迎新手小白加入！6-8K长沙查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-16 01:29:53",
+  "unread_on_boss": 0
+}

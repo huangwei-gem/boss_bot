@@ -1,0 +1,36 @@
+{
+  "chat_name": "郭晨",
+  "chat_id": "郭晨#合正信达",
+  "account_index": 1,
+  "job_name": "数据分析师14-22K上海查看职位",
+  "company": "合正信达",
+  "messages": [
+    {
+      "text": "",
+      "time": "10:57",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397584982983424",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我有数据分析与数据标注的线上经验，熟悉Excel/SQL/Python，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397585091252992",
+      "block": "已读 您好，我有数据分析与数据标注的线上经验，熟悉Excel/SQL/Python，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我有数据分析与数据标注的线上经验，熟悉Excel/SQL/Python，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:47:53"
+}

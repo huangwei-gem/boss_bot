@@ -1,0 +1,50 @@
+{
+  "chat_name": "吴女士",
+  "chat_id": "吴女士#湖南泰阳科技信息",
+  "account_index": 0,
+  "job_name": "临床数据分析师8-12K长沙",
+  "company": "湖南泰阳科技信息",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "12:18",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397605015130883",
+      "block": "12:18 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "不好意思，看了以后觉得不太合适，希望你早日找到满意的工作机会",
+      "time": "昨天 16:01",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398367404094212",
+      "block": "昨天 16:01 不好意思，看了以后觉得不太合适，希望你早日找到满意的工作机会",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，看了以后觉得不太合适，希望你早日找到满意的工作机会"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "text": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-20 17:43:58",
+      "time": "17:43",
+      "job_name": "临床数据分析师8-12K长沙查看职位",
+      "isFriend": false,
+      "mid": "398746589876994"
+    }
+  ],
+  "updated_at": "2026-10-25 02:11:49",
+  "unread_on_boss": 0
+}

@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394423859351553",
-      "block": "12:34 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -124,9 +124,40 @@
       "timestamp": "2026-10-10 02:05:05",
       "time": "02:05",
       "job_name": "兼职·ai数据标注500-1000元/月淮北查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394976895041536"
+    },
+    {
+      "sender": "bot",
+      "content": "在的哈，想问下试标和面试这周能安排吗，我工作日下午都有空~",
+      "text": "在的哈，想问下试标和面试这周能安排吗，我工作日下午都有空~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-21 17:45:15",
+      "time": "17:45",
+      "job_name": "兼职·ai数据标注500-1000元/月淮北查看职位",
+      "isFriend": false,
+      "mid": "399100786589699"
+    },
+    {
+      "sender": "bot",
+      "content": "张先生，试标那边有安排了吗？时间您定，我下午都在，随时可以~",
+      "text": "张先生，试标那边有安排了吗？时间您定，我下午都在，随时可以~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 11:26:43",
+      "time": "11:26",
+      "job_name": "兼职·ai数据标注500-1000元/月淮北查看职位",
+      "isFriend": false,
+      "mid": "399715555864578"
     }
   ],
-  "updated_at": "2026-10-10 02:05:05",
+  "updated_at": "2026-10-23 12:57:42",
   "unread_on_boss": 0
 }

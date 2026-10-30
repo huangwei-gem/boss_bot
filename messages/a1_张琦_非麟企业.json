@@ -1,0 +1,80 @@
+{
+  "chat_name": "张琦",
+  "chat_id": "张琦#非麟企业",
+  "account_index": 1,
+  "job_name": "CRM数据分析师13-16K·13薪上海查看职位",
+  "company": "非麟企业",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据标注与CRM分析，曾用Python/SQL完成多模态数据处理与可视化看板搭建，方便的话我把简历发您细聊",
+      "time": "05:04",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395021025710592",
+      "block": "05:04 已读 您好，我是统计学专业在读生，擅长数据标注与CRM分析，曾用Python/SQL完成多模态数据处理与可视化看板搭建，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据标注与CRM分析，曾用Python/SQL完成多模态数据处理与可视化看板搭建，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "很高兴收到您的简历，但我们目前在寻找不同工作年限经验的候选人。祝您在BOSS直聘找到理想的工作！",
+      "time": "10:55",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395107145232900",
+      "block": "10:55 很高兴收到您的简历，但我们目前在寻找不同工作年限经验的候选人。祝您在BOSS直聘找到理想的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "很高兴收到您的简历，但我们目前在寻找不同工作年限经验的候选人。祝您在BOSS直聘找到理想的工作！"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，理解您的考虑，祝您招聘顺利。",
+      "text": "感谢您的时间，理解您的考虑，祝您招聘顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 12:34:59",
+      "time": "12:34",
+      "job_name": "CRM数据分析师13-16K·13薪上海查看职位",
+      "isFriend": false,
+      "mid": "395131705651715"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，若后续有匹配的岗位欢迎随时联系，祝工作顺利。",
+      "text": "好的，若后续有匹配的岗位欢迎随时联系，祝工作顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 17:33:00",
+      "time": "17:33",
+      "job_name": "CRM数据分析师13-16K·13薪上海查看职位",
+      "isFriend": false,
+      "mid": "397682201002496"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，不打扰您了，祝一切顺利。",
+      "text": "好的，不打扰您了，祝一切顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 14:26:52",
+      "time": "14:26",
+      "job_name": "CRM数据分析师13-16K·13薪上海查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-23 14:26:52",
+  "unread_on_boss": 0
+}

@@ -2,7 +2,7 @@
   "chat_name": "孙佃磊",
   "chat_id": "孙佃磊#浅郁",
   "account_index": 0,
-  "job_name": "兼职·数据分析师3500-9500元/月临沂查看职位",
+  "job_name": "兼职·数据分析师3500-9500元/月临沂",
   "company": "浅郁",
   "messages": [
     {
@@ -29,7 +29,90 @@
       "kind": "card",
       "content": "",
       "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "沟通吧",
+      "time": "昨天 20:51",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398792739181312",
+      "block": "昨天 20:51 沟通吧",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "沟通吧"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398792745517825",
+      "block": "我想要和您交换微信，您是否同意 为保障您的安全建议在平台内沟通，微信沟通中需特别保护您的个人信息，谨防受骗。 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换微信，您是否同意 为保障您的安全建议在平台内沟通，微信沟通中需特别保护您的个人信息，谨防受骗。 拒绝 同意"
+    },
+    {
+      "sender": "bot",
+      "content": "[已同意交换联系方式]",
+      "text": "[已同意交换联系方式]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "contact",
+      "timestamp": "2026-10-21 10:40:40",
+      "time": "10:40",
+      "job_name": "兼职·数据分析师3500-9500元/月临沂查看职位",
+      "isFriend": false
+    },
+    {
+      "text": "",
+      "time": "10:40",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398996455990019",
+      "block": "f17621624838 孙佃磊的微信号 f17621624838 复制微信号",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "f17621624838 孙佃磊的微信号 f17621624838 复制微信号"
+    },
+    {
+      "sender": "bot",
+      "content": "微信号我记下了。",
+      "text": "微信号我记下了。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-23 14:59:33",
+      "time": "14:59",
+      "job_name": "兼职·数据分析师3500-9500元/月临沂查看职位",
+      "isFriend": false,
+      "mid": "399767850652422"
+    },
+    {
+      "sender": "bot",
+      "content": "记下了，这个岗主要是做哪块的数据分析哈？",
+      "text": "记下了，这个岗主要是做哪块的数据分析哈？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-24 11:54:18",
+      "time": "11:54",
+      "job_name": "兼职·数据分析师3500-9500元/月临沂查看职位",
+      "isFriend": false,
+      "mid": "400076225729281"
     }
   ],
-  "updated_at": "2026-10-08 02:53:30"
+  "updated_at": "2026-10-25 02:04:59",
+  "unread_on_boss": 0
 }

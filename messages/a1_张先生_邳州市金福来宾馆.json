@@ -1,0 +1,51 @@
+{
+  "chat_name": "张先生",
+  "chat_id": "张先生#邳州市金福来宾馆",
+  "account_index": 1,
+  "job_name": "兼职·兼职数据采集2000-3000元/月徐州查看职位",
+  "company": "邳州市金福来宾馆",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业学生，擅长数据标注与分析，看到贵司数据采集兼职岗位与我的技能匹配，方便的话我把简历发您细聊。",
+      "time": "12:21",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397959454630402",
+      "block": "12:21 已读 您好，我是统计学专业学生，擅长数据标注与分析，看到贵司数据采集兼职岗位与我的技能匹配，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业学生，擅长数据标注与分析，看到贵司数据采集兼职岗位与我的技能匹配，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "不好意思 我是招具身数据采集的兼职",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397959711318530",
+      "block": "不好意思 我是招具身数据采集的兼职",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思 我是招具身数据采集的兼职"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，祝您招聘顺利~",
+      "text": "好的，感谢您的时间，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-18 12:30:38",
+      "time": "12:30",
+      "job_name": "兼职·兼职数据采集2000-3000元/月徐州查看职位",
+      "isFriend": false,
+      "mid": "397961797612032"
+    }
+  ],
+  "updated_at": "2026-10-24 12:17:06",
+  "unread_on_boss": 0
+}

@@ -13,7 +13,6 @@ import json
 import os
 import shutil
 import sys
-import tempfile
 import time
 from pathlib import Path
 
@@ -23,6 +22,7 @@ os.environ.setdefault("PYTHONUTF8", "1")
 from boss_bot.browser_launcher import launch_browser  # noqa: E402
 from boss_bot.greet_engine import jd_gate  # noqa: E402
 from boss_bot.unified_config import UnifiedConfig, resolve_path  # noqa: E402
+from boss_bot.unified_config import 新建临时目录  # noqa: E402
 
 
 def read_detail(instance):
@@ -69,7 +69,7 @@ def main() -> int:
     job = (acc.jobs or [None])[0]
     query = getattr(job, "query", "") or "数据分析"
     city = getattr(job, "city", "") or "全国"
-    profile = Path(tempfile.mkdtemp(prefix="boss_jdgate_"))
+    profile = 新建临时目录("boss_jdgate_")
     print(f"关键词 {len(keywords)} 条 | 搜索 {city}·{query}")
 
     instance = None

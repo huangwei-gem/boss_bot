@@ -1,0 +1,64 @@
+{
+  "chat_name": "王女士",
+  "chat_id": "王女士#中科创达",
+  "account_index": 1,
+  "job_name": "主动安全数据分析标注工程师9-12K上海查看职位",
+  "company": "中科创达",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:02",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397586171900417",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟悉AI辅助标注流程。看到贵司在招数据分析标注工程师，和我的方向很匹配，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397586287514112",
+      "block": "送达 您好，我是统计学本科在读，有数据标注和数据分析经验，熟悉AI辅助标注流程。看到贵司在招数据分析标注工程师，和我的方向很匹配，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟悉AI辅助标注流程。看到贵司在招数据分析标注工程师，和我的方向很匹配，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "很高兴收到您的应聘，但您的技能组合和我们目前项目的需求不完全吻合。祝您在BOSS直聘找到更好的机会！",
+      "time": "昨天 09:06",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398265606570496",
+      "block": "昨天 09:06 很高兴收到您的应聘，但您的技能组合和我们目前项目的需求不完全吻合。祝您在BOSS直聘找到更好的机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "很高兴收到您的应聘，但您的技能组合和我们目前项目的需求不完全吻合。祝您在BOSS直聘找到更好的机会！"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "text": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-20 16:17:47",
+      "time": "16:17",
+      "job_name": "主动安全数据分析标注工程师9-12K上海查看职位",
+      "isFriend": false,
+      "mid": "398725409915393"
+    }
+  ],
+  "updated_at": "2026-10-23 13:22:37",
+  "unread_on_boss": 0
+}

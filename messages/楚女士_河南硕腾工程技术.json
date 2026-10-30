@@ -2,7 +2,7 @@
   "chat_name": "楚女士",
   "chat_id": "楚女士#河南硕腾工程技术",
   "account_index": 0,
-  "job_name": "数据标注专员3-5K周口查看职位",
+  "job_name": "数据标注专员3-5K周口",
   "company": "河南硕腾工程技术",
   "messages": [
     {
@@ -152,9 +152,64 @@
       "timestamp": "2026-10-10 02:42:50",
       "time": "02:42",
       "job_name": "数据标注专员3-5K周口查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394986172060417"
+    },
+    {
+      "sender": "bot",
+      "content": "楚女士您好，之前聊的数据标注专员3-5K周口查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "楚女士您好，之前聊的数据标注专员3-5K周口查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 16:51:13",
+      "time": "16:51",
+      "job_name": "数据标注专员3-5K周口查看职位",
+      "isFriend": false,
+      "mid": "395194677207810"
+    },
+    {
+      "text": "居家办公的话 也是要先来公司培训学习的",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395194951971585",
+      "block": "居家办公的话 也是要先来公司培训学习的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "居家办公的话 也是要先来公司培训学习的"
+    },
+    {
+      "sender": "bot",
+      "content": "工作日下午都可以安排面试，您看哪个时间段方便？",
+      "text": "工作日下午都可以安排面试，您看哪个时间段方便？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-10 16:53:13",
+      "time": "16:53",
+      "job_name": "数据标注专员3-5K周口查看职位",
+      "isFriend": false,
+      "mid": "395195169485570"
+    },
+    {
+      "text": "线下面试哈",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395195316515586",
+      "block": "线下面试哈",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "线下面试哈"
     }
   ],
-  "updated_at": "2026-10-10 02:42:50",
+  "updated_at": "2026-10-25 08:08:05",
   "unread_on_boss": 0
 }

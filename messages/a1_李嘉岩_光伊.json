@@ -1,0 +1,23 @@
+{
+  "chat_name": "李嘉岩",
+  "chat_id": "李嘉岩#光伊",
+  "account_index": 1,
+  "job_name": "TEMU数据分析师选品助理岗跨境电商亚马逊7-8K上海查看职位",
+  "company": "光伊",
+  "messages": [
+    {
+      "text": "您好，我是统计学本科在读，熟练使用Excel/SQL/Python做数据整理和业务报表分析，有数据分析项目经验。看到贵司TEMU数据分析师选品助理岗位，我的方向很匹配，方便的话我把简历发您细聊。",
+      "time": "10-10 05:03",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395020817031680",
+      "block": "10-10 05:03 送达 您好，我是统计学本科在读，熟练使用Excel/SQL/Python做数据整理和业务报表分析，有数据分析项目经验。看到贵司TEMU数据分析师选品助理岗位，我的方向很匹配，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，熟练使用Excel/SQL/Python做数据整理和业务报表分析，有数据分析项目经验。看到贵司TEMU数据分析师选品助理岗位，我的方向很匹配，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 15:18:28"
+}

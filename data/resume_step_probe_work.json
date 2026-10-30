@@ -1,0 +1,8 @@
+[
+  {"do": "open"},
+  {"do": "set", "fields": {"0": "天鹅到家"}},
+  {"do": "clicktext", "text": "天鹅到家", "wait": 2},
+  {"do": "focus", "field": 3},
+  {"do": "shot"},
+  {"do": "show"}
+]

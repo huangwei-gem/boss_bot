@@ -140,18 +140,6 @@
       "mid": "393294780494081"
     },
     {
-      "text": "",
-      "time": "",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "393294830588160",
-      "block": "",
-      "sender": "hr",
-      "kind": "bubble",
-      "content": ""
-    },
-    {
       "sender": "bot",
       "content": "您好，感谢您的介绍。不过我的求职方向是数据分析岗位，跟这个岗位不太匹配，就不耽误您时间了，祝您招聘顺利~",
       "text": "您好，感谢您的介绍。不过我的求职方向是数据分析岗位，跟这个岗位不太匹配，就不耽误您时间了，祝您招聘顺利~",
@@ -193,9 +181,50 @@
       "timestamp": "2026-10-09 12:46:37",
       "time": "12:46",
       "job_name": "兼职·线上推广专员20-50元/时亳州查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394780658651393"
+    },
+    {
+      "text": "你好，正在招聘的日结兼职有两种，一种是电商拍摄出镜人员，一种是注册软件推广人员，每小时20元，当天结算工资",
+      "time": "17:04",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395198029312266",
+      "block": "17:04 你好，正在招聘的日结兼职有两种，一种是电商拍摄出镜人员，一种是注册软件推广人员，每小时20元，当天结算工资",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，正在招聘的日结兼职有两种，一种是电商拍摄出镜人员，一种是注册软件推广人员，每小时20元，当天结算工资"
+    },
+    {
+      "sender": "bot",
+      "content": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+      "text": "我的期望薪资是 面议，具体可以面谈，更看重发展机会和团队氛围。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rule",
+      "action": "text",
+      "timestamp": "2026-10-10 17:14:26",
+      "time": "17:14",
+      "job_name": "兼职·线上推广专员20-50元/时亳州查看职位",
+      "isFriend": false,
+      "mid": "395200403828998"
+    },
+    {
+      "text": "",
+      "time": "10-11 09:48",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395444617969921",
+      "block": "我想要和您交换微信，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换微信，您是否同意 拒绝 同意"
     }
   ],
-  "updated_at": "2026-10-09 12:46:37",
-  "unread_on_boss": 0
+  "updated_at": "2026-10-23 14:25:31",
+  "unread_on_boss": 1
 }

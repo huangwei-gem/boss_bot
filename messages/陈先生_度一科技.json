@@ -2,7 +2,7 @@
   "chat_name": "陈先生",
   "chat_id": "陈先生#度一科技",
   "account_index": 0,
-  "job_name": "兼职·日语数据标注N2-居家办公40-50元/时铁岭查看职位",
+  "job_name": "兼职·日语数据标注N2-居家办公40-50元/时铁岭",
   "company": "度一科技",
   "messages": [
     {
@@ -16,7 +16,50 @@
       "sender": "me",
       "kind": "bubble",
       "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "您好 您日语什么等级",
+      "time": "00:12",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "399903621534464",
+      "block": "00:12 您好 您日语什么等级",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好 您日语什么等级"
+    },
+    {
+      "sender": "bot",
+      "content": "日语没考过级呢，主要做数据标注和数据分析的，这个岗必须N2吗？",
+      "text": "日语没考过级呢，主要做数据标注和数据分析的，这个岗必须N2吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-24 11:24:04",
+      "time": "11:24",
+      "job_name": "兼职·日语数据标注N2-居家办公40-50元/时铁岭查看职位",
+      "isFriend": false,
+      "mid": "400068794921728"
+    },
+    {
+      "sender": "bot",
+      "content": "没考过级，主要做中文标注和数据分析的，这岗位一定要日语吗？",
+      "text": "没考过级，主要做中文标注和数据分析的，这岗位一定要日语吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-24 13:16:58",
+      "time": "13:16",
+      "job_name": "兼职·日语数据标注N2-居家办公40-50元/时铁岭查看职位",
+      "isFriend": false,
+      "mid": "400096545776386"
     }
   ],
-  "updated_at": "2026-10-08 15:18:34"
+  "updated_at": "2026-10-25 02:01:16",
+  "unread_on_boss": 0
 }

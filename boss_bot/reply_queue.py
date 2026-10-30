@@ -27,6 +27,57 @@ ACTION_CARDS = ("附件简历，您是否同意", "交换微信", "电话号码�
 # 文案改了要同步这里——tests/test_blue_collar_gate.py 有一致性锁。
 REFUSAL_ENDINGS = ("就不耽误您时间了", "不占用您的时间", "先放弃")
 
+# 拒过这一单的完整说法。上面那三条只是我们自己写死的收尾模板，接不住 AI 现编的拒话：
+# 盘上我方气泡里真实出现过的形状是 不耽误您 479 / 不考虑 281 / 不打扰 98 / 方向不 90 /
+# 不太合适 74 / 暂时不 72 / 不匹配 12 / 就先不 4 / 不投了 1，朱微那一路是最后一种。
+拒话说法 = REFUSAL_ENDINGS + ("不投了", "不考虑", "不太合适", "不适合我", "方向不合适",
+                              "暂时不投", "就先不", "不耽误您", "不打扰")
+
+# 问"这个岗位还在不在招"的那一句。同一会话里这句只许问一次：
+# 武先生那一路 10-23 12:49 问过「天盛传媒这个岗位还在招吗？」没人回，
+# 10-24 13:03 又问一遍「哈，还在吗？」——用户 10-25 的指正「同一个岗位，你多次问
+# 人家要不要招聘」就是这一族。第一次都没回，第二次只会更像机器。
+还招吗说法 = ("还在招吗", "还招人吗", "还在招人", "是否还在招", "岗位还在",
+             "还招吗", "在招吗", "还在考虑吗", "还在吗")
+
+
+def 我方说过(chat, 说法) -> bool:
+    """这一段对话里，我们自己有没有说过带这些字样的话（整段都算，不只最后一句）。"""
+    for m in _sorted((chat or {}).get("messages") or []):
+        if m.get("is_mine") and any(k in msg_body(m) for k in 说法):
+            return True
+    return False
+
+
+def 拒过这单(chat) -> bool:
+    """这一单我们是不是已经当面拒过了。
+
+    只看最后一句不够：朱微那一路 10-21 16:24 说的是「…招聘实习这个岗位方向不太合适，
+    就不投了，谢谢您～」，可那句被后面两条我方气泡（10-23 12:56 的占位符、13:19 的
+    「嗯嗢，好的～」）压在了下面，followup_due 原来只比 info["said"]（最后那句我方），
+    于是 10-24 13:21 又追出一句「之前聊的人力招聘实习生…我很有兴趣」——
+    前脚拒、后脚说有兴趣，HR 当场认出「是用ai插件主动投递的吗老师？」。
+    """
+    return 我方说过(chat, 拒话说法)
+
+
+def 问过还招吗(chat) -> bool:
+    """那句"还在招吗"问出去之后对方一句没回——这种就不许问第二遍。
+
+    对方后来开过口就放开：那是新的一轮对话，再提一次不是复读（我自己第一版写成"整段
+    问过就拦"，回放盘上存档发现 179 个被拦的会话里有 49 个 HR 后来回了话，比如
+    河北鼎联那句之后对方回的是「我们有线上的项目，每天在家里用手机电脑做一做…」——
+    那种正是该接着往下聊的，拦掉等于自己把漏斗掐了）。
+    """
+    seq = _sorted((chat or {}).get("messages") or [])
+    问 = 对方 = -1
+    for i, m in enumerate(seq):
+        if inbound_body(m):
+            对方 = i
+        elif m.get("is_mine") and any(k in msg_body(m) for k in 还招吗说法):
+            问 = i
+    return 0 <= 问 > 对方
+
 
 def msg_body(m: dict) -> str:
     """气泡正文在 text/content，卡片正文只在 card_text——只认 text 会把卡片当成没说话。"""
@@ -51,10 +102,38 @@ def inbound_body(m: dict) -> str:
     return body
 
 
-def order_key(m: dict):
-    """顺序按 data-mid 判，不按时间字符串——BOSS 的时间只到分钟且跨年要猜。"""
-    mid = str(m.get("mid") or "")
-    return (int(mid) if mid.isdigit() else 0, str(m.get("time") or ""))
+def 排序位置(消息们: list) -> list:
+    """给每条消息算一个可比较的排序键，和存档写回时用的那一份是同一套规则。
+
+    data-mid 是雪花 id，同一会话内自上而下单调递增，是唯一可靠的顺序；BOSS 的时间
+    标签只到分钟、还常常整段缺失（"昨天 21:54"、"09-23 21:37" 解析不出戳，"HH:MM"
+    会被当成今天），按它重排必然把昨天的消息排到今天之后。
+    没有 mid 的行沿用上一条带 mid 的位置，再用列表下标兜住先后——这种行只有两种来路：
+    我们刚发出去、还没从页面回填 mid 的自记气泡，和工具补写的动作标记（实测全库
+    13031 行带 mid、527 行不带 mid 的**全部**是我方的、对方一行都没有）。
+
+    这一族以前是一条单句键 `(int(mid) if mid.isdigit() else 0, time)`：没 mid 就是 0，
+    等于把我们刚发出去的那条排到整段对话最前面，于是"我们已经接过了"被读成
+    "卡在 HR 手上"——欠回复名单每一轮把同一句重新端上来，而 owed 那条腿是故意绕开
+    was_handled 的（"看过但没回"要能翻账），结果同一句被回两三遍：盘上 52 组、
+    涉及 112 条，赵女士那句「好的」被回了 6 次，朱微那句「好嘟」12:56 回过一次、
+    13:19 又回一次。同一段存档回放：旧键判成"欠回复"的 280 个会话里有 33 个其实早回过了。
+    """
+    原文 = list(消息们 or [])
+    第一个 = 0
+    for m in 原文:
+        mid = str(m.get("mid") or m.get("msg_id") or "").strip()
+        if mid.isdigit():
+            第一个 = int(mid)
+            break
+    键 = []
+    上一个 = 0
+    for idx, m in enumerate(原文):
+        mid = str(m.get("mid") or m.get("msg_id") or "").strip()
+        if mid.isdigit():
+            上一个 = int(mid)
+        键.append(((上一个 or 第一个), idx))
+    return 键
 
 
 def msg_time(m: dict, fallback: str = "", now=None) -> datetime:
@@ -98,7 +177,10 @@ def msg_time(m: dict, fallback: str = "", now=None) -> datetime:
 
 
 def _sorted(messages):
-    return sorted([m for m in messages if msg_body(m)], key=order_key)
+    原文 = list(messages or [])
+    键 = 排序位置(原文)
+    return [原文[i] for i in sorted(range(len(原文)), key=lambda i: 键[i])
+            if msg_body(原文[i])]
 
 
 def chat_state(messages, now=None, fallback_time=""):
@@ -115,18 +197,21 @@ def chat_state(messages, now=None, fallback_time=""):
         return "idle", {}
     last_in = None
     last_out = None
-    for m in seq:
+    for i, m in enumerate(seq):
         if inbound_body(m):
-            last_in = m
+            last_in = i
         if m.get("is_mine"):
-            last_out = m
-    if last_in and (not last_out or order_key(last_in) > order_key(last_out)):
-        return "reply", {"ask": msg_body(last_in),
-                         "at": msg_time(last_in, fallback_time, now),
-                         "mid": str(last_in.get("mid") or "")}
-    if last_out:
-        return "follow", {"said": msg_body(last_out),
-                          "at": msg_time(last_out, fallback_time, now)}
+            last_out = i
+    # 谁在这段对话里更靠后，就卡在谁手上（顺序已由 排序位置 按 data-mid 定好）
+    if last_in is not None and (last_out is None or last_in > last_out):
+        m = seq[last_in]
+        return "reply", {"ask": msg_body(m),
+                         "at": msg_time(m, fallback_time, now),
+                         "mid": str(m.get("mid") or "")}
+    if last_out is not None:
+        m = seq[last_out]
+        return "follow", {"said": msg_body(m),
+                          "at": msg_time(m, fallback_time, now)}
     return "idle", {}
 
 
@@ -210,8 +295,12 @@ def followup_due(chats, state, now=None, after_hours=8, gap_hours=24,
         if kind != "follow":
             continue
         # 上一句就是我们自己说的"这个不考虑了"，再追一句"还在招人吗"就是反悔骚扰
-        # （2026-10-07 09:54 账号2 真的对一单不露脸主播追过）
-        if any(mark in (info.get("said") or "") for mark in REFUSAL_ENDINGS):
+        # （2026-10-07 09:54 账号2 真的对一单不露脸主播追过）。
+        # 判据扫我方整段，不只最后一句——拒话被后面的客气话压住就漏（见 拒过这单）。
+        if 拒过这单(c):
+            continue
+        # 这句已经问过、对方一句没回，就不再问第二遍
+        if 问过还招吗(c):
             continue
         idle = now - info.get("at", datetime.min)
         if idle < timedelta(hours=after_hours) or idle > timedelta(days=within_days):

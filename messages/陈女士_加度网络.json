@@ -1,0 +1,63 @@
+{
+  "chat_name": "陈女士",
+  "chat_id": "陈女士#加度网络",
+  "account_index": 0,
+  "job_name": "跨境数据分析师（双休/六险）6-7K长沙",
+  "company": "加度网络",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "11:14",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397235401888514",
+      "block": "11:14 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397235401921282",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "11:21",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397237036823298",
+      "block": "11:21 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的反馈，祝您招聘顺利~",
+      "text": "理解，感谢您的反馈，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-16 11:24:20",
+      "time": "11:24",
+      "job_name": "跨境数据分析师（双休/六险）6-7K长沙查看职位",
+      "isFriend": false,
+      "mid": "397237703299842"
+    }
+  ],
+  "updated_at": "2026-10-25 07:35:12",
+  "unread_on_boss": 0
+}

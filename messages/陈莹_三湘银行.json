@@ -1,0 +1,22 @@
+{
+  "chat_name": "陈莹",
+  "chat_id": "陈莹#三湘银行",
+  "account_index": 0,
+  "job_name": "研发工程师（征信报送及外部数据对接方向）15-28K长沙查看职位",
+  "company": "三湘银行",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "14:46",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397641250132740",
+      "block": "14:46 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-23 13:58:42"
+}

@@ -1,0 +1,78 @@
+{
+  "chat_name": "李女士",
+  "chat_id": "李女士#淮北市相山区傲奇___",
+  "account_index": 0,
+  "job_name": "兼职·招募市场调研报告、调研数据分析设计师500-1500元/天淮北",
+  "company": "淮北市相山区傲奇...",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 12:48",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "398319994012418",
+      "block": "昨天 12:48 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398319994032898",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "市场调研报告擅长吗？近期作品发给我看一下",
+      "time": "昨天 13:26",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398329480930049",
+      "block": "昨天 13:26 市场调研报告擅长吗？近期作品发给我看一下",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "市场调研报告擅长吗？近期作品发给我看一下"
+    },
+    {
+      "sender": "bot",
+      "content": "擅长，做过的数据分析报告挺多的，我整理下稍后发您哈",
+      "text": "擅长，做过的数据分析报告挺多的，我整理下稍后发您哈",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 17:39:14",
+      "time": "17:39",
+      "job_name": "兼职·招募市场调研报告、调研数据分析设计师500-1500元/天淮北查看职位",
+      "isFriend": false,
+      "mid": "398745427723009"
+    },
+    {
+      "sender": "bot",
+      "content": "嗯，市场调研报告做过的，稍等下我整理几份发您看。",
+      "text": "嗯，市场调研报告做过的，稍等下我整理几份发您看。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 17:59:07",
+      "time": "17:59",
+      "job_name": "兼职·招募市场调研报告、调研数据分析设计师500-1500元/天淮北查看职位",
+      "isFriend": false,
+      "mid": "398750311744262"
+    }
+  ],
+  "updated_at": "2026-10-25 02:10:44",
+  "unread_on_boss": 0
+}

@@ -1,0 +1,50 @@
+{
+  "chat_name": "向前",
+  "chat_id": "向前#三一重工",
+  "account_index": 0,
+  "job_name": "HR数据产品经理20-30K·13薪长沙",
+  "company": "三一重工",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "14:43",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397640469943048",
+      "block": "14:43 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "您好，我们仔细评估了您的过往工作经历，觉得可能不太适合这个岗位，祝您早日找到满意的工作！",
+      "time": "17:29",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398742962246400",
+      "block": "17:29 您好，我们仔细评估了您的过往工作经历，觉得可能不太适合这个岗位，祝您早日找到满意的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好，我们仔细评估了您的过往工作经历，觉得可能不太适合这个岗位，祝您早日找到满意的工作！"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-20 17:37:46",
+      "time": "17:37",
+      "job_name": "HR数据产品经理20-30K·13薪长沙查看职位",
+      "isFriend": false,
+      "mid": "398745064878849"
+    }
+  ],
+  "updated_at": "2026-10-25 02:12:05",
+  "unread_on_boss": 0
+}

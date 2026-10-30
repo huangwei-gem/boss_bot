@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "392981025214720",
-      "block": "10:43 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -42,18 +42,6 @@
       "sender": "hr",
       "kind": "bubble",
       "content": "您好，我们这边项目目前是数据标注和图片采集两大类，可以线上作业，时间一般做到晚上八点半之前，按单量多劳多得，次月结算，打到银行卡，作业前需要先参与培训（线上腾讯会议），培训完之后可进行作业，感兴趣可以加我企业微信。"
-    },
-    {
-      "text": "",
-      "time": "",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "394455673020673",
-      "block": "",
-      "sender": "hr",
-      "kind": "bubble",
-      "content": ""
     },
     {
       "text": "",
@@ -146,9 +134,40 @@
       "timestamp": "2026-10-10 01:55:05",
       "time": "01:55",
       "job_name": "兼职·线上图片采集、数据标注15-25元/时廊坊查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394974440194305"
+    },
+    {
+      "sender": "bot",
+      "content": "微信号我记下了，想问下培训一般安排在什么时间？我工作日下午都有空。",
+      "text": "微信号我记下了，想问下培训一般安排在什么时间？我工作日下午都有空。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-21 17:31:36",
+      "time": "17:31",
+      "job_name": "兼职·线上图片采集、数据标注15-25元/时廊坊查看职位",
+      "isFriend": false,
+      "mid": "399097428939009"
+    },
+    {
+      "sender": "bot",
+      "content": "杨姐，微信号我记下了，培训时间定了跟我说一声，我下午都能配合。",
+      "text": "杨姐，微信号我记下了，培训时间定了跟我说一声，我下午都能配合。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 11:11:59",
+      "time": "11:11",
+      "job_name": "兼职·线上图片采集、数据标注15-25元/时廊坊查看职位",
+      "isFriend": false,
+      "mid": "399711922864385"
     }
   ],
-  "updated_at": "2026-10-10 01:55:05",
+  "updated_at": "2026-10-23 12:58:23",
   "unread_on_boss": 0
 }

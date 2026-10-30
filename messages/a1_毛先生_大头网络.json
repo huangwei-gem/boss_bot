@@ -250,7 +250,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "393789452108288",
-      "block": "昨天 17:33 Lixq040503 毛先生的微信号 Lixq040503 复制微信号",
+      "block": "Lixq040503 毛先生的微信号 Lixq040503 复制微信号",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -300,8 +300,44 @@
       "job_name": "兼职·一对一线上高薪家教50-90元/时长沙查看职位",
       "isFriend": false,
       "mid": "394391183188483"
+    },
+    {
+      "text": "是远程啊",
+      "time": "10-13 10:13",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396158601224705",
+      "block": "10-13 10:13 是远程啊",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "是远程啊"
+    },
+    {
+      "text": "我们7-12休息",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396158614594050",
+      "block": "我们7-12休息",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "我们7-12休息"
+    },
+    {
+      "text": "电话和考核都是线上沟通",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396158667096578",
+      "block": "电话和考核都是线上沟通",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "电话和考核都是线上沟通"
     }
   ],
-  "updated_at": "2026-10-09 23:21:05",
+  "updated_at": "2026-10-24 14:41:54",
   "unread_on_boss": 0
 }

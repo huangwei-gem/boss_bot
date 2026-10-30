@@ -1,0 +1,48 @@
+{
+  "chat_name": "张小龙",
+  "chat_id": "张小龙#广东奕算天云科技",
+  "account_index": 0,
+  "job_name": "兼职·数据标注10-20元/时河源",
+  "company": "广东奕算天云科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "10:46",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397936116163331",
+      "block": "10:46 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397936116192001",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "你好",
+      "time": "14:26",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "400113541595905",
+      "block": "14:26 你好",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好"
+    }
+  ],
+  "updated_at": "2026-10-25 01:57:11",
+  "unread_on_boss": 0
+}

@@ -97,18 +97,6 @@
       "content": "暂时不需要"
     },
     {
-      "text": "",
-      "time": "",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "394481881145859",
-      "block": "",
-      "sender": "hr",
-      "kind": "bubble",
-      "content": ""
-    },
-    {
       "sender": "bot",
       "content": "感谢您的回复，理解您的考虑。祝您招聘顺利~",
       "text": "感谢您的回复，理解您的考虑。祝您招聘顺利~",
@@ -135,9 +123,24 @@
       "timestamp": "2026-10-10 01:39:00",
       "time": "01:39",
       "job_name": "兼职·数据标注专员15-20元/时安顺查看职位",
+      "isFriend": false,
+      "mid": "394970487161344"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，若有线上机会再联系，感谢！",
+      "text": "理解，若有线上机会再联系，感谢！",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 16:04:14",
+      "time": "16:04",
+      "job_name": "兼职·数据标注专员15-20元/时安顺查看职位",
       "isFriend": false
     }
   ],
-  "updated_at": "2026-10-10 01:39:00",
+  "updated_at": "2026-10-23 16:04:14",
   "unread_on_boss": 0
 }

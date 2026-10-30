@@ -1,0 +1,36 @@
+{
+  "chat_name": "林女士",
+  "chat_id": "林女士#英檬科技",
+  "account_index": 1,
+  "job_name": "数据分析师实习生200-220元/天上海查看职位",
+  "company": "英檬科技",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:05",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397587002921475",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学本科在读，有数据标注、AI训练数据质检及数据分析相关经验，熟练使用Excel/SQL/Python完成数据整理、报表分析与可视化，对数据分析师实习岗位很感兴趣，方便的话我把简历发您细聊",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397587120484867",
+      "block": "送达 您好，我是统计学本科在读，有数据标注、AI训练数据质检及数据分析相关经验，熟练使用Excel/SQL/Python完成数据整理、报表分析与可视化，对数据分析师实习岗位很感兴趣，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据标注、AI训练数据质检及数据分析相关经验，熟练使用Excel/SQL/Python完成数据整理、报表分析与可视化，对数据分析师实习岗位很感兴趣，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:47:16"
+}

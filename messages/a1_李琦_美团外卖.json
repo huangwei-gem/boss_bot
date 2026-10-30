@@ -1,0 +1,25 @@
+{
+  "chat_name": "李琦",
+  "chat_id": "李琦#美团外卖",
+  "account_index": 1,
+  "job_name": "美团站点爆单急招几个单王救急-想挣米的来7-14元/单长沙查看职位",
+  "company": "美团外卖",
+  "messages": [
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-10 17:17:05",
+      "time": "17:17",
+      "job_name": "美团站点爆单急招几个单王救急-想挣米的来7-14元/单长沙查看职位",
+      "isFriend": false
+    }
+  ],
+  "updated_at": "2026-10-16 01:29:53",
+  "unread_on_boss": 0
+}

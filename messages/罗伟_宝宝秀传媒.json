@@ -1,0 +1,50 @@
+{
+  "chat_name": "罗伟",
+  "chat_id": "罗伟#宝宝秀传媒",
+  "account_index": 0,
+  "job_name": "室内团播主播7-20K长沙",
+  "company": "宝宝秀传媒",
+  "messages": [
+    {
+      "text": "你好 请问干主播嘛，首月7000次月1万永久无责保底，面试包来回打车。",
+      "time": "14:37",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397639070765826",
+      "block": "14:37 你好 请问干主播嘛，首月7000次月1万永久无责保底，面试包来回打车。",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好 请问干主播嘛，首月7000次月1万永久无责保底，面试包来回打车。"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。不过我这边只找线上远程就能做的兼职，这个岗位不太合适，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。不过我这边只找线上远程就能做的兼职，这个岗位不太合适，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "scam_filter",
+      "action": "text",
+      "timestamp": "2026-10-17 14:39:35",
+      "time": "14:39",
+      "job_name": "室内团播主播7-20K长沙查看职位",
+      "isFriend": false,
+      "mid": "397639586996993"
+    },
+    {
+      "text": "经过认真考虑，我们认为您的经验与我们的职位需求并不完全一致。祝您在BOSS直聘找到您理想的工作！",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397639650833153",
+      "block": "经过认真考虑，我们认为您的经验与我们的职位需求并不完全一致。祝您在BOSS直聘找到您理想的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "经过认真考虑，我们认为您的经验与我们的职位需求并不完全一致。祝您在BOSS直聘找到您理想的工作！"
+    }
+  ],
+  "updated_at": "2026-10-25 08:06:29",
+  "unread_on_boss": 0
+}

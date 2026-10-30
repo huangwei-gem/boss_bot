@@ -1,0 +1,23 @@
+{
+  "chat_name": "万女士",
+  "chat_id": "万女士#上海华屹数码科技___",
+  "account_index": 1,
+  "job_name": "数据分析师10-15K上海查看职位",
+  "company": "上海华屹数码科技...",
+  "messages": [
+    {
+      "text": "您好！我是统计学本科在读，有数据标注和数据分析相关经验，熟练使用Excel、SQL和Python，看到贵司在招数据分析师，觉得方向很匹配，方便的话我把简历发您细聊",
+      "time": "10-10 04:59",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395019730784768",
+      "block": "10-10 04:59 送达 您好！我是统计学本科在读，有数据标注和数据分析相关经验，熟练使用Excel、SQL和Python，看到贵司在招数据分析师，觉得方向很匹配，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好！我是统计学本科在读，有数据标注和数据分析相关经验，熟练使用Excel、SQL和Python，看到贵司在招数据分析师，觉得方向很匹配，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 15:20:57"
+}

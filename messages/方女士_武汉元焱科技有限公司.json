@@ -2,7 +2,7 @@
   "chat_name": "方女士",
   "chat_id": "方女士#武汉元焱科技有限公司",
   "account_index": 0,
-  "job_name": "数据服务主管/均薪10K+双休五险一金10-15K长沙查看职位",
+  "job_name": "数据服务主管/均薪10K+双休五险一金10-15K长沙",
   "company": "武汉元焱科技有限公司",
   "messages": [
     {
@@ -28,7 +28,68 @@
       "sender": "hr",
       "kind": "bubble",
       "content": "您好，实在抱歉，不是很合适哈，祝您早日找到满意的工作机会"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-10 15:04:52",
+      "time": "15:04",
+      "job_name": "数据服务主管/均薪10K+双休五险一金10-15K长沙查看职位",
+      "isFriend": false,
+      "mid": "395168541655810"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "default",
+      "action": "text",
+      "timestamp": "2026-10-10 15:28:26",
+      "time": "15:28",
+      "job_name": "数据服务主管/均薪10K+双休五险一金10-15K长沙查看职位",
+      "isFriend": false,
+      "mid": "395174338822919"
+    },
+    {
+      "sender": "bot",
+      "content": "方女士您好，之前聊的数据服务主管/均薪10K+双休五险一金10-15K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "方女士您好，之前聊的数据服务主管/均薪10K+双休五险一金10-15K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 15:08:43",
+      "time": "15:08",
+      "job_name": "数据服务主管/均薪10K+双休五险一金10-15K长沙查看职位",
+      "isFriend": false,
+      "mid": "397646739895040"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，那就不打扰您了，祝工作顺利。",
+      "text": "好的，那就不打扰您了，祝工作顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 14:38:18",
+      "time": "14:38",
+      "job_name": "数据服务主管/均薪10K+双休五险一金10-15K长沙查看职位",
+      "isFriend": false,
+      "mid": "400116531413761"
     }
   ],
-  "updated_at": "2026-10-10 09:13:43"
+  "updated_at": "2026-10-25 01:56:45",
+  "unread_on_boss": 0
 }

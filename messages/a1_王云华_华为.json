@@ -1,0 +1,23 @@
+{
+  "chat_name": "王云华",
+  "chat_id": "王云华#华为",
+  "account_index": 1,
+  "job_name": "python数据分析20-40K上海查看职位",
+  "company": "华为",
+  "messages": [
+    {
+      "text": "您好，我是统计学本科在读，有Python数据分析经验，看到贵司的python数据分析岗位很感兴趣，方便的话我把简历发您细聊。",
+      "time": "13:49",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397627328508417",
+      "block": "13:49 送达 您好，我是统计学本科在读，有Python数据分析经验，看到贵司的python数据分析岗位很感兴趣，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有Python数据分析经验，看到贵司的python数据分析岗位很感兴趣，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:30:48"
+}

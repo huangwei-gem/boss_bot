@@ -1,0 +1,23 @@
+{
+  "chat_name": "李先生",
+  "chat_id": "李先生#上海鹰角网络",
+  "account_index": 1,
+  "job_name": "数据分析师（游戏平台）18-35K·16薪上海查看职位",
+  "company": "上海鹰角网络",
+  "messages": [
+    {
+      "text": "您好，我是统计学本科在读，有数据分析和数据标注经验，熟悉SQL/Python，看到贵司数据分析师岗位，方便的话我把简历发您细聊。",
+      "time": "12:19",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397605129552385",
+      "block": "12:19 送达 您好，我是统计学本科在读，有数据分析和数据标注经验，熟悉SQL/Python，看到贵司数据分析师岗位，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据分析和数据标注经验，熟悉SQL/Python，看到贵司数据分析师岗位，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:35:09"
+}

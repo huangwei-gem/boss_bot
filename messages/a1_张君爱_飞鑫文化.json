@@ -245,9 +245,23 @@
       "timestamp": "2026-10-10 06:08:35",
       "time": "06:08",
       "job_name": "无任何费用/二次元/官方认证（代招职位）8-15K长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395036742492417"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395036747530497",
+      "block": "AI生成回复",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "AI生成回复"
     }
   ],
-  "updated_at": "2026-10-10 06:08:35",
+  "updated_at": "2026-10-23 15:17:09",
   "unread_on_boss": 0
 }

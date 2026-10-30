@@ -16,10 +16,10 @@
     python run_consistency_test.py
 """
 
+import hashlib
 import json
 import os
 import sys
-import time
 import traceback
 from pathlib import Path
 from datetime import datetime
@@ -29,9 +29,12 @@ import requests
 # 项目根目录
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+from boss_bot.unified_config import 新建临时目录, 面板端口  # noqa: E402
 
-# 后端API基础URL
-BASE_URL = "http://127.0.0.1:5000"
+# 后端API基础URL —— 跟面板用同一个数（unified_config 那份默认口，含 BOSS_PANEL_PORT 覆盖）。
+# 自己写死一个端口就等于"探 A 听 B"：检查看着全绿，其实读的是别的项目的服务——
+# 10-27 与 10-28 两次实测，5000 上站着的是另一个项目的 app.py。
+BASE_URL = "http://127.0.0.1:%s" % 面板端口()
 
 # 配置文件路径
 BOT_CONFIG_FILE = PROJECT_ROOT / "bot_config.json"
@@ -43,6 +46,77 @@ REPLY_RECORDS_FILE = PROJECT_ROOT / "data" / "reply_records.json"
 REPORT_DIR = Path(__file__).resolve().parent
 REPORT_FILE = REPORT_DIR / "test_report.md"
 REPORT_JSON_FILE = REPORT_DIR / "test_report.json"
+
+# 副作用类用例（POST）只打这一个隔离实例，配置是临时副本，跑完就扔
+SANDBOX = {"url": None, "proc": None, "目录": None}
+SANDBOX_PORT = int(os.environ.get("BOSS_CONSISTENCY_SANDBOX_PORT", "5078"))
+
+
+def 起隔离实例():
+    """抄一份配置到临时目录，在那里起一个面板实例给 POST 用例挨。
+
+    复用实测套件的 start_server（LAUNCHER 只有一处），别再抄第三份启动代码。
+    """
+    sys.path.insert(0, str(PROJECT_ROOT / "tests"))
+    import e2e_account_scope_ui as E
+    tmp = 新建临时目录("boss_consistency_")
+    E.seed(tmp)                       # 拿真实配置的副本（只把招呼语清空，不改用户那份）
+    proc = E.start_server(tmp, SANDBOX_PORT)
+    SANDBOX.update(url=f"http://127.0.0.1:{SANDBOX_PORT}", proc=proc, 目录=tmp)
+    print(f"  [隔离实例] {SANDBOX['url']}（配置是 {tmp} 里的副本）")
+    return True
+
+
+def 停隔离实例():
+    proc, tmp = SANDBOX.get("proc"), SANDBOX.get("目录")
+    if proc:
+        from boss_bot.platform_compat import 终止进程
+        终止进程(proc.pid)
+    if tmp:
+        import shutil
+        shutil.rmtree(str(tmp), ignore_errors=True)
+    SANDBOX.update(url=None, proc=None, 目录=None)
+
+
+用户配置文件 = ("bot_config.json", "user_profile.json", "config_overrides.json")
+# 这几份是面板自己在写的：回复腿落一条记录、抓一轮池子，哈希就变一次。
+# 面板在跑的时候把它们算进"这趟没动用户数据"，这条门永远是红的（10-20 16:17 实测
+# 红在 reply_records + job_pool 两份上），而一条永远红的门等于没有门。
+# 面板停着跑这一趟时，它们照样钉死——脚本自己写了照样抓得出。
+运行中会写 = ("data/greet_records.json", "data/reply_records.json",
+              "data/job_pool.json", "data/job_pool_account_1.json")
+
+
+def 快照配置文件():
+    """给"这一趟跑完不许动用户任何数据"这条门用：算每个受管文件的哈希。
+
+    清单必须盖住沙箱顶掉的每一个配置出口——10-20 那次 bot_config 恢复了、
+    config_overrides 漏在清单外，结果 importance_keywords 一直是空的，
+    「收到重要消息就暂停」悄悄停了两天，直到画像那条事实闸门才把它牵出来。
+    """
+    快照 = {}
+    for 名 in 用户配置文件 + 运行中会写:
+        p = PROJECT_ROOT / 名
+        快照[名] = (hashlib.sha256(p.read_bytes()).hexdigest()[:16]
+                    if p.is_file() else "不存在")
+    return 快照
+
+
+def 判定用户数据(跑前, 跑后, 面板在跑):
+    """对比两份快照，分成"这趟犯规"和"面板自己在写、本轮豁免"。
+
+    拆成纯函数是为了能被 pytest 真验一遍（门要是只会放行，它和没有一样）：
+    配置文件任何时候都钉死；记录文件只在确实读到 running=true 时才豁免。
+    返回 (犯规字典, 豁免字典)。
+    """
+    变了 = {k: (跑前[k], 跑后[k]) for k in 跑前
+            if k in 跑后 and 跑前[k] != 跑后[k]}
+    动了记录 = {k: v for k, v in 变了.items() if k in 运行中会写}
+    犯规 = {k: v for k, v in 变了.items() if k not in 运行中会写}
+    if not 面板在跑:
+        犯规.update(动了记录)
+        return 犯规, {}
+    return 犯规, 动了记录
 
 
 # ===================== 测试结果收集器 =====================
@@ -130,9 +204,9 @@ def load_json_file(path):
         return None
 
 
-def api_get(path, timeout=10):
+def api_get(path, timeout=10, base=None):
     """GET请求API。"""
-    url = f"{BASE_URL}{path}"
+    url = f"{base or BASE_URL}{path}"
     try:
         resp = requests.get(url, timeout=timeout)
         return resp
@@ -141,16 +215,19 @@ def api_get(path, timeout=10):
         return None
 
 
-def api_post(path, json_data=None, timeout=15, send_json=True):
-    """POST请求API。
+def api_post(path, json_data=None, timeout=15, send_json=True, base=None):
+    """POST请求API——只准打隔离实例，不许打用户正在用的 :5000。
 
-    Args:
-        path: API路径
-        json_data: JSON数据，如果为None且send_json=True则发送空JSON
-        timeout: 超时秒数
-        send_json: 是否发送JSON body，False时发送空body（用于测试空数据场景）
+    base 缺省取 SANDBOX_URL；沙箱没起来就当场拒发。理由不是洁癖：
+    2026-10-10 这类"全量脚本对着线上面板 POST /api/config"把用户的
+    bot_config.json 真写空过（providers、两套词表、简历全归 0），
+    而这份报告只是来"看"的，没有任何一眼需要它写。
     """
-    url = f"{BASE_URL}{path}"
+    目标 = base or SANDBOX.get("url")
+    if not 目标:
+        print("  [拒发] 没有隔离实例，这个 POST 不打线上面板：%s" % path)
+        return None
+    url = f"{目标}{path}"
     try:
         if send_json:
             resp = requests.post(url, json=json_data, timeout=timeout)
@@ -774,8 +851,453 @@ def test_stats_card_consistency(report, frontend):
     print(f"  结果: {'通过' if result.passed else '失败'}, 问题数: {len(issues)}")
 
 
-# ===================== 2. API端点测试 =====================
+# ===================== 1f. 岗位候选池一致性 =====================
 
+池状态键 = ("new", "selected", "applied", "rejected")
+
+
+def _池行id们(接: dict) -> set:
+    # id 为 0 是合法值，不能写成 `r.get("id") or ""`——那会把 0 当成"没读到"丢掉。
+    ids = {str(r.get("id")).strip() for r in (接.get("rows") or []) if r.get("id") is not None}
+    ids.discard("")
+    return ids
+
+
+def _池界面问题(名: str, total, 画: dict, 接口id集: set, 查重复: bool) -> list:
+    """界面上那 60 行与角标该不该红——单号与合计共用这一份。
+
+    表是分批铺的（一批 60 行，近三千行要铺好几秒），所以"屏幕行数 == 池里条数"
+    只在池子装得下一批时成立；10-29 这一趟 1492 条对上屏幕 60 行，旧判据当场红成
+    "三端不一致"，其实一行都没错。能钉死的是：角标与「筛出 N 条」必须等于接口那个数，
+    屏幕上铺出来的行必须真在接口那份里、不重复、不超过总数——少画几行是还没铺完，
+    画出池里没有的行才是真坏（删掉的又冒出来）。
+    """
+    问题 = []
+    if 画.get("读取失败"):
+        问题.append({"field": f"{名}.界面读取", "config_file_value": "",
+                     "api_value": "", "frontend_value": str(画.get("读取失败"))})
+        return 问题
+    if str(画.get("角", "")).strip() != str(total):
+        问题.append({"field": f"{名}.角标", "config_file_value": "",
+                     "api_value": total, "frontend_value": 画.get("角")})
+    if str(画.get("条数格", "")).strip() != "筛出 %s 条" % total:
+        问题.append({"field": f"{名}.筛出条数", "config_file_value": "",
+                     "api_value": f"筛出 {total} 条", "frontend_value": 画.get("条数格")})
+    行 = 画.get("行")
+    if not isinstance(行, int) or 行 <= 0:
+        问题.append({"field": f"{名}.界面空表", "config_file_value": "",
+                     "api_value": total, "frontend_value": f"{行} 行"})
+    elif total is not None and 行 > int(total):
+        问题.append({"field": f"{名}.界面比池里多", "config_file_value": "",
+                     "api_value": total, "frontend_value": f"{行} 行"})
+    id们 = [str(i) for i in (画.get("id们") or [])]
+    if 查重复 and len(id们) != len(set(id们)):
+        问题.append({"field": f"{名}.界面重复行", "config_file_value": "",
+                     "api_value": "每行 id 唯一", "frontend_value": f"{行} 行里只有 {len(set(id们))} 个 id"})
+    多出来 = [i for i in id们 if i and i not in 接口id集]
+    if 多出来:
+        问题.append({"field": f"{名}.界面上有池里没有的", "config_file_value": "",
+                     "api_value": f"接口 {len(接口id集)} 个 id",
+                     "frontend_value": "屏幕上是这些池里没有的：" + "、".join(多出来[:5])})
+    return 问题
+
+
+def 单号池该不该红(号: int, 盘条数: int, 盘状态: dict, 接: dict, 画: dict) -> list:
+    """一个号的池子：盘上 / 接口 / 界面 三端该不该红。"""
+    问题 = []
+    total = 接.get("total")
+    if total != 盘条数:
+        问题.append({"field": f"岗位池.account{号}.条数", "config_file_value": 盘条数,
+                     "api_value": total, "frontend_value": "接口按盘上那份生成"})
+    接口状态 = {k: v for k, v in (接.get("stats") or {}).items() if k in 池状态键}
+    for s in 池状态键:
+        if 盘状态.get(s, 0) != 接口状态.get(s, 0):
+            问题.append({"field": f"岗位池.account{号}.状态{s}",
+                         "config_file_value": 盘状态.get(s, 0),
+                         "api_value": 接口状态.get(s, 0),
+                         "frontend_value": "接口按状态给计数，界面按接口画"})
+    问题 += _池界面问题(f"岗位池.account{号}", total, 画, _池行id们(接), 查重复=True)
+    return 问题
+
+
+def 合并池该不该红(各号: list, 接: dict, 画: dict) -> list:
+    """「全部账号」这一档：两个号的池并成一张表，合计数与屏幕要跟两份盘上的和相等。
+
+    10-26 之前这一档是"接口照实拒、界面说没有"，10-26 改成合并视图（#259/#260），
+    这条判据也得跟着落到新口径上，否则每次跑都是红的。
+    """
+    问题 = []
+    和 = sum(int(x.get("total") or 0) for x in 各号)
+    if 接.get("status_code") != 200:
+        问题.append({"field": "岗位池.全部账号.接口", "config_file_value": 和,
+                     "api_value": f"HTTP {接.get('status_code')}",
+                     "frontend_value": "合并视图这一档该正常返回"})
+        return 问题
+    if 接.get("total") != 和:
+        问题.append({"field": "岗位池.全部账号.total", "config_file_value": 和,
+                     "api_value": 接.get("total"), "frontend_value": "角标按接口画"})
+    合并状态 = {k: v for k, v in (接.get("stats") or {}).items() if k in 池状态键}
+    for s in 池状态键:
+        应 = sum(int((x.get("状态") or {}).get(s, 0)) for x in 各号)
+        if 合并状态.get(s, 0) != 应:
+            问题.append({"field": f"岗位池.全部账号.状态{s}", "config_file_value": 应,
+                         "api_value": 合并状态.get(s, 0),
+                         "frontend_value": "合计按两份盘上的和"})
+    问题 += _池界面问题("岗位池.全部账号", 接.get("total"), 画, _池行id们(接), 查重复=False)
+    if 画.get("空态可见") is True:
+        问题.append({"field": "岗位池.全部账号.空态", "config_file_value": "",
+                     "api_value": "有行时该藏起来", "frontend_value": "空态框还露在表上"})
+    return 问题
+
+
+def test_job_pool_consistency(report, frontend):
+    """1f. 岗位候选池：盘上那份池文件 / 接口 / 界面表格，三端必须同一份数。
+
+    这一张表是他手工勾投递的地方，行数对不上就两种坏法：
+    界面少行=有岗位永远投不出去，界面多行=删掉的又冒出来。界面是分批铺的，
+    所以判据钉在「盘上 == 接口 total == 角标 == 筛出 N 条」与「屏幕上的行都在池里」
+    上，而不是逼屏幕一次铺完几千行（10-29 那趟就是被这条旧判据红掉的）。
+    """
+    result = TestResult("岗位候选池一致性", "三端一致性")
+    try:
+        from boss_bot.job_pool import 岗位池
+    except Exception as e:
+        result.error_test(f"导入岗位池失败：{e}")
+        report.add(result)
+        return
+
+    resp = api_get("/api/config")
+    if resp is None or resp.status_code != 200:
+        result.error_test("API /api/config 请求失败，拿不到账号数")
+        report.add(result)
+        return
+    账号数 = len(((resp.json().get("config") or {}).get("accounts")) or [])
+    if 账号数 <= 0:
+        result.error_test("接口里一个账号都没有，池无从按号分开")
+        report.add(result)
+        return
+
+    明细, 问题 = {}, []
+    for 号 in range(账号数):
+        盘 = 岗位池(account_index=号).列表()
+        盘状态 = {}
+        for r in 盘:
+            盘状态[r.get("status") or "new"] = 盘状态.get(r.get("status") or "new", 0) + 1
+
+        # limit=0 才给全量：接口默认只回一页（200 条），体检要的是整份池
+        g = api_get(f"/api/job_pool?account={号}&limit=0", timeout=60)
+        if g is None or g.status_code != 200:
+            问题.append({"field": f"岗位池.account{号}.接口",
+                         "config_file_value": len(盘),
+                         "api_value": f"HTTP {getattr(g, 'status_code', None)}",
+                         "frontend_value": "没读"})
+            continue
+        接 = g.json()
+        接口状态 = {k: v for k, v in (接.get("stats") or {}).items()
+                  if k in ("new", "selected", "applied", "rejected")}
+
+        # 界面这一端：切到该号的数据范围、打开池那一页，看角标与真铺出来的行。
+        # FrontendReader.evaluate 出错时回的是 "<读取失败: …>" 这种字符串，
+        # 不是 dict——照 dict 用会当场抛 AttributeError，红成"脚本坏了"而不是"哪一端对不上"。
+        frontend.evaluate("() => { setDataScope(%d); return 1; }" % 号)
+        frontend.evaluate("() => { switchRecordTab('pool'); return 1; }")
+        总数 = 接.get("total")
+        画 = frontend.evaluate("""() => new Promise(function(resolve){
+            var 试 = 0;
+            var 期望 = %s;
+            var t = setInterval(function(){
+                试++;
+                var 行s = document.querySelectorAll('#poolTableBody tr');
+                var 角 = (document.getElementById('poolTabCount')||{}).textContent||'';
+                if ((String(角) === String(期望) && 行s.length > 0) || 试 > 20) {
+                    clearInterval(t);
+                    resolve({行: 行s.length, 角: 角,
+                             条数格: (document.getElementById('poolFilterCount')||{}).textContent||'',
+                             id们: Array.prototype.map.call(行s, function(tr){
+                                 return tr.getAttribute('data-id')||''; })});
+                }
+            }, 300);
+        })""" % 总数)
+        if not isinstance(画, dict):
+            画 = {"读取失败": str(画)}
+        明细[f"账号{号}"] = {
+            "盘上": {"条数": len(盘), "状态": 盘状态, "文件": str(岗位池(account_index=号).路径)},
+            "接口": {"total": 接.get("total"), "状态": 接口状态},
+            "界面": 画,
+        }
+        问题 += 单号池该不该红(号, len(盘), 盘状态, 接, 画)
+
+    # 「全部账号」这一档：两个号的池并成一张表，合计与屏幕都得跟着两份盘上的和
+    frontend.evaluate("() => { setDataScope('all'); return 1; }")
+    frontend.evaluate("() => { switchRecordTab('pool'); return 1; }")
+    全部 = api_get("/api/job_pool?account=all&limit=0", timeout=120)
+    全部json = 全部.json() if (全部 is not None and 全部.status_code == 200) else {}
+    期望合计 = 全部json.get("total")
+    合并画 = frontend.evaluate("""() => new Promise(function(resolve){
+        var 试 = 0;
+        var 期望 = %s;
+        var t = setInterval(function(){
+            试++;
+            var 行s = document.querySelectorAll('#poolTableBody tr');
+            var 角 = (document.getElementById('poolTabCount')||{}).textContent||'';
+            var 空 = document.getElementById('poolEmpty');
+            if ((String(角) === String(期望) && 行s.length > 0) || 试 > 25) {
+                clearInterval(t);
+                resolve({行: 行s.length, 角: 角,
+                         条数格: (document.getElementById('poolFilterCount')||{}).textContent||'',
+                         空态可见: !!空 && getComputedStyle(空).display !== 'none',
+                         id们: Array.prototype.map.call(行s, function(tr){
+                             return tr.getAttribute('data-id')||''; })});
+            }
+        }, 300);
+    })""" % 期望合计)
+    if not isinstance(合并画, dict):
+        合并画 = {"读取失败": str(合并画)}
+    明细["全部账号"] = {"接口": {"status_code": 全部.status_code if 全部 else None,
+                              "total": 全部json.get("total"),
+                              "状态": 全部json.get("stats")},
+                      "界面": 合并画}
+    问题 += 合并池该不该红(
+        [{"total": 明细[f"账号{号}"]["接口"]["total"],
+          "状态": 明细[f"账号{号}"]["接口"]["状态"]} for 号 in range(账号数)],
+        {"status_code": 全部.status_code if 全部 else None,
+         "total": 全部json.get("total"),
+         "stats": 全部json.get("stats") or {},
+         "rows": 全部json.get("rows") or []},
+        合并画)
+
+    if 问题:
+        result.fail_test(问题, 明细)
+    else:
+        result.pass_test(明细)
+    report.add(result)
+    print(f"  结果: {'通过' if result.passed else '失败'}, 问题数: {len(问题)}")
+
+
+# ===================== 1g. 候选池两把开关一致性 =====================
+
+def test_pool_switches_consistency(report, frontend):
+    """1g. 「只抓不投」与「每轮精筛额度」：文件里那份 / 接口 / 界面控件。
+
+    文件里没这一条时接口给的是代码默认值，这不是不一致——所以默认值从
+    unified_config 现读，不写死在这份脚本里（写死了就等于又造第四个口径）。
+    """
+    result = TestResult("候选池开关一致性", "三端一致性")
+    try:
+        import dataclasses
+        from boss_bot.unified_config import UnifiedConfig
+    except Exception as e:
+        result.error_test(f"导入配置类失败：{e}")
+        report.add(result)
+        return
+
+    现盘 = UnifiedConfig.load()
+    默认只抓 = next(f.default for f in dataclasses.fields(现盘.greet)
+                    if f.name == "capture_only")
+    默认额度 = next(f.default for f in dataclasses.fields(现盘.ai)
+                    if f.name == "screen_max_per_round")
+    默认详情间隔 = next(f.default for f in dataclasses.fields(现盘.greet.rate_limit)
+                        if f.name == "job_detail_min_interval")
+    默认验证冷却 = next(f.default for f in dataclasses.fields(现盘.greet.rate_limit)
+                        if f.name == "after_verify_cooldown")
+    默认整页地板 = next(f.default for f in dataclasses.fields(现盘.greet.rate_limit)
+                        if f.name == "page_load_min_interval")
+    默认加载模式 = next(f.default for f in dataclasses.fields(现盘.browser)
+                        if f.name == "load_mode")
+
+    resp = api_get("/api/config")
+    if resp is None or resp.status_code != 200:
+        result.error_test("API /api/config 请求失败")
+        report.add(result)
+        return
+    接 = resp.json().get("config") or {}
+    盘 = 现盘.to_dict() if hasattr(现盘, "to_dict") else {}
+
+    frontend.evaluate("() => { var t=document.getElementById('advToggle');"
+                      "if (t && !t.classList.contains('open')) t.click(); return 1; }")
+    界面 = frontend.evaluate("""() => ({
+        开关: (function(){var e=document.getElementById('advCaptureOnly');
+                        return e ? e.classList.contains('on') : '<元素不存在>';})(),
+        额度: (function(){var e=document.getElementById('aiScreenMaxPerRound');
+                        return e ? parseInt(e.value, 10) : '<元素不存在>';})(),
+        详情间隔: (function(){var e=document.getElementById('jobDetailMinInterval');
+                        return e ? parseInt(e.value, 10) : '<元素不存在>';})(),
+        验证冷却: (function(){var e=document.getElementById('afterVerifyCooldown');
+                        return e ? parseInt(e.value, 10) : '<元素不存在>';})(),
+        整页地板: (function(){var e=document.getElementById('pageLoadMinInterval');
+                        return e ? parseInt(e.value, 10) : '<元素不存在>';})(),
+        加载模式: (function(){var e=document.getElementById('advLoadMode');
+                        return e ? e.value : '<元素不存在>';})()
+    })""") or {}
+
+    原文件 = load_json_file(BOT_CONFIG_FILE) or {}
+    明细 = {
+        "greet.capture_only": {
+            "配置文件里字面有这条吗": "capture_only" in (原文件.get("greet") or {}),
+            "盘上生效值(读码算)": bool(盘.get("greet", {}).get("capture_only", 默认只抓)),
+            "接口": 接.get("greet", {}).get("capture_only"),
+            "界面开关": 界面.get("开关"),
+            "代码默认": 默认只抓,
+        },
+        "ai.screen_max_per_round": {
+            "配置文件里字面有这条吗": "screen_max_per_round" in (原文件.get("ai") or {}),
+            "盘上生效值(读码算)": 盘.get("ai", {}).get("screen_max_per_round", 默认额度),
+            "接口": 接.get("ai", {}).get("screen_max_per_round"),
+            "界面输入框": 界面.get("额度"),
+            "代码默认": 默认额度,
+        },
+        # 安全验证那一族的两条：频率是按 IP 算的，界面上改了就得当场生效，
+        # 不能只住在代码默认里（见 memory「改了必须生效」）
+        "rate_limit.job_detail_min_interval": {
+            "配置文件里字面有这条吗":
+                "job_detail_min_interval" in (原文件.get("rate_limit") or {}),
+            "盘上生效值(读码算)": 盘.get("rate_limit", {}).get(
+                "job_detail_min_interval", 默认详情间隔),
+            "接口": 接.get("rate_limit", {}).get("job_detail_min_interval"),
+            "界面输入框": 界面.get("详情间隔"),
+            "代码默认": 默认详情间隔,
+        },
+        "rate_limit.after_verify_cooldown": {
+            "配置文件里字面有这条吗":
+                "after_verify_cooldown" in (原文件.get("rate_limit") or {}),
+            "盘上生效值(读码算)": 盘.get("rate_limit", {}).get(
+                "after_verify_cooldown", 默认验证冷却),
+            "接口": 接.get("rate_limit", {}).get("after_verify_cooldown"),
+            "界面输入框": 界面.get("验证冷却"),
+            "代码默认": 默认验证冷却,
+        },
+        # 整页加载这一族：地板按进程摊平同一秒的并发加载，加载模式决定
+        # 每一发等到哪一步（10-24 实测 normal 一次要 126~135 秒，eager 1.6~4.8 秒）
+        "rate_limit.page_load_min_interval": {
+            "配置文件里字面有这条吗":
+                "page_load_min_interval" in (原文件.get("rate_limit") or {}),
+            "盘上生效值(读码算)": 盘.get("rate_limit", {}).get(
+                "page_load_min_interval", 默认整页地板),
+            "接口": 接.get("rate_limit", {}).get("page_load_min_interval"),
+            "界面输入框": 界面.get("整页地板"),
+            "代码默认": 默认整页地板,
+        },
+        "browser.load_mode": {
+            "配置文件里字面有这条吗": "load_mode" in (原文件.get("browser") or {}),
+            "盘上生效值(读码算)": 盘.get("browser", {}).get("load_mode", 默认加载模式),
+            "接口": 接.get("browser", {}).get("load_mode"),
+            "界面输入框": 界面.get("加载模式"),
+            "代码默认": 默认加载模式,
+        },
+    }
+
+    问题 = []
+    for 字段 in ("greet.capture_only", "ai.screen_max_per_round",
+                 "rate_limit.job_detail_min_interval",
+                 "rate_limit.after_verify_cooldown",
+                 "rate_limit.page_load_min_interval",
+                 "browser.load_mode"):
+        d = 明细[字段]
+        段, 键 = 字段.split(".")
+        文件值 = d["盘上生效值(读码算)"]
+        接口值 = d["接口"]
+        界面值 = d["界面开关"] if 键 == "capture_only" else d["界面输入框"]
+        if 键 == "capture_only":
+            界面值 = bool(界面值)
+        if 接口值 is None or 文件值 != 接口值 or 界面值 != 接口值:
+            问题.append({"field": 字段, "config_file_value": 文件值,
+                         "api_value": 接口值, "frontend_value": 界面值})
+    if 问题:
+        result.fail_test(问题, 明细)
+    else:
+        result.pass_test(明细)
+    report.add(result)
+    print(f"  结果: {'通过' if result.passed else '失败'}, 问题数: {len(问题)}")
+
+
+# ===================== 1h. 粗筛标签与现盘词表对得上 =====================
+
+def 粗筛标签该不该红(行s, 自定义, 标题表):
+    """盘上池子里贴过标签的行，`否决命中` 必须等于现盘词表当场算出来的那一条。
+
+    这条门是 2026-10-21 那个 bug 的回归锁：粗筛读的是引擎上根本不存在的属性，
+    `or []` 把"没读到"兜成"空表"，于是号0+号1 共 1623 条池子里 `否决命中` 一条都没有，
+    而标题写着「兼职在线打字客服」「5K居家线上客服」的岗位按现盘词表明明能命中。
+    界面那时画的是"方向不合"，看起来像判过了 —— 只有拿配置现算再比才抓得住。
+    返回差异列表（空 = 对得上）。
+    """
+    from boss_bot.greet_engine import veto_keyword_hit
+    from boss_bot.job_pool import 岗位行成抓取
+    差异 = []
+    for 行 in 行s or []:
+        标 = 行.get("gate") or {}
+        if not (标.get("否决命中") or 标.get("词表没读到")
+                or 标.get("标题词表为空") or "方向命中" in 标):
+            continue      # 压根没贴过标的行（手工粘进来的）不算"对不上"，那是另一件事
+        if not 自定义 and not 标题表:
+            if not 标.get("词表没读到"):
+                差异.append({"id": 行.get("id"), "job_name": 行.get("job_name"),
+                             "盘上": "否决命中=%r" % (标.get("否决命中") or ""),
+                             "现算": "词表没读到"})
+            continue
+        if 自定义 and not 标题表 and not 标.get("标题词表为空"):
+            # 10-22 那两行的形状：标题表是空的，而盘上既没写命中也没写"空表"，
+            # 界面看着就像"这岗干干净净"——空表这一格必须落在行上。
+            差异.append({"id": 行.get("id"), "job_name": 行.get("job_name"),
+                         "盘上": "（空）", "现算": "标题词表为空"})
+            continue
+        期 = veto_keyword_hit(list(自定义), 岗位行成抓取(行),
+                              title_keywords=list(标题表)) or ""
+        实 = 标.get("否决命中") or ""
+        if 期 != 实:
+            差异.append({"id": 行.get("id"), "job_name": 行.get("job_name"),
+                         "盘上": 实 or "（空）", "现算": 期 or "（空）"})
+    return 差异
+
+
+def test_pool_gate_matches_wordlist(report):
+    """1h. 候选池的本地粗筛标签 vs 现盘否决词（只读文件与配置，不开浏览器）。"""
+    print("\n[1h] 候选池粗筛标签与词表一致性...")
+    result = TestResult("候选池粗筛标签与词表一致性", "三端一致性")
+    try:
+        from boss_bot.job_pool import 岗位池
+        from boss_bot.unified_config import UnifiedConfig
+    except Exception as e:
+        result.error_test(f"导入失败：{e}")
+        report.add(result)
+        return
+
+    cfg = UnifiedConfig.load()
+    ai = getattr(cfg, "ai", None)
+    自定义 = list(getattr(ai, "custom_filter_keywords", None) or [])
+    标题 = getattr(ai, "title_veto_keywords", None)
+    if 标题 is None:
+        from boss_bot.unified_config import TITLE_VETO_KEYWORDS_DEFAULT
+        标题 = list(TITLE_VETO_KEYWORDS_DEFAULT)
+    标题表 = list(标题)
+
+    明细 = {"词表": {"自定义否决词": len(自定义), "标题否决词": len(标题表)}}
+    问题 = []
+    for 号 in (0, 1):
+        行s = 岗位池(account_index=号).列表()
+        贴过标 = [r for r in 行s if (r.get("gate") or {}).get("否决命中")
+                  or (r.get("gate") or {}).get("词表没读到")
+                  or "方向命中" in (r.get("gate") or {})]
+        差异 = 粗筛标签该不该红(行s, 自定义, 标题表)
+        明细[f"账号{号}"] = {"池内": len(行s), "贴过标": len(贴过标),
+                            "否决命中条数": len([r for r in 行s
+                                             if (r.get("gate") or {}).get("否决命中")]),
+                            "对不上": len(差异), "样例": 差异[:5]}
+        if 差异:
+            问题.append({"field": f"账号{号}.粗筛标签", "config_file_value": "现算为准",
+                         "api_value": "盘上 gate", "frontend_value": 差异[:5]})
+    if not (自定义 or 标题表):
+        明细["提示"] = "两份词表都是空的：这时盘上该写「词表没读到」而不是留空"
+
+    if 问题:
+        result.fail_test(问题, 明细)
+    else:
+        result.pass_test(明细)
+    report.add(result)
+    print(f"  结果: {'通过' if result.passed else '失败'}, 问题数: {len(问题)}")
+
+
+# ===================== 2. API端点测试 =====================
 def test_api_endpoints(report):
     """2a. API端点测试。"""
     print("\n[2a] API端点测试...")
@@ -811,8 +1333,16 @@ def test_api_endpoints(report):
 
         if method == "GET":
             resp = api_get(path)
+        elif SANDBOX.get("url"):
+            # POST 一律打隔离实例：线上面板那份配置是用户攒的，不是测试场
+            resp = api_post(path, base=SANDBOX["url"])
         else:
-            resp = api_post(path)
+            result.details = {"原因": "没起到隔离实例，这条不发线上面板（红线：不许拿真实实例做副作用验证）"}
+            result.fail_test([{"case": f"{method} {path} 需要隔离实例", "实际": "沙箱没起来"}],
+                             result.details)
+            report.add(result)
+            print("    结果: 失败 - 隔离实例没起来，这条没法测")
+            continue
 
         # 判空一律用 is None：requests 2.33 里 bool(Response) 就是 Response.ok，
         # 用 "if not resp" 会把 404/400/500 这些"真的回了话"读成"无响应"
@@ -848,13 +1378,13 @@ def test_edge_cases(report):
     print("\n[2b] 边界case测试...")
 
     # Case 1: 请求不存在的账号
-    result = TestResult("请求不存在的账号 GET /api/accounts/99/check_cookie_simple", "边界case测试")
+    result = TestResult("请求不存在的账号 POST /api/accounts/99/check_cookie_simple", "边界case测试")
     print(f"  测试: 请求不存在的账号")
     resp = api_post("/api/accounts/99/check_cookie_simple")
     if resp is None:
         # 判空必须用 is None：requests 2.33 里 bool(Response) 就是 Response.ok，
         # 用 "if not resp" 会把 404/400/500 这些"真的回了话"读成"无响应"
-        result.error_test("无响应")
+        result.error_test("没打到（隔离实例没起来；这条不许打线上面板）")
     else:
         details = {"status_code": resp.status_code, "response": resp.text[:500]}
         # 应返回错误（404或status=error）
@@ -892,9 +1422,8 @@ def test_edge_cases(report):
     # 使用send_json=False发送空body，模拟空数据请求
     resp = api_post("/api/config", send_json=False)
     if resp is None:
-        # 判空必须用 is None：requests 2.33 里 bool(Response) 就是 Response.ok，
-        # 用 "if not resp" 会把 404/400/500 这些"真的回了话"读成"无响应"
-        result.error_test("无响应")
+        result.error_test("没打到（隔离实例没起来；这条绝不能打线上面板——"
+                          "20-10 就是这类脚本把用户的 bot_config 写空过）")
     else:
         details = {"status_code": resp.status_code, "response": resp.text[:500]}
         # 应不崩溃（返回400或200，但不能500）
@@ -927,6 +1456,23 @@ def test_edge_cases(report):
 
 
 # ===================== 4. 数据完整性测试 =====================
+
+def 数据文件该不该红(打招呼条数: int, 回复条数: int, 有打招呼备份: bool,
+                     有回复备份: bool, 只抓不投: bool) -> list:
+    """当前记录文件为空、备份里却有数据——到底算不算事故，只看一条：这台机器现在该不该写。
+
+    10-19 起口径是只抓不投，打招呼记录 0 条就是预期，历史在归档里；
+    真在投却一条没落下才是丢数据。回复记录没有"预期为空"这一档，0 条就红。
+    """
+    红 = []
+    if 打招呼条数 == 0 and 有打招呼备份 and not 只抓不投:
+        红.append({"warning": "当前 greet_records.json 为空，但存在非空备份文件",
+                   "current_records": 打招呼条数})
+    if 回复条数 == 0 and 有回复备份:
+        红.append({"warning": "当前 reply_records.json 为空，但存在非空备份文件",
+                   "current_records": 回复条数})
+    return 红
+
 
 def test_data_integrity(report):
     """2c. 数据完整性测试。"""
@@ -1076,26 +1622,38 @@ def test_data_integrity(report):
         "non_empty_reply_backups": reply_backups,
     }
 
-    issues = []
-    if greet_count == 0 and greet_backups:
-        issues.append({
-            "warning": "当前 greet_records.json 为空，但存在非空备份文件",
-            "current_records": greet_count,
-            "backups": greet_backups,
-        })
-    if reply_count == 0 and reply_backups:
-        issues.append({
-            "warning": "当前 reply_records.json 为空，但存在非空备份文件",
-            "current_records": reply_count,
-            "backups": reply_backups,
-        })
+    # 「当前文件为空」有两种意思，得先分清再定罪：10-19 起改成只抓不投，0 条打招呼记录
+    # 是口径本身，历史都在 data/archive/<日期>/ 里；真在投却一条没落下才可能是数据丢了。
+    from boss_bot.unified_config import UnifiedConfig
+    只抓不投 = bool(UnifiedConfig.load().greet.capture_only)
+    归档最近一条 = None
+    for d in sorted((data_dir / "archive").glob("2026-*"), reverse=True):
+        f = d / "greet_records.json"
+        if not f.is_file():
+            continue
+        try:
+            cnt = len((json.load(open(f, "r", encoding="utf-8")) or {}).get("records", []))
+        except Exception:
+            continue
+        if cnt:
+            归档最近一条 = {"日期": d.name, "条数": cnt}
+            break
+    details["口径"] = ("只抓不投（capture_only）：打招呼记录 0 条是预期"
+                       if 只抓不投 else "在投：打招呼记录 0 条要查")
+    details["归档里最近的打招呼记录"] = 归档最近一条
+
+    issues = 数据文件该不该红(greet_count, reply_count,
+                              bool(greet_backups), bool(reply_backups), 只抓不投)
 
     if issues:
         result.fail_test(issues, details)
-        print(f"    结果: 失败 - 当前数据文件为空但存在非空备份")
+        print(f"    结果: 失败 - 在投状态下打招呼记录文件空了，但备份里有数据")
     else:
         result.pass_test(details)
-        print(f"    结果: 通过 - 数据文件状态正常")
+        print("    结果: 通过 - %s，回复记录 %d 条%s"
+              % (details["口径"], reply_count,
+                 "，历史在归档 %s（%s 条）" % (归档最近一条["日期"], 归档最近一条["条数"])
+                 if 归档最近一条 else ""))
 
     report.add(result)
 
@@ -1316,6 +1874,16 @@ def main():
         return
     print("  [OK] 后端API运行正常")
 
+    # 这一趟会读哪些用户数据，跑完必须一模一样（只读不许写，写只准发生在隔离实例里）
+    初始快照 = 快照配置文件()
+
+    # 起一个隔离实例专门挨 POST 这类有副作用的用例
+    print("\n[预检] 起隔离实例（配置是临时副本，POST 用例只打它，不打线上面板）...")
+    try:
+        起隔离实例()
+    except Exception as e:
+        print(f"  [警告] 隔离实例没起来：{type(e).__name__}: {e}——POST 类用例会记成测不了")
+
     # 初始化报告收集器
     report = ReportCollector()
 
@@ -1335,6 +1903,9 @@ def main():
         test_reply_records_consistency(report, frontend)
         test_user_profile_consistency(report, frontend)
         test_stats_card_consistency(report, frontend)
+        test_job_pool_consistency(report, frontend)
+        test_pool_switches_consistency(report, frontend)
+        test_pool_gate_matches_wordlist(report)
 
         # 2. 常见软件测试
         print("\n" + "=" * 70)
@@ -1352,6 +1923,39 @@ def main():
 
     finally:
         frontend.close()
+        停隔离实例()
+
+    # 这一趟只该"看"：任何一份用户数据被写动了，就是工具自己犯规
+    末尾快照 = 快照配置文件()
+    # 面板在跑时，回复腿落一条记录、抓一轮池子，那几份哈希自己就会变——不是这一趟写的。
+    # 把它们算进犯规，这条门就永远是红的，而永远红的门等于没有门（10-20 16:17 实测
+    # 红在 reply_records + job_pool）。豁免只在**真读到 running=true** 时给，
+    # 而且必须点名豁免了哪几份、前后哈希各是多少，不许糊成一句"没动"。
+    在跑 = False
+    答 = api_get("/api/status")
+    try:
+        在跑 = bool(答 and 答.json().get("running"))
+    except Exception as e:
+        print("  [状态读不准] /api/status 没解析出来(%s)，按面板没在跑办——不给豁免" % e)
+    犯规, 动了记录 = 判定用户数据(初始快照, 末尾快照, 在跑)
+    守身 = TestResult("这一趟没动用户任何数据", "三端一致性")
+    if 犯规:
+        守身.fail_test([{"field": k, "config_file_value": "跑前 " + v[0],
+                         "api_value": "跑后 " + v[1], "frontend_value": "不该变"}
+                        for k, v in 犯规.items()],
+                       {"跑前": 初始快照, "跑后": 末尾快照, "面板在跑": 在跑})
+    else:
+        守身.pass_test({"核对过": 初始快照,
+                        "面板在跑": 在跑,
+                        "本轮豁免(面板自己在写)": {k: "跑前 %s / 跑后 %s" % (v[0], v[1])
+                                                 for k, v in 动了记录.items()}})
+    report.add(守身)
+    if 动了记录 and 在跑:
+        print("\n[收尾] 用户配置一个字节没动；记录文件 %s 变了，"
+              "是面板自己在写（running=true），这一趟不判红"
+              % "、".join(动了记录))
+    else:
+        print(f"\n[收尾] 用户数据一个字节都没动：{'是' if not 犯规 else '否——动了 ' + str(list(犯规))}")
 
     # 生成报告
     print("\n" + "=" * 70)

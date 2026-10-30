@@ -42,9 +42,40 @@
       "timestamp": "2026-10-10 02:16:25",
       "time": "02:16",
       "job_name": "兼职·具身数据采集20-25元/时廊坊查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394979680145920"
+    },
+    {
+      "sender": "bot",
+      "content": "李先生您好，之前聊的兼职·具身数据采集20-25元/时廊坊查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "李先生您好，之前聊的兼职·具身数据采集20-25元/时廊坊查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-16 10:22:39",
+      "time": "10:22",
+      "job_name": "兼职·具身数据采集20-25元/时廊坊查看职位",
+      "isFriend": false,
+      "mid": "397222544794116"
+    },
+    {
+      "sender": "bot",
+      "content": "李先生您好，北京米未创芯信息科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "李先生您好，北京米未创芯信息科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 10:56:30",
+      "time": "10:56",
+      "job_name": "兼职·具身数据采集20-25元/时廊坊查看职位",
+      "isFriend": false,
+      "mid": "397584758981120"
     }
   ],
-  "updated_at": "2026-10-10 02:16:25",
+  "updated_at": "2026-10-23 14:48:18",
   "unread_on_boss": 0
 }

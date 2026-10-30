@@ -112,9 +112,25 @@
       "timestamp": "2026-10-10 02:22:54",
       "time": "02:22",
       "job_name": "兼职·游戏代练200-400元/时哈尔滨查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394981276279043"
+    },
+    {
+      "sender": "bot",
+      "content": "唐女士您好，哈尔滨瀚至康启网...这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "唐女士您好，哈尔滨瀚至康启网...这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-16 10:36:33",
+      "time": "10:36",
+      "job_name": "兼职·游戏代练200-400元/时哈尔滨查看职位",
+      "isFriend": false,
+      "mid": "397225961525513"
     }
   ],
-  "updated_at": "2026-10-10 02:22:54",
+  "updated_at": "2026-10-23 14:52:01",
   "unread_on_boss": 0
 }

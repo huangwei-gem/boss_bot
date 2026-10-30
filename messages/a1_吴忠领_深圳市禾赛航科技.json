@@ -109,18 +109,6 @@
       "content": "感兴趣可以加我企业号了解详情"
     },
     {
-      "text": "",
-      "time": "",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "393740903105025",
-      "block": "",
-      "sender": "hr",
-      "kind": "bubble",
-      "content": ""
-    },
-    {
       "sender": "bot",
       "content": "好的，请问您的企业号怎么添加？我稍后加您了解详情。",
       "text": "好的，请问您的企业号怎么添加？我稍后加您了解详情。",
@@ -134,18 +122,6 @@
       "job_name": "兼职·线上客服专员15-25元/时菏泽查看职位",
       "isFriend": false,
       "mid": "393741420327424"
-    },
-    {
-      "text": "",
-      "time": "",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "393741705019905",
-      "block": "",
-      "sender": "hr",
-      "kind": "bubble",
-      "content": ""
     },
     {
       "sender": "bot",
@@ -174,9 +150,37 @@
       "timestamp": "2026-10-09 13:24:26",
       "time": "13:24",
       "job_name": "兼职·线上客服专员15-25元/时菏泽查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394789953221122"
+    },
+    {
+      "text": "你好，咱们招的是云客服，入职京东、美团，时薪约20-25/小时，工作时间是一个小时一个班次，班次时间自选，请问你这边有自备电脑吗",
+      "time": "10-13 14:05",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396215582941701",
+      "block": "10-13 14:05 你好，咱们招的是云客服，入职京东、美团，时薪约20-25/小时，工作时间是一个小时一个班次，班次时间自选，请问你这边有自备电脑吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，咱们招的是云客服，入职京东、美团，时薪约20-25/小时，工作时间是一个小时一个班次，班次时间自选，请问你这边有自备电脑吗"
+    },
+    {
+      "sender": "bot",
+      "content": "有的，电脑和网络都没问题，可以满足线上办公。您说的班次自选我这边也合适，方便的话我想进一步了解入职和结算方式。",
+      "text": "有的，电脑和网络都没问题，可以满足线上办公。您说的班次自选我这边也合适，方便的话我想进一步了解入职和结算方式。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-16 03:30:53",
+      "time": "03:30",
+      "job_name": "兼职·线上客服专员15-25元/时菏泽查看职位",
+      "isFriend": false,
+      "mid": "397121349087744"
     }
   ],
-  "updated_at": "2026-10-09 13:24:26",
+  "updated_at": "2026-10-23 14:59:38",
   "unread_on_boss": 0
 }

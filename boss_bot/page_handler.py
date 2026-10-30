@@ -24,7 +24,7 @@ from pathlib import Path
 from boss_bot.config import CHAT_URL, COOKIE_FILE, TEST_MODE, TEST_PAGE, HEADLESS
 from boss_bot.browser_launcher import (
     launch_browser, BrowserInstance, BrowserManager,
-    是风控验证页, LOGIN_WALL_MARKS)
+    是风控验证页, 是登不进去的地址, LOGIN_WALL_MARKS, 准整页加载, 风控去向后缀)
 from boss_bot.message_store import MessageStore
 
 logger = logging.getLogger(__name__)
@@ -328,6 +328,15 @@ class BossChatHandler:
         self._login_event = threading.Event()
         self._msg_store = MessageStore()
 
+    def _导航(self, url: str):
+        """整页换一张页的唯一出口：先发地板，再让 DrissionPage 去加载。
+
+        回复腿这一张会话页一漂就是一次整页加载，两个号又共用一个出口 IP，
+        所以这里必须和 BrowserInstance.get 走同一份计时（见 准整页加载）。
+        """
+        准整页加载(url, logger.debug)
+        self.page.get(url)
+
     def login(self, timeout: int = 300) -> bool:
         """
         检查登录状态。
@@ -336,14 +345,14 @@ class BossChatHandler:
         if TEST_MODE:
             # 测试模式：直接打开本地 mock 页面，视为已登录
             url = TEST_PAGE if TEST_PAGE.startswith("file:") else f"file://{TEST_PAGE}"
-            self.page.get(url)
+            self._导航(url)
             time.sleep(1)
             self._logged_in = True
             logger.info("[TEST_MODE] 已打开 mock 页面，视为已登录")
             return True
 
         # 先访问主站，确保 Cookie 作用域正确
-        self.page.get("https://www.zhipin.com")
+        self._导航("https://www.zhipin.com")
         time.sleep(2)
 
         # 处理首次访问弹窗
@@ -351,7 +360,7 @@ class BossChatHandler:
 
         # 尝试加载已保存的 cookies
         if self._load_cookies():
-            self.page.get(CHAT_URL)
+            self._导航(CHAT_URL)
             time.sleep(3)
             if not self._is_login_page():
                 logger.info("通过 Cookie 自动登录成功")
@@ -360,7 +369,7 @@ class BossChatHandler:
 
         # 需要手动登录
         logger.info("需要登录，正在跳转到登录页面...")
-        self.page.get("https://www.zhipin.com/web/user/?ka=header-login")
+        self._导航("https://www.zhipin.com/web/user/?ka=header-login")
         logger.info("请在浏览器中手动登录 BOSS 直聘，登录完成后点击网页上的「我已登录」按钮")
         self._logged_in = False
         return False
@@ -483,9 +492,22 @@ class BossChatHandler:
                 time.sleep(1)
             return
         current_url = self.page.url or ""
+        if 是登不进去的地址(current_url):
+            # 这一页要么是要人扫码的登录页、要么是要人滑的安全验证页。以前只按
+            # "URL 里没 chat 就跳会话页"办事，正好把这两种页一刀切掀掉：验证滑到一半
+            # 被刷没、扫码二维码和填到一半的手机号被冲掉（2026-10-20 用户原话
+            # 「我在安全验证就不要刷新」）。滑完/登完 BOSS 自己会跳走，我们看着不动。
+            logger.warning(f"当前停在{'安全验证' if 是风控验证页(current_url) else '登录'}页，"
+                           f"这一页不刷新：{current_url[:80]}")
+            return False
         if CHAT_URL not in current_url:
-            self.page.get(CHAT_URL)
+            # 地址漂了才加载，并且只走 _导航（进程级地板）。这一句 debug 是特意留的：
+            # 以前这里数不出"到底漂去了哪"，只能看到整页加载一次次发生（10-23~10-25
+            # 三天能数出来的整页加载共 792 次），没有落点就没法判断该不该收得更紧。
+            logger.debug(f"会话页地址漂了，重新加载：停在 {current_url[:90] or '（读不到）'}")
+            self._导航(CHAT_URL)
             time.sleep(3)
+        return True
 
     def get_unread_chats(self, max_rounds: int = 12) -> List[Dict]:
         """边滚边收侧栏里带红点的会话。
@@ -637,7 +659,10 @@ class BossChatHandler:
             self.page.run_js(self._SIDEBAR_JUMP_JS.replace("__Y__", str(int(y))),
                              as_expr=True)
         except Exception as e:
-            logger.debug(f"侧栏跳到 {y}px 失败: {e}")
+            # run_js 抛的那一类异常 str() 常常是空串，只打 `{e}` 会留下一条
+            # 「侧栏跳到 Npx 失败: 」——10-23 一天 312 条，看不出是页面断了还是 JS 报错
+            logger.debug("侧栏跳到 %s px 失败: %s: %s"
+                         % (y, type(e).__name__, str(e) or repr(e)))
 
     def _sidebar_has_row(self, name: str, company: str, preview: str = "") -> bool:
         return 认行(self._sidebar_rows(), name, company, preview)[0] >= 0
@@ -883,7 +908,8 @@ class BossChatHandler:
             self._登记行位置(all_chats)
 
         except Exception as e:
-            logger.error(f"获取全部会话列表失败: {e}")
+            logger.error("获取全部会话列表失败: %s: %s"
+                         % (type(e).__name__, str(e) or repr(e)))
         return all_chats
 
     def 行位置(self):
@@ -1570,13 +1596,14 @@ class BossChatHandler:
             return ""
 
     def get_job_name(self) -> str:
-        """获取当前聊天对应的岗位名称"""
+        """获取当前聊天对应的岗位名称（尾巴上那句「查看职位」是链接文字，不留）"""
         try:
             result = self.page.run_js(
                 'document.querySelector(".chat-position-content .position-content") ? document.querySelector(".chat-position-content .position-content").textContent.trim() : ""',
                 as_expr=True
             )
-            return result or ""
+            from boss_bot.contact_ledger import 洗岗位标题
+            return 洗岗位标题(result or "")
         except Exception:
             return ""
 
@@ -2262,8 +2289,11 @@ class BossChatHandler:
             return "unknown"
         verdict = classify_health(url, probe)
         _is_c, why = captcha_evidence(probe)
-        # 判据随行：会话侧也报"验证码"时，日志要能自证是哪条命中的
-        logger.debug(f"会话页判据={verdict}（{why or '无挑战证据'}）URL={url[:90]}")
+        # 判据随行：会话侧也报"验证码"时，日志要能自证是哪条命中的。
+        # URL 截到 90 字会把 callbackUrl 切没——那一步的名字全靠它，故再补一段去向
+        # （10-28 数过：八天 134 次风控里 119 次因此定不了因）。
+        logger.debug(f"会话页判据={verdict}（{why or '无挑战证据'}）URL={url[:90]}"
+                     f"{风控去向后缀(url)}")
         return verdict
 
     def close(self):

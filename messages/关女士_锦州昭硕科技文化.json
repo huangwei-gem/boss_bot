@@ -16,7 +16,20 @@
       "sender": "me",
       "kind": "bubble",
       "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "你好",
+      "time": "10-13 10:51",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396167883178248",
+      "block": "10-13 10:51 你好",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好"
     }
   ],
-  "updated_at": "2026-10-10 08:05:57"
+  "updated_at": "2026-10-23 14:23:18",
+  "unread_on_boss": 0
 }

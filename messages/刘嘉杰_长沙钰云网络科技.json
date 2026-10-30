@@ -2,7 +2,7 @@
   "chat_name": "刘嘉杰",
   "chat_id": "刘嘉杰#长沙钰云网络科技",
   "account_index": 0,
-  "job_name": "游戏直播运营14-25K长沙查看职位",
+  "job_name": "游戏直播运营14-25K长沙",
   "company": "长沙钰云网络科技",
   "messages": [
     {
@@ -142,8 +142,68 @@
       "job_name": "游戏直播运营14-25K长沙查看职位",
       "isFriend": false,
       "mid": "394111685571329"
+    },
+    {
+      "sender": "bot",
+      "content": "刘嘉杰您好，之前聊的游戏直播运营14-25K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "刘嘉杰您好，之前聊的游戏直播运营14-25K长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 13:33:02",
+      "time": "13:33",
+      "job_name": "游戏直播运营14-25K长沙查看职位",
+      "isFriend": false,
+      "mid": "395145971127041"
+    },
+    {
+      "sender": "bot",
+      "content": "刘嘉杰您好，长沙钰云网络科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "刘嘉杰您好，长沙钰云网络科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 14:10:27",
+      "time": "14:10",
+      "job_name": "游戏直播运营14-25K长沙查看职位",
+      "isFriend": false,
+      "mid": "397632423039748"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，那就不打扰了，祝招聘顺利。",
+      "text": "好的，那就不打扰了，祝招聘顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 12:16:04",
+      "time": "12:16",
+      "job_name": "游戏直播运营14-25K长沙查看职位",
+      "isFriend": false,
+      "mid": "399727669678848"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，理解，之后就不打扰啦。",
+      "text": "好的，理解，之后就不打扰啦。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 12:49:26",
+      "time": "12:49",
+      "job_name": "游戏直播运营14-25K长沙查看职位",
+      "isFriend": false,
+      "mid": "400089776173825"
     }
   ],
-  "updated_at": "2026-10-09 11:15:47",
+  "updated_at": "2026-10-25 02:01:45",
   "unread_on_boss": 0
 }

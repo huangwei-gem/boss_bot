@@ -12,11 +12,12 @@
       "is_mine": false,
       "is_system": false,
       "mid": "393898953515521",
-      "block": "00:58 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
       "sender": "hr",
       "kind": "card",
       "content": "",
-      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "is_read": true
     },
     {
       "text": "您好～我是统计学本科，想找数据处理 线上的线上兼职机会。看到贵司这个岗位和我的方向挺匹配，方便的话想把简历发您细聊，工作日下午可以面试。",
@@ -41,7 +42,8 @@
       "block": "08:35 你好啊，可以聊一聊~",
       "sender": "hr",
       "kind": "bubble",
-      "content": "你好啊，可以聊一聊~"
+      "content": "你好啊，可以聊一聊~",
+      "is_read": true
     },
     {
       "text": "主要是在电脑上根据要求截图，然后上传即可",
@@ -53,7 +55,8 @@
       "block": "主要是在电脑上根据要求截图，然后上传即可",
       "sender": "hr",
       "kind": "bubble",
-      "content": "主要是在电脑上根据要求截图，然后上传即可"
+      "content": "主要是在电脑上根据要求截图，然后上传即可",
+      "is_read": true
     },
     {
       "text": "工作时间是上午九点到下午一点",
@@ -65,7 +68,8 @@
       "block": "工作时间是上午九点到下午一点",
       "sender": "hr",
       "kind": "bubble",
-      "content": "工作时间是上午九点到下午一点"
+      "content": "工作时间是上午九点到下午一点",
+      "is_read": true
     },
     {
       "text": "薪资是根据你自己做的量来算，做得越多挣得越多",
@@ -77,7 +81,8 @@
       "block": "薪资是根据你自己做的量来算，做得越多挣得越多",
       "sender": "hr",
       "kind": "bubble",
-      "content": "薪资是根据你自己做的量来算，做得越多挣得越多"
+      "content": "薪资是根据你自己做的量来算，做得越多挣得越多",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -104,7 +109,8 @@
       "block": "你不是找兼职？",
       "sender": "hr",
       "kind": "bubble",
-      "content": "你不是找兼职？"
+      "content": "你不是找兼职？",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -131,7 +137,8 @@
       "block": "14:39 这边的话是需要去标注的",
       "sender": "hr",
       "kind": "bubble",
-      "content": "这边的话是需要去标注的"
+      "content": "这边的话是需要去标注的",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -158,7 +165,8 @@
       "block": "15:25 这边是截图上传是兼职",
       "sender": "hr",
       "kind": "bubble",
-      "content": "这边是截图上传是兼职"
+      "content": "这边是截图上传是兼职",
+      "is_read": true
     },
     {
       "text": "可以加联系方式看一下具体操作",
@@ -170,7 +178,8 @@
       "block": "可以加联系方式看一下具体操作",
       "sender": "hr",
       "kind": "bubble",
-      "content": "可以加联系方式看一下具体操作"
+      "content": "可以加联系方式看一下具体操作",
+      "is_read": true
     },
     {
       "text": "",
@@ -183,7 +192,8 @@
       "sender": "hr",
       "kind": "card",
       "content": "",
-      "card_text": "我想要和您交换微信，您是否同意 拒绝 同意"
+      "card_text": "我想要和您交换微信，您是否同意 拒绝 同意",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -206,11 +216,12 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394494525633024",
-      "block": "17:22 LYXIKUN010124 李昱昕的微信号 LYXIKUN010124 复制微信号",
+      "block": "LYXIKUN010124 李昱昕的微信号 LYXIKUN010124 复制微信号",
       "sender": "hr",
       "kind": "card",
       "content": "",
-      "card_text": "LYXIKUN010124 李昱昕的微信号 LYXIKUN010124 复制微信号"
+      "card_text": "LYXIKUN010124 李昱昕的微信号 LYXIKUN010124 复制微信号",
+      "is_read": true
     },
     {
       "text": "加了",
@@ -222,7 +233,8 @@
       "block": "18:26 加了",
       "sender": "hr",
       "kind": "bubble",
-      "content": "加了"
+      "content": "加了",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -249,7 +261,8 @@
       "block": "行",
       "sender": "hr",
       "kind": "bubble",
-      "content": "行"
+      "content": "行",
+      "is_read": true
     },
     {
       "text": "你同意了？",
@@ -261,7 +274,8 @@
       "block": "19:05 你同意了？",
       "sender": "hr",
       "kind": "bubble",
-      "content": "你同意了？"
+      "content": "你同意了？",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -288,7 +302,8 @@
       "block": "08:04 我这边没看见",
       "sender": "hr",
       "kind": "bubble",
-      "content": "我这边没看见"
+      "content": "我这边没看见",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -315,7 +330,8 @@
       "block": "不用加了",
       "sender": "hr",
       "kind": "bubble",
-      "content": "不用加了"
+      "content": "不用加了",
+      "is_read": true
     },
     {
       "sender": "bot",
@@ -344,9 +360,54 @@
       "timestamp": "2026-10-10 03:38:58",
       "time": "03:38",
       "job_name": "兼职·数据采集专员1500-2500元/月长治查看职位",
+      "isFriend": false,
+      "mid": "394999968522753"
+    },
+    {
+      "sender": "bot",
+      "content": "李昱昕您好，之前聊的兼职·数据采集专员1500-2500元/月长治查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "李昱昕您好，之前聊的兼职·数据采集专员1500-2500元/月长治查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 11:46:52",
+      "time": "11:46",
+      "job_name": "兼职·数据采集专员1500-2500元/月长治查看职位",
+      "isFriend": false,
+      "mid": "397597140840960"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，那您看这边是直接线上简单聊几句，还是先加下联系方式方便后续对接？",
+      "text": "好的，那您看这边是直接线上简单聊几句，还是先加下联系方式方便后续对接？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-20 14:55:46",
+      "time": "14:55",
+      "job_name": "兼职·数据采集专员1500-2500元/月长治查看职位",
+      "isFriend": false,
+      "mid": "398705250243072"
+    },
+    {
+      "sender": "bot",
+      "content": "好嘞，那就先这样，您忙。",
+      "text": "好嘞，那就先这样，您忙。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 13:23:00",
+      "time": "13:23",
+      "job_name": "兼职·数据采集专员1500-2500元/月长治查看职位",
       "isFriend": false
     }
   ],
-  "updated_at": "2026-10-10 03:38:58",
+  "updated_at": "2026-10-24 13:23:00",
   "unread_on_boss": 0
 }

@@ -1,0 +1,22 @@
+{
+  "chat_name": "闵桦",
+  "chat_id": "闵桦#山河智能",
+  "account_index": 0,
+  "job_name": "数据中心工程师10-14K·13薪长沙",
+  "company": "山河智能",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "17:02",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397674617987844",
+      "block": "17:02 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-25 02:37:09"
+}

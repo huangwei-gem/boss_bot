@@ -2,7 +2,7 @@
   "chat_name": "补先生",
   "chat_id": "补先生#湖南丰瑞达网络科技",
   "account_index": 0,
-  "job_name": "全长沙W一 免 费 提供电动车食住直招可短期8-9K长沙查看职位",
+  "job_name": "全长沙W一 免 费 提供电动车食住直招可短期8-9K长沙",
   "company": "湖南丰瑞达网络科技",
   "messages": [
     {
@@ -100,8 +100,59 @@
       "sender": "me",
       "kind": "bubble",
       "content": "您好～我是统计学本科，想找数据分析 线上的线上兼职机会。平时用Excel、SQL、Python、数据分析做数据整理和分析，负责业务数据报表与洞察分析。看到贵司这个岗位和我的方向挺匹配，方便的话想把简历发您细聊，工作日下午可以面试。"
+    },
+    {
+      "text": "黄维先生 你好, 您是否有看到合适的呢，我这边很诚心地想和您沟通下？",
+      "time": "昨天 18:26",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397341430862595",
+      "block": "昨天 18:26 黄维先生 你好, 您是否有看到合适的呢，我这边很诚心地想和您沟通下？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "黄维先生 你好, 您是否有看到合适的呢，我这边很诚心地想和您沟通下？"
+    },
+    {
+      "text": "看到你已读了，不知道你这边是有什么顾虑？",
+      "time": "18:39",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397698580071169",
+      "block": "18:39 看到你已读了，不知道你这边是有什么顾虑？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "看到你已读了，不知道你这边是有什么顾虑？"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-17 19:00:40",
+      "time": "19:00",
+      "job_name": "全长沙W一 免 费 提供电动车食住直招可短期8-9K长沙查看职位",
+      "isFriend": false,
+      "mid": "397703747302144"
+    },
+    {
+      "text": "抱歉那我不打扰你了，祝你找到合适的工作",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397703753564930",
+      "block": "抱歉那我不打扰你了，祝你找到合适的工作",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "抱歉那我不打扰你了，祝你找到合适的工作"
     }
   ],
-  "updated_at": "2026-10-08 01:50:17",
+  "updated_at": "2026-10-25 08:07:09",
   "unread_on_boss": 0
 }

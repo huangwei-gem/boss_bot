@@ -44,9 +44,24 @@
       "timestamp": "2026-10-10 01:34:28",
       "time": "01:34",
       "job_name": "兼职·小红书运营（留学方向）-居家兼职25-30元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "394969371832832"
+    },
+    {
+      "sender": "bot",
+      "content": "杨先生，这个岗具体都做些什么？线上沟通我下午都有空。",
+      "text": "杨先生，这个岗具体都做些什么？线上沟通我下午都有空。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 15:52:48",
+      "time": "15:52",
+      "job_name": "兼职·小红书运营（留学方向）-居家兼职25-30元/时长沙查看职位",
       "isFriend": false
     }
   ],
-  "updated_at": "2026-10-10 01:34:28",
+  "updated_at": "2026-10-23 15:52:48",
   "unread_on_boss": 0
 }

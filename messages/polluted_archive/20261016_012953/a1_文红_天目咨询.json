@@ -1,0 +1,22 @@
+{
+  "chat_name": "文红",
+  "chat_id": "文红#天目咨询",
+  "account_index": 1,
+  "job_name": "数据运营经理8-10K长沙查看职位",
+  "company": "天目咨询",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 13:33",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394792174408451",
+      "block": "昨天 13:33 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-10 18:32:56"
+}

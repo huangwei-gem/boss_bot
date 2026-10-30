@@ -174,7 +174,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "393784596521732",
-      "block": "17:13 15623211150 张女士的微信号 15623211150 复制微信号",
+      "block": "15623211150 张女士的微信号 15623211150 复制微信号",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -281,7 +281,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394392967262977",
-      "block": "10:29 我想要一份您的附件简历，您是否同意 拒绝 同意",
+      "block": "我想要一份您的附件简历，您是否同意 拒绝 同意",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -326,9 +326,10 @@
       "timestamp": "2026-10-09 14:13:52",
       "time": "14:13",
       "job_name": "急招-金源-肯德基楼面经理-实习100-150元/天长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394802100880129"
     }
   ],
-  "updated_at": "2026-10-09 14:13:52",
+  "updated_at": "2026-10-18 13:34:45",
   "unread_on_boss": 0
 }

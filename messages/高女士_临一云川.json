@@ -1,0 +1,22 @@
+{
+  "chat_name": "高女士",
+  "chat_id": "高女士#临一云川",
+  "account_index": 0,
+  "job_name": "AI数据治理与Agent评测专家 (MJ000117)15-30K长沙查看职位",
+  "company": "临一云川",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "14:48",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397641804403462",
+      "block": "14:48 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-23 13:58:30"
+}

@@ -57,9 +57,37 @@
       "timestamp": "2026-10-10 01:55:52",
       "time": "01:55",
       "job_name": "兼职·莆田方言采集兼职-线上居家兼职20-30元/时莆田查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394974629294592"
+    },
+    {
+      "text": "您好，公司兼职项目现在暂时是本地方言兼职，其他需要线下坐班",
+      "time": "08:38",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395073678475781",
+      "block": "08:38 您好，公司兼职项目现在暂时是本地方言兼职，其他需要线下坐班",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好，公司兼职项目现在暂时是本地方言兼职，其他需要线下坐班"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-10 09:44:24",
+      "time": "09:44",
+      "job_name": "兼职·莆田方言采集兼职-线上居家兼职20-30元/时莆田查看职位",
+      "isFriend": false,
+      "mid": "395089781694980"
     }
   ],
-  "updated_at": "2026-10-10 01:55:52",
-  "unread_on_boss": 1
+  "updated_at": "2026-10-23 15:10:54",
+  "unread_on_boss": 0
 }

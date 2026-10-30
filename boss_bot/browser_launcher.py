@@ -25,12 +25,12 @@ import subprocess
 import platform
 import shutil
 import socket
-import tempfile
 import logging
 import threading
 from pathlib import Path
 from urllib.request import urlopen
 from urllib.error import URLError
+from urllib.parse import unquote
 from typing import Optional
 
 from boss_bot.unified_config import resolve_path
@@ -59,9 +59,12 @@ LAUNCHED_MODES: dict = {}
 # 实测承载 BOSS 直聘登录态的 Cookie 名（缺这些或过期即需要重新登录）
 BOSS_AUTH_COOKIES = ("wt2", "zp_at", "bst", "wbg")
 
-# Cookie 文件是用户唯一的登录会话凭据。覆盖写之前先留一份，只保留最近这么多份：
+# Cookie 文件是用户唯一的登录会话凭据。覆盖写之前先留一份，热目录里只留最近这么多份：
 # 全留着会把几百 KB 的会话堆成垃圾山，但一份都没有就是 2026-09-29 那样——
 # 判定误报"过期"直接把文件删了，人工连"当时里面到底是什么"都查不了。
+# 超出份数的**挪进 data/cookie_backups/kept/，不删**（10-23 改的口径，跟
+# data/archive_kept/、logs/kept/ 一致）：改之前是 `old.unlink()`，git 里 7 份旧备份
+# 已经因此没了，其中还有账号1 的——见 _本文件的备份() 里那条按形状收口的原因。
 COOKIE_BACKUP_KEEP = 5
 
 # ──────────────────────────────────────────────────────────────
@@ -297,6 +300,36 @@ def _cookie_backup_dir() -> str:
     return str(resolve_path(Path("data") / "cookie_backups"))
 
 
+_备份名尾 = re.compile(r"^_\d{8}_\d{6}_\d{4}$")
+
+
+def _本文件的备份(dst_dir: Path, src: Path):
+    """这份 Cookie 自己的备份，按名字形状收口，别的账号的一份都不算。
+
+    原来是一条 `glob(f"{src.stem}_*{src.suffix}")`：主账号叫 `zhipin_cookies.json`，
+    前缀 `zhipin_cookies_` 把账号1 的 `zhipin_cookies_1_20261019_140120_0076.json`
+    一起捞了进来——于是**主账号每存一次盘，账号1 就少一份备份**（10-23 查
+    `data/cookie_backups/` 时 git 里 7 个被跟踪的旧备份已显示为删除）。
+    """
+    return sorted(p for p in dst_dir.glob(src.stem + "_*" + src.suffix)
+                  if _备份名尾.match(p.stem[len(src.stem):]))
+
+
+def _挪进留档(dst_dir: Path, old: Path):
+    """过期备份只挪走，不删——这是他对用户数据定过的唯一口径。"""
+    留档 = dst_dir / "kept"
+    留档.mkdir(parents=True, exist_ok=True)
+    落 = 留档 / old.name
+    if 落.exists():       # 同名字理论上不该出现（序号只增），撞上了加个后缀，绝不覆盖
+        落 = 留档 / (old.stem + "_再留一次" + old.suffix)
+    try:
+        shutil.move(str(old), str(落))
+        logger.info("Cookie 备份超出份数，挪进留档目录：%s", 落)
+    except OSError as e:
+        logger.warning("Cookie 备份挪进留档目录失败（%s: %s），原备份留在原地不动——"
+                       "宁可堆着，也不能把登录会话凭据弄丢", type(e).__name__, str(e)[:60])
+
+
 def backup_cookie_file(path: str, backup_dir: str = None,
                        keep: int = COOKIE_BACKUP_KEEP) -> str:
     """把现有 Cookie 文件复制进备份目录，返回备份路径；原文件不动。"""
@@ -307,21 +340,17 @@ def backup_cookie_file(path: str, backup_dir: str = None,
     dst_dir.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%Y%m%d_%H%M%S")
     # 序号补零并且"绝不复用已删除的号"：靠 while dest.exists() 找空位的话，
-    # 一份备份被轮换删掉后，下一次会顶回那个最靠前的名字，按名字排序轮换时就
-    # 把最新那份当最旧的删了（第一版就是这么错的）。
-    seqs = []
-    prefix = src.stem + "_"
-    for p in dst_dir.glob(f"{src.stem}_*{src.suffix}"):
-        tail = p.stem[len(prefix):].rsplit("_", 1)[-1]
-        if tail.isdigit():
-            seqs.append(int(tail))
-    dest = dst_dir / f"{prefix}{stamp}_{(max(seqs) + 1) if seqs else 0:04d}{src.suffix}"
+    # 一份备份被轮换挪走后，下一次会顶回那个最靠前的名字，按名字排序轮换时就
+    # 把最新那份当最旧的又挪一遍（第一版就是这么错的）。
+    seqs = [int(p.stem.rsplit("_", 1)[-1]) for p in _本文件的备份(dst_dir, src)]
+    dest = dst_dir / f"{src.stem}_{stamp}_{(max(seqs) + 1) if seqs else 0:04d}{src.suffix}"
     shutil.copy2(str(src), str(dest))
-    for old in sorted(dst_dir.glob(f"{src.stem}_*{src.suffix}"))[:-keep]:
-        try:
-            old.unlink()
-        except OSError:
-            pass
+    全部 = _本文件的备份(dst_dir, src)
+    该挪 = max(len(全部) - max(int(keep), 0), 0)
+    # 写成 全部[:len(全部) - keep] 会有雷：不够 keep 份时那个数是负的，
+    # 切片反而从前面捞走一份（10-23 第一版就这么把第 3 份备份提前挪走了）。
+    for old in 全部[:该挪]:
+        _挪进留档(dst_dir, old)
     return str(dest)
 
 
@@ -384,6 +413,173 @@ def 是登不进去的地址(url) -> bool:
     """
     u = (url or "").lower()
     return 是风控验证页(u) or any(k in u for k in LOGIN_WALL_MARKS)
+
+
+# 「风控到底是谁招来的」这个问题只能从 URL 里那串 callbackUrl 回答：BOSS 把人踢到
+# /web/passport/zp/verify.html 时，把"滑完该回哪一步"编码在这个参数里带过去。
+# 10-28 统计八天日志里 134 次风控，只有 15 次定得了因——判据行把 URL 截到 90 字，
+# 而实测那句正好断在 `callbackUrl=https%3A%2F%2Fwww.zhipin.` 上，那一步的名字
+# 一个字都没留下。这一族关键词只有这一份，两条腿的日志都用它，别在调用方再抄一遍。
+# 实测两种写法都有（绝对编码 `https%3A%2F%2Fwww.zhipin.com%2Fjob_detail%2F…` 与
+# 相对编码 `%2Fjob_detail%2F…`），而且 callbackUrl 不一定排在第一个参数
+# （security.html 有 seed/name/ts 在前的），所以只能按参数名找，不能按位置找。
+# 顺序要紧：/web/geek/job-recommend 得排在 /web/geek/jobs 前面才认得出推荐页。
+风控去向表 = (
+    ("/job_detail", "岗位详情页"),
+    ("/web/geek/job-recommend", "岗位推荐页"),
+    ("/web/geek/jobs", "搜索结果页"),
+    ("/web/geek/chat", "会话页"),
+    ("/web/geek/resume", "在线简历页"),
+    ("/web/user", "登录页"),
+    ("/", "主站首页"),          # 只有裸根才走到这条，所以必须排在最后
+)
+
+
+def _剥到路径(u: str) -> str:
+    """`https://www.zhipin.com/a/b?x=1` → `/a/b`；相对写法（`/a/b`）原样留着。
+
+    带 scheme 却没有路径的一律回空串：实测日志里大量这种串是被老判据行
+    `URL={url[:90]}` 切断的残段（`https://www.zhipin.co`、`https%3`），
+    把它们当成"要去的地方"就是替 BOSS 编一个去向。
+    """
+    s = (u or "").strip()
+    匹 = re.match(r"^https?://[^/?#]*(/.*)$", s, re.I)
+    if 匹:
+        s = 匹.group(1)
+    elif s.startswith("/"):
+        pass
+    else:
+        return ""
+    return s.split("?")[0].split("#")[0]
+
+
+def _解出落地页(url: str) -> str:
+    """取 callbackUrl 那一段并解开百分号编码；验证页套验证页就一层层往里走。
+
+    实测确有链式写法（一条 security.html 的 srcReferer 里躺着
+    `verify.html?callbackUrl=https%253A...` 这种双重编码），只解一层会读出
+    "去向：又一张某验证页"那种没有信息量的答案。走满 5 层还没走到头就照实说读不出。
+    """
+    现 = str(url or "")
+    for _ in range(5):
+        匹 = re.search(r"callbackUrl=([^&]*)", 现, re.I)
+        if not 匹:
+            return ""
+        下 = unquote(匹.group(1))
+        if not 下 or 下 == 现:
+            return 下
+        if not 是风控验证页(下):
+            return 下
+        现 = 下
+    return ""
+
+
+def 风控去向后缀(url) -> str:
+    """这一行日志后面该挂的「（去向：岗位详情页 /job_detail/xxx.html）」；读不出就空串。
+
+    空串是"这条 URL 里读不出那一步"，不是"那一步不存在"——读不出的次数本身就是要看的
+    数，所以不许拿"未知/主站首页"填空（切断的 URL 补成 / 就会被读成去主站）。
+    """
+    址 = _解出落地页(url)
+    if not 址 or 是风控验证页(址):
+        return ""
+    径 = _剥到路径(址)
+    if not 径:
+        return ""
+    名 = next((n for (k, n) in 风控去向表 if 径.lower().startswith(k)), None)
+    return "（去向：%s %s）" % (名 or "没登记的一步", 径[:60])
+
+
+# ── 整页加载地板：整个进程里两次"把一张页整个换掉"之间至少隔这么多秒 ──
+# 已装的闸各管各的：打开岗位详情有 job_detail_min_interval（8 天日志里 111/112 处
+# 被甩验证页都出在这一步），启动复验与等人工登录共用 这一眼该不该导航()。剩下这些
+# "想到就 get 一次"的没人管：回复腿 go_to_chat 每次发现会话页地址漂了就走整页加载、
+# 抓取腿每趟查询刷搜索页、断线重连与内存回收重开浏览器那几下、界面「检测 Cookie」
+# 那条老接口一趟两次整页加载（主站 + 会话页）。
+# 10-23~10-25 三天日志实测：能数出来的整页加载 792 次，其中 11 个"同一秒里两号各
+# 发一发"——风控算的是出口 IP，两个号挤在同一个家宽 IP 上，所以这一份和冷却表、
+# 详情节流表一样是**整个进程共用**，不按号分。
+# 地板只管"同一秒不许三四发"，默认 3 秒：抓取腿本来就是几分钟一趟，摊不慢它。
+# 填 0 = 关掉；上限夹到 60，再大就不是摊平而是把腿停住。
+_SHARED_PAGE_LOAD_STATE = {"上次": 0.0, "地板": 0.0}
+_PAGE_LOAD_LOCK = threading.Lock()
+
+
+def 设置整页加载地板(秒) -> float:
+    """按配置装地板（浏览器启动时调；界面改了要重启号才换，与详情节流同一口径）。
+    返回真正装上的秒数，调用方回读后才能确认生效。"""
+    try:
+        秒 = float(秒 or 0)
+    except (TypeError, ValueError):
+        秒 = 0.0
+    秒 = max(0.0, min(60.0, 秒))
+    with _PAGE_LOAD_LOCK:
+        _SHARED_PAGE_LOAD_STATE["地板"] = 秒
+    return 秒
+
+
+def 整页加载地板秒() -> float:
+    with _PAGE_LOAD_LOCK:
+        return _SHARED_PAGE_LOAD_STATE["地板"]
+
+
+加载模式取值 = ("normal", "eager", "none")
+
+
+def _加载模式(值) -> str:
+    """把配置里的加载模式折成 DrissionPage 认的三个词之一。
+
+    默认 eager：`page.get()` 等到 `document.readyState` 变成 complete 才返回，
+    也就是连图片、统计脚本一起等。10-24 11:01:20→11:03:28 实测主站那一发 128 秒、
+    同一趟四次整页加载各 126~135 秒，占了启动 527 秒里的 508 秒——机器等的不是
+    "BOSS 有没有把页面给出来"，而是那些永远加载不完的挂件。eager 是 DOM 就绪就走，
+    后面的元素由各自的自适应等待去盯（回复轮/抽屉早就是这么办的）。
+    填错不猜：认不了的写回 eager 并说一句，别让一个拼错的词把腿变成 none 那样
+    "发了导航就读空 DOM"。
+    """
+    v = str(值 or "").strip().lower()
+    if not v:
+        return "eager"          # 老配置里没这个键：按新默认走，不该为此念一句
+    if v in 加载模式取值:
+        return v
+    logger.warning("加载模式「%s」不是 %s 之一，按 eager 走"
+                   % (值 or "空", "/".join(加载模式取值)))
+    return "eager"
+
+
+def 整页加载要等秒(上次: float, 现在: float, 地板: float) -> float:
+    """距离下一次准发整页加载还差几秒。纯函数，判据只这一处。
+
+    上次=0 是"这个进程还没加载过"，第一趟绝不许等——跟 打开要等秒() 同一个哨兵，
+    真按 0 + 地板 - 现在 算会等出一个天文数字，两条腿当场冻死。
+    """
+    if 地板 <= 0 or 上次 <= 0:
+        return 0.0
+    return max(0.0, float(上次) + float(地板) - float(现在))
+
+
+def 准整页加载(地址: str = "", 记=None) -> float:
+    """发一次整页加载之前调用：不够地板就睡到够，返回实际等了多久（不改导航结果）。
+
+    `记` 收一个字符串，由调用方决定进哪一路（引擎的 _log 还是 logger）。
+    上限就是地板本身：绝不在这里睡过 60 秒，也不会因为"上一发是别人的"而无限等。
+    """
+    with _PAGE_LOAD_LOCK:
+        地板 = _SHARED_PAGE_LOAD_STATE["地板"]
+        要等 = 整页加载要等秒(_SHARED_PAGE_LOAD_STATE["上次"], time.time(), 地板)
+        if 要等 > 0:
+            time.sleep(min(要等, 地板))
+        _SHARED_PAGE_LOAD_STATE["上次"] = time.time()
+    if 要等 >= 1 and 记 is not None:
+        记("整页加载摊平：两号共用一个出口 IP，这一发（%s）等了 %.1f 秒"
+          % ((地址 or "")[:60], 要等))
+    return 要等
+
+
+def reset_page_load_throttle() -> None:
+    """清掉地板计时（测试用；也用于"改了秒数就当场按新的来"）。"""
+    with _PAGE_LOAD_LOCK:
+        _SHARED_PAGE_LOAD_STATE["上次"] = 0.0
 
 
 def has_live_auth_cookie(cookies) -> bool:
@@ -1120,7 +1316,8 @@ class BrowserInstance:
         return obj.eles(selector)
 
     def get(self, url):
-        """导航到指定 URL"""
+        """导航到指定 URL（整页换一张页，走进程级地板）"""
+        准整页加载(url, logger.debug)
         return self._get_active().get(url)
 
     @property
@@ -1236,6 +1433,11 @@ class BrowserInstance:
         Returns:
             新建的 tab 对象
         """
+        if url:
+            # 带 url 的 new_tab 本身就是一发整页加载（回复腿那张会话页就是这么开的），
+            # 不踩地板的话"同一秒两号各发一发"照样过得去。空 url 开的是空白页，
+            # 没发请求，不许占掉地板。
+            准整页加载(url, logger.debug)
         if self._chromium is not None:
             return self._chromium.new_tab(url)
         elif self._page is not None:
@@ -1365,6 +1567,8 @@ def launch_browser(
     user_data_dir: str = "",
     background: bool = True,
     extra_args: tuple = (),
+    page_load_timeout: int = 30,
+    load_mode: str = "eager",
 ) -> BrowserInstance:
     """启动浏览器（跨平台，支持 Chrome、Edge、Chromium）
 
@@ -1382,6 +1586,8 @@ def launch_browser(
         browser_type: 浏览器类型，"chrome" / "edge" / "chromium"
         background: 有头模式下把窗口直接收进任务栏，不前置、不抢用户焦点
         extra_args: 追加的 Chrome 启动参数（只用于内存参数的 A/B 实测）
+        page_load_timeout: 单页加载最多等几秒（配置里的 browser.page_load_timeout，
+            进 DrissionPage 的 timeouts.page_load；page.get()/refresh() 就是按它等）
 
     Returns:
         BrowserInstance: 浏览器实例
@@ -1434,6 +1640,8 @@ def launch_browser(
             user_data_dir=user_data_dir,
             background=background,
             extra_args=extra_args,
+            page_load_timeout=page_load_timeout,
+            load_mode=load_mode,
         )
     else:
         return _launch_windows(
@@ -1447,6 +1655,8 @@ def launch_browser(
             user_data_dir=user_data_dir,
             background=background,
             extra_args=extra_args,
+            page_load_timeout=page_load_timeout,
+            load_mode=load_mode,
         )
 
 
@@ -1461,6 +1671,8 @@ def _launch_macos(
     user_data_dir: str = "",
     background: bool = True,
     extra_args: tuple = (),
+    page_load_timeout: int = 30,
+    load_mode: str = "eager",
 ) -> BrowserInstance:
     """macOS 启动 Chrome（手动启动 + Chromium 连接）
 
@@ -1472,13 +1684,16 @@ def _launch_macos(
     和内存/后台节流那几档，而 mac 上没人拿回归去比对，所以一直没被发现。
     """
 
-    # 构建启动参数 — 优先使用传入的 user_data_dir，否则使用临时目录
+    # 构建启动参数 — 优先使用传入的 user_data_dir
+    # 没传的时候也要落在**项目里**：以前退到 `tempfile.gettempdir()`，2026-09-17
+    # 那一轮就在 %TEMP% 里留下 17 个 `boss_bot_chrome_*`/`boss_chrome_*` 空壳目录
+    # （128 MB），用户要清又不敢清——他说的"东西应该在我项目文件夹里找得到"包括这个。
     if user_data_dir:
         user_data_dir_path = user_data_dir
     else:
-        user_data_dir_path = os.path.join(
-            tempfile.gettempdir(), f"boss_bot_chrome_{port}"
-        )
+        from boss_bot.unified_config import BASE_DIR
+        user_data_dir_path = str(Path(str(BASE_DIR)) / "browser_data"
+                                 / f"临时_{port}")
 
     # 先确认端口上没有别人的浏览器，再动本账号的 profile 目录（和 Windows 同一顺序：
     # 先建目录再判，等于把"我们没在用"的痕迹先留在磁盘上）
@@ -1538,6 +1753,8 @@ def _launch_macos(
 
     co = ChromiumOptions()
     co.ws_address = ws_url
+    co.set_timeouts(page_load=page_load_timeout)
+    co.set_load_mode(_加载模式(load_mode))
 
     try:
         chromium = Chromium(co)
@@ -1703,12 +1920,16 @@ def _launch_windows(
     user_data_dir: str = "",
     background: bool = True,
     extra_args: tuple = (),
+    page_load_timeout: int = 30,
+    load_mode: str = "eager",
 ) -> BrowserInstance:
     """Windows 启动 Chrome（使用原生 ChromiumPage）"""
 
     from DrissionPage import ChromiumPage, ChromiumOptions
 
     co = ChromiumOptions()
+    co.set_timeouts(page_load=page_load_timeout)
+    co.set_load_mode(_加载模式(load_mode))
     co.set_browser_path(chrome_path)
     for _flag in CHROME运行参数:
         co.set_argument(_flag)
@@ -1823,6 +2044,24 @@ def 挑闲置岗位页(targets, keep_ids) -> list:
             and t.get("id") not in 留着 and 闲置岗位页(t.get("url"))]
 
 
+def 挑验证页(targets) -> list:
+    """`/json` 那批目标里，哪几张是"要人去滑"的安全验证页。
+
+    为什么要有这一条：健康检查只读自己钉住的那一张页（打招呼读搜索页、回复读会话页），
+    而验证页常常是点「立即沟通」后 `_blank` 新开的那张岗位页上弹的。2026-10-21 看线上
+    日志：9222/9223 两边各有一张标签停在 verify.html，同一天却记了 1057 条
+    「会话页判据=ok」对 1 条 captcha——验证页在别的标签上等着，机器当它不存在，
+    既不提示也不摆窗口，两条腿还照原来的频率继续撞。
+
+    只认 type == "page"（service_worker/shared_worker 的 URL 也带 zhipin.com，
+    把它们认成验证页就是狼来了）；URL 判据一律用 是风控验证页，别再抄一份关键词。
+    读不到清单时调用方给空列表，这里也回空列表——"没读到"永远不许变成"有验证页"。
+    """
+    return [t for t in (targets or ())
+            if isinstance(t, dict) and t.get("type") == "page"
+            and 是风控验证页(t.get("url"))]
+
+
 def 是拒连(e) -> bool:
     """这个异常是不是"端口上没人听"。超时、读不出、DNS 都不算。
 
@@ -1840,6 +2079,27 @@ def 是拒连(e) -> bool:
             return True
     文 = str(e)
     return "10061" in 文 or "Connection refused" in 文
+
+
+_清扫最近 = {}
+
+
+def _清扫要说(address, 看到, 在册, 读不到, 关掉) -> bool:
+    """这一圈值不值得在日志里开一句口。
+
+    看守每 60 秒一圈、清扫每一轮收尾一趟，两个号一起算，「关掉 0 张闲置的岗位详情
+    页」这种纯报平安的话一周能堆几万行——现测 10-25 那趟 40188 行里
+    「标签页清扫(…)关掉 0 张」占 3105 行（7.7%）。真动手、读不到 URL、
+    或者页面张数跟上一圈不一样，才说明世界变了，这时候说才有用。
+    """
+    形 = (int(看到), int(在册), int(读不到))
+    if 关掉 or 读不到:
+        _清扫最近[address] = 形
+        return True
+    if _清扫最近.get(address) == 形:
+        return False
+    _清扫最近[address] = 形
+    return True
 
 
 def close_idle_job_tabs_http(address, keep_ids=(), timeout=5.0, 打开=None) -> int:
@@ -1864,8 +2124,9 @@ def close_idle_job_tabs_http(address, keep_ids=(), timeout=5.0, 打开=None) -> 
         return 0
     待关 = 挑闲置岗位页(清单, keep_ids)
     if not 待关:
-        logger.debug("标签页看守(%s)：看到 %d 张（在册 %d 张），没有要收的岗位详情页"
-                     % (address, len(清单 or ()), len(set(keep_ids or ()))))
+        if _清扫要说(address, len(清单 or ()), len(set(keep_ids or ())), 0, 0):
+            logger.debug("标签页看守(%s)：看到 %d 张（在册 %d 张），没有要收的岗位详情页"
+                         % (address, len(清单 or ()), len(set(keep_ids or ()))))
         return 0
     关掉 = 0
     for tid in 待关:
@@ -1920,9 +2181,11 @@ def close_idle_job_tabs(browser, keep_ids=(), only_ids=None) -> int:
             logger.debug(f"闲置的岗位详情页关不掉（不拦这一轮）: {e}")
     # 「没得关」「没看成」「关不掉」在日志里必须长得不一样，否则值守只能猜；
     # 端口也要带上——两个号共用一份日志，不写端口就分不清是哪条腿没动手。
-    logger.debug("标签页清扫(%s)：看到 %d 张（在册 %d 张），关掉 %d 张闲置的岗位详情页%s"
-                 % (getattr(browser, "address", "?"), len(候选), len(留着), 关掉,
-                    "，另有 %d 张读不到 URL" % 读不到 if 读不到 else ""))
+    地址 = getattr(browser, "address", "?")
+    if _清扫要说(地址, len(候选), len(留着), 读不到, 关掉):
+        logger.debug("标签页清扫(%s)：看到 %d 张（在册 %d 张），关掉 %d 张闲置的岗位详情页%s"
+                     % (地址, len(候选), len(留着), 关掉,
+                        "，另有 %d 张读不到 URL" % 读不到 if 读不到 else ""))
     return 关掉
 
 
@@ -1991,7 +2254,27 @@ class BrowserManager:
         self._background = getattr(config, 'background', True) if config else True
         # 缺省按"后台"走：这个浏览器一天要启动两次，前置一次就打断一次用户
         self._background = getattr(config, 'background', True) if config else True
-        self._user_agent = getattr(config, 'user_agent', "") if config else ""
+        # 面板上这两个输入框写的是 custom_user_agent / page_load_timeout
+        # （unified_config 的字段名），老名字 user_agent / page_timeout 仍然收：
+        # 只读一个名字的后果是"设置页填了、启动参数里什么都没有"。
+        self._user_agent = ((getattr(config, 'custom_user_agent', '')
+                             or getattr(config, 'user_agent', '')
+                             or "") if config else "")
+        self._page_load_timeout = int((getattr(config, 'page_load_timeout', 0)
+                                       or getattr(config, 'page_timeout', 0)
+                                       or 30) if config else 30)
+        # 加载模式：eager = DOM 就绪就返回，不等图片/统计脚本。这一条是启动那
+        # 八分钟的命门（10-24 实测四次整页加载各 126~135 秒），所以老配置里没有
+        # 这个键时按 eager 走，而不是退回 DrissionPage 的 normal。
+        self._load_mode = _加载模式(getattr(config, 'load_mode', '') if config else '')
+        if self._user_agent:
+            # 10-23 实测：这台机器上 cloakbrowser 与系统 Chrome 146 各起一台无头浏览器，
+            # 只要带 --user-agent，页面里 navigator.userAgent 就读成空串（不设时是正常
+            # Chrome UA）。界面上那格 UA 因此已经撤掉；配置里手填仍然会下发，但要说清代价：
+            # 拿到的是"一个不可能的空 UA"，不是"换成你的 UA"。
+            logger.warning("配置里设了自定义 UA（%s）：实测这类 Chrome 构建带 --user-agent 后 "
+                           "navigator.userAgent 会变成空串，风控看着比默认 UA 更可疑，"
+                           "除非清楚原因否则建议留空", self._user_agent[:40])
         self._proxy = getattr(config, 'proxy', "") if config else ""
         self._viewport_width = getattr(config, 'viewport_width', 1280) if config else 1280
         self._viewport_height = getattr(config, 'viewport_height', 800) if config else 800
@@ -2072,6 +2355,8 @@ class BrowserManager:
             browser_type=self._browser_type,
             user_data_dir=self._user_data_dir,
             background=self._background,
+            page_load_timeout=self._page_load_timeout,
+            load_mode=self._load_mode,
         )
 
         # 尝试加载 Cookie
@@ -2196,28 +2481,47 @@ class BrowserManager:
                     self._headless, self._background = 原无头, 原后台
                 # close() 把 _search_tab 置空了，不重建的话下一轮打招呼拿的是旧句柄
                 # （11:03 重连现场那个"第二个浏览器打开后无内容"就是漏了这一步）
-                self.get_search_page()
+                # 只钉句柄、不发整页加载：这一趟是为了把窗口摆给他登录，不是要抓岗位。
+                self.get_search_page(导航=False)
             if self._instance is None:
                 结果["error"] = "浏览器没起来（端口或用户目录被别的 Chrome 占了）"
                 return 结果
             结果["windows"] = restore_browser_windows(self._window_pid())
             # "看不准是不是掉登录"那一类不许把会话页导航走：本来就登录着的时候
             # 跳去登录页，回复侧随后就读到登录墙，自己把自己绊停。
-            # 但重开过就没得选——新浏览器里是空白页，不摆登录页等于没窗口可用。
-            if navigate or 要重开:
+            # 重开过的那一张要分两种：空白页就得摆上登录页（不然他面前什么都没有），
+            # 而 Chrome 用同一份用户目录重开时常常把上次那页带回来——带回来的是
+            # 安全验证页/登录页的话，那一页正是他要动手的地方，再导航一次=刚滑的一半
+            # 没了、刚刷出来的二维码换一张（2026-10-22 09:21:18 就是这么把验证页推掉的）。
+            当前 = ""
+            try:
+                当前 = str(self._instance.url or "")
+            except Exception:
+                当前 = ""
+            不许动 = 是风控验证页(当前) or 是登不进去的地址(当前)
+            if (navigate or 要重开) and not 不许动:
                 self._instance.get(登录页)
                 结果["url_shown"] = 登录页
+            elif 不许动:
+                logger.warning("重开后的这一页本来就是%s，摆窗口只把它弄到眼前，不导航走"
+                               % ("安全验证页" if 是风控验证页(当前) else "登录页"))
         except Exception as e:
             # DrissionPage 的 BrowserConnectError str() 是空串，只打 {e} 会留下
             # 「BrowserConnectError: 」这种比没记更糟的一行（10-19 12:08 现场）
             结果["error"] = "%s: %s" % (type(e).__name__, str(e) or repr(e))
         return 结果
 
-    def get_search_page(self) -> BrowserInstance:
+    def get_search_page(self, 导航: bool = True) -> BrowserInstance:
         """获取搜索/打招呼页面 tab（包装为 BrowserInstance）
 
         复用浏览器初始标签页作为搜索页，避免创建多余标签页。
         打招呼引擎使用此标签页进行职位搜索和打招呼操作。
+
+        Args:
+            导航: 假 = 只把句柄钉到当前这张页，不发整页加载。摆登录窗口那条路用它的
+                （重开成有头之后先加载一遍搜索页、紧接着又把同一张页导航去登录页，
+                那趟搜索页纯属白撞一次安全验证——2026-10-22 09:21:15 实测）。
+                抓取腿每一次查询本来就自己 `get(带query的URL)`，所以钉在登录页上不要紧。
 
         Returns:
             BrowserInstance 包装的搜索标签页实例
@@ -2227,9 +2531,11 @@ class BrowserManager:
 
         if self._search_tab is None:
             # 复用初始标签页，导航到搜索 URL
-            self._instance.get(self.BOSS_SEARCH_URL)
+            if 导航:
+                self._instance.get(self.BOSS_SEARCH_URL)
             self._search_tab = self._instance
-            logger.info("已复用初始标签页作为搜索/打招呼页")
+            logger.info("已复用初始标签页作为搜索/打招呼页"
+                        + ("" if 导航 else "（钉住当前这一页，不发整页加载）"))
 
         return self._search_tab
 
@@ -2301,6 +2607,24 @@ class BrowserManager:
             return self._认不出在册页("看守")
         return close_idle_job_tabs_http("127.0.0.1:%s" % self._debug_port,
                                         self._在册标签页id())
+
+    def 验证页标签(self, 打开=None, timeout: float = 3.0) -> list:
+        """这个号的浏览器里，现在有哪几张标签停在安全验证页（只读，不动任何页）。
+
+        走 CDP 的 HTTP 端点，和闲置页看守同一条文：一次 `/json` 是毫秒级的本地读，
+        不发 websocket、也不会把任何人正在用的那一页掀掉。读不到就回空列表——
+        「没读到」和「没有验证页」在调用方那里必须都是"不动手"，但日志里不能装成看到了。
+        """
+        if self._instance is None or not self._debug_port:
+            return []
+        开 = 打开 or (lambda url, t: urlopen(url, timeout=t))
+        try:
+            with 开("http://127.0.0.1:%s/json" % self._debug_port, timeout) as 响:
+                清单 = json.loads(响.read().decode("utf-8"))
+        except Exception as e:
+            logger.debug("验证页扫描(%s)：读不到标签页列表: %s" % (self._debug_port, e))
+            return []
+        return 挑验证页(清单)
 
     def 端口还活着(self, 打开=None, timeout: float = 3.0) -> bool:
         """调试端口上还有没有人听——没有就是这个号已经没有浏览器了。
@@ -2462,7 +2786,7 @@ class BrowserManager:
         logger.info("搜索页句柄已重绑到新开的标签页")
         return self._instance
 
-    def get_chat_page(self) -> BrowserInstance:
+    def get_chat_page(self, 导航: bool = True) -> BrowserInstance:
         """获取聊天回复页面 tab（包装为 BrowserInstance）— 回复引擎专用
 
         如果尚未创建聊天标签页，则创建一个并导航到聊天页。
@@ -2472,6 +2796,14 @@ class BrowserManager:
         打招呼引擎点"沟通"按钮后打开的新标签页请使用 get_greet_chat_tab() 获取，
         用完后调用 close_greet_chat_tab() 关闭，避免与回复引擎的 _chat_tab 混淆。
 
+        Args:
+            导航: 假 = 开一张空白标签页，不去加载会话页。只有"还没登录、先把引擎
+                搭起来"那一趟用它：2026-10-22 09:21:18 就是在这里 new_tab(会话页)，
+                那张页当场被踢成 verify.html，于是一个号出现两张一模一样的安全验证页，
+                第二张还是他正要滑的那一张的副本。空白页不算废弃——下一次
+                `get_chat_page()`（腿真要用页的时候）看到它不在 BOSS 站内就补导航，
+                所以回复腿拿到的永远是会话页，不是一张 about:blank。
+
         Returns:
             BrowserInstance 包装的聊天标签页实例
         """
@@ -2479,16 +2811,38 @@ class BrowserManager:
             self.launch()
 
         if self._chat_tab is None:
-            raw_tab = self._instance.new_tab(self.BOSS_CHAT_URL)
+            raw_tab = (self._instance.new_tab(self.BOSS_CHAT_URL) if 导航
+                       else self._instance.new_tab())
             # 包装为 BrowserInstance，复用底层 chromium/browser 对象
             self._chat_tab = BrowserInstance(
                 chrome_page=raw_tab if not _IS_MACOS else None,
                 chromium=self._instance._get_browser() if _IS_MACOS else None,
                 tab=raw_tab if _IS_MACOS else None,
             )
-            logger.info("已创建回复引擎专用聊天标签页 (_chat_tab)")
+            logger.info("已创建回复引擎专用聊天标签页 (_chat_tab)"
+                        + ("" if 导航 else "（空白：等登录，腿真要用时再导航）"))
+        elif 导航 and not self._在BOSS站内(self._chat_tab):
+            # 空白页兜底：上一趟是"等登录时开的空白页"，这一趟才是腿来要页
+            try:
+                self._chat_tab.get(self.BOSS_CHAT_URL)
+                logger.info("聊天标签页还是空白页，已补导航到会话页")
+            except Exception as e:
+                logger.warning("聊天标签页补导航到会话页失败: %s"
+                               % (str(e) or type(e).__name__))
 
         return self._chat_tab
+
+    @staticmethod
+    def _在BOSS站内(页) -> bool:
+        """这张页是不是已经站在 BOSS 站内（用来兜"空白标签页"，不当登录判据）。
+
+        只认域名，不认具体路径：停在登录页/验证页也算"在站内"，那种页不该被机器
+        反复导航走；about:blank、Chrome 的新标签页、崩了读不到 URL 才是要补的那一类。
+        """
+        try:
+            return "zhipin.com" in str(页.url or "")
+        except Exception:
+            return False
 
     def get_greet_chat_tab(self, url: str = "") -> BrowserInstance:
         """获取打招呼引擎专用的临时聊天标签页 — 用完必须关闭

@@ -1,0 +1,66 @@
+{
+  "chat_name": "伍女士",
+  "chat_id": "伍女士#字节跳动",
+  "account_index": 1,
+  "job_name": "用户增长数据分析师-TikTok20-40K·15薪上海查看职位",
+  "company": "字节跳动",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，有数据标注和TikTok用户增长相关的数据分析经验，熟悉AI辅助标注流程，方便的话我把简历发您细聊",
+      "time": "04:23",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395010951213569",
+      "block": "04:23 已读 您好，我是统计学专业在读生，有数据标注和TikTok用户增长相关的数据分析经验，熟悉AI辅助标注流程，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，有数据标注和TikTok用户增长相关的数据分析经验，熟悉AI辅助标注流程，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "经过认真考虑，我们认为您的经验与我们的职位需求并不完全一致。祝您在BOSS直聘找到您理想的工作！",
+      "time": "10:58",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395108021502466",
+      "block": "10:58 经过认真考虑，我们认为您的经验与我们的职位需求并不完全一致。祝您在BOSS直聘找到您理想的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "经过认真考虑，我们认为您的经验与我们的职位需求并不完全一致。祝您在BOSS直聘找到您理想的工作！"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "text": "感谢您的时间，理解您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-10 11:40:58",
+      "time": "11:40",
+      "job_name": "用户增长数据分析师-TikTok20-40K·15薪上海查看职位",
+      "isFriend": false,
+      "mid": "395118430679556"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的反馈，如有",
+      "text": "感谢您的反馈，如有",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 17:22:10",
+      "time": "17:22",
+      "job_name": "用户增长数据分析师-TikTok20-40K·15薪上海查看职位",
+      "isFriend": false,
+      "mid": "397679539581440"
+    }
+  ],
+  "updated_at": "2026-10-21 15:56:51",
+  "unread_on_boss": 0
+}

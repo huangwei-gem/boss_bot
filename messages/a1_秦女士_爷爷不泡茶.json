@@ -1,0 +1,51 @@
+{
+  "chat_name": "秦女士",
+  "chat_id": "秦女士#爷爷不泡茶",
+  "account_index": 1,
+  "job_name": "数据分析专家25-50K上海查看职位",
+  "company": "爷爷不泡茶",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，有AI训练数据质检和业务分析经验，熟悉Python/SQL工具，方便的话我把简历发您细聊",
+      "time": "02:57",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394989711782400",
+      "block": "02:57 已读 您好，我是统计学专业在读生，有AI训练数据质检和业务分析经验，熟悉Python/SQL工具，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，有AI训练数据质检和业务分析经验，熟悉Python/SQL工具，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    },
+    {
+      "text": "您好，经过初筛，您的经历与我们当前职位需求暂不匹配，如果后续有其他相关岗位开放，我们可以再联系。",
+      "time": "10:46",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395105011393027",
+      "block": "10:46 您好，经过初筛，您的经历与我们当前职位需求暂不匹配，如果后续有其他相关岗位开放，我们可以再联系。",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好，经过初筛，您的经历与我们当前职位需求暂不匹配，如果后续有其他相关岗位开放，我们可以再联系。"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的考虑，祝您招聘顺利~",
+      "text": "理解，感谢您的考虑，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-10 12:36:04",
+      "time": "12:36",
+      "job_name": "数据分析专家25-50K上海查看职位",
+      "isFriend": false,
+      "mid": "395131972452865"
+    }
+  ],
+  "updated_at": "2026-10-24 12:17:40",
+  "unread_on_boss": 0
+}

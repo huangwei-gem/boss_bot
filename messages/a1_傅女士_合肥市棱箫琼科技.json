@@ -63,7 +63,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "393966926893057",
-      "block": "05:35 muzang623 傅女士的微信号 muzang623 复制微信号",
+      "block": "muzang623 傅女士的微信号 muzang623 复制微信号",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -111,9 +111,39 @@
       "timestamp": "2026-10-10 08:05:04",
       "time": "08:05",
       "job_name": "兼职·python仿真matlab大模型算法线上技术工程师70-120元/天许昌查看职位",
+      "isFriend": false,
+      "mid": "395065368887297"
+    },
+    {
+      "sender": "bot",
+      "content": "傅女士，微信已加上，您看方便时我们线上聊聊岗位细节吗？",
+      "text": "傅女士，微信已加上，您看方便时我们线上聊聊岗位细节吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 15:54:36",
+      "time": "15:54",
+      "job_name": "兼职·python仿真matlab大模型算法线上技术工程师70-120元/天许昌查看职位",
+      "isFriend": false,
+      "mid": "397658018873346"
+    },
+    {
+      "sender": "bot",
+      "content": "傅女士好，之前说的技术兼职接单，具体是做什么类型的工作呀？想先了解下哈",
+      "text": "傅女士好，之前说的技术兼职接单，具体是做什么类型的工作呀？想先了解下哈",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 14:39:01",
+      "time": "14:39",
+      "job_name": "兼职·python仿真matlab大模型算法线上技术工程师70-120元/天许昌查看职位",
       "isFriend": false
     }
   ],
-  "updated_at": "2026-10-10 08:05:04",
+  "updated_at": "2026-10-24 14:39:01",
   "unread_on_boss": 0
 }

@@ -1,0 +1,23 @@
+{
+  "chat_name": "邵先生",
+  "chat_id": "邵先生#赞意",
+  "account_index": 1,
+  "job_name": "数据分析实习生（抖音云图）150-160元/天上海查看职位",
+  "company": "赞意",
+  "messages": [
+    {
+      "text": "您好，我是统计学本科在读，有数据标注和数据分析兼职经验，熟悉Excel/SQL/Python及大模型辅助分析流程，看到贵司在招数据分析实习生，方便的话我把简历发您细聊",
+      "time": "10-10 04:26",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395011582787841",
+      "block": "10-10 04:26 送达 您好，我是统计学本科在读，有数据标注和数据分析兼职经验，熟悉Excel/SQL/Python及大模型辅助分析流程，看到贵司在招数据分析实习生，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据标注和数据分析兼职经验，熟悉Excel/SQL/Python及大模型辅助分析流程，看到贵司在招数据分析实习生，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 15:21:56"
+}

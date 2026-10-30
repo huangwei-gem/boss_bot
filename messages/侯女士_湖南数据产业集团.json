@@ -2,7 +2,7 @@
   "chat_name": "侯女士",
   "chat_id": "侯女士#湖南数据产业集团",
   "account_index": 0,
-  "job_name": "数据要素研究岗12-24K长沙查看职位",
+  "job_name": "数据要素研究岗12-24K长沙",
   "company": "湖南数据产业集团",
   "messages": [
     {
@@ -16,7 +16,35 @@
       "sender": "me",
       "kind": "bubble",
       "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "不好意思，您不太适合这个职位哦，祝您找到合适的工作机会",
+      "time": "14:29",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395159757210370",
+      "block": "14:29 不好意思，您不太适合这个职位哦，祝您找到合适的工作机会",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，您不太适合这个职位哦，祝您找到合适的工作机会"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-10 14:29:40",
+      "time": "14:29",
+      "job_name": "数据要素研究岗12-24K长沙查看职位",
+      "isFriend": false,
+      "mid": "395159889367809"
     }
   ],
-  "updated_at": "2026-10-10 09:19:39"
+  "updated_at": "2026-10-25 08:04:59",
+  "unread_on_boss": 0
 }

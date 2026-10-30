@@ -1,0 +1,36 @@
+{
+  "chat_name": "田女士",
+  "chat_id": "田女士#上海视达佳",
+  "account_index": 1,
+  "job_name": "高级数据分析师（Python/SQL方向）15-25K上海查看职位",
+  "company": "上海视达佳",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:22",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397944920576515",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学本科在读，熟练使用Python和SQL，有数据标注和数据分析实战经验，看到贵司在招高级数据分析师（Python/SQL方向），觉得技能匹配度很高，方便的话我把简历发您细聊",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397945055670784",
+      "block": "送达 您好，我是统计学本科在读，熟练使用Python和SQL，有数据标注和数据分析实战经验，看到贵司在招高级数据分析师（Python/SQL方向），觉得技能匹配度很高，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，熟练使用Python和SQL，有数据标注和数据分析实战经验，看到贵司在招高级数据分析师（Python/SQL方向），觉得技能匹配度很高，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 13:42:05"
+}

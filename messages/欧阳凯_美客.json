@@ -1,0 +1,50 @@
+{
+  "chat_name": "欧阳凯",
+  "chat_id": "欧阳凯#美客",
+  "account_index": 0,
+  "job_name": "数据采集工程师15-18K长沙",
+  "company": "美客",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "14:31",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397637701624578",
+      "block": "14:31 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "我们认真审阅了您的简历，但暂不完全匹配岗位情况。祝您在BOSS直聘找到更合适的机会！",
+      "time": "昨天 21:28",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398094022779649",
+      "block": "昨天 21:28 我们认真审阅了您的简历，但暂不完全匹配岗位情况。祝您在BOSS直聘找到更合适的机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "我们认真审阅了您的简历，但暂不完全匹配岗位情况。祝您在BOSS直聘找到更合适的机会！"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-19 08:47:14",
+      "time": "08:47",
+      "job_name": "数据采集工程师15-18K长沙查看职位",
+      "isFriend": false,
+      "mid": "398260776928003"
+    }
+  ],
+  "updated_at": "2026-10-25 02:18:20",
+  "unread_on_boss": 0
+}

@@ -2,7 +2,7 @@
   "chat_name": "贾昊昱",
   "chat_id": "贾昊昱#森哲信息科技",
   "account_index": 0,
-  "job_name": "兼职·居家数据标注100-150元/天南阳查看职位",
+  "job_name": "兼职·居家数据标注100-150元/天南阳",
   "company": "森哲信息科技",
   "messages": [
     {
@@ -151,7 +151,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394481904501506",
-      "block": "16:30 szkj-v 贾昊昱的微信号 szkj-v 复制微信号",
+      "block": "szkj-v 贾昊昱的微信号 szkj-v 复制微信号",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -171,8 +171,23 @@
       "job_name": "兼职·居家数据标注100-150元/天南阳查看职位",
       "isFriend": false,
       "mid": "394490227159810"
+    },
+    {
+      "sender": "bot",
+      "content": "贾昊昱您好，之前聊的兼职·居家数据标注100-150元/天南阳查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "贾昊昱您好，之前聊的兼职·居家数据标注100-150元/天南阳查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-20 16:41:51",
+      "time": "16:41",
+      "job_name": "兼职·居家数据标注100-150元/天南阳查看职位",
+      "isFriend": false,
+      "mid": "398731322860290"
     }
   ],
-  "updated_at": "2026-10-10 07:13:40",
+  "updated_at": "2026-10-25 02:12:49",
   "unread_on_boss": 0
 }

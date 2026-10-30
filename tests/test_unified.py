@@ -3124,12 +3124,19 @@ class GreetCapAutoResumeTest:
 class GreetRoundDryRunTest:
     """真跑一遍打招呼轮次：演练模式必须一次都不点发送"""
 
-    def _setup(self, dry):
+    def _setup(self, dry, tmp_path):
+        from boss_bot.job_pool import 岗位池
         from boss_bot.main_loop import UnifiedBotLoop, UnifiedConfig
         cfg = UnifiedConfig()
         cfg.dry_run = dry
+        # 这两条锁的是"直接投"那条老路径。界面默认已经改成只抓不投（2026-10-19 用户定的），
+        # 不在这儿翻回 False 的话整轮根本走不到发送点，断言会空过
+        cfg.greet.capture_only = False
         with patch("boss_bot.main_loop.BrowserManager"):
             loop = UnifiedBotLoop(config=cfg)
+        # 池必须钉在临时目录：轮次一开头就排空勾选队列，不隔开就是往
+        # data/job_pool.json 里写测试造的假岗位（10-20 真踩过）
+        loop._pool = 岗位池(account_index=0, 目录=str(tmp_path))
         loop._running = True
         loop._stop_event = MagicMock()
         loop._hot_reload_config = lambda: None
@@ -3159,17 +3166,20 @@ class GreetRoundDryRunTest:
         loop._greet_event_cb = None
         return loop, eng
 
-    def test_演练模式不发送(self):
-        loop, eng = self._setup(dry=True)
+    def test_演练模式不发送(self, tmp_path):
+        loop, eng = self._setup(True, tmp_path)
         loop._run_greet_round()
         eng.send_greeting.assert_not_called()
         assert loop._stats_dict["greet_applied"] == 0
 
-    def test_正常模式会发送(self):
-        loop, eng = self._setup(dry=False)
+    def test_正常模式会发送(self, tmp_path):
+        from boss_bot.job_pool import 岗位池
+        loop, eng = self._setup(False, tmp_path)
         loop._run_greet_round()
         assert eng.send_greeting.called
         assert loop._stats_dict["greet_applied"] == 1
+        assert 岗位池(account_index=0, 目录=str(tmp_path)).列表() == [], \
+            "直接投这条路不该往池里写行；写了就是勾和投两套账"
 
 
 class AiSkipUnhealthyTest:

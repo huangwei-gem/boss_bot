@@ -234,7 +234,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "394521593500161",
-      "block": "10-08 19:12 对方刚收藏了您",
+      "block": "对方刚收藏了您",
       "sender": "hr",
       "kind": "system",
       "content": "对方刚收藏了您",
@@ -252,9 +252,22 @@
       "timestamp": "2026-10-10 02:01:31",
       "time": "02:01",
       "job_name": "兼职·数据标注专员15-20元/时临沂查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394976019948032"
+    },
+    {
+      "text": "工作需要在微信上交接，同意一下请求，或者电话",
+      "time": "10-11 14:45",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395517655826947",
+      "block": "10-11 14:45 工作需要在微信上交接，同意一下请求，或者电话",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "工作需要在微信上交接，同意一下请求，或者电话"
     }
   ],
-  "updated_at": "2026-10-10 02:01:31",
-  "unread_on_boss": 0
+  "updated_at": "2026-10-23 15:03:26",
+  "unread_on_boss": 1
 }

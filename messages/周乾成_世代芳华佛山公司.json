@@ -16,7 +16,95 @@
       "sender": "me",
       "kind": "bubble",
       "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "你好，我们是做短视频推广带货的。公司主要经营服装，农产品，百货，可以接受新手小白",
+      "time": "10-13 11:37",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396179362570247",
+      "block": "10-13 11:37 你好，我们是做短视频推广带货的。公司主要经营服装，农产品，百货，可以接受新手小白",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，我们是做短视频推广带货的。公司主要经营服装，农产品，百货，可以接受新手小白"
+    },
+    {
+      "text": "接受居家办公吗？",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396179367792646",
+      "block": "接受居家办公吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "接受居家办公吗？"
+    },
+    {
+      "text": "接受",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "396179593224201",
+      "block": "已读 接受",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "接受"
+    },
+    {
+      "text": "好的，发布我们的带货推广视频就可以了",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396179956334595",
+      "block": "好的，发布我们的带货推广视频就可以了",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "好的，发布我们的带货推广视频就可以了"
+    },
+    {
+      "text": "日结的",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396179961581570",
+      "block": "日结的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "日结的"
+    },
+    {
+      "text": "亲，方便家一下我吗？我发工作流程给你",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396179969630209",
+      "block": "亲，方便家一下我吗？我发工作流程给你",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "亲，方便家一下我吗？我发工作流程给你"
+    },
+    {
+      "sender": "bot",
+      "content": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "text": "您好，感谢您的介绍。这类岗位我不考虑，以后这类岗位不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-16 11:17:44",
+      "time": "11:17",
+      "job_name": "兼职·线上推广专员35-40元/时广州查看职位",
+      "isFriend": false,
+      "mid": "397236084936706"
     }
   ],
-  "updated_at": "2026-10-08 02:09:33"
+  "updated_at": "2026-10-23 14:18:36",
+  "unread_on_boss": 0
 }

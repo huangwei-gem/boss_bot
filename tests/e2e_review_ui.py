@@ -19,6 +19,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+from tests.conftest import mk测试临时目录  # noqa: E402
 sys.path.insert(0, str(PROJECT_ROOT / "tests"))
 
 import e2e_account_scope_ui as E  # noqa: E402  复用临时实例启动器
@@ -32,7 +33,7 @@ REVIEW_API = "/api/ai/judgement_review"
 
 
 def main():
-    tmp_dir = Path(tempfile.mkdtemp(prefix="boss_review_ui_"))
+    tmp_dir = mk测试临时目录("boss_review_ui")
     proc = br = page = None
     before = E.sha_of_cookies()
     try:

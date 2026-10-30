@@ -135,5 +135,40 @@ class TestTokenCache:
         assert len(calls) == 2
 
 
+class Test不许写仓库里那份真缓存:
+    """现测 2026-10-27：跑一趟 pytest 把 `data/wechat_token.json` 刷成了
+    `{"token": "TOK"}`——那是本文件的假接口返回值，把线上那把 access_token 盖掉了。
+    跟 10-19 那条 Cookie 备份是同一个坑：模块级默认参数在 def 那一刻焊死，
+    conftest 再怎么换 `wp.TOKEN_CACHE` 都够不着。
+    """
+
+    def test_发送走的是隔开的那份缓存(self, monkeypatch, tmp_path):
+        隔开的 = str(tmp_path / "隔开的.json")
+        仓库那份 = ROOT / "data" / "wechat_token.json"
+        改前 = 仓库那份.read_bytes() if 仓库那份.exists() else None
+        monkeypatch.setattr(wp, "TOKEN_CACHE", 隔开的)
+        monkeypatch.setattr(wp, "_get", lambda url: {"access_token": "TOK", "expires_in": 7200})
+        wp.get_token("a", "s")            # 不传 cache_path：走默认那一条才算数
+        assert Path(隔开的).is_file(), "没走 TOKEN_CACHE（默认值多半焊死在 def 上）"
+        改后 = 仓库那份.read_bytes() if 仓库那份.exists() else None
+        assert 改前 == 改后, "测试把仓库里那把真 token 盖掉了"
+
+    def test_默认参数不许在_def_就焊死(self):
+        源 = (ROOT / "boss_bot" / "wechat_push.py").read_text(encoding="utf-8")
+        行 = [l for l in 源.splitlines() if l.strip().startswith("def get_token(")]
+        assert 行, "找不到 get_token"
+        assert "cache_path=None" in 行[0], \
+            "默认值写成了模块常量＝测试换不掉，跑一趟就把线上缓存刷成假 token"
+
+    def test_conftest_真的把这份缓存指走了(self):
+        """光"用的时候现取路径"还不够——没人换那个模块属性，测试照样写仓库那份。
+        这条按代码行判，注释里提到不算（10-19 那条 Cookie 备份用的是同一种门）。"""
+        源 = (ROOT / "tests" / "conftest.py").read_text(encoding="utf-8")
+        代码 = "\n".join(l for l in 源.splitlines() if not l.strip().startswith("#"))
+        assert "TOKEN_CACHE" in 代码, "微信 token 缓存没人隔——跑一趟就盖掉线上那把"
+        指走 = [l for l in 代码.splitlines() if "WP.TOKEN_CACHE" in l and "mk测试临时目录" in l]
+        assert 指走, "conftest 里只是提了一下 TOKEN_CACHE，没有真把它指到临时目录"
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-v"]))

@@ -2,7 +2,7 @@
   "chat_name": "武先生",
   "chat_id": "武先生#天盛传媒",
   "account_index": 0,
-  "job_name": "兼职·线上短视频剪辑100-300元/时长沙查看职位",
+  "job_name": "兼职·线上短视频剪辑100-300元/时长沙",
   "company": "天盛传媒",
   "messages": [
     {
@@ -137,8 +137,68 @@
       "job_name": "兼职·线上短视频剪辑100-300元/时长沙查看职位",
       "isFriend": false,
       "mid": "394121020379137"
+    },
+    {
+      "sender": "bot",
+      "content": "武先生您好，之前聊的兼职·线上短视频剪辑100-300元/时长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "武先生您好，之前聊的兼职·线上短视频剪辑100-300元/时长沙查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 13:48:55",
+      "time": "13:48",
+      "job_name": "兼职·线上短视频剪辑100-300元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "395149875474444"
+    },
+    {
+      "sender": "bot",
+      "content": "武先生您好，天盛传媒这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "武先生您好，天盛传媒这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 14:10:37",
+      "time": "14:10",
+      "job_name": "兼职·线上短视频剪辑100-300元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "397632466083845"
+    },
+    {
+      "sender": "bot",
+      "content": "武先生您好，天盛传媒这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "武先生您好，天盛传媒这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 12:50:02",
+      "time": "12:50",
+      "job_name": "兼职·线上短视频剪辑100-300元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "399736020848642"
+    },
+    {
+      "sender": "bot",
+      "content": "哈，还在吗？我这边只接数据标注/数据分析相关的远程兼职，这个剪辑岗不合适我，咱们就不往下聊了，祝早日招到人～",
+      "text": "哈，还在吗？我这边只接数据标注/数据分析相关的远程兼职，这个剪辑岗不合适我，咱们就不往下聊了，祝早日招到人～",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 13:03:44",
+      "time": "13:03",
+      "job_name": "兼职·线上短视频剪辑100-300元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "400093287378944"
     }
   ],
-  "updated_at": "2026-10-09 11:12:21",
+  "updated_at": "2026-10-25 02:01:23",
   "unread_on_boss": 0
 }

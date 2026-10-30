@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "393886413034241",
-      "block": "00:07 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -90,7 +90,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "394435804480256",
-      "block": "昨天 13:23 对方已查看了您的附件简历",
+      "block": "对方已查看了您的附件简历",
       "sender": "hr",
       "kind": "system",
       "content": "对方已查看了您的附件简历",
@@ -123,9 +123,40 @@
       "timestamp": "2026-10-10 05:19:27",
       "time": "05:19",
       "job_name": "兼职·大模型数据标注30-50元/时天津查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395024663778049"
+    },
+    {
+      "sender": "bot",
+      "content": "段中帅您好，之前聊的兼职·大模型数据标注30-50元/时天津查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "段中帅您好，之前聊的兼职·大模型数据标注30-50元/时天津查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 14:42:38",
+      "time": "14:42",
+      "job_name": "兼职·大模型数据标注30-50元/时天津查看职位",
+      "isFriend": false,
+      "mid": "397640331178752"
+    },
+    {
+      "sender": "bot",
+      "content": "简历已发，您看是否需要补充？方便安排线上沟通吗？",
+      "text": "简历已发，您看是否需要补充？方便安排线上沟通吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-20 17:51:25",
+      "time": "17:51",
+      "job_name": "兼职·大模型数据标注30-50元/时天津查看职位",
+      "isFriend": false,
+      "mid": "398748422202117"
     }
   ],
-  "updated_at": "2026-10-10 05:19:27",
+  "updated_at": "2026-10-23 13:15:19",
   "unread_on_boss": 0
 }

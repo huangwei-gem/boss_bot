@@ -110,6 +110,11 @@ class StartupOrderTest:
             wait=lambda timeout=None: flips.__setitem__("n", flips["n"] + 1))
         lp._sync_chat_tab = lambda: None
         lp._check_health = lambda side=None: "ok"
+        # 开轮前那两道安全验证闸门要读的三份状态（真 __init__ 会给，裸实例得手补）
+        lp.browser_manager = SimpleNamespace(验证页标签=lambda **k: [])
+        lp._验证页挡着说过 = False
+        lp._验证结束时刻 = 0.0
+        lp._验证后冷却说过 = False
         lp._reply_login_ok = lambda: None
         lp._check_and_archive_daily_data = lambda: None
         lp._hot_reload_config = lambda: None

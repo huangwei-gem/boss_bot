@@ -1,0 +1,23 @@
+{
+  "chat_name": "张倩",
+  "chat_id": "张倩#上海钧策融鸿品牌管理",
+  "account_index": 1,
+  "job_name": "经营数据分析师10-15K上海查看职位",
+  "company": "上海钧策融鸿品牌管理",
+  "messages": [
+    {
+      "text": "您好，我是统计学本科在读，有数据分析与数据标注经验，熟练使用Excel/SQL/Python，看到贵司经营数据分析师岗位，想了解是否支持线上兼职，方便的话我把简历发您细聊。",
+      "time": "04:38",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397137848136449",
+      "block": "04:38 送达 您好，我是统计学本科在读，有数据分析与数据标注经验，熟练使用Excel/SQL/Python，看到贵司经营数据分析师岗位，想了解是否支持线上兼职，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据分析与数据标注经验，熟练使用Excel/SQL/Python，看到贵司经营数据分析师岗位，想了解是否支持线上兼职，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:54:56"
+}

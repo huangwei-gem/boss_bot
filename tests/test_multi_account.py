@@ -638,14 +638,35 @@ class GroupedChatsAcrossAccountsTest:
         store = MessageStore(account_index=0)
         cid = self._write(store, 0, ["账号1的话-1", "账号1的话-2", "账号1的话-3"])
         self._write(store, 1, ["账号2的话-1", "账号2的话-2"])
-        groups = app.app.test_client().get("/api/reply_records/grouped").get_json()["groups"]
+        client = app.app.test_client()
+        groups = client.get("/api/reply_records/grouped").get_json()["groups"]
         hits = [g for g in groups if g.get("chat_id") == cid]
         assert len(hits) == 2, f"两个号各一路，界面却只列出 {len(hits)} 路"
-        by_acct = {int(g.get("account_index") or 0): g for g in hits}
-        assert [m["text"] for m in by_acct[0]["messages"]] == \
-            ["账号1的话-1", "账号1的话-2", "账号1的话-3"], "账号1 读到了别人的对话"
-        assert [m["text"] for m in by_acct[1]["messages"]] == \
-            ["账号2的话-1", "账号2的话-2"], "账号2 读到了别人的对话"
+        # 正文从合并列表里撤掉了（15.3 MB 那一处），所以"不许读到另一个号的话"
+        # 这条要打在现在真正带正文的那个出口上：点开哪一路取哪一路
+        for 号, 期望 in ((0, ["账号1的话-1", "账号1的话-2", "账号1的话-3"]),
+                        (1, ["账号2的话-1", "账号2的话-2"])):
+            答 = client.get("/api/chats/李女士?account=%d&company=%s&job=数据分析师"
+                            % (号, "深圳市极客星球电...")).get_json()
+            读到 = [m["text"] for m in (答.get("chat") or {}).get("messages", [])]
+            assert 读到 == 期望, "账号%d 读到了别人的对话：%s" % (号 + 1, 读到)
+            assert (答.get("chat") or {}).get("account_index", 号) == 号
+
+    def test_合并列表不再带正文(self, flask_app):
+        """这一份是左侧列表用的：2779 路全带气泡就是 15.3 MB，浏览器解析要几秒。
+
+        门钉在"分组里不许有 messages"上——哪天有人把它加回去，面板就会重新变卡，
+        而界面上看不出来是哪一处。
+        """
+        from boss_bot.message_store import MessageStore
+        app, _tmp = flask_app
+        store = MessageStore(account_index=0)
+        self._write(store, 0, ["账号1的话-1", "账号1的话-2"])
+        groups = app.app.test_client().get("/api/reply_records/grouped").get_json()["groups"]
+        这一路 = [g for g in groups if g.get("chat_name") == "李女士"][0]
+        assert "messages" not in 这一路, "合并列表又带上正文了：%d 条" % len(这一路["messages"])
+        # 但"这一路有几条对话"不能跟着丢：没回复过的那一路靠它才不会被筛成空分组
+        assert 这一路["full_message_count"] == 2, 这一路
 
     def test_单账号范围下只列本号那一路(self, flask_app):
         from boss_bot.message_store import MessageStore

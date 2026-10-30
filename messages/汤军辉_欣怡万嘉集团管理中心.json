@@ -1,0 +1,22 @@
+{
+  "chat_name": "汤军辉",
+  "chat_id": "汤军辉#欣怡万嘉集团管理中心",
+  "account_index": 0,
+  "job_name": "电商数据分析经理10-11K长沙",
+  "company": "欣怡万嘉集团管理中心",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "10:06",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397926412448515",
+      "block": "10:06 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-25 02:34:02"
+}

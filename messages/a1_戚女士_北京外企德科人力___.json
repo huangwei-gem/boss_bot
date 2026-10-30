@@ -1,0 +1,36 @@
+{
+  "chat_name": "戚女士",
+  "chat_id": "戚女士#北京外企德科人力___",
+  "account_index": 1,
+  "job_name": "数据分析师（派遣职位）16-20K上海查看职位",
+  "company": "北京外企德科人力...",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:30",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397593085153793",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟悉SQL/Python和可视化，看到贵司数据分析师岗位，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397593207136773",
+      "block": "已读 您好，我是统计学本科在读，有数据标注和数据分析经验，熟悉SQL/Python和可视化，看到贵司数据分析师岗位，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟悉SQL/Python和可视化，看到贵司数据分析师岗位，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:43:23"
+}

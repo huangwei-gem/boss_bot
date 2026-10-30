@@ -98,9 +98,37 @@
       "timestamp": "2026-10-10 05:30:02",
       "time": "05:30",
       "job_name": "有证券从业资格证的看过来20-40K上海查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395027267097089"
+    },
+    {
+      "text": "感谢您的关注，很遗憾不能与您共事。祝您在BOSS直聘上找到更匹配的工作机会",
+      "time": "10-10 16:05",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395183352836611",
+      "block": "10-10 16:05 感谢您的关注，很遗憾不能与您共事。祝您在BOSS直聘上找到更匹配的工作机会",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢您的关注，很遗憾不能与您共事。祝您在BOSS直聘上找到更匹配的工作机会"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "text": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-16 04:04:46",
+      "time": "04:04",
+      "job_name": "有证券从业资格证的看过来20-40K上海查看职位",
+      "isFriend": false,
+      "mid": "397129673986560"
     }
   ],
-  "updated_at": "2026-10-10 05:30:02",
+  "updated_at": "2026-10-24 11:29:53",
   "unread_on_boss": 0
 }

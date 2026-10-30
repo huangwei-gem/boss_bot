@@ -17,6 +17,8 @@ from unittest.mock import patch
 
 import pytest
 
+from tests.conftest import mk测试临时目录
+
 
 @pytest.fixture(autouse=True)
 def _fresh_cooldown_table():
@@ -276,7 +278,12 @@ class FailoverTest:
         from boss_bot.main_loop import UnifiedBotLoop
         src = inspect.getsource(UnifiedBotLoop)
         assert "_ai_no_candidate" in src, "轮次没接这个标记，池空时会写成 AI判定不匹配"
-        assert "continue" in src[src.index("_ai_no_candidate"):src.index("_ai_no_candidate") + 400]
+        # 锚点要打在打招呼腿那一段（10-24 起 `_精筛一条` 也认这个标记了，
+        # 再按 src.index("_ai_no_candidate") 取第一处就量到精筛那段上去了）
+        处 = src.index("本岗位留到下一轮")
+        段 = src[处 - 500:处 + 260]
+        assert "_ai_no_candidate" in 段, "打招呼腿这一段没在读这个标记"
+        assert "continue" in 段, "认到了却不跳过，照样会烧一条 ai_skip 记录"
 
     def test_兜底不计入判分成功(self):
         chain = make_chain(n=1)
@@ -315,14 +322,13 @@ class MaxTokensTest:
         assert chain.analyze_max_tokens > 1024
 
     def test_配置项读写往返(self):
-        import tempfile
         from boss_bot.unified_config import UnifiedConfig
         cfg = UnifiedConfig()
         assert cfg.ai.analyze_max_tokens == chain_default()
         cfg.ai.analyze_max_tokens = 2048
         d = cfg.to_dict()
         assert d["ai"]["analyze_max_tokens"] == 2048
-        path = tempfile.mkdtemp() + "/bot_config.json"
+        path = str(mk测试临时目录("ai_failover") / "bot_config.json")
         cfg.save(path)
         assert UnifiedConfig.load(path).ai.analyze_max_tokens == 2048
 
@@ -612,11 +618,35 @@ class PromptHotReloadTest:
                                       ensure_ascii=False), encoding="utf-8")
         assert "运营专员" in P.build_system_prompt()
 
+    def test_画像换了文件就要重读_不许只认时间戳(self, isolated, monkeypatch):
+        """Windows 的 mtime 按系统时钟那一格取整（约 15.6 毫秒），两份文件撞在同一格
+        太常见了。以前 `current_profile()` 的缓存只记 mtime 不记路径，于是先读 A 再读 B
+        会把 A 的画像当成 B 的返回——10-29 全量回归里 `test_改完画像立刻生效` 随机红
+        就是这一条（两个号的画像文件在同一个 tick 里建出来，时间戳一模一样）。
+        这里钉的是"读盘要跟着文件走"，不是"缓存要多聪明"。"""
+        import os
+        P, _, profile = isolated
+        另一份 = profile.parent / "另一号的画像.json"
+        另一份.write_text(json.dumps({"position": "算法工程师", "education": "硕士"},
+                                     ensure_ascii=False), encoding="utf-8")
+        同一格 = (1_700_000_000, 1_700_000_000)
+        os.utime(profile, 同一格)
+        os.utime(另一份, 同一格)
+        assert "数据分析师" in P.build_system_prompt(), "先把缓存按第一份填上"
+        monkeypatch.setattr(P, "USER_PROFILE_FILE", 另一份)
+        文 = P.build_system_prompt()
+        assert "算法工程师" in 文, "换了文件没重读：缓存只比了 mtime"
+        assert "数据分析师" not in 文
+
     def test_改完user_prompt模板立刻生效(self, isolated):
         P, overrides, _ = isolated
         assert "最近对话记录" in P.build_user_prompt("王经理", "数据分析", "薪资多少", [])
         _write(overrides, user_prompt_template="对方:{message}|{boss_name}")
-        assert P.build_user_prompt("王经理", "数据分析", "薪资多少", []) == "对方:薪资多少|王经理"
+        文 = P.build_user_prompt("王经理", "数据分析", "薪资多少", [])
+        # 模板那段照改后的输出；后面那句"不许照抄标题"是代码固定追加的，
+        # 写在模板之外才不会被界面上的「恢复默认」抹掉
+        assert 文.startswith("对方:薪资多少|王经理"), 文
+        assert "不许原样念给对方" in 文
 
     def test_回复引擎每次调用都现取提示词(self):
         """reply_engine 不能 import 时抓一份常量就完事"""
@@ -785,11 +815,10 @@ class RecordQualityFieldsTest:
 
     def test_引擎把ai_error与耗时写进落库记录(self):
         """链路验证：analyze → _record_greet → 记录里真的带上这两个字段"""
-        import tempfile
         from boss_bot.greet_engine import GreetEngine
         from boss_bot.reply_record import GreetRecordStore
         e = GreetEngine.__new__(GreetEngine)
-        e._greet_store = GreetRecordStore(path=tempfile.mkdtemp() + "/r.json")
+        e._greet_store = GreetRecordStore(path=str(mk测试临时目录("greet_store") / "r.json"))
         e._greeting_message = "你好"
         e.account_index = 1
         e.log_cb = None
@@ -808,9 +837,8 @@ class RecordQualityFieldsTest:
         assert rec.account_name == "账号2"
 
     def test_按质量统计能算出兜底率(self):
-        import tempfile
         from boss_bot.reply_record import GreetRecordStore, GreetRecord
-        store = GreetRecordStore(path=tempfile.mkdtemp() + "/g.json")
+        store = GreetRecordStore(path=str(mk测试临时目录("quality_stats") / "g.json"))
         for i in range(8):
             store.add(GreetRecord(job_name=f"j{i}", ai_error=(i < 3), ai_model="m-a",
                                   ai_duration_ms=1000))
@@ -822,9 +850,8 @@ class RecordQualityFieldsTest:
     def test_早期没跑AI的记录不混进分母(self):
         """历史 283 条里有 236 条根本没做过 AI 判分（当时没启用），
         把它们算成兜底会得到 83% 的假兜底率。"""
-        import tempfile
         from boss_bot.reply_record import GreetRecordStore, GreetRecord
-        store = GreetRecordStore(path=tempfile.mkdtemp() + "/g2.json")
+        store = GreetRecordStore(path=str(mk测试临时目录("quality_stats") / "g2.json"))
         store.add(GreetRecord(job_name="老数据", ai_score=0))
         store.add(GreetRecord(job_name="老数据2", ai_score=0))
         store.add(GreetRecord(job_name="真判分", ai_model="m-a", ai_score=80))

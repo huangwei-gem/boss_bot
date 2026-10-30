@@ -123,6 +123,10 @@ def test_冷却是在这一轮中途挂上的也要整轮收手():
     loop._stats_dict = {"greet_total": 0, "greet_applied": 0,
                         "greet_skipped": 0, "greet_rounds": 0}
     loop._build_greet_tasks = lambda: [{"query": "数据分析", "city": "全国"}]
+    # 这条锁的是"直投路径里中途挂上冷却要整轮收手"。界面默认已改成只抓不投，
+    # 不翻回 False 的话岗位循环一次都不进，len(hits)<=2 会因为"整轮炸掉"而假绿
+    loop.config = SimpleNamespace(greet=SimpleNamespace(capture_only=False))
+    loop._drain_apply_queue = lambda: 0   # 勾选队列自己那套测试管，别在这儿碰真实池文件
 
     eng = MagicMock()
     eng.search_jobs.return_value = [{"job_name": f"岗位{i}"} for i in range(8)]

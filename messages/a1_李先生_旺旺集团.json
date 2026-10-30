@@ -1,0 +1,36 @@
+{
+  "chat_name": "李先生",
+  "chat_id": "李先生#旺旺集团",
+  "account_index": 1,
+  "job_name": "产销数据分析师12-20K上海查看职位",
+  "company": "旺旺集团",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:45",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397596689154562",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学本科在读，有数据标注与数据分析兼职经验，熟悉SQL、Python及数据可视化，对贵司产销数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397596797043204",
+      "block": "送达 您好，我是统计学本科在读，有数据标注与数据分析兼职经验，熟悉SQL、Python及数据可视化，对贵司产销数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据标注与数据分析兼职经验，熟悉SQL、Python及数据可视化，对贵司产销数据分析师岗位很感兴趣，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:41:57"
+}

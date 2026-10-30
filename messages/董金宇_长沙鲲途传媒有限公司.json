@@ -76,7 +76,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "394782510613249",
-      "block": "12:54 附件简历请求已发送",
+      "block": "附件简历请求已发送",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -110,6 +110,6 @@
       "isFriend": false
     }
   ],
-  "updated_at": "2026-10-09 12:54:09",
+  "updated_at": "2026-10-18 13:37:50",
   "unread_on_boss": 0
 }

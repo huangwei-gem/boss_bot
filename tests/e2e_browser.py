@@ -4,7 +4,7 @@
 使用 DrissionPage 的 ChromiumPage 控制浏览器，逐一点击每个功能按钮，
 验证 UI 交互和日志输出。
 
-前置条件：Flask 服务运行在 http://localhost:5000
+前置条件：Flask 服务已经在默认口上跑着（现在 5001）
 运行方式：python tests/e2e_browser.py
 """
 
@@ -18,13 +18,14 @@ from pathlib import Path
 # 项目根目录
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+from boss_bot.unified_config import 面板端口 as _面板端口  # 线上面板口只有一个出处
 
 # 截图保存目录
 SCREENSHOT_DIR = PROJECT_ROOT / "tests" / "screenshots"
 SCREENSHOT_DIR.mkdir(exist_ok=True)
 
 # Flask 服务地址
-FLASK_URL = "http://localhost:5000"
+FLASK_URL = "http://localhost:%s" % _面板端口()
 
 
 # ═══════════════════════════════════════════════════════

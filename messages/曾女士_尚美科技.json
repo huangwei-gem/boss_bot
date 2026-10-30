@@ -119,7 +119,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394147451560704",
-      "block": "17:50 我想要一份您的附件简历，您是否同意 拒绝 同意",
+      "block": "我想要一份您的附件简历，您是否同意 拒绝 同意",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -214,8 +214,23 @@
       "job_name": "量化策略分析/A股行情战法挖掘/金融优先6-11K长沙查看职位",
       "isFriend": false,
       "mid": "394148760367872"
+    },
+    {
+      "sender": "bot",
+      "content": "曾女士您好，尚美科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "曾女士您好，尚美科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 14:32:57",
+      "time": "14:32",
+      "job_name": "量化策略分析/A股行情战法挖掘/金融优先6-11K长沙查看职位",
+      "isFriend": false,
+      "mid": "395160697348866"
     }
   ],
-  "updated_at": "2026-10-09 11:00:50",
+  "updated_at": "2026-10-23 14:36:48",
   "unread_on_boss": 0
 }

@@ -2,7 +2,7 @@
   "chat_name": "卢女士",
   "chat_id": "卢女士#宿州禾博企业管理",
   "account_index": 1,
-  "job_name": "兼职·数据标注500-1500元/月宿州查看职位",
+  "job_name": "兼职·数据标注1000-2000元/月宿州查看职位",
   "company": "宿州禾博企业管理",
   "messages": [
     {
@@ -42,9 +42,10 @@
       "timestamp": "2026-10-10 02:23:50",
       "time": "02:23",
       "job_name": "兼职·数据标注500-1500元/月宿州查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394981503783170"
     }
   ],
-  "updated_at": "2026-10-10 02:23:50",
+  "updated_at": "2026-10-24 11:29:35",
   "unread_on_boss": 0
 }

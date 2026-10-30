@@ -56,18 +56,6 @@
       "content": "可以先加群，到时群里会发具体流程，主要两种模式：1、测试我们的产品生产使用感受（内容）推广2、推广别人的使用感受（内容）"
     },
     {
-      "text": "",
-      "time": "",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "394438745146114",
-      "block": "",
-      "sender": "hr",
-      "kind": "bubble",
-      "content": ""
-    },
-    {
       "sender": "bot",
       "content": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
       "text": "您好，感谢您的介绍。我这边只找线上远程就能做的兼职，这类岗位不考虑，就不耽误您时间了，祝您招聘顺利~",
@@ -93,8 +81,21 @@
       "sender": "hr",
       "kind": "bubble",
       "content": "这个是线上远程"
+    },
+    {
+      "text": "好的，感谢您的消息，我会尽快回复您。",
+      "time": "10-10 19:31",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395234062709508",
+      "block": "10-10 19:31 已读 好的，感谢您的消息，我会尽快回复您。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "好的，感谢您的消息，我会尽快回复您。",
+      "reply_source": "default"
     }
   ],
-  "updated_at": "2026-10-10 00:51:11",
+  "updated_at": "2026-10-18 16:29:00",
   "unread_on_boss": 0
 }

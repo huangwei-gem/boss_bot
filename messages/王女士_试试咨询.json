@@ -1,0 +1,50 @@
+{
+  "chat_name": "王女士",
+  "chat_id": "王女士#试试咨询",
+  "account_index": 0,
+  "job_name": "AI数据服务主管（标注主管-长沙）（代招职位）10-15K长沙",
+  "company": "试试咨询",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "14:36",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397638714843906",
+      "block": "14:36 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "18:11",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397691606352641",
+      "block": "18:11 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "text": "好的，谢谢您的回复，祝您找到合适的人才~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-17 22:32:31",
+      "time": "22:32",
+      "job_name": "AI数据服务主管（标注主管-长沙）（代招职位）10-15K长沙查看职位",
+      "isFriend": false,
+      "mid": "397755812819712"
+    }
+  ],
+  "updated_at": "2026-10-25 02:34:26",
+  "unread_on_boss": 0
+}

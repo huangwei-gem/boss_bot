@@ -156,19 +156,48 @@
       "mid": "394969561125376"
     },
     {
-      "text": "",
-      "time": "09:13",
+      "sender": "bot",
+      "content": "江好添您好，金华市万利兴科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "江好添您好，金华市万利兴科技这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-16 09:36:08",
+      "time": "09:36",
+      "job_name": "高级营销管理培训生5-8K金华查看职位",
+      "isFriend": false,
+      "mid": "397211113697794"
+    },
+    {
+      "text": "不好意思，我们这边暂时不能做线上的抱歉",
+      "time": "",
       "isFriend": true,
       "is_mine": false,
       "is_system": false,
-      "mid": "395082163347969",
-      "block": "09:13",
+      "mid": "397211347857926",
+      "block": "不好意思，我们这边暂时不能做线上的抱歉",
       "sender": "hr",
-      "kind": "card",
-      "content": "",
-      "card_text": ""
+      "kind": "bubble",
+      "content": "不好意思，我们这边暂时不能做线上的抱歉"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，祝您招聘顺利~",
+      "text": "好的，感谢您的时间，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-16 09:37:42",
+      "time": "09:37",
+      "job_name": "高级营销管理培训生5-8K金华查看职位",
+      "isFriend": false,
+      "mid": "397211497554433"
     }
   ],
-  "updated_at": "2026-10-10 09:17:23",
+  "updated_at": "2026-10-23 14:52:36",
   "unread_on_boss": 0
 }

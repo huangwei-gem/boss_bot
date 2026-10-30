@@ -1,0 +1,23 @@
+{
+  "chat_name": "刘芙蓉",
+  "chat_id": "刘芙蓉#启充科技",
+  "account_index": 1,
+  "job_name": "数据分析助理（Data Analyst Assistant）6-8K上海查看职位",
+  "company": "启充科技",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据标注与分析，曾用Python/SQL完成多模态标注和可视化看板搭建。看到贵司数据分析助理岗位感兴趣，方便的话我把简历发您细聊。",
+      "time": "10-10 02:17",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394979862143488",
+      "block": "10-10 02:17 送达 您好，我是统计学专业在读生，擅长数据标注与分析，曾用Python/SQL完成多模态标注和可视化看板搭建。看到贵司数据分析助理岗位感兴趣，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据标注与分析，曾用Python/SQL完成多模态标注和可视化看板搭建。看到贵司数据分析助理岗位感兴趣，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 15:34:24"
+}

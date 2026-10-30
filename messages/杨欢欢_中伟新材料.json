@@ -1,0 +1,22 @@
+{
+  "chat_name": "杨欢欢",
+  "chat_id": "杨欢欢#中伟新材料",
+  "account_index": 0,
+  "job_name": "SSC数据治理经理10-15K·14薪长沙查看职位",
+  "company": "中伟新材料",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "01:37",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394970049192706",
+      "block": "01:37 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-23 14:58:38"
+}

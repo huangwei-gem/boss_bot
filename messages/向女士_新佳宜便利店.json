@@ -1,0 +1,22 @@
+{
+  "chat_name": "向女士",
+  "chat_id": "向女士#新佳宜便利店",
+  "account_index": 0,
+  "job_name": "经营分析资深经理 / 副总监40-70K·14薪长沙",
+  "company": "新佳宜便利店",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "12:20",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397959255601921",
+      "block": "12:20 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-25 02:28:42"
+}

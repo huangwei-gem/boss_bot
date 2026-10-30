@@ -16,7 +16,20 @@
       "sender": "me",
       "kind": "bubble",
       "content": "您好，我是统计学专业毕业生，熟练使用Python和SQL进行数据分析，看到贵司小语种数据处理岗位感兴趣，请问具体需要哪些语言能力要求？"
+    },
+    {
+      "text": "好嘞，方便问下这岗具体做什么内容吗，我这边时间也灵活",
+      "time": "10:50",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "398998824763906",
+      "block": "10:50 送达 好嘞，方便问下这岗具体做什么内容吗，我这边时间也灵活",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "好嘞，方便问下这岗具体做什么内容吗，我这边时间也灵活",
+      "reply_source": "followup"
     }
   ],
-  "updated_at": "2026-10-08 15:37:10"
+  "updated_at": "2026-10-23 13:10:15"
 }

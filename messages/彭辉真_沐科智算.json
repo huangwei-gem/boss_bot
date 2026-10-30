@@ -1,0 +1,78 @@
+{
+  "chat_name": "彭辉真",
+  "chat_id": "彭辉真#沐科智算",
+  "account_index": 0,
+  "job_name": "兼职·ai数据标注200-300元/天萍乡",
+  "company": "沐科智算",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "10:50",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397937182581507",
+      "block": "10:50 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397937182610178",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "你好，请问您之前做过什么呢？",
+      "time": "10:31",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398286514070274",
+      "block": "10:31 你好，请问您之前做过什么呢？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，请问您之前做过什么呢？"
+    },
+    {
+      "sender": "bot",
+      "content": "有的，我做过标注、数据处理这类项目：文本/图像/语音标注都做过，数据整理和分析也用 Excel/SQL/Python 跑过，AI 工具日常都在用。方便的话我发份简历给您细聊~",
+      "text": "有的，我做过标注、数据处理这类项目：文本/图像/语音标注都做过，数据整理和分析也用 Excel/SQL/Python 跑过，AI 工具日常都在用。方便的话我发份简历给您细聊~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-21 12:46:21",
+      "time": "12:46",
+      "job_name": "兼职·ai数据标注200-300元/天萍乡查看职位",
+      "isFriend": false,
+      "mid": "399027386565379"
+    },
+    {
+      "sender": "bot",
+      "content": "简历还需要我发您一份不？在的话我这就发哈~",
+      "text": "简历还需要我发您一份不？在的话我这就发哈~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 13:03:07",
+      "time": "13:03",
+      "job_name": "兼职·ai数据标注200-300元/天萍乡查看职位",
+      "isFriend": false,
+      "mid": "400093137863424"
+    }
+  ],
+  "updated_at": "2026-10-25 02:01:30",
+  "unread_on_boss": 0
+}

@@ -232,24 +232,12 @@
     },
     {
       "text": "",
-      "time": "",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "394371667870209",
-      "block": "",
-      "sender": "hr",
-      "kind": "bubble",
-      "content": ""
-    },
-    {
-      "text": "",
       "time": "09:25",
       "isFriend": true,
       "is_mine": false,
       "is_system": false,
       "mid": "394377226584577",
-      "block": "09:25 我想要和您交换微信，您是否同意 拒绝 同意",
+      "block": "我想要和您交换微信，您是否同意 拒绝 同意",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -372,18 +360,6 @@
       "sender": "hr",
       "kind": "bubble",
       "content": "我都没在公司"
-    },
-    {
-      "text": "",
-      "time": "",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "394762652901894",
-      "block": "",
-      "sender": "hr",
-      "kind": "bubble",
-      "content": ""
     },
     {
       "sender": "bot",
@@ -509,6 +485,6 @@
       "mid": "395067535335938"
     }
   ],
-  "updated_at": "2026-10-10 09:14:17",
+  "updated_at": "2026-10-23 14:43:50",
   "unread_on_boss": 0
 }

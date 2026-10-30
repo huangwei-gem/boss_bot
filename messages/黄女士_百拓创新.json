@@ -1,0 +1,22 @@
+{
+  "chat_name": "黄女士",
+  "chat_id": "黄女士#百拓创新",
+  "account_index": 0,
+  "job_name": "管理会计经理（跨境电商管理岗-经营分析）15-30K长沙",
+  "company": "百拓创新",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "16:01",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397659801072385",
+      "block": "16:01 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-25 02:39:02"
+}

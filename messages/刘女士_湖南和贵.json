@@ -1,0 +1,51 @@
+{
+  "chat_name": "刘女士",
+  "chat_id": "刘女士#湖南和贵",
+  "account_index": 0,
+  "job_name": "高级大数据开发工程师14-17K长沙查看职位",
+  "company": "湖南和贵",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "02:30",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394983256400640",
+      "block": "02:30 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "很抱歉，经过认真评估，我们希望寻找一位更适合当前项目周期的候选人。祝您在BOSS直聘找到合适您的机会！",
+      "time": "10-13 13:39",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396209156231939",
+      "block": "10-13 13:39 很抱歉，经过认真评估，我们希望寻找一位更适合当前项目周期的候选人。祝您在BOSS直聘找到合适您的机会！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "很抱歉，经过认真评估，我们希望寻找一位更适合当前项目周期的候选人。祝您在BOSS直聘找到合适您的机会！",
+      "is_read": true
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，理解您的考虑，祝您招聘顺利，也祝贵司早日找到合适的候选人。",
+      "text": "感谢您的时间，理解您的考虑，祝您招聘顺利，也祝贵司早日找到合适的候选人。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-16 03:22:16",
+      "time": "03:22",
+      "job_name": "高级大数据开发工程师14-17K长沙查看职位",
+      "isFriend": false,
+      "mid": "397119228183297"
+    }
+  ],
+  "updated_at": "2026-10-29 13:00:29",
+  "unread_on_boss": 0
+}

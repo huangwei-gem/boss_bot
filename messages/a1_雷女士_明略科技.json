@@ -1,0 +1,23 @@
+{
+  "chat_name": "雷女士",
+  "chat_id": "雷女士#明略科技",
+  "account_index": 1,
+  "job_name": "数据分析师- social listening方向8-12K上海查看职位",
+  "company": "明略科技",
+  "messages": [
+    {
+      "text": "您好，我是统计学本科在读，熟练使用SQL/Python做数据分析与可视化看板，熟悉多模态数据标注与质检流程，对social listening方向很感兴趣，方便的话我把简历发您细聊",
+      "time": "14:51",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397642544021504",
+      "block": "14:51 送达 您好，我是统计学本科在读，熟练使用SQL/Python做数据分析与可视化看板，熟悉多模态数据标注与质检流程，对social listening方向很感兴趣，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，熟练使用SQL/Python做数据分析与可视化看板，熟悉多模态数据标注与质检流程，对social listening方向很感兴趣，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:15:22"
+}

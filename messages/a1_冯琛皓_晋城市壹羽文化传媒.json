@@ -1,0 +1,75 @@
+{
+  "chat_name": "冯琛皓",
+  "chat_id": "冯琛皓#晋城市壹羽文化传媒",
+  "account_index": 1,
+  "job_name": "客服专员5-6K晋城查看职位",
+  "company": "晋城市壹羽文化传媒",
+  "messages": [
+    {
+      "text": "你好，黄维，在考虑新的工作机会吗？",
+      "time": "昨天 17:18",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398740246143748",
+      "block": "昨天 17:18 你好，黄维，在考虑新的工作机会吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好，黄维，在考虑新的工作机会吗？"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398740246217478",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，今年在校吗？我们这边需要校园代理哦，全职兼职都可以的",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398740249998082",
+      "block": "您好，今年在校吗？我们这边需要校园代理哦，全职兼职都可以的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "您好，今年在校吗？我们这边需要校园代理哦，全职兼职都可以的"
+    },
+    {
+      "sender": "bot",
+      "content": "客服这种岗位我不考虑哈，以后这类的不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "text": "客服这种岗位我不考虑哈，以后这类的不用再给我推荐了，就不耽误您时间了，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "family_filter",
+      "action": "text",
+      "timestamp": "2026-10-21 10:38:57",
+      "time": "10:38",
+      "job_name": "客服专员5-6K晋城查看职位",
+      "isFriend": false,
+      "mid": "398996032201472"
+    },
+    {
+      "text": "线上就可以",
+      "time": "16:27",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "399081643737859",
+      "block": "16:27 线上就可以",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "线上就可以"
+    }
+  ],
+  "updated_at": "2026-10-21 19:19:47",
+  "unread_on_boss": 0
+}

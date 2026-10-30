@@ -26,6 +26,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+from tests.conftest import mk测试临时目录  # noqa: E402
 from boss_bot.platform_compat import 终止进程
 
 sys.path.insert(0, str(PROJECT_ROOT / "tests"))
@@ -112,7 +113,7 @@ def fire_change(page):
 
 
 def main():
-    tmp = Path(tempfile.mkdtemp(prefix="boss_title_veto_ui_"))
+    tmp = mk测试临时目录("boss_title_veto_ui")
     src = json.loads((PROJECT_ROOT / "bot_config.json").read_text(encoding="utf-8"))
     src.setdefault("ai", {})["title_veto_keywords"] = ["普工", "主播"]
     src["ai"]["target_job_keywords"] = ["数据分析", "剪辑"]

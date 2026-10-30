@@ -1,0 +1,64 @@
+{
+  "chat_name": "魏雯",
+  "chat_id": "魏雯#科锐国际",
+  "account_index": 1,
+  "job_name": "数据分析工程师（猎头职位）15-25K上海查看职位",
+  "company": "科锐国际",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:24",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397945447682562",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学本科在读，有数据标注和数据分析实践经验，熟练使用SQL、Python和Excel做数据整理与可视化。看到贵司在招数据分析工程师，我的技能与岗位方向比较契合，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397945580622338",
+      "block": "送达 您好，我是统计学本科在读，有数据标注和数据分析实践经验，熟练使用SQL、Python和Excel做数据整理与可视化。看到贵司在招数据分析工程师，我的技能与岗位方向比较契合，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据标注和数据分析实践经验，熟练使用SQL、Python和Excel做数据整理与可视化。看到贵司在招数据分析工程师，我的技能与岗位方向比较契合，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "不好意思，不太合适哦",
+      "time": "昨天 10:43",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398289386373633",
+      "block": "昨天 10:43 不好意思，不太合适哦",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不好意思，不太合适哦"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-20 16:43:58",
+      "time": "16:43",
+      "job_name": "数据分析工程师（猎头职位）15-25K上海查看职位",
+      "isFriend": false,
+      "mid": "398731841573380"
+    }
+  ],
+  "updated_at": "2026-10-23 13:21:28",
+  "unread_on_boss": 0
+}

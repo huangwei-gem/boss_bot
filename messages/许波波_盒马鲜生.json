@@ -66,7 +66,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394245445574913",
-      "block": "00:28 13215541119 许波波的微信号 13215541119 复制微信号",
+      "block": "13215541119 许波波的微信号 13215541119 复制微信号",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -114,9 +114,10 @@
       "timestamp": "2026-10-09 13:10:27",
       "time": "13:10",
       "job_name": "app推广专员10-15K北京查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394786518626565"
     }
   ],
-  "updated_at": "2026-10-09 13:10:27",
+  "updated_at": "2026-10-18 13:36:27",
   "unread_on_boss": 0
 }

@@ -12,7 +12,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394403236073985",
-      "block": "昨天 11:10 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -30,7 +30,21 @@
       "kind": "bubble",
       "content": "您好，看到贵司招聘数据标注员岗位，我有丰富的文本/图像/语音多模态标注经验，曾参与AI训练语料清洗与质检项目，熟悉标注规范制定与疑难样本处理，希望能有机会参与线上合作。",
       "reply_source": "greet"
+    },
+    {
+      "text": "",
+      "time": "10-10 18:31",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395219419697673",
+      "block": "您是否接受此工作地点? 金隅智造工场N3 暂不考虑可以接受",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "您是否接受此工作地点? 金隅智造工场N3 暂不考虑可以接受"
     }
   ],
-  "updated_at": "2026-10-09 23:04:38"
+  "updated_at": "2026-10-23 15:03:43",
+  "unread_on_boss": 0
 }

@@ -37,7 +37,7 @@
       "is_mine": false,
       "is_system": true,
       "mid": "392667747496449",
-      "block": "昨天 13:29 附件简历请求已发送",
+      "block": "附件简历请求已发送",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -98,9 +98,25 @@
       "timestamp": "2026-10-10 07:17:03",
       "time": "07:17",
       "job_name": "数据分析师（影刀方向）11-16K上海查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395053576524289"
+    },
+    {
+      "sender": "bot",
+      "content": "康女士您好，上海朵安诺电子商务这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "康女士您好，上海朵安诺电子商务这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 15:31:28",
+      "time": "15:31",
+      "job_name": "数据分析师（影刀方向）11-16K上海查看职位",
+      "isFriend": false,
+      "mid": "397652332880385"
     }
   ],
-  "updated_at": "2026-10-10 07:17:03",
+  "updated_at": "2026-10-23 14:04:55",
   "unread_on_boss": 0
 }

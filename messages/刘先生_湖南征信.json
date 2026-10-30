@@ -1,0 +1,22 @@
+{
+  "chat_name": "刘先生",
+  "chat_id": "刘先生#湖南征信",
+  "account_index": 0,
+  "job_name": "系统分析岗15-20K长沙查看职位",
+  "company": "湖南征信",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "14:46",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397641358910210",
+      "block": "14:46 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-21 15:59:33"
+}

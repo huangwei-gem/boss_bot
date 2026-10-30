@@ -2,36 +2,9 @@
   "chat_name": "孙先生",
   "chat_id": "孙先生#长沙聚勤信息技术",
   "account_index": 1,
-  "job_name": "管培生（接受无经验+免费住宿）7-10K长沙查看职位",
+  "job_name": "实习生+包住宿可以提供实习证明4-5K长沙查看职位",
   "company": "长沙聚勤信息技术",
   "messages": [
-    {
-      "text": "刚刚查看了你的简历，很想深入沟通一下。",
-      "time": "10:43",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "390857683964420",
-      "block": "10:43 刚刚查看了你的简历，很想深入沟通一下。",
-      "sender": "hr",
-      "kind": "bubble",
-      "content": "刚刚查看了你的简历，很想深入沟通一下。",
-      "is_read": true
-    },
-    {
-      "text": "",
-      "time": "",
-      "isFriend": true,
-      "is_mine": false,
-      "is_system": false,
-      "mid": "390857684062723",
-      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
-      "sender": "hr",
-      "kind": "card",
-      "content": "",
-      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
-      "is_read": true
-    },
     {
       "text": "为什么不理me？？？难道是我长沙彭于晏不够帅吗？？？",
       "time": "昨天 20:24",
@@ -317,6 +290,6 @@
       "mid": "394094476481026"
     }
   ],
-  "updated_at": "2026-10-10 00:24:19",
+  "updated_at": "2026-10-16 01:29:53",
   "unread_on_boss": 0
 }

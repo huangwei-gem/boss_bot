@@ -1,0 +1,22 @@
+{
+  "chat_name": "曹三亮",
+  "chat_id": "曹三亮#鸣鸣很忙集团",
+  "account_index": 0,
+  "job_name": "商业分析师10-15K长沙查看职位",
+  "company": "鸣鸣很忙集团",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "14:15",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397633592759043",
+      "block": "14:15 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-23 14:04:51"
+}

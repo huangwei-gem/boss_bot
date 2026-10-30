@@ -31,11 +31,11 @@ import os
 import re
 import shutil
 import sys
-import tempfile
 import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from boss_bot.unified_config import 面板端口 as _面板端口  # 端口只有一个出处
 os.environ.setdefault("PYTHONUTF8", "1")
 
 from boss_bot.browser_launcher import launch_browser  # noqa: E402
@@ -43,6 +43,7 @@ from boss_bot.greet_engine import (DRAWER_READY_JS, JD_THIN_CHARS,  # noqa: E402
                                    parse_drawer_probe)
 from boss_bot.page_handler import BossChatHandler  # noqa: E402
 from boss_bot.unified_config import UnifiedConfig, resolve_path  # noqa: E402
+from boss_bot.unified_config import 新建临时目录  # noqa: E402
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SEARCH_URL = "https://www.zhipin.com/web/geek/job-recommend"
@@ -51,7 +52,7 @@ CHAT_URL = "https://www.zhipin.com/web/geek/chat"
 # 线上那两个浏览器和线上面板：本脚本一个都不许连。
 # 端口撞车时 DrissionPage 会直接接上已在跑的浏览器，那样"隔离"就是假的，
 # 探针会在用户真正登录的标签页上点来点去。
-LIVE_PORTS = (5000, 9222, 9223)
+LIVE_PORTS = (_面板端口(), 9222, 9223)
 
 # 跑前跑后各算一次 sha256 的只读文件。
 # data/*.json 也在名单里，但线上引擎正在写它们，改动不能算在本脚本头上，
@@ -588,7 +589,7 @@ def probe(mode: str, account_index: int, port: int) -> dict:
     sha_before = _sha256(cookie_path)
     protected_before = _protected_snapshot()
 
-    profile = Path(tempfile.mkdtemp(prefix=f"boss_{mode}_"))
+    profile = 新建临时目录(f"boss_{mode}_")
     report = {
         "mode": mode,
         "account_index": account_index,
@@ -768,7 +769,7 @@ def main() -> int:
     # 撞上线上端口就不能跑：DrissionPage 发现端口已被占用会直接接上去，
     # 那样"隔离环境"是假的，探针会打在用户真登录的浏览器和面板上。
     if port in LIVE_PORTS:
-        print(f"端口 {port} 是线上面板/浏览器在用，本脚本拒绝使用（红线：不碰 :5000 与 9222/9223）")
+        print(f"端口 {port} 是线上面板/浏览器在用，本脚本拒绝使用（红线：不碰 :{_面板端口()} 与 9222/9223）")
         return 2
 
     try:

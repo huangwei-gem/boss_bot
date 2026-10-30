@@ -2,7 +2,7 @@
   "chat_name": "吴先生",
   "chat_id": "吴先生#潮州市鑫永汇陶瓷",
   "account_index": 0,
-  "job_name": "兼职·AI场景替换师100-200元/周潮州查看职位",
+  "job_name": "兼职·AI场景替换师100-200元/周潮州",
   "company": "潮州市鑫永汇陶瓷",
   "messages": [
     {
@@ -43,8 +43,68 @@
       "job_name": "兼职·AI场景替换师100-200元/周潮州查看职位",
       "isFriend": false,
       "mid": "394507449774849"
+    },
+    {
+      "sender": "bot",
+      "content": "吴先生您好，之前聊的兼职·AI场景替换师100-200元/周潮州查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "吴先生您好，之前聊的兼职·AI场景替换师100-200元/周潮州查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 14:33:56",
+      "time": "14:33",
+      "job_name": "兼职·AI场景替换师100-200元/周潮州查看职位",
+      "isFriend": false,
+      "mid": "395160936960769"
+    },
+    {
+      "sender": "bot",
+      "content": "吴先生您好，潮州市鑫永汇陶瓷这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "吴先生您好，潮州市鑫永汇陶瓷这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 14:38:01",
+      "time": "14:38",
+      "job_name": "兼职·AI场景替换师100-200元/周潮州查看职位",
+      "isFriend": false,
+      "mid": "397639197758208"
+    },
+    {
+      "sender": "bot",
+      "content": "作品我整理好了，方便的话发您看看？",
+      "text": "作品我整理好了，方便的话发您看看？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-23 13:08:10",
+      "time": "13:08",
+      "job_name": "兼职·AI场景替换师100-200元/周潮州查看职位",
+      "isFriend": false,
+      "mid": "399740478042881"
+    },
+    {
+      "sender": "bot",
+      "content": "作品已整理好，需要的话我发您。方便约个时间线上沟通吗？",
+      "text": "作品已整理好，需要的话我发您。方便约个时间线上沟通吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 13:22:49",
+      "time": "13:22",
+      "job_name": "兼职·AI场景替换师100-200元/周潮州查看职位",
+      "isFriend": false,
+      "mid": "400097980572416"
     }
   ],
-  "updated_at": "2026-10-09 15:04:40",
+  "updated_at": "2026-10-25 02:00:54",
   "unread_on_boss": 0
 }

@@ -1,0 +1,36 @@
+{
+  "chat_name": "张遥",
+  "chat_id": "张遥#上海牧之遥网络科技",
+  "account_index": 1,
+  "job_name": "大数据分析实习生150-300元/天上海查看职位",
+  "company": "上海牧之遥网络科技",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:00",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397585647800836",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学在读本科生，有数据分析与数据标注经验，熟练使用Excel、SQL和Python。看到贵司招大数据分析实习生，想了解一下是否支持线上兼职，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397585766248960",
+      "block": "已读 您好，我是统计学在读本科生，有数据分析与数据标注经验，熟练使用Excel、SQL和Python。看到贵司招大数据分析实习生，想了解一下是否支持线上兼职，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学在读本科生，有数据分析与数据标注经验，熟练使用Excel、SQL和Python。看到贵司招大数据分析实习生，想了解一下是否支持线上兼职，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:47:39"
+}

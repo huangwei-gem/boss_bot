@@ -16,7 +16,77 @@
       "sender": "me",
       "kind": "bubble",
       "content": "您好，我对捷克语数据翻译及标注岗位很感兴趣。我具备数据分析基础，熟悉Excel、SQL和Python，能高效处理数据标注任务。虽然我的捷克语能力有限，但愿意学习并快速适应。期待有机会进一步沟通。"
+    },
+    {
+      "text": "你好",
+      "time": "10-14 14:35",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396576908460548",
+      "block": "10-14 14:35 你好",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你好"
+    },
+    {
+      "text": "你是捷克语专业的吗？",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "396576923456000",
+      "block": "你是捷克语专业的吗？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "你是捷克语专业的吗？"
+    },
+    {
+      "sender": "bot",
+      "content": "不是的，我是统计学专业。我的优势在数据标注和AI辅助标注流程方面，包括文本/图像/语音多模态标注、数据清洗与质检，能快速上手标注任务。如果贵司有其他数据标注或分析相关的线上兼职岗位，欢迎进一步沟通。",
+      "text": "不是的，我是统计学专业。我的优势在数据标注和AI辅助标注流程方面，包括文本/图像/语音多模态标注、数据清洗与质检，能快速上手标注任务。如果贵司有其他数据标注或分析相关的线上兼职岗位，欢迎进一步沟通。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-16 05:58:18",
+      "time": "05:58",
+      "job_name": "兼职·捷克语数据翻译及标注100-200元/时许昌查看职位",
+      "isFriend": false,
+      "mid": "397157576643073"
+    },
+    {
+      "sender": "bot",
+      "content": "不是的，我是统计学专业，捷克语能力有限。我的优势主要在数据标注、AI辅助标注流程和数据分析方面，如果您有其他对语言要求不高的线上数据兼职岗位，欢迎随时联系我。",
+      "text": "不是的，我是统计学专业，捷克语能力有限。我的优势主要在数据标注、AI辅助标注流程和数据分析方面，如果您有其他对语言要求不高的线上数据兼职岗位，欢迎随时联系我。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-16 07:47:00",
+      "time": "07:47",
+      "job_name": "兼职·捷克语数据翻译及标注100-200元/时许昌查看职位",
+      "isFriend": false,
+      "mid": "397184292442625"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，理解岗位对捷克语的要求较高，祝您招聘顺利~",
+      "text": "感谢您的时间，理解岗位对捷克语的要求较高，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 20:25:57",
+      "time": "20:25",
+      "job_name": "兼职·捷克语数据翻译及标注100-200元/时许昌查看职位",
+      "isFriend": false,
+      "mid": "397724710228481"
     }
   ],
-  "updated_at": "2026-10-07 16:47:21"
+  "updated_at": "2026-10-23 13:58:26",
+  "unread_on_boss": 0
 }

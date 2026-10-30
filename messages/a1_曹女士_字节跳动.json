@@ -1,0 +1,23 @@
+{
+  "chat_name": "曹女士",
+  "chat_id": "曹女士#字节跳动",
+  "account_index": 1,
+  "job_name": "风险策略数据分析实习生-Tiktok Shop340-350元/天上海查看职位",
+  "company": "字节跳动",
+  "messages": [
+    {
+      "text": "您好，我是统计学专业在读生，擅长SQL/Python数据分析和AI标注流程搭建，看到Tiktok Shop风险策略分析岗位与我的技能方向契合，方便的话我把简历发您细聊",
+      "time": "13:53",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397628137685249",
+      "block": "13:53 送达 您好，我是统计学专业在读生，擅长SQL/Python数据分析和AI标注流程搭建，看到Tiktok Shop风险策略分析岗位与我的技能方向契合，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长SQL/Python数据分析和AI标注流程搭建，看到Tiktok Shop风险策略分析岗位与我的技能方向契合，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:30:34"
+}

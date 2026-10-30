@@ -1,0 +1,90 @@
+{
+  "chat_name": "邹前",
+  "chat_id": "邹前#富泽信息",
+  "account_index": 0,
+  "job_name": "数据分析员4-5K长沙",
+  "company": "富泽信息",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "03:23",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397119619506947",
+      "block": "03:23 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397119619539712",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "在长沙吗",
+      "time": "09:13",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397205656879875",
+      "block": "09:13 在长沙吗",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "在长沙吗"
+    },
+    {
+      "sender": "bot",
+      "content": "我目前不在长沙，但可以全程线上远程协作，请问这个岗位接受异地吗？",
+      "text": "我目前不在长沙，但可以全程线上远程协作，请问这个岗位接受异地吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-17 10:54:56",
+      "time": "10:54",
+      "job_name": "数据分析员4-5K长沙查看职位",
+      "isFriend": false,
+      "mid": "397584368096002"
+    },
+    {
+      "text": "不可以",
+      "time": "13:10",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397617710236416",
+      "block": "13:10 不可以",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不可以"
+    },
+    {
+      "sender": "bot",
+      "content": "感谢您的时间，理解您的情况，祝您招聘顺利~",
+      "text": "感谢您的时间，理解您的情况，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-17 17:13:31",
+      "time": "17:13",
+      "job_name": "数据分析员4-5K长沙查看职位",
+      "isFriend": false,
+      "mid": "397677414986497"
+    }
+  ],
+  "updated_at": "2026-10-25 02:35:32",
+  "unread_on_boss": 0
+}

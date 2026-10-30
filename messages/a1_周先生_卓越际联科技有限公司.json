@@ -1,0 +1,64 @@
+{
+  "chat_name": "周先生",
+  "chat_id": "周先生#卓越际联科技有限公司",
+  "account_index": 1,
+  "job_name": "【数据分析师】早十晚七双休+五险一金+年终13-17K上海查看职位",
+  "company": "卓越际联科技有限公司",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:01",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397585969078786",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel/SQL/Python。看到贵司数据分析师岗位，想了解一下，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397586084143621",
+      "block": "送达 您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel/SQL/Python。看到贵司数据分析师岗位，想了解一下，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟练使用Excel/SQL/Python。看到贵司数据分析师岗位，想了解一下，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "岗位需2-5年工作经验，不好意思啊",
+      "time": "昨天 16:00",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398367353664001",
+      "block": "昨天 16:00 岗位需2-5年工作经验，不好意思啊",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "岗位需2-5年工作经验，不好意思啊"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的反馈，祝您招聘顺利~",
+      "text": "理解，感谢您的反馈，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-20 18:09:59",
+      "time": "18:09",
+      "job_name": "【数据分析师】早十晚七双休+五险一金+年终13-17K上海查看职位",
+      "isFriend": false,
+      "mid": "398752984084993"
+    }
+  ],
+  "updated_at": "2026-10-23 13:15:02",
+  "unread_on_boss": 0
+}

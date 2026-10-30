@@ -1,0 +1,64 @@
+{
+  "chat_name": "刘女士",
+  "chat_id": "刘女士#拼多多集团_PDD",
+  "account_index": 1,
+  "job_name": "【27届校招正式批】数据分析师20-40K·16薪上海查看职位",
+  "company": "拼多多集团-PDD",
+  "messages": [
+    {
+      "text": "",
+      "time": "04:01",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397128953885185",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟悉SQL/Python，看到贵司数据分析师岗位，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397129107976705",
+      "block": "送达 您好，我是统计学本科在读，有数据标注和数据分析经验，熟悉SQL/Python，看到贵司数据分析师岗位，方便的话我把简历发您细聊。",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学本科在读，有数据标注和数据分析经验，熟悉SQL/Python，看到贵司数据分析师岗位，方便的话我把简历发您细聊。",
+      "reply_source": "greet"
+    },
+    {
+      "text": "感谢您的关注，有合适机会再联系您，祝您求职顺利。",
+      "time": "17:17",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397678267531778",
+      "block": "17:17 感谢您的关注，有合适机会再联系您，祝您求职顺利。",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢您的关注，有合适机会再联系您，祝您求职顺利。"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "text": "好的，感谢您抽出时间查看，祝工作顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-17 17:23:20",
+      "time": "17:23",
+      "job_name": "【27届校招正式批】数据分析师20-40K·16薪上海查看职位",
+      "isFriend": false,
+      "mid": "397679827407363"
+    }
+  ],
+  "updated_at": "2026-10-23 14:25:59",
+  "unread_on_boss": 0
+}

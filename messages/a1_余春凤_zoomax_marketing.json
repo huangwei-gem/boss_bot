@@ -1,0 +1,36 @@
+{
+  "chat_name": "余春凤",
+  "chat_id": "余春凤#zoomax_marketing",
+  "account_index": 1,
+  "job_name": "数据分析7-10K上海查看职位",
+  "company": "zoomax-marketing",
+  "messages": [
+    {
+      "text": "",
+      "time": "11:21",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397590974333442",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我是统计学专业在读生，擅长数据分析和AI训练数据质检，曾用Python/SQL完成过业务报表可视化项目，岗位要求的数据处理经验我都有积累，方便的话我把简历发您细聊",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397591152321026",
+      "block": "送达 您好，我是统计学专业在读生，擅长数据分析和AI训练数据质检，曾用Python/SQL完成过业务报表可视化项目，岗位要求的数据处理经验我都有积累，方便的话我把简历发您细聊",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "您好，我是统计学专业在读生，擅长数据分析和AI训练数据质检，曾用Python/SQL完成过业务报表可视化项目，岗位要求的数据处理经验我都有积累，方便的话我把简历发您细聊",
+      "reply_source": "greet"
+    }
+  ],
+  "updated_at": "2026-10-23 14:45:54"
+}

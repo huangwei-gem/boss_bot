@@ -5,7 +5,7 @@ BOSS Bot 统一入口
     python -m boss_bot              # 多账号统一主循环（打招呼+回复），Ctrl+C 停止
     python -m boss_bot --greet      # 仅运行打招呼/投递引擎
     python -m boss_bot --reply      # 仅运行自动回复引擎
-    python -m boss_bot --web        # 启动 Flask 管理界面（http://localhost:5000）
+    python -m boss_bot --web        # 启动 Flask 管理界面（默认口见 unified_config.面板默认端口，启动时会打出准确地址）
     python -m boss_bot --account 1  # 仅运行指定账号
 """
 

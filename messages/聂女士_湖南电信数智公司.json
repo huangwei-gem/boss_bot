@@ -1,0 +1,22 @@
+{
+  "chat_name": "聂女士",
+  "chat_id": "聂女士#湖南电信数智公司",
+  "account_index": 0,
+  "job_name": "数据产品经理（政务）12-20K长沙",
+  "company": "湖南电信数智公司",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 15:13",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "398001860042753",
+      "block": "昨天 15:13 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-25 02:19:54"
+}

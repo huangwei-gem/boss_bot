@@ -72,9 +72,39 @@
       "timestamp": "2026-10-10 08:02:50",
       "time": "08:02",
       "job_name": "兼职·数据采集专员35-95元/时泰安查看职位",
+      "isFriend": false,
+      "mid": "395064819990528"
+    },
+    {
+      "sender": "bot",
+      "content": "李先生您好，请问方便抽出两分钟简单聊一下吗？",
+      "text": "李先生您好，请问方便抽出两分钟简单聊一下吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-17 15:53:47",
+      "time": "15:53",
+      "job_name": "兼职·数据采集专员35-95元/时泰安查看职位",
+      "isFriend": false,
+      "mid": "397657817735171"
+    },
+    {
+      "sender": "bot",
+      "content": "我21，本科在读统计学哈。这岗能线上远程做吗？",
+      "text": "我21，本科在读统计学哈。这岗能线上远程做吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-24 14:38:45",
+      "time": "14:38",
+      "job_name": "兼职·数据采集专员35-95元/时泰安查看职位",
       "isFriend": false
     }
   ],
-  "updated_at": "2026-10-10 08:02:50",
+  "updated_at": "2026-10-24 14:38:45",
   "unread_on_boss": 0
 }

@@ -125,9 +125,63 @@
       "timestamp": "2026-10-10 01:39:50",
       "time": "01:39",
       "job_name": "兼职·数据分析20-25元/时扬州查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394970690405121"
+    },
+    {
+      "text": "",
+      "time": "12:42",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395133638722306",
+      "block": "我想要和您交换联系方式，您是否同意 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换联系方式，您是否同意 拒绝 同意"
+    },
+    {
+      "text": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "395134526042881",
+      "block": "已读 方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "sender": "bot",
+      "kind": "bubble",
+      "content": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "reply_source": "intent"
+    },
+    {
+      "sender": "bot",
+      "content": "俞征东您好，邗江区诺凡斯登冰...这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "text": "俞征东您好，邗江区诺凡斯登冰...这个岗位还在招吗？我这边只找线上远程就能做的，方便的话咱们线上细聊。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 16:04:44",
+      "time": "16:04",
+      "job_name": "兼职·数据分析20-25元/时扬州查看职位",
+      "isFriend": false,
+      "mid": "395183253787394"
+    },
+    {
+      "text": "可以的",
+      "time": "10-11 10:17",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395451915010817",
+      "block": "10-11 10:17 可以的",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "可以的"
     }
   ],
-  "updated_at": "2026-10-10 01:39:50",
-  "unread_on_boss": 0
+  "updated_at": "2026-10-23 14:25:24",
+  "unread_on_boss": 1
 }

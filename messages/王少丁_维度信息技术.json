@@ -1,0 +1,22 @@
+{
+  "chat_name": "王少丁",
+  "chat_id": "王少丁#维度信息技术",
+  "account_index": 0,
+  "job_name": "兼职·商业数据分析15-20元/时焦作",
+  "company": "维度信息技术",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "10:31",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397932588204802",
+      "block": "10:31 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-25 02:32:56"
+}

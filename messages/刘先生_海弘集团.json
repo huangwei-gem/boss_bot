@@ -76,7 +76,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394404612219649",
-      "block": "11:16 Aurora_1413 刘先生的微信号 Aurora_1413 复制微信号",
+      "block": "Aurora_1413 刘先生的微信号 Aurora_1413 复制微信号",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -109,9 +109,52 @@
       "timestamp": "2026-10-09 14:11:57",
       "time": "14:11",
       "job_name": "兼职·达播BD商务 媒介Pr（线上兼职 个护美妆品类10000-260000元/月广州查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "394801634136836"
+    },
+    {
+      "sender": "bot",
+      "content": "刘先生您好，之前聊的兼职·达播BD商务 媒介Pr（线上兼职 个护美妆品类10000-260000元/月广州查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "text": "刘先生您好，之前聊的兼职·达播BD商务 媒介Pr（线上兼职 个护美妆品类10000-260000元/月广州查看职位我很有兴趣，我时间灵活，方便线上远程沟通或视频面试吗？",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "followup",
+      "action": "text",
+      "timestamp": "2026-10-10 09:32:08",
+      "time": "09:32",
+      "job_name": "兼职·达播BD商务 媒介Pr（线上兼职 个护美妆品类10000-260000元/月广州查看职位",
+      "isFriend": false,
+      "mid": "395086764274438"
+    },
+    {
+      "text": "可加微信详聊",
+      "time": "11:13",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395111779259142",
+      "block": "11:13 可加微信详聊",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "可加微信详聊"
+    },
+    {
+      "sender": "bot",
+      "content": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "text": "方便的话您可以直接在平台上和我沟通，看到消息我会尽快回复您~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "text",
+      "timestamp": "2026-10-10 11:26:58",
+      "time": "11:26",
+      "job_name": "兼职·达播BD商务 媒介Pr（线上兼职 个护美妆品类10000-260000元/月广州查看职位",
+      "isFriend": false,
+      "mid": "395114988143361"
     }
   ],
-  "updated_at": "2026-10-09 14:11:57",
+  "updated_at": "2026-10-23 14:42:17",
   "unread_on_boss": 0
 }

@@ -1,0 +1,22 @@
+{
+  "chat_name": "米先生",
+  "chat_id": "米先生#杭州得瑞米贸易",
+  "account_index": 0,
+  "job_name": "兼职·飞书系统搭建30-50元/时杭州",
+  "company": "杭州得瑞米贸易",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "13:04",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397970130174722",
+      "block": "13:04 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-25 02:26:50"
+}

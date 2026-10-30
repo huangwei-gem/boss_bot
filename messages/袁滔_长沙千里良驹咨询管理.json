@@ -2,7 +2,7 @@
   "chat_name": "袁滔",
   "chat_id": "袁滔#长沙千里良驹咨询管理",
   "account_index": 0,
-  "job_name": "兼职·全国线上普通话录音30-35元/时长沙查看职位",
+  "job_name": "兼职·全国线上普通话录音30-35元/时长沙",
   "company": "长沙千里良驹咨询管理",
   "messages": [
     {
@@ -29,7 +29,75 @@
       "kind": "card",
       "content": "",
       "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "怎么联系你，你加我",
+      "time": "昨天 21:13",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "399859826070273",
+      "block": "昨天 21:13 怎么联系你，你加我",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "怎么联系你，你加我"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "399859835962113",
+      "block": "我想要和您交换微信，您是否同意 为保障您的安全建议在平台内沟通，微信沟通中需特别保护您的个人信息，谨防受骗。 拒绝 同意",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "我想要和您交换微信，您是否同意 为保障您的安全建议在平台内沟通，微信沟通中需特别保护您的个人信息，谨防受骗。 拒绝 同意"
+    },
+    {
+      "sender": "bot",
+      "content": "[已同意交换联系方式]",
+      "text": "[已同意交换联系方式]",
+      "is_mine": true,
+      "kind": "action",
+      "source": "bot",
+      "reply_source": "intent",
+      "action": "contact",
+      "timestamp": "2026-10-24 11:24:17",
+      "time": "11:24",
+      "job_name": "兼职·全国线上普通话录音30-35元/时长沙查看职位",
+      "isFriend": false
+    },
+    {
+      "text": "",
+      "time": "11:24",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "400068864873219",
+      "block": "qingqingliuyaaa 袁滔的微信号 qingqingliuyaaa 复制微信号",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "qingqingliuyaaa 袁滔的微信号 qingqingliuyaaa 复制微信号"
+    },
+    {
+      "sender": "bot",
+      "content": "微信号我记下了，稍后联系您。",
+      "text": "微信号我记下了，稍后联系您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-24 11:26:27",
+      "time": "11:26",
+      "job_name": "兼职·全国线上普通话录音30-35元/时长沙查看职位",
+      "isFriend": false,
+      "mid": "400069381837573"
     }
   ],
-  "updated_at": "2026-10-08 02:43:08"
+  "updated_at": "2026-10-25 02:05:55",
+  "unread_on_boss": 0
 }

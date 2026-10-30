@@ -1,0 +1,22 @@
+{
+  "chat_name": "秦女士",
+  "chat_id": "秦女士#振达电子科技",
+  "account_index": 1,
+  "job_name": "数据/策略运营5-8K长沙查看职位",
+  "company": "振达电子科技",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 13:52",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "394796909654788",
+      "block": "昨天 13:52 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    }
+  ],
+  "updated_at": "2026-10-10 18:32:05"
+}

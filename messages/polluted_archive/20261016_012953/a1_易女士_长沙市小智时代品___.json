@@ -1,0 +1,49 @@
+{
+  "chat_name": "易女士",
+  "chat_id": "易女士#长沙市小智时代品___",
+  "account_index": 1,
+  "job_name": "双休-数据分析师8-12K长沙查看职位",
+  "company": "长沙市小智时代品...",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "09-19 21:29",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "387831250985732",
+      "block": "09-19 21:29 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "387831251018497",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "",
+      "time": "08:42",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "390827766284801",
+      "block": "08:42 你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "is_read": true
+    }
+  ],
+  "updated_at": "2026-10-04 17:01:10"
+}

@@ -17,6 +17,7 @@
 import io
 import json
 import os
+import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,7 +25,7 @@ sys.path.insert(0, os.path.join(ROOT, "flask-version"))
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from access_guard import 已有面板在跑
+from access_guard import 已有面板在跑, 默认面板端口
 
 面板回音 = (200, json.dumps({"accounts": [], "running": False, "stats": {}}))
 
@@ -33,7 +34,7 @@ class Test认不认得出是面板:
     def test_面板自己应答就认领(self):
         在跑, 说明 = 已有面板在跑(lambda u: 面板回音)
         assert 在跑 is True
-        assert "面板" in 说明 and "5000" in 说明
+        assert "面板" in 说明 and str(默认面板端口) in 说明
 
     def test_连不上就是没人跑(self):
         def 连不上(u):
@@ -64,9 +65,11 @@ class Test认不认得出是面板:
 
 
 class Test真接进了启动路径:
+    def _读(self, *段):
+        return io.open(os.path.join(ROOT, *段), encoding="utf-8").read()
+
     def _源码(self):
-        return io.open(os.path.join(ROOT, "flask-version", "app.py"),
-                       encoding="utf-8").read()
+        return self._读("flask-version", "app.py")
 
     def test_main在起服务之前先问有没有第二个(self):
         src = self._源码()
@@ -77,8 +80,29 @@ class Test真接进了启动路径:
     def test_端口不写死两处(self):
         """探测的口和真正监听的口必须同一个数：写死两遍就会有一天探 A 听 B。"""
         src = self._源码()
-        assert '"port": 5000' not in src, "监听端口还写着字面量 5000"
-        assert "面板端口" in src
+        assert '"port": 面板端口' in src, "监听口没引用那一个变量"
+        # 只钉"面板口形状"的兜底：`debug_port or 9222` 那种是浏览器 CDP 口，本来就该有自己的默认
+        兜底 = [l.strip()[:80] for l in src.splitlines() if re.search(r'\bor\s+50[01]\d\b', l)]
+        assert not 兜底, \
+            "app.py 里还有 `or 50xx` 的默认口兜底 = 自己算了一遍默认值，" \
+            "默认口应只住 boss_bot/unified_config.py 一处：\n" + "\n".join(兜底)
+
+    def test_默认口从unified_config取但还能被环境变量顶掉(self):
+        """10-27 与 10-28 两次实测：5000 被另一个项目的 app.py 占着，面板一绑就抛，
+        「看一眼前端统计」变成"他得先去关别的程序"。所以 10-28 起默认口换成 5001，
+        而且只许住在一处；BOSS_PANEL_PORT 这个口子留着。"""
+        src = self._源码()
+        行 = [l for l in src.splitlines() if l.startswith("面板端口 = ")]
+        assert len(行) == 1, f"端口只许定一处：{行}"
+        assert "_默认面板端口" in 行[0], "app.py 没从 access_guard 取那一份，自己另算了一个"
+        i = src.index("def _拒绝第二个面板")
+        assert "_已有面板在跑(_面板探一次, 端口=面板端口)" in src[i:i + 1200]
+        # 换口的环境变量必须只剩一处读它（注释里写"这个口子留着"是讲历史，不算第二处读）
+        守 = "\n".join(l for l in self._读("flask-version", "access_guard.py").splitlines()
+                       if not l.strip().startswith("#"))
+        assert "BOSS_PANEL_PORT" not in 守, \
+            "access_guard 自己算了一遍环境变量，就变成两份口径（unified_config 那份才算）"
+        assert "from boss_bot.unified_config import 面板端口" in 守, "没跟默认口同源"
 
     def test_退出用的是非零码(self):
         src = self._源码()

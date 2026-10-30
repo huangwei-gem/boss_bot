@@ -1,0 +1,78 @@
+{
+  "chat_name": "胡女士",
+  "chat_id": "胡女士#三一重工",
+  "account_index": 0,
+  "job_name": "数据闭环管理工程师15-30K·14薪长沙",
+  "company": "三一重工",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "昨天 14:36",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "398346728268555",
+      "block": "昨天 14:36 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398346728301313",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "很抱歉，您的简历和我们当前的职位需求不是很匹配。祝您在BOSS直聘找到满意的工作！",
+      "time": "昨天 14:53",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "398350678807297",
+      "block": "昨天 14:53 很抱歉，您的简历和我们当前的职位需求不是很匹配。祝您在BOSS直聘找到满意的工作！",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "很抱歉，您的简历和我们当前的职位需求不是很匹配。祝您在BOSS直聘找到满意的工作！"
+    },
+    {
+      "sender": "bot",
+      "content": "好嘞，谢谢，祝您招聘顺利。",
+      "text": "好嘞，谢谢，祝您招聘顺利。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 16:55:02",
+      "time": "16:55",
+      "job_name": "数据闭环管理工程师15-30K·14薪长沙查看职位",
+      "isFriend": false,
+      "mid": "398734561477381"
+    },
+    {
+      "sender": "bot",
+      "content": "好嘞，谢谢您。",
+      "text": "好嘞，谢谢您。",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-20 17:16:45",
+      "time": "17:16",
+      "job_name": "数据闭环管理工程师15-30K·14薪长沙查看职位",
+      "isFriend": false,
+      "mid": "398739904840449"
+    }
+  ],
+  "updated_at": "2026-10-25 02:12:20",
+  "unread_on_boss": 0
+}

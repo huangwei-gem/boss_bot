@@ -21,7 +21,6 @@ import json
 import os
 import re
 import sys
-import tempfile
 import time
 from pathlib import Path
 
@@ -30,6 +29,7 @@ os.environ.setdefault("PYTHONUTF8", "1")
 
 from boss_bot.browser_launcher import launch_browser  # noqa: E402
 from boss_bot.unified_config import UnifiedConfig, resolve_path  # noqa: E402
+from boss_bot.unified_config import 新建临时目录  # noqa: E402
 
 CHAT_URL = "https://www.zhipin.com/web/geek/chat"
 ROOT = Path(__file__).resolve().parent.parent
@@ -211,7 +211,7 @@ def main():
     print(f"账号 {args.account} Cookie={cookie_path.name} sha={sha_before} "
           f"待查会话 {len(targets)} 个", flush=True)
 
-    profile = Path(tempfile.mkdtemp(prefix="boss_row_match_"))
+    profile = 新建临时目录("boss_row_match_")
     instance = None
     by_name = {}
     search_verdicts = {}

@@ -1,0 +1,63 @@
+{
+  "chat_name": "施小庆",
+  "chat_id": "施小庆#湖南慧泽生物医药___",
+  "account_index": 0,
+  "job_name": "生物数据统计分析员6-11K长沙",
+  "company": "湖南慧泽生物医药...",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "10:54",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397230377079558",
+      "block": "10:54 已读 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397230377108227",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "感谢您的关注，暂时不合适该职位",
+      "time": "11:08",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397233885434628",
+      "block": "11:08 感谢您的关注，暂时不合适该职位",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "感谢您的关注，暂时不合适该职位"
+    },
+    {
+      "sender": "bot",
+      "content": "好的，感谢您的时间，祝您招聘顺利~",
+      "text": "好的，感谢您的时间，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-16 11:21:55",
+      "time": "11:21",
+      "job_name": "生物数据统计分析员6-11K长沙查看职位",
+      "isFriend": false,
+      "mid": "397237108876034"
+    }
+  ],
+  "updated_at": "2026-10-25 07:34:40",
+  "unread_on_boss": 0
+}

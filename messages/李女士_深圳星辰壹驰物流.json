@@ -52,7 +52,7 @@
       "is_mine": false,
       "is_system": false,
       "mid": "394227510145537",
-      "block": "昨天 23:15 我想要和您交换微信，您是否同意 拒绝 同意",
+      "block": "我想要和您交换微信，您是否同意 拒绝 同意",
       "sender": "hr",
       "kind": "card",
       "content": "",
@@ -86,6 +86,6 @@
       "card_text": "您已经成功拒绝了对方交换微信请求"
     }
   ],
-  "updated_at": "2026-10-10 09:09:58",
+  "updated_at": "2026-10-24 14:40:54",
   "unread_on_boss": 0
 }

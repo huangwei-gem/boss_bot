@@ -130,9 +130,49 @@
       "timestamp": "2026-10-10 09:11:18",
       "time": "09:11",
       "job_name": "急聘！！！电商客服+月休8天3-6K长沙查看职位",
-      "isFriend": false
+      "isFriend": false,
+      "mid": "395081645003267"
+    },
+    {
+      "text": "？",
+      "time": "10-11 09:20",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395437732975104",
+      "block": "10-11 09:20 ？",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "？"
+    },
+    {
+      "text": "不合适哈",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395437781373441",
+      "block": "不合适哈",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "不合适哈"
+    },
+    {
+      "sender": "bot",
+      "content": "理解，感谢您的反馈，祝您招聘顺利~",
+      "text": "理解，感谢您的反馈，祝您招聘顺利~",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "rejection",
+      "action": "text",
+      "timestamp": "2026-10-16 03:31:25",
+      "time": "03:31",
+      "job_name": "急聘！！！电商客服+月休8天3-6K长沙查看职位",
+      "isFriend": false,
+      "mid": "397121476448769"
     }
   ],
-  "updated_at": "2026-10-10 09:11:18",
+  "updated_at": "2026-10-23 14:59:22",
   "unread_on_boss": 0
 }

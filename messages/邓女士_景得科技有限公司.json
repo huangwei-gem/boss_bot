@@ -1,0 +1,63 @@
+{
+  "chat_name": "邓女士",
+  "chat_id": "邓女士#景得科技有限公司",
+  "account_index": 0,
+  "job_name": "兼职·AI评测标注员（网页交互方向）50-75元/时南宁",
+  "company": "景得科技有限公司",
+  "messages": [
+    {
+      "text": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "time": "10:56",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397938604311300",
+      "block": "10:56 送达 您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，看到您的招聘信息，我很感兴趣，希望可以进一步沟通。"
+    },
+    {
+      "text": "",
+      "time": "",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397938604339974",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "非常抱歉，暂时该项目遇到了点问题，暂未启动，如有需要我再联系您！感谢",
+      "time": "19:04",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "399474228253443",
+      "block": "19:04 非常抱歉，暂时该项目遇到了点问题，暂未启动，如有需要我再联系您！感谢",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "非常抱歉，暂时该项目遇到了点问题，暂未启动，如有需要我再联系您！感谢"
+    },
+    {
+      "sender": "bot",
+      "content": "好嘞，那我等您消息",
+      "text": "好嘞，那我等您消息",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-24 12:28:19",
+      "time": "12:28",
+      "job_name": "兼职·AI评测标注员（网页交互方向）50-75元/时南宁查看职位",
+      "isFriend": false,
+      "mid": "400084583080705"
+    }
+  ],
+  "updated_at": "2026-10-25 02:03:01",
+  "unread_on_boss": 0
+}

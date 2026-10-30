@@ -1,0 +1,35 @@
+{
+  "chat_name": "张敏",
+  "chat_id": "张敏#极豆车联网",
+  "account_index": 1,
+  "job_name": "泊车数据分析师（外包-酷睿程）10-15K上海查看职位",
+  "company": "极豆车联网",
+  "messages": [
+    {
+      "text": "",
+      "time": "10-16 05:01",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "397143663452673",
+      "block": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析",
+      "sender": "hr",
+      "kind": "card",
+      "content": "",
+      "card_text": "你与该职位竞争者PK情况 共人投递，你超过竞争者 优秀竞争者会，建议你 查看详细分析"
+    },
+    {
+      "text": "您好，我有数据标注和数据分析经验，擅长用Python/SQL处理数据，看到贵司泊车数据分析师岗位，方便的话我把简历发您细聊。",
+      "time": "",
+      "isFriend": false,
+      "is_mine": true,
+      "is_system": false,
+      "mid": "397143937241601",
+      "block": "已读 您好，我有数据标注和数据分析经验，擅长用Python/SQL处理数据，看到贵司泊车数据分析师岗位，方便的话我把简历发您细聊。",
+      "sender": "me",
+      "kind": "bubble",
+      "content": "您好，我有数据标注和数据分析经验，擅长用Python/SQL处理数据，看到贵司泊车数据分析师岗位，方便的话我把简历发您细聊。"
+    }
+  ],
+  "updated_at": "2026-10-23 14:54:35"
+}

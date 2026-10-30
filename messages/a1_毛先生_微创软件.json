@@ -16,7 +16,35 @@
       "sender": "me",
       "kind": "bubble",
       "content": "您好，我是统计学在读本科生，有数据分析经验，熟练使用Excel、SQL和Python，看到贵司在招数据分析专员，想了解一下岗位详情，方便的话我把简历发您细聊。"
+    },
+    {
+      "text": "年限不足",
+      "time": "11:10",
+      "isFriend": true,
+      "is_mine": false,
+      "is_system": false,
+      "mid": "395110884848131",
+      "block": "11:10 年限不足",
+      "sender": "hr",
+      "kind": "bubble",
+      "content": "年限不足"
+    },
+    {
+      "sender": "bot",
+      "content": "好啊，那我先不打扰了",
+      "text": "好啊，那我先不打扰了",
+      "is_mine": true,
+      "kind": "bubble",
+      "source": "bot",
+      "reply_source": "ai",
+      "action": "text",
+      "timestamp": "2026-10-17 23:06:39",
+      "time": "23:06",
+      "job_name": "经验数据分析专员10-11K上海查看职位",
+      "isFriend": false,
+      "mid": "397764211315200"
     }
   ],
-  "updated_at": "2026-10-10 07:10:41"
+  "updated_at": "2026-10-23 13:58:03",
+  "unread_on_boss": 0
 }
