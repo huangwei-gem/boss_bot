@@ -77,6 +77,9 @@ def _裸引擎(monkeypatch, 否决词=(), 方向词=(), jd=坐班JD):
     eng._落地后判性 = lambda instance: ""
     eng._random_delay = lambda a, b: None
     eng._find_chat_button = lambda timeout=8: _按钮()
+    # 去重库那一步（_mark_chatted 要读盘、合并、写文件）不在这套门的范围里，
+    # 真实现的行为另有锁；这里钉成空函数，别让它把「发送异常」冒充成投递失败原因
+    eng._mark_chatted = lambda job: None
     eng.方向词表 = lambda: list(方向词)
     eng.browser_manager = SimpleNamespace(get_instance=lambda: _页面(jd))
     return eng
@@ -163,5 +166,9 @@ class 机械闸门照旧Test:
     def test_按钮文案是继续沟通就是已经投过(self, monkeypatch):
         eng = _裸引擎(monkeypatch, 否决词=["坐班"])
         eng._find_chat_button = lambda timeout=8: SimpleNamespace(text="继续沟通")
-        成, 因 = _投递(eng, _岗位(**{勾选标记: True}))
+        标过 = []
+        eng._mark_chatted = lambda job: 标过.append(job.get("url"))
+        岗位 = _岗位(**{勾选标记: True})
+        成, 因 = _投递(eng, 岗位)
         assert 成 is False and "之前已投递过" in 因, 因
+        assert 标过 == [岗位["url"]],             "BOSS 自己说这一单早就有了却不标库——抓取腿下趟还会把它塞回池子等他勾"

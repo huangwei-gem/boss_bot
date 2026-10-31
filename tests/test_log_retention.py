@@ -27,7 +27,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "flask-version"))
 
-from log_retention import (清理日志, 压缩后缀, 值得压字节, 日志文件,  # noqa: E402
+from log_retention import (清理日志, 压缩后缀, 值得压字节, 主日志名, 日志文件,  # noqa: E402
                            读日志文本)
 
 一天 = 86400
@@ -348,6 +348,22 @@ def test_挪进kept又压成gz的那天按日期还读得到(日志目录):
     找到 = 日志文件(日志目录, "2026-10-03")
     assert 找到 is not None, "压过的归档按日期找不到，界面把这天报成没日志"
     assert _读回(找到) == 正文, "解回来的正文对不上：%s" % 找到
+
+
+def test_按今天的日期问要拿到正在写的那一份(日志目录):
+    """今天这份住在没有日期的 `boss_bot.log` 里，到午夜轮转才改名。按 今天 这个
+    日期问，`日志文件()` 只会去拼 `boss_bot.log.<今天>`——拼不出来就回 None，
+    于是"正在写的这一份"被报成"这天没日志"。面板那条接口自己绕开了（date==今天
+    就传 None），直接按日期问的人（e2e 的 log_truth、逐号体检脚本）拿不到。
+    10-30 起号监控时现踩：logs/boss_bot.log 1.3 MB 在写，问今天回 None。"""
+    今 = time.strftime("%Y-%m-%d")
+    _造日志(日志目录, 主日志名, 内容="今天这一行\n", 天数前=0)
+    找到 = 日志文件(日志目录, 今)
+    assert 找到 is not None, "按今天的日期问，正在写的这一份读不到"
+    assert 找到.name == 主日志名, "拿错了文件：%s" % 找到
+    assert _读回(找到) == "今天这一行\n"
+    # 反向哨兵：过去那天没有份就许回 None，不许拿今天这份冒充
+    assert 日志文件(日志目录, "2026-01-01") is None, "把今天的当成 2026-01-01 的了"
 
 
 def test_就地压过的按日期也读得到(日志目录):

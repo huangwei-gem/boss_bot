@@ -1,8 +1,8 @@
 {
-  "date": "2026-10-29",
+  "date": "2026-10-31",
   "all": {
     "0": {
-      "greet_sent": 1043,
+      "greet_sent": 1048,
       "resume_sent": 67,
       "interview": 22
     },
@@ -14,7 +14,7 @@
   },
   "today": {
     "0": {
-      "greet_sent": 1,
+      "greet_sent": 2,
       "resume_sent": 0,
       "interview": 0
     }

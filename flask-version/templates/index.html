@@ -5277,10 +5277,11 @@ function renderJobPool() {
     var 结局 = '';
     if (投['成']) 结局 = '<div class="pool-sub">已投 · ' + escAttr(poolAgo(投['时间'])) + '</div>';
     else if (投['原因']) {
-      // 「投不出」= 这条岗位本身投不了（BOSS 侧已有这条会话）；「上次没投出去」= 这一刻这句话
-      // 过不了发送闸门，他改完画像/招呼语下一轮自己会投走，不许说成判死
+      // 「投不出」= 这条岗位本身投不了（BOSS 侧已有这条会话、岗位已下线）；「上次没投出去」
+      // = 这一刻投不成（话术过不了闸门、页面加载失败、验证码没过、当日额度见底），
+      // 下一轮自己会再试，不许说成判死
       var 可重试 = !!投['可重试'];
-      if (可重试) 结局 = '<div class="pool-retry" title="' + escAttr(String(投['原因']) + '（改了话术下一轮会自动再试）') + '">上次没投出去：' + escAttr(String(投['原因'])) + '</div>';
+      if (可重试) 结局 = '<div class="pool-retry" title="' + escAttr(String(投['原因']) + '（这一刻投不成，下一轮会自动再试）') + '">上次没投出去：' + escAttr(String(投['原因'])) + '</div>';
       else 结局 = '<div class="pool-fail" title="' + escAttr(String(投['原因'])) + '">投不出：' + escAttr(String(投['原因'])) + '</div>';
     }
     var 选s = POOL_STATUS.map(function (p) {

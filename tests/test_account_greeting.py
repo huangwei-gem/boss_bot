@@ -375,3 +375,108 @@ class GreetingUiLockTest(unittest.TestCase):
     def test_岗位弹窗不再预填模板(self):
         self.assertNotIn("greeting_message:defaultGreeting", self.html)
         self.assertNotIn("|| defaultGreeting", self.html)
+
+
+class 会话页直落结算Test(unittest.TestCase):
+    """等登录时新发现的第三种形状（2026-10-30 账号2 勾投递线上现测）：
+
+    点完「立即沟通」既没出聊天抽屉、也没弹「已向BOSS发送」，这一页自己跳进了
+    `https://www.zhipin.com/web/geek/chat?id=…&jobId=…`。旧判据只认前两种形状，
+    于是红字写成「页面已跳走且没有聊天元素」——可那条 URL 本身就是一个刚建立的
+    会话，现场 dump 里还数出「隐藏模板输入框=1 个」（会话页正在挂载）。
+    记成失败会让下一轮对同一个 HR 再点一次，所以这里就地结算。
+    """
+
+    会话页 = "https://www.zhipin.com/web/geek/chat?id=fc69884b886208df0HB7&jobId=891a8"
+    本公司 = "朔珩咨询"
+    顶栏 = "陈女士 朔珩咨询 HR 更多"
+
+    def _引擎(self):
+        eng = _engine()
+        self.标记, self.落库 = [], []
+        eng._mark_chatted = lambda job: self.标记.append(job.get("company"))
+        eng._record_sent_now = lambda job: self.落库.append(job.get("_auto_greet_note"))
+        return eng
+
+    def _页(self, bubble, 元素=None, url=None):
+        页 = FakePage(bubble=bubble, elements=元素 or {})
+        页.url = url or self.会话页
+        return 页
+
+    def test_会话里已有本号那句就不重发(self):
+        ours = "你好，我对这个岗位很感兴趣"
+        eng = self._引擎()
+        页 = self._页({"chat_page": True, "total": 2, "mine": 1, "text": ours,
+                      "head": self.顶栏})
+        job = {"company": self.本公司}
+        self.assertEqual(eng._会话页直落结算(页, job, ours), (True, ""))
+        self.assertIn("未重复发送", job["_auto_greet_note"])
+        self.assertEqual(self.标记, [self.本公司], "算送达就得按 已沟通 落账")
+        self.assertEqual(len(self.落库), 1)
+
+    def test_会话是空的就把本号那句发进去(self):
+        ours = "你好，我对这个岗位很感兴趣"
+        inp, send = FakeEle("input"), FakeEle("send")
+        eng = self._引擎()
+        页 = self._页({"chat_page": True, "total": 0, "mine": 0, "text": "",
+                      "head": self.顶栏},
+                      {"#chat-input": inp, ".btn-send": send})
+        job = {"company": self.本公司}
+        self.assertEqual(eng._会话页直落结算(页, job, ours), (True, ""))
+        self.assertEqual(inp.typed, [ours])
+        self.assertIn("已发进这个会话", job["_auto_greet_note"])
+
+    def test_顶栏对不上公司就不认领(self):
+        """认错人比这一单没投严重得多：不能把本号招呼语发给别家 HR，
+        也不能因为"进了个会话"就记成功。"""
+        ours = "你好，我对这个岗位很感兴趣"
+        inp = FakeEle("input")
+        eng = self._引擎()
+        页 = self._页({"chat_page": True, "total": 1, "mine": 0, "text": "",
+                      "head": "王女士 别家信息科技 HR 更多"},
+                      {"#chat-input": inp})
+        self.assertIsNone(eng._会话页直落结算(页, {"company": self.本公司}, ours))
+        self.assertEqual(inp.typed, [], "顶栏没对上还打字，就是把话发给了别家")
+        self.assertEqual(self.标记, [], "没证实送达就不许记 已沟通")
+        self.assertEqual(self.落库, [])
+
+    def test_读不出会话形状就不认领(self):
+        """URL 像会话页但页面还没渲染出会话：宁可让原来的失败归因照实报红。"""
+        eng = self._引擎()
+        页 = self._页({"chat_page": False, "total": 0, "mine": 0, "text": ""})
+        self.assertIsNone(eng._会话页直落结算(页, {"company": self.本公司}, "你好"))
+        self.assertEqual(self.标记, [])
+        self.assertEqual(self.落库, [])
+
+    def test_还在搜索页就不走这一支(self):
+        """没跳进会话时不许去等会话——那会把每一单的失败归因拖长，
+        抽屉真没出那一族（额度/风控）的计数还得照旧走。"""
+        跑过 = []
+        eng = self._引擎()
+        eng._wait_chat_open = lambda instance: (跑过.append(1), (None, {}))[1]
+        页 = self._页({"chat_page": True, "total": 1, "mine": 1, "text": "你好"},
+                      url="https://www.zhipin.com/web/geek/job-recommend")
+        self.assertIsNone(eng._会话页直落结算(页, {"company": self.本公司}, "你好"))
+        self.assertEqual(跑过, [], "还在搜索页就去等会话，等于替抽屉失败续命")
+
+    def test_无弹窗那一支接上了会话页结算(self):
+        import inspect
+
+        from boss_bot.greet_engine import GreetEngine
+        源 = inspect.getsource(GreetEngine._auto_greet_path)
+        self.assertIn("return self._会话页直落结算(instance, job, greeting)", 源,
+                      "弹窗没出现就直接回 None，会话页那种形状永远没人结算")
+        # 弹窗那条老路一个字没动：还是同一份 followup、同一份落账
+        self.assertIn("self._auto_greet_followup(instance, greeting, dialog, job)", 源)
+
+    def test_没有弹窗可点时补发腿照样走得通(self):
+        """_auto_greet_followup 以前第一行就要 pick_continue_btn(dialog)，
+        会话页那一路没有「继续沟通」可点，得能跳过点击直接核对。"""
+        ours = "你好，我对这个岗位很感兴趣"
+        btn = FakeEle("继续沟通")
+        eng = _engine()
+        页 = FakePage(bubble={"chat_page": True, "total": 2, "mine": 1, "text": ours,
+                             "head": self.顶栏},
+                     elements={"text=继续沟通": btn})
+        self.assertEqual(eng._auto_greet_followup(页, ours, None), "matched")
+        self.assertEqual(btn.clicked, 0, "dialog=None 还去点按钮，就是拿不存在的东西当凭据")

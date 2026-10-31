@@ -374,6 +374,85 @@ class 勾选投递Test:
         loop._greet_engine.send_greeting.assert_not_called()
         assert loop._pool.取(编号)["status"] == 状态已选, "投不成要把勾留着，别偷偷取消"
 
+    def test_BOSS说早有会话的那行判成不投不再重开详情页(self, tmp_path):
+        """「继续沟通」不是暂时投不成：这一单在 BOSS 侧已经有了，重试多少次同一个答案。
+
+        10-31 现账：号2 勾的 5 行里 4 行是这一类，池子把它们留在「已勾待投」，
+        今天 70 次跳过有 50 次（71.4%）就是这么烧出来的——每轮都重开一次岗位详情页，
+        而打开详情页正是风控最集中那一步。
+        """
+        loop = _loop(tmp_path)
+        loop._greet_engine.greet_cooldown_left.return_value = 0
+        loop._greet_engine._is_already_chatted.return_value = False
+        loop._greet_engine._greeting_for.return_value = ("话术", "AI 现编")
+        loop._greet_engine.send_greeting.return_value = False
+        loop._greet_engine.最近一次跳过原因.return_value = "该岗位之前已投递过（继续沟通）"
+        loop._capture_jobs([岗位(1)])
+        编号 = loop._pool.列表()[0]["id"]
+        loop._pool.标状态([编号], 状态已选)
+        assert loop._drain_apply_queue() == 0
+        行 = loop._pool.取(编号)
+        assert 行["status"] == 状态不投, 行["status"]
+        assert 行["投递"]["可重试"] is False and 行["投递"]["原因"] == "该岗位之前已投递过（继续沟通）"
+        assert "不再重投" in (行["勾选"]["动作"]), 行["勾选"]
+        assert loop._pool.列表(状态=状态已选) == [], "判完还留在队列＝下一轮再点一次同一张详情页"
+        # 放回可重试 只放话术那一类，这一行不许被偷偷放回队列
+        assert loop._pool.放回可重试()[0] == 0
+
+    def test_腿上的毛病要留在队列里并且把真因写出来(self, tmp_path):
+        """页面加载失败是"这一刻投不成"，不是这一单的判决；红字要写因，不许写「详见记录」。"""
+        loop = _loop(tmp_path)
+        loop._greet_engine.greet_cooldown_left.return_value = 0
+        loop._greet_engine._is_already_chatted.return_value = False
+        loop._greet_engine._greeting_for.return_value = ("话术", "AI 现编")
+        loop._greet_engine.send_greeting.return_value = False
+        loop._greet_engine.最近一次跳过原因.return_value = "页面加载失败"
+        loop._capture_jobs([岗位(1)])
+        编号 = loop._pool.列表()[0]["id"]
+        loop._pool.标状态([编号], 状态已选)
+        loop._drain_apply_queue()
+        行 = loop._pool.取(编号)
+        assert 行["status"] == 状态已选, "判成不投就成了『改了还是不投』那种假死"
+        assert 行["投递"]["原因"] == "页面加载失败", 行["投递"]
+        assert 行["投递"]["可重试"] is True
+        assert 是可重试的失败(行["投递"]) is True
+
+    def test_投成的那行不许留可重试(self, tmp_path):
+        loop = _loop(tmp_path)
+        loop._greet_engine.greet_cooldown_left.return_value = 0
+        loop._greet_engine._is_already_chatted.return_value = False
+        loop._greet_engine._greeting_for.return_value = ("话术", "AI 现编")
+        loop._greet_engine.send_greeting.return_value = True
+        loop._greet_engine.最近一次跳过原因.return_value = ""
+        loop._capture_jobs([岗位(1)])
+        编号 = loop._pool.列表()[0]["id"]
+        loop._pool.标状态([编号], 状态已选)
+        assert loop._drain_apply_queue() == 1
+        投 = loop._pool.取(编号)["投递"]
+        assert 投["成"] is True and set(投) == {"成", "时间"}, 投
+
+    def test_跳过原因四档只有永久那两种判永久(self):
+        from boss_bot.greet_engine import (CHAT_REDIRECT_REASON, OFFLINE_JOB_REASON,
+                                           PERMANENT_SKIP_REASONS, 是永久不投原因)
+        assert CHAT_REDIRECT_REASON in PERMANENT_SKIP_REASONS and OFFLINE_JOB_REASON in PERMANENT_SKIP_REASONS, \
+            "原因串在两份地方各写一遍——归因那边改了这里不会跟着改"
+        assert 是永久不投原因(CHAT_REDIRECT_REASON + "｜岗位名 数据分析师") is True, \
+            "带现场尾巴的成因判不出来，那一行就会永远留在队列里"
+        assert 是永久不投原因("该岗位之前已投递过（继续沟通）") is True
+        assert 是永久不投原因("页面加载失败") is False
+        assert 是永久不投原因("") is False and 是永久不投原因(None) is False
+
+    def test_继续沟通那支先标已沟通再交原因(self):
+        """标进去重库才不会被抓取腿再塞回池子（口径同 _explain_missing_chat_button 的 already）。"""
+        import inspect
+
+        from boss_bot.greet_engine import GreetEngine
+        源 = inspect.getsource(GreetEngine._apply_job_inner)
+        命中 = 源.index('if "继续沟通" in btn_text')
+        段 = 源[命中:命中 + 400]
+        assert "self._mark_chatted(job)" in 段, "没标库，下趟搜索还会把同一条岗位塞回池子"
+        assert 段.index("_mark_chatted") < 段.index("return False"), "先 return 就轮不到标库那一句"
+
     def test_勾了的要把他勾的这件事带到投递腿(self, tmp_path):
         """投递腿靠这个标记免掉二次判定（见 tests/test_ticked_job_applies_directly.py）。
 

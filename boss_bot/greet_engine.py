@@ -143,6 +143,7 @@ DISCONNECTED_REASON = "聊天页与浏览器连接已断开（标签页被关或
 NO_DRAWER_REASON = "点了「立即沟通」但聊天抽屉没在这个标签页里出现（URL 仍停在岗位详情页）"
 NO_DRAWER_STREAK_LIMIT = 3
 NO_DRAWER_COOLDOWN_SEC = 30 * 60
+
 # 光看"连续"不够：2026-10-07 白天 41 单卡在这条上，却是 失败,成功,失败,成功 交替来的
 # ——每夹一次成功就把连续计数清零，于是永远攒不到 3 次，整晚一单一单白试。
 # 窗口判据补上：这段时间里失败够多、成功又很少，就是账号层面的额度在限流。
@@ -175,6 +176,31 @@ NAV_FAIL_COOLDOWN_SEC = 15 * 60
 # 混进来会把还在出货的好腿冻 15 分钟。
 LEG_FAILURE_REASONS = ("页面加载失败", "页面断开且恢复失败",
                        "导航前页面断开且恢复失败", "浏览器未启动")
+
+# 算"这一单在 BOSS 侧已经没有可投的入口"的成因（勾选队列只对这几种判永久不投）。
+# 10-31 现账：今天 70 次跳过里 50 次（71.4%）是「该岗位之前已投递过（继续沟通）」，
+# 全落在号2 勾的那 5 行上。这几种留在「已勾待投」里，每一轮都会重开一次它们的
+# 岗位详情页——而打开详情页正是风控最集中那一步（README「安全验证到底为什么触发」
+# 记的历史账：跑起来的日子 112 次安全验证里 111 次出自这里；今天唯一那条风控
+# 归因落到的也是 job_detail）。重试多少次都是同一个答案，留着就是拿整页加载陪跑。
+# 其余成因（页面加载失败、抽屉没出来、验证码这一刻没过、当日额度见底、招呼语取不到）
+# 都是"暂时投不成"，必须留在队列里：判成永久会出现"改了配置还是不投"那种假死
+# （10-29 的『双一流』那行红字就是这笔账）。
+PERMANENT_SKIP_REASONS = (
+    "该岗位之前已投递过（继续沟通）",
+    CHAT_REDIRECT_REASON,
+    OFFLINE_JOB_REASON,
+)
+
+
+def 是永久不投原因(原因) -> bool:
+    """这个跳过成因算不算"再试也没用"。
+
+    按包含判而不是相等：CHAT_REDIRECT_REASON 那一条后面会带现场尾巴（岗位名、URL），
+    相等判会把最常见的一种漏掉，于是那一行永远留在队列里。
+    """
+    原因 = str(原因 or "")
+    return any(原 in 原因 for 原 in PERMANENT_SKIP_REASONS)
 
 
 def drawer_give_up_reason(times: int) -> str:
@@ -1864,6 +1890,8 @@ class GreetEngine:
         # 统计
         self.applied_count = 0
         self.skipped_count = 0
+        # 上一次 send_greeting 判失败的成因原文（勾选队列要按它分能不能重试）
+        self._最近跳过原因 = ""
         self.total_jobs = 0
         # 连续"点了沟通没出抽屉"的次数与冷却截止：BOSS 当日沟通额度用完后
         # 这个失败会一直重复，不停手就是整夜每 7 分钟白跑一趟
@@ -2369,6 +2397,7 @@ class GreetEngine:
         """
         job_name = job_info.get('job_name', '')
         job_url = job_info.get('url', '')
+        self._最近跳过原因 = ""
         self._log("DEBUG", f"send_greeting 被调用: job={job_name}, url={job_url[:60]}, running={self.running}")
         
         if not self.running:
@@ -2394,6 +2423,7 @@ class GreetEngine:
                     )
             else:
                 self.skipped_count += 1
+                self._最近跳过原因 = fail_reason or ""
                 self._log("WARN", f"⏭️ 跳过: {job_name}（原因: {fail_reason}）")
                 # 坏在腿上（页面导航不动、句柄断开、浏览器没了）的这几条要进熔断账：
                 # 每一个 return 现场各记各的，就会有现场忘记——10-16 账号2 句柄死了
@@ -2409,6 +2439,7 @@ class GreetEngine:
         except Exception as e:
             self._log("WARN", f"发送打招呼异常: {e}")
             self.skipped_count += 1
+            self._最近跳过原因 = f"发送异常: {type(e).__name__}"
             self._emit_greet_event(job_info, "error", skip_reason=f"发送异常: {e}")
             self._report_progress()
             self._record_greet(job_info, is_skipped=True, skip_reason=f"发送异常: {e}")
@@ -3058,6 +3089,17 @@ class GreetEngine:
             return ""
         return self._greet_cooldown_reason
 
+    def 最近一次跳过原因(self) -> str:
+        """上一次 send_greeting 判失败时的成因原文。
+
+        为什么要单独取：send_greeting 只能回 True/False，而勾选队列要分"这一刻
+        投不成"和"这一单根本投不出去"两档——把成因写成人话的那一步在 _apply_job
+        里，队列自己再猜一遍就会猜歪（今天池里那 5 行红字写的就是
+        「点了沟通但没成（详见打招呼记录）」，等于没写）。
+        每次 send_greeting 开头清零，取到的只会是这一次那一单的成因。
+        """
+        return getattr(self, "_最近跳过原因", "")
+
     def _check_nav_fail(self, now=None) -> str:
         """窗口里页面坏掉够多、这段时间又一单没投进去 → 是腿坏了，不是这个岗位。"""
         now = now or time.time()
@@ -3288,6 +3330,10 @@ class GreetEngine:
 
             btn_text = chat_btn.text
             if "继续沟通" in btn_text:
+                # BOSS 自己说这一单早就沟通过了：一并标进已沟通库，抓取腿下趟就不
+                # 会再把它塞回池子等他勾（口径同 _explain_missing_chat_button 里
+                # already 那一支；他要真打算重投，把这条从库里撤掉就行）。
+                self._mark_chatted(job)
                 self._log("INFO", "该岗位之前已投递过（继续沟通），跳过")
                 return False, "该岗位之前已投递过（继续沟通）"
 
@@ -4063,7 +4109,7 @@ class GreetEngine:
         """
         dialog = self._auto_greet_dialog(instance)
         if not dialog:
-            return None
+            return self._会话页直落结算(instance, job, greeting)
         self._log("WARN", f"BOSS 自动发出招呼语（第二种机制）| 弹窗class="
                           f"{dialog.get('cls', '')} | 按钮={dialog.get('buttons', [])}")
         self._log("WARN", f"  弹窗文本: {str(dialog.get('text', ''))[:120]}")
@@ -4084,6 +4130,46 @@ class GreetEngine:
             "会话顶栏与岗位公司不符，本号招呼语没补发（怕发错人）" if outcome == "mismatch"
             else "平台已自动发出招呼语，未能进会话核对文案（建议抽查）")
         self._record_sent_now(job)
+        return True, ""
+
+    def _会话页直落结算(self, instance, job, greeting):
+        """点完「立即沟通」既没出抽屉、也没弹「已自动发送」，而是这一页自己跳进了会话。
+
+        2026-10-30 线上现测（账号2 勾投递）：两个不同岗位各跳进一个新的
+        `https://www.zhipin.com/web/geek/chat?id=…&jobId=…`，红字写的是
+        「页面已跳走且没有聊天元素」——可 URL 本身就是一个刚建立的会话，
+        现场dump 还数出「隐藏模板输入框=1 个」（那一刻会话页正在挂载）。
+        判据原来只认抽屉、弹窗两种形状，这一种就永远算失败：池子里那行标成
+        投递失败，下一轮还可能对同一个 HR 再点一次。
+
+        这里不新起判据：进不进得去会话用 `chat_is_open` 那一份，认人还是
+        `header_matches_company` 那一份，等渲染还是 `_wait_chat_open` 那一份。
+        进不去（或顶栏对不上公司）就回 None，让原来的失败归因照实报——
+        宁可红，不许把没证实的事记成投了。
+        """
+        try:
+            url = instance.url or ""
+        except Exception:
+            return None
+        if "/web/geek/chat" not in url:
+            return None
+        outcome = self._auto_greet_followup(instance, greeting, None, job)
+        if outcome == "mismatch":
+            self._log("WARN", "页面跳进了会话，但顶栏对不上这个岗位的公司，"
+                              "这一单不算送达（怕发错人）")
+            return None
+        if outcome not in ("matched", "sent"):
+            self._log("WARN", f"页面跳进了会话地址（{url[:60]}），"
+                              f"但没能核对出会话形状，这一单不算送达")
+            return None
+        job["_actual_greeting_sent"] = job.get("_actual_greeting_sent") or greeting
+        job["_auto_greet_note"] = (
+            "点完立即沟通直接进了会话页，会话里已有本号那句（未重复发送）"
+            if outcome == "matched"
+            else "点完立即沟通直接进了会话页，本号招呼语已发进这个会话")
+        self._mark_chatted(job)
+        self._record_sent_now(job)
+        self._log("INFO", "「立即沟通」后页面自己跳进会话（无抽屉无弹窗），就地结算为已投递")
         return True, ""
 
     def _read_last_outgoing(self, tab) -> dict:
@@ -4137,29 +4223,34 @@ class GreetEngine:
         none=进不去会话，什么都没发；mismatch=进去了但不是这个公司的会话，不敢发。
         盲发会对着搜索页打字，所以读不到会话就收手；顶栏对不上公司也收手——
         把 AI 招呼语发给别家的 HR 比发一句固定招呼语严重得多。
-        """
-        btn_text = pick_continue_btn(dialog)
-        if not btn_text:
-            self._log("WARN", "自动发送弹窗里没有「继续沟通」，无法进入会话核对")
-            return "none"
 
-        try:
-            btn = instance.ele(f"text={btn_text}", timeout=3)
-            if not btn:
-                # text= 命中的可能是包着按钮的那层文本，按类名再要一次
-                btn = instance.ele(".btn-sure", timeout=2)
-            if not btn:
-                self._log("WARN", f"弹窗里的「{btn_text}」按钮没找到")
+        `dialog=None` 是第三种形状：点完「立即沟通」既没出抽屉、也没弹窗，
+        这一页自己跳进了会话（10-30 账号2 勾投递实测）。那种没有「继续沟通」
+        可点，直接从"等会话渲染出来"那一步起走——认人、补发的判据都不另起一份。
+        """
+        if dialog is not None:
+            btn_text = pick_continue_btn(dialog)
+            if not btn_text:
+                self._log("WARN", "自动发送弹窗里没有「继续沟通」，无法进入会话核对")
                 return "none"
-            btn.click()
-        except Exception as e:
-            self._log("WARN", f"点击「{btn_text}」失败: {e}")
-            return "none"
+
+            try:
+                btn = instance.ele(f"text={btn_text}", timeout=3)
+                if not btn:
+                    # text= 命中的可能是包着按钮的那层文本，按类名再要一次
+                    btn = instance.ele(".btn-sure", timeout=2)
+                if not btn:
+                    self._log("WARN", f"弹窗里的「{btn_text}」按钮没找到")
+                    return "none"
+                btn.click()
+            except Exception as e:
+                self._log("WARN", f"点击「{btn_text}」失败: {e}")
+                return "none"
 
         tab, read = self._wait_chat_open(instance)
         if tab is None:
-            self._log("WARN", f"点了「继续沟通」也进不去会话"
-                              f"（{CHAT_OPEN_POLLS} 次 × {CHAT_OPEN_POLL_SEC:.0f}s），不盲发")
+            self._log("WARN", f"等 {CHAT_OPEN_POLLS} 次 × {CHAT_OPEN_POLL_SEC:.0f}s 也没读出会话形状，"
+                              f"不盲发")
             return "none"
         sent_text = read.get("text", "")
         if auto_greet_matches(sent_text, greeting):

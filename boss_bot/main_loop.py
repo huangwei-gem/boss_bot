@@ -2354,7 +2354,7 @@ class UnifiedBotLoop:
         动作留在这里，一轮里按冷却/额度自己收手。
         """
         from boss_bot.job_pool import 岗位行成抓取, 状态已投, 状态不投, 状态已选
-        from boss_bot.greet_engine import 勾选标记
+        from boss_bot.greet_engine import 勾选标记, 是永久不投原因
         池 = self._job_pool()
         待投 = 池.列表(状态=状态已选)
         if not 待投:
@@ -2395,11 +2395,24 @@ class UnifiedBotLoop:
                              f"{job.get('job_name', '')} @ {job.get('company', '')}"):
                 break
             成否 = self._greet_engine.send_greeting(job)
-            池.改(行.get("id", ""),
-                 status=状态已投 if 成否 else 状态已选,
-                 投递={"成": bool(成否), "时间": time.time(),
-                       "原因": "" if 成否 else "点了沟通但没成（详见打招呼记录）"},
-                 勾选={**机器痕, "动作": "机器投出去了" if 成否 else "机器试投没成"})
+            因 = self._greet_engine.最近一次跳过原因()
+            if 成否:
+                状态, 动作 = 状态已投, "机器投出去了"
+                递 = {"成": True, "时间": time.time()}
+            elif 是永久不投原因(因):
+                # BOSS 明说这一单早就有了（继续沟通）/ 岗位已下线：留在「已勾待投」里
+                # 下一轮又会为它开一次岗位详情页，今天 70 次跳过有 50 次就是这么烧出来
+                # 的。判成不投、红字写清是哪一种；他要是想重投，把这行改回新入库即可。
+                状态, 动作 = 状态不投, "机器判 BOSS 侧已有会话或岗位已下线，不再重投"
+                递 = {"成": False, "原因": 因, "时间": time.time(), "可重试": False}
+            else:
+                # 腿上的毛病（加载失败、抽屉没出、验证码没过、额度见底）不是这一单的
+                # 判决，留在队列里下一轮再试；原因照实写，别再印成「详见打招呼记录」
+                状态, 动作 = 状态已选, "机器试投没成，留在队列里下一轮再试"
+                递 = {"成": False, "时间": time.time(), "可重试": True,
+                      "原因": 因 or "点了沟通但没成（详见打招呼记录）"}
+            池.改(行.get("id", ""), status=状态, 投递=递,
+                 勾选={**机器痕, "动作": 动作})
             if 成否:
                 投了 += 1
                 self._stats_dict["greet_applied"] += 1
@@ -2797,6 +2810,44 @@ class UnifiedBotLoop:
         if self._chat_handler is not None and chat_page is not None:
             self._chat_handler.browser = chat_page
             self._chat_handler.page = chat_page.page
+        self._会话页空壳就换一张()
+
+    # 扔一张会话页重开的冷却：这张页一直起不来的时候，每轮都重开等于拿整页加载赌风控
+    会话页重开冷却秒 = 5 * 60
+
+    def _会话页空壳就换一张(self):
+        """空壳页在这一页上刷不回来，只能换新的一张（判据见 page_handler.会话页挂载了吗）。
+
+        10-31 两次现测要分开记：上午 11 点前，同一浏览器 `new_tab(会话页)` 4 秒读到
+        侧栏 1 / 会话行 40，而那张活着的旧页 reload 完还是 34 个 DOM 节点的壳——
+        所以动手的是"换一张"，不是"再刷一次"。午后装完判据再数：**扔页 15 次，
+        确认挂载 0 次**，新页同样是壳；12:21 有过一次读回侧栏 1 行。
+        也就是说这一条只是"再给一次机会"，不是保证——真卡点在 BOSS 那一边。
+        扔页有冷却，就是因为每一次扔页都是一发整页加载。
+        """
+        手 = self._chat_handler
+        if 手 is None or 手.会话页挂载了吗() is not False:
+            return
+        现在 = time.time()
+        if 现在 - getattr(self, "_会话页重开于", 0) < self.会话页重开冷却秒:
+            # 这条判据一分钟被叫好几次（回复轮、跟进轮、面板体检都走这条路），
+            # 每次都 warn 就是今天那 276 条重复日志——冷却这件事 10 分钟说一次就够
+            if 现在 - getattr(self, "_空壳挡于说于", 0) >= 10 * 60:
+                self._空壳挡于说于 = 现在
+                self._log("WARN", "会话页仍是空壳（距上次扔页不到 %d 秒，先不再扔页）"
+                          % self.会话页重开冷却秒)
+            return
+        self._会话页重开于 = 现在
+        self._log("WARN", "会话页是空壳（侧栏/会话行/搜索框一个都没有），扔掉这张换新的一页")
+        try:
+            新页 = self.browser_manager.重开会话标签页()
+        except Exception as e:
+            self._log("WARN", "会话页重开没做成: %s: %s"
+                      % (type(e).__name__, str(e)[:70]))
+            return
+        if 新页 is not None:
+            手.browser = 新页
+            手.page = 新页.page
 
     def _run_reply_round(self):
         """执行一轮回复任务：检查未读消息并回复。"""
@@ -2817,33 +2868,39 @@ class UnifiedBotLoop:
 
             # 导航到聊天页面（使用聊天标签页）
             self._log("DEBUG", "正在导航到聊天页面...")
-            self._chat_handler.go_to_chat()
-            self._log("DEBUG", "聊天页面导航完成")
+            会话页可用 = self._chat_handler.go_to_chat() is not False
+            if not 会话页可用:
+                self._log("WARN", "会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、"
+                                  "重开仍没挂载）：不读未读、不从存档补跟进、"
+                                  "也不动置顶标记——「没读到」不许印成「0 个未读」")
+                unread_chats, candidates, owed_n = [], [], 0
+            else:
+                self._log("DEBUG", "聊天页面导航完成")
 
-            # 获取未读聊天列表：默认只滚到列表靠前那 ~120 行（BOSS 按活跃时间排序，
-            # 新消息基本都在前面）；每 5 分钟另有一次滚到底的深扫，捞那些排在后面的红点
-            deep = time.time() >= self._deep_sweep_at
-            if deep:
-                self._deep_sweep_at = time.time() + self.DEEP_SWEEP_SECONDS
-            self._log("DEBUG", "正在获取未读聊天列表...（深扫=%s）" % ("是" if deep else "否"))
-            unread_chats = self._chat_handler.get_unread_chats(max_rounds=30 if deep else 12)
-            self._log("DEBUG", f"获取到未读会话数: {len(unread_chats)}")
+                # 获取未读聊天列表：默认只滚到列表靠前那 ~120 行（BOSS 按活跃时间排序，
+                # 新消息基本都在前面）；每 5 分钟另有一次滚到底的深扫，捞那些排在后面的红点
+                deep = time.time() >= self._deep_sweep_at
+                if deep:
+                    self._deep_sweep_at = time.time() + self.DEEP_SWEEP_SECONDS
+                self._log("DEBUG", "正在获取未读聊天列表...（深扫=%s）" % ("是" if deep else "否"))
+                unread_chats = self._chat_handler.get_unread_chats(max_rounds=30 if deep else 12)
+                self._log("DEBUG", f"获取到未读会话数: {len(unread_chats)}")
 
-            # 置顶标记先落盘（他取消置顶的那一路也会跟着清掉）：欠回复、跟进、
-            # 补发简历和两个批量清剿工具读的是存档、不看侧栏，不落盘它们不知道谁被置顶。
-            # 一并交出这一趟滚过的全部行——他自己聊的那一路常常没有红点，
-            # 只给红点那一小撮就永远认不出她（2026-10-17 那个每三轮撤一次的空窗）
-            self._登记置顶(unread_chats,
-                           getattr(self._chat_handler, "seen_chat_rows", None))
+                # 置顶标记先落盘（他取消置顶的那一路也会跟着清掉）：欠回复、跟进、
+                # 补发简历和两个批量清剿工具读的是存档、不看侧栏，不落盘它们不知道谁被置顶。
+                # 一并交出这一趟滚过的全部行——他自己聊的那一路常常没有红点，
+                # 只给红点那一小撮就永远认不出她（2026-10-17 那个每三轮撤一次的空窗）
+                self._登记置顶(unread_chats,
+                               getattr(self._chat_handler, "seen_chat_rows", None))
 
-            # 红点只是其中一条腿，另外一条腿在本地存档：
-            # 启动全量同步把每个会话点开读过一遍，红点是我们自己清掉的，
-            # 侧栏又是虚拟列表（一屏只渲染 ~20 行），真提问经常根本进不了候选。
-            candidates = list(unread_chats) + self._archive_owed_chats(unread_chats)
-            owed_n = len(candidates) - len(unread_chats)
-            if owed_n:
-                self._log("INFO", f"另外从存档补了 {owed_n} 个欠着的会话"
-                                  f"（红点已被启动全量同步清掉）")
+                # 红点只是其中一条腿，另外一条腿在本地存档：
+                # 启动全量同步把每个会话点开读过一遍，红点是我们自己清掉的，
+                # 侧栏又是虚拟列表（一屏只渲染 ~20 行），真提问经常根本进不了候选。
+                candidates = list(unread_chats) + self._archive_owed_chats(unread_chats)
+                owed_n = len(candidates) - len(unread_chats)
+                if owed_n:
+                    self._log("INFO", f"另外从存档补了 {owed_n} 个欠着的会话"
+                                      f"（红点已被启动全量同步清掉）")
 
             # 「我置顶的岗位你就不要动了，因为那我打算单独聊」（2026-10-08）：
             # 置顶是他亲手标的"这一路我自己谈"，机器连点开都不必

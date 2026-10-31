@@ -16,27 +16,15 @@
 
 这族东西最坏的地方不是红，是**红得像是产品的错、或者绿得像是测过了**：照着"界面筛不到"
 去改产品，而真相是测试没读到东西。所以门要长在代码里，并且每条都配一个反向哨兵——
-拿改动前那份（HEAD）当真红样本，证明门不是摆设（HEAD 里压根没这段代码的，改用现文变异）。
+证明门不是摆设。哨兵样本现造（2026-10-31 起不再拿 `git show HEAD:` 当样本：改动一提交，
+HEAD 就成了"修好的那份"，六条哨兵当天集体转红，红的是哨兵自己过期，不是产品又坏了）。
 """
 import ast
 import re
-import subprocess
 from pathlib import Path
-
-import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 实测 = sorted((ROOT / "tests").glob("e2e_*.py"))
-
-
-def 历史(文件: str) -> str:
-    """HEAD 里那份（本轮改动之前），只用来证明门会红。"""
-    r = subprocess.run(["git", "-C", str(ROOT), "show", "HEAD:tests/" + 文件],
-                       capture_output=True, text=True, encoding="utf-8")
-    if r.returncode != 0:
-        pytest.skip("拿不到 HEAD 里那份（不在 git 仓库里跑）")
-    return r.stdout
-
 
 def 裸IIFE(文本: str):
     """run_js 的整段代码直接以 `(function…` 或 `!function…` 开头——返回值会被丢掉。
@@ -81,18 +69,23 @@ class Test实测脚本不许把读不到印成结果:
         报 = {k: v for k, v in 报.items() if v}
         assert not 报, f"这些脚本的 run_js 拿不到返回值（DrissionPage 会丢）：{报}"
 
-    def test_这条对改动前那份真的会红(self):
-        assert 裸IIFE(历史("e2e_refusal_labels_ui.py")), \
-            "改之前那版就是 `(function(){…})()` 直接交出去，门抓不到了"
+    def test_这条对那种写法真的会红(self):
+        """现造 10-20 现场那两种写法：坏的必须点名，好的不许误伤。"""
+        坏 = 'got = page.run_js("""\n    (function(){ return 1; })()\n""")'
+        assert 裸IIFE(坏), "抓不到 `(function(){…})()` 直接交出去——这条门是摆设"
+        好 = 'got = page.run_js("""\n    var r = (function(){ return 1; })(); return r;\n""")'
+        assert not 裸IIFE(好), "把「外面那句 return 才是取值」的合法写法也点名——会天天假红"
 
     def test_没有为读不到的JS现编返回值(self):
         报 = {p.name: 编造兜底(p.read_text(encoding="utf-8")) for p in 实测}
         报 = {k: v for k, v in 报.items() if v}
         assert not 报, f"这些脚本用 or 兜了一个假返回值：{报}"
 
-    def test_这条对改动前那份真的会红2(self):
-        assert 编造兜底(历史("e2e_refusal_labels_ui.py")), \
-            "改之前那版用 `or \"[0, 0, []]\"` 把 None 兜成了「页面自算 0 组」"
+    def test_这条对那种写法真的会红2(self):
+        坏 = 'got = page.run_js(JS) or "[0, 0, []]"'
+        assert 编造兜底(坏), "抓不到 `or \"[0, 0, []]\"` 这种把 None 兜成「页面自算 0 组」的写法"
+        好 = 'got = page.run_js(JS)\n    if got is None:\n        raise AssertionError("JS 没读到")'
+        assert not 编造兜底(好), "把「读不到就抛」也点名——这条门会假红"
 
 
 class Test实测起的临时面板要接住句柄:
@@ -119,9 +112,11 @@ class Test实测起的临时面板要接住句柄:
         assert not {k: v for k, v in 报.items() if v}, \
             f"这些脚本起了面板却没接句柄，跑完不会停：{ {k: v for k, v in 报.items() if v} }"
 
-    def test_这条对改动前那份真的会红(self):
-        assert self._丢了句柄(历史("e2e_contact_ledger_ui.py")), \
-            "改之前那行是 `E.start_server(tmp, PORT)` 直接当语句，门抓不到就等于没修"
+    def test_这条对那种写法真的会红(self):
+        坏 = "        E.start_server(tmp, PORT)"
+        assert self._丢了句柄(坏), "抓不到「调用当语句、句柄没接」这一行——跑一趟留一个 Flask 实例"
+        好 = "        proc = E.start_server(tmp, PORT)"
+        assert not self._丢了句柄(好), "接了句柄的写法也被点名——这条门会假红"
 
 
 class Test数据范围选择器要唯一:
@@ -140,9 +135,11 @@ class Test数据范围选择器要唯一:
                 报[p.name] = 坏
         assert not 报, f"这些行取的是全局 .scope-chip，会连「无头/有头」和判分复盘那组一起数：{报}"
 
-    def test_这条对改动前那份真的会红(self):
-        assert 全局chip(历史("e2e_account_scope_ui.py")), \
-            "改之前那版全局取 chip，实测把「chip 3 个 / 期望 3 个」这种假红印了出来"
+    def test_这条对那种写法真的会红(self):
+        坏 = "var chips = document.querySelectorAll('.scope-chip');"
+        assert 全局chip(坏), "抓不到裸取全局 .scope-chip——会把「无头/有头」和判分复盘那组一起数"
+        好 = "var chips = document.querySelectorAll('#metricsScope [data-scope]');"
+        assert not 全局chip(好), "限定到数据范围那一组的写法也被点名——这条门会假红"
 
 
 class Test配置路径不许按值绑进面板:
@@ -156,12 +153,22 @@ class Test配置路径不许按值绑进面板:
     """
 
     def _按值绑定的名字(self, 文本: str):
-        """unified_config 里那几个路径常量被 import 成本模块名字，就是隐患。"""
-        名 = ("BOT_CONFIG_FILE", "USER_PROFILE_FILE", "OVERRIDES_FILE")
-        m = re.search(r"from boss_bot\.unified_config import \(([^)]*)\)", 文本, re.S)
-        if not m:
-            return []
-        绑 = [n for n in 名 if re.search(r"[\s,(]" + n + r"\s*[,\)]", m.group(1))]
+        """unified_config 里那几个路径常量被 import 成本模块名字，就是隐患。
+
+        10-31 补的两个洞（做哨兵样本时才暴露）：旧判据只认带括号的 import，
+        `from … import BOT_CONFIG_FILE` 那种单行写法一条不报；括号里最后一个名字
+        后面没有逗号，旧判据要的名字尾字符永远匹配不上它。改成用 ast 直接读绑进来的名字。
+        """
+        名 = {"BOT_CONFIG_FILE", "USER_PROFILE_FILE", "OVERRIDES_FILE"}
+        绑 = []
+        try:
+            树 = ast.parse(文本)
+        except SyntaxError:
+            树 = None
+        if 树 is not None:
+            for n in ast.walk(树):
+                if isinstance(n, ast.ImportFrom) and n.module == "boss_bot.unified_config":
+                    绑 += sorted(a.name for a in n.names if a.name in 名)
         直写 = re.findall(r"write_json_atomic\((?!uc\.)[A-Z_]*CONFIG_FILE", 文本)
         直读 = re.findall(r"open\((?!uc\.)[A-Z_]*(?:CONFIG|OVERRIDES|PROFILE)_FILE", 文本)
         return 绑 + 直写 + 直读
@@ -171,13 +178,20 @@ class Test配置路径不许按值绑进面板:
         坏 = self._按值绑定的名字(文本)
         assert not 坏, f"app.py 里这几个配置路径又变成按值绑定了（沙箱顶不掉它）：{坏}"
 
-    def test_这条对改动前那份真的会红(self):
-        r = subprocess.run(["git", "-C", str(ROOT), "show", "HEAD:flask-version/app.py"],
-                           capture_output=True, text=True, encoding="utf-8")
-        if r.returncode != 0:
-            pytest.skip("拿不到 HEAD 里那份 app.py")
-        assert self._按值绑定的名字(r.stdout), \
-            "改之前那版就是按值绑定 + 直接 open/write，门抓不到就等于没修"
+    def test_这条对那种写法真的会红(self):
+        坏 = ("from boss_bot.unified_config import (UnifiedConfig, BOT_CONFIG_FILE,\n"
+              "                                USER_PROFILE_FILE, OVERRIDES_FILE)\n"
+              "with open(BOT_CONFIG_FILE) as f:\n"
+              "    write_json_atomic(BOT_CONFIG_FILE, data)\n")
+        点名 = self._按值绑定的名字(坏)
+        assert len(点名) == 5, f"三个路径常量按值绑定 + 裸 open + 裸写应当全被点名，实际只有 {点名}"
+        单行 = "from boss_bot.unified_config import OVERRIDES_FILE\n"
+        assert self._按值绑定的名字(单行) == ["OVERRIDES_FILE"], \
+            "不带括号的 import 漏了——这条门只挡住了一半写法"
+        好 = ("from boss_bot.unified_config import (UnifiedConfig,)\n"
+              "with open(uc.BOT_CONFIG_FILE) as f:\n"
+              "    write_json_atomic(uc.BOT_CONFIG_FILE, data)\n")
+        assert not self._按值绑定的名字(好), f"走 uc. 现取的那份也被点名——这门会假红"
 
 
 class Test实测脚本不许打线上面板:
@@ -202,7 +216,7 @@ class Test实测脚本不许打线上面板:
         """
         写死 = re.findall(r'^BASE_URL\s*=\s*["\'][^"\']+["\']', 文本, re.M)
         硬拼 = [x.group(0) for x in re.finditer(
-            r'requests\.(post|put|delete)\(\s*"[^"]*(5\d{3}|面板端口)[^"]*"', 文本)]
+            r'requests\.(post|put|delete)\(\s*[fF]?["\'][^"\']*(5\d{3}|面板端口)[^"\']*["\']', 文本)]
         自算 = re.findall(r'os\.environ\.get\("BOSS_PANEL_PORT"\)\s*or\s*5\d{3}', 文本)
         return 写死 + 硬拼 + 自算
 
@@ -217,9 +231,24 @@ class Test实测脚本不许打线上面板:
                 报[相对] = 坏
         assert not 报, f"这些脚本会把目标写死成用户那台线上面板（红线：只在隔离实例试）：{报}"
 
-    def test_这条对改动前那份真的会红(self):
-        assert self._打线上面板的写请求(历史("e2e_api.py")), \
-            "改之前那版 BASE_URL 把目标直接写死成用户那台线上面板，所有 POST 都打在它上面"
+    def test_这条对那种写法真的会红(self):
+        """三种坏样子各现造一份：写死目标、拼端口、自算默认口。
+
+        样本里那个 5991 是**假端口**：这条哨兵要证的只是"写死一个 5 字头口"的形状
+        会被点名，不是线上面板现在听哪个口。写 5001 的话就等于在 unified_config
+        之外第二次印出那个数，`test_panel_port_source` 那把扫全树的尺子会当场红——
+        10-31 第一版就是拿真口造样本，红的是哨兵自己踩了另一条门。
+        """
+        坏 = ('BASE_URL = "http://127.0.0.1:5991"\n'
+              'requests.post("http://127.0.0.1:5991/api/rules", json=body)\n'
+              'requests.put(f"http://localhost:5991/api/ai", json=body)\n'
+              'PORT = os.environ.get("BOSS_PANEL_PORT") or 5991\n')
+        点名 = self._打线上面板的写请求(坏)
+        assert len(点名) == 4, f"四条都该拦下，实际只点名 {点名}"
+        好 = ('BASE_URL = ""\n'
+              'requests.post(f"{BASE_URL}{path}", json=body)\n')
+        assert not self._打线上面板的写请求(好), \
+            "沙箱那份（BASE_URL 初值是空串、跑起来现起隔离实例）被点名——这门会假红"
 
     def test_写请求的助手不许回落到线上面板(self):
         """三端一致性那套是"读线上、写沙箱"，所以它的 api_post 只准认 SANDBOX。"""

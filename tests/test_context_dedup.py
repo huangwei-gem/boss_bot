@@ -352,12 +352,29 @@ class 排重与上下文全库门Test:
         assert 我方无 > 0
 
     def test_同一句被回多次的历史账还在(self):
-        """这条是回归账，不是判据：数字变了说明存量被动过，要停下来问。"""
-        p = os.path.join(ROOT, "data", "reply_records.json")
-        if not os.path.exists(p):
+        """这条是回归账，不是判据：数字变了说明存量被动过，要停下来问。
+
+        10-31 改过一次口径：原来只读 `data/reply_records.json` 那一份，当天 11:40
+        跨天归档把 1460 条搬进 `data/archive/2026-10-30/`、活动文件清成 19 条
+        （设计如此，一条没丢），这条门就集体转红了——红的是拿"今天这一份"当历史基线，
+        不是存量被动过。所以这里读的是**活动文件 + 全部按天归档**合起来的那一份账。
+        """
+        路径s = [os.path.join(ROOT, "data", "reply_records.json")]
+        归档根 = os.path.join(ROOT, "data", "archive")
+        if os.path.isdir(归档根):
+            for 盒 in sorted(os.listdir(归档根)):
+                p = os.path.join(归档根, 盒, "reply_records.json")
+                if os.path.isfile(p):
+                    路径s.append(p)
+        记 = []
+        for p in 路径s:
+            try:
+                d = json.load(open(p, encoding="utf-8"))
+            except Exception:
+                continue
+            记 += d["records"] if isinstance(d, dict) else (d or [])
+        if not 记:
             pytest.skip("这份检出里没有回复记录")
-        d = json.load(open(p, encoding="utf-8"))
-        记 = d["records"] if isinstance(d, dict) else d
         组 = {}
         for r in 记:
             if not (r.get("reply_content") or "").strip() or r.get("is_skipped"):
@@ -365,5 +382,6 @@ class 排重与上下文全库门Test:
             句 = str(r.get("received_message") or "").strip()
             if 句:
                 组.setdefault((r.get("chat_name"), 句), []).append(r)
+        assert len(记) > 4000, "归档加活动文件只有 %d 条，说明有一盒归档不见了" % len(记)
         assert len([k for k, v in 组.items() if len(v) >= 2]) >= 40, \
             "重复回复的历史账对不上，说明这份数据不是我取证的那一份"

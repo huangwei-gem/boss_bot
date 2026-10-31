@@ -128,9 +128,21 @@ def test_点击后先探测再决定要不要固定等待():
 
 def test_自动发送结算路径与原逻辑同源():
     """抽出来的 _auto_greet_path 必须还是那三条出口：核对上/没核对上/没有弹窗，
-    少一条就会把"平台已替我们发出去"重新记成失败。"""
+    少一条就会把"平台已替我们发出去"重新记成失败。
+
+    2026-10-30 第三条换了住址：没有弹窗时不再直接 return None，而是先问一眼
+    「这一页是不是自己跳进会话了」（第三种形状）。所以"能交回原路径"这条判据
+    要打在 `_会话页直落结算` 的不认账出口上，而且必须排在写记录之前——
+    先记账再判断等于把没证实的单子记成投了。
+    """
     src = inspect.getsource(GreetEngine._auto_greet_path)
     assert "self._auto_greet_dialog(instance)" in src
     assert "self._auto_greet_followup(instance, greeting, dialog, job)" in src
     assert "self._record_sent_now(job)" in src
-    assert "return None" in src, "没有弹窗要交回原路径继续走"
+    assert "return self._会话页直落结算(instance, job, greeting)" in src, \
+        "没有弹窗那一支不再往下问会话页了，跳进会话的岗位会重新记成失败"
+
+    结算 = inspect.getsource(GreetEngine._会话页直落结算)
+    assert "return None" in 结算, "会话页结算没有「不肯认账」这一档了，只能盲记成功"
+    assert 结算.index("return None") < 结算.index("self._mark_chatted(job)"), \
+        "不认账的出口排到了写记录之后，等于先投了再问是不是"

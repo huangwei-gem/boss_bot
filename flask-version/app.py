@@ -2707,6 +2707,11 @@ def api_job_pool_batch():
     只改状态，不在这里点「立即沟通」：投递由打招呼线程排空（见
     UnifiedBotLoop._drain_apply_queue），HTTP 线程当场去开详情页会和抓取线程
     抢同一张搜索页。
+
+    「来源」是留痕的一部分（10-29 他定的口径④：勾了要留谁勾的、什么时候、勾成什么）。
+    界面那条按钮不传，落默认值「面板点击」；代他点的必须自己报名字——
+    「勾了就等于判过了」这条口径是按"谁勾的"成立的，机器勾的记成他勾的，
+    等于机器替他把免复核的闸门打开了。
     """
     try:
         from boss_bot.job_pool import 岗位池
@@ -2715,7 +2720,9 @@ def api_job_pool_batch():
         编号s = [str(x) for x in (体.get("ids") or []) if str(x).strip()]
         if not 编号s:
             return jsonify({"status": "error", "message": "没给 ids"}), 400
-        成, 话 = 池.标状态(编号s, str(体.get("status") or ""))
+        来源 = str(体.get("来源") or "").strip()
+        成, 话 = 池.标状态(编号s, str(体.get("status") or ""),
+                          {"来源": 来源} if 来源 else None)
         if not 成:
             return jsonify({"status": "error", "message": 话}), 400
         return jsonify({"status": "ok", "message": 话, "stats": 池.统计()})

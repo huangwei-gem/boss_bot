@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-29 21:54:44",
+  "updated_at": "2026-10-31 13:56:08",
   "results": {
     "https://apihub.agnes-ai.com/v1|agnes-2.5-flash|Agnes-2": {
       "name": "Agnes-2",
@@ -52,19 +52,6 @@
       "note": "",
       "checked_at": "2026-10-28 10:34:38",
       "index": 7
-    },
-    "https://developer.amd.com.cn/radeon/api/v1|DeepSeek-V4.1-Flash|AMD-DeepSeek-V4.1": {
-      "name": "AMD-DeepSeek-V4.1",
-      "model": "DeepSeek-V4.1-Flash",
-      "api_base": "https://developer.amd.com.cn/radeon/api/v1",
-      "status": "unavailable",
-      "latency_ms": 2617,
-      "reply": "",
-      "error": "Error code: 429 - {'detail': {'error': {'message': \"Model 'DeepSeek-V4.1-Flash' is at its concurrency limit (16); please retry later or use another model\", 'type': 'rate_limit_error', 'code': 'model_concurrency_rate_limit_exceeded'}}}",
-      "reason": "被限流（429，频率太高；稍后重测就会回来，不是 Key 的问题）",
-      "note": "",
-      "checked_at": "2026-10-28 10:34:43",
-      "index": 8
     },
     "https://developer.amd.com.cn/radeon/api/v1|GLM-5.3-Flash|AMD-GLM-5.3": {
       "name": "AMD-GLM-5.3",
@@ -157,20 +144,6 @@
       "checked_at": "2026-10-28 10:33:49",
       "index": 3
     },
-    "https://maas-api.unisound.com/v1|u2|云知声-U2": {
-      "name": "云知声-U2",
-      "model": "u2",
-      "api_base": "https://maas-api.unisound.com/v1",
-      "status": "unavailable",
-      "latency_ms": 0,
-      "reply": "",
-      "error": "请求超时（30s）",
-      "reason": "真实岗位分析连续 2 次超时（短探活通过不算数）",
-      "note": "",
-      "checked_at": "2026-10-29 21:54:44",
-      "index": 1,
-      "source": "runtime"
-    },
     "https://chat.intern-ai.org.cn/api/v1|internvl-latest|浦语-InternVL": {
       "name": "浦语-InternVL",
       "model": "internvl-latest",
@@ -183,24 +156,12 @@
       "note": "",
       "checked_at": "2026-10-29 13:01:04",
       "index": 2
-    },
-    "https://discovery-api.intern-ai.org.cn/v1|deepseek-v4-flash-0731|端砚-DeepSeek": {
-      "name": "端砚-DeepSeek",
-      "model": "deepseek-v4-flash-0731",
-      "api_base": "https://discovery-api.intern-ai.org.cn/v1",
-      "status": "unavailable",
-      "reason": "真实岗位分析连续 2 次超时（短探活通过不算数）",
-      "error": "请求超时（30s）",
-      "latency_ms": 0,
-      "reply": "",
-      "source": "runtime",
-      "checked_at": "2026-10-29 21:51:34"
     }
   },
   "summary": {
-    "total": 15,
+    "total": 12,
     "available": 8,
-    "unavailable": 7,
-    "avg_latency_ms": 15082
+    "unavailable": 4,
+    "avg_latency_ms": 16121
   }
 }

@@ -507,7 +507,70 @@ class BossChatHandler:
             logger.debug(f"会话页地址漂了，重新加载：停在 {current_url[:90] or '（读不到）'}")
             self._导航(CHAT_URL)
             time.sleep(3)
-        return True
+        return self._确保会话页挂载()
+
+    # 挂载判据只认这三样里出现任意一样：侧栏容器、会话行、联系人搜索框。
+    _CHAT_MOUNTED_JS = '''(
+        function() {
+            function n(s) { return document.querySelectorAll(s).length; }
+            return (n(".user-list-content") + n(".friend-content")
+                    + n("input.boss-search-input")) > 0 ? "ok" : "shell";
+        }
+    )()'''
+    # 空壳这件事多久说一次：这条判据一分钟会被叫好几次（回复轮、跟进轮、面板体检），
+    # 每次都 warn 就是 116 条重复日志把别的淹没
+    会话页空壳复述秒 = 10 * 60
+    会话页空壳 = False
+
+    def 会话页挂载了吗(self):
+        """这一页真的把会话应用渲染出来了没有：True 挂载 / False 空壳 / None 读不出。
+
+        None 必须单独一档。DrissionPage 在页面正在挂载、句柄刚换、整页崩掉的时候
+        会把 run_js 的返回值丢成 None（不抛异常），把"没读到"当成"空壳"就等于拿
+        一发整页加载去赌风控——而打开页面正是 10-31 数出来的风控来源那一步。
+        只有明明白白读回 "shell" 才算壳。
+        """
+        try:
+            答 = self.page.run_js(self._CHAT_MOUNTED_JS, as_expr=True)
+        except Exception as e:
+            logger.debug(f"会话页挂载判据没读成（不动手）: {e}")
+            return None
+        if 答 in ("ok", "shell"):
+            return 答 == "ok"
+        logger.debug(f"会话页挂载判据读回来的不是 ok/shell（{str(答)[:40]}），不动手")
+        return None
+
+    def _确保会话页挂载(self) -> bool:
+        """地址对不等于页面活着：壳要认出来，但**不在这一页上重载**。
+
+        2026-10-31 线上实测：两个号的会话页读回来是
+        `<div id="wrap"><!----><!----><!----></div>`，侧栏 0 行、搜索框 0 个、
+        一个会话数据接口都没发过，可 URL 明明还是 /web/geek/chat——于是每一轮都
+        "获取到未读会话数: 0"，而职位页那个角标上挂着 39 条没看的消息。
+        按日志数，最后一次读到非零未读是 10-24（那天 25 次），10-25 起 765 次全是 0，
+        10-28/10-29/10-30 三天 1133 / 3178 / 1724 次全是 0。
+
+        判据留下，重载删掉了：这一版原来在这里原地 `_导航(同址)` 刷一次，
+        实测 11:35~12:19 那 44 分钟判据响 **135 次**、跟着发 **121 次"重新加载"**、
+        地板记账的真实整页加载 **32 发**、**0 次刷活**（`go_to_chat` 一分钟被叫三四次：
+        回复轮、跟进轮、面板体检都走这张页），而打开整页正是风控最集中那一步。
+        刷不回来的真因见 browser_launcher._会话页导航到会话页：那张页是
+        **eager 加载模式掐出来的壳**，同址再刷一次只会再掐一次。
+        治得了的是"扔掉这张、按 normal 重开一张"，那条路在
+        browser_launcher.重开会话标签页，由回复腿按 5 分钟冷却去做。
+        所以这里只判、只照实说，不动整页加载。
+        """
+        if self.会话页挂载了吗() is not False:
+            self.会话页空壳 = False
+            return True
+        self.会话页空壳 = True
+        现在 = time.time()
+        if 现在 - getattr(self, "_空壳提醒于", 0.0) >= self.会话页空壳复述秒:
+            self._空壳提醒于 = 现在
+            logger.warning("会话页是空壳（侧栏/会话行/搜索框一个都没有）：这一轮一个字都没读到，"
+                           "不许当成「0 个未读」；换一张页交给回复腿按冷却去做"
+                           "（BOSS 的聊天应用没起来）")
+        return False
 
     def get_unread_chats(self, max_rounds: int = 12) -> List[Dict]:
         """边滚边收侧栏里带红点的会话。

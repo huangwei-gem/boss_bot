@@ -2811,26 +2811,125 @@ class BrowserManager:
             self.launch()
 
         if self._chat_tab is None:
-            raw_tab = (self._instance.new_tab(self.BOSS_CHAT_URL) if 导航
-                       else self._instance.new_tab())
+            # 先开空白页（不发请求、不占地板），是为了在这张页自己导航到会话页之前
+            # 把它的加载模式换成 normal——见 _会话页导航到会话页。
+            raw_tab = self._instance.new_tab()
             # 包装为 BrowserInstance，复用底层 chromium/browser 对象
             self._chat_tab = BrowserInstance(
                 chrome_page=raw_tab if not _IS_MACOS else None,
                 chromium=self._instance._get_browser() if _IS_MACOS else None,
                 tab=raw_tab if _IS_MACOS else None,
             )
+            if 导航:
+                self._会话页导航到会话页()
             logger.info("已创建回复引擎专用聊天标签页 (_chat_tab)"
                         + ("" if 导航 else "（空白：等登录，腿真要用时再导航）"))
         elif 导航 and not self._在BOSS站内(self._chat_tab):
             # 空白页兜底：上一趟是"等登录时开的空白页"，这一趟才是腿来要页
             try:
-                self._chat_tab.get(self.BOSS_CHAT_URL)
+                self._会话页导航到会话页()
                 logger.info("聊天标签页还是空白页，已补导航到会话页")
             except Exception as e:
                 logger.warning("聊天标签页补导航到会话页失败: %s"
                                % (str(e) or type(e).__name__))
 
         return self._chat_tab
+
+    def _会话页导航到会话页(self):
+        """把回复引擎这一张设成"等整页加载完"，再去会话页。
+
+        10-31 实测（同一浏览器、同一地址、两轮结果一样）：浏览器默认那份是 eager
+        （`unified_config.load_mode`，它把主站一发 126~135 秒降到 1.6~4.8 秒），
+        而 BOSS 的聊天应用把分片脚本和会话接口排在首屏之后——
+        · eager：17→19 个资源、34 个节点，侧栏/会话行/搜索框全 0，再等 20 秒也不会
+          自己活过来（回复腿这几天每一轮印的「0 个未读」就是这么来的）；
+        · normal：138 个资源、1063 个节点，侧栏 1 / 会话行 40 / 搜索框 1。
+        所以只给会话页这一张单独换成 normal，别的页照旧吃 eager 的速度；
+        代价是这一张的 `get()` 按 `page_load_timeout`（默认 30 秒）等，而重开本身
+        有 5 分钟冷却，等得起。
+
+        设完回读：没改成 normal 就照实说——把"没设上"记成"设过了"，日志上又会
+        变成一连串"已经重开了"而侧栏还是 0 行。
+        """
+        页 = self._chat_tab
+        if 页 is None:
+            logger.warning("会话页还没建出来，导航不到会话页")
+            return
+        try:
+            页.set.load_mode.normal()
+        except Exception as e:
+            logger.warning("会话页这张没设成 normal 加载，大概率还是 34 个节点的壳: %s: %s"
+                           % (type(e).__name__, str(e)[:60]))
+        else:
+            读到 = getattr(页.page, "load_mode", None)
+            if 读到 != "normal":
+                logger.warning("会话页加载模式回读是「%s」不是 normal，这一张仍可能是壳"
+                               % (读到 if 读到 is not None else "读不到"))
+        页.get(self.BOSS_CHAT_URL)
+
+    def 重开会话标签页(self, 等到挂载秒: float = 20) -> "BrowserInstance":
+        """把回复引擎那张会话页扔掉、新开一张——同页刷回来治不了"空壳"。
+
+        2026-10-31 线上实测（两个号各两轮）：那张活着的会话页读回来是
+        `<div id="wrap"><!----><!----><!----></div>`，整页 34 个 DOM 节点，
+        侧栏/会话行/搜索框一个都没有，也只发过 APM 埋点（会话数据接口 0 条）。
+        而在这张旧页上 `location.reload()`、`_导航(同一个地址)` 各试过，
+        刷完还是 34 个节点的壳——所以这里换的是"一张新页"，不是"旧页再刷一次"。
+
+        那天中午"同一个浏览器 new_tab 4 秒就读到侧栏"的对照**没把变量固定住**，
+        真正的差别在加载模式，不在新旧页：浏览器默认 eager（`unified_config.load_mode`）
+        把 BOSS 聊天应用的后续分片掐在半路，实测 eager 17→19 个资源永远是壳、
+        normal 138 个资源 6~9 秒出侧栏（见 `_会话页导航到会话页`）。那张页现在
+        就是按 normal 开的，不然"换一张"也只是换一张壳。
+        旧页一定先解绑再关，并且它要是就是搜索页那张，只解绑不关
+        （10-16 那样会把投递腿关死）。
+        """
+        旧 = self._chat_tab
+        self._chat_tab = None
+        if 旧 is not None:
+            tid = self._包的id(旧)
+            自己 = self.search_tab_id()
+            if tid and 自己 and tid == 自己:
+                logger.warning("待扔的会话页就是搜索页自己——只解绑，不关")
+            else:
+                try:
+                    旧.close_current_tab()
+                except Exception as e:
+                    logger.warning("旧会话页没关掉（不影响重开）: %s: %s"
+                                   % (type(e).__name__, str(e)[:60]))
+        新 = self.get_chat_page()
+        截止 = time.time() + max(0.0, float(等到挂载秒))
+        读到 = None
+        while True:
+            读到 = self._会话应用挂载了(新)
+            if 读到 is True:
+                logger.info("会话页已重开并挂载（侧栏/会话行/搜索框读到了）")
+                return 新
+            if time.time() >= 截止:
+                break
+            time.sleep(2)
+        logger.warning("重开的会话页没确认挂载（等满 %.0f 秒，读回=%s）——"
+                       "这一号这一轮读不到会话，不许当成「没有新消息」"
+                       % (等到挂载秒, "读不出" if 读到 is None else "空壳"))
+        return 新
+
+    @staticmethod
+    def _会话应用挂载了(页):
+        """和 BossChatHandler.会话页挂载了吗 同一套选择器：True 挂载 / False 空壳 / None 读不出。
+
+        读不出不许算"在"：这一句是"新页到底活过来了没有"的唯一证据，把没读到记成
+        挂载成功，日志上就成了「会话页已重开并挂载」而侧栏还是 0 行。
+        """
+        try:
+            答 = 页.run_js(
+                '''(function(){
+                        function n(s) { return document.querySelectorAll(s).length; }
+                        return (n(".user-list-content") + n(".friend-content")
+                                + n("input.boss-search-input")) > 0 ? "ok" : "shell";
+                    })()''', as_expr=True)
+        except Exception:
+            return None
+        return 答 == "ok" if 答 in ("ok", "shell") else None
 
     @staticmethod
     def _在BOSS站内(页) -> bool:
