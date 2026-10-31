@@ -23693,3 +23693,276 @@ DrissionPage.errors.PageDisconnectedError:
 2026-10-31 14:16:07,480 [INFO] boss_bot.main_loop: [主账号] [INFO] 已滚动 5/5 次
 2026-10-31 14:16:08,165 [INFO] boss_bot.main_loop: [主账号] [INFO] 共找到 90 个岗位链接
 2026-10-31 14:16:08,492 [INFO] boss_bot.main_loop: [主账号] [INFO] 找到 89 个岗位卡片(.job-card-wrap)
+2026-10-31 14:16:09,549 [INFO] boss_bot.main_loop: [主账号] [DEBUG] 解析岗位[0]: name=人事兼职线上办公时间灵活, salary=31-46元/时, company=重庆赢溪瑀科技, location=长沙·望城区·长沙医学院
+2026-10-31 14:16:10,598 [INFO] boss_bot.main_loop: [主账号] [DEBUG] 解析岗位[1]: name=数据分析师（可线上工作）, salary=2111-7111元/月, company=立美哒文化公司, location=临沂
+2026-10-31 14:16:11,625 [INFO] boss_bot.main_loop: [主账号] [DEBUG] 解析岗位[2]: name=数据标注（兼职）, salary=26-51元/时, company=安尔, location=惠州·惠阳区·淡水
+2026-10-31 14:16:12,210 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:16:12,210 [INFO] boss_bot.main_loop: [主账号] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:16:12,213 [DEBUG] boss_bot.main_loop: [主账号] 正在导航到聊天页面...
+2026-10-31 14:16:12,217 [WARNING] boss_bot.main_loop: [主账号] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:16:13,375 [DEBUG] boss_bot.main_loop: [主账号] 无未读消息
+2026-10-31 14:16:13,380 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:13,380 [INFO] boss_bot.main_loop: [主账号] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:16:13,388 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:13,441 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:13,488 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:16,156 [DEBUG] boss_bot.main_loop: [账号2] 页面判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/jobs?query=%E9%A3%9E%E4%B9%A6%20%E5%85%BC%E8%81%8C&city=10
+2026-10-31 14:16:16,156 [INFO] boss_bot.main_loop: [账号2] ━━━ 开始打招呼轮次 ━━━
+2026-10-31 14:16:16,214 [DEBUG] boss_bot.main_loop: [账号2] 构建打招呼任务数: 6
+2026-10-31 14:16:16,215 [INFO] boss_bot.main_loop: [账号2] 搜索岗位: 上海 · 数据分析
+2026-10-31 14:16:16,215 [DEBUG] boss_bot.main_loop: [账号2] 搜索参数: scroll_pages=5, interval_min=3, interval_max=8
+2026-10-31 14:16:16,216 [INFO] boss_bot.main_loop: [账号2] [INFO] 正在解析岗位列表...
+2026-10-31 14:16:16,217 [INFO] boss_bot.main_loop: [账号2] [INFO] 城市 上海 编码 (硬编码): 101020100
+2026-10-31 14:16:16,217 [INFO] boss_bot.main_loop: [账号2] [INFO] 城市: 上海, 编码: 101020100
+2026-10-31 14:16:16,219 [INFO] boss_bot.main_loop: [账号2] [INFO] 访问搜索页面: https://www.zhipin.com/web/geek/jobs?query=%E6%95%B0%E6%8D%AE%E5%88%86%E6%9E%90&city=101020100&industry=&position=
+2026-10-31 14:16:18,531 [WARNING] browser_launcher: 重开的会话页没确认挂载（等满 12 秒，读回=空壳）——这一号这一轮读不到会话，不许当成「没有新消息」
+2026-10-31 14:16:18,539 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:16:18,539 [INFO] boss_bot.main_loop: [账号2] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:16:18,544 [DEBUG] boss_bot.main_loop: [账号2] 正在导航到聊天页面...
+2026-10-31 14:16:18,548 [WARNING] boss_bot.main_loop: [账号2] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:16:19,946 [DEBUG] boss_bot.main_loop: [账号2] 无未读消息
+2026-10-31 14:16:19,950 [INFO] boss_bot.main_loop: [账号2] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:16:20,454 [INFO] boss_bot.main_loop: [账号2] [INFO] 开始滚动 5 次...
+2026-10-31 14:16:21,570 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:16:21,571 [INFO] boss_bot.main_loop: [主账号] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:16:21,578 [DEBUG] boss_bot.main_loop: [主账号] 正在导航到聊天页面...
+2026-10-31 14:16:21,583 [WARNING] boss_bot.main_loop: [主账号] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:16:22,312 [INFO] boss_bot.main_loop: [账号2] [INFO] 已滚动 1/5 次
+2026-10-31 14:16:22,870 [DEBUG] boss_bot.main_loop: [主账号] 无未读消息
+2026-10-31 14:16:22,877 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:22,878 [INFO] boss_bot.main_loop: [主账号] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:16:22,882 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:22,932 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:22,997 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:23,910 [INFO] boss_bot.main_loop: [账号2] [INFO] 已滚动 2/5 次
+2026-10-31 14:16:26,769 [INFO] boss_bot.main_loop: [账号2] [INFO] 已滚动 3/5 次
+2026-10-31 14:16:28,123 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:16:28,124 [INFO] boss_bot.main_loop: [账号2] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:16:28,128 [DEBUG] boss_bot.main_loop: [账号2] 正在导航到聊天页面...
+2026-10-31 14:16:28,133 [WARNING] boss_bot.main_loop: [账号2] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:16:29,227 [INFO] boss_bot.main_loop: [账号2] [INFO] 已滚动 4/5 次
+2026-10-31 14:16:29,300 [DEBUG] boss_bot.main_loop: [账号2] 无未读消息
+2026-10-31 14:16:29,305 [INFO] boss_bot.main_loop: [账号2] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:16:31,074 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:16:31,075 [INFO] boss_bot.main_loop: [主账号] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:16:31,080 [DEBUG] boss_bot.main_loop: [主账号] 正在导航到聊天页面...
+2026-10-31 14:16:31,086 [WARNING] boss_bot.main_loop: [主账号] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:16:31,101 [INFO] boss_bot.main_loop: [账号2] [INFO] 已滚动 5/5 次
+2026-10-31 14:16:31,895 [INFO] boss_bot.main_loop: [账号2] [INFO] 共找到 90 个岗位链接
+2026-10-31 14:16:32,217 [INFO] boss_bot.main_loop: [账号2] [INFO] 找到 89 个岗位卡片(.job-card-wrap)
+2026-10-31 14:16:32,315 [DEBUG] browser_launcher: 标签页看守(127.0.0.1:9222)：看到 5 张（在册 2 张），没有要收的岗位详情页
+2026-10-31 14:16:32,859 [DEBUG] boss_bot.main_loop: [主账号] 无未读消息
+2026-10-31 14:16:32,866 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:32,867 [INFO] boss_bot.main_loop: [主账号] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:16:32,873 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:32,929 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:32,989 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:33,246 [INFO] boss_bot.main_loop: [账号2] [DEBUG] 解析岗位[0]: name=数据统计分析专员, salary=8-9K, company=哲济咨询, location=上海·浦东新区·张江
+2026-10-31 14:16:34,280 [INFO] boss_bot.main_loop: [账号2] [DEBUG] 解析岗位[1]: name=美股分析研究员, salary=9-24K·25薪, company=红链科技, location=上海·浦东新区·陆家嘴
+2026-10-31 14:16:35,312 [INFO] boss_bot.main_loop: [账号2] [DEBUG] 解析岗位[2]: name=数据分析师, salary=36-61K·29薪, company=拼多多集团-PDD, location=上海
+2026-10-31 14:16:37,464 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:16:37,464 [INFO] boss_bot.main_loop: [账号2] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:16:37,467 [DEBUG] boss_bot.main_loop: [账号2] 正在导航到聊天页面...
+2026-10-31 14:16:37,470 [WARNING] boss_bot.main_loop: [账号2] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:16:38,729 [DEBUG] boss_bot.main_loop: [账号2] 无未读消息
+2026-10-31 14:16:38,733 [INFO] boss_bot.main_loop: [账号2] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:16:41,052 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:16:41,053 [INFO] boss_bot.main_loop: [主账号] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:16:41,055 [DEBUG] boss_bot.main_loop: [主账号] 正在导航到聊天页面...
+2026-10-31 14:16:41,059 [WARNING] boss_bot.main_loop: [主账号] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:16:42,498 [DEBUG] boss_bot.main_loop: [主账号] 无未读消息
+2026-10-31 14:16:42,504 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:42,504 [INFO] boss_bot.main_loop: [主账号] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:16:42,509 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:42,579 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:42,635 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:44,005 [DEBUG] browser_launcher: 标签页看守(127.0.0.1:9223)：看到 4 张（在册 2 张），没有要收的岗位详情页
+2026-10-31 14:16:46,915 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:16:46,916 [INFO] boss_bot.main_loop: [账号2] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:16:46,920 [DEBUG] boss_bot.main_loop: [账号2] 正在导航到聊天页面...
+2026-10-31 14:16:46,925 [WARNING] boss_bot.main_loop: [账号2] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:16:48,185 [DEBUG] boss_bot.main_loop: [账号2] 无未读消息
+2026-10-31 14:16:48,189 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9223)：看到 2 张（在册 2 张），关掉 0 张闲置的岗位详情页
+2026-10-31 14:16:48,189 [INFO] boss_bot.main_loop: [账号2] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:16:50,697 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:16:50,698 [INFO] boss_bot.main_loop: [主账号] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:16:50,701 [DEBUG] boss_bot.main_loop: [主账号] 正在导航到聊天页面...
+2026-10-31 14:16:50,705 [WARNING] boss_bot.main_loop: [主账号] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:16:51,960 [DEBUG] boss_bot.main_loop: [主账号] 无未读消息
+2026-10-31 14:16:51,965 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:51,965 [INFO] boss_bot.main_loop: [主账号] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:16:51,969 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:52,019 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:52,077 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:16:56,378 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:16:56,378 [INFO] boss_bot.main_loop: [账号2] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:16:56,381 [DEBUG] boss_bot.main_loop: [账号2] 正在导航到聊天页面...
+2026-10-31 14:16:56,385 [WARNING] boss_bot.main_loop: [账号2] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:16:57,705 [DEBUG] boss_bot.main_loop: [账号2] 无未读消息
+2026-10-31 14:16:57,708 [INFO] boss_bot.main_loop: [账号2] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:17:00,144 [WARNING] boss_bot.main_loop: [主账号] 会话页是空壳（侧栏/会话行/搜索框一个都没有），扔掉这张换新的一页
+2026-10-31 14:17:02,012 [INFO] browser_launcher: 已创建回复引擎专用聊天标签页 (_chat_tab)
+2026-10-31 14:17:05,895 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:17:05,897 [INFO] boss_bot.main_loop: [账号2] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:17:05,905 [DEBUG] boss_bot.main_loop: [账号2] 正在导航到聊天页面...
+2026-10-31 14:17:05,914 [WARNING] boss_bot.main_loop: [账号2] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:17:07,179 [DEBUG] boss_bot.main_loop: [账号2] 无未读消息
+2026-10-31 14:17:07,182 [INFO] boss_bot.main_loop: [账号2] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:17:14,034 [WARNING] browser_launcher: 重开的会话页没确认挂载（等满 12 秒，读回=空壳）——这一号这一轮读不到会话，不许当成「没有新消息」
+2026-10-31 14:17:14,042 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:17:14,042 [INFO] boss_bot.main_loop: [主账号] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:17:14,047 [DEBUG] boss_bot.main_loop: [主账号] 正在导航到聊天页面...
+2026-10-31 14:17:14,054 [WARNING] boss_bot.main_loop: [主账号] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:17:15,313 [DEBUG] boss_bot.main_loop: [主账号] 无未读消息
+2026-10-31 14:17:15,319 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:15,320 [INFO] boss_bot.main_loop: [主账号] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:17:15,327 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:15,383 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:15,511 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:15,513 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:17:15,514 [INFO] boss_bot.main_loop: [账号2] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:17:15,553 [DEBUG] boss_bot.main_loop: [账号2] 正在导航到聊天页面...
+2026-10-31 14:17:15,560 [WARNING] boss_bot.main_loop: [账号2] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:17:16,643 [DEBUG] boss_bot.main_loop: [账号2] 无未读消息
+2026-10-31 14:17:16,646 [INFO] boss_bot.main_loop: [账号2] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:17:23,590 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:17:23,590 [INFO] boss_bot.main_loop: [主账号] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:17:23,593 [DEBUG] boss_bot.main_loop: [主账号] 正在导航到聊天页面...
+2026-10-31 14:17:23,595 [WARNING] boss_bot.main_loop: [主账号] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:17:24,692 [DEBUG] boss_bot.main_loop: [主账号] 无未读消息
+2026-10-31 14:17:24,696 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:24,697 [INFO] boss_bot.main_loop: [主账号] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:17:24,702 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:24,759 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:24,804 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:24,876 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:17:24,876 [INFO] boss_bot.main_loop: [账号2] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:17:24,878 [DEBUG] boss_bot.main_loop: [账号2] 正在导航到聊天页面...
+2026-10-31 14:17:24,881 [WARNING] boss_bot.main_loop: [账号2] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:17:26,002 [DEBUG] boss_bot.main_loop: [账号2] 无未读消息
+2026-10-31 14:17:26,009 [INFO] boss_bot.main_loop: [账号2] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:17:32,317 [DEBUG] browser_launcher: 标签页看守(127.0.0.1:9222)：看到 5 张（在册 2 张），没有要收的岗位详情页
+2026-10-31 14:17:32,874 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:17:32,874 [INFO] boss_bot.main_loop: [主账号] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:17:32,877 [DEBUG] boss_bot.main_loop: [主账号] 正在导航到聊天页面...
+2026-10-31 14:17:32,880 [WARNING] boss_bot.main_loop: [主账号] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:17:34,116 [DEBUG] boss_bot.main_loop: [主账号] 无未读消息
+2026-10-31 14:17:34,123 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:34,123 [INFO] boss_bot.main_loop: [主账号] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:17:34,129 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:34,185 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:34,249 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:34,255 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:17:34,256 [INFO] boss_bot.main_loop: [账号2] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:17:34,298 [DEBUG] boss_bot.main_loop: [账号2] 正在导航到聊天页面...
+2026-10-31 14:17:34,307 [WARNING] boss_bot.main_loop: [账号2] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:17:35,438 [DEBUG] boss_bot.main_loop: [账号2] 无未读消息
+2026-10-31 14:17:35,441 [INFO] boss_bot.main_loop: [账号2] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:17:41,065 [INFO] boss_bot.main_loop: [主账号] [INFO] 解析出 89 条岗位信息
+2026-10-31 14:17:41,066 [INFO] boss_bot.main_loop: [主账号] 找到 89 个岗位，开始打招呼...
+2026-10-31 14:17:41,067 [DEBUG] boss_bot.main_loop: [主账号] 岗位列表前5个: ['人事兼职线上办公时间灵活', '数据分析师（可线上工作）', '数据标注（兼职）', '线上短视频剪辑兼职', '线上居家｜初中数学错因知识点制作']
+2026-10-31 14:17:41,565 [INFO] boss_bot.main_loop: [主账号] ⏭️ 本轮 27 条 BOSS 侧已有会话，没进池（池里只留投得出去的）
+2026-10-31 14:17:41,962 [INFO] boss_bot.main_loop: [主账号] 📥 进池 新增0 见过62 池内1510；本轮精筛 0/0 条（限额 40，剩下的下轮接着判）
+2026-10-31 14:17:42,001 [INFO] boss_bot.main_loop: [主账号] 搜索岗位: 全国 · 数据标注
+2026-10-31 14:17:42,002 [DEBUG] boss_bot.main_loop: [主账号] 搜索参数: scroll_pages=5, interval_min=3, interval_max=8
+2026-10-31 14:17:42,004 [INFO] boss_bot.main_loop: [主账号] [INFO] 正在解析岗位列表...
+2026-10-31 14:17:42,009 [INFO] boss_bot.main_loop: [主账号] [INFO] 城市 全国 编码 (硬编码): 100010000
+2026-10-31 14:17:42,009 [INFO] boss_bot.main_loop: [主账号] [INFO] 城市: 全国, 编码: 100010000
+2026-10-31 14:17:42,012 [INFO] boss_bot.main_loop: [主账号] [INFO] 访问搜索页面: https://www.zhipin.com/web/geek/jobs?query=%E6%95%B0%E6%8D%AE%E6%A0%87%E6%B3%A8&city=100010000&industry=&position=&jobType=1903
+2026-10-31 14:17:42,548 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:17:42,549 [INFO] boss_bot.main_loop: [主账号] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:17:42,551 [DEBUG] boss_bot.main_loop: [主账号] 正在导航到聊天页面...
+2026-10-31 14:17:42,554 [WARNING] boss_bot.main_loop: [主账号] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:17:43,645 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:17:43,645 [INFO] boss_bot.main_loop: [账号2] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:17:43,650 [DEBUG] boss_bot.main_loop: [账号2] 正在导航到聊天页面...
+2026-10-31 14:17:43,654 [WARNING] boss_bot.main_loop: [账号2] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:17:44,007 [DEBUG] browser_launcher: 标签页看守(127.0.0.1:9223)：看到 4 张（在册 2 张），没有要收的岗位详情页
+2026-10-31 14:17:44,153 [DEBUG] boss_bot.main_loop: [主账号] 无未读消息
+2026-10-31 14:17:44,161 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:44,162 [INFO] boss_bot.main_loop: [主账号] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:17:44,171 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:44,259 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:44,338 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:45,533 [DEBUG] boss_bot.main_loop: [账号2] 无未读消息
+2026-10-31 14:17:45,539 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9223)：看到 2 张（在册 2 张），关掉 0 张闲置的岗位详情页
+2026-10-31 14:17:45,539 [INFO] boss_bot.main_loop: [账号2] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:17:48,218 [INFO] boss_bot.main_loop: [主账号] [INFO] 开始滚动 5 次...
+2026-10-31 14:17:49,406 [INFO] boss_bot.main_loop: [主账号] [INFO] 已滚动 1/5 次
+2026-10-31 14:17:50,496 [INFO] boss_bot.main_loop: [主账号] [INFO] 已滚动 2/5 次
+2026-10-31 14:17:52,410 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:17:52,411 [INFO] boss_bot.main_loop: [主账号] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:17:52,414 [DEBUG] boss_bot.main_loop: [主账号] 正在导航到聊天页面...
+2026-10-31 14:17:52,418 [WARNING] boss_bot.main_loop: [主账号] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:17:53,014 [INFO] boss_bot.main_loop: [主账号] [INFO] 已滚动 3/5 次
+2026-10-31 14:17:53,466 [DEBUG] boss_bot.main_loop: [主账号] 无未读消息
+2026-10-31 14:17:53,470 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:53,471 [INFO] boss_bot.main_loop: [主账号] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:17:53,475 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:53,542 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:53,609 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:17:53,727 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:17:53,728 [INFO] boss_bot.main_loop: [账号2] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:17:53,734 [DEBUG] boss_bot.main_loop: [账号2] 正在导航到聊天页面...
+2026-10-31 14:17:53,738 [WARNING] boss_bot.main_loop: [账号2] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:17:54,681 [INFO] boss_bot.main_loop: [主账号] [INFO] 已滚动 4/5 次
+2026-10-31 14:17:55,074 [DEBUG] boss_bot.main_loop: [账号2] 无未读消息
+2026-10-31 14:17:55,077 [INFO] boss_bot.main_loop: [账号2] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:17:56,680 [INFO] boss_bot.main_loop: [主账号] [INFO] 已滚动 5/5 次
+2026-10-31 14:17:57,273 [INFO] boss_bot.main_loop: [主账号] [INFO] 共找到 75 个岗位链接
+2026-10-31 14:17:57,595 [INFO] boss_bot.main_loop: [主账号] [INFO] 找到 74 个岗位卡片(.job-card-wrap)
+2026-10-31 14:17:58,638 [INFO] boss_bot.main_loop: [主账号] [DEBUG] 解析岗位[0]: name=安徽方言数据标注 5个月, salary=51-56元/时, company=四川骏才吉羊科技, location=宣城·宣州区·国购广场
+2026-10-31 14:17:59,676 [INFO] boss_bot.main_loop: [主账号] [DEBUG] 解析岗位[1]: name=数据标注电脑标注简单好做月8K左右, salary=3?1-411元/天, company=青果文化传媒, location=百色·右江区·拉域
+2026-10-31 14:18:00,710 [INFO] boss_bot.main_loop: [主账号] [DEBUG] 解析岗位[2]: name=数据标注（兼职）, salary=26-51元/时, company=安尔, location=惠州·惠阳区·淡水
+2026-10-31 14:18:01,679 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:18:01,679 [INFO] boss_bot.main_loop: [主账号] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:18:01,682 [DEBUG] boss_bot.main_loop: [主账号] 正在导航到聊天页面...
+2026-10-31 14:18:01,687 [WARNING] boss_bot.main_loop: [主账号] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:18:03,133 [DEBUG] boss_bot.main_loop: [主账号] 无未读消息
+2026-10-31 14:18:03,140 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:18:03,140 [INFO] boss_bot.main_loop: [主账号] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:18:03,145 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:18:03,217 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:18:03,279 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:18:03,346 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:18:03,347 [INFO] boss_bot.main_loop: [账号2] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:18:03,350 [DEBUG] boss_bot.main_loop: [账号2] 正在导航到聊天页面...
+2026-10-31 14:18:03,355 [WARNING] boss_bot.main_loop: [账号2] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:18:04,841 [INFO] boss_bot.main_loop: [账号2] [INFO] 解析出 89 条岗位信息
+2026-10-31 14:18:04,842 [INFO] boss_bot.main_loop: [账号2] 找到 89 个岗位，开始打招呼...
+2026-10-31 14:18:04,842 [DEBUG] boss_bot.main_loop: [账号2] 岗位列表前5个: ['数据统计分析专员', '美股分析研究员', '数据分析师', '物料控制数据分析师(金蝶/SAP系统)', '数据分析师']
+2026-10-31 14:18:04,981 [DEBUG] boss_bot.main_loop: [账号2] 无未读消息
+2026-10-31 14:18:04,987 [INFO] boss_bot.main_loop: [账号2] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:18:07,006 [INFO] boss_bot.main_loop: [账号2] ⏭️ 本轮 1 条 BOSS 侧已有会话，没进池（池里只留投得出去的）
+2026-10-31 14:18:07,454 [INFO] boss_bot.main_loop: [账号2] 📥 进池 新增0 见过88 池内1754；本轮精筛 0/0 条（限额 40，剩下的下轮接着判）
+2026-10-31 14:18:07,508 [INFO] boss_bot.main_loop: [账号2] 搜索岗位: 全国 · 数据处理 线上
+2026-10-31 14:18:07,509 [DEBUG] boss_bot.main_loop: [账号2] 搜索参数: scroll_pages=5, interval_min=3, interval_max=8
+2026-10-31 14:18:07,510 [INFO] boss_bot.main_loop: [账号2] [INFO] 正在解析岗位列表...
+2026-10-31 14:18:07,511 [INFO] boss_bot.main_loop: [账号2] [INFO] 城市 全国 编码 (硬编码): 100010000
+2026-10-31 14:18:07,511 [INFO] boss_bot.main_loop: [账号2] [INFO] 城市: 全国, 编码: 100010000
+2026-10-31 14:18:07,513 [INFO] boss_bot.main_loop: [账号2] [INFO] 访问搜索页面: https://www.zhipin.com/web/geek/jobs?query=%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86%20%E7%BA%BF%E4%B8%8A&city=100010000&industry=&position=&jobType=1903
+2026-10-31 14:18:11,357 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:18:11,358 [INFO] boss_bot.main_loop: [主账号] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:18:11,361 [DEBUG] boss_bot.main_loop: [主账号] 正在导航到聊天页面...
+2026-10-31 14:18:11,364 [WARNING] boss_bot.main_loop: [主账号] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:18:12,600 [DEBUG] boss_bot.main_loop: [主账号] 无未读消息
+2026-10-31 14:18:12,605 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:18:12,605 [INFO] boss_bot.main_loop: [主账号] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:18:12,610 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:18:12,665 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:18:12,709 [DEBUG] browser_launcher: 标签页清扫(127.0.0.1:9222)：看到 3 张（在册 2 张），关掉 0 张闲置的岗位详情页，另有 1 张读不到 URL
+2026-10-31 14:18:13,211 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:18:13,211 [INFO] boss_bot.main_loop: [账号2] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:18:13,216 [DEBUG] boss_bot.main_loop: [账号2] 正在导航到聊天页面...
+2026-10-31 14:18:13,224 [WARNING] boss_bot.main_loop: [账号2] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
+2026-10-31 14:18:13,492 [INFO] boss_bot.main_loop: [账号2] [INFO] 开始滚动 5 次...
+2026-10-31 14:18:14,496 [DEBUG] boss_bot.main_loop: [账号2] 无未读消息
+2026-10-31 14:18:14,500 [INFO] boss_bot.main_loop: [账号2] ━━━ 回复轮次结束 ━━━
+2026-10-31 14:18:14,675 [INFO] boss_bot.main_loop: [账号2] [INFO] 已滚动 1/5 次
+2026-10-31 14:18:16,536 [INFO] boss_bot.main_loop: [账号2] [INFO] 已滚动 2/5 次
+2026-10-31 14:18:17,999 [INFO] boss_bot.main_loop: [账号2] [INFO] 已滚动 3/5 次
+2026-10-31 14:18:20,359 [INFO] boss_bot.main_loop: [账号2] [INFO] 已滚动 4/5 次
+2026-10-31 14:18:20,767 [DEBUG] boss_bot.page_handler: 会话页判据=ok（无挑战证据）URL=https://www.zhipin.com/web/geek/chat
+2026-10-31 14:18:20,768 [INFO] boss_bot.main_loop: [主账号] ━━━ 开始回复轮次 ━━━
+2026-10-31 14:18:20,771 [DEBUG] boss_bot.main_loop: [主账号] 正在导航到聊天页面...
+2026-10-31 14:18:20,778 [WARNING] boss_bot.main_loop: [主账号] 会话页这一轮不能用（停在登录/安全验证页，或整页是空壳、重开仍没挂载）：不读未读、不从存档补跟进、也不动置顶标记——「没读到」不许印成「0 个未读」
