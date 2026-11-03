@@ -174,7 +174,10 @@ class Test默认招呼语与画像同源:
     def test_画像没写档次时同一句必须拦(self):
         from boss_bot.reply_engine import reply_rejection
         没写 = {"education": "本科在读（统计学）", "school": ""}
-        assert reply_rejection(DEFAULT_GREETING, 没写), "闸门坏了不会拦＝只是摆设"
+        # 默认串本身不报学校档次（2026-11-01 按在线简历对齐后），
+        # 反向哨兵改成"给同一句补一个画像里没有的档次"——证明这道门还在，不是被删了
+        assert reply_rejection("您好，我是双一流的。" + DEFAULT_GREETING, 没写), \
+            "闸门坏了不会拦＝只是摆设"
 
 
 class Test测试不许碰线上池:

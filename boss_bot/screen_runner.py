@@ -18,7 +18,8 @@ import time
 
 from boss_bot import ai_screen_doc
 from boss_bot.job_pool import 岗位池
-from boss_bot.screen_judge import 判分写回
+from boss_bot.greet_engine import in_probe_band
+from boss_bot.screen_judge import 判分写回, 结论过期
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +93,70 @@ def _设(**字段) -> None:
         _状态.update(字段)
 
 
+def _追问器(引擎):
+    """这一趟"按文件重判"里的追问回调：每号每轮 ≤ probe_max_per_round。
+
+    配额按账号各算（两个号投的工种不同，边界带密度不一样）。没接这条的话，
+    面板上「判分复盘」永远是 0 条——判分实际发生在这条线程里，不在打招呼腿里。
+    """
+    ai = getattr(getattr(引擎, "config", None), "ai", None)
+    try:
+        上限 = int(getattr(ai, "probe_max_per_round", 0) or 0)
+    except (TypeError, ValueError):
+        上限 = 0
+    if 上限 <= 0:
+        return None
+    try:
+        阈值 = int(getattr(ai, "match_threshold", 70) or 70)
+    except (TypeError, ValueError):
+        阈值 = 70
+    已用 = {"n": 0}
+
+    def 追问(job: dict, verdict: dict):
+        if 已用["n"] >= 上限:
+            return None
+        # 命中硬否决不是"差一点"：卡在哪条词上结论里已经写出来了，再问一次是白烧配额
+        if str((verdict or {}).get("veto_hit") or "").strip():
+            return None
+        if not in_probe_band((verdict or {}).get("score"), 阈值):
+            return None
+        # 链是懒加载的（greet_engine 起判分那一刻才建），所以只能在要问的时候取：
+        # 这趟重判一开始一次判分都还没跑，早取一次就是整趟 None，界面永远 0 条追问。
+        链 = getattr(引擎, "_ai_analyzer", None)
+        if 链 is None:
+            return None
+        已用["n"] += 1
+        return 链.probe_rejection(job, verdict or {})
+
+    return 追问
+
+
+def 按号轮转(队列: list, 上限: int) -> list:
+    """这一趟要判哪些行：号与号轮着取，不许一个号把名额吃光。
+
+    2026-11-03 线上现测：上限 120 那一趟 judged=120 全落在号0，号1 一行没判。
+    队列是「号0 的池 → 号1 的池」拼起来的，直接截前 N 条，就等于只要号0 的
+    待判数 ≥ N，另一个号永远排不上——他这两条腿各投各的方向，号1（数据分析）
+    判不到，界面上就一直是旧口径留下的 95 分，勾哪条都像在盲投。
+    """
+    if 上限 <= 0:
+        return list(队列)
+    分组 = {}
+    for 项 in 队列:
+        分组.setdefault(项[0], []).append(项)
+    出 = []
+    第几 = 0
+    while len(出) < 上限 and any(len(v) > 第几 for v in 分组.values()):
+        for 号 in sorted(分组):
+            批 = 分组[号]
+            if 第几 < len(批):
+                出.append(批[第几])
+                if len(出) >= 上限:
+                    break
+        第几 += 1
+    return 出
+
+
 def _跑(账号s, 引擎工厂, 文档, 上限) -> None:
     哈希 = 文档["hash"]
     try:
@@ -105,6 +170,7 @@ def _跑(账号s, 引擎工厂, 文档, 上限) -> None:
         if not any(引擎s.values()):
             _设(error="AI 引擎起不来：AI 没启用，或者一个可用接口都没有")
             return
+        追问器s = {号: _追问器(引擎) for 号, 引擎 in 引擎s.items() if 引擎}
 
         队列 = []
         for 号 in 账号s:
@@ -119,11 +185,16 @@ def _跑(账号s, 引擎工厂, 文档, 上限) -> None:
                 if str(粗.get("否决命中") or "").strip() or 粗.get("方向命中") is False:
                     _加(skipped=1)
                     continue
-                if str(判.get("doc") or "") == 哈希 and 判.get("判于"):
+                引擎 = 引擎s.get(号)
+                if 引擎 is None:
+                    # 引擎起不来的号退回老判据（按这份文件判过就跳过），别把整池排进
+                    # 队列再逐条记失败
+                    if str(判.get("doc") or "") == 哈希 and 判.get("判于"):
+                        continue
+                elif not 结论过期(引擎, r, 文档):
                     continue
                 队列.append((号, r))
-        if 上限 > 0:
-            队列 = 队列[:上限]
+        队列 = 按号轮转(队列, 上限)
         _设(total=len(队列), left=len(队列))
 
         连续没接口 = 0
@@ -137,13 +208,17 @@ def _跑(账号s, 引擎工厂, 文档, 上限) -> None:
                 _设(left=len(队列) - 序号 - 1, last="账号 %s 的判分引擎不可用" % 号)
                 continue
             try:
-                话, 写 = 判分写回(岗位池(account_index=号), 引擎, r, 文档=文档)
+                话, 写 = 判分写回(岗位池(account_index=号), 引擎, r, 文档=文档,
+                                  追问=追问器s.get(号))
             except Exception as e:
                 话, 写 = "判分抛异常: %s" % (str(e) or type(e).__name__), None
             if 写 is not None and not 写.get("接口异常"):
                 _加(judged=1)
                 if 写.get("合"):
                     _加(matched=1)
+                if 写.get("追问"):
+                    话 = "%s · 追问: %s" % (
+                        话, str(写["追问"].get("blocking_requirement") or "")[:30])
                 连续没接口 = 0
             else:
                 # 「没判成」一律算进连败：接口异常、没接口、写回失败。只认其中一种的话，

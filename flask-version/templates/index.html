@@ -526,7 +526,7 @@ a{color:var(--accent);text-decoration:none}
 .pool-sel label{display:flex;align-items:center;justify-content:center;width:100%;min-height:36px;cursor:pointer}
 .pool-sel label:hover{background:var(--accent-light)}
 #poolTable input[type=checkbox]{width:17px;height:17px;margin:0;accent-color:var(--accent);cursor:pointer;vertical-align:middle}
-#poolTable{min-width:1180px}
+/* 这一张表的 min-width 只在下面「三张记录表各自的最小宽度」那一处写，这里不再重复一条 */
 .pool-selcount{font-variant-numeric:tabular-nums;color:var(--fg-3rd);white-space:nowrap}
 .pool-selcount b{color:var(--accent);font-weight:600}
 .pool-status{width:86px;padding:2px 3px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)}
@@ -540,6 +540,12 @@ a{color:var(--accent);text-decoration:none}
    表格单元，高度只剩文本那两行；行悬停时这一列空出一块没被涂到的深色方块（他截图指的就是它）。
    td 的 white-space:nowrap 会继承下来，内层要显式改回 normal 才换得了行。 */
 .pool-reason>div{line-height:1.35;word-break:break-word;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+/* 2026-10-31 他指「岗位那里空这么多」：投递记录是 table-layout:fixed，只有"岗位"一列
+   没写宽度，整张表的富余全灌给它——一屏上 210~335px 的列里躺着中位 92px 的字，
+   而 141 行里有 24 行的公司名被 132px 钉成省略号。改法是两件事一起做：
+   宽度写满每一列、富余只给"跳过原因/依据原话"这种长文本列，然后把岗位·公司这类
+   中等长度的列收窄并允许换两行。截断仍然挂在里面的 div 上，理由同上一条注释。 */
+.cell-wrap>div{line-height:1.35;word-break:break-word;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .pool-sub{color:var(--fg-4th);font-size:10.5px;margin-top:2px}
 .pool-fail{color:var(--danger);font-size:10.5px;margin-top:2px}
 .pool-retry{color:var(--warning);font-size:10.5px;margin-top:2px}
@@ -561,10 +567,12 @@ tr.pool-pinned td{background:rgba(245,158,11,.07)}
 .cell-city{font-variant-numeric:tabular-nums}
 .cell-city-sub{color:var(--fg-4th);font-size:10.5px;margin-top:1px}
 /* 三张记录表各自的最小宽度：窗口窄了不再把固定列压成一条缝，
-   改成整表横向滚动——.record-tab-content 就是那个滚动容器 */
+   改成整表横向滚动——.record-tab-content 就是那个滚动容器。
+   岗位池这一张从 1240 提到 1440：固定列 1028 + 岗位/判分理由两列（都不写宽度、分剩下的），
+   1240 那档每列只剩 100 出头，理由列会被折成一竖条 */
 #greetTable{min-width:980px}
 #contactTable{min-width:1200px}
-#poolTable{min-width:1240px}
+#poolTable{min-width:1440px}
 
 /* ── 回复记录聊天界面（一比一模仿BOSS直聘） ── */
 .boss-chat-wrap{display:flex;width:100%;height:100%;min-height:480px;overflow:hidden;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--bd)}
@@ -1395,7 +1403,11 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
           <div class="record-tab-content active" id="greetTabContent" style="padding:0;flex:1;overflow-y:auto">
             <div id="greetAlert" class="greet-alert" style="display:none"><i data-ki="alert-triangle" style="width:14px;height:14px"></i><span><span class="greet-alert-names" id="greetAlertNames"></span> <span id="greetAlertWhy"></span></span><button class="btn btn-ghost btn-sm" id="greetAlertGo"><i data-ki="edit"></i>去填写</button></div>
             <table class="greet-table" id="greetTable">
-              <thead><tr><th style="width:104px">时间</th><th>岗位</th><th style="width:132px">公司</th><th style="width:104px">城市</th><th style="width:96px">薪资</th><th style="width:84px">状态</th><th style="width:250px">跳过原因</th><th style="width:84px">AI</th></tr></thead>
+              <!-- 列宽是 10-31 现量出来的（141 行逐格克隆量内容宽，见 .cell-wrap 那条注释）：
+                   每一列都写死宽度，只有"跳过原因"分容器富余——它中位 185px、最长 964px，是这张表唯一吃得下富余的列。
+                   时间 72（字最多 69）/ 岗位 150+换两行（中位 92、p90 210）/ 公司 140+换两行（p90 140）
+                   / 城市 108（两行：市 + 区，106）/ 薪资 110（108）/ 状态 88（88）/ AI 44（徽章 32） -->
+              <thead><tr><th style="width:72px">时间</th><th style="width:150px">岗位</th><th style="width:140px">公司</th><th style="width:108px">城市</th><th style="width:110px">薪资</th><th style="width:88px">状态</th><th>跳过原因</th><th style="width:44px">AI</th></tr></thead>
               <tbody id="greetTableBody"></tbody>
             </table>
             <div class="empty-state" id="greetEmpty" style="height:100%;min-height:200px">
@@ -1445,17 +1457,19 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
               </div>
             </div>
             <table class="greet-table" id="contactTable">
+              <!-- 10-31：富余以前给的是"号码 / 微信号"（一串手机号 ~130px，宽屏上整列是空的），
+                   现在给"依据原话"——这张表唯一会长到几十上百字的列，并允许换两行 -->
               <thead><tr>
-                <th style="width:104px">时间</th>
+                <th style="width:84px">时间</th>
                 <th style="width:34px">号</th>
-                <th style="width:132px">HR·公司</th>
-                <th>岗位</th>
+                <th style="width:150px">HR·公司</th>
+                <th style="width:150px">岗位</th>
                 <th style="width:124px">薪资·城市</th>
                 <th style="width:88px">联系方式</th>
-                <th style="width:104px">微信名</th>
-                <th style="width:142px">号码 / 微信号</th>
+                <th style="width:110px">微信名</th>
+                <th style="width:150px">号码 / 微信号</th>
                 <th style="width:84px">简历</th>
-                <th style="width:240px">依据原话</th>
+                <th>依据原话</th>
               </tr></thead>
               <tbody id="contactTableBody"></tbody>
             </table>
@@ -1513,17 +1527,20 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
             <table class="greet-table" id="poolTable" style="display:none">
               <thead><tr>
                 <th class="pool-sel"><label title="全选本页筛出来的岗位（再点一次取消；Shift+点行首可连续勾一段）"><input type="checkbox" id="poolCheckAll" onchange="poolCheckAll(this.checked)" aria-label="全选本页筛出的岗位"></label></th>
+                <!-- 岗位/判分理由两列不写宽度=分容器富余；其余每列按 10-31 现量到的
+                     最宽内容给（公司 152、城市 140、薪资 115、状态里的下拉 106、操作两个按钮 83），
+                     状态和操作以前是 96/76，180 行里 180 行都在裁字 -->
                 <th>岗位</th>
-                <th style="width:120px">公司</th>
-                <th style="width:96px">城市</th>
-                <th style="width:100px">薪资</th>
+                <th style="width:140px">公司</th>
+                <th style="width:110px">城市</th>
+                <th style="width:112px">薪资</th>
                 <th style="width:126px">AI 精筛</th>
                 <th>判分理由</th>
-                <th style="width:104px">本地粗筛</th>
-                <th style="width:96px">状态</th>
+                <th style="width:112px">本地粗筛</th>
+                <th style="width:110px">状态</th>
                 <th style="width:118px">备注</th>
                 <th style="width:66px">抓到</th>
-                <th style="width:76px">操作</th>
+                <th style="width:90px">操作</th>
               </tr>
               <!-- 表头下面这一行是逐列筛选：每一格只管自己那一列，判据全在
                    job_pool.筛行 那一份里（单号视图与「全部账号」合并视图共用）。
@@ -4675,13 +4692,13 @@ function renderContactLedger() {
       + '<td title="' + escAttr(r.last_activity) + '">' + escAttr((r.last_activity || '').slice(5, 16)) + '</td>'
       + '<td title="' + escAttr(accName) + '">' + escAttr(String(Number(r.account_index) + 1)) + '</td>'
       + '<td title="' + escAttr(r.chat_name + ' · ' + r.company) + '">' + escAttr(r.chat_name) + '<br><span style="color:var(--fg-3rd);font-size:11px">' + escAttr(r.company) + '</span></td>'
-      + '<td title="' + escAttr(r.job_name) + '">' + escAttr(r.job_title || r.job_name) + link + '</td>'
+      + '<td class="cell-wrap" title="' + escAttr(r.job_name) + '"><div>' + escAttr(r.job_title || r.job_name) + link + '</div></td>'
       + '<td>' + pay + '</td>'
       + '<td>' + ledgerKindHtml(r.contact_kind) + '</td>'
       + '<td>' + ledgerNameHtml(r) + '</td>'
       + '<td>' + numHtml + '</td>'
       + '<td>' + resume + '</td>'
-      + '<td class="ledger-quote" title="' + escAttr(r.matched_quote || r.hr_last_message) + '">' + escAttr(r.matched_quote || r.hr_last_message) + '</td>'
+      + '<td class="ledger-quote cell-wrap" title="' + escAttr(r.matched_quote || r.hr_last_message) + '"><div>' + escAttr(r.matched_quote || r.hr_last_message) + '</div></td>'
       + '</tr>';
   }).join('');
   if (window.KIcon) KIcon.createIcons(body);
@@ -5661,8 +5678,8 @@ function buildGreetRowHtml(data) {
       + escAttr(data.auto_greet_note) + '">' + escHtml(data.auto_greet_note) + '</span>';
   }
   return '<td title="'+escAttr(timeFull)+'">'+escHtml(timeDisplay)+'</td>'
-    +'<td title="'+escAttr(data.job_name||'')+'">'+escHtml(data.job_name||'—')+'</td>'
-    +'<td title="'+escAttr(data.company||'')+'">'+escHtml(data.company||'—')+'</td>'
+    +'<td class="cell-wrap" title="'+escAttr(data.job_name||'')+'"><div>'+escHtml(data.job_name||'—')+'</div></td>'
+    +'<td class="cell-wrap" title="'+escAttr(data.company||'')+'"><div>'+escHtml(data.company||'—')+'</div></td>'
     +'<td>'+城市格(data.city)+'</td>'
     +'<td>'+薪资格子(data.salary)+'</td>'
     +'<td>'+statusHtml+'</td>'

@@ -13,6 +13,7 @@
 """
 import argparse
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -30,6 +31,8 @@ RESUME_CANDIDATES = [
     "https://www.zhipin.com/web/geek/profile-resume",
 ]
 CHAT_URL = "https://www.zhipin.com/web/geek/chat"
+# --slot 填的值：换一份 profile 会话（见 open_browser 的说明）
+_槽 = ""
 
 # 每个号的在线简历/附件简历用哪份 docx（他 10-20 定的分工）
 ACCOUNT_RESUME = {
@@ -49,9 +52,13 @@ def open_browser(idx: int) -> BrowserInstance:
     浏览器"，把他正在编辑的在线简历窗口连同我这条工具一起收掉——表现成
     "简历页自己没了 + 这个号又未登录"。Cookie 检测那条路（app.py 用 9500+idx 和
     临时 profile）已经是现成的先例，照它走。
+
+    --slot 换一个 profile 目录名（resume_probe_0_<slot>）：11-03 现测 BOSS 的简历路由
+    是按会话限流的，同一个 profile 连开三次整页加载都只回「操作失败，请刷新页面重试！」，
+    换个会话就能读到正文——这不是绕过风控的招，是别再拿一个已经被限死的会话反复撞。
     """
     port = 9600 + idx
-    profile = ROOT / "browser_data" / f"resume_probe_{idx}"
+    profile = ROOT / "browser_data" / ("resume_probe_%s%s" % (idx, ("_" + _槽) if _槽 else ""))
     profile.mkdir(parents=True, exist_ok=True)
     instance = launch_browser(headless=False, port=port,
                               user_data_dir=str(profile), background=True)
@@ -441,6 +448,22 @@ def _板块矩形(instance, sid: str) -> dict:
 })()
 """
 
+打开第几个编辑 = """
+(() => {
+  const sid = __SID__, 第几 = __N__;
+  const host = document.getElementById(sid);
+  if (!host) return 'NO SECTION ' + sid;
+  // 一个板块里每条经历各挂一个「编辑」，第几 按 DOM 顺序数（0 起）。
+  // 没 hover 时这些 a 的 rect 是 0×0（DrissionPage 因此报 NoRectError），
+  // 但它们一直在 DOM 里，JS 的 .click() 照样打得开那张抽屉。
+  const 件 = [...host.querySelectorAll('a[ka^="user-resume-edit"]')];
+  if (!件.length) return 'NO EDIT in ' + sid + '（共 0 个）';
+  if (第几 >= 件.length) return 'NO EDIT 第' + 第几 + '个（共 ' + 件.length + ' 个）';
+  件[第几].click();
+  return 'clicked 第' + 第几 + '个/' + 件.length + ' ' + (件[第几].getAttribute('ka') || '');
+})()
+"""
+
 列字段 = """
 (() => {
   const sid = %s;
@@ -593,6 +616,33 @@ def action_ids(idx: int) -> int:
 })()
 """
 
+# 选完文件后那张确认框：文案在版本之间换过（老的是「确定添加」，11-03 现测是「确定」）。
+# 只在这个框里找，别拿整页的「确定」——同一页上还挂着「发送简历」「确认提交」那两个
+# 是会把简历发给 HR 的，这条工具一个发送按钮都不许碰。
+点上传确认 = """
+(() => {
+  const 名 = %s;
+  const clean = (s) => (s || '').replace(/\\u00a0/g, ' ').trim();
+  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };
+  const 框住 = (b) => {
+    let e = b;
+    for (let i = 0; i < 8 && e; i++) {
+      e = e.parentElement;
+      if (e && /dialog|modal|popup|preview|mask/i.test((e.className || '') + '')) return e;
+    }
+    return b.closest('.dialog-wrap, .common-dialog, [class*="modal"]') || document.body;
+  };
+  const 候选 = [...document.querySelectorAll('span,a,button')]
+      .filter(b => /^(确定添加|确定|确认)$/.test(clean(b.innerText)) && vis(b));
+  const 命中 = 候选.find(b => clean(框住(b).innerText).includes(名))
+            || 候选.find(b => /上传|附件|预览/.test(clean(框住(b).innerText)));
+  if (!命中) return 'NO 上传确认按钮（可见确定类：' + 候选.map(clean).join('/') + '）';
+  const 现场 = clean(框住(命中).innerText).slice(0, 180);
+  命中.click();
+  return 'clicked ' + clean(命中.innerText) + ' 框内=' + 现场;
+})()
+"""
+
 
 开附件口 = """
 (() => {
@@ -654,11 +704,27 @@ def action_attach(idx: int, path: str, step: str) -> int:
     print(f"用第 {idxs[0]} 个文件框（可见候选：{idxs}）")
     target.input(path)
     print("已选文件:", path)
-    time.sleep(8)
-    # 选完文件只是进了预览，右侧「附件确认」要点「确定添加」才真的进附件管理
-    print("确定添加:", instance.run_js(
-        点按钮 % (json.dumps(""), json.dumps("确定添加")), as_expr=True))
-    time.sleep(6)
+    # 选完文件只是进了预览，要点框里那个确认才会真的进附件管理。
+    # 文案会变（老版「确定添加」，11-03 现测「确定」），所以按"这个框里的确定类按钮"找，
+    # 而且只在框内找：同页还有「发送简历」「确认提交」，那条工具一个发送按钮都不碰。
+    # 框不是秒出：11-03 传 794KB 那份，8 秒后按钮还是 w=0，得等它自己弹出来（最多 45 秒）。
+    名 = Path(path).name
+    点了 = ""
+    for 第几 in range(30):
+        time.sleep(1.5 if 第几 else 4)
+        回 = instance.run_js(点上传确认 % json.dumps(名), as_expr=True)
+        if isinstance(回, str) and 回.startswith("clicked"):
+            点了 = 回
+            print("确认(等 %s 次):" % (第几 + 1), 回[:220])
+            break
+    if not 点了:
+        print("⚠️ 轮询 45 秒没等到可点的上传确认按钮:", 回)
+    # 点完立刻读会拿到上一刻：轮询到「文件（3/3）」或 24 秒为止
+    for _ in range(20):
+        time.sleep(1.2)
+        现 = (instance.run_js(附件区, as_expr=True) or {}).get("text") or ""
+        if "3/3" in 现:
+            break
     shot = ROOT / "data" / f"resume_attach_account_{idx}.png"
     try:
         instance.page.get_screenshot(str(shot))
@@ -701,6 +767,77 @@ _滚动到可见 = """(() => {
 # 下标会随页面上还有几个可见输入框而漂，标签不会。
 # 这里用 __SPECS__ 占位再 replace，不用 % 格式化——简历正文里有 "提升 30%" 这种
 # 百分号，`模板 % json` 会当场 ValueError: unsupported format character。
+读字段 = """
+(() => {
+  const sp = __SPEC__;
+  const host = (sp.sid && document.getElementById(sp.sid)) || document;
+  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };
+  const all = [...host.querySelectorAll('input,textarea,[contenteditable=true]')].filter(vis);
+  const 值Of = (e) => (e.value !== undefined && e.value !== '' ? e.value : (e.innerText || ''));
+  const lblOf = (e) => { const p = e.closest('div[class*=form-item]') || e.parentElement;
+                         return ((p && p.innerText) || '').trim(); };
+  let hits = [];
+  if (sp.ph) hits = all.filter((x) => (x.placeholder || '').includes(sp.ph));
+  if (sp.lbl) hits = all.filter((x) => lblOf(x).includes(sp.lbl));
+  if (sp.ka) hits = all.filter((x) => x.getAttribute('ka') === sp.ka);
+  // 含：按"这一格里正写着这段话"定位。抽屉里同名的框不止一个（教育经历既有
+  // 「专业排名」又有「在校担任职务」），拿占位符猜就会改错格（11-03 实测：
+  // 占位符命中的那一格是担任职务，专业排名那句在别处）。
+  if (sp.含) hits = all.filter((x) => 值Of(x).includes(sp.含));
+  if (!hits.length) return {命中: 0, 说明: '没找到这一格', 全部: all.map((e) => (e.placeholder || e.tagName))};
+  // 全文回显，不截断：要照原样改一句话（比如只删掉「专业排名：前1%」那一行），
+  // 截到 140 字就只能靠猜，猜错就是把他的经历抹掉一半。
+  return {命中: hits.length,
+          第几: hits.map((e, i) => i),
+          占位: hits.map((e) => e.placeholder || ''),
+          值: hits.map(值Of)};
+})()
+"""
+
+
+改文 = """
+(() => {
+  const sp = __SPEC__;
+  const host = (sp.sid && document.getElementById(sp.sid)) || document;
+  const vis = (e) => { const r = e.getBoundingClientRect(); return r.width > 2 && r.height > 2; };
+  const all = [...host.querySelectorAll('input,textarea,[contenteditable=true]')].filter(vis);
+  const 值Of = (e) => (e.value !== undefined && e.value !== '' ? e.value : (e.innerText || ''));
+  const lblOf = (e) => { const p = e.closest('div[class*=form-item]') || e.parentElement;
+                         return ((p && p.innerText) || '').trim(); };
+  let e = null;
+  if (sp.ka) e = all.find((x) => x.getAttribute('ka') === sp.ka);
+  if (!e && sp.ph) e = all.find((x) => (x.placeholder || '').includes(sp.ph));
+  if (!e && sp.lbl) e = all.find((x) => lblOf(x).includes(sp.lbl));
+  if (!e && sp.含) e = all.find((x) => 值Of(x).includes(sp.含));
+  if (!e) return {命中: 0, 说明: '没找到这一格', 全部: all.map((x) => x.placeholder || x.tagName)};
+  const 原 = (e.value !== undefined && e.value !== '') ? e.value : (e.innerText || '');
+  const 账 = [];
+  let 新 = 原;
+  for (const p of (sp.pairs || [])) {
+    const 条 = p.定则 ? new RegExp(p.找, p.志 || 'g') : null;
+    const 前 = 新;
+    新 = 条 ? 新.replace(条, p.换) : 新.split(p.找).join(p.换);
+    账.push((p.名 || p.找) + (新 !== 前 ? '：改了' : '：没命中'));
+  }
+  if (新 !== 原) {
+    e.focus();
+    if (e.isContentEditable) { e.innerText = 新; }
+    else {
+      const proto = e.tagName === 'TEXTAREA' ? HTMLTextAreaElement : HTMLInputElement;
+      const setter = Object.getOwnPropertyDescriptor(proto.prototype, 'value').set;
+      setter.call(e, ''); e.dispatchEvent(new Event('input', {bubbles: true}));
+      setter.call(e, 新);
+    }
+    e.dispatchEvent(new Event('input', {bubbles: true}));
+    e.dispatchEvent(new Event('change', {bubbles: true}));
+  }
+  // 只报"改了几处 + 改完的长度"，正文不整段回显：这是他的简历，日志里留全文没意义
+  return {命中: 1, 长度: [原.length, 新.length], 逐条: 账,
+          尾: 新.slice(Math.max(0, 新.length - 60))};
+})()
+"""
+
+
 按标记赋值 = """
 (() => {
   const specs = __SPECS__;
@@ -896,11 +1033,93 @@ _滚动到可见 = """(() => {
 """
 
 
+def _跑js(instance, js):
+    """简历页是 SPA：整页加载完的头几秒里执行上下文还会被换掉一次，那一眼 run_js
+    报的是"js运行环境出错"（11-03 实测：readyState=complete、#education 在、15 个
+    编辑按钮都在，脚本仍崩在第一个 JS 上）。重试到上下文稳住，而不是让整趟脚本
+    因为一次呼吸没跟上就废掉——每次重跑都要再加载一整页。
+    """
+    for 第几 in range(6):
+        try:
+            return instance.run_js(js, as_expr=True)
+        except Exception as e:
+            if 第几 == 5:
+                raise
+            print("JS 上下文没就绪（%s），%d 秒后重试" % (type(e).__name__, 2 * (第几 + 1)))
+            time.sleep(2 * (第几 + 1))
+
+
+def _存现场(instance, 名字: str, idx: int) -> list:
+    """把"这一眼页面上真有什么"整张留下：形状 + HTML + 截图，一次都不多点页面。
+
+    要这个是因为有两回光凭日志查不出形状：号0 那趟 BOSS 回了「操作失败，请刷新
+    页面重试！」（11-03 01:34），还有一回连续硬刷被限流、整页只回来一个壳。
+    这里只读页面，不点任何东西——多点一下就是多一分风控。
+    """
+    目录 = ROOT / "data" / "简历现场"
+    目录.mkdir(parents=True, exist_ok=True)
+    基 = 目录 / ("%s_%s_号%s" % (time.strftime("%m%d-%H%M%S"), 名字, idx))
+    留 = []
+    try:
+        状 = instance.run_js("""(() => ({url: location.href,
+            节点: document.querySelectorAll('*').length,
+            板块: !!document.getElementById('education'),
+            编辑按钮: document.querySelectorAll("a[ka^='user-resume-edit']").length,
+            弹层: [...document.querySelectorAll('.boss-popup__content,[class*=toast],[class*=message]')]
+                     .map(e => (e.innerText || '').trim()).filter(t => t).slice(0, 8)}))()""",
+            as_expr=True)
+        路径 = 基.with_suffix(".txt")
+        路径.write_text(json.dumps(状, ensure_ascii=False, indent=1), encoding="utf-8")
+        留.append(str(路径))
+        print("现场形状:", json.dumps(状, ensure_ascii=False)[:600])
+    except Exception as e:
+        print("现场形状没取到:", type(e).__name__, str(e)[:60])
+    try:
+        文 = getattr(instance.page, "html", None) or instance.run_js(
+            "return document.documentElement.outerHTML;")
+        if 文:
+            路径 = 基.with_suffix(".html")
+            路径.write_text(str(文), encoding="utf-8")
+            留.append(str(路径))
+    except Exception as e:
+        print("HTML 没存下:", type(e).__name__, str(e)[:60])
+    try:
+        路径 = 基.with_suffix(".png")
+        instance.page.get_screenshot(str(路径))
+        留.append(str(路径))
+    except Exception as e:
+        print("截图没存下:", type(e).__name__, str(e)[:60])
+    print("📸 现场已留:", " | ".join(留) or "三样都没成")
+    return 留
+
+
+def 等简历页就绪(instance, 最多=90, idx=None):
+    """整页加载实测 126~135 秒，也可能只回一个壳（连续硬刷被限流那回就是这样）。
+    等到真拿到简历板块再动手；到点没就绪就如实说，后面的步骤会报"找不到"，
+    不许悄悄往下跑成"改了"。"""
+    过 = 0
+    while 过 < 最多:
+        try:
+            形 = instance.run_js("""(() => ({ready: document.readyState,
+              板块: !!document.getElementById('education'),
+              按钮: document.querySelectorAll("a[ka^='user-resume-edit']").length}))()""",
+              as_expr=True)
+            if isinstance(形, dict) and 形.get("板块") and 形.get("按钮", 0) >= 3:
+                print("简历页就绪:", json.dumps(形, ensure_ascii=False), "等了 %d 秒" % 过)
+                return True
+        except Exception:
+            pass
+        time.sleep(3)
+        过 += 3
+    print("⚠️ 简历页 %d 秒还没就绪，这一趟只能当没做成" % 最多)
+    _存现场(instance, "没就绪", idx if idx is not None else "?")
+    return False
+
+
 def _跑模板(instance, 模板, 载荷):
     """把载荷塞进 JS 模板再跑。用 replace 不用 %：正文里的百分号会把 % 格式化打炸。"""
     文 = json.dumps(载荷, ensure_ascii=False)
-    return instance.run_js(
-        模板.replace("__SPECS__", 文).replace("__SPEC__", 文), as_expr=True)
+    return _跑js(instance, 模板.replace("__SPECS__", 文).replace("__SPEC__", 文))
 
 
 def action_script(idx: int, sid: str, ka: str, steps: list) -> int:
@@ -910,28 +1129,36 @@ def action_script(idx: int, sid: str, ka: str, steps: list) -> int:
     """
     instance = open_browser(idx)
     instance.get("https://www.zhipin.com/web/geek/resume")
-    time.sleep(6)
+    if not 等简历页就绪(instance, idx=idx):
+        return 1
     域 = sid
     for st in steps:
         动作 = st.get("do")
         if 动作 == "open":
-            rect = _板块矩形(instance, sid) if sid else None
-            if ka and not rect:
-                rect = instance.run_js(
+            # sid/ka 优先看这一步自己给的：一趟脚本要连着改几个板块（教育、项目…），
+            # 只认命令行的那一个 sid 就没法走第二条。
+            板 = st.get("sid") or sid
+            卡 = st.get("ka") or ka
+            第几 = int(st.get("第几", 0) or 0)
+            rect = _板块矩形(instance, 板) if 板 else None
+            if 卡 and not rect:
+                rect = _跑js(instance,
                     """(() => {const e=document.querySelector('[ka=' + %s + ']');
                     if(!e) return null; const r=e.getBoundingClientRect();
                     return {x: Math.round(r.left+r.width/2), y: Math.round(r.top+r.height/2)};})()"""
-                    % json.dumps(ka), as_expr=True)
+                    % json.dumps(卡))
             if not rect:
-                print("开板块失败：找不到", sid or ka)
+                print("开板块失败：找不到", 板 or 卡)
                 return 1
             instance.page.actions.move_to((rect["x"], rect["y"]))
             time.sleep(0.8)
-            if ka:
-                print("开编辑:", instance.run_js(按ka开 % json.dumps(ka), as_expr=True))
+            if 卡:
+                print("开编辑:", _跑js(instance, 按ka开 % json.dumps(卡)))
             else:
-                print("开编辑:", instance.run_js(打开编辑 % json.dumps(sid), as_expr=True))
-            域 = "" if ka else sid
+                print("开编辑:", _跑js(instance, 打开第几个编辑
+                      .replace("__SID__", json.dumps(板, ensure_ascii=False))
+                      .replace("__N__", str(第几))))
+            域 = "" if 卡 else 板
             time.sleep(2)
         elif 动作 == "set":
             print("赋值:", instance.run_js(
@@ -971,17 +1198,17 @@ def action_script(idx: int, sid: str, ka: str, steps: list) -> int:
             选 = st.get("css", "")
             if 选:
                 try:
-                    instance.run_js(_滚动到可见.replace("__CSS__", json.dumps(选, ensure_ascii=False)),
-                                    as_expr=True)
+                    _跑js(instance, _滚动到可见.replace("__CSS__", json.dumps(选, ensure_ascii=False)))
                     time.sleep(0.5)
                     件 = instance.eles('css:' + 选, timeout=4) or []
-                    if not 件:
+                    第几 = int(st.get("第几", 0) or 0)
+                    if not 件 or 第几 >= len(件):
                         # 不撤整趟：这一格本来就可能不存在（比如公司联想里根本没有
                         # 「新公司」那一条），后面的闸门会核最终结果
-                        print("真点：找不到", 选, "（继续走后面的步骤）")
+                        print("真点：找不到", 选, "第", 第几, "个（共 %d 个，继续走后面的步骤）" % len(件))
                     else:
-                        件[0].click()
-                        print("真点了元素", 选)
+                        件[第几].click()
+                        print("真点了元素", 选, "第%d个" % 第几)
                 except Exception as e:
                     print("真点失败:", type(e).__name__, e)
             else:
@@ -1012,6 +1239,17 @@ def action_script(idx: int, sid: str, ka: str, steps: list) -> int:
             except Exception as e:
                 print("输入失败:", type(e).__name__, e)
             time.sleep(float(st.get("wait", 1.5)))
+        elif 动作 == "edittext":
+            # 就地改几句话（删一行 / 换几个词），而不是整段重写：
+            # 整段重写要先把原文捞出来喂回去，捞的时候列字段截到 140 字，
+            # 一回读就把他半段经历抹了（这条踩过，见 memory「dump 截断会把已存误判成没存」）。
+            print("改文:", json.dumps(_跑模板(instance, 改文, st.get("at") or {}),
+                                    ensure_ascii=False)[:1200])
+            time.sleep(float(st.get("wait", 0.8)))
+        elif 动作 == "readfield":
+            print("读全文:", json.dumps(_跑模板(instance, 读字段, st.get("at") or {}),
+                                     ensure_ascii=False)[: int(st.get("限", 4000))])
+            time.sleep(float(st.get("wait", 0.4)))
         elif 动作 == "clickword":
             # BOSS 弹窗那对「暂不删除 / 继续删除」不是 span/a/button，是 div，
             # 按文字点那条找不到（实测点了个空）
@@ -1035,10 +1273,19 @@ def action_script(idx: int, sid: str, ka: str, steps: list) -> int:
             print("聚焦:", instance.run_js(
                 聚焦字段 % (json.dumps(域), json.dumps(int(st.get("field", 0)))), as_expr=True))
             time.sleep(float(st.get("wait", 1.2)))
+        elif 动作 == "peek":
+            # 先看清这一刻页面上有哪些可写控件再决定往哪个下标写。
+            # 为什么需要：编辑已有那一条时开出来的表单，字段下标和「添加」那条不一样
+            # （实测「添加教育经历」是 0学历/1学校/2专业/3在校经历，而板块里的 编辑
+            # 走的是另一条挂载路径）；照猜的下标写下去，写进「专业」那一格就是把他的
+            # 真实信息抹了。看一眼不要钱，写错要人命。
+            print("看一眼:", json.dumps(instance.run_js(
+                列字段 % json.dumps(st.get("scope", 域)), as_expr=True),
+                ensure_ascii=False)[: int(st.get("限", 2600))])
+            time.sleep(float(st.get("wait", 0.5)))
         elif 动作 == "clicktext":
-            print("点文本:", instance.run_js(
-                点按钮 % (json.dumps(st.get("scope", 域)), json.dumps(st.get("text", ""))),
-                as_expr=True))
+            print("点文本:", _跑js(instance, 点按钮 % (json.dumps(st.get("scope", 域)),
+                                                    json.dumps(st.get("text", "")))))
             time.sleep(float(st.get("wait", 1.0)))
         elif 动作 == "type":
             # 只读选择器（职位名称/所属行业）要真敲键盘才会出下拉，直接改 value 它不认。
@@ -1092,6 +1339,9 @@ def action_script(idx: int, sid: str, ka: str, steps: list) -> int:
                 print("截图:", p)
             except Exception as e:
                 print("截图失败:", e)
+        elif 动作 == "dump":
+            # 哪一步可疑就在哪一步后面插一条 dump：存形状+HTML+截图，不多点一下页面
+            _存现场(instance, str(st.get("名", "步骤")), idx)
         else:
             print("未知步骤:", 动作)
             return 1
@@ -1101,6 +1351,7 @@ def action_script(idx: int, sid: str, ka: str, steps: list) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--acct", type=int, required=True, help="0=主账号 1=账号2")
+    ap.add_argument("--slot", default="", help="profile 后缀：换一份简历页会话（被限流时用）")
     ap.add_argument("--action", default="probe")
     ap.add_argument("--section", default="")
     ap.add_argument("--which", type=int, default=0)
@@ -1114,6 +1365,8 @@ def main() -> int:
     ap.add_argument("--step", default="upload")
     ap.add_argument("--script", default="", help="步骤 JSON 文件，见 action_script")
     args = ap.parse_args()
+    global _槽
+    _槽 = re.sub(r"[^0-9A-Za-z_-]", "", args.slot or "")
     if args.acct not in (0, 1):
         print("只支持 --acct 0 或 1")
         return 2

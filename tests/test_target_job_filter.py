@@ -133,100 +133,42 @@ class 要求段那一句Test:
         assert "不是要投的方向" in reason
 
 
-class TestLabelingHalfStillCounts:
-    """目标有两半（数据分析 + 数据标注），词表却是一个"标注"都没有。
+class TestLabelingNoLongerTarget:
+    """2026-11-01 用户口径：「BOSS 直聘不需要数据标注的岗位了」。
 
-    10-09 现读 `ai.target_job_keywords` = 下面 NO_LABEL_TABLE 那份，是照着
-    "只投数据分析类"那句话建的；结果当天标题含"标注"的 19 单里
-    **新投出去 0 单**，6 单被这道闸以"标题和 JD 里都没有数据分析类字样"拦死
-    （视频数据标注/AI训练师 5 单 + 数据标注专员-影视方向 1 单）。
-    账号默认招呼语本身就写着"想找线上兼职（数据分析/数据标注方向）"。
+    两个号分别只投 AI 产品经理 / 数据分析，标注族不再由代码兜底——删掉配置里的
+    词就该真的不进来。这里锁的是"删了有效"，也锁着"别把运营/客服当成标注漏进来"。
     """
 
     NO_LABEL_TABLE = ["数据分析", "数据挖掘", "数据治理", "数据建模", "商业分析",
                       "经营分析", "数据仓库", "数据清洗", "指标体系", "BI", "SQL"]
     LABEL_JD = ("【岗位职责】 1. 负责视频通话场景下多模态数据标注与模型评测工作，"
                 "依据评测标准判定模型回复质量，精准识别、定位模型各类问题。"
-                "2. 从多维度开展评测：画面识别、属性细节、空间指代、OCR、时序实时性。"
-                "【岗位要求】 1. 本科及以上学历，专业不限；"
-                "2. 有 1 年及以上数据标注、数据质检、AI 模型评测相关经验优先。")
+                "【岗位要求】 2. 有 1 年及以上数据标注、数据质检相关经验优先。")
 
     def _job(self, title):
         return {"job_name": title, "jd_description": self.LABEL_JD,
-                "jd_requirements": self.LABEL_JD, "company": "嵩聿奕科技有限公司"}
+                "jd_requirements": self.LABEL_JD, "company": "某科技有限公司"}
 
-    def test_词表里没有标注字样时数据标注岗仍算方向(self):
-        assert target_job_hit(self.NO_LABEL_TABLE,
-                              self._job("视频数据标注/AI训练师"))
+    def test_标注岗不再算方向(self):
+        for title in ("视频数据标注/AI训练师", "数据标注专员-影视方向",
+                      "兼职·居家2d标注员(接受无经验)"):
+            assert not target_job_hit(self.NO_LABEL_TABLE, self._job(title)), title
 
-    def test_标题只写标注员没写数据也算(self):
-        """「兼职·居家2d标注员(接受无经验)」正文常常一句话都没有，判据得认标题"""
-        assert target_job_hit(self.NO_LABEL_TABLE,
-                              {"job_name": "兼职·居家2d标注员(接受无经验)15-20元/时"})
-
-    def test_真实标注岗过闸门不再被拦(self):
-        assert jd_gate([], self._job("数据标注专员-影视方向"),
-                       title_keywords=[], target_keywords=self.NO_LABEL_TABLE) == ""
-
-    def test_标题写着到岗的标注岗仍拦得住(self):
-        """补标注这半壁不能把"线下面试+到岗"那种放出去——否决词表接不住这一写法"""
-        reason = jd_gate([], {"job_name": "数据标注兼职（可转正-线下面试和到岗）",
-                              "jd_description": self.LABEL_JD,
-                              "jd_requirements": self.LABEL_JD},
-                         title_keywords=[], target_keywords=self.NO_LABEL_TABLE)
-        assert reason, "这一单自己写了要来公司，不该投"
-
-    def test_同一份JD去掉到岗字样就该放行(self):
-        """上一条拦的是"到岗"这几个字，不是标注方向本身"""
-        assert jd_gate([], {"job_name": "数据标注兼职（可转正）",
-                            "jd_description": self.LABEL_JD,
-                            "jd_requirements": self.LABEL_JD},
-                       title_keywords=[], target_keywords=self.NO_LABEL_TABLE) == ""
-
-    def test_跑偏的岗照旧拦(self):
-        for title in ("实验室分析员", "电商运营助理", "项目经理（数据采集）"):
-            reason = jd_gate([], {"job_name": title,
-                                  "jd_description": "负责样本检测与原始记录，按规程操作仪器。",
-                                  "jd_requirements": "化学、环境监测相关专业优先。"},
+    def test_标注岗过不了方向闸(self):
+        for title in ("视频数据标注/AI训练师", "数据标注专员-影视方向"):
+            reason = jd_gate([], self._job(title),
                              title_keywords=[], target_keywords=self.NO_LABEL_TABLE)
             assert reason and "方向" in reason, title
 
-    def test_空词表仍然是不做正向过滤(self):
-        assert target_job_hit([], {"job_name": "普工包吃住"}) == ""
-
-    REAL_ONLINE_LABEL_JD = (
-        "工作周期：6个月 每周工期：5天及以上 工作时间：不限 结算方式：月结\n"
-        "**项目背景** 归属【高价值专家】长期大项目，线上远程长期协作，"
-        "**要求每日稳定在线 4-8 小时，长期参与**\n"
-        "**工作内容** 1. 依据 rubrics 规则，做专业评估、要素提取、内容校验；"
-        "2. 按照 rubrics 标准完成判别、标注、要点梳理工作；"
-        "3. 输出结构化评估结论，配合团队迭代评测标准。")
-
-    def test_标题写在线标注的也算这半壁(self):
-        """10-10 这一天被同一判据拦了 15 次：Centific「医疗合规质量与数据决策专家‑在线标注兼职」
-
-        标题写着"在线标注兼职"，正文只有一句"完成判别、标注、要点梳理"，
-        既没有"数据标注"连写也没有"标注员/标注专员"——现判据回放命中为空，
-        于是这一单在 04:32 等时刻被"不是要投的方向"反复拦掉。
-        """
-        assert not any("标注" in k for k in self.NO_LABEL_TABLE)
-        assert target_job_hit(self.NO_LABEL_TABLE, {
-            "job_name": "医疗合规质量与数据决策专家‑在线标注兼职",
-            "jd_description": self.REAL_ONLINE_LABEL_JD,
-            "description": self.REAL_ONLINE_LABEL_JD,
-            "company": "Centific"},
-        ), "标题写着「在线标注兼职」却按没命中方向拦掉"
-
     def test_正文里的标注两个字不算方向(self):
-        """方向词只认标题里的"标注"：正文写"按要求标注通话质检标签"的客服岗不是标注岗"""
         assert not target_job_hit(self.NO_LABEL_TABLE, {
             "job_name": "电话客服（线上兼职）",
             "jd_description": "负责接听来电，按要求标注通话场景的质检标签，记录工单。"})
 
-    def test_标题写标注的岗仍不许带到岗(self):
-        assert not target_job_hit(self.NO_LABEL_TABLE, {
-            "job_name": "在线标注专员（需到岗坐班）",
-            "jd_description": self.LABEL_JD})
+    def test_两个号真正要的方向仍然认(self):
+        assert target_job_hit(["AI产品经理", "AI产品"], {"job_name": "AI产品经理（长沙）"})
+        assert target_job_hit(["数据分析"], {"job_name": "数据分析师 8-12K 长沙"})
 
 
 class TestConfigWired:

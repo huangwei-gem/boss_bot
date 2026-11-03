@@ -2143,31 +2143,60 @@ class UnifiedBotLoop:
 
         self._log("INFO", "打招呼线程结束")
 
+    def _probe_callback(self):
+        """给「精筛一条」用的追问回调：配额、边界带、否决词只在这一处判。
+
+        为什么要有回调：真实的筛岗发生在池子那条腿上（capture_only=true 时打招呼
+        腿根本不判分），追问长在打招呼腿里等于永远不触发——盘上 3288 条判分、
+        `ai_probe` 一条都没有，就是这个形状。判分写回（screen_judge）现在两边共用，
+        这里只把"该不该问"交出去。
+        """
+        引擎 = self._greet_engine
+        if 引擎 is None:
+            return None
+        try:
+            limit = int(self.config.ai.probe_max_per_round)
+        except (TypeError, ValueError):
+            limit = 0
+        if limit <= 0:
+            return None
+        threshold = self.config.ai.match_threshold
+
+        def 追问(job: dict, verdict: dict):
+            if self._probe_used_this_round >= limit:
+                return None
+            # 命中硬否决的岗不是"差一点"：它已经写明卡在哪条词上了，再问一次是白烧配额
+            if str((verdict or {}).get("veto_hit") or "").strip():
+                return None
+            if not in_probe_band((verdict or {}).get("score"), threshold):
+                return None
+            # 链是懒加载的：判分那一刻才建（AI 签名变了还会置回 None），所以取链要放到
+            # 真要问的时候。在回调构造时取一次，等于每轮第一行、每次热重载后第一行
+            # 永远问不出去——而池子这条腿一轮就判几十行，漏的那几行正是边界带那几条。
+            chain = getattr(引擎, "_ai_analyzer", None)
+            if chain is None:
+                return None
+            self._probe_used_this_round += 1
+            probe = chain.probe_rejection(job, verdict or {})
+            if probe:
+                job["_ai_probe"] = probe
+                self._log("INFO", "🔎 追问不匹配原因: "
+                                  f"{str(probe.get('blocking_requirement', ''))[:60]}")
+            return probe
+
+        return 追问
+
     def _maybe_probe_rejection(self, job: dict, ai_result: dict) -> bool:
         """AI 判"不符合"之后追问它到底卡在哪一条，结果挂回 job 上给记录和推送用。
 
         只问 AI，不给 HR 发任何消息——主动问 HR"哪里不合适"是骚扰，撞红线。
         返回 True 表示这一轮又用掉一次配额（问没问到都算，问砸了同样烧了一次接口）。
         """
-        chain = getattr(self._greet_engine, "_ai_analyzer", None) if self._greet_engine else None
-        if chain is None:
-            return False
-        try:
-            limit = int(self.config.ai.probe_max_per_round)
-        except (TypeError, ValueError):
-            limit = 0
-        if limit <= 0 or self._probe_used_this_round >= limit:
-            return False
-        if not in_probe_band((ai_result or {}).get("score"),
-                             self.config.ai.match_threshold):
-            return False
-        self._probe_used_this_round += 1
-        probe = chain.probe_rejection(job, ai_result or {})
-        if probe:
-            job["_ai_probe"] = probe
-            self._log("INFO", f"🔎 追问不匹配原因: "
-                              f"{str(probe.get('blocking_requirement', ''))[:60]}")
-        return True
+        before = self._probe_used_this_round
+        cb = self._probe_callback()
+        if cb is not None:
+            cb(job, ai_result or {})
+        return self._probe_used_this_round > before
 
     def _record_greet_skip(self, job: dict, ui_status: str, reason: str):
         """跳过结论落库并推送前端；今天本号在这个岗位上记过同类别就不再重复。
@@ -2273,7 +2302,7 @@ class UnifiedBotLoop:
         走的是同一个函数，两处各写一套就会一边把"没判成"写成"不合"。
         """
         from boss_bot.screen_judge import 判分写回
-        return 判分写回(池, self._greet_engine, row)[0]
+        return 判分写回(池, self._greet_engine, row, 追问=self._probe_callback())[0]
 
     def _重贴粗筛标(self, 池) -> None:
         """每轮抓取开头都把整池的粗筛标签按现在的词表重算一遍。
@@ -2312,6 +2341,18 @@ class UnifiedBotLoop:
         if len(抓到) != len(可投):
             self._log("INFO", "⏭️ 本轮 %d 条 BOSS 侧已有会话，没进池（池里只留投得出去的）"
                       % (len(抓到) - len(可投)))
+        # 追问到的拒因回流到这里：这家 HR 亲口拒过（14 天内），它的新岗位不再进池。
+        # 用户 2026-11-03 第二次交代「碰到拒绝的你要追问原因啊…然后自调整优化投递策略」——
+        # 只把原因存起来不叫调整，得有一条真会改行为的判据。挡在进池这一步，
+        # 是因为界面口径「池里不留投不出去的岗位」；只挪不删：这轮没进池的仍在日志里报名字。
+        from boss_bot import reject_reason
+        可投, 挡 = reject_reason.筛掉刚拒过的(可投)
+        if 挡:
+            台数 = sum(1 for j in 抓到
+                       if str(j.get("company") or "").strip() in 挡)
+            样 = sorted(挡.items())[:3]
+            self._log("INFO", "⏭️ 本轮 %d 条这家 HR 亲口拒过，没进池（%s）"
+                      % (台数, "；".join("%s：「%s」" % (c, (r or "")[:30]) for c, r in 样)))
         结果 = 池.收(可投)
         挪了, 挪话 = 池.挪走已沟通(身份库)
         if 挪了:
@@ -2325,7 +2366,9 @@ class UnifiedBotLoop:
                 标 = self._粗筛标记(行)
                 if 标:
                     池.改(编号, gate=标)
-        待筛 = [r for r in 池.列表(排序="新抓的在前") if not (r.get("ai") or {}).get("判于")]
+        from boss_bot.screen_judge import 结论过期
+        待筛 = [r for r in 池.列表(排序="新抓的在前")
+                if 结论过期(self._greet_engine, r)]
         try:
             限额 = int(self.config.ai.screen_max_per_round)
         except (TypeError, ValueError):
@@ -2354,7 +2397,7 @@ class UnifiedBotLoop:
         动作留在这里，一轮里按冷却/额度自己收手。
         """
         from boss_bot.job_pool import 岗位行成抓取, 状态已投, 状态不投, 状态已选
-        from boss_bot.greet_engine import 勾选标记, 是永久不投原因
+        from boss_bot.greet_engine import 勾选标记, 是永久不投原因, 失败族, 该放手这一行
         池 = self._job_pool()
         待投 = 池.列表(状态=状态已选)
         if not 待投:
@@ -2396,6 +2439,11 @@ class UnifiedBotLoop:
                 break
             成否 = self._greet_engine.send_greeting(job)
             因 = self._greet_engine.最近一次跳过原因()
+            # 同一行连着几轮撞同一族成因，就别再判它"下一轮再试"（判据见 该放手这一行）
+            上一递 = 行.get("投递") or {}
+            族 = 失败族(因)
+            次数 = ((int(上一递.get("失败次数") or 0)
+                     if 上一递.get("失败族") == 族 else 0) + 1)
             if 成否:
                 状态, 动作 = 状态已投, "机器投出去了"
                 递 = {"成": True, "时间": time.time()}
@@ -2405,11 +2453,17 @@ class UnifiedBotLoop:
                 # 的。判成不投、红字写清是哪一种；他要是想重投，把这行改回新入库即可。
                 状态, 动作 = 状态不投, "机器判 BOSS 侧已有会话或岗位已下线，不再重投"
                 递 = {"成": False, "原因": 因, "时间": time.time(), "可重试": False}
+            elif 该放手这一行(因, 次数):
+                状态, 动作 = 状态不投, ("机器判这一行连着 %d 轮都卡在「%s」，"
+                                       "不再每轮重开它的详情页" % (次数, 族))
+                递 = {"成": False, "原因": 因, "时间": time.time(), "可重试": False,
+                      "失败族": 族, "失败次数": 次数}
             else:
                 # 腿上的毛病（加载失败、抽屉没出、验证码没过、额度见底）不是这一单的
                 # 判决，留在队列里下一轮再试；原因照实写，别再印成「详见打招呼记录」
                 状态, 动作 = 状态已选, "机器试投没成，留在队列里下一轮再试"
                 递 = {"成": False, "时间": time.time(), "可重试": True,
+                      "失败族": 族, "失败次数": 次数,
                       "原因": 因 or "点了沟通但没成（详见打招呼记录）"}
             池.改(行.get("id", ""), status=状态, 投递=递,
                  勾选={**机器痕, "动作": 动作})
@@ -2493,15 +2547,16 @@ class UnifiedBotLoop:
                 if self._capture_only():
                     # 只抓不投：这一轮搜到的岗位全进池，一条都不点「立即沟通」。
                     # 投哪条由他在面板上勾，勾完由打招呼线程取走（见 _drain_apply_queue）
-                    self._capture_jobs(jobs)
-                    # 每个搜索任务收尾再排空一次勾队列：一轮里几个搜索任务串下来要跑
-                    # 十几分钟，只在轮头排空的话，他中途勾的那几条得等整轮跑完才动——
+                    # 排空放在精筛之前：`_capture_jobs` 一个字都不碰页面（吃的就是这批
+                    # 内存里的卡片），却要为每张卡片逐行问 AI——2026-11-03 现测一批 89 行
+                    # 要十几分钟，排空挂在它后面等于他中途勾的那条最快也要等这么久，
                     # 界面点了没反应就是他要问的那种"没生效"。队列空的时候这里只读一次
                     # 池文件，不产生任何导航。
                     try:
                         self._drain_apply_queue()
                     except Exception as e:
                         self._log("WARN", f"搜索任务之间没排空勾选: {type(e).__name__}: {e}")
+                    self._capture_jobs(jobs)
                     continue
 
                 for job in jobs:
@@ -3670,7 +3725,8 @@ class UnifiedBotLoop:
             messages_for_reply = messages
 
         action, content, meta = self._reply_engine.get_reply(
-            messages_for_reply, boss_name, job_name, chat_name=name
+            messages_for_reply, boss_name, job_name, chat_name=name,
+            company=chat_company
         )
         self._log("DEBUG", f"回复引擎决策: action={action}, meta={meta}")
 

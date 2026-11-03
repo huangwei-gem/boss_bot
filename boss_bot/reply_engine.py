@@ -35,6 +35,7 @@ from boss_bot.intent import (classify, classify_interview_invite, is_contact_exc
                              is_resume_request, veto_hit_anywhere)
 from boss_bot.prompts import (build_system_prompt, build_user_prompt, 历史原始行上限,
                               对话指纹, 消息正文, 机器人腔, 旁白 as 旁白判据)
+from boss_bot import reject_reason
 from boss_bot.reply_record import ReplyRecord, ReplyRecordStore, _get_reply_store
 
 logger = logging.getLogger(__name__)
@@ -122,6 +123,16 @@ REJECTION_PATTERNS = [
     "再考虑", "已招满", "已关闭", "已结束", "暂停招聘",
     "经验不足", "学历不够", "薪资太低", "太远",
 ]
+
+# 这些词本身只表示"还没定"，不是把话说死。整句还在拉你做事（加微信、先了解）时
+# 更不能算拒绝——11-03 现算 362 条 HR 消息里 7 条判拒，其中「不露脸语音直播…可以
+# 加个微信先了解再考虑！」就是这样被当成拒绝，机器回一句"祝您招聘顺利"然后
+# 永远不再追这一单。self_evolve 早就把"再看看/再考虑"归到观望那一类，两处判据得同一份口径。
+_缓和词 = {"再看看", "再考虑", "暂不考虑", "另有安排", "感谢您的关注"}
+_还在拉人 = ("加个微信", "加微信", "加我", "先了解", "了解一下", "方便告知",
+             "是否有合适", "感兴趣的话", "期待和你沟通", "点击卡片")
+# 「岗位若不匹配也理解」是假设句，不是结论；只有不带"若/如果"的"不匹配"才算拒。
+_假设词 = ("若", "如", "要是", "假如", "万一")
 
 # 检测到拒绝时的礼貌接受回复池（随机选一条，避免机械重复）
 REJECTION_REPLIES = [
@@ -308,12 +319,13 @@ def _unkept_promise(t: str) -> str:
     return f"替用户许了兑现不了的话「{hit}」" if hit else ""
 
 
-def reply_rejection(text: str, profile: dict = None) -> str:
+def reply_rejection(text: str, profile: dict = None, account_index=None) -> str:
     """这条 AI 输出能不能发给 HR；能发返回空串，不能发返回原因。
 
     不能发的一律抛错走容灾链换下一个接口，绝不"降级发出去"——发出去的话收不回来，
     而换一个接口再试一次的代价只是几秒钟。
-    profile 不传就现读画像（面板上改了年龄/学历，下一句就得按新的判）。
+    profile 不传就现读画像（面板上改了年龄/学历，下一句就得按新的判）；
+    account_index 传了就读这一号的求职意向（两个号现在是两条方向）。
     """
     t = (text or "").strip()
     bad = _format_rejection(t) or _unkept_promise(t) or _denied_how_he_applied(t)
@@ -321,7 +333,7 @@ def reply_rejection(text: str, profile: dict = None) -> str:
         return bad
     if profile is None:
         from boss_bot.prompts import current_profile
-        profile = current_profile()
+        profile = current_profile(account_index)
     return _fact_leak(t, profile)
 
 
@@ -345,6 +357,11 @@ _SELF_INTRO_MARKERS = [
 def _is_rejection(message: str) -> bool:
     """检测 HR 是否在拒绝（不调用 AI，纯关键词匹配）。
 
+    命中关键词不等于就是拒绝，还要过两道：
+    ① 关键词是被"若/如果"带出来的假设句（"岗位若不匹配也理解"）不算结论；
+    ② 只命中"再看看/再考虑"这类缓和词、整句却还在拉你做事（加微信、先了解、
+       方便告知），那是观望不是拒——判成拒绝会让机器主动放弃一单还在谈的活。
+
     Args:
         message: HR 发来的消息文本
 
@@ -355,8 +372,14 @@ def _is_rejection(message: str) -> bool:
         return False
     text = message.strip()
     for pattern in REJECTION_PATTERNS:
-        if pattern in text:
-            return True
+        位 = text.find(pattern)
+        if 位 < 0:
+            continue
+        if any(假设 in text[max(0, 位 - 3):位] for 假设 in _假设词):
+            continue
+        if pattern in _缓和词 and any(拉 in text for 拉 in _还在拉人):
+            continue
+        return True
     return False
 
 
@@ -652,12 +675,13 @@ class ReplyEngine:
         return False
 
     def get_reply(self, messages, boss_name: str = "", job_name: str = "",
-                  chat_name: str = "") -> Tuple[str, Optional[str], dict]:
+                  chat_name: str = "", company: str = "") -> Tuple[str, Optional[str], dict]:
         """
         根据消息决定回复。
         Args:
             messages: 消息列表 [{"text","is_mine"/"isFriend","time"}]，
                       也兼容直接传最新消息字符串
+            company: 这一单所属公司（拒因台账按公司回流投递侧，主循环的会话上下文里有）
         Returns:
             (动作类型, 回复内容, 元信息)
         """
@@ -705,9 +729,39 @@ class ReplyEngine:
         # 检测两种场景，判定依据都只是"这一段对话自己"：
         #   a) HR 最后一条消息就是拒绝 → 礼貌接受
         #   b) HR 在这条消息之前已经拒绝过，且这条消息没有重新邀约/兴趣信号 → 不再推销
+        前头HR文本 = [m for m in history
+                      if not m.get("is_mine") and (m.get("type") or "text") == "text"]
+        if latest and reject_reason.刚问过(history) \
+                and conversation_rejected(前头HR文本[:-1]) \
+                and reject_reason.是原因回答(latest):
+            # 我们已经把"差在哪一条"问出去了，这句就是答案：收进原因台账，这一轮不再回话。
+            # 放在拒绝检测前面，是因为原因里常常带着"经验不足/不合适"这些字样，
+            # 走下面那条分支会被当成又一次拒绝、回第二句客套话，把答案本身盖掉。
+            新记 = reject_reason.记一条(
+                latest, company=company, job_name=job_name,
+                chat_name=chat_name, account_index=self._account_index)
+            logger.info("[拒因] %s HR 亲口说的原因: %s" %
+                        ("记下了" if 新记 else "已记过", latest[:60]))
+            meta["source"] = "reject_reason"
+            meta["intent"] = "reject_reason"
+            self._log_decision(chat_name, latest, meta, "none", decision_start)
+            self._add_record(
+                chat_name=chat_name, job_name=job_name, received_message=latest,
+                reply_content=None, reply_source="skip",
+                reply_intent="reject_reason",
+                reply_reason="HR 回答了我们问的拒绝原因，收下这一句，不再回话打扰",
+                is_skipped=True, skip_reason="已收到拒因，无需再回",
+                decline_reason=latest[:200] if 新记 else "",
+            )
+            return ("none", None, meta)
+
         if latest and _is_rejection(latest):
-            reply = random.choice(REJECTION_REPLIES)
-            logger.info(f"[拒绝检测] HR拒绝，礼貌接受: {reply[:30]}")
+            问 = ""
+            if reject_reason.该问原因(latest) and not reject_reason.已问过(history):
+                问 = " " + reject_reason.请教话术()
+            reply = random.choice(REJECTION_REPLIES) + 问
+            logger.info("[拒绝检测] HR拒绝，礼貌接受%s: %s" %
+                        ("并请教原因" if 问 else "（这句没再问原因）", reply[:30]))
             meta["source"] = "rejection"
             meta["intent"] = "rejection"
             self._log_decision(chat_name, latest, meta, "text", decision_start)
@@ -716,7 +770,9 @@ class ReplyEngine:
                 chat_name=chat_name, job_name=job_name, received_message=latest,
                 reply_content=reply, reply_source="rejection",
                 reply_intent="rejection",
-                reply_reason="检测到HR拒绝意图，礼貌接受并结束对话",
+                reply_reason=("检测到HR拒绝意图，礼貌接受并请教差在哪一条（每段会话只问一次）"
+                              if 问 else "检测到HR拒绝意图（岗位状态类/已经问过了），礼貌接受并结束对话"),
+                decline_reason=latest[:200],
             )
             return ("text", reply, meta)
 
@@ -1332,7 +1388,7 @@ class ReplyEngine:
         user_prompt = build_user_prompt(boss_name, job_name, message, history,
                                         追加指令=指令)
         # 每次现取：前端改了 system_rules 或个人画像，下一条回复就该用新的
-        system_prompt = build_system_prompt()
+        system_prompt = build_system_prompt(account_index=self._account_index)
         # 经验补充只做增量追加，不重写基础提示词（Continual Harness：小范围更新）；
         # 带上这一轮的岗位+最新消息做上下文，只挑最相关的几条，不把全部经验都塞进去
         if self._self_evolve and self._self_evolve.enabled:

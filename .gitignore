@@ -130,3 +130,7 @@ tools/sidebar_chats_account_*.json
 .qoder/
 .kb/
 flask-version/static/icons/src/
+
+# InstaBox 本地凭证/状态（绝不入库）
+.instabox/
+

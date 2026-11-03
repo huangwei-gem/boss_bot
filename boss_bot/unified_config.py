@@ -227,19 +227,24 @@ ACCOUNT_GLOBAL_ONLY = ("resume", "user_profile", "reply_rules", "importance_keyw
 # 2026-10-23 把「我是双一流的本科」撤下来过：那时画像只写「本科在读（统计学）」，
 # 机器替他报了一个画像里没有的学校标签，这句在存档里真发出去过 218 条（10-04 起，
 # 10-23 还有 33 个会话带它），HR 回「不太合适」之前那句就是它的占 13 条。
-# 2026-10-29 用户明确「我就是双一流，全部改成双一流」，画像 education 已写成
-# 「本科在读（统计学），双一流」，这句重新可用。闸门本身不动：画像里没写档次，
-# 手写的招呼语照样被 reply_rejection 拦下（tests/test_greeting_fact_gate.py 盯着）。
+# 2026-11-01 按 BOSS 在线简历对齐：长沙理工大学 · 风景园林 · 2023-2027，
+# 在线简历上没有「双一流」，也没有「统计学」专业——这两句不再由默认串替他说。
+# 闸门本身不动：画像里没写档次，手写的招呼语照样被 reply_rejection 拦下
+# （tests/test_greeting_fact_gate.py 盯着）。
 DEFAULT_GREETING = (
-    "您好，我是双一流的统计学专业本科在读，应聘数据分析岗位。在校系统学习数据分析相关知识，"
-    "掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，"
-    "愿意踏实积累。十分认可贵公司，希望能获得面试机会。"
+    "您好，我是 2027 届本科在读，应聘 AI 产品 / 数据分析岗位。"
+    "学过数据分析方法，用 Excel、SQL、Python 做过数据整理、报表与看板；"
+    "也参与过 AI 产品项目，做过需求梳理、prompt 设计与模型评测。"
+    "做事严谨、学习能力强，希望能获得面试机会。"
 )
 
 # 历史上对外发过的那几版默认文案：盘上/岗位里还是它们时一律当"没写"，
 # 否则改了常量之后旧串会被当成"他手写的招呼语"重新用起来。
 历史默认招呼语 = (
     DEFAULT_GREETING,
+    "您好，我是双一流的统计学专业本科在读，应聘数据分析岗位。在校系统学习数据分析相关知识，"
+    "掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，"
+    "愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
     "您好，我是双一流的本科，应聘数据分析岗位。在校系统学习数据分析相关知识，"
     "掌握Excel、基础SQL与数据整理技能，具备数据思维。做事严谨细心，学习能力强，"
     "愿意踏实积累。十分认可贵公司，希望能获得面试机会。",
@@ -819,6 +824,11 @@ class UserProfileConfig:
     name: str = "求职者"
     education: str = "本科学历"
     position: str = "数据分析"
+    # 求职意向按号各一份（用户 2026-11-03："每个好一份吧，然后你把现在有的分配一下"）。
+    # 键是账号索引的字符串，值是这一号对 HR 说的那句方向；没填这一号的仍走 position。
+    # 画像其余字段（学历/技能/经历）继续全局一份——两个号是同一个人，
+    # 劈开就成了对两个 HR 说互相矛盾的话（见 ACCOUNT_GLOBAL_ONLY 那段注释）。
+    position_by_account: dict = field(default_factory=dict)
     skills: list = field(default_factory=list)
     experience: str = ""
     salary_expectation: str = "面议"
@@ -841,6 +851,11 @@ class LogConfig:
 
 
 _FILTER_SEP_RE = re.compile("[，,、;；\\n]+")
+
+# 话术里会被画像替换掉的那几段（渲染顺序无关，逐条从原文出）
+_可渲染话术 = ("salary_reply", "interview_time_reply", "job_content_reply",
+              "greeting_reply", "default_reply", "resume_duplicate_reply",
+              "resume_unavailable_reply")
 
 
 def normalize_filter_keywords(value) -> list:
@@ -942,6 +957,9 @@ class UnifiedConfig:
     reply: ReplyConfig = field(default_factory=ReplyConfig)
     ai: AIConfig = field(default_factory=AIConfig)
     templates: TemplateConfig = field(default_factory=TemplateConfig)
+    # 话术模板的原文（渲染前那份，占位符还在）。只在这一份对象里活着，
+    # 不写进 bot_config：界面回传的是渲染后的句子，写回去就把占位抹掉了。
+    templates_raw: dict = field(default_factory=dict)
     rules: RuleConfig = field(default_factory=RuleConfig)
     notify: NotifyConfig = field(default_factory=NotifyConfig)
     resume: ResumeConfig = field(default_factory=ResumeConfig)
@@ -1059,6 +1077,13 @@ class UnifiedConfig:
                 if field_name in locked or not hasattr(target, field_name):
                     continue
                 setattr(target, field_name, value)
+        # 求职意向按号各一份：这一号对 HR 报的方向要用它自己那条。
+        # 话术模板和规则是加载时按全局画像渲染的，这里换掉 position 就得再渲染一次，
+        # 否则界面显示的是这一号的方向、发出去的招呼语还是那条合并写法。
+        这一号 = self.生效求职意向(index)
+        if 这一号 and 这一号 != cfg.user_profile.position:
+            cfg.user_profile.position = 这一号
+            cfg._render_templates()
         return cfg
 
     def _apply_bot_config(self, data: dict):
@@ -1540,33 +1565,50 @@ class UnifiedConfig:
             self.greet.enabled = False
 
     def _render_templates(self):
-        """用个人画像渲染话术模板中的占位符。"""
-        profile = self._profile_dict()
-        self.templates.salary_reply = render_template(self.templates.salary_reply, profile)
-        self.templates.interview_time_reply = render_template(self.templates.interview_time_reply, profile)
-        self.templates.job_content_reply = render_template(self.templates.job_content_reply, profile)
-        self.templates.greeting_reply = render_template(self.templates.greeting_reply, profile)
-        # default_reply 和 resume_duplicate_reply 不含占位符，但也渲染以保持一致
-        self.templates.default_reply = render_template(self.templates.default_reply, profile)
-        self.templates.resume_duplicate_reply = render_template(self.templates.resume_duplicate_reply, profile)
-        self.templates.resume_unavailable_reply = render_template(self.templates.resume_unavailable_reply, profile)
+        """用个人画像渲染话术模板中的占位符。
 
+        渲染永远从 templates_raw（配置里那句带占位的原文）出发，不拿上一轮的成品再渲染：
+        占位在第一次渲染时就被吃掉了，按号再渲染一次会拿到"全局那句已经烘进去"的文本，
+        于是界面显示的是这一号的方向、发出去的还是那条合并写法（求职意向按号各一份就落不了地）。
+        """
+        画像 = self._profile_dict()
+        if not self.templates_raw:
+            # 第一次渲染前把配置里那几句原文存下：占位被吃掉后再也还原不回来，
+            # 而"按号各一份的求职意向"要能拿原文重渲染一次
+            self.templates_raw = {名: str(getattr(self.templates, 名) or "")
+                                  for 名 in _可渲染话术}
+        for 名 in _可渲染话术:
+            原文 = self.templates_raw.get(名, getattr(self.templates, 名))
+            setattr(self.templates, 名, render_template(原文, 画像))
         # 同步到 reply_rules（规则中的回复也需渲染）
         self._build_default_rules()
 
-    def _profile_dict(self) -> dict:
-        """将 UserProfileConfig 转为字典（用于模板渲染）。"""
+    def _profile_dict(self, account_index=None) -> dict:
+        """将 UserProfileConfig 转为字典（用于模板渲染）。
+
+        account_index 给了就把「求职意向」换成这一号那一份（position_by_account）。
+        """
         return {
             "name": self.user_profile.name,
             "education": self.user_profile.education,
-            "position": self.user_profile.position,
+            "position": self.生效求职意向(account_index),
             "skills": self.user_profile.skills,
             "experience": self.user_profile.experience,
             "salary_expectation": self.user_profile.salary_expectation,
             "available_interview_time": self.user_profile.available_interview_time,
             "contact": self.user_profile.contact,
             "highlights": self.user_profile.highlights,
+            # 回读要带上这张表，界面整份回传时才不会把它抹掉
+            "position_by_account": dict(self.user_profile.position_by_account or {}),
         }
+
+    def 生效求职意向(self, account_index=None) -> str:
+        """这一号对 HR 报的求职意向：自己那份优先，没填就用全局那条。"""
+        if account_index is None:
+            return str(self.user_profile.position or "")
+        表 = self.user_profile.position_by_account or {}
+        值 = str(表.get(str(account_index)) or "").strip()
+        return 值 or str(self.user_profile.position or "")
 
     def _build_default_rules(self):
         """构建默认关键词规则集（使用渲染后的话术模板）。"""

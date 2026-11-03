@@ -169,6 +169,8 @@ class CallChatTest:
         e._last_ai_model = ""
         e._last_ai_raw_response = None
         e._self_evolve = None
+        # __new__ 绕过了 __init__，这两样得自己补：正文要按这一号的求职意向出提示词
+        e._account_index = 0
         return e
 
     def _client(self, content, reasoning=""):
@@ -224,6 +226,7 @@ class FailoverTest:
         e._last_ai_model = ""
         e._last_ai_raw_response = None
         e._self_evolve = None
+        e._account_index = 0
         return e
 
     def test_第一个接口回思考稿就换第二个(self):

@@ -36,6 +36,8 @@ def _挑一句学历谎话() -> str:
 
 
 谎句_学历 = _挑一句学历谎话()
+# 理由里点名的档次跟着现挑的那一句走，钉死"双一流"会在画像改动后变成假绿
+谎句_档次 = 谎句_学历[2:谎句_学历.index("的")]
 谎句_承诺 = "好的，我加您微信了哈"
 
 
@@ -90,7 +92,7 @@ class Test规则直通要过闸:
         e.get_reply(_HR("在吗"))
         assert 记下的, "闸门拦下必须留痕，否则配置里的病句永远查不到"
         assert 谎句_学历 in 记下的[0][1]
-        assert "双一流" in 记下的[0][0]
+        assert 谎句_档次 in 记下的[0][0]
 
     def test_一路让到底的那条记录要说真话(self):
         """规则句被拦、意图没命中、AI 没回——最后落进回复记录的那句理由必须写
@@ -105,7 +107,7 @@ class Test规则直通要过闸:
         assert action == "none"
         条 = [r for r in 记下的 if r.get("is_skipped")][-1]
         assert "闸门" in 条["reply_reason"], 条["reply_reason"]
-        assert "双一流" in 条["reply_reason"]
+        assert 谎句_档次 in 条["reply_reason"]
         assert "闸门" in 条["skip_reason"]
 
     def test_干净的规则句照常直通(self):
@@ -196,7 +198,7 @@ class Test兜底话术要过闸:
         assert action == "none"
         条 = [r for r in 记下的 if r.get("is_skipped")][-1]
         assert "DEFAULT_REPLY" in 条["reply_reason"], 条["reply_reason"]
-        assert "双一流" in 条["reply_reason"]
+        assert 谎句_档次 in 条["reply_reason"]
 
 
 class Test闸门不许反咬自己的配置:

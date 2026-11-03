@@ -76,14 +76,15 @@ class Test不实学历档次:
         assert reply_rejection(句, 画像) == "", reply_rejection(句, 画像)
 
     def test_默认招呼语得过它自己那道闸(self):
-        """留的判据不是"永远不许写双一流"，是"默认串得按画像说得通"。
+        """留的判据不是"永远不许写档次"，是"默认串得按画像说得通"。
 
-        10-23 撤档次是因为画像没写；10-29 用户确认自己是双一流、画像也写上了，
-        这句重新可用。反向哨兵跟着换：把画像退回"没报档次"那一份，同一句必须被拦。
+        2026-11-01 按 BOSS 在线简历对齐（长沙理工大学 · 风景园林），默认串不再报
+        学校档次，所以它自己那道门必须放行。反向哨兵跟着换：给同一句补一个画像里
+        没有的档次，必须被拦——证明这道门还在，不是被删了。
         """
         assert reply_rejection(DEFAULT_GREETING) == "", "默认招呼语过不了自己的闸门"
-        assert "统计学" in DEFAULT_GREETING, "改口径不能把专业也改没了"
-        assert reply_rejection(DEFAULT_GREETING, 画像), \
+        assert "2027 届" in DEFAULT_GREETING, "改口径不能把身份也改没了"
+        assert reply_rejection("您好，我是双一流的。" + DEFAULT_GREETING, 画像), \
             "画像里没这个档次还放行＝这道门是摆设"
 
     def test_旧那句仍被认成没写过默认文案(self):

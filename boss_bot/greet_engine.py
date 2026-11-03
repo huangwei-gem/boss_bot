@@ -203,6 +203,44 @@ def 是永久不投原因(原因) -> bool:
     return any(原 in 原因 for 原 in PERMANENT_SKIP_REASONS)
 
 
+# 同一个岗位反复撞"这一单自己的页面形状"时，第几次起不再为它开详情页。
+# 2026-11-02 现账：号1 勾的 14 行里有 3 行从 10-31 起每轮各烧一次岗位详情页，
+# 成因逐字相同——「岗位页没有可点的沟通按钮」+ 兜底页现场（只剩"搜索"和
+# "查看更多优选职位"，岗位在 BOSS 侧早下架了：其中两行 last_seen 停在 10-23）。
+# 20:58 一分钟内这三行又各撞一次，而同期号0 投进 14 单——坏的不是腿，是这三行。
+# 打开详情页正是风控最集中那一步（README「安全验证到底为什么触发」：跑起来的日子
+# 112 次安全验证里 111 次出自这里），留着它们就是每轮拿整页加载陪跑，
+# 还把新勾的 11 行一直排在后面。
+NO_BUTTON_FAMILY = "岗位页没有可点的沟通按钮"
+# 2026-11-02 号1 那 10 行撞的是另一种形状：点完「立即沟通」页面自己跳进
+# `/web/geek/chat?id=…&jobId=…`，可会话元素一个都读不出来（_会话页直落结算
+# 核对失败 → 不算送达）。今天 6 次「没能核对出会话形状」、12 次红字，
+# 一次都没投出去，却每轮为同一行再开一次详情页。跳进会话地址说明 BOSS 侧
+# 这一单已经有会话了，再点一次既投不出去，也可能对同一个 HR 发第二遍。
+CHAT_SHELL_FAMILY = "页面已跳走且没有聊天元素"
+GIVE_UP_FAMILIES = (NO_BUTTON_FAMILY, CHAT_SHELL_FAMILY)
+SAME_ROW_GIVE_UP = 3
+
+
+def 失败族(原因) -> str:
+    """跳过成因去掉现场尾巴之后的族名。
+
+    「…（详情页已打开但按钮没渲染）；页面上的按钮: 搜索|…」后面那段每轮都跟着
+    现场变，整串比对会把同一个毛病算成三次不同的失败，计数永远攒不到头。
+    """
+    return str(原因 or "").split("；")[0].split("（")[0].strip()
+
+
+def 该放手这一行(原因, 次数) -> bool:
+    """这一行是不是已经连着几次卡在"这一单自己的页面形状"上。
+
+    只认 GIVE_UP_FAMILIES 那两族：风控没过、要重新登录、当日额度见底、整条腿加载
+    失败都是暂时的，判成永久会出现"改了配置还是不投"那种假死
+    （10-29 的『双一流』红字就是这笔账）。
+    """
+    return 失败族(原因) in GIVE_UP_FAMILIES and int(次数 or 0) >= SAME_ROW_GIVE_UP
+
+
 def drawer_give_up_reason(times: int) -> str:
     return (f"这个岗位连着 {times} 次点了「立即沟通」都不出聊天抽屉，"
             f"BOSS 没把这次沟通记下来（不是当日额度，同期别的岗位投得出去），先放一放")
@@ -242,11 +280,9 @@ JD_THIN_REASON = "JD 没写具体工作内容（正文太短），按疑似诈�
 VETO_FIELDS = ("job_name", "description", "requirements", "company",
                "jd_description", "jd_requirements")
 
-# 目标方向的另一半：标注类。配置那张 ai.target_job_keywords 是数据分析族，
-# 标注这一半由代码兜住（依据：账号默认招呼语自己写着"数据分析/数据标注方向"）。
-LABELING_DIRECTION = ("数据标注", "标注员", "标注专员")
-# 标题自己写了要来公司的形状，不在这半壁的兜底范围内。
-LABELING_OFFLINE_MARKS = ("到岗", "到场", "线下面试", "驻场", "线下办公")
+# 2026-11-01 用户口径变了：「BOSS 上不需要数据标注的岗位了」，两个号分别是
+# AI 产品经理与数据分析。标注族不再由代码兜底——方向闸只认配置里那张
+# ai.target_job_keywords，改方向只改配置一处，不会出现"配置删了词、代码又给放进来"。
 
 
 def veto_keyword_hit(keywords, job: dict, title_keywords=None) -> str:
@@ -330,13 +366,9 @@ def target_job_hit(keywords, job: dict) -> str:
     "这活得是他要的那个方向"。BOSS 搜"数据分析"带出来的电商运营、资料录入
     一条否决词都不沾，光做减法拦不住（2026-10-09 用户：「其他的不要」）。
 
-    LABELING_DIRECTION 是代码里补的那半壁：他要的方向本来就有两半
-    （数据分析 + 数据标注，账号默认招呼语就是这么写的），而配置那张表是照着
-    "只投数据分析类"那一句话建的，一个"标注"都没有——10-09 当天标题含"标注"的
-    19 单里新投出去 0 单，6 单被这道闸按"没有数据分析类字样"拦死。
-    补进来的这一半只认标题里不含到岗形状的：「数据标注兼职（可转正-线下面试
-    和到岗）」那种自己写着要来公司的，仍然不给过（否决词表里只有"到岗面试/
-    仅线下"，接不住"线下面试和到岗"这种写法）。
+    方向词只有配置这一份（2026-11-01 起不再有"标注族"代码兜底）：用户在面板上
+    改了方向，这张表就是唯一口径。历史上标注那半壁是照账号默认招呼语补的，
+    现在两个号分别只投 AI 产品经理 / 数据分析，再兜一层就等于删了还进来。
 
     10-16 起方向词**不再把任职要求段当命中**：投出去过的 904 单里有 45 单的"数据分析"
     只出现在"任职要求"之后，原句是"具备较强的数据分析能力"这种技能要求，岗本身是
@@ -353,7 +385,6 @@ def target_job_hit(keywords, job: dict) -> str:
             or str(job.get("job_description") or ""))
     要求 = (str(job.get("jd_requirements") or "") or str(job.get("requirements") or "")
             or str(job.get("job_requirements") or ""))
-    全文 = "|".join(str(job.get(k) or "") for k in VETO_FIELDS).lower()
 
     命中 = _方向命中(keywords, 标题, True) or _方向命中(keywords, 工作, False)
     if 命中:
@@ -362,16 +393,6 @@ def target_job_hit(keywords, job: dict) -> str:
     if 落 and (not 工作.strip()
                or any(w in 标题 for w in DIRECTION_TITLE_STEMS)):
         return 落
-    if not any(m in 标题 for m in LABELING_OFFLINE_MARKS):
-        for word in LABELING_DIRECTION:
-            if word.lower() in 全文:
-                return word
-        # "标注"只在这一层认标题：标题写着"在线标注兼职"的就是标注岗
-        # （Centific 那一单 10-10 被拦 15 次，正文只有"完成判别、标注、要点梳理"，
-        # 没有"数据标注"连写）。正文里的"标注"不认——"按要求标注质检标签"
-        # 那种客服/审核岗一认就放错了。
-        if "标注" in 标题:
-            return "标注"
     return ""
 
 
@@ -960,6 +981,7 @@ def reset_job_page_throttle() -> None:
 PROBE_BAND_DEFAULT = 15      # 阈值下方多宽算"差一点就过"
 PROBE_LIMIT_DEFAULT = 5      # 每号每轮最多追问几条（一次追问≈一次判分，中位 5.4s）
 PROBE_FIELD_MAX_LEN = 200    # 四段各自限长，别把 2MB 的记录文件继续撑大
+PROBE_ATTEMPTS = 2           # 同一个接口问砸了就地再问一次的上限（超时是这一路最常见的死法）
 
 _TRUE_WORDS = ("true", "yes", "y", "1", "是", "对", "可以", "能")
 _FALSE_WORDS = ("false", "no", "n", "0", "否", "不", "没")
@@ -1409,8 +1431,21 @@ class AIAnalyzerChain:
                 "suggested_greeting": ""}
 
     def _build_probe_prompt(self, job: dict, verdict: dict) -> list:
-        """追问提示词：只问"卡在哪一条"，不让它改判。"""
+        """追问提示词：只问"卡在哪一条"，不让它改判。
+
+        池子那条精筛腿拿不到 JD（只读搜索卡片，不碰浏览器），所以这里的任职要求
+        经常是空的。空着就明说"只能按标题/薪资/城市判断"——不写这句，模型会对着
+        两段空白硬编一条要求出来，复盘就变成拿幻觉改配置。
+        """
         resume = self._resume or {}
+        requirements = str(job.get("requirements") or job.get("jd_requirements") or "").strip()
+        description = str(job.get("description") or job.get("jd_description") or "").strip()
+        jd_block = (
+            f"任职要求：{sanitize_untrusted(requirements, limit=2000)}\n"
+            f"岗位描述：{sanitize_untrusted(description, limit=3000)}\n"
+            if (requirements or description)
+            else "（招聘方没写 JD，只能按岗位名、薪资、城市、经验/学历要求判断）\n"
+        )
         system_msg = (
             "你刚才判定这个岗位与求职者的简历不匹配。现在只回答一件事：到底卡在哪一条。"
             "不要重新评分、不要改判、不要安慰性套话。说不出来就把 blocking_requirement 留空。"
@@ -1426,12 +1461,14 @@ class AIAnalyzerChain:
             f"工作经验：{resume.get('experience', '')}\n\n"
             "【岗位】\n"
             f"岗位名称：{sanitize_untrusted(job.get('job_name', ''), limit=200)}\n"
-            f"任职要求：{sanitize_untrusted(job.get('requirements', ''), limit=2000)}\n"
-            f"岗位描述：{sanitize_untrusted(job.get('description', ''), limit=3000)}\n\n"
-            + untrusted_note(f"{job.get('requirements', '')}\n{job.get('description', '')}") + "\n\n"
+            f"薪资：{job.get('salary', '')}\n"
+            f"城市：{job.get('city', '') or job.get('location', '')}\n"
+            f"经验要求：{job.get('experience', '')}　学历要求：{job.get('education', '')}\n"
+            + jd_block + "\n"
+            + untrusted_note(f"{requirements}\n{description}") + "\n\n"
             "请按以下 JSON 格式返回（不要包含其他内容）：\n"
             '{\n'
-            '  "blocking_requirement": "没过的那一条硬性要求，尽量用任职要求里的原文",\n'
+            '  "blocking_requirement": "没过的那一条硬性要求，尽量用任职要求里的原文；没写 JD 就写岗位名里最要命的那一条",\n'
             '  "evidence_missing": "简历里缺什么证据（会做但没写清楚，写清楚在哪）",\n'
             '  "fixable_by_resume": true/false,\n'
             '  "score_if_fixed": 0-100\n'
@@ -1447,24 +1484,44 @@ class AIAnalyzerChain:
 
         只问 AI，不给 HR 发任何消息（防骚扰红线：主动问 HR "哪里不合适" 是骚扰）。
         拿不到可信回答一律返回 None —— 追问是附加信息，不能变成打招呼轮的新炸点。
+
+        每条出口都要出声：2026-11-02 号0 边界带里 12 行、一条追问都没有，日志里
+        「追问」两个字一次都没出现过（现算 logs/greet_engine.log 全天 0 行）。
+        当时四条出口里只有接口报错那一条会写 DEBUG，其余三条静默返回 None，
+        于是"没问到""问砸了""压根没试"三件事在盘上长得一模一样，没法归因。
         """
         provider = self.last_provider or next(
             (p for p in self.providers if p.is_valid()), None)
         if provider is None:
+            self._log("WARN", "🔎 追问没问成：一个可用 AI 接口都没有")
             return None
-        try:
-            raw = self._call_provider_api(provider,
-                                          self._build_probe_prompt(job, verdict or {}),
-                                          normalize=False)
-        except Exception as e:
-            self._log("DEBUG", f"追问不匹配原因没问出来（{provider.name}）: {e}")
+        prompt = self._build_probe_prompt(job, verdict or {})
+        raw, 报错 = None, ""
+        for 次 in range(1, PROBE_ATTEMPTS + 1):
+            try:
+                raw = self._call_provider_api(provider, prompt, normalize=False)
+                报错 = ""
+                break
+            except Exception as e:
+                报错 = str(e) or type(e).__name__
+                if 次 < PROBE_ATTEMPTS:
+                    # 就地换同一个接口再问一次，不换接口：换接口问出来的是
+                    # "另一个人会怎么判"，不是"你刚才为什么这么判"（见 last_provider 那条注释）
+                    self._log("DEBUG", f"追问第 {次} 次没回话（{provider.name}）: "
+                                       f"{报错[:60]}，再问一次")
+        if 报错:
+            self._log("WARN", f"🔎 追问没问出来（{provider.name}，试了 {PROBE_ATTEMPTS} 次）: "
+                              f"{报错[:80]}")
             return None
         if not isinstance(raw, dict):
+            self._log("WARN", f"🔎 追问没问出来（{provider.name}）: 回来的不是那个 JSON 形状")
             return None
         blocker = str(raw.get("blocking_requirement") or "").strip()
         if not blocker:
             # 说不出哪条硬性要求没过，就等于没问到：留着只会让复盘产出空话建议
+            self._log("INFO", f"🔎 问了（{provider.name}）：它说不出卡在哪一条，按没问到算")
             return None
+        self._log("INFO", f"🔎 问到了（{provider.name}）: {blocker[:40]}")
         return {
             "blocking_requirement": blocker[:PROBE_FIELD_MAX_LEN],
             "evidence_missing": str(raw.get("evidence_missing") or "").strip()[:PROBE_FIELD_MAX_LEN],
@@ -1539,6 +1596,19 @@ class AIAnalyzerChain:
 
         result["score"] = score
         result["is_match"] = is_match
+
+        # 分数和结论打架时以分数为准。match_threshold 是他配的（70），两号自定义的
+        # 判分提示词也是按分数段写的（80 以上才算像能投），模型却可以一边给 62 分
+        # 一边回 is_match=true —— 那等于把这两样一起架空。2026-11-02 现账：
+        # 号0 今天边界带（55-69）14 条全部标成"合"，号1 17 条里 16 条标成"合"；
+        # 而追问只在"判不合"时才发起（screen_judge._追问一条），于是盘上 0 条追问，
+        # 看着像追问链坏了，其实是这一格根本没被判成不合。
+        if not self.veto_only_match:
+            按分 = score >= self.match_threshold
+            if 按分 != bool(is_match):
+                self._log("INFO", f"判分自相矛盾（{score} 分 / is_match={is_match}），"
+                                  f"按阈值 {self.match_threshold} 改判为 is_match={按分}")
+                result["is_match"] = 按分
 
         # 自定义筛选条件是硬否决：模型自己承认命中就不能因为分高而放行
         veto = str(result.get("veto_hit") or "").strip()
@@ -4132,6 +4202,58 @@ class GreetEngine:
         self._record_sent_now(job)
         return True, ""
 
+    def _会话壳按normal重走(self, 页) -> bool:
+        """这一张跳进了会话地址却读不出形状：先把它换成 normal 加载，再按原地址走一遍。
+
+        2026-11-03 01:48 号1 三条勾选项全卡在这一族，现场逐字是
+        「url=/web/geek/chat?id=…&jobId=… 抽屉元素=无 按钮=[] 可见输入框=[]
+        隐藏模板输入框=1 个」——和 10-31 回复腿那张壳一模一样。BOSS 的聊天应用把
+        分片脚本与会话接口排在首屏之后，eager（`unified_config.load_mode`，它把主站
+        那一发从 126~135 秒压到 1.6~4.8 秒）会把它永远掐成 34 个节点的壳，再等 8 秒
+        也不活。回复腿那边同一个治法（`_会话页导航到会话页`：先设 normal 再导航），
+        投递腿这张一直没人治，所以「立即沟通」后自己跳会话的那一类单子一张都投不出去，
+        每行还要烧三次岗位详情页——那正是风控最集中那一步。
+
+        走罢必须把加载模式换回原样：这张页待会儿还要拿去做搜索，落在 normal 上
+        一发整页加载就是 126~135 秒。
+        """
+        try:
+            地址 = 页.url or ""
+        except Exception:
+            return False
+        if "/web/geek/chat" not in 地址:
+            return False
+        原样 = getattr(getattr(页, "page", None), "load_mode", None) or "eager"
+
+        def _换(名, 为什么):
+            try:
+                getattr(页.set.load_mode, 名)()
+                return True
+            except Exception as e:
+                self._log("WARN", "会话这一张的加载模式没换成「%s」（%s）: %s: %s"
+                          % (名, 为什么, type(e).__name__, str(e)[:50]))
+                return False
+
+        if not _换("normal", "重走会话页之前"):
+            return False
+        读到 = getattr(getattr(页, "page", None), "load_mode", None)
+        if 读到 != "normal":
+            # 设了不等于设上：回读不认账就照实说，别让日志留下一串"已经重开了"而壳还在
+            self._log("WARN", "会话页加载模式回读是「%s」不是 normal，这一张仍可能是壳"
+                      % (读到 or "读不到"))
+            _换(原样, "回读不认账，退回去")
+            return False
+        try:
+            页.get(地址)
+        except Exception as e:
+            self._log("WARN", "会话页按 normal 重走这一发没成: %s: %s"
+                      % (type(e).__name__, str(e)[:60]))
+            _换(原样, "重走失败")
+            return False
+        _换(原样, "重走完了要还给搜索腿")
+        self._log("INFO", "会话这一张按 normal 重走过一次，再核一遍会话形状")
+        return True
+
     def _会话页直落结算(self, instance, job, greeting):
         """点完「立即沟通」既没出抽屉、也没弹「已自动发送」，而是这一页自己跳进了会话。
 
@@ -4154,6 +4276,11 @@ class GreetEngine:
         if "/web/geek/chat" not in url:
             return None
         outcome = self._auto_greet_followup(instance, greeting, None, job)
+        if outcome == "none" and self._会话壳按normal重走(instance):
+            # 读不出形状不一定等于没建会话：更常见的是这张页被 eager 掐成壳。
+            # 重走一次再核——判据还是 `_wait_chat_open`/`chat_is_open` 那一份，
+            # 不在这里另起一套，也不许因为"跳进了会话地址"就直接记送达。
+            outcome = self._auto_greet_followup(instance, greeting, None, job)
         if outcome == "mismatch":
             self._log("WARN", "页面跳进了会话，但顶栏对不上这个岗位的公司，"
                               "这一单不算送达（怕发错人）")

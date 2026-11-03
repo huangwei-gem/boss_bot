@@ -3243,6 +3243,18 @@ def api_judgement_review():
         except (TypeError, ValueError):
             days = 7
         rows = _get_greet_store().get_all()
+        # 判分实际发生在池子那条腿（只抓不投时打招呼腿根本不判分）。只读打招呼记录
+        # 会让「今日追问 0 条」永远是真的——复盘必须把池子里的追问一起读进来。
+        try:
+            from boss_bot.job_pool import 岗位池
+            from boss_bot.judgement_review import pool_rows_as_records
+            if account is None:
+                for i, _ in enumerate(_ensure_config().greet.accounts):
+                    rows = rows + pool_rows_as_records(岗位池(account_index=i).列表())
+            else:
+                rows = rows + pool_rows_as_records(岗位池(account_index=account).列表())
+        except Exception:
+            logger.warning("读岗位池里的追问失败，这一轮只算打招呼记录", exc_info=True)
         data = build_review(rows, account_index=account, days=max(1, min(90, days)))
         return jsonify({"status": "ok", **data})
     except Exception as e:

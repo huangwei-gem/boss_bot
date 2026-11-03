@@ -1,0 +1,18 @@
+{
+  "name": "boosbot-instabox",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "把 boosbot 的执行层搬到 InstaBox 沙箱：建 box、登录、快照、按快照跑主流程",
+  "scripts": {
+    "boosbot": "node boosbot.mjs run",
+    "boosbot:create": "node boosbot.mjs create",
+    "boosbot:login": "node boosbot.mjs login",
+    "boosbot:snapshot": "node boosbot.mjs snapshot",
+    "boosbot:status": "node boosbot.mjs status",
+    "boosbot:pause": "node boosbot.mjs pause"
+  },
+  "dependencies": {
+    "@insforge/instabox-sdk": "^0.5.3"
+  }
+}

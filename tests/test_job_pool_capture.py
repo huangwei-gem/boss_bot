@@ -698,9 +698,11 @@ class 池与轮次接线Test:
         loop._run_greet_round()
         assert 序 == ["投", "搜"]
 
-    def test_每个搜索任务收尾都再排空一次勾选(self, tmp_path):
-        """2026-10-29 口径：一轮里几个搜索任务串下来要跑十几分钟，只在轮头排空一次
-        等于他中途勾的岗位最快也要等整轮跑完才动——点了没反应就是那种"没生效"。"""
+    def test_每个搜索任务开工先排空勾选再进池精筛(self, tmp_path):
+        """2026-11-03 现账：精筛要为每张卡片逐行问 AI，号1 一批 89 行跑了十几分钟。
+        排空挂在精筛后面，等于他中途勾的那条最快也要等这么久才动——
+        界面点了没反应就是他要问的那种"没生效"。`_capture_jobs` 吃的就是这批
+        内存里的卡片，一个字都不碰页面，所以排空挪到它前面不会抢页面。"""
         序 = []
         loop = _loop(tmp_path)
         loop.config.greet.capture_only = True
@@ -708,16 +710,16 @@ class 池与轮次接线Test:
         loop._greet_engine.search_jobs.return_value = [岗位(1)]
         loop._build_greet_tasks = lambda: [
             {"query": "数据分析", "city": "长沙", "scroll_pages": 1},
-            {"query": "数据标注", "city": "长沙", "scroll_pages": 1},
+            {"query": "AI产品", "city": "长沙", "scroll_pages": 1},
         ]
         loop._drain_apply_queue = lambda: 序.append("投") or 0
         loop._capture_jobs = lambda jobs: 序.append("抓")
         loop._run_greet_round()
-        assert 序 == ["投", "抓", "投", "抓", "投"], f"搜索任务之间没排空：{序}"
+        assert 序 == ["投", "投", "抓", "投", "抓"], f"排空没排在精筛前面：{序}"
 
     def test_这条门真的会红(self, tmp_path):
-        """抓那一步一抛，收尾那次排空就走不到——只剩轮头那一次。
-        断言的是次数差，不是"代码里有没有这一行"。"""
+        """抓那一步一抛，本任务那次排空也已经点过了（在前头）。
+        排回精筛后面就只剩轮头那一次——断言的是次序，不是"代码里有没有这一行"。"""
         def _跑(会抛):
             序 = []
             loop = _loop(tmp_path)
@@ -735,9 +737,9 @@ class 池与轮次接线Test:
             else:
                 loop._capture_jobs = lambda jobs: 序.append("抓")
             loop._run_greet_round()
-            return 序.count("投")
-        assert _跑(False) == 2, _跑
-        assert _跑(True) == 1, "抓取挂了之后收尾那次排空还在跑＝这两条没分开"
+            return 序
+        assert _跑(False) == ["投", "投", "抓"], _跑
+        assert _跑(True) == ["投", "投", "抓"], "抓取挂了就不算这一任务排过空＝排空还挂在精筛后面"
 
     def test_抓取腿异常不许把整轮带走(self, tmp_path):
         loop = _loop(tmp_path)

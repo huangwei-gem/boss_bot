@@ -220,7 +220,7 @@ class InjectionTest:
         e.add_lesson("回复控制在两句话内", evidence_count=2)
         eng = re_mod.ReplyEngine(self_evolve=e)
         saved = re_mod.build_system_prompt
-        re_mod.build_system_prompt = lambda profile=None: "基础提示词"
+        re_mod.build_system_prompt = lambda profile=None, **按号: "基础提示词"
         try:
             fake = SimpleNamespace(
                 chat=SimpleNamespace(completions=SimpleNamespace(
@@ -240,7 +240,7 @@ class InjectionTest:
         e = _engine(tmp_path)
         eng = re_mod.ReplyEngine(self_evolve=e)
         saved = re_mod.build_system_prompt
-        re_mod.build_system_prompt = lambda profile=None: "基础提示词"
+        re_mod.build_system_prompt = lambda profile=None, **按号: "基础提示词"
         try:
             fake = SimpleNamespace(
                 chat=SimpleNamespace(completions=SimpleNamespace(

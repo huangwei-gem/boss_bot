@@ -1,0 +1,36 @@
+{
+  "name": "boss_bot",
+  "version": "1.0.0",
+  "description": "自动投递简历 + AI 筛选岗位 + AI 自动回复。整合 `auto_boss`（打招呼/投递）与 `BOSS-auto-reply-bot`（自动回复）两个项目，多账号并行运行，配 Flask + SocketIO 管理界面。",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "box:status": "node tools/instabox/boosbot.mjs status",
+    "box:setup": "node tools/instabox/boosbot.mjs create && node tools/instabox/boosbot.mjs push --with-data",
+    "box:push": "node tools/instabox/boosbot.mjs push",
+    "box:login": "node tools/instabox/boosbot.mjs login --no-wait",
+    "box:wait": "node tools/instabox/boosbot.mjs wait --minutes=25",
+    "box:snapshot": "node tools/instabox/boosbot.mjs snapshot",
+    "box:run": "node tools/instabox/boosbot.mjs run --minutes=45",
+    "box:pause": "node tools/instabox/boosbot.mjs pause",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/huangwei-gem/boss_bot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/huangwei-gem/boss_bot/issues"
+  },
+  "homepage": "https://github.com/huangwei-gem/boss_bot#readme",
+  "dependencies": {
+    "@insforge/instabox-sdk": "^0.6.0"
+  }
+}

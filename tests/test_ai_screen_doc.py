@@ -261,10 +261,15 @@ class 重判线程Test:
         assert not 成 and "要求" in 话
 
     def test_跳过本地已否和已按这份文件判过的(self, monkeypatch):
+        # 「已判过」现在要连口径一起对上：改了打分提示词/方向后，旧结论（没有口径）
+        # 必须重判，否则池子永远留着旧账（2026-11-01 改方向时踩到的就是这一条）
+        from boss_bot.screen_judge import 判定口径
+        现口径 = 判定口径(假引擎(lambda j: (None, 0)), self.文档)
         行s = [_行(1), _行(2),
                _行(3, gate={"方向命中": False}),
                _行(4, gate={"否决命中": "外包"}),
-               _行(5, ai={"合": True, "doc": "run-h1", "判于": time.time()}),
+               _行(5, ai={"合": True, "doc": "run-h1", "口径": 现口径,
+                          "判于": time.time()}),
                _行(6, ai={"合": True, "doc": "旧文件", "判于": time.time()})]
         池, 引擎 = self._起(monkeypatch, 行s,
                              lambda job: ({"score": 80, "is_match": True, "reason": "ok",

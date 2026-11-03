@@ -58,6 +58,39 @@ def _probe_of(row: Any) -> Optional[Dict[str, Any]]:
     return None
 
 
+def pool_rows_as_records(rows: List[Any]) -> List[Dict[str, Any]]:
+    """岗位池里带追问的行 → build_review 认识的记录形状。
+
+    为什么要这一层：2026-11-01 起两个号走"只抓不投 + 面板勾选"，AI 判分实际发生在
+    池子那条腿（screen_runner / _精筛一条），而复盘接口只读打招呼记录——于是
+    界面上「今日追问 0 条」一直是真的，可它不是因为没岗位，是因为读错了表。
+    池子行的键名是 ai.分 / ai.判于 / ai.追问，在这里折成记录形状，聚合逻辑不抄第二套。
+    """
+    out: List[Dict[str, Any]] = []
+    for r in rows or []:
+        ai = _field(r, "ai") or {}
+        if not isinstance(ai, dict):
+            continue
+        probe = ai.get("追问")
+        if not isinstance(probe, dict) or not _norm(probe.get("blocking_requirement")):
+            continue
+        t = None
+        for 原始 in (ai.get("判于"), _field(r, "captured_at")):
+            try:
+                t = datetime.fromtimestamp(float(原始))
+                break
+            except (TypeError, ValueError, OSError):
+                continue
+        out.append({
+            "timestamp": t.strftime(TIME_FORMAT) if t else "",
+            "account_index": int(_field(r, "account_index", 0) or 0),
+            "ai_score": ai.get("分") if ai.get("分") is not None else 0,
+            "ai_error": bool(ai.get("接口异常")),
+            "ai_probe": probe,
+        })
+    return out
+
+
 def build_review(records: List[Any], account_index: Optional[int] = None,
                  days: int = REVIEW_DAYS_DEFAULT,
                  now: Optional[datetime] = None) -> Dict[str, Any]:

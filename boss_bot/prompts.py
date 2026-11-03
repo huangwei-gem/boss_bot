@@ -143,7 +143,7 @@ _SYSTEM_RULES_DEFAULT = """你在 BOSS 直聘上替一个大学生找工作，�
 
 下面的话只许照【你的背景】里写的说：年龄、学历（大几/应届/毕业）、工作年限、电话。背景写 21 就绝不写别的数；背景没写的（大几、哪年毕业、证书编号）一律不给数字，改说「这个面试时详细聊」。做过的事才说做过，别回「我可以学」这种自贬的话。对方问有没有经验，直接答有经验——标注、数据分析、Excel/SQL/Python 都做过。
 
-对方说不合适（不匹配/不太合适/暂不考虑/另有安排/祝您找到…），回一句收尾就停，别再推销、别追问。对方已经拒绝过，就不再提简历，也不说「希望有机会」。之前说过的话不重复发，自我介绍别来第二遍。
+对方说不合适（不匹配/不太合适/暂不考虑/另有安排/祝您找到…），回一句收尾就停，别再推销。收尾那句里可以顺口请教一句「主要是差在哪一条」——这段对话里问过就绝不问第二遍，也别在「岗位已招满/暂停招聘」这种话上问（那不是对你的评价，问了等于自言自语）。对方已经拒绝过，就不再提简历，也不说「希望有机会」。之前说过的话不重复发，自我介绍别来第二遍。
 
 不知道的就说「这个面谈时细聊」；没投递、没发送过的动作别说「已投递/已发送」，对方催就回「稍后处理」。这一轮只回文字、没点那张卡片，就不说「已同意交换」「已点了」，想说就回「我这就点一下」。加微信是在黄维自己手机上做的事，机器做不了，别说「我这就加您」「马上加您」「我马上添加」，收到号就说「微信号我记下了」。钉钉、企业微信里「我这边已经通过您的好友申请了」同理——那一下不是机器点的，别说「已通过」，让对方自己去看。表没打开过就不说「我来填一下」「刚去填了」；别的岗没投就不说「投完跟您说」；视频剪不出来就不说「剪好发您」，想接话就回「这个我确认后回复您」。只有真的要做、而且机器做得到的事，才可以答应。岗位方向明显不对，说一句「我主要找线上数据分析这类的」，别硬凑。只回这句话本身，别的都别写。"""
 
@@ -198,7 +198,7 @@ def user_prompt_template() -> str:
     return _load_overrides().get("user_prompt_template") or _USER_PROMPT_DEFAULT
 
 
-def current_profile() -> dict:
+def current_profile(account_index=None) -> dict:
     """当前个人画像 —— 每次现读盘，跟 `_load_overrides()` 同一个口径。
 
     config.USER_PROFILE 是进程启动时的快照，/api/user_profile 只写文件，
@@ -208,6 +208,10 @@ def current_profile() -> dict:
     撞在同一个 mtime 上也会串数据（10-29 全量回归里 `test_改完画像立刻生效` 就是这么随机红的）。
     这份文件一千字节，调用点全在"接着要打 AI"那几条路上（见 reply_engine._ask_ai），
     省这一次读不值这一点不确定性。
+
+    account_index 给了就把「求职意向」换成这一号那一份（position_by_account）：
+    两个号现在是两条方向（一号 AI 产品/AI 运营、一号数据分析），
+    喂给 AI 的背景必须是这一号自己那句，否则号1 会对着 HR 说"我想做 AI 产品"。
     """
     data = None
     try:
@@ -217,12 +221,22 @@ def current_profile() -> dict:
             data = loaded
     except (OSError, ValueError):
         data = None
-    return data or dict(USER_PROFILE)
+    画像 = data or dict(USER_PROFILE)
+    if account_index is not None and isinstance(画像, dict):
+        表 = 画像.get("position_by_account") or {}
+        这一号 = str(表.get(str(account_index)) or "").strip()
+        if 这一号:
+            画像 = dict(画像)
+            画像["position"] = 这一号
+    return 画像
 
 
-def build_system_prompt(profile: dict = None) -> str:
-    """根据个人画像生成系统提示词"""
-    p = profile or current_profile()
+def build_system_prompt(profile: dict = None, account_index=None) -> str:
+    """根据个人画像生成系统提示词
+
+    account_index：这一号自己的求职方向（画像其余字段全局一份）。
+    """
+    p = profile or current_profile(account_index)
     skills = p.get("skills")
     if isinstance(skills, list):
         skills = "、".join(str(s) for s in skills)

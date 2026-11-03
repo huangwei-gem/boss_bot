@@ -242,7 +242,8 @@ class TestReplyEngineWiring:
             return ""
         monkeypatch.setattr(e, "get_prompt_supplement", fake_supplement)
         eng = re_mod.ReplyEngine(self_evolve=e)
-        monkeypatch.setattr(re_mod, "build_system_prompt", lambda profile=None: "基础提示词")
+        monkeypatch.setattr(re_mod, "build_system_prompt",
+                            lambda profile=None, **按号: "基础提示词")
         fake = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(
             create=lambda **kw: SimpleNamespace(
                 choices=[SimpleNamespace(message=SimpleNamespace(

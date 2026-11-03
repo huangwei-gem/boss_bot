@@ -44,8 +44,16 @@ sys.path.insert(0, str(ROOT))
 }
 工具缓存目录 = {".git", ".scratch", ".pytest_cache", ".qoder", ".arts", ".codeartsdoer",
                ".firecrawl", "__pycache__"}
+# InstaBox 那条执行层（把 bot 搬到云端 Linux 沙箱跑）是 Node 的：
+# package.json / package-lock.json 必须住仓库根，`npm run box:*` 才在仓库根解析得到；
+# node_modules 是 npm 自己按"从脚本目录往上找"放下的，装进 tools/instabox 反而会让
+# 下次 npm install 又回根目录。`.instabox/` 是 SDK 的本地状态目录（api-key 句柄与
+# stream-url 临时钥匙都写在这儿，boosbot.mjs 按这个路径读，已被 .gitignore 挡住）。
+# 这四样都不是散件，但依赖清单还没进版本库——clone 完要能直接开干，得连着
+# tools/instabox/ 一起提交（等他点头）。
+node执行层 = {"package.json", "package-lock.json", "node_modules", ".instabox"}
 
-允许 = 入口 | 门面 | 当前配置 | 凭据 | 他的东西 | 代码与数据目录 | 工具缓存目录
+允许 = 入口 | 门面 | 当前配置 | 凭据 | 他的东西 | 代码与数据目录 | 工具缓存目录 | node执行层
 
 # 根目录里一条都不许出现的形状（白名单之外的第二道：形状判据，专门盯"又会长回来"的那些）
 坏形状 = [
