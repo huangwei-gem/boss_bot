@@ -315,6 +315,25 @@ _兼容层常量 = ("SALARY_REPLY", "INTERVIEW_TIME_REPLY", "JOB_CONTENT_REPLY",
 
 
 @pytest.fixture(autouse=True)
+def 小时账不留给下一条():
+    """IP 级整页加载小时账是**进程级全局**（风控按出口 IP 记，两号共用一份，
+    所以它本来就该是全局的）——但全局态在测试里就是跨文件的假象源。
+
+    实测：加了这道闸之后 `pytest tests/` 里 `test_unified.py::GreetRoundDryRunTest::
+    正常模式会发送` 单跑绿、全量红——前面某条测试装了上限并记了几发，
+    后面那条打招呼轮被自己的额度闸拦在搜索之前，看起来像"发送逻辑坏了"。
+    每条测试进出各还原一次，桩配置造的账不许漏给下一条。
+    """
+    from boss_bot import browser_launcher as BL
+
+    原 = dict(BL._SHARED_PAGE_LOAD_STATE)
+    原["小时表"] = list(原.get("小时表") or [])
+    yield
+    BL._SHARED_PAGE_LOAD_STATE.clear()
+    BL._SHARED_PAGE_LOAD_STATE.update(原)
+
+
+@pytest.fixture(autouse=True)
 def 热重载不许把兼容层留在桩配置上():
     """`main_loop._hot_reload_config()` 会调 `config.刷新兼容层(self.config)`，
     把 boss_bot.config 那 10 个模块级常量整个换成传进来那份 cfg 的值。

@@ -140,7 +140,8 @@ _ARCHIVE_LOCK = threading.Lock()
 # 这两个名字继续从这里导出，README 和老调用点用的还是同一份判据。
 from boss_bot.browser_launcher import (          # noqa: F401  (对外导出)
     LOGIN_WALL_MARKS, CHAT_PAGE_MARKS, login_state_of, has_live_auth_cookie,
-    是风控验证页, 是登不进去的地址, 设置整页加载地板, 风控去向后缀)
+    是风控验证页, 是登不进去的地址, 设置整页加载地板,
+    设置整页加载小时上限, 整页加载额度用完了, 风控去向后缀)
 
 # 回复侧连续判这么多次登录失效就停这个号，等人工——不再每 30 秒空刷
 REPLY_LOGIN_FAIL_LIMIT = 3
@@ -339,6 +340,14 @@ class UnifiedBotLoop:
         # 需要登录的原因，供前端状态点说明"为什么是黄的"
         self._login_reason = ""
         self._greet_paused = False
+        # 被按 IP 关进「访问受限」时置真：两条腿一起停手，只有他手动恢复才清。
+        # 装自动恢复时刻等于到点自己冲回去重开一次封禁周期，所以这里没有重试时间。
+        self._ip封着 = False
+        # IP 级额度那句只说一遍（一分钟一趟、每趟两号，不说就会淹掉日志）
+        self._额度说过 = False
+        # 回复腿空轮退避：连着几轮没有要回的，就把间隔按 2 的幂拉长（见 _回复间隔秒）
+        self._空轮连击 = 0
+        self._本轮回复有活 = True
         # 只有"因为到达每日上限而暂停"才允许跨零点自动恢复；人工暂停不动
         self._greet_paused_by_cap = False
         self._greet_cap_paused_on = ""
@@ -652,8 +661,76 @@ class UnifiedBotLoop:
             self._greet_engine.stop()
         self._log("INFO", "打招呼已暂停")
 
+    def _ip封了停下(self, 侧: str, 为什么: str) -> None:
+        """被按 IP 关进"访问受限"那一族：唯一的正确动作是**停手**，不是等。
+
+        2026-11-04 实测：10:00~14:59 每小时 57~61 次搜索整页加载 + 每小时 255~316 轮
+        会话页，连着五个小时，18 点 BOSS 回了一句「您的 IP 存在异常行为……将于 24 小时
+        后恢复正常，请勿频繁提交刷新请求」。这一族的页面里没有滑块，所以：
+        · 不能走 `_captcha_gate()`——那会每 2 秒复查一次去等"有人滑完"，
+          而每一趟复查都是一次新的请求，正好把 24 小时往后推；
+        · 也不能只停这一侧——风控记的是出口 IP，两个号共用这一台机器，
+          停一个号另一个照样在刷；
+        · 不装自动恢复时刻：这一族的恢复时间是 BOSS 给的（几十分钟到 24 小时），
+          机器猜的时间到点就自己冲回去，等于把封禁周期重开一次。
+        所以：两侧一起停、通知、把原因写进界面，等他手动恢复。
+        """
+        if self._ip封着:
+            return
+        self._ip封着 = True
+        self._login_reason = "ip_blocked"
+        self.pause_greet()
+        self.pause_reply()
+        话 = ("BOSS 把这台的出口 IP 关进了「访问受限」（%s 侧读到：%s）。"
+              "两条腿都已停手，不会再发任何请求——这一族越刷越久。"
+              "页面上写的是 24 小时内恢复；要提前解开就手动登录一次（那句话是"
+              "「请登录使用」）。确认解开了再点恢复打招呼 / 恢复回复。"
+              % (侧, 为什么 or "命中访问受限文案"))
+        self._log("ERROR", "🚫 " + 话)
+        try:
+            if self._notifier is not None:
+                self._notifier.send_notification("BOSS 按 IP 限流了", 话, level="error")
+        except Exception as e:
+            self._log("WARN", "封禁通知没发出去: %s: %s" % (type(e).__name__, e))
+
+    def _整页加载额度收手(self, 侧: str) -> bool:
+        """IP 级每小时额度用完了就收手这一轮，返回 True 表示调用方该跳过。
+
+        额度装的是"每小时最多几次整页加载"（默认 20，填 0 = 不限量）。
+        这里只跳过、不睡在原地：睡在这儿会把这条线程钉住几十分钟，
+        而日志上会出现一整段"什么都没发生"——那是最难查的一种停。
+        """
+        # 名字从模块顶部那份 import 来（这一文件自己有条门：函数里再 import 一遍
+        # 同名算"重复定义覆盖"，点到的那一刻就是 NameError）
+        超, 数, 等多久 = 整页加载额度用完了()
+        if not 超:
+            return False
+        分 = int(等多久 / 60) + 1
+        if not getattr(self, "_额度说过", False):
+            self._log("WARN", "⏸️ IP 级整页加载额度用完了（这一小时已发 %d 次，上限 %d）："
+                      "%s侧这一轮不搜索/不刷页，约 %d 分钟后腾出位置再试"
+                      % (数, int(self._整页加载小时上限()), 侧, 分))
+            self._额度说过 = True
+        self._stop_event.wait(timeout=min(60.0, max(10.0, 等多久)))
+        return True
+
+    def _整页加载小时上限(self) -> int:
+        try:
+            return int(getattr(self.config.greet.rate_limit, "page_loads_per_hour", 20) or 0)
+        except (TypeError, ValueError):
+            return 0
+
     def resume_greet(self):
-        """恢复打招呼功能。"""
+        """恢复打招呼功能。
+
+        这也是"IP 封禁已解除"的人工确认口：那一族的恢复时间只有 BOSS 知道
+        （页面上写 24 小时，实际登录一次就可能解开），机器不猜时间，只认他点的这一下。
+        """
+        if self._ip封着:
+            self._ip封着 = False
+            self._login_reason = ""
+            self._log("INFO", "人工恢复打招呼：按他确认「IP 限制已解除」处理，"
+                              "IP 级整页加载额度照旧收着（默认每小时 20 次）")
         self._greet_paused = False
         self._greet_paused_by_cap = False
         self._greet_auto_resume_at = 0.0
@@ -667,7 +744,11 @@ class UnifiedBotLoop:
         self._log("INFO", "回复已暂停（人工接管模式）")
 
     def resume_reply(self):
-        """恢复回复功能。"""
+        """恢复回复功能（同样是 IP 封禁的人工确认口，理由见 resume_greet）。"""
+        if self._ip封着:
+            self._ip封着 = False
+            self._login_reason = ""
+            self._log("INFO", "人工恢复回复：按他确认「IP 限制已解除」处理")
         self._reply_paused = False
         if self._state_store is not None:
             self._state_store.resume()
@@ -980,6 +1061,8 @@ class UnifiedBotLoop:
         # 装晚了等于最该摊平的那一段没人管。
         设置整页加载地板(
             getattr(self.config.greet.rate_limit, "page_load_min_interval", 3))
+        设置整页加载小时上限(
+            getattr(self.config.greet.rate_limit, "page_loads_per_hour", 20))
         try:
             self._log("INFO", "=" * 50)
             self._log("INFO", "BOSS 统一机器人启动（双标签页并行架构）")
@@ -2081,6 +2164,10 @@ class UnifiedBotLoop:
 
                 # ── 健康检查：检测验证码/风控/登录态 ──
                 health = self._check_health(side="greet")
+                if health == "ip_blocked":
+                    # 这一族不等人滑、也不停一侧就完事：见 _ip封了停下
+                    self._ip封了停下("打招呼", self._health_why or "")
+                    break
                 if health == "captcha":
                     self._log("ERROR", "⚠️ 检测到验证码/风控拦截，等人工滑一下"
                                        "（要等多久由闸门按有没有摆窗口决定，结束时按实数记）")
@@ -2604,6 +2691,14 @@ class UnifiedBotLoop:
                 city = task.get("city", "上海")
                 scroll_pages = task.get("scroll_pages", 5)
 
+                # 一个词一发整页加载，额度用完了就到此为止：剩下的词下一轮接着排。
+                # 装在词头上而不是装在轮头上，是为了"摊平"而不是"停摆"——
+                # 轮头一刀砍掉整轮，他勾的那几条也会跟着排到很久以后。
+                if self._整页加载额度收手("打招呼"):
+                    self._log("INFO", f"⏭️ 这一轮排到「{query}」时 IP 级额度用完了，"
+                                      f"这个词和它后面的下一轮接着排")
+                    break
+
                 self._log("INFO", f"搜索岗位: {city} · {query}")
                 self._log("DEBUG", f"搜索参数: scroll_pages={scroll_pages}, "
                                   f"interval_min={task.get('message_interval_min', 3)}, "
@@ -2866,6 +2961,9 @@ class UnifiedBotLoop:
                 # 搜索页上偶尔出现的风控提示会被误判成"回复侧被验证码拦截"
                 self._sync_chat_tab()
                 health = self._check_health(side="reply")
+                if health == "ip_blocked":
+                    self._ip封了停下("回复", self._health_why or "")
+                    break
                 if health == "captcha":
                     self._log("ERROR", "⚠️ 回复侧检测到验证码/风控拦截，等人工滑一下"
                                        "（要等多久由闸门按有没有摆窗口决定，结束时按实数记）")
@@ -2916,8 +3014,10 @@ class UnifiedBotLoop:
                 # 欠着的简历每轮照时间窗再补一趟，不然只靠启动那一次
                 self._run_resume_backfill()
 
-                # 回复检查间隔
-                check_interval = self.config.reply.check_interval
+                # 回复检查间隔：有活就按面板那个秒数走；连着几轮没活就 2 倍拉长，
+                # 上限由 reply.idle_backoff_max 定（默认 120 秒，填 0 = 不退避、照旧固定间隔）。
+                # 退避不是偷懒：BOSS 记的是出口 IP 的请求频率，而空轮也要读一次会话页。
+                check_interval = self._回复间隔秒()
                 self._stop_event.wait(timeout=check_interval)
 
             except Exception as e:
@@ -2980,6 +3080,37 @@ class UnifiedBotLoop:
         if 新页 is not None:
             手.browser = 新页
             手.page = 新页.page
+
+    def _回复间隔秒(self) -> float:
+        """这一轮睡多久：有活回到基准秒，空轮按 2 的幂往上抬，抬到上限就停在那。
+
+        基准是面板上那个「检查间隔」（他的旋钮），退避只在其上放大；
+        一旦哪一轮真有活，立刻回到基准——不会因为"刚才退到 120 秒"而让新消息多等。
+        填 `idle_backoff_max = 0` 就是关掉退避，回到以前那副固定间隔的样子。
+        """
+        基准 = 0.0
+        try:
+            基准 = float(self.config.reply.check_interval or 15)
+        except (TypeError, ValueError):
+            基准 = 15.0
+        基准 = max(1.0, 基准)
+        try:
+            顶 = float(getattr(self.config.reply, "idle_backoff_max", 120) or 0)
+        except (TypeError, ValueError):
+            顶 = 0.0
+        if 顶 <= 0:
+            self._空轮连击 = 0
+            return 基准
+        if getattr(self, "_本轮回复有活", True):
+            self._空轮连击 = 0
+            return 基准
+        # 第一次空轮就退到 2 倍：等到第二轮才退，等于明知这轮是空的还白读一次会话页
+        self._空轮连击 = int(getattr(self, "_空轮连击", 0)) + 1
+        秒 = min(顶, 基准 * (2 ** min(6, self._空轮连击)))
+        if 秒 >= 顶 and self._空轮连击 == 2:
+            self._log("INFO", f"连着几轮没有要回的：回复腿退到每 {int(顶)} 秒一趟"
+                              f"（有 HR 说话就立刻回到 {int(基准)} 秒）")
+        return 秒
 
     def _run_reply_round(self):
         """执行一轮回复任务：检查未读消息并回复。"""
@@ -3064,6 +3195,10 @@ class UnifiedBotLoop:
                 except Exception as e:
                     self._log("WARN", f"自动复盘检查失败（不影响本轮回复）: {e}")
 
+            # 这一轮有没有活——回复腿的空轮退避就认这个旗（不是认时间隔了几秒）。
+            # 今天实测每小时 255~316 轮、平均 11 秒一趟，其中绝大多数是空轮；
+            # 空轮照样要读一次会话页，那就是"请勿频繁提交刷新请求"里的那个"频繁"。
+            self._本轮回复有活 = bool(candidates)
             if not candidates:
                 self._log("DEBUG", "无未读消息")
             else:
@@ -4344,6 +4479,14 @@ class UnifiedBotLoop:
             #     风控算的是 IP 不是号，所以不能按号各装一份。
             地板 = 设置整页加载地板(
                 getattr(self.config.greet.rate_limit, "page_load_min_interval", 3))
+            上限 = 设置整页加载小时上限(
+                getattr(self.config.greet.rate_limit, "page_loads_per_hour", 20))
+            if 上限 != getattr(self, "_装过的小时上限", None):
+                # 只在变了的时候说一句：这一趟是热重载，一分钟一趟，
+                # 每趟都念就把真要看的行淹了（日志噪音那条门同一个教训）
+                self._装过的小时上限 = 上限
+                self._log("INFO", "IP 级整页加载额度已装：每小时 %d 次%s"
+                          % (上限, "（0=不限量，等于把 11-04 那天的打法放回来）" if 上限 == 0 else ""))
             if getattr(self, "_整页地板秒", None) != 地板:
                 self._整页地板秒 = 地板
                 self._log("INFO", f"整页加载地板已装：两次整页换页之间至少隔 {地板:.0f} 秒"
@@ -4642,7 +4785,10 @@ class UnifiedBotLoop:
             try:
                 health = self._chat_handler.check_health()
                 self._health_why = "会话页检查器判定"
-                return health if health in ("ok", "need_login", "captcha") else "unknown"
+                # ip_blocked 必须在白名单里：漏了它就被折成 unknown，
+                # 于是"访问受限"读成"这一眼看不准"，两条腿照样一轮一轮去刷那张页
+                return health if health in ("ok", "need_login", "captcha",
+                                            "ip_blocked") else "unknown"
             except Exception as e:
                 self._log("DEBUG", f"健康检查异常: {e}")
                 return "unknown"
@@ -4651,7 +4797,7 @@ class UnifiedBotLoop:
         # 于是风控页被当成健康，接着掉进打招呼侧几分钟不可中断的重试循环
         try:
             from boss_bot.page_handler import (CAPTCHA_PROBE_JS, classify_health,
-                                               captcha_evidence)
+                                               captcha_evidence, ip_blocked_evidence)
             url = instance.url or ""
             # as_expr 必须带：这份 JS 是 IIFE 表达式，不带的话 DrissionPage 把它
             # 当函数体包一层，没有 return → 恒为 undefined → 页面证据一条拿不到，
@@ -4659,7 +4805,8 @@ class UnifiedBotLoop:
             probe = instance.run_js(CAPTCHA_PROBE_JS, as_expr=True)
             verdict = classify_health(url, probe)
             _is_c, why = captcha_evidence(probe)
-            self._health_why = why or "无挑战证据"
+            _封, 封为什么 = ip_blocked_evidence(probe)
+            self._health_why = 封为什么 if _封 else (why or "无挑战证据")
             # 判据写进日志：以后再说"页面没有验证码"，能当场看出是哪条判据响的。
             # 光记 URL 前 90 字不够：风控页的 URL 长这样
             #   https://www.zhipin.com/web/user/verify.html?callbackUrl=https%3A%2F%2F...

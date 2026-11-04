@@ -1262,6 +1262,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
             <div class="adv-field-row"><label title="两次打开岗位详情页之间至少隔几秒（两个号共用一份账，风控按 IP 算）。8 天日志里被甩安全验证的 111/112 处，上一条动作都是打开详情页；填 0 = 不节流">详情页间隔(s)</label><input class="side-form-input" id="jobDetailMinInterval" type="number" min="0" max="600" step="5" placeholder="30" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label title="人工把安全验证滑完之后再歇几秒才碰页面；立刻照原频率回去撞等于再要一张验证页。填 0 = 不等">验证后冷却(s)</label><input class="side-form-input" id="afterVerifyCooldown" type="number" min="0" max="3600" step="30" placeholder="300" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label title="整个进程里两次「把一张页整个换掉」之间至少隔几秒。已装的详情页间隔只管岗位详情页，这一条管剩下那些没人管的：回复腿会话页地址一漂就重刷、抓取腿刷搜索页、断线重连与内存回收重开浏览器、检测 Cookie 那趟两次加载。10-23~10-25 三天日志共 792 次整页加载，其中 11 个「同一秒两号各发一发」，而两个号走同一个出口 IP。填 0 = 关掉">整页加载地板(s)</label><input class="side-form-input" id="pageLoadMinInterval" type="number" min="0" max="60" step="1" placeholder="3" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="按出口 IP 记的总量闸：每小时最多几次「把一张页整个换掉」，两个号共用一份账。地板管的是同一秒不许三四发，管不了一小时总共多少发——11-04 实测每小时 57~61 次搜索加载 + 255~316 轮会话页连刷五小时，18 点被 BOSS 关进「访问受限 · 24 小时」。用完就一个词一个词地不收手，剩下的下一轮接着排。填 0 = 不限量（等于把那天那套打法放回来）">整页加载/小时(次)</label><input class="side-form-input" id="pageLoadsPerHour" type="number" min="0" max="200" step="5" placeholder="20" onchange="onAdvChange()"></div>
             <div class="adv-group-title">登录</div>
             <div class="adv-field-row"><label>等待超时(s)</label><input class="side-form-input" id="advLoginWait" type="number" placeholder="300" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label>失败时清除Cookie</label><span id="advClearCookies" class="toggle-switch" onclick="toggleAdvBool('clear_cookies')"></span></div>
@@ -1282,6 +1283,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
             <div class="adv-field-row"><label title="从这个数到自动投线之间的岗位机器不替你决定，留着你自己看——就是池里那一档「待你看」。填得比自动投线高会被抬到自动投线（不然一条岗会同时既自动投又待你看）">待你看下限(分)</label><input class="side-form-input" id="advReviewMin" type="number" min="0" max="100" step="5" placeholder="60"></div>
             <div class="adv-field-row"><label title="每个号每一轮最多自己勾几条。一轮就勾几十条等于把每日 150 的额度一次打满，还把「机器在替我发东西」变成看不见的事。填 0=关掉机器自己勾">自动投条数/轮</label><input class="side-form-input" id="advAutoApplyMax" type="number" min="0" max="50" step="1" placeholder="5"></div>
             <div class="adv-field-row"><label>每小时最多回复</label><input class="side-form-input" id="advMaxReply" type="number" value="60" min="1" max="200" step="1" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="连着几轮没有要回的，就把检查间隔按 2 倍拉长到这个秒数为止；哪一轮真有 HR 说话立刻回到基准秒。今天 12 点那一小时跑了 316 轮、平均 11 秒一趟，绝大多数是空轮，而每趟空轮都要读一次会话页——「请勿频繁提交刷新请求」数的就是这个。填 0 = 不退避">空轮退避上限(s)</label><input class="side-form-input" id="advIdleBackoff" type="number" min="0" max="900" step="30" placeholder="120" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label title="HR 发来 offer/面试邀请这类重要消息时机器人会停手等人工，但一句话不该把整个号锁住：超过这个分钟数自动恢复回复。手动按「暂停回复」不受影响，0 = 永不自动恢复">重要消息暂停自动恢复(分钟)</label><input class="side-form-input" id="advPauseResumeMin" type="number" value="10" min="0" max="720" step="1" onchange="onAdvChange()"></div>
             <div class="adv-group-title">回复补漏与主动跟进</div>
             <div class="adv-field-row"><label title="侧栏红点会被启动全量同步清掉，而且它一屏只渲染约 20 行；每轮再从本地存档补几个「HR 最后说话、我们没接」的会话">每轮补回欠回复(个)</label><input class="side-form-input" id="advOwedPerRound" type="number" value="8" min="0" max="50" step="1" onchange="onAdvChange()"></div>
@@ -3216,6 +3218,7 @@ let cookieStatusCache = {};
 
 var PHASE_LABEL = {stopped:'未启动', starting:'初始化中', checking_login:'正在用Cookie自动登录', waiting_login:'等你登录', running:'运行中'};
 var LOGIN_REASON_LABEL = {
+  ip_blocked: "BOSS 按 IP 限流（访问受限）——两条腿已停手，别再刷；人工确认解开后点恢复",
   cookie_expired: 'Cookie 已过期，需要重新登录',
   no_cookie: '这个账号还没有登录过',
   cookie_error: 'Cookie 读取失败',
@@ -3455,6 +3458,9 @@ function renderAdvSettings() {
   setVal('jobDetailMinInterval', rl.job_detail_min_interval != null ? rl.job_detail_min_interval : 30);
   setVal('afterVerifyCooldown', rl.after_verify_cooldown != null ? rl.after_verify_cooldown : 300);
   setVal('pageLoadMinInterval', rl.page_load_min_interval != null ? rl.page_load_min_interval : 3);
+  // 11-04 新装的 IP 级总量闸：读不到就按后端那份默认（20 次/小时）画，别画成 0——
+  // 画成 0 的意思是"不限量"，那正好是把 IP 刷进 24 小时封禁的那套打法
+  setVal('pageLoadsPerHour', rl.page_loads_per_hour != null ? rl.page_loads_per_hour : 20);
 
   const lg = config.login || {};
   setVal('advLoginWait', lg.wait_timeout != null ? lg.wait_timeout : 300);
@@ -3489,6 +3495,7 @@ function renderAdvSettings() {
   setVal('advAutoApplyMax', _g.auto_apply_max_per_round != null ? _g.auto_apply_max_per_round : 5);
   var _rl = config.reply || {};
   setVal('advMaxReply', _rl.max_replies_per_hour != null ? _rl.max_replies_per_hour : 60);
+  setVal('advIdleBackoff', _rl.idle_backoff_max != null ? _rl.idle_backoff_max : 120);
   setVal('advPauseResumeMin', _rl.pause_auto_resume_minutes != null ? _rl.pause_auto_resume_minutes : 10);
   setVal('advOwedPerRound', _rl.owed_per_round != null ? _rl.owed_per_round : 8);
   setVal('advOwedMaxAge', _rl.owed_max_age_hours != null ? _rl.owed_max_age_hours : 72);
@@ -3612,6 +3619,7 @@ function onAdvChange() {
   config.rate_limit.job_detail_min_interval = _夹('jobDetailMinInterval', 30, 0, 600);
   config.rate_limit.after_verify_cooldown = _夹('afterVerifyCooldown', 300, 0, 3600);
   config.rate_limit.page_load_min_interval = _夹('pageLoadMinInterval', 3, 0, 60);
+  config.rate_limit.page_loads_per_hour = _夹('pageLoadsPerHour', 20, 0, 200);
 
   if (!config.login) config.login = {};
   config.login.wait_timeout = parseInt(document.getElementById('advLoginWait').value) || 300;
@@ -3650,6 +3658,8 @@ function onAdvChange() {
   config.greet.auto_apply_max_per_round = _advNum('advAutoApplyMax', 5);
   if (!config.reply) config.reply = {};
   config.reply.max_replies_per_hour = parseInt(document.getElementById('advMaxReply').value) || 30;
+  // 0 是有效值（关掉退避，回到固定间隔），所以这里不能用 || 默认
+  config.reply.idle_backoff_max = _advNum('advIdleBackoff', 120);
   // 0 是有效值（"每轮补 0 个"就是把补漏关掉），这里不能用 parseInt(x) || 默认
   function _replyNum(id, def) {
     var v = parseInt(document.getElementById(id).value, 10);

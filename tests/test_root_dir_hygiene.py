@@ -43,7 +43,11 @@ sys.path.insert(0, str(ROOT))
     留档目录,                     # 一次性清理的去处
 }
 工具缓存目录 = {".git", ".scratch", ".pytest_cache", ".qoder", ".arts", ".codeartsdoer",
-               ".firecrawl", "__pycache__"}
+               ".firecrawl", "__pycache__",
+               # 会话里贴图时工具自己在仓库根落的那一份（11-04 那张「访问受限」截图就是它带进来的）。
+               # 不是项目内容、也不该入库（.gitignore 里挡着），但删它等于删用户贴进来的原图，
+               # 所以给它一个"是工具缓存"的名分，而不是把它塞进 archive/ 假装是我们清过的东西
+               ".qoder-input-images"}
 # InstaBox 那条执行层（把 bot 搬到云端 Linux 沙箱跑）是 Node 的：
 # package.json / package-lock.json 必须住仓库根，`npm run box:*` 才在仓库根解析得到；
 # node_modules 是 npm 自己按"从脚本目录往上找"放下的，装进 tools/instabox 反而会让

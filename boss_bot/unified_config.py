@@ -456,6 +456,12 @@ class RateLimitConfig:
     # 风控算出口 IP，两个号在同一个家宽 IP 上，所以地板按进程算，不按号算。
     # 默认 3 秒：抓取腿几分钟一趟，摊不慢它，只把同一秒三四发隔开。填 0 = 关掉。
     page_load_min_interval: int = 3
+    # 地板只管"同一秒不许三四发"，不保证一小时总共多少发。
+    # 2026-11-04 实测：10:00~14:59 每小时 57~61 次搜索整页加载 + 每小时 255~316 轮会话页，
+    # 连着五个小时，18 点被 BOSS 关进「访问受限 · 您的 IP 存在异常行为 · 24 小时」。
+    # 默认 20 次/小时（按整个出口 IP 记，两个号共用一份账）。填 0 = 不限量，
+    # 也就是把今天这套打法退回封禁之前——所以默认不给 0。
+    page_loads_per_hour: int = 20
     # 人工把验证页滑完之后再歇多久才准碰页面（秒）。填 0 = 不等。
     after_verify_cooldown: int = 300
 
@@ -530,6 +536,10 @@ class ReplyConfig:
     """自动回复配置（来自 BOSS-auto-reply-bot）"""
     enabled: bool = True
     check_interval: int = 8
+    # 连着几轮没有要回的，就把间隔按 2 的幂拉长到这个秒数为止（0 = 关掉退避，照旧固定间隔）。
+    # 今天 12 点那一小时跑了 316 轮、平均 11 秒一趟，绝大多数是空轮，
+    # 而每一趟空轮都要读一次会话页——BOSS 那句「请勿频繁提交刷新请求」数的就是这个。
+    idle_backoff_max: int = 120
     context_message_count: int = 10
     max_replies_per_hour: int = 60
     min_delay: int = 2
@@ -1171,6 +1181,10 @@ class UnifiedConfig:
             if "page_load_min_interval" in rl:
                 self.greet.rate_limit.page_load_min_interval = max(
                     0, min(60, int(rl["page_load_min_interval"])))
+            if "page_loads_per_hour" in rl:
+                # 上限夹到 200：再高就不是限流，是个摆设
+                self.greet.rate_limit.page_loads_per_hour = max(
+                    0, min(200, int(rl["page_loads_per_hour"])))
             if "after_verify_cooldown" in rl:
                 self.greet.rate_limit.after_verify_cooldown = max(
                     0, min(3600, int(rl["after_verify_cooldown"])))
@@ -1349,6 +1363,13 @@ class UnifiedConfig:
                 self.reply.enabled = bool(reply["enabled"])
             if "check_interval" in reply:
                 self.reply.check_interval = int(reply["check_interval"])
+            if "idle_backoff_max" in reply:
+                # 0 是有效值（关掉退避），所以这里不能用 `or` 兜默认；上限夹到 900 秒
+                try:
+                    self.reply.idle_backoff_max = max(
+                        0, min(900, int(float(reply["idle_backoff_max"]))))
+                except (TypeError, ValueError):
+                    pass
             if "context_message_count" in reply:
                 self.reply.context_message_count = int(reply["context_message_count"])
             if "max_replies_per_hour" in reply:
@@ -1747,6 +1768,8 @@ class UnifiedConfig:
                 "max_per_day": self.greet.rate_limit.max_per_day,
                 "job_detail_min_interval":
                     self.greet.rate_limit.job_detail_min_interval,
+                "page_loads_per_hour":
+                    self.greet.rate_limit.page_loads_per_hour,
                 "page_load_min_interval":
                     self.greet.rate_limit.page_load_min_interval,
                 "after_verify_cooldown":
@@ -1837,6 +1860,7 @@ class UnifiedConfig:
             "reply": {
                 "enabled": self.reply.enabled,
                 "check_interval": self.reply.check_interval,
+                "idle_backoff_max": self.reply.idle_backoff_max,
                 "context_message_count": self.reply.context_message_count,
                 "max_replies_per_hour": self.reply.max_replies_per_hour,
                 "min_delay": self.reply.min_delay,

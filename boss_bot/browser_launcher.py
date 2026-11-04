@@ -563,17 +563,61 @@ def 准整页加载(地址: str = "", 记=None) -> float:
 
     `记` 收一个字符串，由调用方决定进哪一路（引擎的 _log 还是 logger）。
     上限就是地板本身：绝不在这里睡过 60 秒，也不会因为"上一发是别人的"而无限等。
+
+    2026-11-04 加的小时账：地板只保证"同一秒不许三四发"，**不保证一小时总共多少发**。
+    当天 10:00~14:59 实测每小时 57~61 次搜索整页加载 + 每小时 255~316 轮会话页，
+    连着跑了五个小时，18 点 BOSS 直接把这台出口 IP 关进"访问受限（24 小时）"。
+    风控按 IP 记，所以这份账跟地板一样是整个进程共用一份，不按号分。
+    这里只**记账**，不在这儿睡——睡在这里会把两条腿钉住；额度用完了由调用方
+    决定这一轮不搜了（见 main_loop 的 整页加载额度用完了），那才是能看懂的收手。
     """
     with _PAGE_LOAD_LOCK:
         地板 = _SHARED_PAGE_LOAD_STATE["地板"]
         要等 = 整页加载要等秒(_SHARED_PAGE_LOAD_STATE["上次"], time.time(), 地板)
         if 要等 > 0:
             time.sleep(min(要等, 地板))
-        _SHARED_PAGE_LOAD_STATE["上次"] = time.time()
+        现在 = time.time()
+        _SHARED_PAGE_LOAD_STATE["上次"] = 现在
+        表 = _SHARED_PAGE_LOAD_STATE.setdefault("小时表", [])
+        表[:] = [t for t in 表 if 现在 - t < 3600.0]
+        表.append(现在)
     if 要等 >= 1 and 记 is not None:
         记("整页加载摊平：两号共用一个出口 IP，这一发（%s）等了 %.1f 秒"
           % ((地址 or "")[:60], 要等))
     return 要等
+
+
+def 设置整页加载小时上限(次) -> int:
+    """装"每小时最多几次整页加载"这道闸（IP 级，两号共用）。返回真装上的数。
+
+    填 0 = 不限量（退回 11-04 之前那个把 IP 打进 24 小时封禁的行为，所以默认不给 0）。
+    上限夹到 200：再高就不是限流而是摆设了。
+    """
+    try:
+        值 = int(float(次 or 0))
+    except (TypeError, ValueError):
+        值 = 0
+    值 = max(0, min(200, 值))
+    with _PAGE_LOAD_LOCK:
+        _SHARED_PAGE_LOAD_STATE["小时上限"] = 值
+    return 值
+
+
+def 整页加载额度用完了(现在=None) -> tuple:
+    """(是不是该收手, 这一小时已经发了几次, 还要等多久才腾出一个位置)。
+
+    额度没装（0）就永远不该收手；窗口里最早那一发滑出去，就腾出一个位置。
+    """
+    现在 = 现在 if 现在 is not None else time.time()
+    with _PAGE_LOAD_LOCK:
+        限 = int(_SHARED_PAGE_LOAD_STATE.get("小时上限") or 0)
+        表 = [t for t in (_SHARED_PAGE_LOAD_STATE.get("小时表") or [])
+               if 现在 - t < 3600.0]
+        _SHARED_PAGE_LOAD_STATE["小时表"] = 表
+        if 限 <= 0 or len(表) < 限:
+            return False, len(表), 0.0
+        等多久 = max(0.0, 3600.0 - (现在 - 表[0]))
+        return True, len(表), 等多久
 
 
 def reset_page_load_throttle() -> None:

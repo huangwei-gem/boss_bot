@@ -11,25 +11,7 @@
           "city": "长沙",
           "query": "AI产品经理",
           "job_type": "全职",
-          "scroll_pages": 10,
-          "greeting_message": "",
-          "image_files": []
-        },
-        {
-          "enabled": true,
-          "city": "长沙",
-          "query": "AIGC产品经理",
-          "job_type": "全职",
-          "scroll_pages": 10,
-          "greeting_message": "",
-          "image_files": []
-        },
-        {
-          "enabled": true,
-          "city": "长沙",
-          "query": "大模型产品经理",
-          "job_type": "全职",
-          "scroll_pages": 10,
+          "scroll_pages": 6,
           "greeting_message": "",
           "image_files": []
         },
@@ -38,25 +20,7 @@
           "city": "长沙",
           "query": "AI应用工程师",
           "job_type": "全职",
-          "scroll_pages": 10,
-          "greeting_message": "",
-          "image_files": []
-        },
-        {
-          "enabled": true,
-          "city": "长沙",
-          "query": "AI产品运营",
-          "job_type": "全职",
-          "scroll_pages": 10,
-          "greeting_message": "",
-          "image_files": []
-        },
-        {
-          "enabled": true,
-          "city": "长沙",
-          "query": "算法产品经理",
-          "job_type": "全职",
-          "scroll_pages": 10,
+          "scroll_pages": 6,
           "greeting_message": "",
           "image_files": []
         },
@@ -65,7 +29,25 @@
           "city": "长沙",
           "query": "产品经理 算法",
           "job_type": "全职",
-          "scroll_pages": 10,
+          "scroll_pages": 6,
+          "greeting_message": "",
+          "image_files": []
+        },
+        {
+          "enabled": true,
+          "city": "长沙",
+          "query": "算法产品经理",
+          "job_type": "全职",
+          "scroll_pages": 6,
+          "greeting_message": "",
+          "image_files": []
+        },
+        {
+          "enabled": true,
+          "city": "长沙",
+          "query": "AI产品运营",
+          "job_type": "全职",
+          "scroll_pages": 6,
           "greeting_message": "",
           "image_files": []
         }
@@ -100,27 +82,9 @@
         {
           "enabled": true,
           "city": "长沙",
-          "query": "数据分析",
+          "query": "数据产品经理",
           "job_type": "全职",
-          "scroll_pages": 10,
-          "greeting_message": "",
-          "image_files": []
-        },
-        {
-          "enabled": true,
-          "city": "长沙",
-          "query": "BI分析师",
-          "job_type": "全职",
-          "scroll_pages": 10,
-          "greeting_message": "",
-          "image_files": []
-        },
-        {
-          "enabled": true,
-          "city": "长沙",
-          "query": "数据分析师",
-          "job_type": "全职",
-          "scroll_pages": 10,
+          "scroll_pages": 6,
           "greeting_message": "",
           "image_files": []
         },
@@ -129,34 +93,34 @@
           "city": "长沙",
           "query": "SQL",
           "job_type": "全职",
-          "scroll_pages": 10,
+          "scroll_pages": 6,
           "greeting_message": "",
           "image_files": []
         },
         {
           "enabled": true,
           "city": "长沙",
-          "query": "数据产品经理",
+          "query": "BI分析师",
           "job_type": "全职",
-          "scroll_pages": 10,
+          "scroll_pages": 6,
           "greeting_message": "",
           "image_files": []
         },
         {
           "enabled": true,
           "city": "长沙",
-          "query": "商业数据分析",
+          "query": "数据分析",
           "job_type": "全职",
-          "scroll_pages": 10,
+          "scroll_pages": 6,
           "greeting_message": "",
           "image_files": []
         },
         {
           "enabled": true,
           "city": "长沙",
-          "query": "数据分析专家",
+          "query": "数据分析师",
           "job_type": "全职",
-          "scroll_pages": 10,
+          "scroll_pages": 6,
           "greeting_message": "",
           "image_files": []
         }
@@ -563,7 +527,8 @@
     "max_per_day": 150,
     "job_detail_min_interval": 30,
     "page_load_min_interval": 3,
-    "after_verify_cooldown": 300
+    "after_verify_cooldown": 300,
+    "page_loads_per_hour": 20
   },
   "reply": {
     "accept_contact_exchange": true,
@@ -583,7 +548,8 @@
     "owed_per_round": 12,
     "pause_auto_resume_minutes": 10,
     "pause_on_important": true,
-    "resume_send_once": true
+    "resume_send_once": true,
+    "idle_backoff_max": 120
   },
   "reply_rules": {
     "你好": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",

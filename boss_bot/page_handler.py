@@ -47,11 +47,20 @@ CAPTCHA_BOX_SELECTORS = (".nc-container", ".verify-wrap", ".geetest_panel",
 CAPTCHA_STRONG_WORDS = ("安全验证", "请完成验证", "拖动滑块", "滑动验证",
                         "人机验证", "图形验证")
 
+# 2026-11-04：BOSS 把这台的出口 IP 关进了另一族页面——「访问受限 / 您的 IP 存在异常
+# 行为，请登录使用 / 将于 24 小时后恢复正常 / 请勿频繁提交刷新请求」。
+# 这一族跟滑块**必须分开处理**：滑块是"人工滑一下就继续"，这一族是"再多发一次
+# 就把窗口往后推"，唯一正确的动作是停手。判据分开两份，别混成一个 captcha，
+# 否则闸门会每 2 秒复查一次去"等有人滑完"，而那张页面上根本没有可滑的东西。
+IP_BLOCK_WORDS = ("访问受限", "存在异常行为", "请勿频繁提交刷新请求",
+                  "暂时无法访问此页面")
+
 # 探针只报证据（候选容器的实测尺寸 + 命中的文案），定罪留给 python：
 # 同一份判据既能被单测覆盖，也能被写进日志自证。
 CAPTCHA_PROBE_JS = '''(function () {
     var sels = %s;
     var strong = %s;
+    var blocked = %s;
     var boxes = [];
     for (var i = 0; i < sels.length; i++) {
         var els = document.querySelectorAll(sels[i]);
@@ -67,9 +76,14 @@ CAPTCHA_PROBE_JS = '''(function () {
     for (var k = 0; k < strong.length; k++) {
         if (body.indexOf(strong[k]) >= 0) words.push(strong[k]);
     }
-    return JSON.stringify({boxes: boxes, words: words});
+    var hits = [];
+    for (var m = 0; m < blocked.length; m++) {
+        if (body.indexOf(blocked[m]) >= 0) hits.push(blocked[m]);
+    }
+    return JSON.stringify({boxes: boxes, words: words, blocked: hits});
 })()''' % (json.dumps(list(CAPTCHA_BOX_SELECTORS)),
-           json.dumps(list(CAPTCHA_STRONG_WORDS), ensure_ascii=False))
+           json.dumps(list(CAPTCHA_STRONG_WORDS), ensure_ascii=False),
+           json.dumps(list(IP_BLOCK_WORDS), ensure_ascii=False))
 
 
 def _probe_data(probe):
@@ -97,6 +111,23 @@ def _box_challenges(box: dict) -> bool:
             and box.get("visibility") != "hidden")
 
 
+def ip_blocked_evidence(probe) -> tuple:
+    """探针结果 → (是不是被按 IP 封了, 给人看的判据)。
+
+    只认页面证据（正文里真出现那几句），不认 URL：这一族住在哪个路径没有实测过，
+    拿地址定罪会重演 9-30 那次「URL 带 _security_check 就判验证码」的误判。
+    命中两个以上词才算一封——单一个「访问受限」可能是别的临时页，
+    而「存在异常行为」+「24 小时」这种组合才是 BOSS 在说"你今天别再来"。
+    """
+    data = _probe_data(probe)
+    if data is None:
+        return False, ""
+    中 = [w for w in (data.get("blocked") or []) if w]
+    if len(中) >= 2:
+        return True, "IP 级访问受限（命中：" + "、".join(中[:3]) + "）"
+    return False, ""
+
+
 def captcha_evidence(probe) -> tuple:
     """探针结果 → (是否确实在验证, 给人看的判据)。"""
     data = _probe_data(probe)
@@ -113,10 +144,13 @@ def captcha_evidence(probe) -> tuple:
 
 
 def classify_health(url: str, probe) -> str:
-    """把"页面地址 + 探针证据"归成 ok / need_login / captcha / unknown。
+    """把"页面地址 + 探针证据"归成 ok / need_login / captcha / ip_blocked / unknown。
 
     验证优先于登录：风控滑块常盖在登录框上，判成 need_login 会去动 Cookie 文件、
     逼人重新扫码，而实情只差过一次验证。
+    **IP 封禁优先于验证码**：11-04 那一族页面上既有"访问受限"也常带一句"请登录使用"，
+    判成 captcha 就会每 2 秒复查一次去等"有人滑完"——可那张页面根本没有可滑的东西，
+    多刷一次只会把 24 小时往后推。判成 ip_blocked 之后调用方要的是**停手**，不是等。
     探针拿不到证据时不兜底成 ok——旧代码就是这么漏掉纯图形验证页的。
     地址这一路也不能裸着判 "passport"：实测 BOSS 把风控页放在
     /web/passport/zp/{security,verify}.html 下面（2026-10-18 13:20 账号2 两张
@@ -124,6 +158,9 @@ def classify_health(url: str, probe) -> str:
     于是这一腿每次 park 五分钟等一个根本不存在的"重新登录"。判据用
     browser_launcher 那一份，不在这里另起一套。
     """
+    封, _为什么 = ip_blocked_evidence(probe)
+    if 封:
+        return "ip_blocked"
     is_captcha, _why = captcha_evidence(probe)
     if is_captcha or 是风控验证页(url):
         return "captcha"
