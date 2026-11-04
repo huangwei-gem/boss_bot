@@ -285,6 +285,12 @@ def judge_resume_sent(read, baseline: int = 0):
     return False, "会话里没多出简历附件卡片"
 
 
+# 会话列表读取失败的"报过没有"台账：{账号键: {异常族名}}。
+# 判据跟 main_loop 的 `login_uncertain`、greet_engine 的 `_announce_giveup` 同一套——
+# 同一句话每轮都念，一小时几百行，真要查的那行就被埋掉了（2026-11-04 现数 1908 行）。
+_会话列表坏过的族 = {}
+
+
 class BossChatHandler:
     """BOSS 聊天页面操作处理器
 
@@ -647,6 +653,19 @@ class BossChatHandler:
         }
     )()'''
 
+    def _会话台账键(self) -> str:
+        """这一路会话读取归谁——按账号分，两个号互不静音。
+
+        拿不到账号就用浏览器管理器的端口，再拿不到退回 '全局'：
+        宁可多记一份，也不许因为"键取不到"把两个号的收敛合成一份。
+        """
+        名 = getattr(self, "_account_id", None)
+        if 名:
+            return str(名)
+        管 = getattr(self, "_browser_manager", None)
+        口 = getattr(管, "debug_port", None) if 管 is not None else None
+        return "port:%s" % 口 if 口 else "全局"
+
     def get_all_chats(self, max_rounds: int = 60) -> List[Dict]:
         """获取侧栏全部会话（不看红点），用于启动后的一次性全量同步。
 
@@ -969,10 +988,22 @@ class BossChatHandler:
             if result:
                 all_chats = json.loads(result)
             self._登记行位置(all_chats)
+            # 这一轮真读到东西了：把这一号的"坏过"清零，下一次再坏还能报出第一声
+            _会话列表坏过的族.pop(self._会话台账键(), None)
 
         except Exception as e:
-            logger.error("获取全部会话列表失败: %s: %s"
-                         % (type(e).__name__, str(e) or repr(e)))
+            话 = "获取全部会话列表失败: %s: %s" % (type(e).__name__, str(e) or repr(e))
+            族 = type(e).__name__
+            # 同一族成因今天念了 1908 遍，把"谁把投递停了"那种真要看的行全埋了。
+            # 只报第一声，之后转 DEBUG。台账住**模块级**、按账号各记一份：
+            # 实例属性会被那些拿 __new__ 造 handler 的测试打空，
+            # 而全局一份会让一个号安静了把另一个号一起静音（日志噪音那条门同样的教训）。
+            记 = _会话列表坏过的族.setdefault(self._会话台账键(), set())
+            if 族 in 记:
+                logger.debug(话 + "（同一族已报过，收敛）")
+            else:
+                记.add(族)
+                logger.error(话 + "（同一族后续转 DEBUG，读到过一次就重新计）")
         return all_chats
 
     def 行位置(self):

@@ -3181,16 +3181,34 @@ def api_chats():
     - last_message: 最新消息内容
     - last_time: 最新消息时间
     - messages: 完整消息列表
+
+    **默认只给一页（?limit=50）**。这条口以前一次吐 2871 路会话的全部正文 =
+    13,072,236 字节 / 现测 9.70 秒，而面板一个字节都不请求它（聊天正文走
+    `/api/chats/<会话名>` 那一条，点开哪一路取哪一路）——所以它纯粹是给脚本用的，
+    而"顺手 GET 一下想拿全量"的脚本少读两千八百条**不报错，只是数字小**。
+    要全量必须显式 `?limit=0`；这条由 tests/test_panel_speed.py 扫全仓 .py 钉住。
     """
     try:
         account = _account_arg()
+        # limit/offset 是地址栏和脚本里拼出来的：读不懂就当没给，不能把接口顶成 500
+        try:
+            每页 = max(0, int(str(request.args.get("limit") or 50)))
+        except (TypeError, ValueError):
+            每页 = 50
+        try:
+            偏移 = max(0, int(str(request.args.get("offset") or 0)))
+        except (TypeError, ValueError):
+            偏移 = 0
         msg_store = MessageStore()
         chats = [c for c in msg_store.get_all_chats_detail()
                  if account is None or int(c.get("account_index") or 0) == account]
+        全部 = len(chats)
         return jsonify({
             "status": "ok",
-            "chats": chats,
-            "total": len(chats),
+            "chats": chats[偏移:偏移 + 每页] if 每页 else chats[偏移:],
+            "total": 全部,
+            "returned": min(每页 or 全部, max(0, 全部 - 偏移)),
+            "offset": 偏移, "limit": 每页,
             "account": account,
         })
     except Exception as e:

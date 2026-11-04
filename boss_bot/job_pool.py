@@ -470,10 +470,37 @@ def 筛行(行s, 状态: str = "", 关键字: str = "", 城市: str = "",
     return 出
 
 
-def 排序行(行s: list, 排序: str = "分降") -> list:
+# 表头能点着排的列：列名 → 取值的规矩。只在这一份里列，界面照这份画箭头，
+# 后端照这份排——多一处写法就会"点了没反应"（这项目为这类账修过好几轮）。
+可排序列 = {
+    "岗位": lambda r: str(r.get("job_name") or ""),
+    "公司": lambda r: str(r.get("company") or ""),
+    "城市": lambda r: str(r.get("city") or r.get("location") or ""),
+    "薪资": lambda r: 薪资折月(r.get("salary")) if 薪资折月(r.get("salary")) is not None else -1.0,
+    "AI分": lambda r: float((r.get("ai") or {}).get("分") or 0),
+    "抓到": lambda r: float(r.get("captured_at") or 0),
+    "见过": lambda r: float(r.get("last_seen_at") or 0),
+}
+默认排序 = "分降"
+
+
+def 排序行(行s: list, 排序: str = 默认排序) -> list:
     """按界面那个「排序」摆好。单号的列表和「全部账号」的合并视图共用这一份：
     两处各写一套的话，同一条岗位换个数据范围顺序就变了。
+
+    两种写法都吃：
+    - 预设名 `分降` / `新抓的在前`（老地址、老测试、下拉里那两项）；
+    - 表头点出来的 `列名:asc` / `列名:desc`（列名必须在 `可排序列` 里）。
+    认不出来的一律退回默认那一种，绝不"排成没排"却什么都不说。
     """
+    排序 = str(排序 or 默认排序)
+    if ":" in 排序:
+        列, _, 向 = 排序.partition(":")
+        取 = 可排序列.get(列)
+        if 取 is not None:
+            行s.sort(key=取, reverse=(str(向).lower() != "asc"))
+            return 行s
+        return 排序行(行s, 默认排序)
     if 排序 == "分降":
         # 没判过分的排后面：他打开界面该先看到机器已经筛出来的，而不是一堆空白
         行s.sort(key=lambda r: (-(float((r.get("ai") or {}).get("分") or 0)),

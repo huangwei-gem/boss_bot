@@ -238,7 +238,7 @@ def main():
         server = start_server(临时)
         列表 = requests.get(URL + "/api/reply_records/grouped", timeout=30)
         组 = 列表.json().get("groups") or []
-        带正文的 = requests.get(URL + "/api/chats", timeout=30)
+        带正文的 = requests.get(URL + "/api/chats?limit=0", timeout=30)
         check("合并列表里一份正文都没有（15.3 MB 那一处撤掉了）",
               all("messages" not in g for g in 组),
               "漏了正文的分组：%s" % [g.get("chat_name") for g in 组

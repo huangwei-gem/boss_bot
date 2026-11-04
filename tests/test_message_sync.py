@@ -328,7 +328,7 @@ class ApiChatIdentityTest:
                 "陈女士_数据分析师.json").exists()
 
     def test_会话列表给出两条身份(self, client):
-        chats = client.get("/api/chats").get_json()["chats"]
+        chats = client.get("/api/chats?limit=0").get_json()["chats"]
         names = [c["chat_name"] for c in chats]
         assert names.count("陈女士") == 2
         assert all(c.get("chat_id") for c in chats)

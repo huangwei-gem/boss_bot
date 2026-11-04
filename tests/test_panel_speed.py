@@ -390,8 +390,8 @@ class 别的出口Test:
             except Exception:
                 continue
             for 行 in 文.splitlines():
-                if "/api/job_pool" in 行 and ("api_get(" in 行 or ".get(" in 行
-                                              or "requests.get" in 行):
+                if ("/api/job_pool" in 行 or "/api/chats" in 行) and (
+                        "api_get(" in 行 or ".get(" in 行 or "requests.get" in 行):
                     if "limit" not in 行:
                         没带.append("%s：%s" % (p, 行.strip()[:90]))
         assert not 没带, "这些读岗位池的出口没带 limit，会被默认一页 200 条静默截断：\n" + \

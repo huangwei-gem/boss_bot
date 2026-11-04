@@ -1066,6 +1066,17 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
 .btn-sm:not(:disabled):active,.side-btn:not(:disabled):active,
 .record-tab:not(:disabled):active,.pool-btn:not(:disabled):active{transform:translateY(1px)}
 .pool-table tbody tr:hover td{background:var(--surface-hover)}
+/* 点表头排序：th 里放真 button（挂 onclick 在 th 上，键盘和读屏都够不着）。
+   当前列用 --accent 描出来 + aria-sort 说出方向，不只靠一个箭头颜色。 */
+.pool-sortable{padding:0!important}
+.pool-sort-btn{display:inline-flex;align-items:center;gap:4px;width:100%;padding:8px 10px;
+  font:inherit;color:inherit;background:none;border:0;text-align:left;cursor:pointer;
+  border-radius:var(--r-sm);transition:background var(--dur-1) var(--ease),color var(--dur-1) var(--ease)}
+.pool-sort-btn:hover{background:var(--surface-hover);color:var(--fg)}
+.pool-sort-ind{width:.85em;height:.85em;min-width:0;min-height:0;opacity:0;transition:opacity var(--dur-1) var(--ease),transform var(--dur-1) var(--ease)}
+th[aria-sort="ascending"] .pool-sort-ind,th[aria-sort="descending"] .pool-sort-ind{opacity:1;color:var(--accent)}
+th[aria-sort="descending"] .pool-sort-ind{transform:rotate(180deg)}
+th[aria-sort="ascending"],th[aria-sort="descending"]{color:var(--accent)}
 .pool-table tbody tr[aria-selected="true"] td{background:var(--accent-light)}
 .pool-table tbody tr[aria-selected="true"]{box-shadow:inset 3px 0 0 var(--accent)}
 
@@ -1378,8 +1389,8 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
           <div class="record-tabs" role="tablist" aria-label="记录视图" style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto">
             <button class="record-tab active" role="tab" id="tab-greet" aria-selected="true" aria-controls="greetTabContent" onclick="switchRecordTab('greet')"><i data-ki="greet"></i>打招呼记录 <span class="tab-count" id="greetTabCount">0</span></button>
             <button class="record-tab" role="tab" id="tab-reply" aria-selected="false" aria-controls="replyTabContent" tabindex="-1" onclick="switchRecordTab('reply')"><i data-ki="reply"></i>回复记录 <span class="tab-count" id="replyTabCount">0</span></button>
-            <button class="record-tab" role="tab" id="tab-contact" aria-selected="false" aria-controls="contactTabContent" tabindex="-1" onclick="switchRecordTab('contact')"><i data-ki="clipboard-list"></i>联系与简历 <span class="tab-count" id="contactTabCount">0</span></button>
-            <button class="record-tab" role="tab" id="tab-pool" aria-selected="false" aria-controls="poolTabContent" tabindex="-1" onclick="switchRecordTab('pool')"><i data-ki="jobs"></i>岗位候选池 <span class="tab-count" id="poolTabCount">0</span></button>
+            <button class="record-tab" role="tab" id="tab-contact" aria-selected="false" aria-controls="contactTabContent" tabindex="-1" onclick="switchRecordTab('contact')"><i data-ki="clipboard-list"></i>联系与简历 <span class="tab-count" id="contactTabCount" title="还没打开过这一张表，所以手上没有数——不是没有记录。点开就换成真条数">—</span></button>
+            <button class="record-tab" role="tab" id="tab-pool" aria-selected="false" aria-controls="poolTabContent" tabindex="-1" onclick="switchRecordTab('pool')"><i data-ki="jobs"></i>岗位候选池 <span class="tab-count" id="poolTabCount" title="还没打开过这一张表，所以手上没有数——不是没有记录。点开就换成真条数">—</span></button>
             <!-- 打招呼筛选栏（和tab同一行） -->
             <div id="greetFilterBar" style="display:flex;align-items:center;gap:4px 6px;flex:1;justify-content:flex-end;flex-wrap:wrap;font-size:var(--fs-2xs)">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">开始</label>
@@ -1451,7 +1462,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">搜全部</label>
               <input type="text" id="poolFilterQ" placeholder="岗位/公司/备注/城市" style="width:136px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:var(--fs-2xs);background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">排序</label>
-              <select id="poolFilterSort" style="width:86px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:var(--fs-2xs);background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyPoolFilter()">
+              <select id="poolFilterSort" style="width:86px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:var(--fs-2xs);background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="POOL排.列='';applyPoolFilter()">
                 <option value="分降">AI 分高在前</option>
                 <option value="新抓的在前">刚抓到的在前</option>
               </select>
@@ -1601,16 +1612,16 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
                 <!-- 岗位/判分理由两列不写宽度=分容器富余；其余每列按 10-31 现量到的
                      最宽内容给（公司 152、城市 140、薪资 115、状态里的下拉 106、操作两个按钮 83），
                      状态和操作以前是 96/76，180 行里 180 行都在裁字 -->
-                <th scope="col">岗位</th>
-                <th scope="col" style="width:140px">公司</th>
-                <th scope="col" style="width:110px">城市</th>
-                <th scope="col" style="width:112px">薪资</th>
-                <th scope="col" style="width:126px">AI 精筛</th>
+                <th scope="col" class="pool-sortable" data-col="岗位"><button type="button" class="pool-sort-btn" onclick="poolSortBy('岗位')" title="点一下按这一列排，再点换方向">岗位<i data-ki="chevron-down" class="ki pool-sort-ind" aria-hidden="true"></i></button></th>
+                <th scope="col" style="width:140px" class="pool-sortable" data-col="公司"><button type="button" class="pool-sort-btn" onclick="poolSortBy('公司')" title="点一下按这一列排，再点换方向">公司<i data-ki="chevron-down" class="ki pool-sort-ind" aria-hidden="true"></i></button></th>
+                <th scope="col" style="width:110px" class="pool-sortable" data-col="城市"><button type="button" class="pool-sort-btn" onclick="poolSortBy('城市')" title="点一下按这一列排，再点换方向">城市<i data-ki="chevron-down" class="ki pool-sort-ind" aria-hidden="true"></i></button></th>
+                <th scope="col" style="width:112px" class="pool-sortable" data-col="薪资"><button type="button" class="pool-sort-btn" onclick="poolSortBy('薪资')" title="点一下按这一列排，再点换方向">薪资<i data-ki="chevron-down" class="ki pool-sort-ind" aria-hidden="true"></i></button></th>
+                <th scope="col" style="width:126px" class="pool-sortable" data-col="AI分"><button type="button" class="pool-sort-btn" onclick="poolSortBy('AI分')" title="点一下按这一列排，再点换方向">AI 精筛<i data-ki="chevron-down" class="ki pool-sort-ind" aria-hidden="true"></i></button></th>
                 <th scope="col">判分理由</th>
                 <th scope="col" style="width:112px">本地粗筛</th>
                 <th scope="col" style="width:110px">状态</th>
                 <th scope="col" style="width:118px">备注</th>
-                <th scope="col" style="width:66px">抓到</th>
+                <th scope="col" style="width:66px" class="pool-sortable" data-col="抓到"><button type="button" class="pool-sort-btn" onclick="poolSortBy('抓到')" title="点一下按这一列排，再点换方向">抓到<i data-ki="chevron-down" class="ki pool-sort-ind" aria-hidden="true"></i></button></th>
                 <th scope="col" style="width:90px">操作</th>
               </tr>
               <!-- 表头下面这一行是逐列筛选：每一格只管自己那一列，判据全在
@@ -4914,11 +4925,43 @@ var POOL_FILTERS = [
   {id: 'poolFilterFresh', qs: 'captured_within'}
 ];
 
+// 表头点出来的那一列（{列,向}），空 = 还跟着下拉那两项走。
+// 两个控件不能同时说话：点了表头就以表头为准，动了下拉就回到下拉——
+// 两边各存一份的话，屏幕上按"薪资"排、请求里发"分降"，那就是"看着对其实没生效"。
+var POOL排 = {列: '', 向: 'desc'};
+var POOL排可选 = ['岗位', '公司', '城市', '薪资', 'AI分', '抓到'];
+
+function poolSortBy(列) {
+  if (POOL排可选.indexOf(列) < 0) return;
+  if (POOL排.列 === 列) {
+    POOL排.向 = (POOL排.向 === 'desc' ? 'asc' : 'desc');   // 同一列再点=换方向
+  } else {
+    POOL排.列 = 列; POOL排.向 = 'desc';                    // 换列=先按"大的在前"
+  }
+  POOL页.偏移 = 0;      // 换了排序还停在第三页，那一页的内容跟页码对不上
+  applyPoolFilter();
+}
+
+function pool排参数() {
+  return POOL排.列 ? (POOL排.列 + ':' + POOL排.向) : poolVal('poolFilterSort', '分降');
+}
+
+function pool表头排序态() {
+  // aria-sort 只写在"当前那一列"的 th 上：读屏才念得出"按薪资，降序"，
+  // 而不是让人靠一个箭头颜色猜（1.4.1：不单靠颜色/图标传达状态）
+  Array.prototype.forEach.call(
+    document.querySelectorAll('#poolTable thead th[data-col]'), function (th) {
+      var 列 = th.getAttribute('data-col');
+      if (POOL排.列 && 列 === POOL排.列) th.setAttribute('aria-sort', POOL排.向 === 'asc' ? 'ascending' : 'descending');
+      else th.removeAttribute('aria-sort');
+    });
+}
+
 function poolFilterQs() {
   var 串 = POOL_FILTERS.map(function (f) {
     return '&' + f.qs + '=' + encodeURIComponent(poolVal(f.id));
   }).join('');
-  return 串 + '&sort=' + encodeURIComponent(poolVal('poolFilterSort', '分降'));
+  return 串 + '&sort=' + encodeURIComponent(pool排参数());
 }
 
 // 分页单独一条串，不混进 poolFilterQs：那一串的参数集合要跟表头那几格一一对得上
@@ -5446,6 +5489,7 @@ function poolIcon(name) {
 }
 
 function renderJobPool() {
+  pool表头排序态();
   var body = document.getElementById('poolTableBody');
   var table = document.getElementById('poolTable');
   var empty = document.getElementById('poolEmpty');

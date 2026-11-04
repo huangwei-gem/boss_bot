@@ -313,12 +313,17 @@ class 前端真跑一遍Test:
             "  return EL[id]; }};\n"
             "function loadJobPool(x) { return 1; }\n"
             "function toast(a, b) { return 1; }\n"
-            "%s\n%s\n%s\n%s\n%s\n%s\n%s\n"
+            "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n"
             "%s"
             "console.log(JSON.stringify({qs: poolFilterQs(), 在筛: poolFilterOn(),"
             " 偏移: POOL页.偏移}));"
             % (json.dumps(值, ensure_ascii=False), 表字面量, _页声明(),
-               _函数体("poolVal", 要整段=True), _函数体("poolFilterQs", 要整段=True),
+               _函数体("poolVal", 要整段=True),
+               # poolFilterQs 现在多依赖 pool排参数()（表头点排与下拉那两项共用一份状态），
+               # 切片里少带它就是 ReferenceError——这条注释说的正是它自己踩过的坑
+               _函数体("pool排参数", 要整段=True),
+               "var POOL排 = {列: '', 向: 'desc'};\n",
+               _函数体("poolFilterQs", 要整段=True),
                _函数体("poolFilterOn", 要整段=True), _函数体("resetPoolFilter", 要整段=True),
                "POOL页.偏移 = 400;\n" if 跑重置 else "",
                "resetPoolFilter();" if 跑重置 else "")
