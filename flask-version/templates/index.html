@@ -124,7 +124,7 @@ a{color:var(--accent);text-decoration:none}
 /* Layout */
 /* 左栏两列布局：标签一列、控件一列。列宽做成变量，窄屏时一起缩，
    不随窗口变化的话 360px 栏里就会挤出一堆参差（2026-10-04 实测 8 种控件左边缘） */
-:root{--side-label-w:96px;--side-w:360px}
+:root{--side-label-w:112px;--side-w:360px}
 .app{display:flex;width:100%;height:100vh;height:100dvh}
 .side{flex:0 0 var(--side-w);width:var(--side-w);display:flex;flex-direction:column;background:var(--side-bg);color:var(--side-text);position:relative;z-index:10;border-right:1px solid var(--bd);overflow:hidden;-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
 .side-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--side-input-bd);flex-shrink:0}
@@ -717,8 +717,8 @@ tr.pool-pinned td{background:rgba(245,158,11,.07)}
 /* Responsive */
 /* 侧栏宽度以前写死 flex-basis:360px，@media 里那条 280px 的 .side 宽度被 flex-basis 压住从不生效；
    现在两档都用变量收，窄窗口下右栏还有地方放，两列对齐关系不变 */
-@media(max-width:1180px){:root{--side-w:326px;--side-label-w:88px}}
-@media(max-width:1000px){:root{--side-w:296px;--side-label-w:80px}}
+@media(max-width:1180px){:root{--side-w:326px;--side-label-w:104px}}
+@media(max-width:1000px){:root{--side-w:296px;--side-label-w:96px}}
 @media(max-width:1200px){.stats-grid{grid-template-columns:repeat(4,1fr)}.panel-half{flex:none;width:100%}.panel-row{flex-direction:column}}
 @media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}.panel-row{flex-direction:column}}
 @media(max-width:600px){.side{display:none}.stats-grid{grid-template-columns:1fr}.content{padding:12px}.topbar{padding:8px 12px}.topbar-title{font-size:var(--fs-base)}.stat-card{padding:10px}.stat-value{font-size:var(--fs-xl)}.btn-sm{padding:4px 8px;font-size:var(--fs-2xs)}.modal{width:95%;max-width:400px}.modal-large{width:95%;max-width:600px}}
@@ -1142,14 +1142,14 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
         <div class="acc-field-row" style="padding:6px 8px;border-radius:8px;background:var(--side-input-bg);border:1px solid var(--bd-2)"><label style="font-size:var(--fs-xs);font-weight:600">启用 AI</label><span id="aiEnabled" class="toggle-switch ai-switch" onclick="toggleAiEnabled()" style="margin-left:auto"></span></div>
         <div class="acc-field-row"><label>匹配阈值</label><input class="side-form-input" id="aiThreshold" type="number" min="0" max="100" placeholder="70" onchange="onAiChange()"></div>
         <div class="acc-field-row" title="一次岗位判分允许模型输出多少 token。带思考(reasoning)的接口会把预算花在思考上，不够就正文为空、这次判分作废换下一个接口">
-          <label>判分预算 tokens</label><input class="side-form-input" id="aiAnalyzeMaxTokens" type="number" min="512" max="8192" step="128" placeholder="1600" onchange="onAiChange()"></div>
+          <label title="判分预算：单位 tokens（岗位判分的输出预算，带思考的接口要给够）">判分预算</label><input class="side-form-input" id="aiAnalyzeMaxTokens" type="number" min="512" max="8192" step="128" placeholder="1600" onchange="onAiChange()"></div>
         <div class="acc-field-row" title="回一句 HR 允许模型输出多少 token。带思考的接口先烧额度写思考过程，额度不够就只剩思考没有正文，这种回复不能发出去，四个接口连着踩同一个坑就等于没回">
-          <label>回复预算 tokens</label><input class="side-form-input" id="aiMaxTokens" type="number" min="512" max="8192" step="100" placeholder="1200" onchange="onAiChange()"></div>
+          <label title="回复预算：单位 tokens（回复正文的输出预算）">回复预算</label><input class="side-form-input" id="aiMaxTokens" type="number" min="512" max="8192" step="100" placeholder="1200" onchange="onAiChange()"></div>
         <div class="acc-field-row" title="AI 判「不符合」后，只追问分数离阈值最近的那批（阈值-15 到阈值）到底卡在哪一条硬性要求。一次追问≈一次判分的耗时；填 0 就是关掉">
-          <label>复盘追问/每号每轮</label><input class="side-form-input" id="aiProbeMaxPerRound" type="number" min="0" max="20" step="1" placeholder="5" onchange="onAiChange()"></div>
-        <div class="acc-field-row" title="抓来的岗位先进候选池，由 AI 逐条判「像不像能投」，判多少条看这里。一抓就是几十条，不设闸这一轮要跑十几分钟、回复腿跟着挨饿；没轮到的显示「未判」，下一轮自己补上。填 0 = 完全不送 AI，只留本地词表粗筛"><label>精筛送 AI/每号每轮(条)</label><input class="side-form-input" id="aiScreenMaxPerRound" type="number" min="0" max="400" step="1" placeholder="40" onchange="onAiChange()"></div>
+          <label title="复盘追问：每号每轮最多追问几条不匹配原因，单位 条，0=关掉">追问条数/轮</label><input class="side-form-input" id="aiProbeMaxPerRound" type="number" min="0" max="20" step="1" placeholder="5" onchange="onAiChange()"></div>
+        <div class="acc-field-row" title="抓来的岗位先进候选池，由 AI 逐条判「像不像能投」，判多少条看这里。一抓就是几十条，不设闸这一轮要跑十几分钟、回复腿跟着挨饿；没轮到的显示「未判」，下一轮自己补上。填 0 = 完全不送 AI，只留本地词表粗筛"><label title="精筛送 AI：每号每轮最多判几条，单位 条。一抓就是几十条，不设闸这一轮要跑十几分钟、回复腿跟着挨饿；没轮到的显示「未判」，下一轮自己补上。填 0 = 完全不送 AI">精筛条数/轮</label><input class="side-form-input" id="aiScreenMaxPerRound" type="number" min="0" max="400" step="1" placeholder="40" onchange="onAiChange()"></div>
         <div class="acc-field-row" title="判分时单个接口最多等几秒，超了就换下一家。体检那边仍按服务商自己的 45 秒等（慢但活着的不算坏），但判分等不起：实测三家 46~50 秒超时，一轮还没换到能用的一家，这条岗位就按「默认通过」盲投出去了。填 0 = 不另设上限">
-          <label>判分单接口超时（秒）</label><input class="side-form-input" id="aiJudgeTimeout" type="number" min="0" max="60" step="1" placeholder="30" onchange="onAiChange()"></div>
+          <label title="判分单接口超时：单位 秒">单接口超时</label><input class="side-form-input" id="aiJudgeTimeout" type="number" min="0" max="60" step="1" placeholder="30" onchange="onAiChange()"></div>
         <button class="adv-toggle" id="aiProvToggle" onclick="toggleAiProviders()">
           <i data-ki="ai"></i>AI 接口列表 <i data-ki="chevron-right" class="arrow"></i>
           <span id="aiProvSummary" style="margin-left:4px;font-size:var(--fs-2xs);color:var(--fg-3rd);font-weight:400"></span>
@@ -1269,7 +1269,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
             <div class="adv-field-row"><label title="开着：池里 AI 分过「自动投线」的那几条由机器自己勾上，交给同一条投递腿投出去——打招呼冷却、每日额度、BOSS 侧已有会话、页面风控、发送闸门一道不少；线以下的照旧等你自己勾。关掉=全部等你勾（11-04 口径「90 分的就自己投递，60 以上 90 以下的存起来我看看」）">自动投过线的(≥自动投线)</label><span id="advAutoApply" class="toggle-switch" onclick="toggleAdvBool('auto_apply')"></span></div>
             <div class="adv-field-row"><label title="AI 分到这个数以上，机器自己勾着投。填 100 等于几乎不投，填 0 等于全都投（会被夹在 0~100）。这条线同时决定岗位池表里「机器自动投」那一格筛哪些行">自动投线(分)</label><input class="side-form-input" id="advAutoApplyMin" type="number" min="0" max="100" step="5" placeholder="90"></div>
             <div class="adv-field-row"><label title="从这个数到自动投线之间的岗位机器不替你决定，留着你自己看——就是池里那一档「待你看」。填得比自动投线高会被抬到自动投线（不然一条岗会同时既自动投又待你看）">待你看下限(分)</label><input class="side-form-input" id="advReviewMin" type="number" min="0" max="100" step="5" placeholder="60"></div>
-            <div class="adv-field-row"><label title="每个号每一轮最多自己勾几条。一轮就勾几十条等于把每日 150 的额度一次打满，还把「机器在替我发东西」变成看不见的事。填 0=关掉机器自己勾">每号每轮自动投(条)</label><input class="side-form-input" id="advAutoApplyMax" type="number" min="0" max="50" step="1" placeholder="5"></div>
+            <div class="adv-field-row"><label title="每个号每一轮最多自己勾几条。一轮就勾几十条等于把每日 150 的额度一次打满，还把「机器在替我发东西」变成看不见的事。填 0=关掉机器自己勾">自动投条数/轮</label><input class="side-form-input" id="advAutoApplyMax" type="number" min="0" max="50" step="1" placeholder="5"></div>
             <div class="adv-field-row"><label>每小时最多回复</label><input class="side-form-input" id="advMaxReply" type="number" value="60" min="1" max="200" step="1" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label title="HR 发来 offer/面试邀请这类重要消息时机器人会停手等人工，但一句话不该把整个号锁住：超过这个分钟数自动恢复回复。手动按「暂停回复」不受影响，0 = 永不自动恢复">重要消息暂停自动恢复(分钟)</label><input class="side-form-input" id="advPauseResumeMin" type="number" value="10" min="0" max="720" step="1" onchange="onAdvChange()"></div>
             <div class="adv-group-title">回复补漏与主动跟进</div>
