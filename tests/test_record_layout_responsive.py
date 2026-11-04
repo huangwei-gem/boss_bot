@@ -211,12 +211,12 @@ class 列宽Test:
 
     def test_门自身能红(self):
         """把投递记录退回旧写法（岗位不写宽度、跳过原因钉死），两条门都要报红。"""
-        坏 = HTML.replace('<th style="width:150px">岗位</th>', "<th>岗位</th>", 1)
-        坏 = 坏.replace("<th>跳过原因</th>", '<th style="width:250px">跳过原因</th>', 1)
+        坏 = HTML.replace('<th scope="col" style="width:150px">岗位</th>', '<th>岗位</th>', 1)
+        坏 = 坏.replace('<th scope="col">跳过原因</th>', '<th scope="col" style="width:250px">跳过原因</th>', 1)
         assert 坏 != HTML and "width:250px" in 坏, "变异没落到源码上"
         assert 不设宽度的列("greetTable", 坏) == ["岗位"]
         # 反向：给短列不设宽度也要抓住
-        坏2 = HTML.replace('<th style="width:108px">城市</th>', "<th>城市</th>", 1)
+        坏2 = HTML.replace('<th scope="col" style="width:108px">城市</th>', '<th>城市</th>', 1)
         assert 坏2 != HTML, "变异没落到源码上"
         assert 不设宽度的列("greetTable", 坏2) == ["城市", "跳过原因"]
         # 把岗位池 min-width 改回 1240（固定列 1028 不变）→ 每列只剩 106px，那条门要判红

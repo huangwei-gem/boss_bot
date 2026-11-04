@@ -60,7 +60,7 @@ def test_整格都是可点区域():
     """框放大了但只有框本身能点，鼠标还是很难瞄准；整格包 label 才是成熟做法"""
     行 = re.search(r"'<td class=\"pool-sel\"><label><input type=\"checkbox\" class=\"pool-acc\"[^']*'", HTML)
     assert 行, "行首格子没有包在 label 里"
-    head = re.search(r'<th class="pool-sel">.*?</th>', HTML, re.S)
+    head = re.search(r'<th[^>]*class="pool-sel"[^>]*>.*?</th>', HTML, re.S)
     assert head and "<label" in head.group(0) and "poolCheckAll" in head.group(0), \
         "表头全选框没包在 label 里"
     assert ".pool-sel label{" in HTML and "cursor:pointer" in _规则(".pool-sel label"), \

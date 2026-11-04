@@ -101,7 +101,7 @@ html{scroll-padding-top:64px}
 /* Base */
 html,body{height:100%}
 body{transition:background-color .3s ease,color .3s ease}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei UI","Microsoft YaHei",Roboto,"Helvetica Neue","Noto Sans SC",sans-serif;font-size:13.5px;line-height:1.55;background:var(--bg);color:var(--fg);display:flex;overflow:hidden;-webkit-font-smoothing:antialiased}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei UI","Microsoft YaHei",Roboto,"Helvetica Neue","Noto Sans SC",sans-serif;font-size:var(--fs-sm);line-height:1.55;background:var(--bg);color:var(--fg);display:flex;overflow:hidden;-webkit-font-smoothing:antialiased}
 /* 背景只留一个冷光源：三团粉/青彩斑在毛玻璃后面会糊成脏色，
    也把他要的"Codex 那种"克制感冲没了 */
 body{background:
@@ -131,36 +131,36 @@ a{color:var(--accent);text-decoration:none}
 .side-head .logo-wrap{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--accent);background:linear-gradient(180deg,rgba(91,124,250,.26),rgba(91,124,250,.10));border:1px solid rgba(91,124,250,.4);box-shadow:0 2px 12px rgba(91,124,250,.25),inset 0 1px 0 rgba(255,255,255,.18);transition:transform .2s ease,box-shadow .2s ease}
 .side-head .logo-wrap .ki{width:19px;height:19px}
 .side-head .logo-wrap:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(91,124,250,.38)}
-.side-head .logo-text{font-size:14px;font-weight:600;flex:1;letter-spacing:-.02em;text-wrap:balance}
-.side-head .conn-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500;background:var(--success-bg);color:var(--success)}
+.side-head .logo-text{font-size:var(--fs-base);font-weight:600;flex:1;letter-spacing:-.02em;text-wrap:balance}
+.side-head .conn-badge{font-size:var(--fs-2xs);padding:2px 8px;border-radius:10px;font-weight:500;background:var(--success-bg);color:var(--success)}
 .side-head .conn-badge.disconnected{background:var(--danger-bg);color:var(--danger)}
 .side-scroll{flex:1;overflow-y:auto;padding:14px 16px 20px;display:flex;flex-direction:column;gap:14px}
-.side-section-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--side-label);margin-bottom:8px;padding:0 4px;display:flex;align-items:center;gap:6px}
-.side-section-title .badge-count{font-size:9px;padding:1px 6px;border-radius:8px;background:var(--side-input-bg);color:var(--fg-3rd);font-weight:600}
-.side-footer{flex-shrink:0;padding:10px 16px;border-top:1px solid var(--side-input-bd);display:flex;align-items:center;gap:8px;font-size:11px}
+.side-section-title{font-size:var(--fs-2xs);font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--side-label);margin-bottom:8px;padding:0 4px;display:flex;align-items:center;gap:6px}
+.side-section-title .badge-count{font-size:var(--fs-2xs);padding:1px 6px;border-radius:8px;background:var(--side-input-bg);color:var(--fg-3rd);font-weight:600}
+.side-footer{flex-shrink:0;padding:10px 16px;border-top:1px solid var(--side-input-bd);display:flex;align-items:center;gap:8px;font-size:var(--fs-2xs)}
 
 /* Advanced settings collapsible */
-.adv-toggle{cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 4px;border-radius:4px;transition:all var(--dur) var(--ease);font-size:10.5px;font-weight:600;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em;margin-top:14px;width:100%;border:none;background:none}
+.adv-toggle{cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 4px;border-radius:4px;transition:all var(--dur) var(--ease);font-size:var(--fs-2xs);font-weight:600;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em;margin-top:14px;width:100%;border:none;background:none}
 .adv-toggle:hover{background:var(--surface-hover);color:var(--fg)}
-.adv-toggle .arrow{transition:rotate .2s ease;font-size:12px;margin-left:auto;transform-origin:50% 50%}
+.adv-toggle .arrow{transition:rotate .2s ease;font-size:var(--fs-xs);margin-left:auto;transform-origin:50% 50%}
 .adv-toggle.open .arrow{rotate:90deg}
 .adv-section{overflow:hidden;max-height:0;transition:max-height .3s ease;display:flex;flex-direction:column;gap:8px}
 .adv-section.open{max-height:2000px}
-.adv-field-row{display:grid;grid-template-columns:var(--side-label-w) minmax(0,1fr);column-gap:8px;align-items:center;font-size:12px;color:var(--fg-2nd);padding:2px 0}
-.adv-field-row label{font-size:10.5px;font-weight:500;color:var(--side-label);line-height:1.3;min-width:0}
+.adv-field-row{display:grid;grid-template-columns:var(--side-label-w) minmax(0,1fr);column-gap:8px;align-items:center;font-size:var(--fs-xs);color:var(--fg-2nd);padding:2px 0}
+.adv-field-row label{font-size:var(--fs-2xs);font-weight:500;color:var(--side-label);line-height:1.3;min-width:0}
 .adv-field-row .side-form-input{width:100%;min-width:0}
-.adv-group-title{font-size:10px;font-weight:600;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em;padding:4px 0 2px;border-bottom:1px solid var(--side-input-bd)}
+.adv-group-title{font-size:var(--fs-2xs);font-weight:600;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em;padding:4px 0 2px;border-bottom:1px solid var(--side-input-bd)}
 /* 左栏说明文字统一一档：10px 次级色，正文一句说完，细节进 title */
-.side-hint{font-size:10px;line-height:1.5;color:var(--fg-4th);margin-top:2px}
+.side-hint{font-size:var(--fs-2xs);line-height:1.5;color:var(--fg-4th);margin-top:2px}
 
 /* Account tabs */
-.account-tab{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;font-size:11.5px;font-weight:500;border-radius:20px;background:var(--side-input-bg);color:var(--fg-2nd);border:1px solid var(--side-input-bd);transition:all var(--dur) var(--ease);cursor:pointer;margin-right:4px;margin-bottom:4px}
+.account-tab{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;font-size:var(--fs-2xs);font-weight:500;border-radius:20px;background:var(--side-input-bg);color:var(--fg-2nd);border:1px solid var(--side-input-bd);transition:all var(--dur) var(--ease);cursor:pointer;margin-right:4px;margin-bottom:4px}
 .account-tab:hover{background:var(--surface-hover);color:var(--fg);box-shadow:var(--sh-sm)}
 /* 登录按钮是这一行的主要动作，行本身不再响应点击（切数据在右上角） */
-.acc-login-btn{border:1px solid var(--side-input-bd);background:var(--surface);color:var(--fg-2nd);font-size:10px;font-weight:600;padding:1px 8px;border-radius:10px;cursor:pointer;margin-left:2px}
+.acc-login-btn{border:1px solid var(--side-input-bd);background:var(--surface);color:var(--fg-2nd);font-size:var(--fs-2xs);font-weight:600;padding:1px 8px;border-radius:10px;cursor:pointer;margin-left:2px}
 .acc-login-btn:hover{background:rgba(91,124,250,.16);color:var(--accent);border-color:rgba(91,124,250,.35)}
 .account-tab.active{background:rgba(91,124,250,.15);color:var(--accent);border-color:rgba(91,124,250,.32);box-shadow:0 2px 8px rgba(91,124,250,.15)}
-.account-tab .badge{display:inline-block;font-size:9px;padding:1px 5px;border-radius:8px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.5);font-weight:600;margin-left:4px}
+.account-tab .badge{display:inline-block;font-size:var(--fs-2xs);padding:1px 5px;border-radius:8px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.5);font-weight:600;margin-left:4px}
 .account-tab.active .badge{background:rgba(91,124,250,.25);color:var(--accent)}
 .account-tab .acc-status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .account-tab .acc-status-dot.idle{background:var(--fg-4th)}
@@ -172,26 +172,26 @@ a{color:var(--accent);text-decoration:none}
 .account-tab .acc-status-dot.checking_login{background:var(--accent);animation:pulse 1s ease-in-out infinite}
 .account-tab .acc-status-dot.paused{background:var(--info)}
 /* 账号条上的今日计数：两个号各跑各的，不看数字就以为只有一个在动 */
-.account-tab .acc-counts{font-size:9.5px;color:var(--fg-3rd);font-weight:500;margin-left:2px;letter-spacing:.02em}
+.account-tab .acc-counts{font-size:var(--fs-2xs);color:var(--fg-3rd);font-weight:500;margin-left:2px;letter-spacing:.02em}
 /* 浏览器形态贴在账号条上：无头压根没有窗口，不写出来就只能靠猜 */
-.account-tab .acc-mode{font-size:9.5px;color:var(--fg-4th);border:1px solid var(--bd-2);border-radius:6px;padding:0 5px;margin-left:2px}
+.account-tab .acc-mode{font-size:var(--fs-2xs);color:var(--fg-4th);border:1px solid var(--bd-2);border-radius:6px;padding:0 5px;margin-left:2px}
 /* 形态切换和启动/停止并排：藏在高级设置里，等于让人找不到那个开关（2026-10-10） */
 .mode-group{display:inline-flex;align-items:center;gap:6px;padding:2px 4px 2px 9px;border:1px solid var(--bd-2);border-radius:999px;background:var(--surface-soft)}
-.mode-group .mode-label{font-size:11px;color:var(--fg-3rd);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
-.mode-group .mode-real{font-size:10.5px;color:var(--fg-4th);max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mode-group .mode-label{font-size:var(--fs-2xs);color:var(--fg-3rd);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.mode-group .mode-real{font-size:var(--fs-2xs);color:var(--fg-4th);max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mode-group .scope-chip{padding:2px 9px}
 /* 操作条上的范围提示：让人在点"停止"之前就知道会不会把另一个号也停了 */
-.action-bar .scope-hint{font-size:10.5px;font-weight:600;color:var(--accent);background:var(--accent-light);padding:2px 8px;border-radius:10px}
+.action-bar .scope-hint{font-size:var(--fs-2xs);font-weight:600;color:var(--accent);background:var(--accent-light);padding:2px 8px;border-radius:10px}
 
 /* Forms */
 .side-form-group{display:flex;flex-direction:column;gap:4px}
-.side-form-label{font-size:10.5px;font-weight:500;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em}
-.side-form-input,.side-form-select{font-size:12px;padding:7px 10px;border-radius:8px;background:var(--side-input-bg);border:1px solid var(--side-input-bd);color:var(--fg);transition:all var(--dur) var(--ease)}
+.side-form-label{font-size:var(--fs-2xs);font-weight:500;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em}
+.side-form-input,.side-form-select{font-size:var(--fs-xs);padding:7px 10px;border-radius:8px;background:var(--side-input-bg);border:1px solid var(--side-input-bd);color:var(--fg);transition:all var(--dur) var(--ease)}
 .side-form-input:focus,.side-form-select:focus{border-color:rgba(91,124,250,.55);box-shadow:0 0 0 3px rgba(91,124,250,.15)}
 .side-form-input::placeholder{color:var(--fg-4th)}
 .side-form-select option{background:var(--surface);color:var(--fg)}
-.acc-field-row{display:grid;grid-template-columns:var(--side-label-w) minmax(0,1fr);column-gap:8px;align-items:center;font-size:12px;color:var(--fg-2nd)}
-.acc-field-row label{font-size:10.5px;font-weight:500;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em;line-height:1.3;min-width:0}
+.acc-field-row{display:grid;grid-template-columns:var(--side-label-w) minmax(0,1fr);column-gap:8px;align-items:center;font-size:var(--fs-xs);color:var(--fg-2nd)}
+.acc-field-row label{font-size:var(--fs-2xs);font-weight:500;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em;line-height:1.3;min-width:0}
 /* 说明行横跨两列：跟在复选框后面会被挤成 88px 宽的三行小条 */
 .acc-field-row>.side-hint,.adv-field-row>.side-hint{grid-column:1/-1}
 /* 竖排的字段行（标签在上、输入框在下），不参与两列对齐 */
@@ -205,7 +205,7 @@ a{color:var(--accent);text-decoration:none}
    所以输入框独占一行，上传/删除落到下一行 */
 .file-input-wrap{display:flex;flex-wrap:wrap;gap:4px;min-width:0}
 .file-input-wrap .side-form-input{flex:1 1 100%;min-width:0}
-.file-btn{flex-shrink:0;padding:6px 10px;font-size:10.5px;font-weight:500;border-radius:4px;background:rgba(91,124,250,.2);color:var(--accent);border:1px solid rgba(91,124,250,.25);transition:all var(--dur) var(--ease);white-space:nowrap}
+.file-btn{flex-shrink:0;padding:6px 10px;font-size:var(--fs-2xs);font-weight:500;border-radius:4px;background:rgba(91,124,250,.2);color:var(--accent);border:1px solid rgba(91,124,250,.25);transition:all var(--dur) var(--ease);white-space:nowrap}
 .file-btn:hover{background:rgba(91,124,250,.32)}
 
 /* Toggle switch — 统一样式，OFF状态清晰可见 */
@@ -218,10 +218,10 @@ a{color:var(--accent);text-decoration:none}
 
 /* Buttons */
 .side-btn-row{display:flex;gap:6px;align-items:center}
-.side-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:6px 12px;font-size:11px;font-weight:500;border-radius:4px;transition:all var(--dur) var(--ease);white-space:nowrap}
+.side-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:6px 12px;font-size:var(--fs-2xs);font-weight:500;border-radius:4px;transition:all var(--dur) var(--ease);white-space:nowrap}
 .side-btn-ghost{background:var(--side-input-bg);color:var(--fg-2nd);border:1px solid var(--side-input-bd);border-radius:8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
 .side-btn-ghost:hover{background:var(--surface-hover);color:var(--fg);box-shadow:var(--sh)}
-.side-btn-sm{padding:4px 8px;font-size:10px}
+.side-btn-sm{padding:4px 8px;font-size:var(--fs-2xs)}
 .side-btn-danger{color:var(--danger)!important}
 .side-btn-block{width:100%}
 
@@ -229,47 +229,47 @@ a{color:var(--accent);text-decoration:none}
 .image-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;max-height:200px;overflow-y:auto;padding:2px}
 .image-grid-item{position:relative;border-radius:var(--r-sm);overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all var(--dur) var(--ease);aspect-ratio:16/10}
 .image-grid-item img{width:100%;height:100%;object-fit:cover;display:block;border-radius:3px}
-.image-grid-item .check-overlay{position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;transition:all var(--dur) var(--ease);opacity:0}
+.image-grid-item .check-overlay{position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;color:#fff;font-size:var(--fs-2xs);transition:all var(--dur) var(--ease);opacity:0}
 .image-grid-item.checked{border-color:var(--img-checked-bd);background:var(--img-checked-bg)}
 .image-grid-item.checked .check-overlay{opacity:1;background:var(--accent)}
 .image-grid-item:hover .check-overlay{opacity:1}
-.image-grid-item .img-name{position:absolute;bottom:0;left:0;right:0;padding:3px 6px;font-size:8px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.image-grid-item .img-del-btn{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:rgba(220,38,38,.8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;opacity:0;transition:opacity .15s ease;z-index:2;line-height:1}
+.image-grid-item .img-name{position:absolute;bottom:0;left:0;right:0;padding:3px 6px;font-size:var(--fs-2xs);background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.image-grid-item .img-del-btn{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:rgba(220,38,38,.8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:var(--fs-2xs);cursor:pointer;opacity:0;transition:opacity .15s ease;z-index:2;line-height:1}
 .image-grid-item:hover .img-del-btn{opacity:1}
 .image-grid-item .img-del-btn:hover{background:#dc2626;transform:scale(1.15)}
 
 /* Chips */
 .chip-list{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;min-height:22px}
-.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;font-size:10px;border-radius:12px;background:var(--chip-bg);color:var(--chip-text);max-width:100%;transition:all var(--dur) var(--ease);animation:chipIn .3s cubic-bezier(.34,1.56,.64,1)}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;font-size:var(--fs-2xs);border-radius:12px;background:var(--chip-bg);color:var(--chip-text);max-width:100%;transition:all var(--dur) var(--ease);animation:chipIn .3s cubic-bezier(.34,1.56,.64,1)}
 @keyframes chipIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
-.chip .chip-remove{cursor:pointer;font-size:12px;line-height:1;opacity:.6;transition:opacity var(--dur) var(--ease);margin-left:2px;color:var(--chip-del)}
+.chip .chip-remove{cursor:pointer;font-size:var(--fs-xs);line-height:1;opacity:.6;transition:opacity var(--dur) var(--ease);margin-left:2px;color:var(--chip-del)}
 .chip .chip-remove:hover{opacity:1}
 
 /* Sidebar job list */
 .sbar-job-item{display:flex;align-items:flex-start;gap:6px;padding:6px 8px;border-radius:4px;background:var(--side-input-bg);border:1px solid var(--side-input-bd);cursor:pointer;transition:all var(--dur) var(--ease);margin-bottom:4px}
 .sbar-job-item:hover{background:var(--surface-hover)}
-.sbar-job-query{font-size:11px;font-weight:500;color:var(--fg)}
-.sbar-job-city{font-size:9px;color:var(--fg-3rd);padding:2px 6px;border-radius:3px;background:var(--side-input-bg);display:inline-block;margin-top:2px}
+.sbar-job-query{font-size:var(--fs-2xs);font-weight:500;color:var(--fg)}
+.sbar-job-city{font-size:var(--fs-2xs);color:var(--fg-3rd);padding:2px 6px;border-radius:3px;background:var(--side-input-bg);display:inline-block;margin-top:2px}
 .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .status-dot.idle{background:var(--fg-4th)}
 .status-dot.running{background:#34d399;animation:pulse 1.5s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(52,211,153,.4)}50%{opacity:.7;box-shadow:0 0 0 4px rgba(52,211,153,0)}}
-.status-text{font-size:11px;font-weight:500;color:var(--fg-3rd)}
-.status-label{font-size:10px;color:var(--fg-4th);margin-left:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px}
+.status-text{font-size:var(--fs-2xs);font-weight:500;color:var(--fg-3rd)}
+.status-label{font-size:var(--fs-2xs);color:var(--fg-4th);margin-left:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px}
 
 /* Main area */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
 .topbar{display:flex;align-items:center;padding:0 24px;height:var(--header-h);border-bottom:1px solid var(--bd);background:var(--surface);flex-shrink:0;gap:12px;-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
-.topbar-title{font-size:15px;font-weight:600;letter-spacing:-.02em}
+.topbar-title{font-size:var(--fs-base);font-weight:600;letter-spacing:-.02em}
 .topbar-title .highlight{color:var(--accent)}
-.topbar-task{font-size:11px;color:var(--fg-3rd);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbar-task{font-size:var(--fs-2xs);color:var(--fg-3rd);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .topbar-right{display:flex;align-items:center;gap:8px;margin-left:auto}
-.topbar-badge{font-size:9px;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--accent-light);color:var(--accent);letter-spacing:.02em}
+.topbar-badge{font-size:var(--fs-2xs);font-weight:600;padding:2px 8px;border-radius:4px;background:var(--accent-light);color:var(--accent);letter-spacing:.02em}
 
 /* Theme toggle button */
-.theme-toggle{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:10px;background:var(--surface-soft);border:1px solid var(--bd);transition:all var(--dur) var(--ease);font-size:11px;font-weight:500;color:var(--fg-2nd);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+.theme-toggle{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:10px;background:var(--surface-soft);border:1px solid var(--bd);transition:all var(--dur) var(--ease);font-size:var(--fs-2xs);font-weight:500;color:var(--fg-2nd);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
 .theme-toggle:hover{background:var(--surface-hover);color:var(--fg);box-shadow:var(--sh);transform:translateY(-1px)}
-.theme-toggle .toggle-icon{font-size:14px;line-height:1}
+.theme-toggle .toggle-icon{font-size:var(--fs-base);line-height:1}
 
 /* Content */
 .content{flex:1;overflow:hidden;padding:10px 16px;display:flex;flex-direction:column;gap:8px;min-height:0}
@@ -281,15 +281,15 @@ a{color:var(--accent);text-decoration:none}
 .stat-card.warning{border-left:3px solid var(--warning)}
 .stat-card.info{border-left:3px solid var(--info)}
 .metrics-scope{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:-4px 0 10px 2px}
-.metrics-scope-label{font-size:11px;color:var(--fg-3rd);margin-right:2px}
-.scope-chip{font-size:11px;padding:3px 10px;border-radius:999px;border:1px solid var(--bd-2);background:var(--surface-soft);color:var(--fg-3rd);cursor:pointer}
+.metrics-scope-label{font-size:var(--fs-2xs);color:var(--fg-3rd);margin-right:2px}
+.scope-chip{font-size:var(--fs-2xs);padding:3px 10px;border-radius:999px;border:1px solid var(--bd-2);background:var(--surface-soft);color:var(--fg-3rd);cursor:pointer}
 .scope-chip:hover{border-color:var(--accent);color:var(--fg)}
 .scope-chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .ai-health-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 12px}
-.ai-health-summary{font-size:12px;color:var(--fg-3rd)}
+.ai-health-summary{font-size:var(--fs-xs);color:var(--fg-3rd)}
 .ai-health-summary b{color:var(--fg)}
 /* AI 判分质量：绿=没兜底，黄=少量，红=两成以上岗位其实没被 AI 筛过 */
-.ai-quality-line{font-size:11px;color:var(--fg-3rd);margin:2px 0 8px;padding:4px 8px;border-radius:7px;
+.ai-quality-line{font-size:var(--fs-2xs);color:var(--fg-3rd);margin:2px 0 8px;padding:4px 8px;border-radius:7px;
   background:var(--side-input-bg);border:1px solid var(--bd-2);line-height:1.5}
 .ai-quality-line b{color:var(--fg)}
 .ai-quality-line.ok{border-color:rgba(52,199,123,.35)}
@@ -298,20 +298,20 @@ a{color:var(--accent);text-decoration:none}
 .ai-quality-line.bad{border-color:rgba(255,95,95,.4)}
 .ai-quality-line.bad b{color:var(--danger)}
 /* 判分复盘：追问原因的可展开块 + 建议列表（建议必须手点采纳才写配置） */
-.greet-probe{margin-top:4px;font-size:11px;color:var(--fg-3rd)}
+.greet-probe{margin-top:4px;font-size:var(--fs-2xs);color:var(--fg-3rd)}
 .greet-probe summary{cursor:pointer;color:var(--accent);list-style:none}
 .greet-probe summary::-webkit-details-marker{display:none}
 .greet-probe-body{margin-top:4px;padding:6px 8px;border-radius:7px;background:var(--side-input-bg);
   border:1px solid var(--bd-2);line-height:1.6;white-space:normal;word-break:break-word}
 .greet-probe-body b{display:inline-block;min-width:96px;color:var(--fg-4th);font-weight:400}
-.review-detail{font-size:11px;color:var(--fg-3rd);margin:-4px 0 8px;padding:6px 8px;border-radius:7px;
+.review-detail{font-size:var(--fs-2xs);color:var(--fg-3rd);margin:-4px 0 8px;padding:6px 8px;border-radius:7px;
   background:var(--side-input-bg);border:1px solid var(--bd-2);line-height:1.6}
-.review-detail h4{margin:6px 0 4px;font-size:11px;color:var(--fg);font-weight:600}
+.review-detail h4{margin:6px 0 4px;font-size:var(--fs-2xs);color:var(--fg);font-weight:600}
 .review-item{display:flex;gap:6px;align-items:flex-start;padding:4px 0;border-top:1px dashed var(--bd-2)}
 .review-item:first-of-type{border-top:none}
 .review-item .txt{flex:1;white-space:normal;word-break:break-word}
-.review-item .why{color:var(--fg-4th);font-size:10px}
-.review-adopt{flex:none;font-size:10px;padding:2px 8px;border-radius:6px;border:1px solid var(--accent);
+.review-item .why{color:var(--fg-4th);font-size:var(--fs-2xs)}
+.review-adopt{flex:none;font-size:var(--fs-2xs);padding:2px 8px;border-radius:6px;border:1px solid var(--accent);
   background:transparent;color:var(--accent);cursor:pointer}
 .review-adopt:hover{background:var(--accent);color:#fff}
 .review-adopt:disabled{opacity:.45;cursor:default}
@@ -321,21 +321,21 @@ a{color:var(--accent);text-decoration:none}
 .ai-status-dot.untested{background:var(--fg-4th);opacity:.5}
 .ai-status-dot.probing{background:var(--warning);animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-.ai-provider-reason{font-size:11px;color:var(--danger)}
-.ai-provider-latency{font-size:11px;color:var(--fg-3rd);font-variant-numeric:tabular-nums}
-.stat-card .stat-icon{font-size:20px;flex-shrink:0;opacity:.8}
+.ai-provider-reason{font-size:var(--fs-2xs);color:var(--danger)}
+.ai-provider-latency{font-size:var(--fs-2xs);color:var(--fg-3rd);font-variant-numeric:tabular-nums}
+.stat-card .stat-icon{font-size:var(--fs-xl);flex-shrink:0;opacity:.8}
 .stat-card .stat-body{flex:1;min-width:0}
-.stat-label{display:flex;align-items:center;gap:5px;white-space:nowrap;font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fg-3rd)}
-.stat-value{font-size:20px;font-weight:700;margin:1px 0;letter-spacing:-.03em;color:var(--fg);line-height:1.1;font-variant-numeric:tabular-nums}
-.stat-sub{font-size:10px;color:var(--fg-3rd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.stat-label{display:flex;align-items:center;gap:5px;white-space:nowrap;font-size:var(--fs-2xs);font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fg-3rd)}
+.stat-value{font-size:var(--fs-xl);font-weight:700;margin:1px 0;letter-spacing:-.03em;color:var(--fg);line-height:1.1;font-variant-numeric:tabular-nums}
+.stat-sub{font-size:var(--fs-2xs);color:var(--fg-3rd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 
 /* Action bar */
 .action-bar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:6px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--bd);flex-shrink:0;box-shadow:var(--sh-sm)}
-.action-bar .action-label{font-size:10px;font-weight:600;color:var(--fg-3rd);text-transform:uppercase;letter-spacing:.04em;margin-right:4px}
+.action-bar .action-label{font-size:var(--fs-2xs);font-weight:600;color:var(--fg-3rd);text-transform:uppercase;letter-spacing:.04em;margin-right:4px}
 
 /* Button variants */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:8px 16px;font-size:12px;font-weight:500;border-radius:10px;transition:all var(--dur) var(--ease);white-space:nowrap}
-.btn-sm{padding:5px 10px;font-size:11px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:8px 16px;font-size:var(--fs-xs);font-weight:500;border-radius:10px;transition:all var(--dur) var(--ease);white-space:nowrap}
+.btn-sm{padding:5px 10px;font-size:var(--fs-2xs)}
 .btn-success{background:var(--success);color:#fff;box-shadow:0 2px 8px rgba(16,185,129,.25)}
 .btn-success:hover{filter:brightness(1.05);box-shadow:0 6px 18px rgba(16,185,129,.35);transform:translateY(-1px)}
 .btn-success:active{transform:translateY(0)}
@@ -349,7 +349,7 @@ a{color:var(--accent);text-decoration:none}
 /* 运行控制：启动/停止是同一颗按钮的两个状态，形状必须一致。
    以前是实心绿块/实心红块，和旁边一排玻璃按钮完全不搭（2026-10-04 用户："停止和开启的这个UI不太好看"） */
 .btn-run{display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:0 14px;border-radius:999px;
-  font-size:11.5px;font-weight:600;letter-spacing:.01em;color:var(--accent);
+  font-size:var(--fs-2xs);font-weight:600;letter-spacing:.01em;color:var(--accent);
   border:1px solid rgba(91,124,250,.45);
   background:linear-gradient(180deg,rgba(91,124,250,.22),rgba(91,124,250,.08));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 3px 12px rgba(91,124,250,.16);
@@ -377,15 +377,15 @@ a{color:var(--accent);text-decoration:none}
 .panel-half{flex:1}
 .panel-full{flex:1;width:100%}
 .panel-header{display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid var(--bd);flex-shrink:0;gap:6px}
-.panel-icon{font-size:14px}
-.panel-title{font-size:12px;font-weight:600;color:var(--fg);letter-spacing:-.01em}
+.panel-icon{font-size:var(--fs-base)}
+.panel-title{font-size:var(--fs-xs);font-weight:600;color:var(--fg);letter-spacing:-.01em}
 .panel-actions{margin-left:auto;display:flex;gap:4px}
 .panel-body{flex:1;overflow-y:auto;padding:6px 10px;min-height:0}
 
 /* Log panel collapsible */
 .log-panel{flex-shrink:0;transition:flex .3s ease}
 .log-panel .panel-header{cursor:pointer;user-select:none}
-.log-panel .log-toggle-icon{margin-left:8px;font-size:10px;transition:transform .2s ease;color:var(--fg-3rd)}
+.log-panel .log-toggle-icon{margin-left:8px;font-size:var(--fs-2xs);transition:transform .2s ease;color:var(--fg-3rd)}
 .log-panel.collapsed .log-toggle-icon{transform:rotate(-90deg)}
 .log-panel.collapsed .panel-body{display:none}
 .log-panel.collapsed{flex:0 0 auto}
@@ -395,42 +395,42 @@ a{color:var(--accent);text-decoration:none}
 .job-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r-sm);border:1px solid var(--bd);background:var(--surface-soft);margin-bottom:6px;transition:all var(--dur) var(--ease);cursor:pointer}
 .job-item:hover{background:var(--surface-hover);border-color:var(--bd-2);box-shadow:var(--sh);transform:translateY(-1px)}
 .job-item .job-info{flex:1;min-width:5px}
-.job-item .job-query{font-size:13px;font-weight:500;color:var(--fg)}
-.job-item .job-city{font-size:10px;color:var(--fg-3rd);margin-top:1px}
+.job-item .job-query{font-size:var(--fs-sm);font-weight:500;color:var(--fg)}
+.job-item .job-city{font-size:var(--fs-2xs);color:var(--fg-3rd);margin-top:1px}
 .job-thumbs{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
 .job-thumbs img{width:40px;height:30px;object-fit:cover;border-radius:6px;border:1px solid var(--bd);cursor:pointer;transition:transform var(--dur) var(--ease)}
 .job-thumbs img:hover{transform:scale(1.15)}
-.job-thumbs-more{font-size:10px;color:var(--fg-3rd);align-self:center;margin-left:2px}
+.job-thumbs-more{font-size:var(--fs-2xs);color:var(--fg-3rd);align-self:center;margin-left:2px}
 .job-img-chip{position:relative;display:inline-block;width:64px;height:48px;border-radius:8px;overflow:hidden;border:1px solid var(--bd);cursor:zoom-in;transition:transform var(--dur) var(--ease),box-shadow var(--dur) var(--ease)}
 .job-img-chip:hover{transform:scale(1.08);box-shadow:var(--sh)}
 .job-img-chip img{width:100%;height:100%;object-fit:cover}
-.job-img-chip .chip-remove{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity var(--dur) var(--ease);line-height:1}
+.job-img-chip .chip-remove{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:var(--fs-2xs);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity var(--dur) var(--ease);line-height:1}
 .job-img-chip:hover .chip-remove{opacity:1}
-.job-item .job-badge{font-size:9px;padding:2px 6px;border-radius:3px;background:var(--accent-light);color:var(--accent);font-weight:500}
-.job-item .job-del{font-size:14px;color:var(--fg-4th);cursor:pointer;padding:2px 4px;border-radius:3px;transition:all var(--dur) var(--ease)}
+.job-item .job-badge{font-size:var(--fs-2xs);padding:2px 6px;border-radius:3px;background:var(--accent-light);color:var(--accent);font-weight:500}
+.job-item .job-del{font-size:var(--fs-base);color:var(--fg-4th);cursor:pointer;padding:2px 4px;border-radius:3px;transition:all var(--dur) var(--ease)}
 .job-item .job-del:hover{color:var(--danger);background:var(--danger-bg)}
 .job-item .job-toggle{flex-shrink:0}
 .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:8px}
-.empty-icon{font-size:32px;opacity:.5}
-.empty-title{font-size:14px;font-weight:600;color:var(--fg-2nd)}
-.empty-desc{font-size:11px;color:var(--fg-3rd)}
+.empty-icon{font-size:var(--fs-3xl);opacity:.5}
+.empty-title{font-size:var(--fs-base);font-weight:600;color:var(--fg-2nd)}
+.empty-desc{font-size:var(--fs-2xs);color:var(--fg-3rd)}
 
 /* Modal large variant */
 .modal-large{max-width:800px;width:90%}
-.modal-large textarea{width:100%;padding:8px 12px;font-size:12px;border:1px solid var(--bd-2);border-radius:8px;background:var(--side-input-bg);color:var(--fg);resize:vertical;box-sizing:border-box;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.modal-large textarea{width:100%;padding:8px 12px;font-size:var(--fs-xs);border:1px solid var(--bd-2);border-radius:8px;background:var(--side-input-bg);color:var(--fg);resize:vertical;box-sizing:border-box;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .modal-large textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light)}
 
 /* Excel file list */
 .excel-file-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--bd-2);border-radius:8px;margin-bottom:8px}
 .excel-file-info{flex:1;min-width:0}
-.excel-file-name{font-size:12px;font-weight:600;color:var(--fg)}
-.excel-file-meta{font-size:10px;color:var(--fg-3rd);margin-top:2px}
+.excel-file-name{font-size:var(--fs-xs);font-weight:600;color:var(--fg)}
+.excel-file-meta{font-size:var(--fs-2xs);color:var(--fg-3rd);margin-top:2px}
 
 /* Log */
-.log-area{font-family:ui-monospace,SF Mono,Menlo,Consolas,monospace;font-size:11px;line-height:1.6;padding:8px 12px;max-height:200px;overflow-y:auto}
+.log-area{font-family:ui-monospace,SF Mono,Menlo,Consolas,monospace;font-size:var(--fs-2xs);line-height:1.6;padding:8px 12px;max-height:200px;overflow-y:auto}
 .panel.collapsed .panel-body{display:none}
 .log-entry{padding:2px 0;display:flex;gap:8px;word-break:break-all}
-.log-time{color:var(--fg-4th);flex-shrink:0;font-size:10px}
+.log-time{color:var(--fg-4th);flex-shrink:0;font-size:var(--fs-2xs)}
 .log-message{flex:1}
 .log-SYSTEM,.log-INFO{color:var(--fg-2nd)}
 .log-SUCCESS{color:var(--success)}
@@ -439,35 +439,35 @@ a{color:var(--accent);text-decoration:none}
 .log-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:8px;color:var(--fg-3rd)}
 
 /* Greet Table */
-.greet-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+.greet-table{width:100%;border-collapse:collapse;font-size:var(--fs-xs);table-layout:fixed}
 .greet-table thead{position:sticky;top:0;background:var(--surface);z-index:10;box-shadow:0 1px 0 var(--bd-2)}
 .greet-table thead th{background:var(--surface)}
-.greet-table th{padding:8px 10px;text-align:left;font-weight:600;color:var(--fg-2nd);border-bottom:1px solid var(--bd-2);font-size:11px;white-space:nowrap}
+.greet-table th{padding:8px 10px;text-align:left;font-weight:600;color:var(--fg-2nd);border-bottom:1px solid var(--bd-2);font-size:var(--fs-2xs);white-space:nowrap}
 .greet-table td{padding:7px 10px;border-bottom:1px solid var(--bd);color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .greet-table tr:hover td{background:var(--surface-hover)}
-.greet-status{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.greet-status{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:var(--fs-2xs);font-weight:600}
 .greet-status-success{background:rgba(34,197,94,.15);color:var(--success)}
 .greet-status-skip{background:rgba(107,114,128,.16);color:var(--fg-3rd)}
 .greet-status-ai_skip{background:rgba(139,92,246,.16);color:#8b5cf6}
 .greet-status-already{background:rgba(107,114,128,.15);color:var(--fg-3rd)}
 .greet-status-error{background:rgba(239,68,68,.15);color:var(--danger)}
-.greet-src{margin-top:3px;font-size:10px;font-weight:600;color:var(--success);white-space:nowrap}
+.greet-src{margin-top:3px;font-size:var(--fs-2xs);font-weight:600;color:var(--success);white-space:nowrap}
 .greet-src-fallback{color:var(--warning)}
-.greet-ai-badge{font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(34,197,94,.12);color:var(--success)}
+.greet-ai-badge{font-size:var(--fs-2xs);padding:1px 6px;border-radius:8px;background:rgba(34,197,94,.12);color:var(--success)}
 .greet-ai-badge-nomatch{background:rgba(239,68,68,.12);color:var(--danger)}
 
 /* Record Tabs */
 .record-tabs{display:flex;gap:2px;padding:0 16px;border-bottom:1px solid var(--bd);flex-shrink:0}
-.record-tab{padding:8px 14px;font-size:11.5px;font-weight:500;color:var(--fg-3rd);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:all var(--dur) var(--ease);display:inline-flex;align-items:center;gap:6px}
+.record-tab{padding:8px 14px;font-size:var(--fs-2xs);font-weight:500;color:var(--fg-3rd);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:all var(--dur) var(--ease);display:inline-flex;align-items:center;gap:6px}
 .record-tab:hover{color:var(--fg)}
 .record-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
-.record-tab .tab-count{font-size:9px;padding:1px 6px;border-radius:8px;background:var(--surface-soft);color:var(--fg-3rd);font-weight:600}
+.record-tab .tab-count{font-size:var(--fs-2xs);padding:1px 6px;border-radius:8px;background:var(--surface-soft);color:var(--fg-3rd);font-weight:600}
 .record-tab.active .tab-count{background:var(--accent-light);color:var(--accent)}
 .record-tab-content{display:none;flex:1;overflow:auto}
 .record-tab-content.active{display:block}
 /* ── 联系与简历台账 ── */
-.ledger-note{padding:7px 10px;font-size:11px;line-height:1.5;color:var(--fg-3rd);background:var(--surface-soft);border-bottom:1px solid var(--bd-2)}
-.ledger-kind{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10.5px;font-weight:600;white-space:nowrap}
+.ledger-note{padding:7px 10px;font-size:var(--fs-2xs);line-height:1.5;color:var(--fg-3rd);background:var(--surface-soft);border-bottom:1px solid var(--bd-2)}
+.ledger-kind{display:inline-block;padding:1px 6px;border-radius:4px;font-size:var(--fs-2xs);font-weight:600;white-space:nowrap}
 .ledger-kind.num{background:var(--success-bg);color:var(--success)}
 .ledger-kind.ask{background:var(--warning-bg);color:var(--warning)}
 .ledger-kind.plain{background:var(--surface-soft);color:var(--fg-3rd)}
@@ -475,37 +475,37 @@ a{color:var(--accent);text-decoration:none}
 .ledger-num:hover,.ledger-name:hover{color:var(--accent)}
 .ledger-resume-sent{color:var(--success);font-weight:600}
 .ledger-resume-owed{color:var(--warning);font-weight:600}
-.ledger-quote{color:var(--fg-3rd);font-size:11px}
+.ledger-quote{color:var(--fg-3rd);font-size:var(--fs-2xs)}
 .ledger-link{display:inline-flex;vertical-align:-2px;margin-left:4px;color:var(--accent)}
 .ledger-bar{display:flex;flex-direction:column;gap:6px;padding:7px 10px;border-bottom:1px solid var(--bd-2)}
-.ledger-bar .ledger-stats{font-size:11px;color:var(--fg-3rd)}
+.ledger-bar .ledger-stats{font-size:var(--fs-2xs);color:var(--fg-3rd)}
 .ledger-filters{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .ledger-bar .ledger-stats b{color:var(--fg);font-variant-numeric:tabular-nums}
 .ledger-name-diff{color:var(--accent);font-weight:600}
-.ledger-search{height:22px;min-width:196px;padding:0 7px;font-size:11px;color:var(--fg);background:var(--bg-2);border:1px solid var(--bd-2);border-radius:5px;outline:none}
+.ledger-search{height:22px;min-width:196px;padding:0 7px;font-size:var(--fs-2xs);color:var(--fg);background:var(--bg-2);border:1px solid var(--bd-2);border-radius:5px;outline:none}
 .ledger-search::placeholder{color:var(--fg-4th)}
 .ledger-search:focus{border-color:var(--accent)}
-.ledger-hit{font-size:11px;color:var(--fg-3rd)}
+.ledger-hit{font-size:var(--fs-2xs);color:var(--fg-3rd)}
 .ledger-hit b{color:var(--fg);font-variant-numeric:tabular-nums}
 
 /* ── 岗位候选池 ── */
-.pool-note{padding:7px 10px;font-size:11px;line-height:1.5;color:var(--fg-3rd);background:var(--surface-soft);border-bottom:1px solid var(--bd-2)}
-.pool-toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 10px;border-bottom:1px solid var(--bd-2);font-size:11px}
+.pool-note{padding:7px 10px;font-size:var(--fs-2xs);line-height:1.5;color:var(--fg-3rd);background:var(--surface-soft);border-bottom:1px solid var(--bd-2)}
+.pool-toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 10px;border-bottom:1px solid var(--bd-2);font-size:var(--fs-2xs)}
 .pool-stats{display:flex;gap:8px;flex-wrap:wrap;color:var(--fg-3rd)}
 .pool-stats b{font-weight:600;font-variant-numeric:tabular-nums;color:var(--fg-1st)}
 .pool-stats .pool-on b{color:var(--accent)}
-.pool-add{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:6px 10px;border-bottom:1px solid var(--bd-2);font-size:11px;background:var(--surface-soft)}
-.pool-add input{padding:3px 6px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);min-width:0}
+.pool-add{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:6px 10px;border-bottom:1px solid var(--bd-2);font-size:var(--fs-2xs);background:var(--surface-soft)}
+.pool-add input{padding:3px 6px;border:1px solid var(--border-2nd);border-radius:4px;font-size:var(--fs-2xs);background:var(--bg-1st);color:var(--fg-1st);min-width:0}
 .pool-add-url{flex:1 1 260px}
-.pool-add-hint{color:var(--fg-4th);font-size:10.5px}
+.pool-add-hint{color:var(--fg-4th);font-size:var(--fs-2xs)}
 /* AI 自定义筛选：他给的那份要求就住在这个框里（存盘 + 按它重判整池） */
 .ai-screen-panel{border-bottom:1px solid var(--bd-2);background:var(--surface-soft)}
-.ai-screen-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 10px;font-size:11.5px;color:var(--fg-3rd)}
-.ai-screen-head b{color:var(--fg-1st);font-size:12px;white-space:nowrap}
+.ai-screen-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 10px;font-size:var(--fs-2xs);color:var(--fg-3rd)}
+.ai-screen-head b{color:var(--fg-1st);font-size:var(--fs-xs);white-space:nowrap}
 .ai-screen-head .side-hint{margin:0}
 #aiScreenBody{padding:0 10px 8px}
-#aiScreenText{width:100%;min-height:76px;max-height:220px;padding:6px 8px;border:1px solid var(--border-2nd);border-radius:6px;background:var(--bg-1st);color:var(--fg-1st);font-size:11.5px;line-height:1.55;resize:vertical;box-sizing:border-box;font-family:inherit}
-.ai-screen-row{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;padding-top:6px;font-size:11px;color:var(--fg-3rd)}
+#aiScreenText{width:100%;min-height:76px;max-height:220px;padding:6px 8px;border:1px solid var(--border-2nd);border-radius:6px;background:var(--bg-1st);color:var(--fg-1st);font-size:var(--fs-2xs);line-height:1.55;resize:vertical;box-sizing:border-box;font-family:inherit}
+.ai-screen-row{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;padding-top:6px;font-size:var(--fs-2xs);color:var(--fg-3rd)}
 .ai-screen-row b{font-weight:600;color:var(--fg-1st);font-variant-numeric:tabular-nums}
 .ai-screen-doc{color:var(--fg-2nd);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ai-screen-run{font-variant-numeric:tabular-nums}
@@ -518,24 +518,24 @@ a{color:var(--accent);text-decoration:none}
 /* 表头下面那行逐列筛选：格子贴着列边，输入框吃满列宽；底色比表头浅一档，
    滚动时整块 thead（含这一行）一起吸顶，筛到一半也不会飘走 */
 .greet-table .pool-filter-row th{padding:3px 5px;background:var(--surface-soft);border-bottom:1px solid var(--bd-2)}
-.pool-f{width:100%;min-width:0;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:10.5px;line-height:1.35;background:var(--bg-1st);color:var(--fg-1st)}
+.pool-f{width:100%;min-width:0;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:var(--fs-2xs);line-height:1.35;background:var(--bg-1st);color:var(--fg-1st)}
 .pool-f::placeholder{color:var(--fg-4th)}
 .pool-f:focus{outline:1px solid var(--accent);outline-offset:0}
 .pool-f-icon{width:13px;height:13px;color:var(--fg-4th);vertical-align:middle}
-@media screen and (max-width: 1200px){ .pool-f{font-size:10px} .greet-table .pool-filter-row th{padding:2px 3px} }
+@media screen and (max-width: 1200px){ .pool-f{font-size:var(--fs-2xs)} .greet-table .pool-filter-row th{padding:2px 3px} }
 .pool-sel label{display:flex;align-items:center;justify-content:center;width:100%;min-height:36px;cursor:pointer}
 .pool-sel label:hover{background:var(--accent-light)}
 #poolTable input[type=checkbox]{width:17px;height:17px;margin:0;accent-color:var(--accent);cursor:pointer;vertical-align:middle}
 /* 这一张表的 min-width 只在下面「三张记录表各自的最小宽度」那一处写，这里不再重复一条 */
 .pool-selcount{font-variant-numeric:tabular-nums;color:var(--fg-3rd);white-space:nowrap}
 .pool-selcount b{color:var(--accent);font-weight:600}
-.pool-status{width:86px;padding:2px 3px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)}
-.pool-note-input{width:100%;min-width:80px;padding:2px 5px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st)}
-.pool-tag{display:inline-block;padding:1px 5px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap;margin:1px 3px 1px 0}
+.pool-status{width:86px;padding:2px 3px;border:1px solid var(--border-2nd);border-radius:4px;font-size:var(--fs-2xs);background:var(--bg-1st);color:var(--fg-1st)}
+.pool-note-input{width:100%;min-width:80px;padding:2px 5px;border:1px solid var(--border-2nd);border-radius:4px;font-size:var(--fs-2xs);background:var(--bg-1st);color:var(--fg-1st)}
+.pool-tag{display:inline-block;padding:1px 5px;border-radius:4px;font-size:var(--fs-2xs);font-weight:600;white-space:nowrap;margin:1px 3px 1px 0}
 .pool-tag.pass{background:var(--success-bg);color:var(--success)}
 .pool-tag.veto{background:rgba(239,68,68,.12);color:var(--danger)}
 .pool-tag.idle{background:var(--surface-soft);color:var(--fg-4th);font-weight:500}
-.pool-reason{color:var(--fg-3rd);font-size:10.5px}
+.pool-reason{color:var(--fg-3rd);font-size:var(--fs-2xs)}
 /* 两行截断只能挂在里面的 div 上：display:-webkit-box 一旦挂到 <td>，这一格就不再是
    表格单元，高度只剩文本那两行；行悬停时这一列空出一块没被涂到的深色方块（他截图指的就是它）。
    td 的 white-space:nowrap 会继承下来，内层要显式改回 normal 才换得了行。 */
@@ -546,26 +546,26 @@ a{color:var(--accent);text-decoration:none}
    宽度写满每一列、富余只给"跳过原因/依据原话"这种长文本列，然后把岗位·公司这类
    中等长度的列收窄并允许换两行。截断仍然挂在里面的 div 上，理由同上一条注释。 */
 .cell-wrap>div{line-height:1.35;word-break:break-word;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.pool-sub{color:var(--fg-4th);font-size:10.5px;margin-top:2px}
-.pool-fail{color:var(--danger);font-size:10.5px;margin-top:2px}
-.pool-retry{color:var(--warning);font-size:10.5px;margin-top:2px}
+.pool-sub{color:var(--fg-4th);font-size:var(--fs-2xs);margin-top:2px}
+.pool-fail{color:var(--danger);font-size:var(--fs-2xs);margin-top:2px}
+.pool-retry{color:var(--warning);font-size:var(--fs-2xs);margin-top:2px}
 tr.pool-pinned td{background:rgba(245,158,11,.07)}
 .pool-act{display:inline-flex;gap:4px;align-items:center}
 /* 两号合起来近三千行 × 11 格：整表一次性排版实测要 8 秒多，期间页面点不动。
    屏外的行跳过排版与绘制，滚到哪儿排到哪儿；auto 会记住真实行高，滚动条不跳。 */
 #poolTableBody tr{content-visibility:auto;contain-intrinsic-size:auto 44px}
 /* 「全部账号」下两号的池并成一张表，行上要认得出是哪个号的（单号范围里不出现） */
-.pool-acc-tag{display:inline-block;padding:1px 5px;border-radius:4px;font-size:10px;font-weight:600;color:var(--accent);background:var(--accent-light);white-space:nowrap;margin-right:4px;vertical-align:1px}
+.pool-acc-tag{display:inline-block;padding:1px 5px;border-radius:4px;font-size:var(--fs-2xs);font-weight:600;color:var(--accent);background:var(--accent-light);white-space:nowrap;margin-right:4px;vertical-align:1px}
 
 /* ── 薪资格子 / 城市格 ── */
 /* 三种薪资要一眼分得开：读全的粗体数字、读不出的写「读不出」、没写的画 —。
    以前读不出的也画成 —，看着像"这岗位没写薪资"，其实是我方把数字解码丢了。 */
 .salary-val{font-weight:600;font-variant-numeric:tabular-nums}
-.salary-bad{color:var(--warning);border-bottom:1px dotted var(--warning);cursor:help;font-size:11px}
+.salary-bad{color:var(--warning);border-bottom:1px dotted var(--warning);cursor:help;font-size:var(--fs-2xs)}
 .salary-none{color:var(--fg-4th)}
 /* 城市串是「长沙·岳麓区·望城坡」：城市一行、区/商圈一行小字，窄格子也不丢后半截 */
 .cell-city{font-variant-numeric:tabular-nums}
-.cell-city-sub{color:var(--fg-4th);font-size:10.5px;margin-top:1px}
+.cell-city-sub{color:var(--fg-4th);font-size:var(--fs-2xs);margin-top:1px}
 /* 三张记录表各自的最小宽度：窗口窄了不再把固定列压成一条缝，
    改成整表横向滚动——.record-tab-content 就是那个滚动容器。
    岗位池这一张从 1240 提到 1440：固定列 1028 + 岗位/判分理由两列（都不写宽度、分剩下的），
@@ -577,45 +577,45 @@ tr.pool-pinned td{background:rgba(245,158,11,.07)}
 /* ── 回复记录聊天界面（一比一模仿BOSS直聘） ── */
 .boss-chat-wrap{display:flex;width:100%;height:100%;min-height:480px;overflow:hidden;border-radius:var(--r-md);background:var(--surface);border:1px solid var(--bd)}
 .boss-chat-sidebar{flex:0 0 280px;display:flex;flex-direction:column;border-right:1px solid var(--bd);background:var(--surface-soft);overflow:hidden}
-.boss-chat-sidebar-header{padding:12px 16px;border-bottom:1px solid var(--bd);font-size:13px;font-weight:600;color:var(--fg);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.boss-chat-sidebar-header .chat-count-badge{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--accent-light);color:var(--accent);font-weight:600}
+.boss-chat-sidebar-header{padding:12px 16px;border-bottom:1px solid var(--bd);font-size:var(--fs-sm);font-weight:600;color:var(--fg);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.boss-chat-sidebar-header .chat-count-badge{font-size:var(--fs-2xs);padding:2px 8px;border-radius:10px;background:var(--accent-light);color:var(--accent);font-weight:600}
 .boss-chat-list{flex:1;overflow-y:auto;min-height:0}
 .boss-chat-item{display:flex;align-items:center;padding:12px 14px;cursor:pointer;transition:background var(--dur) var(--ease);border-bottom:1px solid var(--bd);gap:10px}
 .boss-chat-item:hover{background:var(--surface-hover)}
 .boss-chat-item.active{background:var(--accent-light);border-left:3px solid var(--accent);padding-left:11px}
-.boss-chat-item-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6bfa);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex-shrink:0;box-shadow:0 2px 8px rgba(91,124,250,.2)}
+.boss-chat-item-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6bfa);color:#fff;display:flex;align-items:center;justify-content:center;font-size:var(--fs-base);font-weight:600;flex-shrink:0;box-shadow:0 2px 8px rgba(91,124,250,.2)}
 .boss-chat-item-info{flex:1;min-width:0;overflow:hidden;display:flex;flex-direction:column;gap:2px}
-.boss-chat-item-name{font-size:13px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.boss-chat-item-name{font-size:var(--fs-sm);font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* 同昵称不同岗位是两个会话，列表里必须带岗位才分得开 */
-.boss-chat-item-job{font-size:10px;font-weight:400;color:var(--fg-4th);margin-left:6px}
+.boss-chat-item-job{font-size:var(--fs-2xs);font-weight:400;color:var(--fg-4th);margin-left:6px}
 /* 「全部账号」下撞车的身份挂的账号标记：不挂的话两行长得完全一样 */
-.boss-chat-item-acc{font-size:9.5px;font-weight:600;color:var(--accent);border:1px solid var(--bd-2);border-radius:5px;padding:0 4px;margin-left:6px;flex-shrink:0}
-.boss-chat-item-pin{font-size:9.5px;font-weight:600;color:var(--warning);border:1px solid var(--bd-2);border-radius:5px;padding:0 4px;margin-left:6px;flex-shrink:0}
-.boss-chat-item-preview{font-size:11.5px;color:var(--fg-3rd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.boss-chat-item-acc{font-size:var(--fs-2xs);font-weight:600;color:var(--accent);border:1px solid var(--bd-2);border-radius:5px;padding:0 4px;margin-left:6px;flex-shrink:0}
+.boss-chat-item-pin{font-size:var(--fs-2xs);font-weight:600;color:var(--warning);border:1px solid var(--bd-2);border-radius:5px;padding:0 4px;margin-left:6px;flex-shrink:0}
+.boss-chat-item-preview{font-size:var(--fs-2xs);color:var(--fg-3rd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .boss-chat-item-meta{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
-.boss-chat-item-time{font-size:10px;color:var(--fg-4th);white-space:nowrap}
-.boss-chat-item-badge{display:inline-block;background:var(--danger);color:#fff;border-radius:10px;padding:0 6px;font-size:10px;min-width:16px;height:16px;text-align:center;font-weight:600;line-height:16px}
+.boss-chat-item-time{font-size:var(--fs-2xs);color:var(--fg-4th);white-space:nowrap}
+.boss-chat-item-badge{display:inline-block;background:var(--danger);color:#fff;border-radius:10px;padding:0 6px;font-size:var(--fs-2xs);min-width:16px;height:16px;text-align:center;font-weight:600;line-height:16px}
 .boss-chat-item-badge.badge-zero{display:none}
 .boss-chat-main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;background:var(--surface)}
 .boss-chat-header{padding:12px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:10px;flex-shrink:0;background:var(--surface-soft)}
-.boss-chat-header-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6bfa);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0}
+.boss-chat-header-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6bfa);color:#fff;display:flex;align-items:center;justify-content:center;font-size:var(--fs-sm);font-weight:600;flex-shrink:0}
 .boss-chat-header-info{flex:1;min-width:0}
-.boss-chat-header-name{font-size:14px;font-weight:600;color:var(--fg)}
-.boss-chat-header-job{font-size:11.5px;color:var(--fg-3rd);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.boss-chat-header-name{font-size:var(--fs-base);font-weight:600;color:var(--fg)}
+.boss-chat-header-job{font-size:var(--fs-2xs);color:var(--fg-3rd);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .boss-chat-header-actions{display:flex;gap:6px;align-items:center}
-.boss-chat-header-actions .chat-header-btn{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;border-radius:6px;background:var(--surface);border:1px solid var(--bd);color:var(--fg-2nd);cursor:pointer;transition:all var(--dur) var(--ease);min-height:28px}
+.boss-chat-header-actions .chat-header-btn{display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-2xs);padding:4px 10px;border-radius:6px;background:var(--surface);border:1px solid var(--bd);color:var(--fg-2nd);cursor:pointer;transition:all var(--dur) var(--ease);min-height:28px}
 .boss-chat-header-actions .chat-header-btn:hover{background:var(--surface-hover);color:var(--fg)}
 .boss-chat-messages{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:14px;min-height:0}
-.boss-chat-messages-empty{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--fg-4th);font-size:13px}
+.boss-chat-messages-empty{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--fg-4th);font-size:var(--fs-sm)}
 .boss-chat-messages-empty .ki{opacity:.45}
 .boss-msg-row{display:flex;gap:8px;align-items:flex-start;animation:msgFadeIn .25s ease}
 .boss-msg-row.hr{justify-content:flex-start}
 .boss-msg-row.me{justify-content:flex-end}
 .boss-msg-row.system{justify-content:center}
-.boss-msg-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6bfa);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.boss-msg-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#8a6bfa);color:#fff;display:flex;align-items:center;justify-content:center;font-size:var(--fs-xs);font-weight:600;flex-shrink:0}
 .boss-msg-avatar.me{background:linear-gradient(135deg,#10b981,#34d399)}
-.boss-msg-avatar.system{background:var(--fg-4th);font-size:10px}
-.boss-msg-bubble{max-width:100%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5;word-break:break-word;white-space:pre-wrap;position:relative;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.boss-msg-avatar.system{background:var(--fg-4th);font-size:var(--fs-2xs)}
+.boss-msg-bubble{max-width:100%;padding:10px 14px;border-radius:14px;font-size:var(--fs-sm);line-height:1.5;word-break:break-word;white-space:pre-wrap;position:relative;box-shadow:0 1px 2px rgba(0,0,0,.04)}
 /* 气泡宽度由外层 wrapper 管：wrapper 以前不限宽，长消息一撑就占满整行，
    justify-content 就没地方可推 —— 结果我方气泡画在左边，和 BOSS 端左右相反 */
 .boss-msg-row.me>div,.boss-msg-row.hr>div{max-width:78%;min-width:0;display:flex;flex-direction:column}
@@ -624,22 +624,22 @@ tr.pool-pinned td{background:rgba(245,158,11,.07)}
 .boss-msg-row.hr .boss-msg-bubble{background:#fff;color:#333;border-top-left-radius:4px;border:1px solid var(--bd-2)}
 [data-theme="dark"] .boss-msg-row.hr .boss-msg-bubble{background:rgba(255,255,255,.08);color:var(--fg)}
 .boss-msg-row.me .boss-msg-bubble{background:linear-gradient(135deg,#5b7cfa,#4365e8);color:#fff;border-top-right-radius:4px}
-.boss-msg-row.system .boss-msg-bubble{background:var(--warning-bg);color:var(--warning);font-size:11.5px;padding:6px 12px;border-radius:8px;max-width:90%;text-align:center}
+.boss-msg-row.system .boss-msg-bubble{background:var(--warning-bg);color:var(--warning);font-size:var(--fs-2xs);padding:6px 12px;border-radius:8px;max-width:90%;text-align:center}
 /* 送达 / 已读：BOSS 在我方气泡下方显示，之前完全没渲染 */
-.boss-msg-status{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--fg-3rd);margin-left:6px}
+.boss-msg-status{display:inline-flex;align-items:center;gap:3px;font-size:var(--fs-2xs);color:var(--fg-3rd);margin-left:6px}
 .boss-msg-status.read{color:var(--success)}
 /* 非文字消息：图片缩略图、简历/职位卡片、系统条 */
 .boss-msg-img{max-width:180px;max-height:220px;border-radius:8px;display:block;border:1px solid var(--bd-2)}
-.boss-msg-card{border:1px solid var(--bd-2);border-radius:10px;padding:9px 12px;background:var(--bg-2);font-size:12.5px;line-height:1.45;max-width:280px}
+.boss-msg-card{border:1px solid var(--bd-2);border-radius:10px;padding:9px 12px;background:var(--bg-2);font-size:var(--fs-xs);line-height:1.45;max-width:280px}
 .boss-msg-card-title{display:flex;align-items:center;gap:6px;font-weight:600;color:var(--fg);margin-bottom:3px;word-break:break-all}
-.boss-msg-card-sub{font-size:11.5px;color:var(--fg-3rd)}
-.boss-msg-card-text{font-size:12.5px;color:var(--fg-2nd);line-height:1.45;white-space:pre-wrap;word-break:break-word}
-.boss-msg-divider{text-align:center;font-size:11px;color:var(--fg-3rd);margin:10px 0}
+.boss-msg-card-sub{font-size:var(--fs-2xs);color:var(--fg-3rd)}
+.boss-msg-card-text{font-size:var(--fs-xs);color:var(--fg-2nd);line-height:1.45;white-space:pre-wrap;word-break:break-word}
+.boss-msg-divider{text-align:center;font-size:var(--fs-2xs);color:var(--fg-3rd);margin:10px 0}
 .boss-msg-row.system{justify-content:center}
-.boss-msg-meta{display:flex;gap:6px;align-items:center;margin-top:4px;font-size:10px;color:var(--fg-4th)}
+.boss-msg-meta{display:flex;gap:6px;align-items:center;margin-top:4px;font-size:var(--fs-2xs);color:var(--fg-4th)}
 .boss-msg-row.me .boss-msg-meta{justify-content:flex-end}
-.boss-msg-time{font-size:10px;color:var(--fg-4th)}
-.boss-msg-source{font-size:10px;padding:1px 6px;border-radius:4px;background:var(--surface-soft);color:var(--fg-3rd)}
+.boss-msg-time{font-size:var(--fs-2xs);color:var(--fg-4th)}
+.boss-msg-source{font-size:var(--fs-2xs);padding:1px 6px;border-radius:4px;background:var(--surface-soft);color:var(--fg-3rd)}
 .boss-msg-source.ai{background:var(--accent-light);color:var(--accent)}
 .boss-msg-source.rule{background:var(--success-bg);color:var(--success)}
 .boss-msg-source.skip{background:var(--warning-bg);color:var(--warning)}
@@ -647,19 +647,19 @@ tr.pool-pinned td{background:rgba(245,158,11,.07)}
 .boss-msg-source.manual{background:#fff7e6;color:#fa8c16;border:1px solid #ffd591}
 .boss-msg-source.default{background:var(--surface-soft);color:var(--fg-4th)}
 .boss-chat-empty{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--fg-4th)}
-.boss-chat-empty-icon{font-size:48px;opacity:.3}
-.boss-chat-empty-text{font-size:13px;font-weight:500}
-.boss-chat-empty-hint{font-size:11px;color:var(--fg-4th)}
+.boss-chat-empty-icon{font-size:var(--fs-4xl);opacity:.3}
+.boss-chat-empty-text{font-size:var(--fs-sm);font-weight:500}
+.boss-chat-empty-hint{font-size:var(--fs-2xs);color:var(--fg-4th)}
 @keyframes msgFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.boss-chat-loading{display:flex;align-items:center;justify-content:center;gap:6px;padding:20px;text-align:center;color:var(--fg-3rd);font-size:12px}
+.boss-chat-loading{display:flex;align-items:center;justify-content:center;gap:6px;padding:20px;text-align:center;color:var(--fg-3rd);font-size:var(--fs-xs)}
 /* 底部监控视图提示（一比一复刻BOSS直聘聊天页面底部输入区，但只读） */
 .boss-chat-footer{flex-shrink:0;padding:10px 18px;border-top:1px solid var(--bd);background:var(--surface-soft);display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
-.boss-chat-footer-hint{font-size:11.5px;color:var(--fg-4th);font-style:italic}
+.boss-chat-footer-hint{font-size:var(--fs-2xs);color:var(--fg-4th);font-style:italic}
 /* 引擎自记标记（[简历已发送] 这类线上没有的条目）：居中小字，不伪装成气泡 */
 .boss-msg-row.engine-mark{justify-content:center}
-.boss-msg-mark{font-size:11px;color:var(--fg-4th);background:var(--surface-soft);
+.boss-msg-mark{font-size:var(--fs-2xs);color:var(--fg-4th);background:var(--surface-soft);
   border-radius:10px;padding:3px 10px;max-width:80%;text-align:center}
-.boss-chat-marks{font-size:11.5px;color:var(--fg-3rd);display:flex;align-items:center;
+.boss-chat-marks{font-size:var(--fs-2xs);color:var(--fg-3rd);display:flex;align-items:center;
   gap:5px;cursor:pointer;user-select:none}
 .boss-chat-marks input{width:13px;height:13px;accent-color:var(--accent);cursor:pointer}
 
@@ -668,23 +668,23 @@ tr.pool-pinned td{background:rgba(245,158,11,.07)}
 .chat-card{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--bd);cursor:pointer;transition:background var(--dur) var(--ease);flex-wrap:wrap}
 .chat-card:hover{background:var(--surface-hover)}
 .chat-card.expanded{background:var(--surface-soft)}
-.chat-avatar{width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;margin-right:12px;flex-shrink:0}
+.chat-avatar{width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:var(--fs-base);font-weight:600;margin-right:12px;flex-shrink:0}
 .chat-info{flex:1;min-width:0;overflow:hidden}
-.chat-name{font-weight:600;font-size:13.5px;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.chat-preview{font-size:11.5px;color:var(--fg-3rd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.chat-name{font-weight:600;font-size:var(--fs-sm);color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-preview{font-size:var(--fs-2xs);color:var(--fg-3rd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
 .chat-meta{flex-shrink:0;margin-left:8px;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
-.chat-time{font-size:10.5px;color:var(--fg-3rd);white-space:nowrap}
-.chat-badge{display:inline-block;background:var(--accent);color:#fff;border-radius:10px;padding:0 6px;font-size:10.5px;min-width:18px;text-align:center;font-weight:600;line-height:16px}
+.chat-time{font-size:var(--fs-2xs);color:var(--fg-3rd);white-space:nowrap}
+.chat-badge{display:inline-block;background:var(--accent);color:#fff;border-radius:10px;padding:0 6px;font-size:var(--fs-2xs);min-width:18px;text-align:center;font-weight:600;line-height:16px}
 .chat-badge.chat-badge-zero{background:var(--surface-soft);color:var(--fg-3rd)}
 .chat-detail{display:none;width:100%;padding:8px 8px 12px 64px;background:var(--surface-soft);border-radius:8px;margin-top:4px;box-sizing:border-box}
 .chat-card.expanded .chat-detail{display:block}
-.chat-message-row{display:flex;gap:8px;padding:5px 0;font-size:12px;border-bottom:1px dashed var(--bd-2);align-items:flex-start}
+.chat-message-row{display:flex;gap:8px;padding:5px 0;font-size:var(--fs-xs);border-bottom:1px dashed var(--bd-2);align-items:flex-start}
 .chat-message-row:last-child{border-bottom:none}
-.chat-message-row .msg-time{color:var(--fg-3rd);font-size:10.5px;flex-shrink:0;width:70px;white-space:nowrap}
+.chat-message-row .msg-time{color:var(--fg-3rd);font-size:var(--fs-2xs);flex-shrink:0;width:70px;white-space:nowrap}
 .chat-message-row .msg-received{color:var(--fg);flex:1;min-width:0;word-break:break-word;white-space:pre-wrap}
 .chat-message-row .msg-reply{color:var(--accent);flex:1;min-width:0;word-break:break-word;white-space:pre-wrap}
-.chat-message-row .msg-source{font-size:10.5px;color:var(--fg-3rd);flex-shrink:0;width:50px;text-align:right;white-space:nowrap}
-.chat-message-row .msg-status-skip{color:var(--warning);font-size:10.5px;flex-shrink:0;width:40px;text-align:right;white-space:nowrap}
+.chat-message-row .msg-source{font-size:var(--fs-2xs);color:var(--fg-3rd);flex-shrink:0;width:50px;text-align:right;white-space:nowrap}
+.chat-message-row .msg-status-skip{color:var(--warning);font-size:var(--fs-2xs);flex-shrink:0;width:40px;text-align:right;white-space:nowrap}
 
 /* ── Cookie 状态指示器 ── */
 .cookie-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;margin-left:4px;cursor:pointer;transition:all var(--dur) var(--ease)}
@@ -697,10 +697,10 @@ tr.pool-pinned td{background:rgba(245,158,11,.07)}
 /* Modal */
 .modal-overlay{position:fixed;inset:0;background:var(--modal-overlay);z-index:1000;display:flex;align-items:center;justify-content:center;animation:fadeIn .15s ease}
 .modal{background:var(--surface);border-radius:20px;padding:24px;width:520px;max-width:90vw;max-height:80vh;overflow-y:auto;box-shadow:var(--sh-lg);border:1px solid var(--bd);animation:slideUp .2s ease;-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
-.modal h3{font-size:15px;font-weight:600;margin-bottom:16px;color:var(--fg)}
+.modal h3{font-size:var(--fs-base);font-weight:600;margin-bottom:16px;color:var(--fg)}
 .modal-field{margin-bottom:12px}
-.modal-field label{display:block;font-size:11px;font-weight:500;color:var(--fg-2nd);margin-bottom:4px}
-.modal-field input,.modal-field textarea,.modal-field select{width:100%;padding:8px 10px;border-radius:var(--r-sm);border:1px solid var(--bd);background:var(--surface-soft);font-size:12px;color:var(--fg);transition:all var(--dur) var(--ease)}
+.modal-field label{display:block;font-size:var(--fs-2xs);font-weight:500;color:var(--fg-2nd);margin-bottom:4px}
+.modal-field input,.modal-field textarea,.modal-field select{width:100%;padding:8px 10px;border-radius:var(--r-sm);border:1px solid var(--bd);background:var(--surface-soft);font-size:var(--fs-xs);color:var(--fg);transition:all var(--dur) var(--ease)}
 .modal-field input:focus,.modal-field textarea:focus,.modal-field select:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-light)}
 .modal-field textarea{min-height:80px;resize:vertical}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
@@ -721,10 +721,10 @@ tr.pool-pinned td{background:rgba(245,158,11,.07)}
 @media(max-width:1000px){:root{--side-w:296px;--side-label-w:80px}}
 @media(max-width:1200px){.stats-grid{grid-template-columns:repeat(4,1fr)}.panel-half{flex:none;width:100%}.panel-row{flex-direction:column}}
 @media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}.panel-row{flex-direction:column}}
-@media(max-width:600px){.side{display:none}.stats-grid{grid-template-columns:1fr}.content{padding:12px}.topbar{padding:8px 12px}.topbar-title{font-size:14px}.stat-card{padding:10px}.stat-value{font-size:20px}.btn-sm{padding:4px 8px;font-size:11px}.modal{width:95%;max-width:400px}.modal-large{width:95%;max-width:600px}}
+@media(max-width:600px){.side{display:none}.stats-grid{grid-template-columns:1fr}.content{padding:12px}.topbar{padding:8px 12px}.topbar-title{font-size:var(--fs-base)}.stat-card{padding:10px}.stat-value{font-size:var(--fs-xl)}.btn-sm{padding:4px 8px;font-size:var(--fs-2xs)}.modal{width:95%;max-width:400px}.modal-large{width:95%;max-width:600px}}
 
 /* ── 移动端适配 ── */
-.mobile-menu-btn{display:none;position:fixed;top:10px;left:10px;z-index:1001;background:var(--side-bg);border:1px solid var(--bd-2);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:16px;color:var(--fg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);align-items:center;justify-content:center;line-height:1}
+.mobile-menu-btn{display:none;position:fixed;top:10px;left:10px;z-index:1001;background:var(--side-bg);border:1px solid var(--bd-2);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:var(--fs-md);color:var(--fg);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);align-items:center;justify-content:center;line-height:1}
 .sidebar-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:999}
 .records-table-wrapper{overflow-x:auto;-webkit-overflow-scrolling:touch}
 
@@ -786,7 +786,7 @@ tr.pool-pinned td{background:rgba(245,158,11,.07)}
   .ledger-bar, .pool-toolbar, .pool-add { padding: 6px 8px; }
   .ledger-search { min-width: 0; flex: 1 1 160px; }
   .boss-chat-sidebar { flex-basis: 210px; }
-  .ledger-note, .pool-note { font-size: 10.5px; padding: 6px 8px; }
+  .ledger-note, .pool-note { font-size:var(--fs-2xs); padding: 6px 8px; }
 
   /* 模态弹窗占满屏幕 */
   .modal { width: 95% !important; margin: 5vh auto !important; max-width: 95vw !important; }
@@ -801,13 +801,13 @@ tr.pool-pinned td{background:rgba(245,158,11,.07)}
 
   /* 顶栏留出汉堡菜单空间 */
   .topbar { padding-left: 56px; }
-  .topbar-title { font-size: 13px; }
+  .topbar-title { font-size:var(--fs-sm); }
 
   /* 内容区域减小内边距 */
   .content { padding: 8px 10px; }
 
   /* 统计卡片数值缩小 */
-  .stat-value { font-size: 16px; }
+  .stat-value { font-size:var(--fs-md); }
   .stat-card { padding: 8px 10px; }
 
   /* 通知列表最大高度适配 */
@@ -820,26 +820,26 @@ tr.pool-pinned td{background:rgba(245,158,11,.07)}
 }
 
 /* ── 风控通知中心 ── */
-.notif-badge{display:inline-block;background:#e74c3c;color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:600;min-width:18px;text-align:center;line-height:1.4}
+.notif-badge{display:inline-block;background:#e74c3c;color:#fff;border-radius:10px;padding:1px 6px;font-size:var(--fs-2xs);font-weight:600;min-width:18px;text-align:center;line-height:1.4}
 .notif-list{max-height:300px;overflow-y:auto;border:1px solid var(--bd-2);border-radius:8px;background:var(--side-input-bg);margin-top:6px}
-.notif-item{padding:8px 10px;border-bottom:1px solid var(--bd-2);font-size:11px;cursor:pointer;transition:background .2s}
+.notif-item{padding:8px 10px;border-bottom:1px solid var(--bd-2);font-size:var(--fs-2xs);cursor:pointer;transition:background .2s}
 .notif-item:hover{background:var(--surface-hover)}
 .notif-item.unread{border-left:3px solid #e74c3c}
-.notif-item .notif-time{color:var(--fg-3rd);font-size:10px;display:block}
+.notif-item .notif-time{color:var(--fg-3rd);font-size:var(--fs-2xs);display:block}
 .notif-item .notif-msg{color:var(--fg);margin-top:2px;display:block;white-space:pre-wrap;word-break:break-all}
-.notif-item .notif-type{display:inline-block;padding:1px 5px;border-radius:3px;font-size:9px;margin-right:4px;font-weight:600}
+.notif-item .notif-type{display:inline-block;padding:1px 5px;border-radius:3px;font-size:var(--fs-2xs);margin-right:4px;font-weight:600}
 .notif-type.wind_control{background:#e74c3c;color:#fff}
 .notif-type.error{background:#e67e22;color:#fff}
 .notif-type.info{background:#3498db;color:#fff}
 .notif-type.success{background:var(--success);color:#fff}
 .notif-type.warn{background:var(--warning);color:#fff}
-.notif-empty{text-align:center;padding:20px;color:var(--fg-3rd);font-size:11px}
+.notif-empty{text-align:center;padding:20px;color:var(--fg-3rd);font-size:var(--fs-2xs)}
 .notif-actions{display:flex;gap:6px;padding:6px 10px;border-bottom:1px solid var(--bd-2)}
-.notif-actions button{flex:1;padding:4px;border:1px solid var(--bd-2);border-radius:4px;background:var(--side-input-bg);color:var(--fg);font-size:10px;cursor:pointer;transition:all var(--dur) var(--ease)}
+.notif-actions button{flex:1;padding:4px;border:1px solid var(--bd-2);border-radius:4px;background:var(--side-input-bg);color:var(--fg);font-size:var(--fs-2xs);cursor:pointer;transition:all var(--dur) var(--ease)}
 .notif-actions button:hover{background:var(--surface-hover);color:var(--fg)}
-.notif-center-header{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:6px;padding:6px 4px;border-radius:4px;transition:all var(--dur) var(--ease);font-size:10.5px;font-weight:600;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em;margin-top:14px;width:100%;border:none;background:none}
+.notif-center-header{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:6px;padding:6px 4px;border-radius:4px;transition:all var(--dur) var(--ease);font-size:var(--fs-2xs);font-weight:600;color:var(--side-label);text-transform:uppercase;letter-spacing:.04em;margin-top:14px;width:100%;border:none;background:none}
 .notif-center-header:hover{background:var(--surface-hover);color:var(--fg)}
-.notif-center-header .arrow{transition:rotate .2s ease;font-size:12px;margin-left:auto;transform-origin:50% 50%}
+.notif-center-header .arrow{transition:rotate .2s ease;font-size:var(--fs-xs);margin-left:auto;transform-origin:50% 50%}
 .notif-center-header.open .arrow{rotate:90deg}
 .notif-center-header>span:first-child{display:inline-flex;align-items:center;gap:6px}
 
@@ -849,21 +849,21 @@ tr.pool-pinned td{background:rgba(245,158,11,.07)}
 .login-modal{position:relative;background:var(--surface);border-radius:24px;padding:0;max-width:440px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,.28),0 0 0 1px var(--bd);border:1px solid var(--bd);animation:modalPop .28s cubic-bezier(.2,.9,.3,1.2);overflow:hidden;-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
 .login-modal-header{background:linear-gradient(135deg,var(--accent),#7c5bfa);padding:28px 32px 24px;text-align:center;position:relative}
 .login-modal-header::after{content:"";position:absolute;bottom:-12px;left:0;right:0;height:24px;background:var(--surface);border-radius:18px 18px 0 0}
-.login-modal-icon-text{font-size:17px;font-weight:700;line-height:1.35;margin-top:8px;color:#fff}
-.login-modal-icon{font-size:42px;line-height:1;margin-bottom:10px;display:inline-block;animation:iconBob 2.2s ease-in-out infinite;filter:drop-shadow(0 2px 8px rgba(0,0,0,.2))}
-.login-modal-title{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.01em;text-shadow:0 1px 3px rgba(0,0,0,.15)}
+.login-modal-icon-text{font-size:var(--fs-lg);font-weight:700;line-height:1.35;margin-top:8px;color:#fff}
+.login-modal-icon{font-size:var(--fs-4xl);line-height:1;margin-bottom:10px;display:inline-block;animation:iconBob 2.2s ease-in-out infinite;filter:drop-shadow(0 2px 8px rgba(0,0,0,.2))}
+.login-modal-title{font-size:var(--fs-lg);font-weight:700;color:#fff;letter-spacing:-.01em;text-shadow:0 1px 3px rgba(0,0,0,.15)}
 .login-modal-body{padding:20px 32px 28px;text-align:center}
-.login-modal-desc{font-size:13px;color:var(--fg-2nd);margin-bottom:24px;line-height:1.7}
+.login-modal-desc{font-size:var(--fs-sm);color:var(--fg-2nd);margin-bottom:24px;line-height:1.7}
 .login-modal-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 /* 归档弹窗套的是扫码登录那套头（紫底渐变 + 42px 跳动图标），
    一个数据表格长得像登录页；plain 变体只改头部观感，不动登录页 */
 .login-modal-plain .login-modal-header{background:var(--surface-soft);padding:14px 22px;text-align:left;border-bottom:1px solid var(--bd)}
 .login-modal-plain .login-modal-header::after{display:none}
-.login-modal-plain .login-modal-icon{display:flex;align-items:center;gap:8px;font-size:18px;animation:none;margin:0;filter:none;color:var(--accent)}
-.login-modal-plain .login-modal-icon-text{font-size:13.5px;font-weight:600;color:var(--fg);margin-top:0;line-height:1.3}
+.login-modal-plain .login-modal-icon{display:flex;align-items:center;gap:8px;font-size:var(--fs-lg);animation:none;margin:0;filter:none;color:var(--accent)}
+.login-modal-plain .login-modal-icon-text{font-size:var(--fs-sm);font-weight:600;color:var(--fg);margin-top:0;line-height:1.3}
 .login-modal-plain .login-modal-body{text-align:left;padding:16px 22px 20px}
 .login-modal-plain .login-modal-actions{justify-content:flex-start}
-.login-modal-btn{display:inline-flex;align-items:center;gap:6px;padding:11px 22px;border-radius:var(--r-md);font-size:13.5px;font-weight:600;background:var(--accent);color:#fff;transition:all var(--dur) var(--ease);box-shadow:0 2px 8px rgba(30,75,210,.25)}
+.login-modal-btn{display:inline-flex;align-items:center;gap:6px;padding:11px 22px;border-radius:var(--r-md);font-size:var(--fs-sm);font-weight:600;background:var(--accent);color:#fff;transition:all var(--dur) var(--ease);box-shadow:0 2px 8px rgba(30,75,210,.25)}
 .login-modal-btn:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 6px 18px rgba(30,75,210,.35)}
 .login-modal-btn:active{transform:translateY(0)}
 .login-modal-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
@@ -899,8 +899,8 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;
 /* 数字一律用等宽数字，跳动时不会左右抖 */
 .stat-value,.ai-provider-latency,.log-time,.greet-ai-badge,.chat-time,.boss-msg-time,
 td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
-.stat-label{font-size:11px;letter-spacing:.12em;text-transform:none;color:var(--fg-3rd)}
-.stat-value{font-size:26px;font-weight:650;letter-spacing:-.035em}
+.stat-label{font-size:var(--fs-2xs);letter-spacing:.12em;text-transform:none;color:var(--fg-3rd)}
+.stat-value{font-size:var(--fs-2xl);font-weight:650;letter-spacing:-.035em}
 
 /* 交互反馈：悬停、按下、聚焦三态都要有 */
 .btn,.side-btn,.scope-chip,.chip,.adv-toggle,.account-tab,.tab,.file-btn{cursor:pointer;
@@ -947,13 +947,13 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
 .conn-lost{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:400;
   display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:var(--r-pill);
   background:var(--danger-bg);border:1px solid var(--danger);color:var(--fg);
-  font-size:12px;font-weight:600;box-shadow:var(--elev-2);animation:bubbleIn var(--dur-2) var(--ease-spring)}
+  font-size:var(--fs-xs);font-weight:600;box-shadow:var(--elev-2);animation:bubbleIn var(--dur-2) var(--ease-spring)}
 
 /* 轻提示：以前所有反馈都写进"系统日志"，而日志在首屏之外，点了没反应 = 像坏了 */
 .toast-stack{position:fixed;right:18px;bottom:18px;z-index:500;display:flex;flex-direction:column;
   gap:8px;align-items:flex-end;pointer-events:none}
 .toast{display:flex;align-items:center;gap:8px;max-width:340px;padding:9px 14px;
-  border-radius:var(--r-pill);font-size:12px;font-weight:550;color:var(--fg);
+  border-radius:var(--r-pill);font-size:var(--fs-xs);font-weight:550;color:var(--fg);
   background:var(--surface);border:1px solid var(--ring);box-shadow:var(--elev-2);
   -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
   animation:toastIn var(--dur-2) var(--ease-spring) both;pointer-events:auto}
@@ -979,14 +979,14 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
 
 /* 空状态：图标 + 一句话 + 下一步动作 */
 .empty-state{gap:10px}
-.empty-state .empty-title{font-size:13.5px;font-weight:650;color:var(--fg-2nd)}
-.empty-state .empty-desc,.empty-state .empty-hint{font-size:11.5px;color:var(--fg-3rd);max-width:340px;
+.empty-state .empty-title{font-size:var(--fs-sm);font-weight:650;color:var(--fg-2nd)}
+.empty-state .empty-desc,.empty-state .empty-hint{font-size:var(--fs-2xs);color:var(--fg-3rd);max-width:340px;
   text-align:center;line-height:1.65}
 
 /* 打招呼区顶前的整号级提示（没填招呼语 = 一条都不会投） */
 .greet-alert{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 12px;
   padding:9px 12px;border-radius:10px;background:var(--warning-bg);
-  border:1px solid var(--warning-bg);color:var(--warning);font-size:12px;line-height:1.6}
+  border:1px solid var(--warning-bg);color:var(--warning);font-size:var(--fs-xs);line-height:1.6}
 .greet-alert .ki{flex-shrink:0}
 .greet-alert .greet-alert-names{font-weight:650}
 .greet-alert .btn{margin-left:auto;flex-shrink:0}
@@ -1009,6 +1009,71 @@ td.num,.stat-sub{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 
   .stat-card:hover,.btn:hover,.side-btn:hover,.boss-chat-item:hover{transform:none}
   .boss-msg-row,.pulse-once{animation:none}
 }
+
+/* ── 交付层 v3（2026-11-04）──────────────────────────────
+   这一团东西全是"数出来的"，不是审美偏好。改之前这份文件里有 21 种字号
+   （186 条 font-size 声明，其中 127 条低于 12px、16 条低于 10px——最小 8px）、
+   CSS 里 1120 个 px 字面值、表头一个 `scope` 都没有、0 个 aria-sort/aria-selected、
+   整份文档只有 8 个 aria 属性和 1 个 role，4 处 `outline:none` 却只有 3 处 :focus-visible。
+   翻译成人话：键盘 Tab 一圈看不见焦点在哪；读屏念不出"这一列是什么、这一行选没选"；
+   八成的说明文字小到要凑近屏幕看。 */
+
+/* primitive：真的字号阶梯 + 4px 基底的间距阶。两套主题共用，所以住在不带 data-theme 的 :root。
+   （上面那 186 条 font-size 已经全部改成引用这些变量，不再各写各的像素。） */
+:root{
+  --fs-2xs:11.5px;--fs-xs:12.5px;--fs-sm:13.5px;--fs-base:14.5px;--fs-md:16px;
+  --fs-lg:18px;--fs-xl:21px;--fs-2xl:27px;--fs-3xl:34px;--fs-4xl:44px;
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:20px;--sp-6:24px;
+  --sp-8:32px;--sp-10:40px;--sp-12:48px;--sp-16:64px;
+  --lh-tight:1.25;--lh-body:1.55;--lh-loose:1.7;
+  --hit-sm:28px;--hit-md:34px;      /* 桌面鼠标操作的最小可点面积（移动端的 44pt 在这儿不适用） */
+  --z-base:1;--z-sticky:20;--z-overlay:60;--z-modal:80;--z-toast:90;
+  --dur-1:.15s;--dur-2:.2s;--dur-3:.36s;
+}
+
+/* 焦点可见（WCAG 2.4.7 硬项）。不撤销那句 `outline:none`——它挡的是浏览器默认那圈
+   难看的黑框；这里补一圈真看得见的环：2px 实环 + 2px 外偏移，偏移走表面色，
+   压在毛玻璃上也不会糊成一团。 */
+:focus-visible{outline:2px solid var(--accent)!important;outline-offset:2px;border-radius:var(--r-sm)}
+.pool-f:focus-visible,.side-form-input:focus-visible,.record-search:focus-visible,
+.side-input:focus-visible,.adv-input:focus-visible{box-shadow:0 0 0 3px var(--accent-light)}
+/* 鼠标点一下不该留焦点环（那是键盘操作才需要的信号），所以只给 :focus-visible */
+:focus:not(:focus-visible){outline:none}
+
+/* 高对比 / 强制颜色模式：这两档以前完全没有。系统一开强对比，半透明表面和
+   rgba 边线会一起失效——玻璃好看和看得见只能选一个的话，选看得见。 */
+@media (prefers-contrast:more){
+  [data-theme="light"],:root{--surface:rgba(255,255,255,.95);--surface-soft:rgba(255,255,255,.9);
+    --bd:rgba(60,70,110,.55);--bd-2:rgba(60,70,110,.7);
+    --fg-2nd:#3c4053;--fg-3rd:#3c4053;--fg-4th:#4a4e62;--glass-blur:blur(4px)}
+  [data-theme="dark"]{--surface:rgba(18,21,34,.96);--surface-soft:rgba(255,255,255,.09);
+    --bd:rgba(255,255,255,.42);--bd-2:rgba(255,255,255,.55);
+    --fg-2nd:#dfe3f0;--fg-3rd:#dfe3f0;--fg-4th:#cdd2e2;--glass-blur:blur(4px)}
+}
+@media (forced-colors:active){
+  .card,.modal,.toast,.pool-tag,.greet-ai-badge,.stat-card,.side-btn,.btn-sm{border:1px solid CanvasText}
+  :focus-visible{outline:3px solid Highlight}
+}
+
+/* 状态完整性（空/加载/错误/边界/权限/离线那套矩阵）。这份面板以前只有"在读"和
+   一句"没有记录"，而"没有记录"有三种完全不同的成因：这张表本来就是空的、
+   筛选筛窄了、盘上那份读不出来。这一条查下来不用补：岗位池/回复/台账/日志四个视图
+   各自已经有区分这三样的文案（见 poolShowNotice 那三句），所以这里不另摆一套没人用的状态类。 */
+@keyframes uiSkel{from{background-position:120% 0}to{background-position:-20% 0}}
+
+/* 交互反馈：按下去要有位移，鼠标在哪一行要认得出来，选中行不只是换个底色
+   （1.4.1：不单靠颜色传达——左边那道 3px 是形状）。 */
+.btn-sm:not(:disabled):active,.side-btn:not(:disabled):active,
+.record-tab:not(:disabled):active,.pool-btn:not(:disabled):active{transform:translateY(1px)}
+.pool-table tbody tr:hover td{background:var(--surface-hover)}
+.pool-table tbody tr[aria-selected="true"] td{background:var(--accent-light)}
+.pool-table tbody tr[aria-selected="true"]{box-shadow:inset 3px 0 0 var(--accent)}
+
+/* 跳到主要内容：键盘用户进页面第一下就该能跳过整条左栏（以前只能 Tab 几十个按钮） */
+.skip-link{position:absolute;left:var(--sp-2);top:-48px;z-index:var(--z-toast);
+  background:var(--accent);color:#fff;padding:var(--sp-2) var(--sp-4);
+  border-radius:var(--r-sm);font-size:var(--fs-sm);transition:top var(--dur-1) var(--ease)}
+.skip-link:focus{top:var(--sp-2)}
 </style>
 <script>
 // 首帧就按上次的主题画：以前 HTML 写死 light，深色要等接口回来才改，每次开屏先白一下再转暗
@@ -1016,26 +1081,28 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
 </script>
 </head>
 <body>
-<button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="切换菜单"><i data-ki="menu"></i></button>
+<!-- 跳到主要内容：左栏一上来就是几十个按钮，键盘用户以前要 Tab 完那一整栏才碰得到表格 -->
+<a class="skip-link" href="#mainContent">跳到主要内容</a>
+<button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="切换菜单" aria-controls="side" aria-expanded="false"><i data-ki="menu"></i></button>
 <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 <div class="app">
-  <div class="side">
+  <div class="side" id="side" role="navigation" aria-label="账号与设置">
     <div class="side-head">
       <div class="logo-wrap"><i data-ki="briefcase"></i></div>
       <div class="logo-text">Boss直聘</div>
-      <span class="conn-badge" id="connStatus">已连接</span>
+      <span class="conn-badge" id="connStatus" role="status" aria-live="polite">已连接</span>
     </div>
     <div class="side-scroll" id="sideScroll">
       <div>
         <div class="side-section-title"><i data-ki="account"></i>账号 <span class="badge-count" id="accBadge">1</span></div>
         <div id="accountTabs" style="margin-bottom:6px"></div>
         <div class="side-btn-row">
-          <button class="side-btn side-btn-ghost side-btn-sm" onclick="addAccount()"><i data-ki="plus" style="font-size:12px;vertical-align:-2px;margin-right:2px"></i> 添加</button>
+          <button class="side-btn side-btn-ghost side-btn-sm" onclick="addAccount()"><i data-ki="plus" style="font-size:var(--fs-xs);vertical-align:-2px;margin-right:2px"></i> 添加</button>
           <button class="side-btn side-btn-ghost side-btn-sm side-btn-danger" onclick="deleteAccount()" title="删除当前账号"><i data-ki="delete"></i>删除</button>
         </div>
       </div>
       <div>
-        <div class="side-section-title"><i data-ki="settings"></i>账号设置 <span style="font-size:10px;color:var(--fg-4th);font-weight:400">(独立)</span> <span id="accConfigScope" style="font-size:10px;color:var(--fg-4th);font-weight:400"></span></div>
+        <div class="side-section-title"><i data-ki="settings"></i>账号设置 <span style="font-size:var(--fs-2xs);color:var(--fg-4th);font-weight:400">(独立)</span> <span id="accConfigScope" style="font-size:var(--fs-2xs);color:var(--fg-4th);font-weight:400"></span></div>
         <div class="acc-field-row"><label>名称</label><input class="side-form-input" id="accName" type="text" placeholder="主账号" onchange="onAccChange()"></div>
         <div class="acc-field-row"><label>Cookie</label>
           <div class="file-input-wrap">
@@ -1054,7 +1121,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
                     title="按这个账号自己的城市/岗位方向/简历画像重生成一条默认招呼语"><i data-ki="regenerate"></i>重新生成</button>
           </div>
         </div>
-        <div id="accGreetingMode" style="font-size:10px;margin-top:2px;line-height:1.5;color:var(--fg-4th)"></div>
+        <div id="accGreetingMode" style="font-size:var(--fs-2xs);margin-top:2px;line-height:1.5;color:var(--fg-4th)"></div>
         <!-- 取话顺序只留一行，完整规则挂在 title 上：左栏一屏装不下两段说明 -->
         <div class="side-hint" title="发送时按这个顺序取：AI 按岗位+公司+JD 现编的 &gt; 岗位里改过的 &gt; 上面这段账号招呼语。后两段只是兜底——AI 这次没编出来（接口挂了或编的话没过闸门）才轮到它们。这段空着时系统按本账号的城市/方向/简历画像生成一条默认（就是框里现在这句），改成你的话就以你的为准">
           取话顺序：AI 现编 &gt; 岗位改过的 &gt; 这段招呼语</div>
@@ -1069,10 +1136,10 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
         </div>
       </div>
       <div>
-        <div class="side-section-title"><i data-ki="ai"></i>AI 智能解析 <span class="badge-count" id="aiBadge">关</span> <span id="aiScopeNote" style="font-size:10px;color:var(--fg-4th);font-weight:400"></span></div>
+        <div class="side-section-title"><i data-ki="ai"></i>AI 智能解析 <span class="badge-count" id="aiBadge">关</span> <span id="aiScopeNote" style="font-size:var(--fs-2xs);color:var(--fg-4th);font-weight:400"></span></div>
         <div class="side-hint" style="color:var(--warning);display:flex;align-items:center;gap:5px;margin:0 0 4px"
              title="这个开关只管打招呼时的 AI 岗位判分；HR 来了消息的自动回复 AI 是常开的，关不掉"><i data-ki="alert-triangle"></i>只管打招呼的岗位判分；自动回复 AI 一直开</div>
-        <div class="acc-field-row" style="padding:6px 8px;border-radius:8px;background:var(--side-input-bg);border:1px solid var(--bd-2)"><label style="font-size:12px;font-weight:600">启用 AI</label><span id="aiEnabled" class="toggle-switch ai-switch" onclick="toggleAiEnabled()" style="margin-left:auto"></span></div>
+        <div class="acc-field-row" style="padding:6px 8px;border-radius:8px;background:var(--side-input-bg);border:1px solid var(--bd-2)"><label style="font-size:var(--fs-xs);font-weight:600">启用 AI</label><span id="aiEnabled" class="toggle-switch ai-switch" onclick="toggleAiEnabled()" style="margin-left:auto"></span></div>
         <div class="acc-field-row"><label>匹配阈值</label><input class="side-form-input" id="aiThreshold" type="number" min="0" max="100" placeholder="70" onchange="onAiChange()"></div>
         <div class="acc-field-row" title="一次岗位判分允许模型输出多少 token。带思考(reasoning)的接口会把预算花在思考上，不够就正文为空、这次判分作废换下一个接口">
           <label>判分预算 tokens</label><input class="side-form-input" id="aiAnalyzeMaxTokens" type="number" min="512" max="8192" step="128" placeholder="1600" onchange="onAiChange()"></div>
@@ -1085,7 +1152,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
           <label>判分单接口超时（秒）</label><input class="side-form-input" id="aiJudgeTimeout" type="number" min="0" max="60" step="1" placeholder="30" onchange="onAiChange()"></div>
         <button class="adv-toggle" id="aiProvToggle" onclick="toggleAiProviders()">
           <i data-ki="ai"></i>AI 接口列表 <i data-ki="chevron-right" class="arrow"></i>
-          <span id="aiProvSummary" style="margin-left:4px;font-size:10px;color:var(--fg-3rd);font-weight:400"></span>
+          <span id="aiProvSummary" style="margin-left:4px;font-size:var(--fs-2xs);color:var(--fg-3rd);font-weight:400"></span>
         </button>
         <div class="adv-section" id="aiProvSection">
           <div class="ai-health-bar">
@@ -1099,30 +1166,30 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
           <div id="aiProviders" style="margin-top:8px"></div>
         </div>
         <div class="acc-field-row acc-stack" style="margin-top:8px">
-          <label style="font-size:12px;font-weight:600">自定义筛选词</label>
+          <label style="font-size:var(--fs-xs);font-weight:600">自定义筛选词</label>
           <input class="side-form-input" id="customFilterKeywords" type="text" placeholder="输入筛选关键词，逗号或顿号分隔，如：主播、地推、需坐班" style="width:100%;box-sizing:border-box" onchange="onCustomAiChange()">
           <div class="side-hint" title="这些关键词会追加到 AI 打分提示词里，让它额外关注这些条件；一条一个词，逗号/顿号/分号都能分">追加进打分提示词，逗号或顿号分隔</div>
         </div>
         <div class="acc-field-row acc-stack" style="margin-top:8px">
-          <label style="font-size:12px;font-weight:600">岗位类型词（只看岗位标题）</label>
+          <label style="font-size:var(--fs-xs);font-weight:600">岗位类型词（只看岗位标题）</label>
           <input class="side-form-input" id="aiTitleVetoKeywords" type="text" placeholder="普工、主播、直播、快递、保洁、骑手" style="width:100%;box-sizing:border-box" onchange="onCustomAiChange()">
           <div class="side-hint" title="只查岗位标题，命中就不投、HR 发来交换微信/电话的卡片也只点「拒绝」。刻意不查 JD 正文：正文里"标注快递场景""直播间语音切片"到处都是，照正文杀会把数据标注、线上运营这些真正要的方向一起杀掉。标题里同时带"客服/运营/标注/剪辑"这类职业词的放行（直播运营助理、电商客服）">命中不投；职业词标题放行，交换卡片只拒</div>
         </div>
         <div class="acc-field-row acc-stack" style="margin-top:8px">
-          <label style="font-size:12px;font-weight:600">只投这些方向（标题或 JD 至少要命中一个）</label>
+          <label style="font-size:var(--fs-xs);font-weight:600">只投这些方向（标题或 JD 至少要命中一个）</label>
           <input class="side-form-input" id="aiTargetJobKeywords" type="text" placeholder="数据分析、数据挖掘、商业分析、SQL" style="width:100%;box-sizing:border-box" onchange="onCustomAiChange()">
           <div class="side-hint" title="投递这一侧以前只有减法（命中否决词就不投），可 BOSS 搜「数据分析」带出来的电商运营、资料录入一条否决词都不沾，照样投出去。这一栏是加法：标题和 JD 里一个都没命中就跳过，压根不点「立即沟通」。清空这一栏＝不做正向要求，回到只按否决词的老口径">一个都没命中就不投；清空＝不做正向要求</div>
         </div>
         <div class="acc-field-row" style="margin-top:6px">
-          <label for="aiVetoOnly" style="font-size:12px;font-weight:600">只看否决词</label>
+          <label for="aiVetoOnly" style="font-size:var(--fs-xs);font-weight:600">只看否决词</label>
           <div class="acc-inline">
             <input type="checkbox" id="aiVetoOnly" style="width:auto;flex-shrink:0" onchange="onCustomAiChange()">
-            <span class="side-hint" style="margin:0" title="勾上后 AI 的分数和&quot;方向不符/经验不符&quot;一律不拦，只有命中上面筛选词的岗位才不发。要放量时用；招呼语仍由 AI 按岗位现编。">只拦命中筛选词的，分数与方向一律放行</span>
+            <span class="side-hint" style="margin:0;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="勾上后 AI 的分数和&quot;方向不符/经验不符&quot;一律不拦，只有命中上面筛选词的岗位才不发。要放量时用；招呼语仍由 AI 按岗位现编。">命中筛词才不发</span>
           </div>
         </div>
         <div class="acc-field-row acc-stack" style="margin-top:6px">
-          <label style="font-size:12px;font-weight:600">自定义打分提示词</label>
-          <textarea id="customScoringPrompt" rows="3" placeholder="输入自定义打分要求，如：优先考虑有大数据经验的岗位，扣分项：加班严重、单休" style="width:100%;min-height:80px;box-sizing:border-box;padding:6px 8px;font-size:12px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg);color:var(--fg);resize:vertical;font-family:inherit" onchange="onCustomAiChange()"></textarea>
+          <label style="font-size:var(--fs-xs);font-weight:600">自定义打分提示词</label>
+          <textarea id="customScoringPrompt" rows="3" placeholder="输入自定义打分要求，如：优先考虑有大数据经验的岗位，扣分项：加班严重、单休" style="width:100%;min-height:80px;box-sizing:border-box;padding:6px 8px;font-size:var(--fs-xs);border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg);color:var(--fg);resize:vertical;font-family:inherit" onchange="onCustomAiChange()"></textarea>
           <div class="side-hint" title="追加到 AI 系统提示词后面，用于自定义打分标准；留空则使用系统默认打分逻辑">追加到系统提示词；留空=用默认打分逻辑</div>
         </div>
         <div class="side-btn-row" style="margin-top:6px;flex-wrap:wrap">
@@ -1134,16 +1201,16 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
           <button class="side-btn side-btn-ghost side-btn-sm" onclick="showTemplatesModal()"><i data-ki="edit-template"></i>编辑模板</button>
           <button class="side-btn side-btn-ghost side-btn-sm" onclick="showEvolutionModal()"><i data-ki="evolve"></i>自进化</button>
         </div>
-        <div id="aiStatus" style="font-size:10px;color:var(--fg-3rd);margin-top:4px;word-break:break-all"></div>
+        <div id="aiStatus" style="font-size:var(--fs-2xs);color:var(--fg-3rd);margin-top:4px;word-break:break-all"></div>
         <!-- AI 测试对比面板 -->
         <div class="ai-test-panel" style="margin-top:10px;border:1px solid var(--bd-2);border-radius:8px;padding:10px">
-          <div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin-bottom:6px">AI 测试对比</div>
-          <textarea id="aiTestJobDesc" placeholder="粘贴岗位描述（JD）进行测试..." style="width:100%;min-height:60px;padding:6px 8px;font-size:11px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg);color:var(--fg);resize:vertical;box-sizing:border-box;margin-bottom:6px"></textarea>
+          <div style="font-size:var(--fs-2xs);font-weight:600;color:var(--fg-2nd);margin-bottom:6px">AI 测试对比</div>
+          <textarea id="aiTestJobDesc" placeholder="粘贴岗位描述（JD）进行测试..." style="width:100%;min-height:60px;padding:6px 8px;font-size:var(--fs-2xs);border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg);color:var(--fg);resize:vertical;box-sizing:border-box;margin-bottom:6px"></textarea>
           <div class="side-btn-row" style="margin-bottom:6px;flex-wrap:wrap">
             <button class="side-btn side-btn-ghost side-btn-sm" onclick="runAiTest()"><i data-ki="start"></i>运行测试</button>
             <button class="side-btn side-btn-ghost side-btn-sm" onclick="clearAiTest()"><i data-ki="clear"></i>清空</button>
           </div>
-          <div id="aiTestResults" style="font-size:10.5px;color:var(--fg-2nd);max-height:200px;overflow-y:auto"></div>
+          <div id="aiTestResults" style="font-size:var(--fs-2xs);color:var(--fg-2nd);max-height:200px;overflow-y:auto"></div>
         </div>
       </div>
       <div style="flex:1">
@@ -1154,19 +1221,19 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
           <div class="adv-section" id="advSection">
             <div class="adv-group-title">浏览器</div>
             <div class="adv-field-row"><label>浏览器</label>
-              <select class="side-form-input" id="advBrowserType" onchange="onAdvChange()" style="flex:1;padding:4px 6px;border-radius:4px;border:1px solid var(--bd-2);background:var(--side-input-bg);color:var(--fg-2nd);font-size:12px">
+              <select class="side-form-input" id="advBrowserType" onchange="onAdvChange()" style="flex:1;padding:4px 6px;border-radius:4px;border:1px solid var(--bd-2);background:var(--side-input-bg);color:var(--fg-2nd);font-size:var(--fs-xs)">
                 <option value="chrome">Google Chrome</option>
                 <option value="edge">Microsoft Edge</option>
               </select>
             </div>
-            <div class="adv-field-row"><label>无头</label><span id="advHeadless" class="toggle-switch" onclick="toggleAdvBool('headless')"></span><span id="advHeadlessReal" style="font-size:11px;color:var(--fg-3rd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="开关说的是配置；这里问的是浏览器本身，启动那一刻就定型了">实际：读取中…</span></div>
+            <div class="adv-field-row"><label>无头</label><span id="advHeadless" class="toggle-switch" onclick="toggleAdvBool('headless')"></span><span id="advHeadlessReal" style="font-size:var(--fs-2xs);color:var(--fg-3rd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="开关说的是配置；这里问的是浏览器本身，启动那一刻就定型了">实际：读取中…</span></div>
             <div class="adv-field-row"><label>后台</label><span id="advBackground" class="toggle-switch" onclick="toggleAdvBool('background')"></span></div>
             <div class="adv-field-row"><label>回收(MB)</label><input class="side-form-input" id="advMemoryRecycle" type="number" min="0" step="100" placeholder="1600" onchange="onAdvChange()" title="这个号的浏览器整棵树涨到这么多 MB 就在一轮跑完的空档重开一次（挂机一天会从 0.7 GB 涨到 2.5 GB，机器开始换页就卡）；写 0 = 不回收。重开不掉登录。"></div>
             <div class="adv-field-row"><label>宽度</label><input class="side-form-input" id="advViewportW" type="number" placeholder="1280" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label>高度</label><input class="side-form-input" id="advViewportH" type="number" placeholder="800" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label>超时(s)</label><input class="side-form-input" id="advTimeout" type="number" placeholder="30" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label title="整页加载等到哪一步才算完。默认 DOM就绪：以前按「全都加载完」等，10-24 实测启动一趟四次整页加载各 126~135 秒，527 秒里 508 秒都花在等图片和统计脚本，而抓取/回复本来就各自等自己的元素，不需要浏览器替它们等。改成 DOM就绪要重启这个号才换（这是浏览器的启动参数）。全部加载完=老行为，最快=发了导航就走（最容易读到空 DOM，只在别的都不行时试）">加载等到</label>
-              <select class="side-form-input" id="advLoadMode" onchange="onAdvChange()" style="flex:1;padding:4px 6px;border-radius:4px;border:1px solid var(--bd-2);background:var(--side-input-bg);color:var(--fg-2nd);font-size:12px">
+              <select class="side-form-input" id="advLoadMode" onchange="onAdvChange()" style="flex:1;padding:4px 6px;border-radius:4px;border:1px solid var(--bd-2);background:var(--side-input-bg);color:var(--fg-2nd);font-size:var(--fs-xs)">
                 <option value="eager">DOM就绪（默认）</option>
                 <option value="normal">全部加载完</option>
                 <option value="none">最快（不等）</option>
@@ -1222,13 +1289,13 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
             <div class="adv-group-title">历史数据体积闸</div>
             <div class="adv-field-row"><label title="data/ + logs/ 一共涨到这么多 MB 才开始删按天的旧历史（归档盒、logs/kept、data/kept 的留档副本）。没到线一个字节都不动。写 0 = 不看体积，每轮都只留下面那些天。Cookie 备份那一族永远不在这个闸的射程里——总共 0.1 MB，删了不省地方，代价是掉登录。">到线就清(MB)</label><input class="side-form-input" id="advHistoryCleanupMb" type="number" min="0" step="50" placeholder="500" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label title="动手那一天往回数，只留这么多天的按天历史。下限 1 天：填 0 也不会把今天删掉">只留(天)</label><input class="side-form-input" id="advHistoryKeepDays" type="number" min="1" max="365" step="1" placeholder="3" onchange="onAdvChange()"></div>
-            <div class="adv-field-row"><label>&nbsp;</label><span id="advHistoryNote" style="font-size:11px;color:var(--fg-3rd);line-height:1.5;white-space:normal">历史数据体积：读取中…</span></div>
+            <div class="adv-field-row"><label>&nbsp;</label><span id="advHistoryNote" style="font-size:var(--fs-2xs);color:var(--fg-3rd);line-height:1.5;white-space:normal">历史数据体积：读取中…</span></div>
           </div>
         </div>
 
-        <div class="side-section-title"><i data-ki="jobs"></i>岗位列表 <span class="badge-count" id="sbarJobCount">0</span> <span id="sbarJobScope" style="font-size:10px;color:var(--fg-4th);font-weight:400"></span></div>
+        <div class="side-section-title"><i data-ki="jobs"></i>岗位列表 <span class="badge-count" id="sbarJobCount">0</span> <span id="sbarJobScope" style="font-size:var(--fs-2xs);color:var(--fg-4th);font-weight:400"></span></div>
         <div id="sbarJobs" style="display:flex;flex-direction:column;min-height:40px"></div>
-        <button class="side-btn side-btn-ghost side-btn-sm side-btn-block" onclick="addJob()" style="margin-top:6px;padding:8px 12px;font-size:11px;font-weight:500;border:1px dashed var(--bd-2);background:var(--side-input-bg);border-radius:6px;cursor:pointer" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--bd-2)';this.style.color='var(--fg-2nd)'">+ 添加岗位</button>
+        <button class="side-btn side-btn-ghost side-btn-sm side-btn-block" onclick="addJob()" style="margin-top:6px;padding:8px 12px;font-size:var(--fs-2xs);font-weight:500;border:1px dashed var(--bd-2);background:var(--side-input-bg);border-radius:6px;cursor:pointer" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--bd-2)';this.style.color='var(--fg-2nd)'">+ 添加岗位</button>
       </div>
 
       <!-- 配置预览区域：整份配置的取值一览，默认收起（展开会占掉半栏，把要填的表单挤出首屏） -->
@@ -1266,7 +1333,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
   </div>
   <div class="main">
     <div class="topbar">
-      <div class="topbar-title"><i data-ki="zap" style="font-size:18px;vertical-align:-3px;margin-right:4px"></i><span class="highlight">AI</span> 自动投递</div>
+      <div class="topbar-title"><i data-ki="zap" style="font-size:var(--fs-lg);vertical-align:-3px;margin-right:4px"></i><span class="highlight">AI</span> 自动投递</div>
       <div class="topbar-task" id="topbarTask"></div>
       <div class="topbar-right">
         <span class="topbar-badge">v2.0</span>
@@ -1276,12 +1343,12 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
         </button>
       </div>
     </div>
-    <div class="content">
-      <div class="stats-grid">
-        <div class="stat-card accent"><div class="stat-label"><i data-ki="sent-total"></i>累计投递</div><div class="stat-value" id="statTotal">0</div><div class="stat-sub" id="statTotalSub">历史打招呼成功数</div></div>
-        <div class="stat-card success"><div class="stat-label"><i data-ki="sent-today"></i>已投递</div><div class="stat-value" id="statApplied">0</div><div class="stat-sub" id="statAppliedSub">每日上限 150</div></div>
-        <div class="stat-card warning"><div class="stat-label"><i data-ki="resume-in"></i>接收简历</div><div class="stat-value" id="statResume">0</div><div class="stat-sub" id="statResumeSub">累计 0</div></div>
-        <div class="stat-card info"><div class="stat-label"><i data-ki="interview"></i>面试数</div><div class="stat-value" id="statInterview">0</div><div class="stat-sub" id="statInterviewSub">累计 0 · 按会话去重</div></div>
+    <div class="content" id="mainContent" role="main">
+      <div class="stats-grid" role="group" aria-label="四个指标卡（数字随状态轮询刷新）">
+        <div class="stat-card accent"><div class="stat-label"><i data-ki="sent-total"></i>累计投递</div><div class="stat-value" id="statTotal" aria-live="polite">0</div><div class="stat-sub" id="statTotalSub">历史打招呼成功数</div></div>
+        <div class="stat-card success"><div class="stat-label"><i data-ki="sent-today"></i>已投递</div><div class="stat-value" id="statApplied" aria-live="polite">0</div><div class="stat-sub" id="statAppliedSub">每日上限 150</div></div>
+        <div class="stat-card warning"><div class="stat-label"><i data-ki="resume-in"></i>接收简历</div><div class="stat-value" id="statResume" aria-live="polite">0</div><div class="stat-sub" id="statResumeSub">累计 0</div></div>
+        <div class="stat-card info"><div class="stat-label"><i data-ki="interview"></i>面试数</div><div class="stat-value" id="statInterview" aria-live="polite">0</div><div class="stat-sub" id="statInterviewSub">累计 0 · 按会话去重</div></div>
       </div>
       <div class="metrics-scope" id="metricsScope"></div>
       <div class="action-bar">
@@ -1308,23 +1375,23 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
       <div class="panel-row">
         <div class="panel panel-full">
           <div class="panel-header"><span class="panel-icon"><i data-ki="file-text"></i></span><span class="panel-title">投递记录</span><div class="panel-actions"><button class="btn btn-ghost btn-sm" id="btnClearRecord" onclick="clearCurrentRecordTab()"><i data-ki="clear"></i>清空</button></div></div>
-          <div class="record-tabs" style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto">
-            <button class="record-tab active" onclick="switchRecordTab('greet')"><i data-ki="greet"></i>打招呼记录 <span class="tab-count" id="greetTabCount">0</span></button>
-            <button class="record-tab" onclick="switchRecordTab('reply')"><i data-ki="reply"></i>回复记录 <span class="tab-count" id="replyTabCount">0</span></button>
-            <button class="record-tab" onclick="switchRecordTab('contact')"><i data-ki="clipboard-list"></i>联系与简历 <span class="tab-count" id="contactTabCount">0</span></button>
-            <button class="record-tab" onclick="switchRecordTab('pool')"><i data-ki="jobs"></i>岗位候选池 <span class="tab-count" id="poolTabCount">0</span></button>
+          <div class="record-tabs" role="tablist" aria-label="记录视图" style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;overflow-x:auto">
+            <button class="record-tab active" role="tab" id="tab-greet" aria-selected="true" aria-controls="greetTabContent" onclick="switchRecordTab('greet')"><i data-ki="greet"></i>打招呼记录 <span class="tab-count" id="greetTabCount">0</span></button>
+            <button class="record-tab" role="tab" id="tab-reply" aria-selected="false" aria-controls="replyTabContent" tabindex="-1" onclick="switchRecordTab('reply')"><i data-ki="reply"></i>回复记录 <span class="tab-count" id="replyTabCount">0</span></button>
+            <button class="record-tab" role="tab" id="tab-contact" aria-selected="false" aria-controls="contactTabContent" tabindex="-1" onclick="switchRecordTab('contact')"><i data-ki="clipboard-list"></i>联系与简历 <span class="tab-count" id="contactTabCount">0</span></button>
+            <button class="record-tab" role="tab" id="tab-pool" aria-selected="false" aria-controls="poolTabContent" tabindex="-1" onclick="switchRecordTab('pool')"><i data-ki="jobs"></i>岗位候选池 <span class="tab-count" id="poolTabCount">0</span></button>
             <!-- 打招呼筛选栏（和tab同一行） -->
-            <div id="greetFilterBar" style="display:flex;align-items:center;gap:4px 6px;flex:1;justify-content:flex-end;flex-wrap:wrap;font-size:11px">
+            <div id="greetFilterBar" style="display:flex;align-items:center;gap:4px 6px;flex:1;justify-content:flex-end;flex-wrap:wrap;font-size:var(--fs-2xs)">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">开始</label>
-              <input type="date" id="greetFilterDateStart" style="width:130px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyGreetFilter()" oninput="applyGreetFilter()">
+              <input type="date" id="greetFilterDateStart" style="width:130px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:var(--fs-2xs);background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyGreetFilter()" oninput="applyGreetFilter()">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">结束</label>
-              <input type="date" id="greetFilterDateEnd" style="width:130px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyGreetFilter()" oninput="applyGreetFilter()">
+              <input type="date" id="greetFilterDateEnd" style="width:130px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:var(--fs-2xs);background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyGreetFilter()" oninput="applyGreetFilter()">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">薪资≥</label>
-              <input type="number" id="greetFilterSalaryMin" placeholder="K" style="width:50px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyGreetFilter()" oninput="applyGreetFilter()">
+              <input type="number" id="greetFilterSalaryMin" placeholder="K" style="width:50px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:var(--fs-2xs);background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyGreetFilter()" oninput="applyGreetFilter()">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">岗位</label>
-              <input type="text" id="greetFilterJob" placeholder="数据分析" style="width:80px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyGreetFilter()" oninput="applyGreetFilter()">
+              <input type="text" id="greetFilterJob" placeholder="数据分析" style="width:80px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:var(--fs-2xs);background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyGreetFilter()" oninput="applyGreetFilter()">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">状态</label>
-              <select id="greetFilterStatus" style="width:80px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyGreetFilter()" oninput="applyGreetFilter()">
+              <select id="greetFilterStatus" style="width:80px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:var(--fs-2xs);background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyGreetFilter()" oninput="applyGreetFilter()">
                 <option value="">全部</option>
                 <option value="success">成功</option>
                 <option value="skip">跳过</option>
@@ -1337,15 +1404,15 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
               <span id="greetFilterCount" style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0"></span>
             </div>
             <!-- 回复筛选栏（和tab同一行，默认隐藏） -->
-            <div id="replyFilterBar" style="display:none;align-items:center;gap:4px 6px;flex:1;justify-content:flex-end;flex-wrap:wrap;font-size:11px">
+            <div id="replyFilterBar" style="display:none;align-items:center;gap:4px 6px;flex:1;justify-content:flex-end;flex-wrap:wrap;font-size:var(--fs-2xs)">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">开始</label>
-              <input type="date" id="replyFilterDateStart" style="width:130px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyReplyFilter()" oninput="applyReplyFilter()">
+              <input type="date" id="replyFilterDateStart" style="width:130px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:var(--fs-2xs);background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyReplyFilter()" oninput="applyReplyFilter()">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">结束</label>
-              <input type="date" id="replyFilterDateEnd" style="width:130px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyReplyFilter()" oninput="applyReplyFilter()">
+              <input type="date" id="replyFilterDateEnd" style="width:130px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:var(--fs-2xs);background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyReplyFilter()" oninput="applyReplyFilter()">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">岗位</label>
-              <input type="text" id="replyFilterJob" placeholder="数据分析" style="width:80px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyReplyFilter()" oninput="applyReplyFilter()">
+              <input type="text" id="replyFilterJob" placeholder="数据分析" style="width:80px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:var(--fs-2xs);background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyReplyFilter()" oninput="applyReplyFilter()">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">来源</label>
-              <select id="replyFilterSource" style="width:96px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyReplyFilter()" oninput="applyReplyFilter()">
+              <select id="replyFilterSource" style="width:96px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:var(--fs-2xs);background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyReplyFilter()" oninput="applyReplyFilter()">
                 <option value="">全部</option>
                 <option value="ai">机器自动</option>
                 <option value="rule">规则匹配</option>
@@ -1365,7 +1432,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
                 <option value="skip">跳过</option>
               </select>
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">状态</label>
-              <select id="replyFilterStatus" style="width:80px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyReplyFilter()" oninput="applyReplyFilter()">
+              <select id="replyFilterStatus" style="width:80px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:var(--fs-2xs);background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyReplyFilter()" oninput="applyReplyFilter()">
                 <option value="">全部</option>
                 <option value="replied">已回复</option>
                 <option value="skipped">跳过</option>
@@ -1377,14 +1444,14 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
             </div>
             <!-- 岗位池筛选栏（和tab同一行，默认隐藏）。筛的是服务端：池按号存文件，
                  一次可能几百条，前端拿全量再筛会把这一屏拖住 -->
-            <div id="poolFilterBar" style="display:none;align-items:center;gap:4px 6px;flex:1;justify-content:flex-end;flex-wrap:wrap;font-size:11px">
+            <div id="poolFilterBar" style="display:none;align-items:center;gap:4px 6px;flex:1;justify-content:flex-end;flex-wrap:wrap;font-size:var(--fs-2xs)">
               <!-- 逐列的筛选框在表头下面那一行（.pool-filter-row）：状态、城市、薪资、
                    AI 精筛、本地粗筛、备注、抓到，跟列对齐摆。这里只留跨列的东西
                    （搜全部、排序、按钮、计数）——同一个筛选项两处都有，早晚筛出两个结果 -->
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">搜全部</label>
-              <input type="text" id="poolFilterQ" placeholder="岗位/公司/备注/城市" style="width:136px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()">
+              <input type="text" id="poolFilterQ" placeholder="岗位/公司/备注/城市" style="width:136px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:var(--fs-2xs);background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()">
               <label style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0">排序</label>
-              <select id="poolFilterSort" style="width:86px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:11px;background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyPoolFilter()">
+              <select id="poolFilterSort" style="width:86px;padding:2px 4px;border:1px solid var(--border-2nd);border-radius:4px;font-size:var(--fs-2xs);background:var(--bg-1st);color:var(--fg-1st);flex-shrink:0" onchange="applyPoolFilter()">
                 <option value="分降">AI 分高在前</option>
                 <option value="新抓的在前">刚抓到的在前</option>
               </select>
@@ -1404,25 +1471,25 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
               <span id="poolFilterCount" style="color:var(--fg-3rd);white-space:nowrap;flex-shrink:0"></span>
             </div>
           </div>
-          <div class="record-tab-content active" id="greetTabContent" style="padding:0;flex:1;overflow-y:auto">
+          <div class="record-tab-content active" role="tabpanel" id="greetTabContent" aria-labelledby="tab-greet" tabindex="0" style="padding:0;flex:1;overflow:auto">
             <div id="greetAlert" class="greet-alert" style="display:none"><i data-ki="alert-triangle" style="width:14px;height:14px"></i><span><span class="greet-alert-names" id="greetAlertNames"></span> <span id="greetAlertWhy"></span></span><button class="btn btn-ghost btn-sm" id="greetAlertGo"><i data-ki="edit"></i>去填写</button></div>
             <table class="greet-table" id="greetTable">
               <!-- 列宽是 10-31 现量出来的（141 行逐格克隆量内容宽，见 .cell-wrap 那条注释）：
                    每一列都写死宽度，只有"跳过原因"分容器富余——它中位 185px、最长 964px，是这张表唯一吃得下富余的列。
                    时间 72（字最多 69）/ 岗位 150+换两行（中位 92、p90 210）/ 公司 140+换两行（p90 140）
                    / 城市 108（两行：市 + 区，106）/ 薪资 110（108）/ 状态 88（88）/ AI 44（徽章 32） -->
-              <thead><tr><th style="width:72px">时间</th><th style="width:150px">岗位</th><th style="width:140px">公司</th><th style="width:108px">城市</th><th style="width:110px">薪资</th><th style="width:88px">状态</th><th>跳过原因</th><th style="width:44px">AI</th></tr></thead>
+              <thead><tr><th scope="col" style="width:72px">时间</th><th scope="col" style="width:150px">岗位</th><th scope="col" style="width:140px">公司</th><th scope="col" style="width:108px">城市</th><th scope="col" style="width:110px">薪资</th><th scope="col" style="width:88px">状态</th><th scope="col">跳过原因</th><th scope="col" style="width:44px">AI</th></tr></thead>
               <tbody id="greetTableBody"></tbody>
             </table>
             <div class="empty-state" id="greetEmpty" style="height:100%;min-height:200px">
               <div class="empty-icon"><i data-ki="empty-greet"></i></div>
-              <div class="empty-desc" style="font-size:13px;font-weight:600;margin-top:8px">暂无投递记录</div>
-              <div class="empty-hint" style="font-size:11px;color:var(--fg-3rd);margin-top:4px">
+              <div class="empty-desc" style="font-size:var(--fs-sm);font-weight:600;margin-top:8px">暂无投递记录</div>
+              <div class="empty-hint" style="font-size:var(--fs-2xs);color:var(--fg-3rd);margin-top:4px">
                 点击上方 <span style="color:var(--accent);font-weight:600">启动</span> 按钮开始自动投递
               </div>
             </div>
           </div>
-          <div class="record-tab-content" id="replyTabContent" style="padding:0;flex:1;overflow-y:auto">
+          <div class="record-tab-content" role="tabpanel" id="replyTabContent" aria-labelledby="tab-reply" tabindex="0" style="padding:0;flex:1;overflow:auto">
 
             <div id="bossChatWrap" class="boss-chat-wrap">
               <div class="boss-chat-sidebar">
@@ -1442,13 +1509,13 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
             </div>
             <div class="empty-state" id="replyEmpty" style="height:100%;min-height:200px;display:none">
               <div class="empty-icon"><i data-ki="empty-reply"></i></div>
-              <div class="empty-desc" style="font-size:13px;font-weight:600;margin-top:8px">暂无回复记录</div>
-              <div class="empty-hint" style="font-size:11px;color:var(--fg-3rd);margin-top:4px">
+              <div class="empty-desc" style="font-size:var(--fs-sm);font-weight:600;margin-top:8px">暂无回复记录</div>
+              <div class="empty-hint" style="font-size:var(--fs-2xs);color:var(--fg-3rd);margin-top:4px">
                 启动机器人后，收到消息将自动回复并记录在此
               </div>
             </div>
           </div>
-          <div class="record-tab-content" id="contactTabContent" style="padding:0;flex:1;overflow-y:auto">
+          <div class="record-tab-content" role="tabpanel" id="contactTabContent" aria-labelledby="tab-contact" tabindex="0" style="padding:0;flex:1;overflow:auto">
             <div class="ledger-note">这张表每行是一个「聊到留联系方式或收发简历」的会话，现算自会话存档，不另存一份。「依据」列就是被判进来的那句原话，判错了照它改判据。点号码可复制。<br>「微信名」是 BOSS 那张「××的微信号」卡片上印的名字——别人在微信里加你，显示的就是这一串，它跟左边 BOSS 会话名<b>可能不是同一个字</b>（盘上实测有 3 单不一致），所以认人只认这一列，别拿会话名去搜。<br>上面那个框是认人用的：微信里那串名字粘进去，就照出他是哪个 HR、哪家公司、开的多少钱——档位按钮管"给到没有"，这个框管"这是谁"，两个一起用是交集。<br>「要过·未发」发不出去时先查 BOSS 的附件大小上限 <b>2000K</b>：超了每次点发送都会被拒（页面提示"附件简历大小超出限制"），要换小一点的那份简历重传到【简历·附件简历】。现在机器只认"我方气泡里出现简历条目"才算发成功，不会再拿 HR 那句"发份简历"当送达。</div>
             <div class="ledger-bar" id="contactStatsBar">
               <div class="ledger-stats" id="contactStats">正在统计…</div>
@@ -1464,28 +1531,28 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
               <!-- 10-31：富余以前给的是"号码 / 微信号"（一串手机号 ~130px，宽屏上整列是空的），
                    现在给"依据原话"——这张表唯一会长到几十上百字的列，并允许换两行 -->
               <thead><tr>
-                <th style="width:84px">时间</th>
-                <th style="width:34px">号</th>
-                <th style="width:150px">HR·公司</th>
-                <th style="width:150px">岗位</th>
-                <th style="width:124px">薪资·城市</th>
-                <th style="width:88px">联系方式</th>
-                <th style="width:110px">微信名</th>
-                <th style="width:150px">号码 / 微信号</th>
-                <th style="width:84px">简历</th>
-                <th>依据原话</th>
+                <th scope="col" style="width:84px">时间</th>
+                <th scope="col" style="width:34px">号</th>
+                <th scope="col" style="width:150px">HR·公司</th>
+                <th scope="col" style="width:150px">岗位</th>
+                <th scope="col" style="width:124px">薪资·城市</th>
+                <th scope="col" style="width:88px">联系方式</th>
+                <th scope="col" style="width:110px">微信名</th>
+                <th scope="col" style="width:150px">号码 / 微信号</th>
+                <th scope="col" style="width:84px">简历</th>
+                <th scope="col">依据原话</th>
               </tr></thead>
               <tbody id="contactTableBody"></tbody>
             </table>
             <div class="empty-state" id="contactEmpty" style="height:100%;min-height:200px;display:none">
               <div class="empty-icon"><i data-ki="empty-reply"></i></div>
-              <div class="empty-desc" style="font-size:13px;font-weight:600;margin-top:8px">还没有拿到联系方式或发出简历的会话</div>
-              <div class="empty-hint" style="font-size:11px;color:var(--fg-3rd);margin-top:4px">
+              <div class="empty-desc" style="font-size:var(--fs-sm);font-weight:600;margin-top:8px">还没有拿到联系方式或发出简历的会话</div>
+              <div class="empty-hint" style="font-size:var(--fs-2xs);color:var(--fg-3rd);margin-top:4px">
                 对方同意交换微信/电话、或简历发出去之后，会话会自动进这张表
               </div>
             </div>
           </div>
-          <div class="record-tab-content" id="poolTabContent" style="padding:0;flex:1;overflow:auto">
+          <div class="record-tab-content" role="tabpanel" id="poolTabContent" aria-labelledby="tab-pool" tabindex="0" style="padding:0;flex:1;overflow:auto">
             <div class="pool-note">抓来的岗位先进这张表，<b>不自动沟通</b>：勾上「投递」的那几条才由打招呼线程按冷却投出去。<b>勾了就等于你判过了</b>——投递那一步不再拿否决词、方向词、AI 结论把这条弹回来，只有真投不出去才会停（BOSS 侧已有会话、页面被风控挡住、点了没出聊天框、这一刻这句话过不了发送闸门）。<b>这两档是按他划的线分的（11-04 口径）</b>：AI 分 ≥ 自动投线的那一档由「自动投」那颗开关决定要不要机器自己勾着投（开关关着就一条都不动，只当提示）；自动线以下、待你看线以上的留在表里等他自己在「状态」那一格改成「已勾待投」；<b>低于待你看线的（现在填的 60）不再占这张表</b>——那一族（普工/主播/老师/中介这一类，11-04 现数是池里 88% 的行）由机器挪进 <code>data/job_pool_screened_out*.json</code>，一行都不删，换一份「AI 自定义筛选」要求文件它们就会回来重判。<b>表头下面那一行按列筛</b>：填哪一格就只看那一列（两格一起填是交集），薪资按「元/月」折过再比——时薪按 8 小时×22 天、日薪按 22 天，「面议」不参与；「重置」一次清干净。<b>BOSS 侧已经有会话的岗位不进这张表</b>（机器以前招呼过的都记在去重库里，勾了也只会被判「已沟通过」，所以抓的时候就拦掉；那几条要看去「打招呼记录」）。<b>「上次没投出去」是黄字不是红字</b>：那一类是话术这一刻过不了发送闸门，你把画像或招呼语改对，下一轮它自己就投走了。<b>本地粗筛</b>是词表白拿（不要钱），只贴标签不删人；<b>AI 精筛</b>每号每轮有额度，没判到的显示「未判」，下一轮自己补——这两栏是给你挑的时候看的，不是替你决定。<b>池按号分开存</b>：「全部账号」把两号并成一张表看（每行标着是哪个号），改哪一行就写回哪一行的号；切到具体某个号就只看那一个。</div>
             <!-- AI 自定义筛选：把「我的要求」交给 AI，按它把池里的岗位逐条重判 -->
             <div class="ai-screen-panel" id="aiScreenPanel">
@@ -1530,34 +1597,34 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
             </div>
             <table class="greet-table" id="poolTable" style="display:none">
               <thead><tr>
-                <th class="pool-sel"><label title="全选本页筛出来的岗位（再点一次取消；Shift+点行首可连续勾一段）"><input type="checkbox" id="poolCheckAll" onchange="poolCheckAll(this.checked)" aria-label="全选本页筛出的岗位"></label></th>
+                <th scope="col" class="pool-sel"><label title="全选本页筛出来的岗位（再点一次取消；Shift+点行首可连续勾一段）"><input type="checkbox" id="poolCheckAll" onchange="poolCheckAll(this.checked)" aria-label="全选本页筛出的岗位"></label></th>
                 <!-- 岗位/判分理由两列不写宽度=分容器富余；其余每列按 10-31 现量到的
                      最宽内容给（公司 152、城市 140、薪资 115、状态里的下拉 106、操作两个按钮 83），
                      状态和操作以前是 96/76，180 行里 180 行都在裁字 -->
-                <th>岗位</th>
-                <th style="width:140px">公司</th>
-                <th style="width:110px">城市</th>
-                <th style="width:112px">薪资</th>
-                <th style="width:126px">AI 精筛</th>
-                <th>判分理由</th>
-                <th style="width:112px">本地粗筛</th>
-                <th style="width:110px">状态</th>
-                <th style="width:118px">备注</th>
-                <th style="width:66px">抓到</th>
-                <th style="width:90px">操作</th>
+                <th scope="col">岗位</th>
+                <th scope="col" style="width:140px">公司</th>
+                <th scope="col" style="width:110px">城市</th>
+                <th scope="col" style="width:112px">薪资</th>
+                <th scope="col" style="width:126px">AI 精筛</th>
+                <th scope="col">判分理由</th>
+                <th scope="col" style="width:112px">本地粗筛</th>
+                <th scope="col" style="width:110px">状态</th>
+                <th scope="col" style="width:118px">备注</th>
+                <th scope="col" style="width:66px">抓到</th>
+                <th scope="col" style="width:90px">操作</th>
               </tr>
               <!-- 表头下面这一行是逐列筛选：每一格只管自己那一列，判据全在
                    job_pool.筛行 那一份里（单号视图与「全部账号」合并视图共用）。
                    整行是静态 HTML，轮询只重画 tbody —— 不然他打字打到一半就被冲掉 -->
               <tr class="pool-filter-row">
-                <th class="pool-sel" aria-label="筛选"><i data-ki="filter" class="pool-f-icon" title="这一行按列筛岗位：填哪一格就筛哪一列"></i></th>
-                <th><input class="pool-f" type="text" id="poolFilterJob" placeholder="含岗位名" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()"></th>
-                <th><input class="pool-f" type="text" id="poolFilterCompany" placeholder="含公司" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()"></th>
-                <th><select class="pool-f" id="poolFilterCity" onchange="applyPoolFilter()" title="选项是接口现算的整池城市清单（不受当前筛选影响），选中哪个筛哪个">
+                <th scope="col" class="pool-sel" aria-label="筛选"><i data-ki="filter" class="pool-f-icon" title="这一行按列筛岗位：填哪一格就筛哪一列"></i></th>
+                <th scope="col"><input class="pool-f" type="text" id="poolFilterJob" placeholder="含岗位名" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()"></th>
+                <th scope="col"><input class="pool-f" type="text" id="poolFilterCompany" placeholder="含公司" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()"></th>
+                <th scope="col"><select class="pool-f" id="poolFilterCity" onchange="applyPoolFilter()" title="选项是接口现算的整池城市清单（不受当前筛选影响），选中哪个筛哪个">
                   <option value="">全部城市</option>
                 </select></th>
-                <th><input class="pool-f" type="number" min="0" step="1" id="poolFilterSalaryK" placeholder="≥ K/月" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()" title="按「元/月」比：8-10K 算 8000，211-221元/天 按 22 天折，31-36元/时 按 8 小时×22 天折；面议和反爬字体读不出的不参与"></th>
-                <th><select class="pool-f" id="poolFilterAiState" onchange="applyPoolFilter()" title="这两档和机器自动投用的是同一句判据（job_pool.投递分档），数字来自配置里那两条线">
+                <th scope="col"><input class="pool-f" type="number" min="0" step="1" id="poolFilterSalaryK" placeholder="≥ K/月" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()" title="按「元/月」比：8-10K 算 8000，211-221元/天 按 22 天折，31-36元/时 按 8 小时×22 天折；面议和反爬字体读不出的不参与"></th>
+                <th scope="col"><select class="pool-f" id="poolFilterAiState" onchange="applyPoolFilter()" title="这两档和机器自动投用的是同一句判据（job_pool.投递分档），数字来自配置里那两条线">
                   <option value="">全部</option>
                   <option value="未判">未判</option>
                   <option value="判过">判过</option>
@@ -1566,36 +1633,36 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
                   <option value="自动投">机器自动投（≥90）</option>
                   <option value="待你看">待你看（60-89）</option>
                 </select></th>
-                <th><input class="pool-f" type="text" id="poolFilterAiReason" placeholder="含理由字样" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()"></th>
-                <th><select class="pool-f" id="poolFilterGateState" onchange="applyPoolFilter()">
+                <th scope="col"><input class="pool-f" type="text" id="poolFilterAiReason" placeholder="含理由字样" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()"></th>
+                <th scope="col"><select class="pool-f" id="poolFilterGateState" onchange="applyPoolFilter()">
                   <option value="">全部</option>
                   <option value="没过过的">没过过的</option>
                   <option value="被否过的">被否过的</option>
                   <option value="要人看一眼">要人看一眼</option>
                   <option value="词表没读到">词表没读到</option>
                 </select></th>
-                <th><select class="pool-f" id="poolFilterStatus" onchange="applyPoolFilter()">
+                <th scope="col"><select class="pool-f" id="poolFilterStatus" onchange="applyPoolFilter()">
                   <option value="">全部</option>
                   <option value="new">待选</option>
                   <option value="selected">已勾待投</option>
                   <option value="applied">已投</option>
                   <option value="rejected">不投</option>
                 </select></th>
-                <th><input class="pool-f" type="text" id="poolFilterNote" placeholder="含备注" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()"></th>
-                <th><select class="pool-f" id="poolFilterFresh" onchange="applyPoolFilter()" title="按「抓到时刻」筛：今天=最近 24 小时">
+                <th scope="col"><input class="pool-f" type="text" id="poolFilterNote" placeholder="含备注" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()"></th>
+                <th scope="col"><select class="pool-f" id="poolFilterFresh" onchange="applyPoolFilter()" title="按「抓到时刻」筛：今天=最近 24 小时">
                   <option value="">不限</option>
                   <option value="1">今天</option>
                   <option value="3">近 3 天</option>
                   <option value="7">近 7 天</option>
                 </select></th>
-                <th></th>
+                <th scope="col"></th>
               </tr></thead>
               <tbody id="poolTableBody"></tbody>
             </table>
             <div class="empty-state" id="poolEmpty" style="height:100%;min-height:200px">
               <div class="empty-icon"><i data-ki="jobs"></i></div>
-              <div class="empty-desc" style="font-size:13px;font-weight:600;margin-top:8px" id="poolEmptyMsg">这个号的池子还是空的</div>
-              <div class="empty-hint" style="font-size:11px;color:var(--fg-3rd);margin-top:4px" id="poolEmptyHint">
+              <div class="empty-desc" style="font-size:var(--fs-sm);font-weight:600;margin-top:8px" id="poolEmptyMsg">这个号的池子还是空的</div>
+              <div class="empty-hint" style="font-size:var(--fs-2xs);color:var(--fg-3rd);margin-top:4px" id="poolEmptyHint">
                 点上方 <span style="color:var(--accent);font-weight:600">启动</span>，线程每搜一轮就把岗位放进这里，投哪条你来勾
               </div>
             </div>
@@ -1604,8 +1671,8 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
       </div>
       <div class="panel-row" style="margin-top:8px;flex:0 0 auto">
         <div class="panel log-panel collapsed" id="logPanel">
-          <div class="panel-header" onclick="toggleLogPanel()" style="cursor:pointer;user-select:none"><span class="panel-icon"><i data-ki="log"></i></span><span class="panel-title">系统日志</span><span class="log-toggle-icon" style="margin-left:auto;transition:transform .2s ease;font-size:10px;color:var(--fg-3rd)"><i data-ki="chevron-down"></i></span><div class="panel-actions" onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="copyLog()"><i data-ki="copy"></i>复制</button><button class="btn btn-ghost btn-sm" onclick="clearLog()"><i data-ki="clear"></i>清空</button></div></div>
-          <div class="panel-body log-area" id="logArea"><div class="log-empty"><div class="empty-icon"><i data-ki="empty-log"></i></div><div class="empty-desc">等待操作...</div></div></div>
+          <div class="panel-header" onclick="toggleLogPanel()" style="cursor:pointer;user-select:none"><span class="panel-icon"><i data-ki="log"></i></span><span class="panel-title">系统日志</span><span class="log-toggle-icon" style="margin-left:auto;transition:transform .2s ease;font-size:var(--fs-2xs);color:var(--fg-3rd)"><i data-ki="chevron-down"></i></span><div class="panel-actions" onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" onclick="copyLog()"><i data-ki="copy"></i>复制</button><button class="btn btn-ghost btn-sm" onclick="clearLog()"><i data-ki="clear"></i>清空</button></div></div>
+          <div class="panel-body log-area" id="logArea" role="log" aria-live="off" aria-label="实时日志"><div class="log-empty"><div class="empty-icon"><i data-ki="empty-log"></i></div><div class="empty-desc">等待操作...</div></div></div>
         </div>
       </div>
     </div>
@@ -1740,8 +1807,8 @@ function renderAiConfig() {
     var p = providers[i];
     var h = aiHealthByIndex[i] || {status: 'untested'};
     html += '<div style="border:1px solid var(--bd-2);border-radius:8px;padding:8px;margin-bottom:6px;position:relative">';
-    html += '<div style="position:absolute;right:4px;top:4px"><button class="side-btn side-btn-ghost side-btn-sm" onclick="removeAiProvider('+i+')" style="padding:2px 6px;font-size:10px">删除</button></div>';
-    html += '<div id="aiProvHealth-'+i+'" style="margin:0 60px 6px 0;font-size:11px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+aiHealthInline(h, i)+'</div>';
+    html += '<div style="position:absolute;right:4px;top:4px"><button class="side-btn side-btn-ghost side-btn-sm" onclick="removeAiProvider('+i+')" style="padding:2px 6px;font-size:var(--fs-2xs)">删除</button></div>';
+    html += '<div id="aiProvHealth-'+i+'" style="margin:0 60px 6px 0;font-size:var(--fs-2xs);display:flex;align-items:center;gap:6px;flex-wrap:wrap">'+aiHealthInline(h, i)+'</div>';
     html += '<div class="acc-field-row"><label>名称</label><input class="side-form-input" value="'+escAttr(p.name||'')+'" onchange="updateAiProvider('+i+',\'name\',this.value)" placeholder="如: Agnes"></div>';
     html += '<div class="acc-field-row"><label>API Key</label><input class="side-form-input" type="password" value="'+escAttr(p.api_key||'')+'" onchange="updateAiProvider('+i+',\'api_key\',this.value)" placeholder="sk-..."></div>';
     html += '<div class="acc-field-row"><label>API 地址</label><input class="side-form-input" value="'+escAttr(p.api_base||'')+'" onchange="updateAiProvider('+i+',\'api_base\',this.value)" placeholder="https://..."></div>';
@@ -1778,7 +1845,7 @@ function aiHealthInline(h, i) {
   if (h && h.reason) out += '<span class="ai-provider-reason" title="' + escAttr(h.reason) + '">' + escHtml(h.reason) + '</span>';
   if (h && h.note) out += '<span class="ai-provider-latency" title="' + escAttr(h.note) + '">' + escHtml(h.note) + '</span>';
   if (h && h.checked_at) out += '<span class="ai-provider-latency">' + escHtml(h.checked_at) + '</span>';
-  out += '<button class="side-btn side-btn-ghost side-btn-sm" style="padding:1px 6px;font-size:10px;margin-left:auto" onclick="runAiHealth([' + i + '])">重测</button>';
+  out += '<button class="side-btn side-btn-ghost side-btn-sm" style="padding:1px 6px;font-size:var(--fs-2xs);margin-left:auto" onclick="runAiHealth([' + i + '])">重测</button>';
   return out;
 }
 
@@ -2108,7 +2175,7 @@ function renderAiTestResults() {
     return '<div style="padding:6px 0;border-bottom:' + (i < aiTestHistory.length-1 ? '1px solid var(--bd-2)' : 'none') + '">'+
       '<div style="display:flex;justify-content:space-between;align-items:center">'+
         '<span style="font-weight:600;color:var(--accent)">' + escHtml(r.provider || 'AI') + '</span>'+
-        '<span style="color:var(--fg-4th);font-size:9px">' + r.time + ' · ' + r.duration + 's</span>'+
+        '<span style="color:var(--fg-4th);font-size:var(--fs-2xs)">' + r.time + ' · ' + r.duration + 's</span>'+
       '</div>'+
       '<div style="color:var(--fg-3rd);margin-top:2px;white-space:pre-wrap">'+escHtml(r.analysis || '')+'</div>'+
     '</div>';
@@ -2182,7 +2249,7 @@ function showPromptModal() {
         '<h3>编辑 AI 提示词</h3>'+
         '<div class="modal-field"><label>System Rules（系统规则）</label>'+
           '<textarea id="promptSystem" style="min-height:120px;width:100%;resize:vertical;box-sizing:border-box">'+escHtml(systemRules)+'</textarea></div>'+
-        '<div class="modal-field"><label>User Prompt Template（用户提示词模板）<span style="font-size:10px;color:var(--fg-3rd);margin-left:8px">支持占位符: {boss_name} {job_name} {history} {message}</span></label>'+
+        '<div class="modal-field"><label>User Prompt Template（用户提示词模板）<span style="font-size:var(--fs-2xs);color:var(--fg-3rd);margin-left:8px">支持占位符: {boss_name} {job_name} {history} {message}</span></label>'+
           '<textarea id="promptUser" style="min-height:200px;width:100%;resize:vertical;box-sizing:border-box">'+escHtml(userPromptTemplate)+'</textarea></div>'+
         '<div class="modal-actions">'+
           '<button class="btn btn-ghost btn-sm" onclick="resetPromptModal()">恢复默认</button>'+
@@ -2258,8 +2325,8 @@ function showResumeModal() {
     ];
     var rowsHtml = infoRows.map(function(r) {
       return '<div style="display:flex;padding:8px 0;border-bottom:1px solid var(--bd-2);gap:12px">'+
-        '<div style="flex:0 0 100px;font-size:11px;font-weight:600;color:var(--fg-2nd)">'+escHtml(r.label)+'</div>'+
-        '<div style="flex:1;font-size:11px;color:var(--fg);white-space:pre-wrap;word-break:break-all">'+escHtml(r.value)+'</div>'+
+        '<div style="flex:0 0 100px;font-size:var(--fs-2xs);font-weight:600;color:var(--fg-2nd)">'+escHtml(r.label)+'</div>'+
+        '<div style="flex:1;font-size:var(--fs-2xs);color:var(--fg);white-space:pre-wrap;word-break:break-all">'+escHtml(r.value)+'</div>'+
       '</div>';
     }).join('');
     const overlay = document.createElement('div');
@@ -2268,8 +2335,8 @@ function showResumeModal() {
     overlay.innerHTML =
       '<div class="modal modal-large">'+
         '<h3>简历信息预览</h3>'+
-        '<div style="background:var(--warning-bg);color:var(--warning);padding:10px 12px;border-radius:8px;font-size:11px;margin-bottom:14px;display:flex;gap:8px;align-items:flex-start">'+
-          '<span style="font-size:14px"><i data-ki="lightbulb"></i></span>'+
+        '<div style="background:var(--warning-bg);color:var(--warning);padding:10px 12px;border-radius:8px;font-size:var(--fs-2xs);margin-bottom:14px;display:flex;gap:8px;align-items:flex-start">'+
+          '<span style="font-size:var(--fs-base)"><i data-ki="lightbulb"></i></span>'+
           '<span>请在 <strong>BOSS 直聘网页/App</strong> 上编辑你的简历，这里只做简历信息预览，用于 AI 匹配分析。<br>修改简历请前往：<a href="https://www.zhipin.com/web/geek/resume" target="_blank" style="color:var(--accent);text-decoration:underline">https://www.zhipin.com/web/geek/resume</a></span>'+
         '</div>'+
         '<div style="max-height:50vh;overflow-y:auto">'+rowsHtml+'</div>'+
@@ -2289,7 +2356,7 @@ function showResumeModal() {
     overlay.innerHTML =
       '<div class="modal modal-large">'+
         '<h3>简历信息预览</h3>'+
-        '<div style="background:var(--warning-bg);color:var(--warning);padding:10px 12px;border-radius:8px;font-size:11px;margin-bottom:14px">'+
+        '<div style="background:var(--warning-bg);color:var(--warning);padding:10px 12px;border-radius:8px;font-size:var(--fs-2xs);margin-bottom:14px">'+
           '请在 BOSS 直聘网页上编辑你的简历，这里只做简历信息预览。'+
         '</div>'+
         '<div style="color:var(--fg-3rd);padding:20px;text-align:center">加载简历信息失败，请稍后重试。</div>'+
@@ -2364,8 +2431,8 @@ function showRulesModal() {
 
 function renderRuleRow(idx, key, value) {
   return '<div class="rule-row" data-idx="'+idx+'" style="display:flex;gap:6px;align-items:center;margin-bottom:6px">'+
-    '<input class="rule-key" value="'+escAttr(key||'')+'" placeholder="关键词" style="flex:1;padding:6px 8px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg);color:var(--fg);font-size:12px">'+
-    '<input class="rule-value" value="'+escAttr(value||'')+'" placeholder="回复内容" style="flex:2;padding:6px 8px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg);color:var(--fg);font-size:12px">'+
+    '<input class="rule-key" value="'+escAttr(key||'')+'" placeholder="关键词" style="flex:1;padding:6px 8px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg);color:var(--fg);font-size:var(--fs-xs)">'+
+    '<input class="rule-value" value="'+escAttr(value||'')+'" placeholder="回复内容" style="flex:2;padding:6px 8px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg);color:var(--fg);font-size:var(--fs-xs)">'+
     '<button class="btn btn-danger btn-sm" onclick="removeRuleRow(this)" style="flex-shrink:0">删除</button>'+
   '</div>';
 }
@@ -2556,10 +2623,10 @@ function showEvolutionModal() {
     const lessons = (report.lessons || {});
     const activeLessons = lessons.active || [];
     const retiredLessons = lessons.retired_recent || [];
-    let lessonHtml = '<div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin-bottom:6px">沉淀经验（追加进提示词，证据≥2次才入库，连负2次自动退役）</div>';
+    let lessonHtml = '<div style="font-size:var(--fs-2xs);font-weight:600;color:var(--fg-2nd);margin-bottom:6px">沉淀经验（追加进提示词，证据≥2次才入库，连负2次自动退役）</div>';
     if (activeLessons.length > 0) {
       lessonHtml += activeLessons.map(function(l) {
-        return '<div style="padding:5px 0;border-bottom:1px solid var(--bd-2);font-size:10px;color:var(--fg-2nd)">'+
+        return '<div style="padding:5px 0;border-bottom:1px solid var(--bd-2);font-size:var(--fs-2xs);color:var(--fg-2nd)">'+
           '<div>#'+l.id+' · '+escHtml(l.text)+'</div>'+
           '<div style="color:var(--fg-3rd);margin-top:2px">证据 '+l.evidence_count+' 次 · 有效 '+l.effect_positive+' / 无效 '+l.effect_negative+
           ' <a href="javascript:void(0)" onclick="confirmLesson('+l.id+',\'positive\')" style="color:var(--success,#46a758)">有效</a>'+
@@ -2568,10 +2635,10 @@ function showEvolutionModal() {
           '</div>';
       }).join('');
     } else {
-      lessonHtml += '<div style="font-size:10px;color:var(--fg-3rd);padding:4px 0">暂无在库经验。复盘后，反复出现的闸门拦截会自动沉淀进来。</div>';
+      lessonHtml += '<div style="font-size:var(--fs-2xs);color:var(--fg-3rd);padding:4px 0">暂无在库经验。复盘后，反复出现的闸门拦截会自动沉淀进来。</div>';
     }
     if (retiredLessons.length > 0) {
-      lessonHtml += '<div style="font-size:10px;color:var(--fg-3rd);margin-top:6px">已退役：'+retiredLessons.map(function(l){return '#'+l.id;}).join('、')+'</div>';
+      lessonHtml += '<div style="font-size:var(--fs-2xs);color:var(--fg-3rd);margin-top:6px">已退役：'+retiredLessons.map(function(l){return '#'+l.id;}).join('、')+'</div>';
     }
     lessonHtml += '<div style="display:flex;gap:8px;margin-top:8px">'+
       '<button class="btn btn-cancel btn-sm" onclick="refineLessons()">复盘沉淀</button>'+
@@ -2580,7 +2647,7 @@ function showEvolutionModal() {
     let reportHtml = '';
     reportHtml += '<div style="margin-bottom:10px">'+lessonHtml+'</div>';
     if (adjustments.length > 0) {
-      reportHtml += '<div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin-bottom:6px">策略调整历史</div>';
+      reportHtml += '<div style="font-size:var(--fs-2xs);font-weight:600;color:var(--fg-2nd);margin-bottom:6px">策略调整历史</div>';
       reportHtml += adjustments.slice(0, 5).map(function(a) {
         var head, body = '';
         if (a.action) {
@@ -2592,9 +2659,9 @@ function showEvolutionModal() {
                + (a.reason ? '（'+escHtml(a.reason)+'）' : '')
                + (a.auto_applied ? '' : ' · <span style="color:var(--warning)">待人工采纳</span>');
         }
-        return '<div style="padding:6px 0;border-bottom:1px solid var(--bd-2);font-size:11px;color:var(--fg-2nd);line-height:1.5">'
+        return '<div style="padding:6px 0;border-bottom:1px solid var(--bd-2);font-size:var(--fs-2xs);color:var(--fg-2nd);line-height:1.5">'
              + '<div>'+head+'</div>'
-             + (body ? '<div style="color:var(--fg-3rd);margin-top:2px;font-size:10px">'+body+'</div>' : '')
+             + (body ? '<div style="color:var(--fg-3rd);margin-top:2px;font-size:var(--fs-2xs)">'+body+'</div>' : '')
              + '</div>';
       }).join('');
     }
@@ -2603,32 +2670,32 @@ function showEvolutionModal() {
                   negative: ['无效', 'var(--danger,#e5484d)'], ignored: ['已读不回', 'var(--warning)'] }[r.effect];
       var effHtml = '<span style="color:'+(eff ? eff[1] : 'var(--fg-4th)')+'">'+(eff ? eff[0] : '待评估')+'</span>';
       var kindHtml = r.kind === 'gate_block' ? ' <span style="color:var(--danger,#e5484d)">闸门拦截</span>' : '';
-      var html = '<div style="padding:6px 0;border-bottom:1px solid var(--bd-2);font-size:11px;line-height:1.5">'
-               + '<div style="font-size:10px;color:var(--fg-4th)">'+escHtml(fmtEvoTime(r.timestamp))+' · '+escHtml(r.chat_name||'')+' · '+effHtml+kindHtml+'</div>'
+      var html = '<div style="padding:6px 0;border-bottom:1px solid var(--bd-2);font-size:var(--fs-2xs);line-height:1.5">'
+               + '<div style="font-size:var(--fs-2xs);color:var(--fg-4th)">'+escHtml(fmtEvoTime(r.timestamp))+' · '+escHtml(r.chat_name||'')+' · '+effHtml+kindHtml+'</div>'
                + '<div style="color:var(--fg-2nd);margin-top:2px">“'+escHtml((r.reply_text||'').replace(/\s+/g,' ').trim())+'”</div>';
       if (r.note) {
-        html += '<div style="color:var(--danger,#e5484d);margin-top:2px;font-size:10px">拦截原因：'+escHtml(r.note)+'</div>';
+        html += '<div style="color:var(--danger,#e5484d);margin-top:2px;font-size:var(--fs-2xs)">拦截原因：'+escHtml(r.note)+'</div>';
       }
       if (r.hr_response) {
-        html += '<div style="color:var(--fg-3rd);margin-top:2px;font-size:10px">HR 回复：'+escHtml(r.hr_response)+'</div>';
+        html += '<div style="color:var(--fg-3rd);margin-top:2px;font-size:var(--fs-2xs)">HR 回复：'+escHtml(r.hr_response)+'</div>';
       }
       return html + '</div>';
     }
-    var evoHead = 'font-size:11px;font-weight:600;color:var(--fg-2nd);margin:8px 0 6px';
+    var evoHead = 'font-size:var(--fs-2xs);font-weight:600;color:var(--fg-2nd);margin:8px 0 6px';
     if (recentRecords.length > 0) {
       // 911 和 200 都摆出来并写清各是什么，不然翻明细就像少了 711 条
       reportHtml += '<div style="'+evoHead+'">最近回复记录'
-        + '<span style="font-weight:400;color:var(--fg-3rd);font-size:10px">（累计 '+totalReplies+' 条'
+        + '<span style="font-weight:400;color:var(--fg-3rd);font-size:var(--fs-2xs)">（累计 '+totalReplies+' 条'
         + ' · 明细存最近 '+recordsCap+' 条 · 这里列 '+Math.min(5, recentRecords.length)+' 条）</span></div>';
       reportHtml += recentRecords.slice(0, 5).map(evoRow).join('');
     }
     if (pendingTotal > 0) {
       reportHtml += '<div style="'+evoHead+'">未标注效果（'+pendingTotal+' 条）'
-        + '<span style="font-weight:400;color:var(--fg-3rd);font-size:10px">'
+        + '<span style="font-weight:400;color:var(--fg-3rd);font-size:var(--fs-2xs)">'
         + '· HR 回话或超时未答后会自动标注，不用手动点</span></div>';
       reportHtml += pendingRecords.map(evoRow).join('');
       if (pendingTotal > pendingRecords.length) {
-        reportHtml += '<div style="font-size:10px;color:var(--fg-3rd);padding:4px 0">还有 '
+        reportHtml += '<div style="font-size:var(--fs-2xs);color:var(--fg-3rd);padding:4px 0">还有 '
           + (pendingTotal - pendingRecords.length) + ' 条没列出来（一屏最多 '+pendingLimit+' 条）</div>';
       }
     }
@@ -2644,23 +2711,23 @@ function showEvolutionModal() {
       '<div class="modal modal-large">'+
         '<h3>自进化功能</h3>'+
         '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px">'+
-          '<span style="font-size:10px;color:var(--fg-3rd)">数据属于账号</span>' + accChips +
+          '<span style="font-size:var(--fs-2xs);color:var(--fg-3rd)">数据属于账号</span>' + accChips +
         '</div>'+
         '<div class="modal-field"><label>启用自进化</label><span id="evolutionEnabled" class="toggle-switch'+(enabled?' on':'')+'" onclick="toggleEvolution()"></span></div>'+
         '<div style="display:flex;gap:16px;margin:12px 0">'+
           '<div style="flex:1;text-align:center;padding:8px;border:1px solid var(--bd-2);border-radius:8px">'+
-            '<div style="font-size:20px;font-weight:700;color:var(--accent)">'+totalReplies+'</div>'+
-            '<div style="font-size:10px;color:var(--fg-3rd)">总回复数</div>'+
-            '<div style="font-size:9px;color:var(--fg-4th)">累计 · 明细存最近 '+recordsCap+' 条（现有 '+keptRecords+'）</div>'+
+            '<div style="font-size:var(--fs-xl);font-weight:700;color:var(--accent)">'+totalReplies+'</div>'+
+            '<div style="font-size:var(--fs-2xs);color:var(--fg-3rd)">总回复数</div>'+
+            '<div style="font-size:var(--fs-2xs);color:var(--fg-4th)">累计 · 明细存最近 '+recordsCap+' 条（现有 '+keptRecords+'）</div>'+
           '</div>'+
           '<div style="flex:1;text-align:center;padding:8px;border:1px solid var(--bd-2);border-radius:8px">'+
-            '<div style="font-size:20px;font-weight:700;color:var(--warning)">'+pending+'</div>'+
-            '<div style="font-size:10px;color:var(--fg-3rd)">待评估数</div>'+
-            '<div style="font-size:9px;color:var(--fg-4th)">'+(pending > 0 ? '下面逐条列出' : '已全部标注')+'</div>'+
+            '<div style="font-size:var(--fs-xl);font-weight:700;color:var(--warning)">'+pending+'</div>'+
+            '<div style="font-size:var(--fs-2xs);color:var(--fg-3rd)">待评估数</div>'+
+            '<div style="font-size:var(--fs-2xs);color:var(--fg-4th)">'+(pending > 0 ? '下面逐条列出' : '已全部标注')+'</div>'+
           '</div>'+
           '<div style="flex:1;text-align:center;padding:8px;border:1px solid var(--bd-2);border-radius:8px">'+
-            '<div style="font-size:20px;font-weight:700;color:var(--danger,#e5484d)">'+gateBlocks+'</div>'+
-            '<div style="font-size:10px;color:var(--fg-3rd)" title="接口吐了思考过程/空正文/坏格式，被输出校验拦下换接口的次数">闸门拦截</div>'+
+            '<div style="font-size:var(--fs-xl);font-weight:700;color:var(--danger,#e5484d)">'+gateBlocks+'</div>'+
+            '<div style="font-size:var(--fs-2xs);color:var(--fg-3rd)" title="接口吐了思考过程/空正文/坏格式，被输出校验拦下换接口的次数">闸门拦截</div>'+
           '</div>'+
         '</div>'+
         '<div style="max-height:30vh;overflow-y:auto;margin:12px 0">'+reportHtml+'</div>'+
@@ -2977,7 +3044,7 @@ function renderConfigPreview() {
 
   // 1. 打招呼语（从岗位配置中读取）
   html += '<div style="margin-bottom:10px;padding:8px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg)">';
-  html += '<div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin-bottom:4px">打招呼语</div>';
+  html += '<div style="font-size:var(--fs-2xs);font-weight:600;color:var(--fg-2nd);margin-bottom:4px">打招呼语</div>';
   try {
     var accounts = config.accounts || [];
     var greetingCount = 0;
@@ -2986,7 +3053,7 @@ function renderConfigPreview() {
       for (var ji = 0; ji < jobs.length; ji++) {
         var greeting = jobs[ji].greeting_message || '';
         if (greeting) {
-          html += '<div style="font-size:10px;color:var(--fg);margin-bottom:4px;white-space:pre-wrap;word-break:break-all">' +
+          html += '<div style="font-size:var(--fs-2xs);color:var(--fg);margin-bottom:4px;white-space:pre-wrap;word-break:break-all">' +
             '<span style="color:var(--fg-3rd)">[' + escHtml(accounts[ai].name || '账号') + '/' + escHtml(jobs[ji].query || '岗位') + ']</span> ' +
             escHtml(greeting) + '</div>';
           greetingCount++;
@@ -2994,16 +3061,16 @@ function renderConfigPreview() {
       }
     }
     if (greetingCount === 0) {
-      html += '<div style="font-size:10px;color:var(--fg-3rd)">暂无打招呼语</div>';
+      html += '<div style="font-size:var(--fs-2xs);color:var(--fg-3rd)">暂无打招呼语</div>';
     }
   } catch (e) {
-    html += '<div style="font-size:10px;color:var(--danger)">加载失败: ' + escHtml(e.message) + '</div>';
+    html += '<div style="font-size:var(--fs-2xs);color:var(--danger)">加载失败: ' + escHtml(e.message) + '</div>';
   }
   html += '</div>';
 
   // 2. 回复模板
   html += '<div style="margin-bottom:10px;padding:8px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg)">';
-  html += '<div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin-bottom:4px">回复模板</div>';
+  html += '<div style="font-size:var(--fs-2xs);font-weight:600;color:var(--fg-2nd);margin-bottom:4px">回复模板</div>';
   var templateLabels = {
     'salary_reply': '薪资回复',
     'interview_time_reply': '面试时间回复',
@@ -3016,7 +3083,7 @@ function renderConfigPreview() {
   for (var tk in templateLabels) {
     if (Object.prototype.hasOwnProperty.call(templateLabels, tk)) {
       var tv = config.templates[tk] || '';
-      html += '<div style="font-size:10px;color:var(--fg);margin-bottom:4px">' +
+      html += '<div style="font-size:var(--fs-2xs);color:var(--fg);margin-bottom:4px">' +
         '<span style="color:var(--fg-3rd);font-weight:600">' + escHtml(templateLabels[tk]) + ':</span> ' +
         '<span style="white-space:pre-wrap;word-break:break-all">' + escHtml(tv) + '</span></div>';
     }
@@ -3025,67 +3092,67 @@ function renderConfigPreview() {
 
   // 3. 回复规则
   html += '<div style="margin-bottom:10px;padding:8px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg)">';
-  html += '<div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin-bottom:4px">回复规则</div>';
+  html += '<div style="font-size:var(--fs-2xs);font-weight:600;color:var(--fg-2nd);margin-bottom:4px">回复规则</div>';
   try {
     var ruleKeys = Object.keys(config.reply_rules || {});
     if (ruleKeys.length === 0) {
-      html += '<div style="font-size:10px;color:var(--fg-3rd)">暂无回复规则</div>';
+      html += '<div style="font-size:var(--fs-2xs);color:var(--fg-3rd)">暂无回复规则</div>';
     } else {
       for (var ri = 0; ri < ruleKeys.length; ri++) {
         var rk = ruleKeys[ri];
         var rv = config.reply_rules[rk] || '';
-        html += '<div style="font-size:10px;color:var(--fg);margin-bottom:4px">' +
+        html += '<div style="font-size:var(--fs-2xs);color:var(--fg);margin-bottom:4px">' +
           '<span style="color:var(--accent);font-weight:600">' + escHtml(rk) + ':</span> ' +
           '<span style="white-space:pre-wrap;word-break:break-all">' + escHtml(rv) + '</span></div>';
       }
     }
   } catch (e) {
-    html += '<div style="font-size:10px;color:var(--danger)">加载失败: ' + escHtml(e.message) + '</div>';
+    html += '<div style="font-size:var(--fs-2xs);color:var(--danger)">加载失败: ' + escHtml(e.message) + '</div>';
   }
   html += '</div>';
 
   // 4. 重要关键词
   html += '<div style="margin-bottom:10px;padding:8px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg)">';
-  html += '<div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin-bottom:4px">重要关键词</div>';
+  html += '<div style="font-size:var(--fs-2xs);font-weight:600;color:var(--fg-2nd);margin-bottom:4px">重要关键词</div>';
   try {
     var keywords = config.importance_keywords || [];
     if (keywords.length === 0) {
-      html += '<div style="font-size:10px;color:var(--fg-3rd)">暂无重要关键词</div>';
+      html += '<div style="font-size:var(--fs-2xs);color:var(--fg-3rd)">暂无重要关键词</div>';
     } else {
-      html += '<div style="font-size:10px;color:var(--fg)">' + escHtml(keywords.join('、')) + '</div>';
+      html += '<div style="font-size:var(--fs-2xs);color:var(--fg)">' + escHtml(keywords.join('、')) + '</div>';
     }
   } catch (e) {
-    html += '<div style="font-size:10px;color:var(--danger)">加载失败: ' + escHtml(e.message) + '</div>';
+    html += '<div style="font-size:var(--fs-2xs);color:var(--danger)">加载失败: ' + escHtml(e.message) + '</div>';
   }
   html += '</div>';
 
   // 5. AI配置
   html += '<div style="margin-bottom:10px;padding:8px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg)">';
-  html += '<div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin-bottom:4px">AI 配置</div>';
+  html += '<div style="font-size:var(--fs-2xs);font-weight:600;color:var(--fg-2nd);margin-bottom:4px">AI 配置</div>';
   try {
     var aiCfg = config.ai || {};
-    html += '<div style="font-size:10px;color:var(--fg);margin-bottom:4px">' +
+    html += '<div style="font-size:var(--fs-2xs);color:var(--fg);margin-bottom:4px">' +
       '<span style="color:var(--fg-3rd);font-weight:600">启用:</span> ' + (aiCfg.enabled ? '是' : '否') + '</div>';
-    html += '<div style="font-size:10px;color:var(--fg);margin-bottom:4px">' +
+    html += '<div style="font-size:var(--fs-2xs);color:var(--fg);margin-bottom:4px">' +
       '<span style="color:var(--fg-3rd);font-weight:600">匹配阈值:</span> ' + (aiCfg.match_threshold || 70) + '</div>';
     var providers = aiCfg.providers || [];
     if (providers.length > 0) {
       for (var pi = 0; pi < providers.length; pi++) {
-        html += '<div style="font-size:10px;color:var(--fg);margin-bottom:4px">' +
+        html += '<div style="font-size:var(--fs-2xs);color:var(--fg);margin-bottom:4px">' +
           '<span style="color:var(--fg-3rd);font-weight:600">接口[' + (pi+1) + ']:</span> ' +
           escHtml(providers[pi].name || '') + ' / ' + escHtml(providers[pi].model || '') + '</div>';
       }
     } else {
-      html += '<div style="font-size:10px;color:var(--fg-3rd)">未配置 AI 接口</div>';
+      html += '<div style="font-size:var(--fs-2xs);color:var(--fg-3rd)">未配置 AI 接口</div>';
     }
   } catch (e) {
-    html += '<div style="font-size:10px;color:var(--danger)">加载失败: ' + escHtml(e.message) + '</div>';
+    html += '<div style="font-size:var(--fs-2xs);color:var(--danger)">加载失败: ' + escHtml(e.message) + '</div>';
   }
   html += '</div>';
 
   // 6. 个人画像（user_profile 字段：name/education/position/experience/salary_expectation/available_interview_time/contact/highlights/skills）
   html += '<div style="margin-bottom:10px;padding:8px;border:1px solid var(--bd-2);border-radius:6px;background:var(--side-input-bg)">';
-  html += '<div style="font-size:11px;font-weight:600;color:var(--fg-2nd);margin-bottom:4px">个人画像</div>';
+  html += '<div style="font-size:var(--fs-2xs);font-weight:600;color:var(--fg-2nd);margin-bottom:4px">个人画像</div>';
   try {
     var profile = config.user_profile || {};
     var profileLabels = {
@@ -3103,7 +3170,7 @@ function renderConfigPreview() {
         var pv = profile[pk] || '';
         if (pv) {
           profileHasValue = true;
-          html += '<div style="font-size:10px;color:var(--fg);margin-bottom:4px">' +
+          html += '<div style="font-size:var(--fs-2xs);color:var(--fg);margin-bottom:4px">' +
             '<span style="color:var(--fg-3rd);font-weight:600">' + escHtml(profileLabels[pk]) + ':</span> ' +
             '<span style="white-space:pre-wrap;word-break:break-all">' + escHtml(pv) + '</span></div>';
         }
@@ -3111,19 +3178,19 @@ function renderConfigPreview() {
     }
     if (profile.skills && profile.skills.length > 0) {
       profileHasValue = true;
-      html += '<div style="font-size:10px;color:var(--fg);margin-bottom:4px">' +
+      html += '<div style="font-size:var(--fs-2xs);color:var(--fg);margin-bottom:4px">' +
         '<span style="color:var(--fg-3rd);font-weight:600">技能:</span> ' + escHtml(profile.skills.join('、')) + '</div>';
     }
     if (profile.highlights && profile.highlights.length > 0) {
       profileHasValue = true;
-      html += '<div style="font-size:10px;color:var(--fg);margin-bottom:4px">' +
+      html += '<div style="font-size:var(--fs-2xs);color:var(--fg);margin-bottom:4px">' +
         '<span style="color:var(--fg-3rd);font-weight:600">亮点:</span> ' + escHtml(profile.highlights.join('、')) + '</div>';
     }
     if (!profileHasValue) {
-      html += '<div style="font-size:10px;color:var(--fg-3rd)">暂无个人画像</div>';
+      html += '<div style="font-size:var(--fs-2xs);color:var(--fg-3rd)">暂无个人画像</div>';
     }
   } catch (e) {
-    html += '<div style="font-size:10px;color:var(--danger)">加载失败: ' + escHtml(e.message) + '</div>';
+    html += '<div style="font-size:var(--fs-2xs);color:var(--danger)">加载失败: ' + escHtml(e.message) + '</div>';
   }
   html += '</div>';
 
@@ -3686,7 +3753,7 @@ function updateSbarJobs() {
     if (typeof KIcon !== 'undefined') KIcon.createIcons();
   } else {
     if (badge) badge.textContent = '0';
-    el.innerHTML = '<span style="color:var(--fg-3rd);font-size:10px;padding:8px 0;display:block;text-align:center">暂无岗位，点击上方添加</span>';
+    el.innerHTML = '<span style="color:var(--fg-3rd);font-size:var(--fs-2xs);padding:8px 0;display:block;text-align:center">暂无岗位，点击上方添加</span>';
     if (typeof KIcon !== 'undefined') KIcon.createIcons();
   }
 }
@@ -3739,7 +3806,7 @@ function showJobModal(job) {
   overlay.innerHTML =
     '<div class="modal">'+
       '<h3>'+(editingJobIdx>=0?'编辑岗位':'添加岗位')+
-        '<span style="font-size:11px;font-weight:400;color:var(--fg-3rd);margin-left:6px">'+escHtml(editingAccountLabel())+'</span></h3>'+
+        '<span style="font-size:var(--fs-2xs);font-weight:400;color:var(--fg-3rd);margin-left:6px">'+escHtml(editingAccountLabel())+'</span></h3>'+
       '<div class="modal-field"><label>城市</label><input id="modalCity" value="'+escHtml(job.city||'')+'" placeholder="例如: 长沙" list="cityList"><datalist id="cityList"></datalist></div>'+
       '<div class="modal-field"><label>搜索关键词</label><input id="modalQuery" value="'+escHtml(job.query||'')+'" placeholder="例如: 数据分析"></div>'+
       '<div class="modal-field"><label>求职类型</label><select id="modalJobType">'+
@@ -3748,7 +3815,7 @@ function showJobModal(job) {
                  (v||'不限')+'</option>';
         }).join('')+
       '</select></div>'+
-      '<div style="font-size:10px;color:var(--fg-4th);margin:-4px 0 6px;line-height:1.5">选"兼职"就是 BOSS 搜索页的求职类型筛选（jobType=1903），不是只把字塞进关键词；城市选"全国"=city=100010000，结果会跨省</div>'+
+      '<div style="font-size:var(--fs-2xs);color:var(--fg-4th);margin:-4px 0 6px;line-height:1.5">选"兼职"就是 BOSS 搜索页的求职类型筛选（jobType=1903），不是只把字塞进关键词；城市选"全国"=city=100010000，结果会跨省</div>'+
       '<div class="modal-field"><label>翻页数</label><input id="modalPages" type="number" value="'+(job.scroll_pages||5)+'" min="1" max="20"></div>'+
       "<div class=\"modal-field\"><label>打招呼消息（兜底：只在 AI 这次没现编出来时才用）</label>"+"<textarea id=\"modalGreeting\" placeholder=\"留空=AI 没编出来时用账号级招呼语；两级都空则该岗位不发送\" style=\"min-height:80px\">"+escHtml(job.greeting_message||'')+'</textarea></div>'+
       '<div class="modal-field"><label>作品图片</label>'+
@@ -3852,8 +3919,8 @@ function showImageLightbox(src) {
   img.onerror = function() {
     img.style.display = 'none';
     var err = document.createElement('div');
-    err.style.cssText = 'color:#fff;font-size:14px;text-align:center;padding:20px';
-    err.innerHTML = '<i data-ki="alert-triangle" style="font-size:14px;vertical-align:-2px;margin-right:4px"></i>图片加载失败<br><span style="font-size:12px;opacity:.7">' + src + '</span>';
+    err.style.cssText = 'color:#fff;font-size:var(--fs-base);text-align:center;padding:20px';
+    err.innerHTML = '<i data-ki="alert-triangle" style="font-size:var(--fs-base);vertical-align:-2px;margin-right:4px"></i>图片加载失败<br><span style="font-size:var(--fs-xs);opacity:.7">' + src + '</span>';
     overlay.appendChild(err);
     if (typeof KIcon !== 'undefined') KIcon.createIcons();
   };
@@ -4483,11 +4550,11 @@ function addLog(level,message){
   const ts=new Date().toLocaleTimeString();
   // 根据日志级别添加对应的 Lucide 图标前缀
   var levelIcon = '';
-  if (level === 'ERROR') levelIcon = '<i data-ki="x-circle" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
-  else if (level === 'WARN') levelIcon = '<i data-ki="alert-triangle" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
-  else if (level === 'SUCCESS') levelIcon = '<i data-ki="check-circle" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
-  else if (level === 'SYSTEM') levelIcon = '<i data-ki="settings" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
-  else if (level === 'INFO') levelIcon = '<i data-ki="info" style="font-size:11px;vertical-align:-1px;margin-right:3px"></i>';
+  if (level === 'ERROR') levelIcon = '<i data-ki="x-circle" style="font-size:var(--fs-2xs);vertical-align:-1px;margin-right:3px"></i>';
+  else if (level === 'WARN') levelIcon = '<i data-ki="alert-triangle" style="font-size:var(--fs-2xs);vertical-align:-1px;margin-right:3px"></i>';
+  else if (level === 'SUCCESS') levelIcon = '<i data-ki="check-circle" style="font-size:var(--fs-2xs);vertical-align:-1px;margin-right:3px"></i>';
+  else if (level === 'SYSTEM') levelIcon = '<i data-ki="settings" style="font-size:var(--fs-2xs);vertical-align:-1px;margin-right:3px"></i>';
+  else if (level === 'INFO') levelIcon = '<i data-ki="info" style="font-size:var(--fs-2xs);vertical-align:-1px;margin-right:3px"></i>';
   div.innerHTML='<span class="log-time">'+ts+'</span><span class="log-message log-'+level+'">'+levelIcon+escHtml(message)+'</span>';
   area.appendChild(div);
   if (typeof KIcon !== 'undefined') KIcon.createIcons();
@@ -4512,10 +4579,42 @@ function bumpReplyTabCount() {
   if (el) el.textContent = replyRecordCount;
 }
 
+// 键盘走 tablist：左右键换视图，Home/End 跳两端（ARIA 授权做法，
+// 不然四个 role=tab 只能靠 Tab 一个个点，读屏用户比鼠标用户还慢）
+function tablistKeys(ev) {
+  var 序 = ['greet', 'reply', 'contact', 'pool'];
+  var 当 = document.querySelector('.record-tab[aria-selected="true"]');
+  if (!当) return;
+  var i = 序.indexOf((当.getAttribute('onclick') || '').replace(/[^a-z]/g, '').replace('switchRecordTab', '') || '');
+  var 键 = ev.key;
+  if (键 === 'ArrowRight' || 键 === 'ArrowLeft') {
+    i = (i + (键 === 'ArrowRight' ? 1 : 序.length - 1)) % 序.length;
+  } else if (键 === 'Home') { i = 0; }
+  else if (键 === 'End') { i = 序.length - 1; }
+  else return;
+  ev.preventDefault();
+  switchRecordTab(序[i]);
+  var 新 = document.querySelector('.record-tab[onclick*="' + 序[i] + '"]');
+  if (新) 新.focus();
+}
+// 绑上才算真的能用：只写函数不接听的键盘支持等于没做（四个 tab 的 tabindex 由
+// switchRecordTab 维护，这里只管方向键/Home/End）
+(function 绑tablist() {
+  var 栏 = document.querySelector('.record-tabs');
+  if (栏) { 栏.addEventListener('keydown', tablistKeys); return; }
+  document.addEventListener('DOMContentLoaded', function () {
+    var 栏2 = document.querySelector('.record-tabs');
+    if (栏2) 栏2.addEventListener('keydown', tablistKeys);
+  });
+})();
+
 function switchRecordTab(tab) {
   var tabs = document.querySelectorAll('.record-tab');
   var contents = document.querySelectorAll('.record-tab-content');
-  tabs.forEach(function(t){ t.classList.remove('active'); });
+  tabs.forEach(function(t){ t.classList.remove('active');
+    // role=tab 的选中态必须跟着 class 一起改，否则读屏念出来的还是"打招呼记录被选中"，
+    // 而他眼睛看到的表格已经是回复记录了
+    t.setAttribute('aria-selected', 'false'); t.tabIndex = -1; });
   contents.forEach(function(c){ c.classList.remove('active'); });
   var bars = {greet: 'greetFilterBar', reply: 'replyFilterBar', pool: 'poolFilterBar'};
   Object.keys(bars).forEach(function(k) {
@@ -4523,7 +4622,7 @@ function switchRecordTab(tab) {
     if (el) el.style.display = (k === tab) ? 'flex' : 'none';
   });
   var btn = document.querySelector('.record-tab[onclick*="' + tab + '"]');
-  if (btn) btn.classList.add('active');
+  if (btn) { btn.classList.add('active'); btn.setAttribute('aria-selected', 'true'); btn.tabIndex = 0; }
   var content = document.getElementById(tab + 'TabContent');
   if (content) content.classList.add('active');
   // 台账是从会话存档现算出来的，池是抓来的岗位清单，两张表都没有"清空"这回事：
@@ -4720,7 +4819,7 @@ function renderContactLedger() {
     return '<tr>'
       + '<td title="' + escAttr(r.last_activity) + '">' + escAttr((r.last_activity || '').slice(5, 16)) + '</td>'
       + '<td title="' + escAttr(accName) + '">' + escAttr(String(Number(r.account_index) + 1)) + '</td>'
-      + '<td title="' + escAttr(r.chat_name + ' · ' + r.company) + '">' + escAttr(r.chat_name) + '<br><span style="color:var(--fg-3rd);font-size:11px">' + escAttr(r.company) + '</span></td>'
+      + '<td title="' + escAttr(r.chat_name + ' · ' + r.company) + '">' + escAttr(r.chat_name) + '<br><span style="color:var(--fg-3rd);font-size:var(--fs-2xs)">' + escAttr(r.company) + '</span></td>'
       + '<td class="cell-wrap" title="' + escAttr(r.job_name) + '"><div>' + escAttr(r.job_title || r.job_name) + link + '</div></td>'
       + '<td>' + pay + '</td>'
       + '<td>' + ledgerKindHtml(r.contact_kind) + '</td>'
@@ -5398,7 +5497,8 @@ function renderJobPool() {
     var 选s = POOL_STATUS.map(function (p) {
       return '<option value="' + p[0] + '"' + (p[0] === 状态 ? ' selected' : '') + '>' + p[1] + '</option>';
     }).join('');
-    return '<tr' + (r.pinned ? ' class="pool-pinned"' : '') + ' data-id="' + escAttr(id) + '">'
+    return '<tr' + (r.pinned ? ' class="pool-pinned"' : '') + ' data-id="' + escAttr(id) + '"'
+      + ' aria-selected="' + (勾 ? 'true' : 'false') + '">'
       + '<td class="pool-sel"><label><input type="checkbox" class="pool-acc" data-key="' + escAttr(键) + '"'
       + (勾 ? ' checked' : '') + ' onclick="poolRowCheck(' + i + ', this.checked, event)" aria-label="勾选这条岗位"></label></td>'
       + '<td>' + (dataScope === 'all' ? '<span class="pool-acc-tag" title="这条在哪个号的池里">'
@@ -5424,10 +5524,10 @@ function renderJobPool() {
       + '<td title="抓到 ' + escAttr(String(r.captured_at ? new Date(Number(r.captured_at) * 1000).toLocaleString() : '')) + '">'
       + escAttr(poolAgo(r.last_seen_at || r.captured_at)) + '</td>'
       + '<td><span class="pool-act">'
-      + '<button class="btn btn-ghost btn-sm" style="padding:1px 5px;font-size:10px" onclick="poolRowPin(' + i + ')" title="'
+      + '<button class="btn btn-ghost btn-sm" style="padding:1px 5px;font-size:var(--fs-2xs)" onclick="poolRowPin(' + i + ')" title="'
       + (r.pinned ? '取消置顶（置顶只是排前面、看得清楚，机器不会因此多动它）' : '置顶（盯住这条）') + '">'
       + (r.pinned ? '已置顶' : '置顶') + '</button>'
-      + '<button class="btn btn-ghost btn-sm" style="padding:1px 5px;font-size:10px" onclick="poolRowDelete(' + i + ')" title="从池里删掉这条">' + poolIcon('delete') + '</button>'
+      + '<button class="btn btn-ghost btn-sm" style="padding:1px 5px;font-size:var(--fs-2xs)" onclick="poolRowDelete(' + i + ')" title="从池里删掉这条">' + poolIcon('delete') + '</button>'
       + '</span></td></tr>';
   }
   function fillRest() {
@@ -5749,7 +5849,7 @@ function buildGreetRowHtml(data) {
           reasonText = aiReason;
         }
       }
-      skipReasonHtml = '<span style="color:var(--fg-3rd);font-size:11px;white-space:normal;word-break:break-word;display:inline-block;line-height:1.4" title="'+escAttr(reasonText)+'">'+escHtml(reasonText)+'</span>';
+      skipReasonHtml = '<span style="color:var(--fg-3rd);font-size:var(--fs-2xs);white-space:normal;word-break:break-word;display:inline-block;line-height:1.4" title="'+escAttr(reasonText)+'">'+escHtml(reasonText)+'</span>';
       // 判分复盘：追问到的四段单独展开，不拼进上面的原因串——
       // skip_reason 限长 200 字，四段挤进去会互相顶掉
       var probe = data.ai_probe || null;
@@ -5767,7 +5867,7 @@ function buildGreetRowHtml(data) {
   // 第二种打招呼机制：平台自己把招呼发出去了、我们没能进会话核对文案。
   // 这一句必须出现在"成功"行上 —— 否则界面只有个绿勾，用户不知道少核对了一步
   if (data.auto_greet_note) {
-    skipReasonHtml = '<span style="color:var(--fg-3rd);font-size:11px;white-space:normal;'
+    skipReasonHtml = '<span style="color:var(--fg-3rd);font-size:var(--fs-2xs);white-space:normal;'
       + 'word-break:break-word;display:inline-block;line-height:1.4" title="'
       + escAttr(data.auto_greet_note) + '">' + escHtml(data.auto_greet_note) + '</span>';
   }
@@ -7169,8 +7269,8 @@ socket.on('wind_control',function(data){
     addLog('WARN', data.message);
     // 显示醒目警告
     var w = document.createElement('div');
-    w.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#fef3c7;color:#92400e;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.15);max-width:90vw;display:flex;align-items:center;gap:8px';
-    w.innerHTML = '<i data-ki="alert-triangle" style="font-size:16px"></i> ' + escHtml(data.message);
+    w.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#fef3c7;color:#92400e;padding:12px 24px;border-radius:8px;font-size:var(--fs-base);font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.15);max-width:90vw;display:flex;align-items:center;gap:8px';
+    w.innerHTML = '<i data-ki="alert-triangle" style="font-size:var(--fs-md)"></i> ' + escHtml(data.message);
     document.body.appendChild(w);
     if (typeof KIcon !== 'undefined') KIcon.createIcons();
     setTimeout(function(){ w.style.opacity='0'; w.style.transition='opacity .5s'; setTimeout(function(){w.remove();},500); }, 10000);
@@ -7680,7 +7780,7 @@ function loadArchiveList() {
       if (typeof KIcon !== 'undefined') KIcon.createIcons();
       return;
     }
-    var html = '<table class="greet-table" style="width:100%"><thead><tr><th>日期</th><th>打招呼</th><th>回复</th><th>大小</th><th>操作</th></tr></thead><tbody>';
+    var html = '<table class="greet-table" style="width:100%"><thead><tr><th scope="col">日期</th><th scope="col">打招呼</th><th scope="col">回复</th><th scope="col">大小</th><th scope="col">操作</th></tr></thead><tbody>';
     archives.forEach(function(a) {
       html += '<tr>';
       html += '<td>' + escHtml(a.date) + '</td>';
