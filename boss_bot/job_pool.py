@@ -35,6 +35,9 @@ from boss_bot.unified_config import account_file, resolve_path, write_json_atomi
 
 池文件名 = "job_pool.json"
 挪出文件名 = "job_pool_chatted_out.json"
+# 2026-11-04 他改的口径：「低于 60 分的以后就不要存在那个数据库里面了，没意义……
+# 就是没有达到筛选条件的」。走同一族"只挪不删"，不留在这张表里挡路，也不毁掉原件。
+筛掉文件名 = "job_pool_screened_out.json"
 坏证据目录名 = "pool_bad"
 
 # 「没投出去」分两类，界面措辞和要不要放回队列都按这个分：
@@ -62,6 +65,123 @@ _锁 = threading.RLock()
 _可更新字段 = ("job_name", "salary", "company", "location", "experience",
                "education", "job_type", "query", "city", "url")
 _不许被重置的字段 = ("id", "url", "status", "note", "captured_at", "pinned")
+
+# ── 投递分档（2026-11-04 他定的口径）──────────────────────────
+# 「AI 匹配度 90 分的就自己投递，60 以上 90 以下的存起来我看看」。
+# 两条线只住这里：自动投的那一步、界面上那两格筛选、每一行的那个标签，
+# 问的都是下面这一句。抄第二套的话，迟早出现"机器投的档和界面筛的档不是同一档"。
+# 默认值可以被 greet.auto_apply_min_score / greet.review_min_score 顶掉（界面能改），
+# 顶掉之后这三处一起跟着变，因为它们是拿同一份生效配置算的。
+自动投分数线 = 90
+待你看分数线 = 60
+
+档自动投 = "自动投"
+档待你看 = "待你看"
+档分不够 = "分不够"
+档没判 = "没判"
+
+
+def 投递分档(row: dict, 自动线=None, 待看线=None) -> str:
+    """这一行落在哪一档：自动投 / 待你看 / 分不够 / 没判。
+
+    只读 `ai.分`，不另存一份档位——存了就会过期：他换一份要求文件重判，
+    或者 AI 这次没答上来留空，写在行上的档就成了假话。
+
+    两条线之间留了口子：分刚好等于自动线算「自动投」（他要的是「90 分的就自己投」）。
+    命中本地否决词的**不给自动投**，降到「待你看」——那三十来个词（主播/刷单/中介/
+    传销/押金…）是他一条一条手写的「这些一律不要」，比 AI 的一句 90 更接近他本人；
+    AI 给这种行打 90 分是判错，机器不该拿自己的错替他做决定，但也不替他删掉。
+    """
+    ai = row.get("ai") or {}
+    分 = ai.get("分")
+    try:
+        分 = float(分)
+    except (TypeError, ValueError):
+        return 档没判
+    自动 = float(自动线 if 自动线 not in (None, "") else 自动投分数线)
+    待看 = float(待看线 if 待看线 not in (None, "") else 待你看分数线)
+    if 分 >= 自动 and not ((row.get("gate") or {}).get("否决命中")):
+        return 档自动投
+    if 分 >= 待看:
+        return 档待你看
+    return 档分不够
+
+
+def 生效分档线(配置) -> tuple:
+    """这两条线现在划在哪——机器自动投、界面筛、行上那个标签都问这一句。
+
+    配置来自 `greet.auto_apply_min_score` / `greet.review_min_score`（界面能改，
+    热重载生效）。读不到就用模块上那两个默认值，绝不各猜各的：他今天把线调到 85，
+    机器按 85 投、界面按 90 筛，那"筛出来 0 行、机器明明投了 5 条"就又成了要人猜的账。
+    自动线低于待看线时把待看线抬到自动线：否则"90 以下"这个说法自相矛盾，
+    而两条线交叉会同时出现"既自动投又待你看"的行。
+    """
+    段 = 配置.get("greet") if isinstance(配置, dict) else getattr(配置, "greet", None)
+
+    def 取(名, 兜底):
+        try:
+            值 = 段.get(名) if isinstance(段, dict) else getattr(段, 名, None)
+            return float(值) if 值 not in (None, "") else float(兜底)
+        except (TypeError, ValueError, AttributeError):
+            return float(兜底)
+
+    自动 = 取("auto_apply_min_score", 自动投分数线)
+    待看 = 取("review_min_score", 待你看分数线)
+    return 自动, min(待看, 自动)
+
+
+def 人工撤过勾(row: dict) -> bool:
+    """这一行是不是被他从「已勾待投」撤回到「待选」的。
+
+    撤勾的留痕是 `勾选.来源=面板点击` + `动作=撤勾回待选`（见 标状态）。
+    机器自动投必须认这个：他不想要某条 90 分的岗、撤了一次，机器下一轮又替他
+    勾上——那就成了"我的操作没生效"，比不自动投更糟。
+    """
+    痕 = row.get("勾选") or {}
+    return (str(痕.get("来源") or "") == "面板点击"
+            and str(痕.get("动作") or "") == "撤勾回待选")
+
+
+def 机器会挑这条(row: dict, 自动线=None, 待看线=None) -> bool:
+    """这一行此刻会不会被机器自己勾走。`自动投候选` 和界面「机器自动投」那一格
+    问的都是这一句——分成两套就会出现"筛出来 1 行、机器 0 条"。
+
+    比分数档多两条：还得挂着「待选」（已经投过的、他标成不投的不再挑），
+    而且他没撤过勾（撤一次=表过一次态）。
+    """
+    return (row.get("status") == 状态待选
+            and not 人工撤过勾(row)
+            and 投递分档(row, 自动线, 待看线) == 档自动投)
+
+
+def 待他看的(row: dict, 自动线=None, 待看线=None) -> bool:
+    """这一行此刻归他看：挂着「待选」、分数过「待你看线」，而且机器不会自己挑走它。
+
+    与 `机器会挑这条` 互斥——同一条岗位不能既算"机器投"又算"等他看"，
+    那两个数字加起来就会超过池子里真正待办的行数。
+    过线但被机器让出来的那两种（撞了他手写的否决词、他撤过勾）落在这里：
+    机器不替他决定，本来就是给他看的。
+    """
+    if row.get("status") != 状态待选 or 机器会挑这条(row, 自动线, 待看线):
+        return False
+    分 = (row.get("ai") or {}).get("分")
+    try:
+        分 = float(分)
+    except (TypeError, ValueError):
+        return False
+    return 分 >= float(待看线 if 待看线 not in (None, "") else 待你看分数线)
+
+
+def 自动投候选(行s, 自动线=None, 待看线=None) -> list:
+    """池里此刻该由机器自己投的行，分高的在前。
+
+    每轮有个数上限：一轮就勾几十条等于把每日 150 的额度一次打满，
+    还把"机器在替我发东西"这件事变成一件看不见的事。
+    """
+    出 = [r for r in (行s or []) if 机器会挑这条(r, 自动线, 待看线)]
+    出.sort(key=lambda r: (-float((r.get("ai") or {}).get("分") or 0),
+                           -float(r.get("last_seen_at") or 0)))
+    return 出
 
 
 def _去噪(url: str) -> str:
@@ -244,14 +364,17 @@ def 抓到筛得过(row: dict, 天内) -> bool:
     return 抓 >= time.time() - 天 * 86400
 
 
-def _AI档筛得过(row: dict, 档: str, 文档指纹: str = "") -> bool:
-    """界面「AI 精筛」那一格：未判 / 判过 / 合 / 不合。
+def _AI档筛得过(row: dict, 档: str, 文档指纹: str = "", 自动线=None,
+                待看线=None) -> bool:
+    """界面「AI 精筛」那一格：未判 / 判过 / 合 / 不合 / 自动投 / 待你看。
 
     「合」只认**当前这份要求文件**下判出来的合：换了一份要求，旧结论就跟新要求
     没关系了，不能继续冒充匹配。顶部那个「AI匹配」计数走的是同一句判据——
     两处各写一套的话，数字跟筛出来的行数会对不上。
     「不合」要的是机器真给了个否：接口异常那次落的是空结论（没盖文件指纹），
     把它算进「判成不合」就成了"AI 说这条不要"，其实它没看。
+    「自动投」「待你看」走 `投递分档` 那一句，跟机器真拿去自动投的是同一份判据：
+    这一格筛出的行数就是他该看见的行数，也等于机器替他投出去的那些。
     """
     if not 档:
         return True
@@ -260,6 +383,12 @@ def _AI档筛得过(row: dict, 档: str, 文档指纹: str = "") -> bool:
         return not ai.get("判于")
     if 档 == "判过":
         return bool(ai.get("判于"))
+    if 档 == 档自动投:
+        # 跟机器真拿去勾的那一句完全一样
+        return 机器会挑这条(row, 自动线, 待看线)
+    if 档 == 档待你看:
+        # 同一条岗位不许既"机器自己投"又"等他来看"；已经投过/标过不投的也不再占这一档
+        return 待他看的(row, 自动线, 待看线)
     if 档 == "合":
         指纹 = str(文档指纹 or "")
         return bool(指纹) and ai.get("合") is True \
@@ -297,14 +426,15 @@ def _粗筛档筛得过(row: dict, 档: str) -> bool:
 def 筛行(行s, 状态: str = "", 关键字: str = "", 城市: str = "",
         岗位: str = "", 公司: str = "", 备注: str = "", 判分理由: str = "",
         薪资下限K=None, AI档: str = "", 粗筛档: str = "", 抓到天内=None,
-        文档指纹: str = "") -> list:
+        文档指纹: str = "", 自动线=None, 待看线=None) -> list:
     """按面板表头那几格挑行（纯函数）。
 
     单号列表和「全部账号」的合并视图共用这一份：两处各写一套的话，同一条岗位
     换个数据范围筛出来的结果就不一样。筛只是筛，一个字都不改。
 
     形参就是界面上那几格，一格一个名（`文档指纹` 不算格子，那是"当前按哪份要求
-    判的"这个上下文）——加一格忘了接线，tests/test_job_pool_filters.py 会逐格比红。
+    判的"这个上下文；`自动线`/`待看线` 同理，那是"他这两条线现在划在哪"）。
+    加一格忘了接线，tests/test_job_pool_filters.py 会逐格比红。
     """
     出 = list(行s or [])
     if 状态:
@@ -334,7 +464,7 @@ def 筛行(行s, 状态: str = "", 关键字: str = "", 城市: str = "",
     if 粗筛档:
         出 = [r for r in 出 if _粗筛档筛得过(r, 粗筛档)]
     if AI档:
-        出 = [r for r in 出 if _AI档筛得过(r, AI档, 文档指纹)]
+        出 = [r for r in 出 if _AI档筛得过(r, AI档, 文档指纹, 自动线, 待看线)]
     出 = [r for r in 出 if 薪资筛得过(r, 薪资下限K)]
     出 = [r for r in 出 if 抓到筛得过(r, 抓到天内)]
     return 出
@@ -398,6 +528,7 @@ class 岗位池:
         self.坏目录 = os.path.join(基目录, 坏证据目录名)
         self.路径 = account_file(os.path.join(基目录, 池文件名), self.account_index)
         self.挪出路径 = account_file(os.path.join(基目录, 挪出文件名), self.account_index)
+        self.筛掉路径 = account_file(os.path.join(基目录, 筛掉文件名), self.account_index)
         _不许测试碰真实池(self.路径)
 
     # ── 读写 ──
@@ -681,6 +812,96 @@ class 岗位池:
             if 改数:
                 self._写(行s)
             return 改数, ("放回 %d 条：话术这一类的失败改了配置就重新可投" % 改数 if 改数 else "没有可放回的行")
+
+    def _读筛掉留档(self):
+        """读出筛掉留档那一份；读不出来返回 None（调用方据此一条都不许动）。"""
+        if not os.path.exists(str(self.筛掉路径)):
+            return []
+        try:
+            with open(str(self.筛掉路径), "r", encoding="utf-8") as f:
+                份 = json.load(f) or []
+            return 份 if isinstance(份, list) else None
+        except Exception:
+            return None
+
+    def 筛掉身份(self, 当前口径: str = "") -> set:
+        """已经被"没达到筛选条件"挪出池的那些行的身份——抓取腿拿它决定要不要再捡回来。
+
+        只认**同一套判定口径**下筛掉的（口径 = 筛选文件 + 阈值 + 打分提示词 +
+        否决/方向词，见 screen_judge.判定口径）。他改了其中任何一样，旧结论就跟新要求
+        没关系了，那条岗位必须能重新进池、重新判一次——不然"改口径"这件事在挪出去那
+        一批上永远不生效，那正是这个项目修过好几轮的那类账。
+        没判过口径的留档行（挪出去时那行没盖口径）也放回：拿不准的时候宁可让他重判一遍，
+        也不许悄悄把候选永久变没。
+        """
+        份 = self._读筛掉留档()
+        if not 份:
+            return set()
+        出 = set()
+        for r in 份:
+            身份 = r.get("id")
+            if not 身份:
+                continue
+            刻 = str(r.get("挪出口径") or "")
+            if 刻 and 刻 == str(当前口径 or ""):
+                出.add(身份)
+        return 出
+
+    def 挪走低于线(self, 线, 当前口径: str = "") -> tuple:
+        """AI 分低于这条线的行挪出池子，一行不删，进 `job_pool_screened_out.json`。
+
+        2026-11-04 现数：两号池 4204 行里 **3804 行（88.2%）** 的 AI 分低于 60——
+        这张表是他挑"哪条我要投"的地方，八成的行是机器早就判过"没达到筛选条件"的
+        普工/主播/老师/中介，留在这里就是让他在四千行里翻四百条能看的。
+        为什么是"挪"不是"删"：这条判据住在 AI 的一次打分里，他会换要求文件、会调线，
+        删了就没有回头的账；挪出去那份带 挪出原因/时刻/判它时那套口径，
+        改了口径还能重新进池（见 `筛掉身份`）。
+
+        没判过分（`ai.分` 空）的行不动：那是"还没轮到"，不是"没过线"。
+        已经勾过、投过的行也不动：那是他自己点过的名，机器不替他撤销记录。
+        """
+        try:
+            线 = float(线)
+        except (TypeError, ValueError):
+            return 0, "没给一条线，一条没动"
+        if 线 <= 0:
+            return 0, "线填 0 = 这条不收，一条没动"
+        with _锁:
+            行s = self._读()
+            留, 走 = [], []
+            for r in 行s:
+                if r.get("status") != 状态待选:
+                    留.append(r)
+                    continue
+                try:
+                    分 = float((r.get("ai") or {}).get("分"))
+                except (TypeError, ValueError):
+                    留.append(r)
+                    continue
+                if 分 < 线:
+                    走.append(r)
+                else:
+                    留.append(r)
+            if not 走:
+                return 0, "池里没有低于这条线的行"
+            以前 = self._读筛掉留档()
+            if 以前 is None:
+                # 那份是唯一的留档，读不出来就宁可不动：挪过去等于把它盖掉
+                return 0, "筛掉留档读不出来，这条没动"
+            现在 = time.time()
+            for r in 走:
+                r["挪出原因"] = "AI 分 %s 低于 %s，没达到筛选条件" % (
+                    (r.get("ai") or {}).get("分"), int(线))
+                r["挪出时刻"] = 现在
+                # 盖的是**这一行结论自己的口径**（判它时那份文件+阈值+提示词+词表）。
+                # 拿调用方传的当前口径去盖会作假：改了口径之后旧行会被当成"新口径下
+                # 筛掉的"，永远捡不回来。留档里没口径的那种旧行一律放回（见 筛掉身份）。
+                r["挪出口径"] = str((r.get("ai") or {}).get("口径")
+                                    or 当前口径 or "")
+            write_json_atomic(str(self.筛掉路径), 以前 + 走)
+            self._写(留)
+            return len(走), "挪走 %d 条没达到筛选条件的行（原件在 %s）" % (
+                len(走), Path(self.筛掉路径).name)
 
     def 挪走已沟通(self, 身份库) -> tuple:
         """把"BOSS 侧早已有这条会话"的行挪出池子，一行不删，进 `job_pool_chatted_out.json`。

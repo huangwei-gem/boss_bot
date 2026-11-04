@@ -290,6 +290,9 @@ class 判分落池Test:
     def test_AI判了不合要把结论落进池子(self, tmp_path):
         loop = _loop(tmp_path, 引擎=_光引擎())
         loop.config.ai.screen_max_per_round = 5
+        # 0 分这一行会被"没达到筛选条件就挪出池"那一刀收走（11-04 口径，另有一条门测它）。
+        # 这条门要测的是**结论落不落得下来**，两件事别搅在一块儿。
+        loop.config.greet.drop_below_review = False
         self._接进光引擎(loop, self._引擎替身(
             {"score": 0, "is_match": False, "veto_hit": "主播",
              "reason": "命中否决词「主播」（代码直查 JD）"}))
@@ -304,6 +307,7 @@ class 判分落池Test:
         """50 分是"判过了、不够"，不是"没判"。"""
         loop = _loop(tmp_path, 引擎=_光引擎())
         loop.config.ai.screen_max_per_round = 5
+        loop.config.greet.drop_below_review = False   # 同上：这条只看结论落不落下来
         self._接进光引擎(loop, self._引擎替身(
             {"score": 40, "is_match": True, "reason": "方向不太对"}))
         loop._capture_jobs([岗位(1)])
@@ -332,17 +336,76 @@ class 判分落池Test:
         assert not (行.get("ai") or {}).get("分")
 
     def test_判过不合的下轮不再重判(self, tmp_path):
-        """结论落了盘，名额就要让给还没判的行——这是这条链存在的意义。"""
+        """结论落了盘，名额就要让给还没判的行——这是这条链存在的意义。
+
+        11-04 之后这条有两条路都算数：还留在池里的（没达到条件那一刀关掉时）靠
+        `结论过期` 认出"判过了"；已经被挪出池的靠 `筛掉身份` 认出"这条判过、别再捡回来"。
+        两条都要在——只留前一条，那 3804 行低分岗每轮都会被重判一遍烧额度。
+        """
+        for 收在, 说明 in ((False, "留在池里"), (True, "挪出池之后")):
+            loop = _loop(tmp_path / str(收在), 引擎=_光引擎())
+            loop.config.ai.screen_max_per_round = 5
+            loop.config.greet.drop_below_review = 收在
+            分析 = MagicMock(side_effect=self._引擎替身(
+                {"score": 0, "is_match": False, "veto_hit": "主播", "reason": "命中否决词"}))
+            loop._greet_engine._analyze_job_with_ai = 分析
+            loop._capture_jobs([岗位(1, 标题="线上兼职主播")])
+            assert 分析.call_count == 1, 说明
+            loop._capture_jobs([岗位(1, 标题="线上兼职主播"),
+                                岗位(2, 标题="线上兼职主播")])
+            assert 分析.call_count == 2, "%s：只有新来的那条该判，旧的那条已经结了（%d）" % (
+                说明, 分析.call_count)
+            在池 = [r for r in loop._pool.列表() if r.get("ai", {}).get("分") == 0]
+            if 收在:
+                assert not 在池, "没达到条件的还占着这张表"
+            else:
+                assert 在池, "关掉那一刀时结论必须留在池里，别顺手把人删了"
+
+    def test_挪出池的低分行不会被下一轮重判(self, tmp_path):
+        """这条是上面那一刀存在的理由：不收干净，每号每轮 40 条额度全花在普工身上。"""
         loop = _loop(tmp_path, 引擎=_光引擎())
         loop.config.ai.screen_max_per_round = 5
+        loop.config.greet.drop_below_review = True
         分析 = MagicMock(side_effect=self._引擎替身(
-            {"score": 0, "is_match": False, "veto_hit": "主播", "reason": "命中否决词"}))
+            {"score": 10, "is_match": False, "reason": "方向不对"}))
         loop._greet_engine._analyze_job_with_ai = 分析
-        loop._capture_jobs([岗位(1, 标题="线上兼职主播")])
+        loop._capture_jobs([岗位(7)])
         assert 分析.call_count == 1
-        loop._capture_jobs([岗位(2, 标题="线上兼职主播")])
-        assert 分析.call_count == 2, "只有新来的那条该判，旧的那条已经结了"
-        assert (loop._pool.取(loop._pool.列表()[0]["id"])["ai"] or {}).get("分") == 0
+        for _ in range(3):
+            loop._capture_jobs([岗位(7)])          # BOSS 每轮都会把这同一条搜出来
+        assert 分析.call_count == 1, "同一条低分岗被重判了 %d 遍" % 分析.call_count
+        assert not loop._pool.列表(), "它早该不在池里了"
+
+    def test_改了判定口径要把挪出去的捞回来重判(self, tmp_path):
+        """他换要求文件、调阈值、改打分提示词——旧结论就不算数了。
+
+        这一条不许省：挪出去的那一批要是永远捡不回来，"改口径立刻生效"这件事
+        恰好对八成的行不成立，而那正是他要调的东西。
+        """
+        loop = _loop(tmp_path, 引擎=_光引擎())
+        loop.config.ai.screen_max_per_round = 5
+        loop.config.greet.drop_below_review = True
+        分析 = MagicMock(side_effect=self._引擎替身(
+            {"score": 10, "is_match": False, "reason": "方向不对"}))
+        loop._greet_engine._analyze_job_with_ai = 分析
+        loop._capture_jobs([岗位(9)])
+        assert not loop._pool.列表()
+        # `判定口径` 读的是**引擎手里那份 config**（真实跑起来就是 loop.config 那一份；
+        # 桩引擎默认没挂 config，先接上，否则下面改阈值对判据是无效的，那条绿就是空的）
+        from boss_bot.screen_judge import 判定口径
+        loop._greet_engine.config = loop.config
+        旧口径 = 判定口径(loop._greet_engine)
+        loop.config.ai.match_threshold = 88        # 动一下口径里的任意一样
+        assert 判定口径(loop._greet_engine) != 旧口径, "口径没动，下面那句绿是空的"
+        loop._capture_jobs([岗位(9)])
+        assert 分析.call_count == 2, "改了口径却没重判：这批候选就这样永久消失了"
+        # 它回来重判了，判完还是 10 分——于是又被挪出去。留档里该多一条，
+        # 且那条盖的是**新口径**：这才叫"改口径对这批行也生效"，不是把它们藏起来。
+        import json
+        from pathlib import Path as _P
+        份 = json.loads(_P(str(loop._pool.筛掉路径)).read_text(encoding="utf-8"))
+        assert len(份) == 2, 份
+        assert 份[-1]["挪出口径"] == 判定口径(loop._greet_engine)
 
 
 

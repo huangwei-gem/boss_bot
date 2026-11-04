@@ -512,6 +512,17 @@ class GreetConfig:
     # 只抓不投：搜索腿抓到的岗位全部进候选池，一条招呼都不自动发；
     # 他勾了哪几条，下一轮才投哪几条（2026-10-19 用户口径「先抓岗位，然后用户选择性投递」）
     capture_only: bool = True
+    # 2026-11-04 他的口径：「AI 匹配度 90 分的就自己投递，60 以上 90 以下的存起来我看看」。
+    # 所以 capture_only 照旧为真（不自动搜到就投），但池子里过线的由机器替他勾——
+    # 走的还是他手动勾那条腿，冷却、额度、风控、发送闸门、已沟通过一道不少。
+    auto_apply: bool = True
+    auto_apply_min_score: int = 90     # 到这条线机器自己投
+    review_min_score: int = 60         # 这条线到自动线之间存着给他看
+    auto_apply_max_per_round: int = 5  # 每号每轮最多自己勾几条，防一轮打满每日额度
+    # 2026-11-04 他补的口径：「低于 60 分的以后就不要存在那个数据库里面了，没意义」。
+    # 线就是上面那条 review_min_score，不再开第二条线（两条会打架）；
+    # 走的是"挪出去留档"不是删——他会换要求文件、会调线，删了就没有回头的账。
+    drop_below_review: bool = True
 
 
 @dataclass
@@ -1265,6 +1276,33 @@ class UnifiedConfig:
             # 只抓不投：抓到岗位进候选池，投哪条由他在面板上勾（2026-10-19 定的口径）。
             # 读不到这个键时保持默认 True —— 默认自动投等于用他的账号做他没批准的事
             self.greet.capture_only = bool(greet_block["capture_only"])
+        if isinstance(greet_block, dict):
+            # 「90 分这条线以上机器自己投」这一族（2026-11-04）。夹在合理范围里：
+            # 线填 0 等于"全部自己投"、填 120 等于"永远不投"，两种都不是他要的，
+            # 但 0~100 是他能自己划的范围，越界就夹回来并在界面上显示夹完的数。
+            def _线(名, 兜底, 上限=100):
+                值 = greet_block.get(名)
+                if 值 in (None, ""):
+                    return 兜底
+                try:
+                    return min(max(int(float(值)), 0), 上限)
+                except (TypeError, ValueError):
+                    return 兜底
+            self.greet.auto_apply = bool(greet_block.get("auto_apply", True))
+            self.greet.auto_apply_min_score = _线(
+                "auto_apply_min_score", self.greet.auto_apply_min_score)
+            self.greet.review_min_score = _线(
+                "review_min_score", self.greet.review_min_score)
+            个 = greet_block.get("auto_apply_max_per_round")
+            try:
+                个 = int(float(个)) if 个 not in (None, "") else self.greet.auto_apply_max_per_round
+            except (TypeError, ValueError):
+                个 = self.greet.auto_apply_max_per_round
+            self.greet.auto_apply_max_per_round = min(max(个, 0), 50)
+            if "drop_below_review" in greet_block:
+                # 显式给了才认：没给要保留 dataclass 的默认 True，别让"这一轮没读到键"
+                # 变成"他关掉了这条"
+                self.greet.drop_below_review = bool(greet_block["drop_below_review"])
 
         # 账号/打招呼配置
         accounts = data.get("accounts", [])
@@ -1788,6 +1826,13 @@ class UnifiedConfig:
             "greet": {
                 "enabled": self.greet.enabled,
                 "capture_only": self.greet.capture_only,
+                # 这四条必须跟着写回：界面上任何一次保存都是 to_dict() 整份覆盖，
+                # 少一条就等于他点一次保存把「90 分自己投」这条设置抹掉了。
+                "auto_apply": self.greet.auto_apply,
+                "auto_apply_min_score": self.greet.auto_apply_min_score,
+                "review_min_score": self.greet.review_min_score,
+                "auto_apply_max_per_round": self.greet.auto_apply_max_per_round,
+                "drop_below_review": self.greet.drop_below_review,
             },
             "reply": {
                 "enabled": self.reply.enabled,

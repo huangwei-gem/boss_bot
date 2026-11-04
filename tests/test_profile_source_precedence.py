@@ -184,3 +184,24 @@ class 规则话术要跟着画像走Test:
             assert 经, "%s 没带上 experience 这句" % 名
             份.append(经)
         assert len(set(份)) == 1, "三份文件的 experience 不是同一句：改一处不够"
+
+    def test_画像里的学历档次要真能让招呼语过闸(self):
+        """11-04 改专业那一下把「双一流」从 education 里抹掉过一次，查不出来。
+
+        闸门只认画像：画像里没有的档次不许机器替他报（greet_engine 里那段手写招呼语
+        过闸就是这条）。education 少这三个字，那条来源的招呼语就整条回空，
+        日志上只留一句"话术不可用"——所以这里既判这句话在，也判它真管用。
+        """
+        from boss_bot.reply_engine import reply_rejection
+
+        句 = "我是双一流的本科"
+        对 = _真机三份().user_profile
+        学历 = 对.education or ""
+        assert "双一流" in 学历, "画像 education 丢了「双一流」，那条手写招呼语会被闸门整条拦回"
+        assert "风景园林" in 学历, "他 11-04 定的是风景园林：" + 学历
+        assert "统计学" not in 学历, "专业又退回统计学了：" + 学历
+        assert reply_rejection(句, profile={"education": 学历}) == "", \
+            "画像带着双一流，这句话却还过不了闸——判据和画像对不上了"
+        # 反向哨兵：把双一流拿掉，同一条门必须真的会拦（不然上面那条绿是空的）
+        assert reply_rejection(句, profile={"education": 学历.replace("，双一流", "")}), \
+            "拿掉双一流居然还放行，说明这条门根本不看画像"

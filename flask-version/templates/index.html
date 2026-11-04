@@ -1199,6 +1199,10 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
                  这里原来还有一颗同名输入框，写的是 config.greet.rate_limit——加载器只认平铺的
                  rate_limit 段，所以填了永远不生效，10-23 查出来撤掉。 -->
             <div class="adv-field-row"><label title="开着：搜到的岗位只进【岗位候选池】，一条都不自动点「立即沟通」，投哪条由你在池里勾（勾完由打招呼线程按冷却投）。关掉：回到老样子，判得过就当轮投出去。你要的「先抓岗位、再选择性投递」就是这一条开着">只抓不投(勾选才投)</label><span id="advCaptureOnly" class="toggle-switch" onclick="toggleAdvBool('capture_only')"></span></div>
+            <div class="adv-field-row"><label title="开着：池里 AI 分过「自动投线」的那几条由机器自己勾上，交给同一条投递腿投出去——打招呼冷却、每日额度、BOSS 侧已有会话、页面风控、发送闸门一道不少；线以下的照旧等你自己勾。关掉=全部等你勾（11-04 口径「90 分的就自己投递，60 以上 90 以下的存起来我看看」）">自动投过线的(≥自动投线)</label><span id="advAutoApply" class="toggle-switch" onclick="toggleAdvBool('auto_apply')"></span></div>
+            <div class="adv-field-row"><label title="AI 分到这个数以上，机器自己勾着投。填 100 等于几乎不投，填 0 等于全都投（会被夹在 0~100）。这条线同时决定岗位池表里「机器自动投」那一格筛哪些行">自动投线(分)</label><input class="side-form-input" id="advAutoApplyMin" type="number" min="0" max="100" step="5" placeholder="90"></div>
+            <div class="adv-field-row"><label title="从这个数到自动投线之间的岗位机器不替你决定，留着你自己看——就是池里那一档「待你看」。填得比自动投线高会被抬到自动投线（不然一条岗会同时既自动投又待你看）">待你看下限(分)</label><input class="side-form-input" id="advReviewMin" type="number" min="0" max="100" step="5" placeholder="60"></div>
+            <div class="adv-field-row"><label title="每个号每一轮最多自己勾几条。一轮就勾几十条等于把每日 150 的额度一次打满，还把「机器在替我发东西」变成看不见的事。填 0=关掉机器自己勾">每号每轮自动投(条)</label><input class="side-form-input" id="advAutoApplyMax" type="number" min="0" max="50" step="1" placeholder="5"></div>
             <div class="adv-field-row"><label>每小时最多回复</label><input class="side-form-input" id="advMaxReply" type="number" value="60" min="1" max="200" step="1" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label title="HR 发来 offer/面试邀请这类重要消息时机器人会停手等人工，但一句话不该把整个号锁住：超过这个分钟数自动恢复回复。手动按「暂停回复」不受影响，0 = 永不自动恢复">重要消息暂停自动恢复(分钟)</label><input class="side-form-input" id="advPauseResumeMin" type="number" value="10" min="0" max="720" step="1" onchange="onAdvChange()"></div>
             <div class="adv-group-title">回复补漏与主动跟进</div>
@@ -1482,7 +1486,7 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
             </div>
           </div>
           <div class="record-tab-content" id="poolTabContent" style="padding:0;flex:1;overflow:auto">
-            <div class="pool-note">抓来的岗位先进这张表，<b>不自动沟通</b>：勾上「投递」的那几条才由打招呼线程按冷却投出去。<b>勾了就等于你判过了</b>——投递那一步不再拿否决词、方向词、AI 结论把这条弹回来，只有真投不出去才会停（BOSS 侧已有会话、页面被风控挡住、点了没出聊天框、这一刻这句话过不了发送闸门）。<b>表头下面那一行按列筛</b>：填哪一格就只看那一列（两格一起填是交集），薪资按「元/月」折过再比——时薪按 8 小时×22 天、日薪按 22 天，「面议」不参与；「重置」一次清干净。<b>BOSS 侧已经有会话的岗位不进这张表</b>（机器以前招呼过的都记在去重库里，勾了也只会被判「已沟通过」，所以抓的时候就拦掉；那几条要看去「打招呼记录」）。<b>「上次没投出去」是黄字不是红字</b>：那一类是话术这一刻过不了发送闸门，你把画像或招呼语改对，下一轮它自己就投走了。<b>本地粗筛</b>是词表白拿（不要钱），只贴标签不删人；<b>AI 精筛</b>每号每轮有额度，没判到的显示「未判」，下一轮自己补——这两栏是给你挑的时候看的，不是替你决定。<b>池按号分开存</b>：「全部账号」把两号并成一张表看（每行标着是哪个号），改哪一行就写回哪一行的号；切到具体某个号就只看那一个。</div>
+            <div class="pool-note">抓来的岗位先进这张表，<b>不自动沟通</b>：勾上「投递」的那几条才由打招呼线程按冷却投出去。<b>勾了就等于你判过了</b>——投递那一步不再拿否决词、方向词、AI 结论把这条弹回来，只有真投不出去才会停（BOSS 侧已有会话、页面被风控挡住、点了没出聊天框、这一刻这句话过不了发送闸门）。<b>这两档是按他划的线分的（11-04 口径）</b>：AI 分 ≥ 自动投线的那一档由「自动投」那颗开关决定要不要机器自己勾着投（开关关着就一条都不动，只当提示）；自动线以下、待你看线以上的留在表里等他自己在「状态」那一格改成「已勾待投」；<b>低于待你看线的（现在填的 60）不再占这张表</b>——那一族（普工/主播/老师/中介这一类，11-04 现数是池里 88% 的行）由机器挪进 <code>data/job_pool_screened_out*.json</code>，一行都不删，换一份「AI 自定义筛选」要求文件它们就会回来重判。<b>表头下面那一行按列筛</b>：填哪一格就只看那一列（两格一起填是交集），薪资按「元/月」折过再比——时薪按 8 小时×22 天、日薪按 22 天，「面议」不参与；「重置」一次清干净。<b>BOSS 侧已经有会话的岗位不进这张表</b>（机器以前招呼过的都记在去重库里，勾了也只会被判「已沟通过」，所以抓的时候就拦掉；那几条要看去「打招呼记录」）。<b>「上次没投出去」是黄字不是红字</b>：那一类是话术这一刻过不了发送闸门，你把画像或招呼语改对，下一轮它自己就投走了。<b>本地粗筛</b>是词表白拿（不要钱），只贴标签不删人；<b>AI 精筛</b>每号每轮有额度，没判到的显示「未判」，下一轮自己补——这两栏是给你挑的时候看的，不是替你决定。<b>池按号分开存</b>：「全部账号」把两号并成一张表看（每行标着是哪个号），改哪一行就写回哪一行的号；切到具体某个号就只看那一个。</div>
             <!-- AI 自定义筛选：把「我的要求」交给 AI，按它把池里的岗位逐条重判 -->
             <div class="ai-screen-panel" id="aiScreenPanel">
               <div class="ai-screen-head">
@@ -1553,12 +1557,14 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
                   <option value="">全部城市</option>
                 </select></th>
                 <th><input class="pool-f" type="number" min="0" step="1" id="poolFilterSalaryK" placeholder="≥ K/月" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()" title="按「元/月」比：8-10K 算 8000，211-221元/天 按 22 天折，31-36元/时 按 8 小时×22 天折；面议和反爬字体读不出的不参与"></th>
-                <th><select class="pool-f" id="poolFilterAiState" onchange="applyPoolFilter()">
+                <th><select class="pool-f" id="poolFilterAiState" onchange="applyPoolFilter()" title="这两档和机器自动投用的是同一句判据（job_pool.投递分档），数字来自配置里那两条线">
                   <option value="">全部</option>
                   <option value="未判">未判</option>
                   <option value="判过">判过</option>
                   <option value="合">判成合</option>
                   <option value="不合">判成不合</option>
+                  <option value="自动投">机器自动投（≥90）</option>
+                  <option value="待你看">待你看（60-89）</option>
                 </select></th>
                 <th><input class="pool-f" type="text" id="poolFilterAiReason" placeholder="含理由字样" onchange="applyPoolFilter()" oninput="applyPoolFilterDebounce()"></th>
                 <th><select class="pool-f" id="poolFilterGateState" onchange="applyPoolFilter()">
@@ -3397,6 +3403,12 @@ function renderAdvSettings() {
   // 加载器把它写进 greet.rate_limit）；这里不再读第二个同名键。
   // 缺省按"开着"画：后端 capture_only 默认 True，画成关就是界面与实跑相反
   setEl('advCaptureOnly', 'toggle-switch' + (((config.greet || {}).capture_only) !== false ? ' on' : ''));
+  // 自动投这一族同理：后端默认都是开的/90/60/5，画成别的就等于给他看一个跟实跑相反的面板
+  var _g = config.greet || {};
+  setEl('advAutoApply', 'toggle-switch' + (_g.auto_apply !== false ? ' on' : ''));
+  setVal('advAutoApplyMin', _g.auto_apply_min_score != null ? _g.auto_apply_min_score : 90);
+  setVal('advReviewMin', _g.review_min_score != null ? _g.review_min_score : 60);
+  setVal('advAutoApplyMax', _g.auto_apply_max_per_round != null ? _g.auto_apply_max_per_round : 5);
   var _rl = config.reply || {};
   setVal('advMaxReply', _rl.max_replies_per_hour != null ? _rl.max_replies_per_hour : 60);
   setVal('advPauseResumeMin', _rl.pause_auto_resume_minutes != null ? _rl.pause_auto_resume_minutes : 10);
@@ -3481,6 +3493,13 @@ function toggleAdvBool(key) {
     toast(config.greet.capture_only
       ? '已改成只抓不投：搜到的岗位进【岗位候选池】，勾了才投'
       : '已关掉只抓不投：判得过的岗位当轮直接投出去（老行为）');
+  } else if (key === "auto_apply") {
+    if (!config.greet) config.greet = {};
+    config.greet.auto_apply = !(config.greet.auto_apply !== false);
+    setEl('advAutoApply', 'toggle-switch' + (config.greet.auto_apply ? ' on' : ''));
+    toast(config.greet.auto_apply
+      ? '已开启：AI 分过「自动投线」的岗位由机器自己勾上、交投递腿投出去'
+      : '已关掉：机器只搜索 + 初筛 + 回复，一条都不替你投（要投还是你自己勾）');
   } else if (key === "self_evolve") {
     config.self_evolve_enabled = !(config.self_evolve_enabled !== false);
     setEl('advSelfEvolve', 'toggle-switch' + (config.self_evolve_enabled ? ' on' : ''));
@@ -3540,7 +3559,17 @@ function onAdvChange() {
 
   // 投递/回复限制
   if (!config.greet) config.greet = {};
+  // 空框/非数字退回默认值，0 是有效值（每轮自动投 0 条 = 这一步关掉）
+  function _advNum(id, def) {
+    var v = parseInt(document.getElementById(id).value, 10);
+    return isNaN(v) ? def : v;
+  }
   config.greet.capture_only = document.getElementById('advCaptureOnly').classList.contains('on');
+  config.greet.auto_apply = document.getElementById('advAutoApply').classList.contains('on');
+  // 0 是有效值（每轮自动投 0 条就是把这一步关掉），不能用 parseInt(x) || 默认
+  config.greet.auto_apply_min_score = _advNum('advAutoApplyMin', 90);
+  config.greet.review_min_score = _advNum('advReviewMin', 60);
+  config.greet.auto_apply_max_per_round = _advNum('advAutoApplyMax', 5);
   if (!config.reply) config.reply = {};
   config.reply.max_replies_per_hour = parseInt(document.getElementById('advMaxReply').value) || 30;
   // 0 是有效值（"每轮补 0 个"就是把补漏关掉），这里不能用 parseInt(x) || 默认
@@ -4720,6 +4749,8 @@ let poolShownSig = null;    // 屏上这份表是按哪一份数据画的（轮�
 let poolRenderGen = 0;      // 每重画一次加一：分批铺行的旧批次看见它变了就停手
 let poolFilterTimer = null;
 let poolAiDocHash = null;   // 接口上次告诉我们的「当前筛选要求」指纹（''=还没保存过）
+let pool分档线 = null;      // 后端现算的那两条线（自动投 / 待你看），来自配置，界面上不另写一份
+let pool自动投开关 = false;  // 那颗开关此刻开着没有——关着的时候这句要说"机器不会投"
 
 function poolTabActive() {
   var el = document.getElementById('poolTabContent');
@@ -5142,7 +5173,10 @@ function loadJobPool(force, 补过一次) {
       }
       poolRows = 行s;
       poolFillCities(data.cities);
-      renderJobPoolStats(data.stats || {});
+      pool分档线 = data.分档线 || null;   // 那两条线以配置为准，界面上不自己写死
+      pool自动投开关 = !!data.自动投开关;  // 关着的时候这句必须改口，不能说"机器会自动投"
+      pool同步分档标签();
+      renderJobPoolStats(data.stats || {}, data.档计数);
       // 表是分批铺的，可勾条数与按钮状态不能等最后一批铺完才更新（几千行要几十秒）
       poolSyncSelection();
       if (要重画) {
@@ -5187,7 +5221,7 @@ function poolShowNotice(title, hint) {
   pool画分页();
 }
 
-function renderJobPoolStats(s) {
+function renderJobPoolStats(s, 档) {
   var el = document.getElementById('poolStats');
   if (el) {
     el.innerHTML = POOL_STATUS.map(function (p) {
@@ -5199,10 +5233,49 @@ function renderJobPoolStats(s) {
                 + (s['AI匹配'] !== undefined
                     ? '<span title="这一池里按当前那份筛选要求判成『合』的条数（换了文件旧结论不算）">AI 匹配 <b>'
                       + (Number(s['AI匹配']) || 0) + '</b></span>' : '')
+                + pool档标签(档)
                 + (dataScope === 'all' ? '<span style="color:var(--fg-4th)">（两个号合计）</span>' : '');
   }
   var badge = document.getElementById('poolTabCount');
   if (badge) badge.textContent = Number(s['总数']) || 0;
+}
+
+// 那两档的数字：只有接口告诉了我们分档线才印，否则宁可不印。
+// 把「≥90」「60-89」写死在这一句里是第二种真相——他把线调到 85 之后，
+// 界面上还在说 90，那就是"看着对、其实没生效"那一类要人猜的账。
+function pool档标签(档) {
+  if (!pool分档线 || !pool分档线['自动']) return '';
+  var 自 = Math.round(Number(pool分档线['自动']) || 0);
+  var 看 = Math.round(Number(pool分档线['待看']) || 0);
+  var a = Number((档 || {})['待自动投']) || 0;
+  var b = Number((档 || {})['待你看']) || 0;
+  var q = Number((档 || {})['机器已勾在队列']) || 0;
+  // 开关关着（他 11-04 后半句改的口径：「你不需要投递，你负责搜索和初筛和回复就行」）
+  // 就不能印成「自动投（≥90）6」——那读起来像机器在自己发消息。数字照给，话要说清。
+  var 名 = pool自动投开关 ? '自动投（≥' + 自 + '）' : '过自动投线（开关关着，不投）';
+  var 由 = pool自动投开关
+    ? 'AI 分 ≥' + 自 + '、没撞你手写的否决词、你也没撤过勾的：这些由机器自己勾上交给投递腿'
+      + '（每号每轮有条数上限）。这一档的判据跟表里「AI 精筛」那一格、跟机器真正拿去投的是同一条'
+    : '开关关着，机器一条都不会自己投——这个数只告诉你开了之后会有几条过线。'
+      + 'AI 分 ≥' + 自 + '、没撞你手写的否决词、你也没撤过勾的才算';
+  return '<span' + (pool自动投开关 && a ? ' class="pool-on"' : '') + ' title="' + escAttr(由) + '">'
+    + 名 + ' <b>' + a + '</b></span>'
+    + '<span title="AI 分 ' + 看 + '~' + (自 - 1) + '：机器不替你决定，留着你自己看">待你看（' + 看 + '-' + (自 - 1) + '） <b>' + b + '</b></span>'
+    + (q ? '<span title="机器已经替他勾上、正排在队列里的条数">机器已勾待投 <b>' + q + '</b></span>' : '');
+}
+
+// 下拉里那两档的名字跟着生效的线走；改文案只动 option 的 text，
+// 不重建那一格（重建会把他正在选的别的东西冲掉）
+function pool同步分档标签() {
+  if (!pool分档线) return;
+  var sel = document.getElementById('poolFilterAiState');
+  if (!sel) return;
+  var 自 = Math.round(Number(pool分档线['自动']) || 0);
+  var 看 = Math.round(Number(pool分档线['待看']) || 0);
+  Array.prototype.forEach.call(sel.options, function (o) {
+    if (o.value === '自动投') o.textContent = '机器自动投（≥' + 自 + '）';
+    else if (o.value === '待你看') o.textContent = '待你看（' + 看 + '-' + (自 - 1) + '）';
+  });
 }
 
 function poolAgo(sec) {
@@ -5215,7 +5288,7 @@ function poolAgo(sec) {
   return Math.floor(d / 86400) + ' 天前';
 }
 
-function poolAiCell(ai) {
+function poolAiCell(ai, 行) {
   var 分 = ai['分'];
   var 判了 = ai['判于'] || (分 !== undefined && 分 !== null && 分 !== '');
   if (!判了) return '<span class="pool-tag idle">未判</span><div class="pool-sub">还没轮到精筛</div>';
@@ -5225,10 +5298,31 @@ function poolAiCell(ai) {
     + escAttr(String(分 === undefined || 分 === null ? '—' : 分)) + '分 '
     + (异常 ? '没判成' : (合 ? '像能投' : '不合')) + '</span>';
   var sub = [];
+  var 档 = pool投递分档(行 || { ai: ai });
+  if (档 === '自动投') sub.push('<span class="pool-tag pass" title="过他自己画的那条自动投线，机器每轮自己勾着投（撤过勾的、撞他手写否决词的不算）">自动投</span>');
+  else if (档 === '待你看') sub.push('<span class="pool-tag idle" title="这条机器不替他决定：留着他自己看">待你看</span>');
   if (ai['接口']) sub.push(escAttr(String(ai['接口'])));
   if (ai['否决']) sub.push('硬否决：' + escAttr(String(ai['否决'])));
   if (ai['判于']) sub.push('判于 ' + escAttr(poolAgo(ai['判于'])));
   return badge + (sub.length ? '<div class="pool-sub">' + sub.join(' · ') + '</div>' : '');
+}
+
+// 这一行落在哪一档——判据的真身在 boss_bot/job_pool.py 的 投递分档 / 机器会挑这条。
+// 这里搬的是同样几条输入（分 + 他手写的否决词 + 他撤没撤过勾 + 还是不是待选 + 那两条线），
+// 所以这一格筛出来的行数 = 这里画出来的标签数 = 机器真拿去勾的条数。
+// 线来自接口（pool分档线），拿不到就一个标签都不画：宁可不画，也不替他猜一条线。
+function pool投递分档(行) {
+  if (!pool分档线) return '';
+  var 分 = Number(((行 || {}).ai || {})['分']);
+  if (!isFinite(分)) return '';
+  if (String((行 || {}).status || 'new') !== 'new') return '';   // 已投/标过不投的不再占这两档
+  var 痕 = ((行 || {}).勾选 || {});
+  var 撤 = 痕['来源'] === '面板点击' && 痕['动作'] === '撤勾回待选';
+  var 否 = !!(((行 || {}).gate || {})['否决命中']);
+  var 自动 = Number(pool分档线['自动']), 待看 = Number(pool分档线['待看']);
+  if (分 >= 自动 && !否 && !撤) return '自动投';
+  if (分 >= 待看) return '待你看';   // 到这里的一定不是机器会挑走的：撤过勾的、撞否决词的高分行都归他看
+  return '分不够';
 }
 
 function poolGateCell(gate) {
@@ -5316,7 +5410,7 @@ function renderJobPool() {
       + '<td title="' + escAttr(String(r.company || '')) + '">' + escAttr(String(r.company || '')) + '</td>'
       + '<td>' + 城市格(城) + '</td>'
       + '<td>' + 薪资格子(r.salary) + '</td>'
-      + '<td>' + poolAiCell(ai) + '</td>'
+      + '<td>' + poolAiCell(ai, r) + '</td>'
       + '<td class="pool-reason" title="' + escAttr(String(ai['理由'] || '')) + '"><div>'
       + (ai['理由'] ? escAttr(String(ai['理由'])) : dash) + '</div></td>'
       + '<td>' + poolGateCell(gate) + '</td>'

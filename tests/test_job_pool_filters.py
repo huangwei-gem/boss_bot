@@ -31,8 +31,10 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = (ROOT / "flask-version" / "templates" / "index.html").read_text(encoding="utf-8")
 APP = (ROOT / "flask-version" / "app.py").read_text(encoding="utf-8")
 
-# 「文档指纹」不算表头的一格：它是「现在按哪份要求判的」这个上下文，不是哪一列
-_不是格子 = {"行s", "文档指纹"}
+# 「文档指纹」不算表头的一格：它是「现在按哪份要求判的」这个上下文，不是哪一列。
+# 「自动线」「待看线」同理：那是他此刻把自动投/待你看这两条线划在哪（来自配置），
+# 界面上是下拉里两档的**名字**跟着它变，不是多摆一个输入框。
+_不是格子 = {"行s", "文档指纹", "自动线", "待看线"}
 
 
 def _函数体(名, 要整段=False):

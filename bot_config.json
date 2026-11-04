@@ -7,40 +7,67 @@
       "image_files": [],
       "jobs": [
         {
-          "city": "长沙",
           "enabled": true,
-          "greeting_message": "",
-          "image_files": [],
-          "job_type": "",
+          "city": "长沙",
           "query": "AI产品经理",
-          "scroll_pages": 5
+          "job_type": "全职",
+          "scroll_pages": 10,
+          "greeting_message": "",
+          "image_files": []
         },
         {
-          "city": "长沙",
           "enabled": true,
+          "city": "长沙",
+          "query": "AIGC产品经理",
+          "job_type": "全职",
+          "scroll_pages": 10,
           "greeting_message": "",
-          "image_files": [],
-          "job_type": "",
-          "query": "AI产品",
-          "scroll_pages": 5
+          "image_files": []
         },
         {
-          "city": "长沙",
           "enabled": true,
-          "greeting_message": "",
-          "image_files": [],
-          "job_type": "",
+          "city": "长沙",
           "query": "大模型产品经理",
-          "scroll_pages": 5
+          "job_type": "全职",
+          "scroll_pages": 10,
+          "greeting_message": "",
+          "image_files": []
         },
         {
-          "city": "长沙",
           "enabled": true,
+          "city": "长沙",
+          "query": "AI应用工程师",
+          "job_type": "全职",
+          "scroll_pages": 10,
           "greeting_message": "",
-          "image_files": [],
-          "job_type": "",
-          "query": "AI运营",
-          "scroll_pages": 5
+          "image_files": []
+        },
+        {
+          "enabled": true,
+          "city": "长沙",
+          "query": "AI产品运营",
+          "job_type": "全职",
+          "scroll_pages": 10,
+          "greeting_message": "",
+          "image_files": []
+        },
+        {
+          "enabled": true,
+          "city": "长沙",
+          "query": "算法产品经理",
+          "job_type": "全职",
+          "scroll_pages": 10,
+          "greeting_message": "",
+          "image_files": []
+        },
+        {
+          "enabled": true,
+          "city": "长沙",
+          "query": "产品经理 算法",
+          "job_type": "全职",
+          "scroll_pages": 10,
+          "greeting_message": "",
+          "image_files": []
         }
       ],
       "message_interval_max": 8,
@@ -71,35 +98,67 @@
       "image_files": [],
       "jobs": [
         {
-          "city": "长沙",
           "enabled": true,
-          "greeting_message": "",
-          "image_files": [
-            "dashboard/d7ca4e20_看板1.png",
-            "dashboard/452a1b69_看板2.png",
-            "dashboard/d258c537_看板3.png"
-          ],
-          "job_type": "",
+          "city": "长沙",
           "query": "数据分析",
-          "scroll_pages": 5
+          "job_type": "全职",
+          "scroll_pages": 10,
+          "greeting_message": "",
+          "image_files": []
         },
         {
-          "city": "长沙",
           "enabled": true,
+          "city": "长沙",
+          "query": "BI分析师",
+          "job_type": "全职",
+          "scroll_pages": 10,
           "greeting_message": "",
-          "image_files": [],
-          "job_type": "",
+          "image_files": []
+        },
+        {
+          "enabled": true,
+          "city": "长沙",
           "query": "数据分析师",
-          "scroll_pages": 5
+          "job_type": "全职",
+          "scroll_pages": 10,
+          "greeting_message": "",
+          "image_files": []
         },
         {
-          "city": "长沙",
           "enabled": true,
+          "city": "长沙",
+          "query": "SQL",
+          "job_type": "全职",
+          "scroll_pages": 10,
           "greeting_message": "",
-          "image_files": [],
-          "job_type": "",
+          "image_files": []
+        },
+        {
+          "enabled": true,
+          "city": "长沙",
+          "query": "数据产品经理",
+          "job_type": "全职",
+          "scroll_pages": 10,
+          "greeting_message": "",
+          "image_files": []
+        },
+        {
+          "enabled": true,
+          "city": "长沙",
           "query": "商业数据分析",
-          "scroll_pages": 5
+          "job_type": "全职",
+          "scroll_pages": 10,
+          "greeting_message": "",
+          "image_files": []
+        },
+        {
+          "enabled": true,
+          "city": "长沙",
+          "query": "数据分析专家",
+          "job_type": "全职",
+          "scroll_pages": 10,
+          "greeting_message": "",
+          "image_files": []
         }
       ],
       "message_interval_max": 8,
@@ -280,7 +339,7 @@
       "试用期无薪",
       "游戏代练"
     ],
-    "custom_scoring_prompt": "本轮只投「长沙 · 全职」的两类岗位：AI 产品经理、数据分析师。按岗位与这两个方向的匹配度给 0-100 分：\n1) 80 分以上：岗位方向对，JD 职责与我的项目/技能能对上；\n2) 55-79 分：方向对，但差一项具体证据（经验年限、行业背景、某项技术），请在 reason 里写清差哪一条；\n3) 30 分以下：方向不对（运营/文员/客服/销售/主播/剪辑/教师/配送/中介/工厂/驻场外包等），或命中自定义否决词。\n不要因为「专业是风景园林」降分。命中自定义否决词一律 0-30 分且 is_match=false。",
+    "custom_scoring_prompt": "本轮只看「长沙 · 全职」的两类岗：AI 产品经理、数据分析师。按匹配度给 0-100 的整数分，分数要真的铺开，别都挤在 80-85：\n1) 90-100 分：方向精准（岗位名或 JD 就是 AI 产品 / 数据分析本身）+ 长沙 + 全职 + 学历经验都够 + JD 职责和简历里的项目能一条条对上 + 薪资不低于 7K。这类不需要人再看第二眼。\n2) 75-89 分：方向对，但有一两项要人自己判断——薪资偏低、公司太小或太杂、经验年限差一点、JD 写的职责一半跟方向无关。\n3) 55-74 分：方向擦边（如「产品运营」「数据运营」「AI 训练/标注」），要在 reason 里写清差哪一条。\n4) 30-54 分：明显不是这两个方向，只是标题里带了 AI / 数据 字样。\n5) 0-29 分：方向不对（运营/文员/客服/销售/主播/剪辑/教师/配送/中介/工厂/驻场外包等），或命中自定义否决词。\n不要因为「专业是风景园林」降分，也不要因为「2027 届在读」降分——他要的就是应届。\n命中自定义否决词一律 0-30 分且 is_match=false。",
     "fail_action": "skip",
     "greet_fail_action": "skip",
     "skip_unhealthy": true,
@@ -461,7 +520,12 @@
   "dry_run": false,
   "greet": {
     "capture_only": true,
-    "enabled": true
+    "enabled": true,
+    "auto_apply": false,
+    "auto_apply_min_score": 90,
+    "review_min_score": 60,
+    "auto_apply_max_per_round": 5,
+    "drop_below_review": true
   },
   "importance_keywords": [
     "offer",
@@ -572,7 +636,7 @@
   "user_profile": {
     "available_interview_time": "工作日下午",
     "contact": "",
-    "education": "本科在读（长沙理工大学 · 风景园林，2023-2027）",
+    "education": "本科在读（长沙理工大学 · 风景园林，2023-2027），双一流",
     "experience": "AI 产品：在百川做 AI 产品经理实习（2025.05-2025.09），参与 AIGC 营销素材生成产品从 0 到 1，负责筛可落地场景、定文案生成规则与行业话术库、prompt 优化与模型微调配合、定评测标准并做 AI 与人工盲测，产品上线后覆盖内部约 50% 的营销场景，生成素材 CTR 比传统方式高约 30%；同期参与办公大模型产品（文本生成/润色/摘要/扩写/翻译），做场景定义、数据整理、Coze 工作流搭建、模型验证与 API 对接，项目通过 C-EVAL 评测、多领域能力接近 GPT-3.5，并用 RAG 落地政企与医疗客户场景。AI 人事：在天鹅到家做 AI 人事实习生（2026.05-2026.09），参与智能招聘管理系统（类北森）设计落地，负责 AI 初筛规则（0-5 分打分）、简历智能筛选、批量重新评估的方案设计，做 JD 生成/简历解析/AI 初筛/招聘日报的提示词模板与模型选型降级方案（DeepSeek、Llama 等），用飞书多维表格与机器人消息实现招聘数据汇总和日报自动生成，搭了 7 级招聘漏斗和 HRBP 效能看板（周报/月报），AI 初筛单批可自动评估数百份简历。数据分析：用 Excel、SQL、Python 做数据清洗、口径核对与可视化，回收校验 AI 初筛评分并分析漏斗转化与各环节耗时；在校社团做过问卷、描述性统计、相关性与聚类分析。另外做过文本/图像/语音多模态数据标注与语料质检，那是干过的活儿，不是这次找的方向。",
     "highlights": [
       "AI 产品项目从 0 到 1：AIGC 营销、办公大模型",

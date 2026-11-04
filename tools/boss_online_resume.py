@@ -33,6 +33,8 @@ RESUME_CANDIDATES = [
 CHAT_URL = "https://www.zhipin.com/web/geek/chat"
 # --slot 填的值：换一份 profile 会话（见 open_browser 的说明）
 _槽 = ""
+# --no-proxy 填的值：这台浏览器完全不读系统代理，直连出网
+_不走代理 = False
 
 # 每个号的在线简历/附件简历用哪份 docx（他 10-20 定的分工）
 ACCOUNT_RESUME = {
@@ -61,7 +63,8 @@ def open_browser(idx: int) -> BrowserInstance:
     profile = ROOT / "browser_data" / ("resume_probe_%s%s" % (idx, ("_" + _槽) if _槽 else ""))
     profile.mkdir(parents=True, exist_ok=True)
     instance = launch_browser(headless=False, port=port,
-                              user_data_dir=str(profile), background=True)
+                              user_data_dir=str(profile), background=True,
+                              extra_args=("--no-proxy-server",) if _不走代理 else ())
     cf = cookie_file(idx)
     if cf.exists():
         if not instance.load_cookies(str(cf)):
@@ -1352,6 +1355,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--acct", type=int, required=True, help="0=主账号 1=账号2")
     ap.add_argument("--slot", default="", help="profile 后缀：换一份简历页会话（被限流时用）")
+    ap.add_argument("--no-proxy", action="store_true",
+                    help="浏览器加 --no-proxy-server：本机系统代理是 Clash(127.0.0.1:7897)，"
+                         "默认所有页面请求都过它。他 11-04 要求「不用代理，用国内网络」再跑这一腿")
     ap.add_argument("--action", default="probe")
     ap.add_argument("--section", default="")
     ap.add_argument("--which", type=int, default=0)
@@ -1365,8 +1371,9 @@ def main() -> int:
     ap.add_argument("--step", default="upload")
     ap.add_argument("--script", default="", help="步骤 JSON 文件，见 action_script")
     args = ap.parse_args()
-    global _槽
+    global _槽, _不走代理
     _槽 = re.sub(r"[^0-9A-Za-z_-]", "", args.slot or "")
+    _不走代理 = bool(args.no_proxy)
     if args.acct not in (0, 1):
         print("只支持 --acct 0 或 1")
         return 2

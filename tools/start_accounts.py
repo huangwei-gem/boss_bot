@@ -35,6 +35,18 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from boss_bot.unified_config import 面板端口 as _面板端口  # 端口只有一个出处
 
+# 这一份脚本从头到尾在往外印中文和 ✓（11-04 实测：把它输出重定向进文件就当场
+# `UnicodeEncodeError: 'gbk' codec can't encode character '\u2713'` 崩在半路——
+# Windows 上 stdout 不是控制台时 Python 用 ANSI 代码页编码，而 `start.bat` 里那句
+# `set PYTHONUTF8=1` 只在双击那条路上有）。谁从别处调它（脚本、计划任务、日志重定向）
+# 都会撞上，而崩的位置在半路：面板已经起来了，号却没交上去，看的人只看到一句 traceback。
+# 这里自己把三个流拧成 UTF-8，不再靠调用方记得带环境变量。
+for _流 in (sys.stdout, sys.stderr):
+    try:
+        _流.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass  # 老 Python 或被换成了非文本流：不拦，脚本照常跑
+
 默认等待秒 = 180      # 冷启动：浏览器 24~70 秒 + 复验最多 90 秒，留点余量
 等面板秒 = 240        # 实测这台机器 app.py 从进程起来到应答要 60 秒上下
 轮询秒 = 5

@@ -2341,6 +2341,25 @@ class UnifiedBotLoop:
         if len(抓到) != len(可投):
             self._log("INFO", "⏭️ 本轮 %d 条 BOSS 侧已有会话，没进池（池里只留投得出去的）"
                       % (len(抓到) - len(可投)))
+        # 上一轮判成"没达到筛选条件"、已经挪出池的那条不再捡回来：捡回来就要重判一遍，
+        # 每号每轮那点精筛额度就是这么被同一条普工吃掉的（11-04 现数：池 4204 行里
+        # 3804 行低于 60）。**只认同一套判定口径**：他换了要求文件、改了阈值或打分
+        # 提示词，旧结论就不算数，那条岗位重新进池重判（判据见 岗位池.筛掉身份）。
+        from boss_bot.job_pool import 行id
+        from boss_bot.screen_judge import 判定口径
+        try:
+            当前口径 = 判定口径(self._greet_engine)
+        except Exception as e:
+            # 口径算不成时一个都不拦：宁可这一轮多判几条，也不许把候选悄悄变没
+            self._log("WARN", "判定口径没算出来，这一轮不拦挪出去过的岗位: %s" % e)
+            当前口径 = ""
+        筛过的 = 池.筛掉身份(当前口径)
+        if 筛过的:
+            前 = len(可投)
+            可投 = [j for j in 可投 if 行id(j.get("url") or "") not in 筛过的]
+            if len(可投) != 前:
+                self._log("INFO", "⏭️ 本轮 %d 条按现在这套口径判过「没达到筛选条件」，"
+                          "没重新进池（改了阈值/提示词/要求文件就会回来重判）" % (前 - len(可投)))
         # 追问到的拒因回流到这里：这家 HR 亲口拒过（14 天内），它的新岗位不再进池。
         # 用户 2026-11-03 第二次交代「碰到拒绝的你要追问原因啊…然后自调整优化投递策略」——
         # 只把原因存起来不叫调整，得有一条真会改行为的判据。挡在进池这一步，
@@ -2386,6 +2405,64 @@ class UnifiedBotLoop:
         self._log("INFO", f"📥 进池 新增{结果['新增']} 见过{结果['见过']}{自}"
                           f" 池内{结果['总数']}；本轮精筛 {筛了}/{len(待筛)} 条"
                           f"（限额 {限额}，剩下的下轮接着判）")
+        # 判完就顺手把过线的勾上，勾完这一趟就投：等到下一轮才动的话，
+        # 界面上会出现"AI 明明给了 95 分，这条还躺在待选里"那种说不清的账
+        from boss_bot.job_pool import 生效分档线
+        自动线, 待看线 = 生效分档线(self.config)
+        # 先收干净低于他那条筛选线的（11-04 口径：没达到条件的不许再占这张表）
+        if bool(getattr(self.config.greet, "drop_below_review", True)):
+            收了, 收话 = 池.挪走低于线(待看线, 当前口径)
+            if 收了:
+                self._log("INFO", "🧹 收掉没达到筛选条件的：%s" % 收话)
+        if self._自动勾过线的(池):
+            try:
+                self._drain_apply_queue()
+            except Exception as e:
+                self._log("WARN", f"自动勾完这一轮没投出去: {type(e).__name__}: {e}")
+
+    def _自动勾过线的(self, 池) -> int:
+        """AI 分过他画那条线的，机器替他勾上——2026-11-04 他的口径：
+        「匹配度 90 分的就自己投递，60 以上 90 以下的存起来我看看」。
+
+        这一步**只改状态**，动作一律留给 `_drain_apply_queue`：那一条路上
+        打招呼冷却、每日额度、BOSS 侧已有会话、页面风控、发送闸门、永久不投
+        六道机械闸门一道不少。机器自动勾和他手动勾之后走的是同一条腿，
+        不另起第二条（另起一条就会多一套判据，多一套判据就得多修一轮对不上账）。
+
+        他撤过勾的行不再自动勾（见 job_pool.人工撤过勾）：撤一次=表过一次态。
+        每号每轮有个数上限：一轮就勾几十条等于自己把每日 150 的额度一次打满，
+        还把"机器在替我发东西"这件事变成一件看不见的事。
+        """
+        from boss_bot.job_pool import 生效分档线, 自动投候选, 状态已选
+        if not bool(getattr(self.config.greet, "auto_apply", True)):
+            return 0
+        try:
+            上限 = int(getattr(self.config.greet, "auto_apply_max_per_round", 5))
+        except (TypeError, ValueError):
+            上限 = 0
+        if 上限 <= 0:
+            return 0
+        自动线, 待看线 = 生效分档线(self.config)
+        全量 = 自动投候选(池.列表(), 自动线, 待看线)
+        本轮 = 全量[:上限]
+        勾了的 = 0
+        for 行 in 本轮:
+            if not self._running:
+                break
+            分 = (行.get("ai") or {}).get("分")
+            成, 话 = 池.改(行.get("id", ""), status=状态已选, 勾选={
+                "来源": "机器按 AI 分", "动作": "AI 分 %s 过 %s 这条线，机器替他勾上" % (分, int(自动线)),
+                "时间": time.time(), "首于": (行.get("勾选") or {}).get("首于") or time.time()})
+            if 成:
+                勾了的 += 1
+            else:
+                self._log("WARN", f"⚠️ 自动勾没写进去（{行.get('job_name', '')[:20]}）：{话}")
+        if 勾了的:
+            剩 = len(全量) - 勾了的
+            self._log("INFO", f"🤖 自动投档：AI 分 ≥{int(自动线)} 自己勾了 {勾了的} 条"
+                              f"（每轮上限 {上限}）"
+                              + (f"，还剩 {剩} 条下轮接着投" if 剩 > 0 else ""))
+        return 勾了的
 
     def _drain_apply_queue(self) -> int:
         """把他在池里勾成「已选」的岗位投掉，返回这一轮投了几条。
