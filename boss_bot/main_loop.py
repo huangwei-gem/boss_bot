@@ -345,6 +345,8 @@ class UnifiedBotLoop:
         self._ip封着 = False
         # IP 级额度那句只说一遍（一分钟一趟、每趟两号，不说就会淹掉日志）
         self._额度说过 = False
+        # "同一组同一关键只说一次"的台账（活跃窗口/熔断/各类额度各一档）
+        self._说过 = {}
         # 回复腿空轮退避：连着几轮没有要回的，就把间隔按 2 的幂拉长（见 _回复间隔秒）
         self._空轮连击 = 0
         self._本轮回复有活 = True
@@ -692,6 +694,83 @@ class UnifiedBotLoop:
                 self._notifier.send_notification("BOSS 按 IP 限流了", 话, level="error")
         except Exception as e:
             self._log("WARN", "封禁通知没发出去: %s: %s" % (type(e).__name__, e))
+
+    def _装节奏闸(self) -> dict:
+        """把配置灌进 pace，并回读装成了什么（改了没生效这件事本项目踩过太多次）。"""
+        from boss_bot import pace
+        rl = self.config.greet.rate_limit
+        现状 = pace.装限额(
+            小时={"搜索页": getattr(rl, "search_loads_per_hour", 18),
+                  "会话页": getattr(rl, "chat_rounds_per_hour", 60),
+                  "详情页": getattr(rl, "detail_loads_per_hour", 8)},
+            日={"搜索页": getattr(rl, "search_loads_per_day", 200),
+                "会话页": getattr(rl, "chat_rounds_per_day", 1200),
+                "详情页": getattr(rl, "detail_loads_per_day", 60)},
+            抖动=float(getattr(rl, "jitter_ratio", 35) or 0) / 100.0,
+            活跃=(int(getattr(rl, "active_hours_start", 9) or 9),
+                  int(getattr(rl, "active_hours_end", 18) or 18),
+                  bool(getattr(rl, "active_hours_enabled", True))),
+            熔断=[x for x in str(getattr(rl, "risk_cooldown_ladder", "300,900,3600")).split(",") if x],
+            窗口=int(getattr(rl, "risk_strike_window", 300) or 300))
+        return 现状
+
+    def _能不能出门(self, 侧: str) -> tuple:
+        """轮子开头那道：只看活跃时段与熔断冷却，不扣任何额度（判据在 pace.可以出门）。"""
+        from boss_bot import pace
+        能, 为什么, 等多久 = pace.可以出门()
+        if not 能:
+            self._说一句("出门", "⏸️ %s侧这一轮不出门：%s（还要等 %s）"
+                         % (侧, 为什么, "%.0f 秒" % 等多久), 关键="出门" + 侧 + 为什么)
+        return 能, 为什么, 等多久
+
+    def _节奏放行(self, 类: str, 侧: str) -> tuple:
+        """这一发能不能发：活跃时段 → 熔断冷却 → 小时/日额度，三样按这个顺序问。
+
+        返回 (能不能发, 建议睡多久秒)。都不拦时第二项是 0。
+        每类只留"第一次说不"的那一句在日志里（一分钟一趟、每趟两号，
+        不说就会把真要看的行淹掉——这条项目里为验证码、额度都收敛过一次）。
+        """
+        from boss_bot import pace
+        在窗口, 等多久 = pace.活跃窗口()
+        if not 在窗口:
+            self._说一句("节奏", "%s侧现在不在活跃时段（北京时间 %s:00~%s:00 才干活），"
+                       "还有 %.1f 小时到窗口，期间完全静默、一次请求都不发"
+                       % (侧, pace.全局("活跃起"), pace.全局("活跃止"), 等多久 / 3600.0),
+                       关键="活跃窗口" + 侧)
+            return False, 等多久
+        剩 = pace.冷却剩余()
+        if 剩 > 0:
+            self._说一句("节奏", "⏸️ %s侧在熔断冷却里（还剩 %.0f 分钟）：刚才连着被风控拒了，"
+                         "照原频率重试就是那句「请勿频繁提交刷新请求」" % (侧, 剩 / 60.0),
+                         关键="熔断" + 侧)
+            return False, 剩
+        允许, 为什么, 等多久 = pace.请求闸(类)
+        if not 允许:
+            self._说一句("节奏", "⏸️ %s侧收手：%s，约 %.0f 分钟后腾出位置"
+                         % (侧, 为什么, 等多久 / 60.0), 关键=类 + 侧)
+            return False, 等多久
+        return True, 0.0
+
+    def _说一句(self, 组: str, 话: str, 关键: str = "") -> bool:
+        """同一组同一关键只说一次（说过了转 DEBUG）。返回是不是第一次说。"""
+        记 = self._说过.setdefault(组, set())
+        键 = 关键 or 话[:40]
+        if 键 in 记:
+            self._log("DEBUG", 话)
+            return False
+        记.add(键)
+        self._log("INFO", 话)
+        return True
+
+    def _风控命中一次(self, 侧: str, 为什么: str) -> float:
+        """记一次风控命中并给出冷却；阶梯在 pace 里（5min→15min→60min）。"""
+        from boss_bot import pace
+        秒 = pace.命中风控()
+        if 秒 > 0:
+            self._log("ERROR", "🛑 %s侧命中风控（%s）：熔断冷却 %d 分钟，"
+                               "期间两条腿都不发请求" % (侧, 为什么, int(秒 / 60)))
+            self._emit_wind("%s侧命中风控，熔断冷却 %d 分钟（%s）" % (侧, int(秒 / 60), 为什么), "limit")
+        return 秒
 
     def _整页加载额度收手(self, 侧: str) -> bool:
         """IP 级每小时额度用完了就收手这一轮，返回 True 表示调用方该跳过。
@@ -1063,6 +1142,7 @@ class UnifiedBotLoop:
             getattr(self.config.greet.rate_limit, "page_load_min_interval", 3))
         设置整页加载小时上限(
             getattr(self.config.greet.rate_limit, "page_loads_per_hour", 20))
+        self._装节奏闸()
         try:
             self._log("INFO", "=" * 50)
             self._log("INFO", "BOSS 统一机器人启动（双标签页并行架构）")
@@ -2169,8 +2249,10 @@ class UnifiedBotLoop:
                     self._ip封了停下("打招呼", self._health_why or "")
                     break
                 if health == "captcha":
+                    self._风控命中一次("打招呼", self._health_why or "页面判据=captcha")
                     self._log("ERROR", "⚠️ 检测到验证码/风控拦截，等人工滑一下"
-                                       "（要等多久由闸门按有没有摆窗口决定，结束时按实数记）")
+                                       "（要等多久由闸门按有没有摆窗口决定，结束时按实数记；"
+                                       "这一族同时进熔断阶梯）")
                     # 人工解掉就继续本轮；超时则跳过这一轮，不再永久暂停
                     self._captcha_gate()
                     continue
@@ -2199,6 +2281,12 @@ class UnifiedBotLoop:
 
                 self._finish_login_window()
                 self._current_mode = "greet"
+                # 轮子开头先问一句：这一轮除了搜索，还要排空勾选队列（那要开详情页）、
+                # 可能还要动会话页，这些都不属于任何一族额度，但同样是被封的对象
+                能出门, 为什么, 等多久 = self._能不能出门("打招呼")
+                if not 能出门:
+                    self._stop_event.wait(timeout=max(10.0, min(等多久, 3600.0)))
+                    continue
                 round_had_jobs = self._run_greet_round()
 
                 # ── 连续空搜索检测 ──
@@ -2209,14 +2297,21 @@ class UnifiedBotLoop:
                                           f"打招呼暂停 {GREET_PAUSE_RETRY_SEC // 60} 分钟后自动再试，"
                                           "也可以现在就去 BOSS 直聘页面看看")
                         self._emit_wind("连续3轮搜索结果为0，请检查BOSS直聘页面", "limit")
+                        # 连续空轮常常就是风控的另一副面孔（页面给了但没给卡片）。
+                        # 一起进熔断阶梯，冷却取"固定 15 分钟"与"阶梯算出来的"里较大的那个，
+                        # 别只靠 GREET_PAUSE_RETRY_SEC 那一档——第三次命中该歇 60 分钟。
+                        冷却 = self._风控命中一次("打招呼", "连续 3 轮搜索结果为 0")
                         self._greet_paused = True
-                        self._greet_auto_resume_at = time.time() + GREET_PAUSE_RETRY_SEC
+                        self._greet_auto_resume_at = time.time() + max(
+                            GREET_PAUSE_RETRY_SEC, 冷却)
                         consecutive_empty_rounds = 0
                 else:
                     consecutive_empty_rounds = 0
 
-                # 两轮搜索之间的固定间隔（配置里没有这一项，别再假装可读）
-                self._stop_event.wait(timeout=GREET_ROUND_INTERVAL)
+                # 两轮之间的间隔：固定 30 秒本身就是特征（11-04 那天平均 11 秒一趟
+                # 会话页，规律到不像真人）。按 jitter_ratio 打散，界面那条改了这里跟着变。
+                from boss_bot import pace
+                self._stop_event.wait(timeout=max(5.0, pace.抖动(GREET_ROUND_INTERVAL)))
 
             except Exception as e:
                 self._log("ERROR", f"打招呼线程异常: {e}")
@@ -2694,6 +2789,10 @@ class UnifiedBotLoop:
                 # 一个词一发整页加载，额度用完了就到此为止：剩下的词下一轮接着排。
                 # 装在词头上而不是装在轮头上，是为了"摊平"而不是"停摆"——
                 # 轮头一刀砍掉整轮，他勾的那几条也会跟着排到很久以后。
+                能发, 等多久 = self._节奏放行("搜索页", "打招呼")
+                if not 能发:
+                    self._log("INFO", f"⏭️ 这一轮排到「{query}」时收手，约 {int(等多久 / 60) + 1} 分钟后再试")
+                    break
                 if self._整页加载额度收手("打招呼"):
                     self._log("INFO", f"⏭️ 这一轮排到「{query}」时 IP 级额度用完了，"
                                       f"这个词和它后面的下一轮接着排")
@@ -2965,8 +3064,10 @@ class UnifiedBotLoop:
                     self._ip封了停下("回复", self._health_why or "")
                     break
                 if health == "captcha":
+                    self._风控命中一次("回复", self._health_why or "页面判据=captcha")
                     self._log("ERROR", "⚠️ 回复侧检测到验证码/风控拦截，等人工滑一下"
-                                       "（要等多久由闸门按有没有摆窗口决定，结束时按实数记）")
+                                       "（要等多久由闸门按有没有摆窗口决定，结束时按实数记；"
+                                       "这一族同时进熔断阶梯）")
                     self._captcha_gate(pause_field="reply")
                     continue
                 if health == "need_login":
@@ -3008,6 +3109,16 @@ class UnifiedBotLoop:
                     self._run_resume_backfill(force=True)
 
                 self._current_mode = "reply"
+                # 闸必须问在轮子前面。只在"睡多久"那里问，等于额度用完、窗口外、
+                # 熔断中这一轮照样去碰 BOSS——那正是"请勿频繁提交刷新请求"要数的东西。
+                能出门, 为什么, 睡多久 = self._能不能出门("回复")
+                if not 能出门:
+                    self._stop_event.wait(timeout=max(10.0, min(睡多久, 3600.0)))
+                    continue
+                能发, 睡多久 = self._节奏放行("会话页", "回复")
+                if not 能发:
+                    self._stop_event.wait(timeout=max(10.0, min(睡多久, 3600.0)))
+                    continue
                 self._run_reply_round()
                 # 追到面试：回复轮只管"对方说了什么"，这一句管"我们说完对方没回"
                 self._run_followup_round()
@@ -3017,7 +3128,13 @@ class UnifiedBotLoop:
                 # 回复检查间隔：有活就按面板那个秒数走；连着几轮没活就 2 倍拉长，
                 # 上限由 reply.idle_backoff_max 定（默认 120 秒，填 0 = 不退避、照旧固定间隔）。
                 # 退避不是偷懒：BOSS 记的是出口 IP 的请求频率，而空轮也要读一次会话页。
-                check_interval = self._回复间隔秒()
+                # 再叠两层：随机抖动（退避只解决"空轮太多"，不解决"每 15 秒一次很规律"），
+                # 以及活跃时段/熔断/会话页额度——不通过就把这一觉拉长到腾出位置为止。
+                from boss_bot import pace
+                check_interval = pace.抖动(self._回复间隔秒())
+                能发, 等多久 = self._节奏放行("会话页", "回复")
+                if not 能发:
+                    check_interval = max(check_interval, min(等多久, 3600.0))
                 self._stop_event.wait(timeout=check_interval)
 
             except Exception as e:
@@ -4479,6 +4596,7 @@ class UnifiedBotLoop:
             #     风控算的是 IP 不是号，所以不能按号各装一份。
             地板 = 设置整页加载地板(
                 getattr(self.config.greet.rate_limit, "page_load_min_interval", 3))
+            self._装节奏闸()
             上限 = 设置整页加载小时上限(
                 getattr(self.config.greet.rate_limit, "page_loads_per_hour", 20))
             if 上限 != getattr(self, "_装过的小时上限", None):

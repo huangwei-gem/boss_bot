@@ -315,6 +315,31 @@ _兼容层常量 = ("SALARY_REPLY", "INTERVIEW_TIME_REPLY", "JOB_CONTENT_REPLY",
 
 
 @pytest.fixture(autouse=True)
+def 节奏闸不留给下一条():
+    """`boss_bot.pace` 那本账也是**进程级全局**（风控按出口 IP 记，两号共用一本，
+    所以它本来就该是全局的），而它比小时账更容易漏：小时/日额度、熔断阶梯、
+    活跃时段、抖动种子全在同一个 dict 与同一批模块常量上。
+
+    实测：装完这道闸之后全量红 22 条，单跑全绿——前面那些测试把"会话页 60/小时"
+    用完了，后面的回复轮被自己的闸拦掉，看起来像"回复逻辑坏了"。
+    """
+    from boss_bot import pace
+
+    原账 = {k: (list(v) if isinstance(v, list) else v) for k, v in pace._状态.items()}
+    原限额 = {k: dict(v) for k, v in pace.默认限额.items()}
+    原常量 = dict(抖动比例=pace.抖动比例, 活跃起=pace.活跃起, 活跃止=pace.活跃止,
+                 活跃启用=pace.活跃启用, 熔断阶梯=pace.熔断阶梯,
+                 风控窗口秒=pace.风控窗口秒)
+    pace.清零()
+    yield
+    pace.清零()
+    pace.默认限额.clear()
+    pace.默认限额.update(原限额)
+    for 名, 值 in 原常量.items():
+        pace.全局(名, 值)
+
+
+@pytest.fixture(autouse=True)
 def 小时账不留给下一条():
     """IP 级整页加载小时账是**进程级全局**（风控按出口 IP 记，两号共用一份，
     所以它本来就该是全局的）——但全局态在测试里就是跨文件的假象源。

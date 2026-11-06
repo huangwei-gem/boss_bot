@@ -2611,6 +2611,30 @@ def _档计数(全行, 自动线, 待看线):
     return {"待自动投": 待自动, "待你看": 待你看, "机器已勾在队列": 在队列}
 
 
+@app.route("/api/pace")
+def api_pace():
+    """实时节奏状态：这一小时/今天各类已用多少、还剩多少、多久腾出位置、
+    在不在活跃时段、熔断冷却还剩多久。
+
+    11-04 那次封 IP 之后，"机器人现在是什么节奏"必须一眼看得见——
+    不然他只能去猜"为什么这一轮什么都没干"，而答案可能是额度、窗口、熔断三种之一。
+    数字全部来自 boss_bot/pace.py 那一份账（不在这里重算一遍，两处各算迟早对不上）。
+    """
+    try:
+        from boss_bot import pace
+        现状 = pace.现状()
+        # 配置里那两条总量闸也一并回：界面要说"额度 18/小时"，那个 18 得来自生效配置
+        cfg = _ensure_config()
+        现状["配置"] = {
+            "整页加载/小时": int(getattr(cfg.greet.rate_limit, "page_loads_per_hour", 20) or 0),
+            "回复/天": int(getattr(cfg.reply, "max_replies_per_day", 200) or 0),
+        }
+        return jsonify({"status": "ok", "pace": 现状})
+    except Exception as e:
+        logger.exception("读取节奏状态失败")
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 @app.route("/api/job_pool")
 def api_job_pool():
     """岗位候选池：抓来的岗位、本地粗筛标签、AI 精筛结论，加一份状态计数。

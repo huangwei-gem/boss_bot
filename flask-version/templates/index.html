@@ -1085,6 +1085,18 @@ th[aria-sort="ascending"],th[aria-sort="descending"]{color:var(--accent)}
   background:var(--accent);color:#fff;padding:var(--sp-2) var(--sp-4);
   border-radius:var(--r-sm);font-size:var(--fs-sm);transition:top var(--dur-1) var(--ease)}
 .skip-link:focus{top:var(--sp-2)}
+/* 节奏条：三档语义（正常/快满了/被拦）。每颗芯片自带文字，不单靠颜色传达（WCAG 1.4.1）*/
+.pace-strip{display:flex;flex-wrap:wrap;align-items:center;gap:var(--sp-2);
+  padding:var(--sp-2) var(--sp-3);margin-top:var(--sp-2);border-radius:var(--r-md);
+  background:var(--surface-soft);border:1px solid var(--bd-2);font-size:var(--fs-xs);color:var(--fg-2nd)}
+.pace-chip{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;
+  border-radius:var(--r-pill);background:var(--chip-bg);color:var(--chip-text);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.pace-chip.warn{background:var(--warning-bg);color:var(--warning)}
+.pace-chip.stop{background:var(--danger-bg);color:var(--danger)}
+.pace-chip.calm{background:var(--success-bg);color:var(--success)}
+.pace-key{color:var(--fg-3rd)}
+.pace-idle{color:var(--fg-3rd)}
 </style>
 <script>
 // 首帧就按上次的主题画：以前 HTML 写死 light，深色要等接口回来才改，每次开屏先白一下再转暗
@@ -1263,6 +1275,14 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
             <div class="adv-field-row"><label title="人工把安全验证滑完之后再歇几秒才碰页面；立刻照原频率回去撞等于再要一张验证页。填 0 = 不等">验证后冷却(s)</label><input class="side-form-input" id="afterVerifyCooldown" type="number" min="0" max="3600" step="30" placeholder="300" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label title="整个进程里两次「把一张页整个换掉」之间至少隔几秒。已装的详情页间隔只管岗位详情页，这一条管剩下那些没人管的：回复腿会话页地址一漂就重刷、抓取腿刷搜索页、断线重连与内存回收重开浏览器、检测 Cookie 那趟两次加载。10-23~10-25 三天日志共 792 次整页加载，其中 11 个「同一秒两号各发一发」，而两个号走同一个出口 IP。填 0 = 关掉">整页加载地板(s)</label><input class="side-form-input" id="pageLoadMinInterval" type="number" min="0" max="60" step="1" placeholder="3" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label title="按出口 IP 记的总量闸：每小时最多几次「把一张页整个换掉」，两个号共用一份账。地板管的是同一秒不许三四发，管不了一小时总共多少发——11-04 实测每小时 57~61 次搜索加载 + 255~316 轮会话页连刷五小时，18 点被 BOSS 关进「访问受限 · 24 小时」。用完就一个词一个词地不收手，剩下的下一轮接着排。填 0 = 不限量（等于把那天那套打法放回来）">整页加载/小时(次)</label><input class="side-form-input" id="pageLoadsPerHour" type="number" min="0" max="200" step="5" placeholder="20" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="按出口 IP 记（双号合计）。11-04 封禁前实测每小时 57~61 次搜索整页加载；这条压到 15。填 0 = 不限量">搜索页/小时</label><input class="side-form-input" id="searchLoadsPerHour" type="number" min="0" max="600" step="1" placeholder="15" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="双号合计的会话页轮次。封禁前实测每小时 255~316 轮（平均 11 秒一趟）。填 0 = 不限量">会话页/小时</label><input class="side-form-input" id="chatRoundsPerHour" type="number" min="0" max="2000" step="5" placeholder="60" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="打开岗位详情页那一族——8 天日志里 111/112 处风控都出在这一步，所以给得最小。填 0 = 不限量">详情页/小时</label><input class="side-form-input" id="detailLoadsPerHour" type="number" min="0" max="600" step="1" placeholder="6" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="每日总量（双号合计）。到量就等到明天零点清零。填 0 = 不限量">搜索页/天</label><input class="side-form-input" id="searchLoadsPerDay" type="number" min="0" max="20000" step="10" placeholder="200" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="所有固定间隔按这个比例随机打散（0~90）。等间隔本身就是模式匹配的靶子：填 0 等于把特征送回去">间隔抖动±%</label><input class="side-form-input" id="jitterRatio" type="number" min="0" max="90" step="5" placeholder="35" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="北京时间几点开始干活。窗口外两条腿完全静默、一次请求都不发">活跃起(时)</label><input class="side-form-input" id="activeHoursStart" type="number" min="0" max="23" step="1" placeholder="9" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="到几点收手（不含这个整点）。填 24 就是全天">活跃止(时)</label><input class="side-form-input" id="activeHoursEnd" type="number" min="1" max="24" step="1" placeholder="18" onchange="onAdvChange()"></div>
+            <div class="adv-field-row"><label title="只在上面这两个整点之间干活；关掉就是全天都会发请求（凌晨三点每 11 秒刷一次 BOSS 既不像真人，也白耗当天额度）">活跃时段</label><span id="advActiveHours" class="toggle-switch" onclick="toggleAdvBool('active_hours')"></span></div>
             <div class="adv-group-title">登录</div>
             <div class="adv-field-row"><label>等待超时(s)</label><input class="side-form-input" id="advLoginWait" type="number" placeholder="300" onchange="onAdvChange()"></div>
             <div class="adv-field-row"><label>失败时清除Cookie</label><span id="advClearCookies" class="toggle-switch" onclick="toggleAdvBool('clear_cookies')"></span></div>
@@ -1384,6 +1404,14 @@ try{document.documentElement.setAttribute('data-theme',localStorage.getItem('bos
         <button class="btn btn-ghost btn-sm" onclick="downloadReplyRecords()"><i data-ki="download"></i>下载回复记录</button>
         <button class="btn btn-ghost btn-sm" onclick="downloadGreetRecords()"><i data-ki="download"></i>下载打招呼记录</button>
         <button class="btn btn-ghost btn-sm" onclick="showArchiveModal()"><i data-ki="history"></i>历史数据</button>
+      </div>
+      <!-- 节奏状态条（11-04 被封 IP 之后装的）：把"这一小时各类发了多少、还剩多少、
+           多久腾出位置、在不在活跃时段、熔断还剩多久"摆在明面上。
+           没这一条，机器人收手的时候他只能猜是额度、窗口还是熔断哪一种。
+           数字全部来自 /api/pace 那一份账，界面上不重算（两处各算迟早对不上）。 -->
+      <div class="pace-strip" id="paceStrip" role="status" aria-live="polite"
+           aria-label="请求节奏状态" title="随状态轮询从 /api/pace 取：各类已用/额度、腾位时间、活跃时段、熔断冷却">
+        <span class="pace-idle">正在读取节奏…</span>
       </div>
       <div class="panel-row">
         <div class="panel panel-full">
@@ -3461,6 +3489,14 @@ function renderAdvSettings() {
   // 11-04 新装的 IP 级总量闸：读不到就按后端那份默认（20 次/小时）画，别画成 0——
   // 画成 0 的意思是"不限量"，那正好是把 IP 刷进 24 小时封禁的那套打法
   setVal('pageLoadsPerHour', rl.page_loads_per_hour != null ? rl.page_loads_per_hour : 20);
+  setVal('searchLoadsPerHour', rl.search_loads_per_hour != null ? rl.search_loads_per_hour : 15);
+  setVal('chatRoundsPerHour', rl.chat_rounds_per_hour != null ? rl.chat_rounds_per_hour : 60);
+  setVal('detailLoadsPerHour', rl.detail_loads_per_hour != null ? rl.detail_loads_per_hour : 6);
+  setVal('searchLoadsPerDay', rl.search_loads_per_day != null ? rl.search_loads_per_day : 200);
+  setVal('jitterRatio', rl.jitter_ratio != null ? rl.jitter_ratio : 35);
+  setVal('activeHoursStart', rl.active_hours_start != null ? rl.active_hours_start : 9);
+  setVal('activeHoursEnd', rl.active_hours_end != null ? rl.active_hours_end : 18);
+  setEl('advActiveHours', 'toggle-switch' + (rl.active_hours_enabled !== false ? ' on' : ''));
 
   const lg = config.login || {};
   setVal('advLoginWait', lg.wait_timeout != null ? lg.wait_timeout : 300);
@@ -3571,6 +3607,13 @@ function toggleAdvBool(key) {
     config.reply.accept_contact_exchange = !(config.reply.accept_contact_exchange !== false);
     setEl('advAcceptContact', 'toggle-switch' + (config.reply.accept_contact_exchange ? ' on' : ''));
     toast(config.reply.accept_contact_exchange ? '已开启：HR 要交换微信/电话时直接点同意' : '已关闭：交换联系方式留给人工处理');
+  } else if (key === "active_hours") {
+    if (!config.rate_limit) config.rate_limit = {};
+    config.rate_limit.active_hours_enabled = !(config.rate_limit.active_hours_enabled !== false);
+    setEl('advActiveHours', 'toggle-switch' + (config.rate_limit.active_hours_enabled ? ' on' : ''));
+    toast(config.rate_limit.active_hours_enabled
+      ? '已开启活跃时段：只在设的两个整点之间发请求，窗口外完全静默'
+      : '已关掉活跃时段：全天都会发请求（凌晨那种规律请求最容易被认出来）');
   } else if (key === "capture_only") {
     if (!config.greet) config.greet = {};
     config.greet.capture_only = !(config.greet.capture_only !== false);
@@ -3620,6 +3663,14 @@ function onAdvChange() {
   config.rate_limit.after_verify_cooldown = _夹('afterVerifyCooldown', 300, 0, 3600);
   config.rate_limit.page_load_min_interval = _夹('pageLoadMinInterval', 3, 0, 60);
   config.rate_limit.page_loads_per_hour = _夹('pageLoadsPerHour', 20, 0, 200);
+  config.rate_limit.search_loads_per_hour = _夹('searchLoadsPerHour', 15, 0, 600);
+  config.rate_limit.chat_rounds_per_hour = _夹('chatRoundsPerHour', 60, 0, 2000);
+  config.rate_limit.detail_loads_per_hour = _夹('detailLoadsPerHour', 6, 0, 600);
+  config.rate_limit.search_loads_per_day = _夹('searchLoadsPerDay', 200, 0, 20000);
+  config.rate_limit.jitter_ratio = _夹('jitterRatio', 35, 0, 90);
+  config.rate_limit.active_hours_start = _夹('activeHoursStart', 9, 0, 23);
+  config.rate_limit.active_hours_end = _夹('activeHoursEnd', 18, 1, 24);
+  config.rate_limit.active_hours_enabled = document.getElementById('advActiveHours').classList.contains('on');
 
   if (!config.login) config.login = {};
   config.login.wait_timeout = parseInt(document.getElementById('advLoginWait').value) || 300;
@@ -4218,7 +4269,56 @@ function resumeReply() {
 }
 
 // 状态是轮询回来的，按钮只负责跟着显示；不再用前端布尔当真相
+function pace秒表(v) {
+  v = Number(v || 0);
+  if (v < 60) return v.toFixed(0) + ' 秒';
+  if (v < 3600) return (v / 60).toFixed(v < 600 ? 1 : 0) + ' 分钟';
+  return (v / 3600).toFixed(1) + ' 小时';
+}
+
+function pace渲染(d) {
+  var el = document.getElementById('paceStrip');
+  if (!el) return;
+  var p = (d && d.pace) || null;
+  if (!p || !p['每类']) { el.innerHTML = '<span class="pace-chip stop">节奏状态读不到</span>'; return; }
+  var chips = [], 名 = {搜索页: '搜索', 会话页: '会话', 详情页: '详情'};
+  Object.keys(p['每类']).forEach(function (类) {
+    var c = p['每类'][类] || {};
+    var 用 = Number(c['小时已用']) || 0, 额 = Number(c['小时额度']) || 0;
+    var 态 = 'pace-chip';
+    if (!c['还能发']) 态 += ' stop'; else if (额 && 用 / 额 >= 0.8) 态 += ' warn';
+    chips.push('<span class="' + 态 + '" title="' + escAttr(类 + '：本小时已发 ' + 用 + '/' + 额 +
+      ' 次，今天 ' + (Number(c['日已用']) || 0) + '/' + (Number(c['日额度']) || 0) + ' 次' +
+      (c['还能发'] ? '' : '，还要等 ' + pace秒表(c['恢复还要秒']))) + '">' +
+      (名[类] || 类) + ' ' + 用 + '/' + (额 || '∞') + '<span class="pace-key">/时</span>' +
+      (!c['还能发'] ? '（还 ' + pace秒表(c['恢复还要秒']) + '）' : '') + '</span>');
+  });
+  var 窗 = p['活跃窗口'] || {};
+  if (窗['启用']) {
+    chips.push('<span class="pace-chip' + (窗['在窗口内'] ? ' calm' : ' warn') + '" title="' +
+      escAttr('活跃时段（' + (窗['时区'] || '') + '）' + 窗['起'] + ':00~' + 窗['止'] +
+      ':00，窗口外一次请求都不发') + '">' +
+      (窗['在窗口内'] ? '在活跃时段 ' + 窗['起'] + '-' + 窗['止']
+        : '窗口外，还 ' + pace秒表(窗['距打开还要秒']) + ' 才干活') + '</span>');
+  } else {
+    chips.push('<span class="pace-chip" title="活跃时段被关掉：全天都会发请求">活跃时段：关</span>');
+  }
+  var 冷 = Number(p['熔断冷却剩秒']) || 0;
+  chips.push(冷 > 0
+    ? '<span class="pace-chip stop" title="连着被风控拒了，按 5→15→60 分钟阶梯冷却，期间两条腿都不发请求">熔断中，还剩 ' + pace秒表(冷) + '</span>'
+    : '<span class="pace-chip calm">熔断：无</span>');
+  var 抖 = Math.round((Number(p['抖动比例']) || 0) * 100);
+  chips.push('<span class="pace-chip" title="' + escAttr('间隔随机扰动 ±' + 抖 +
+    '%：等间隔本身就是给模式匹配当靶子') + '">抖动 ±' + 抖 + '%</span>');
+  el.innerHTML = chips.join('');
+}
+
 function refreshAccountStatus() {
+  fetch('/api/pace').then(function (r) { return r.json(); }).then(pace渲染).catch(function () {
+    // 取不到就明说取不到，不许留着上一轮的数装作还在动
+    var el = document.getElementById('paceStrip');
+    if (el) el.innerHTML = '<span class="pace-chip stop">节奏状态读不到（/api/pace 没回话）</span>';
+  });
   fetch('/api/status').then(function(r){return r.json()}).then(function(data) {
     applyStatusUpdate(data);
   }).catch(function(){});
@@ -7562,6 +7662,12 @@ loadAiHealth();
 loadAiQuality();
 loadAiReview();
 setInterval(loadMetrics, 20000);
+// 节奏条跟着这一趟 20 秒的车刷新，并同时在开机时取一次。
+// 以前 refreshAccountStatus 只在暂停/恢复那几个按钮回调里被调，
+// 于是节奏条开机就停在"正在读取节奏…"，直到他点一次暂停才动——
+// 那正是本项目最恨的"摆了个框但没人喂"（test_pace_governor 里钉住了这条）。
+setInterval(function () { try { refreshAccountStatus(); } catch (e) {} }, 20000);
+try { refreshAccountStatus(); } catch (e) {}
 // 启动通知红点轮询（每30秒刷新一次）
 startNotifPolling();
 

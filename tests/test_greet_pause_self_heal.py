@@ -73,12 +73,22 @@ def test_重试时长在十分钟到半小时之间():
 
 
 def test_两处机器暂停都要记下恢复时间():
-    """空搜索和验证码连击这两处是机器自己判的，漏一处就还有一条悄悄死掉的路。"""
+    """空搜索和验证码连击这两处是机器自己判的，漏一处就还有一条悄悄死掉的路。
+
+    靶子从字面串换成形状判据：11-04 装熔断阶梯之后，空搜索那一处的恢复时间改成
+    `max(GREET_PAUSE_RETRY_SEC, 阶梯算出来的)`——仍然必须设、仍然必须包含那个固定档，
+    但不再是那句一模一样的赋值。钉字面串的门会把"改得更严"当成"改坏了"。
+    """
     loop_src = inspect.getsource(UnifiedBotLoop._greet_loop)
     gate_src = inspect.getsource(UnifiedBotLoop._captcha_gate)
     for src, where in ((loop_src, "连续空搜索"), (gate_src, "验证码连击")):
-        assert "self._greet_auto_resume_at = time.time() + GREET_PAUSE_RETRY_SEC" in src, \
-            f"{where} 这条暂停没设恢复时间，会永久挂着"
+        # 逐行看会被折行骗过去（`+ max(` 在一行、`GREET_PAUSE_RETRY_SEC, 冷却)` 在下一行），
+        # 所以从赋值那处往后多带两行一起判
+        起点 = src.find("self._greet_auto_resume_at = time.time() +")
+        assert 起点 >= 0, f"{where} 这条暂停没设恢复时间，会永久挂着"
+        块 = src[起点:起点 + 160]
+        assert "GREET_PAUSE_RETRY_SEC" in 块, \
+            f"{where} 设的恢复时间里不含那个固定档：{块[:90]!r}"
 
 
 def test_人工暂停入口要清掉自动恢复时间():

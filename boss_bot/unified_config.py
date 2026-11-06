@@ -464,6 +464,22 @@ class RateLimitConfig:
     page_loads_per_hour: int = 20
     # 人工把验证页滑完之后再歇多久才准碰页面（秒）。填 0 = 不等。
     after_verify_cooldown: int = 300
+    # ── 节奏闸（boss_bot/pace.py）：分小时的量、分日的量、抖动、活跃时段、熔断 ──
+    # 11-04 那次封 IP 的现数是每小时 57~61 次搜索加载 + 255~316 轮会话页。
+    # 上面那条 page_loads_per_hour 只数"整页加载"一个总数，分不出是哪一族打的；
+    # 下面这几条按类别分账——搜索页是查询接口、会话页是 SPA 首屏，敏感度不同。
+    search_loads_per_hour: int = 18      # 搜索页整页加载/小时（双号合计）
+    chat_rounds_per_hour: int = 60       # 会话页轮次/小时（双号合计）
+    detail_loads_per_hour: int = 8       # 岗位详情页/小时（8 天日志里 111/112 处风控出在这一步）
+    search_loads_per_day: int = 200      # 搜索页/天（双号合计）
+    chat_rounds_per_day: int = 1200      # 会话页轮次/天
+    detail_loads_per_day: int = 60       # 详情页/天
+    jitter_ratio: int = 35               # 间隔随机扰动 ±%（0=固定间隔，那正是模式匹配要的靶子）
+    active_hours_enabled: bool = True    # 只在活跃时段干活，其余完全静默
+    active_hours_start: int = 9          # 北京时间 09:00
+    active_hours_end: int = 18           # 到 18:00（不含）
+    risk_cooldown_ladder: str = "300,900,3600"   # 熔断阶梯：5min → 15min → 60min
+    risk_strike_window: int = 300        # 多久内的连续命中算"连着被打"
 
 
 @dataclass
@@ -540,6 +556,8 @@ class ReplyConfig:
     # 今天 12 点那一小时跑了 316 轮、平均 11 秒一趟，绝大多数是空轮，
     # 而每一趟空轮都要读一次会话页——BOSS 那句「请勿频繁提交刷新请求」数的就是这个。
     idle_backoff_max: int = 120
+    # 每天最多回多少条（双号各算）。小时额度管节奏，日额度管"今天别把号刷成营销号"。
+    max_replies_per_day: int = 200
     context_message_count: int = 10
     max_replies_per_hour: int = 60
     min_delay: int = 2
@@ -1181,6 +1199,36 @@ class UnifiedConfig:
             if "page_load_min_interval" in rl:
                 self.greet.rate_limit.page_load_min_interval = max(
                     0, min(60, int(rl["page_load_min_interval"])))
+            def _整数(名, 兜底, 下, 上):
+                if 名 not in rl:
+                    return 兜底
+                try:
+                    return max(下, min(上, int(float(rl[名]))))
+                except (TypeError, ValueError):
+                    return 兜底
+            rl段 = self.greet.rate_limit
+            rl段.search_loads_per_hour = _整数("search_loads_per_hour", rl段.search_loads_per_hour, 0, 600)
+            rl段.chat_rounds_per_hour = _整数("chat_rounds_per_hour", rl段.chat_rounds_per_hour, 0, 2000)
+            rl段.detail_loads_per_hour = _整数("detail_loads_per_hour", rl段.detail_loads_per_hour, 0, 600)
+            rl段.search_loads_per_day = _整数("search_loads_per_day", rl段.search_loads_per_day, 0, 20000)
+            rl段.chat_rounds_per_day = _整数("chat_rounds_per_day", rl段.chat_rounds_per_day, 0, 20000)
+            rl段.detail_loads_per_day = _整数("detail_loads_per_day", rl段.detail_loads_per_day, 0, 20000)
+            rl段.jitter_ratio = _整数("jitter_ratio", rl段.jitter_ratio, 0, 90)
+            rl段.risk_strike_window = _整数("risk_strike_window", rl段.risk_strike_window, 30, 3600)
+            if "active_hours_enabled" in rl:
+                rl段.active_hours_enabled = bool(rl["active_hours_enabled"])
+            rl段.active_hours_start = _整数("active_hours_start", rl段.active_hours_start, 0, 23)
+            rl段.active_hours_end = _整数("active_hours_end", rl段.active_hours_end, 1, 24)
+            if "risk_cooldown_ladder" in rl:
+                # 阶梯必须递增且都在 60 秒~6 小时之间；形状不对就整条退回默认，
+                # 不半收半退（收一半会装出一副"300,3600"的怪梯子）
+                try:
+                    级 = [int(float(x)) for x in str(rl["risk_cooldown_ladder"]).split(",") if str(x).strip()]
+                    级 = [x for x in 级 if 60 <= x <= 21600]
+                    if 级 and 级 == sorted(级):
+                        rl段.risk_cooldown_ladder = ",".join(str(x) for x in 级)
+                except (TypeError, ValueError):
+                    pass
             if "page_loads_per_hour" in rl:
                 # 上限夹到 200：再高就不是限流，是个摆设
                 self.greet.rate_limit.page_loads_per_hour = max(
@@ -1363,6 +1411,11 @@ class UnifiedConfig:
                 self.reply.enabled = bool(reply["enabled"])
             if "check_interval" in reply:
                 self.reply.check_interval = int(reply["check_interval"])
+            if "max_replies_per_day" in reply:
+                try:
+                    self.reply.max_replies_per_day = max(0, min(5000, int(float(reply["max_replies_per_day"]))))
+                except (TypeError, ValueError):
+                    pass
             if "idle_backoff_max" in reply:
                 # 0 是有效值（关掉退避），所以这里不能用 `or` 兜默认；上限夹到 900 秒
                 try:
@@ -1770,6 +1823,18 @@ class UnifiedConfig:
                     self.greet.rate_limit.job_detail_min_interval,
                 "page_loads_per_hour":
                     self.greet.rate_limit.page_loads_per_hour,
+                "search_loads_per_hour": self.greet.rate_limit.search_loads_per_hour,
+                "chat_rounds_per_hour": self.greet.rate_limit.chat_rounds_per_hour,
+                "detail_loads_per_hour": self.greet.rate_limit.detail_loads_per_hour,
+                "search_loads_per_day": self.greet.rate_limit.search_loads_per_day,
+                "chat_rounds_per_day": self.greet.rate_limit.chat_rounds_per_day,
+                "detail_loads_per_day": self.greet.rate_limit.detail_loads_per_day,
+                "jitter_ratio": self.greet.rate_limit.jitter_ratio,
+                "active_hours_enabled": self.greet.rate_limit.active_hours_enabled,
+                "active_hours_start": self.greet.rate_limit.active_hours_start,
+                "active_hours_end": self.greet.rate_limit.active_hours_end,
+                "risk_cooldown_ladder": self.greet.rate_limit.risk_cooldown_ladder,
+                "risk_strike_window": self.greet.rate_limit.risk_strike_window,
                 "page_load_min_interval":
                     self.greet.rate_limit.page_load_min_interval,
                 "after_verify_cooldown":
@@ -1861,6 +1926,7 @@ class UnifiedConfig:
                 "enabled": self.reply.enabled,
                 "check_interval": self.reply.check_interval,
                 "idle_backoff_max": self.reply.idle_backoff_max,
+                "max_replies_per_day": self.reply.max_replies_per_day,
                 "context_message_count": self.reply.context_message_count,
                 "max_replies_per_hour": self.reply.max_replies_per_hour,
                 "min_delay": self.reply.min_delay,

@@ -526,14 +526,26 @@
     "max_per_hour": 30,
     "max_per_day": 150,
     "job_detail_min_interval": 30,
-    "page_load_min_interval": 3,
+    "page_load_min_interval": 5,
     "after_verify_cooldown": 300,
-    "page_loads_per_hour": 20
+    "page_loads_per_hour": 15,
+    "search_loads_per_hour": 15,
+    "chat_rounds_per_hour": 60,
+    "detail_loads_per_hour": 6,
+    "search_loads_per_day": 200,
+    "chat_rounds_per_day": 900,
+    "detail_loads_per_day": 40,
+    "jitter_ratio": 35,
+    "active_hours_enabled": true,
+    "active_hours_start": 9,
+    "active_hours_end": 18,
+    "risk_cooldown_ladder": "300,900,3600",
+    "risk_strike_window": 300
   },
   "reply": {
     "accept_contact_exchange": true,
     "chat_url": "https://www.zhipin.com/web/geek/chat",
-    "check_interval": 8,
+    "check_interval": 15,
     "context_message_count": 10,
     "enabled": true,
     "followup_after_hours": 8,
@@ -549,7 +561,8 @@
     "pause_auto_resume_minutes": 10,
     "pause_on_important": true,
     "resume_send_once": true,
-    "idle_backoff_max": 120
+    "idle_backoff_max": 120,
+    "max_replies_per_day": 200
   },
   "reply_rules": {
     "你好": "您好！我对这个岗位很感兴趣，方便了解一下具体情况吗？",

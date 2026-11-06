@@ -296,7 +296,10 @@ class Test配置与界面:
         assert (键 in HTML), "保存时没写回配置"
 
     def test_线上配置已经把两道闸装上(self):
-        assert CFG["rate_limit"]["page_loads_per_hour"] == 20
+        # 15 不是 20：同一天稍后把天花板又压了一档（用户点名"搜索页控制在每小时 15~20 以内"），
+        # 分类别的那几道闸在 tests/test_pace_governor.py 里钉
+        assert CFG["rate_limit"]["page_loads_per_hour"] == 15
+        assert CFG["rate_limit"]["page_load_min_interval"] == 5
         assert CFG["reply"]["idle_backoff_max"] == 120
 
     def test_搜索词按当天产量收过(self):
